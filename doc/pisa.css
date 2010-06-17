@@ -1,0 +1,170 @@
+@media print {
+
+	@font-face {
+		font-family: "DejaVu Sans Mono", dejamono;
+		src: url(DejaVuSansMono.ttf);
+	}
+
+	@font-face {
+		font-family: "DejaVu Sans Mono", dejamono;
+		font-weight: bold;
+		src: url(DejaVuSansMono-Bold.ttf);
+	}
+	
+	@font-face {
+		font-family: Calibri;
+		src: url("CALIBRI.TTF");
+	}
+
+	@font-face {
+		font-family: Calibri;
+		src: url("CALIBRIB.TTF");
+		font-weight: bold;
+	}
+
+	@font-face {
+		font-family: Calibri;
+		src: url("CALIBRII.TTF");
+		font-style: italic;
+	}
+
+	@font-face {
+		font-family: Calibri;
+		src: url("CALIBRIZ.TTF");
+		font-weight: bold;
+		font-style: italic;
+	}
+	
+	@page {
+
+		-pdf-page-orientation: portrait;
+		-pdf-page-size: a4;
+
+		/* background-image: url(background.pdf); */
+
+		margin-top: 2cm;
+		margin-left: 4cm;
+		margin-right: 2cm;
+		margin-bottom: 3cm;
+
+	}
+
+	@page regular {
+
+		-pdf-page-orientation: portrait;
+		-pdf-page-size: a4;
+
+		/* background-image: url(background.pdf); */
+
+		margin-top: 2cm;
+		margin-left: 4cm;
+		margin-right: 2cm;
+		margin-bottom: 3cm;
+
+		@frame footer {
+			-pdf-frame-content: footer;
+			bottom: 2cm;
+			left: 4cm;
+			right: 2cm;
+			height: 1cm;
+		}
+
+	}
+
+}
+
+html {
+	font-family: Calibri, Arial, Helvetica, sans-serif;
+	font-size: 10pt;
+}
+
+h1 {
+	page-break-before: always;
+	border-bottom: 2px solid #ccc;	
+}
+
+pre, code {
+	background: #eee;
+	font-family: dejamono, "DejaVu Sans Mono", "Courier New", Courier, monospace;
+	font-size: 8pt;
+}
+
+code {
+	font-weight: bold;
+	color: #333;
+	/* text-decoration: underline; */
+	font-size: 8pt;	
+}
+
+.del {
+	text-decoration: line-through;
+}
+
+p, pre {
+	margin-top: 1em;
+	margin-bottom: 1em;
+}
+
+.license {
+	font-size: 8px;
+	line-height: 110%;
+}
+
+
+.title {
+	font-size: 300%;
+	font-weight: bold;
+	margin-top: 20pt;
+	margin-bottom: 20pt;
+}
+
+.subtitle {
+	font-size: 150%;
+	font-weight: bold;
+	margin-top: 20pt;
+	margin-bottom: 20pt;
+}
+
+#footer {
+	text-align: right;
+}
+
+i, em {
+	font-style: normal;
+	color: #990000;
+	font-weight: bold;
+}
+
+a {
+	color: #000066;
+}
+
+pdftoc {
+}
+
+pdftoc.pdftoclevel0 {
+	font-weight: bold;
+	margin-top: 0.5em;
+}
+
+pdftoc.pdftoclevel1 {
+	margin-left: 1em;
+}
+
+pdftoc.pdftoclevel2 {
+	margin-left: 1em;
+	font-weight: normal;
+}
+
+h2 {
+	margin-top: 1.5em;
+	margin-bottom: 0.5em;
+	font-size: 125%;
+	color: #666;
+}
+
+h3 {
+	font-size: 100%;
+	color: #000000;
+	margin-bottom: 0.5em;
+}

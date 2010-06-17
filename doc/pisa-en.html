@@ -1,0 +1,357 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html
+    xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
+    lang="en"
+    xmlns:pdf="http://htmltopdf.org/pdf"
+    >
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>pisa Documentation</title>
+<link href="pisa.css" type="text/css" rel="stylesheet" media="all" />
+<link href="screen.css" type="text/css" rel="stylesheet" media="screen" />
+</head>
+<body>
+<div id="footer" class="pdf"> <em>pisa</em> HTML/CSS to PDF.
+  Page
+  <pdf:pagenumber />
+</div>
+<p class="title"><em>pisa</em>
+  <!--VERSION-->3.0.33<!--VERSION-->
+</p>
+<p class="subtitle">XHTML/HTML/CSS to PDF converter </p>
+<p class="copyright">(C)opyright by Dirk Holtwick, Germany <br />
+  <a href="mailto:dirk.holtwick@gmail.com">dirk.holtwick@gmail.com</a><br />
+  <a href="http://www.xhtml2pdf.com">http://www.xhtml2pdf.com</a></p>
+<pdf:nexttemplate name="regular"/>
+<h1 style="-pdf-outline: false;" class="pdf">Table of Contents</h1>
+<div class="pdf">
+  <pdf:toc />
+</div>
+<h1>Introduction</h1>
+<p><em>pisa</em> is a HTML/XHTML/CSS to PDF converter written in Python and based on Reportlab Toolkit, pyPDF, TechGame Networks CSS Library and HTML5lib. The primary focus is not on generating perfect printable webpages but to use HTML and CSS as commonly known tools to generate PDF files within Applications. For example generating documentations (like this one), generating invoices or other office documents etc.</p>
+<h1>Installation</h1>
+<p>As pisa is a Python pakage an installed version of Python &lt;<a href="http://www.python.org">http://www.python.org</a>&gt; is needed. For the moment Python 2.3 to 2.5 is supported. For  Python 3000 a special version will be needed, because it is not compatible with the 2.x series. A proper version will be made available as soon as Python 3000 becomes stable.</p>
+<p>The easiest way to install <em>pisa</em> is to use easy_install:</p>
+<pre>$ easy_install pisa</pre>
+<p>But you may also download the source code of <em>pisa</em>, then enter the main directory and execute this command (on Linux and MacOS you may prepend a <code>sudo</code> command):</p>
+<pre>$ python setup.py install</pre>
+<p><em>pisa</em> needs also some additional Python packages to be installed to work. Please follow the setup instruction for each package:</p>
+<ul>
+  <li><strong>ReportlabToolkit</strong> 2.2+ (required)<br />
+    <a href="http://www.reportlab.org/downloads.html">http://www.reportlab.org/downloads.html</a><br />
+    Provides the Python to PDF conversion functionality</li>
+  <li><strong>html5lib</strong> 0.11.1+ (required)<br />
+    <a href="http://code.google.com/p/html5lib/">http://code.google.com/p/html5lib/</a><br />
+    The parser for HTML and XHTML<br />
+  </li>
+  <li><strong>pyPdf</strong> 1.11+ (optional)<br />
+    <a href="http://pybrary.net/pyPdf/">http://pybrary.net/pyPdf/</a><br />
+    Will be used if you like to place another PDF as a watermark in the background of PDF pages <br />
+  </li>
+  <li><strong>PIL</strong> 1.1.6+ (optional)<br />
+    <a href="http://www.pythonware.com/products/pil/">http://www.pythonware.com/products/pil/</a><br />
+    The Python Imaging Library (PIL) is requred by ReportLab for handling of different image formats like GIF and PNG. </li>
+</ul>
+<h2>Windows precompiled version</h2>
+<p>For Windows a precompiled version exists that includes Python and all needed libraries. The package contains the file <code>xhtml2pdf.exe</code>. Please add the directory where <code>xhtml2pdf.exe</code> is placed to the Windows <code>PATH</code> variable.</p>
+<p>The Windows version is distributed via the Website &lt;<a href="http://www.xhtml2pdf.com">http://www.xhtml2pdf.com</a>&gt; in the &quot;Download&quot; section.</p>
+<h1>Command line</h1>
+<p>If you do not want to integrate <em>pisa</em> in your own application, you may use the command line tool that gives you a simple interface to the features of <em>pisa</em>. Just call <code>xhtml2pdf --help</code> to get the following help informations:</p>
+<!--HELP--><pre></pre><!--HELP-->
+<h2>Converting HTML data </h2>
+<p>To generate a PDF from an HTML file called <code>test.html</code> call:</p>
+<pre>$ xhtml2pdf -s test.html</pre>
+<p>The resulting PDF will be called <code>test.pdf</code> (if this file is locked e.g. by the Adobe Reader it will be called <code>test-0.pdf</code> and so on). The <code>-s</code> option takes care that the PDF will be opened directly in the Operating Systems default viewer. </p>
+<p>To convert more than one file you may use wildcard patterns like <code>*</code> and <code>?</code>:</p>
+<pre>$ xhtml2pdf &quot;test/test-*.html&quot;</pre>
+<p>You may also directly access pages from the internet:</p>
+<pre>$ xhtml2pdf -s http://www.xhtml2pdf.com/</pre>
+<h2>Using special properties</h2>
+<p>If the conversion doesn't work as expected some more informations may be usefull. You may turn on the output of warnings adding <code>-w</code> or even the debugging output by using <code>-d</code>.</p>
+<p>Another reason could be, that the parsing failed. Consider trying the <code>-xhtml</code> and <code>-html</code> options. <em>pisa</em> uses the HTMLT5lib parser that offers two internal parsing modes: one for HTML and one for XHTML.</p>
+<p>When generating the HTML output <em>pisa</em> uses an internal default CSS definition (otherwise all tags would appear with no diffences). To get an impression of how this one looks like start <em>pisa</em> like this:</p>
+<pre>$ xhtml2pdf --css-dump &gt; xhtml2pdf-default.css</pre>
+<p>The CSS will be dumped into the file <code>pisa-default.css</code>. You may modify this or even take a totaly self defined one and hand it in by using the <code>-css</code> option, e.g.: </p>
+<pre>$ xhtml2pdf --css=xhtml2pdf-default.css test.html  </pre>
+<h1>Python module</h1>
+<p><strong>XXX TO BE COMPLETED </strong></p>
+<p>The integration into a Python program is quite easy. We will start with a simple &quot;Hello World&quot; example:</p>
+<pre>import ho.pisa as pisa                        (1)
+
+def helloWorld():
+  filename = __file__ + &quot;.pdf&quot;                (2)
+  pdf = pisa.CreatePDF(                       (3)
+    &quot;Hello &lt;strong&gt;World&lt;/strong&gt;&quot;,
+    file(filename, &quot;wb&quot;))
+  if not pdf.err:                             (4)
+    pisa.startViewer(filename)                (5)
+
+if __name__==&quot;__main__&quot;:
+  pisa.showLogging()                          (6)
+  helloWorld()
+</pre>
+<p><strong>Comments:</strong></p>
+<p>(1) Import the <em>pisa</em> Python module <br />
+  (2) Calculate a sample filename. If your demo is saved under <code>test.py</code> the filename will be <code>test.py.pdf</code>.<br />
+  (3) The function <code>CreatePDF</code> is called with the source and the destination. In this case the source is a string and the destination is a fileobject. Other values will be discussed later (XXX to do!). An object will be returned as result and saved in <code>pdf</code>. <br />
+  (4) The property <code>pdf.err</code> is checked to find out if errors occured<br />
+  (5) If no errors occured a helper function will open a PDF Reader with the resulting file<br />
+  (6) Errors and warnings are written as log entries by using the Python standard module <code>logging</code>. This helper enables printing warnings on the console. </p>
+<h2>Create PDF</h2>
+<p>The main function of pisa is called CreatePDF(). It offers the following arguments in this order:</p>
+<ul>
+  <li><strong>src</strong>: The source to be parsed. This can be a file handle or a <code>String</code> - or even better - a <code>Unicode</code> object.</li>
+  <li><strong>dest</strong>: The destination for the resulting PDF. This has to be a file object wich will not be closed by <code>CreatePDF</code>. (XXX allow file name?) </li>
+  <li><strong>path</strong>: The original file path or URL. This is needed to calculate relative paths of images and style sheets. (XXX calculate automatically from src?) </li>
+  <li><strong>link_callback</strong>: Handler for special file paths (see below).</li>
+  <li><strong>debug</strong>: ** DEPRECATED ** </li>
+  <li><strong>show_error_as_pdf</strong>: Boolean that indicates that the errors will be dumped into a PDF. This is usefull if that is the only way to show the errors like in simple web applications.</li>
+  <li><strong>default_css</strong>: Here you can pass a default CSS definition in as a <code>String</code>. If set to <code>None</code> the predefined CSS of pisa is used. </li>
+  <li><strong>xhtml</strong>: Boolean to force parsing the source as XHTML. By default the HTML5 parser tries to guess this. </li>
+  <li><strong>encoding</strong>: The encoding name of the source. By default this is guessed by the HTML5 parser. But HTML with no meta information this may not work an then this argument is helpfull. </li>
+</ul>
+<h2>Link callback</h2>
+<p>Images, backgrounds and stylesheets are loaded form an HTML document. Normaly <em>pisa</em> expects these files to be found on the local drive. They may also be referenced relative to the original document. But the programmer might want to load form different kind of sources like the Internet via HTTP requests or from a database or anything else. Therefore you may define a <code>link_callback</code> that handles these reuests. </p>
+<p>XXX</p>
+<h2>Web applications</h2>
+<p>XXX</p>
+<h1>Defaults</h1>
+<p>Some notes on some default values: </p>
+<ul>
+  <li>Usually the position (0, 0) in PDF files is found in the lower left corner. For <em>pisa</em> it is the upper left corner like it is for HTML.</li>
+  <li>The default page size is the German DIN A4 with portrait orientation.</li>
+  <li>The name of the first layout template is <code>body</code>, but you better leave the name empty for defining the default template  (XXX May be changed in the future!) </li>
+</ul>
+<h1>Cascading Style Sheets</h1>
+<p><em>pisa</em> supports a lot of Cascading Style Sheet (CSS). The following styles are supported:</p>
+<pre>background-color<br />border-bottom-color<br />border-bottom-style<br />border-bottom-width<br />border-left-color<br />border-left-style<br />border-left-width<br />border-right-color<br />border-right-style<br />border-right-width<br />border-top-color<br />border-top-style<br />border-top-width<br />color<br />display<br />font-family <br />font-size <br />font-style<br />font-weight<br />height<br />line-height<br />list-style-type<br />margin-bottom<br />margin-left<br />margin-right<br />margin-top<br />padding-bottom<br />padding-left<br />padding-right<br />padding-top<br />page-break-after<br />page-break-before<br />size<br />text-align<br />text-decoration<br />text-indent<br />vertical-align<br />white-space<br />width<br />zoom</pre>
+<p>And it adds some vendor specific styles: </p>
+<pre>-pdf-frame-border<br />-pdf-frame-break<br />-pdf-frame-content<br />-pdf-keep-with-next<br />-pdf-next-page<br />-pdf-outline<br />-pdf-outline-level<br />-pdf-outline-open<br />-pdf-page-break</pre>
+<h1>Layout Definition</h1>
+<h2>Pages and Frames </h2>
+<p>Pages can be layouted by using some special CSS at-keywords and properties. All special properties start with <code>-pdf-</code> to mark them as vendor specific as defined by CSS 2.1. Layouts may be defined by page using the <code>@page</code> keyword. Then text flows in one or more frames which can be defined within the <code>@page</code> block by using <code>@frame</code>. Example:</p>
+<pre>@page {
+  @frame {
+    margin: 1cm;
+  }
+} </pre>
+<p>In the example we define an unnamed page template - though it will be used as the default template - having one frame with <code>1cm</code> margin to the page borders. The first frame of the page may also be defined within the <code>@page</code> block itself. See the equivalent example: </p>
+<pre>@page {
+  margin: 1cm;
+} </pre>
+<p>To define more frames just add some more <code>@frame</code> blocks. You may use the following properties to define the dimensions of the frame:</p>
+<ul>
+  <li><code>marign</code></li>
+  <li><code>margin-top</code></li>
+  <li><code>margin-left</code></li>
+  <li><code>margin-right</code></li>
+  <li><code>margin-bottom</code></li>
+  <li><code>top</code></li>
+  <li><code>left</code></li>
+  <li><code>right</code></li>
+  <li><code>bottom</code></li>
+  <li><code>width</code></li>
+  <li><code>height</code></li>
+</ul>
+<p>Here is a more complex example:</p>
+<pre>@page lastPage {
+  top: 1cm;
+  left: 2cm;
+  right: 2cm;
+  height: 2cm;
+  @frame middle {
+    margin: 3cm;
+  }
+  @frame footer {
+    bottom: 2cm;
+    margin-left: 1cm;
+    margin-right: 1cm;
+    height: 1cm;
+  }
+} </pre>
+<p>Layout scheme:</p>
+<pre>                 top
+     +--------------------------+   ---
+     |        margin-top        |   /|\
+     |    +---------------+     |    |
+     |    |               |     |
+     |    |               |     |  height
+     |    |               |     |
+</pre>
+<p>By default the Frame uses the whole page and is defined to begin in the upper left corner and end in the lower right corner. Now you can add the position of the frame using <code>top</code>, <code>left</code>, <code>bottom</code> and <code>right</code>. If you now add <code>height</code> and you have a value other than zero in <code>top</code> the <code>bottom</code> will be modified. (XXX If you had not defined <code>top</code> but <code>bottom</code> the <code>height</code> will be ...)</p>
+<h2>Page size and orientation </h2>
+<p>A page layout may also define the page size and the orientation of the paper using the <code>size</code> property as defined in CSS 3. Here is an example defining page size &quot;DIN A5&quot;  with &quot;landscape&quot; orientation (default orientation is &quot;portrait&quot;): </p>
+<pre>@page {
+  size: a5 landscape;
+  margin: 1cm;
+} </pre>
+<p>Here is the complete list of valid page size identifiers:</p>
+<ul>
+  <li><code>a0</code> ... <code>a6</code></li>
+  <li><code>b0</code> ... <code>b6</code></li>
+  <li><code>letter</code></li>
+  <li><code>legal</code></li>
+  <li> <code>elevenseventeen</code></li>
+</ul>
+<h2>PDF watermark/ background </h2>
+<p>For the use of PDF backgrounds specify the source file in the <code>background-image</code> property, like this:</p>
+<pre>@page {
+  background-image: url(bg.pdf);
+}</pre>
+<h2>Static frames </h2>
+<p>Some frames should be static like headers and footers that means they are on every page but do not change content. The only information that may change is the page number. Here is a simple example that show how to make an element named by ID the content of a static frame. In this case it is the ID <code>footer</code>.</p>
+<pre>&lt;html&gt;
+&lt;style&gt;
+@page {
+  margin: 1cm;
+  margin-bottom: 2.5cm;
+  @frame footer {
+    -pdf-frame-content: footerContent;
+    bottom: 2cm;
+    margin-left: 1cm;
+    margin-right: 1cm;
+    height: 1cm;
+  }
+}
+&lt;/style&gt;
+&lt;body&gt;
+  Some text
+  &lt;div id=&quot;footerContent&quot;&gt;
+    This is a footer on page #&lt;pdf:pagenumber&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+<p>For better debugging you may want to add this property for each frame definition: <code>-pdf-frame-border: 1</code>. It will paint a border around the frame. </p>
+<h1>Fonts</h1>
+<p>By default there is just a certain set of fonts available for PDF. Here is the complete list - and their repective alias names - <em>pisa</em> knows  by default (the names are not case sensitive):</p>
+<ul>
+  <li><strong>Times-Roman</strong>: Times New Roman, Times, Georgia, serif </li>
+  <li><strong>Helvetica</strong>: Arial, Verdana, Geneva, sansserif, sans </li>
+  <li><strong>Courier</strong>: Courier New, monospace, monospaced, mono </li>
+  <li><strong>ZapfDingbats</strong></li>
+  <li><strong>Symbol</strong></li>
+</ul>
+<p>But you may  also embed new font faces by using the <code>@font-face</code> keyword in CSS like this: </p>
+<pre>@font-face {
+  font-family: Example, &quot;Example Font&quot;;
+  src: url(example.ttf);
+}</pre>
+<p>The <code>font-family</code> property defines the names under which the embedded font will be known. <code>src</code> defines the place of the fonts source file. This can be a TrueType font or a Postscript font. The file name of the first has to end with <code>.ttf</code> the latter with one of <code>.pfb</code> or <code>.afm</code>. For Postscript font pass just one filename like <code>&lt;name&gt;</code><code>.afm</code> or <code>&lt;name&gt;</code><code>.pfb</code>, the missing one will be calculated automatically. </p>
+<p>To define other shapes you may do like this:</p>
+<pre>/* Normal */
+@font-face {
+   font-family: DejaMono;
+   src: url(font/DejaVuSansMono.ttf);
+}
+
+/* Bold */
+@font-face {
+   font-family: DejaMono;
+   src: url(font/DejaVuSansMono-Bold.ttf);
+   font-weight: bold;
+}
+
+/* Italic */
+@font-face {
+   font-family: DejaMono;
+   src: url(font/DejaVuSansMono-Oblique.ttf);
+   font-style: italic;
+}
+
+/* Bold and italic */
+@font-face {
+   font-family: DejaMono;
+   src: url(font/DejaVuSansMono-BoldOblique.ttf);
+   font-weight: bold;
+   font-style: italic;
+}</pre>
+<h1>Outlines/ Bookmarks </h1>
+<p>PDF supports outlines (Adobe calls them &quot;bookmarks&quot;). By default <em>pisa</em> defines the <code>&lt;h1&gt;</code> to <code>&lt;h6&gt;</code> tags to be shown in the outline. But you can specify exactly for every tag which outline behaviour it should have. Therefore you may want to use the following vendor specific styles:</p>
+<ul>
+  <li><code>-pdf-outline </code><br />
+    set it to &quot;true&quot; if the block element should appear in the outline</li>
+  <li><code>-pdf-outline-level</code><br />
+    set the value starting with &quot;0&quot; for the level on which the outline should appear. Missing predecessors are inserted automatically with the same name as the current outline</li>
+  <li><code>-pdf-outline-open</code><br />
+    set to &quot;true&quot;  if the outline should be shown uncollapsed</li>
+</ul>
+<p>Example:</p>
+<pre>h1 {
+  -pdf-outline: true;<br />  -pdf-level: 0;
+  -pdf-open: false;
+}</pre>
+<h1>Table of Contents</h1>
+<p>It is possible to automatically generate a Table of Contents (TOC) with <em>pisa</em>. By default all headings from <code>&lt;h1&gt;</code> to <code>&lt;h6&gt;</code> will be inserted into that TOC. But you may change that behaviour by setting the CSS property <code>-pdf-outline</code> to <code>true</code> or <code>false</code>. To generate the TOC simply insert <code>&lt;pdf:toc /&gt;</code> into your document. You then may modify the look of it by defining styles for the <code>pdf:toc</code> tag and the classes <code>pdftoc.pdftoclevel0</code> to <code>pdftoc.pdftoclevel5</code>. Here is a simple example for a nice looking CSS:</p>
+<pre>pdftoc {
+    color: #666;
+}
+pdftoc.pdftoclevel0 {
+    font-weight: bold;
+    margin-top: 0.5em;
+}
+pdftoc.pdftoclevel1 {
+    margin-left: 1em;
+}
+pdftoc.pdftoclevel2 {
+    margin-left: 2em;
+    font-style: italic;
+} </pre>
+<h1>Tables</h1>
+<p>Tables are supported but may behave a little different to the way you might expect them to do. These restriction are due to the underlying table mechanism of ReportLab. </p>
+<ul>
+  <li>The main restriction is that table cells that are longer than one page lead to an error</li>
+  <li>Tables can not float left or right and can not be inlined </li>
+</ul>
+<h2>Long cells</h2>
+<p>Pisa is not able to split table cells that are larger than the available space. To work around it you may define what should happen in this case.  The <code>-pdf-keep-in-frame-mode</code> can be one of: &quot;error&quot;, &quot;overflow&quot;, &quot;shrink&quot;, &quot;truncate&quot;, where &quot;shrink&quot; is the default value. </p>
+<pre>table {<br />    -pdf-keep-in-frame-mode: shrink;<br />}</pre>
+<h2>Cell widths </h2>
+<p>The table renderer is not able  to adjust the width of the table automatically. Therefore you should explicitly set the width of the table and to the table rows or cells.</p>
+<h2>Headers</h2>
+<p>It is possible to repeat table rows if a page break occurs within a table. The number of repeated rows is passed in the attribute <code>repeat</code>. Example: </p>
+<pre>&lt;table repeat=&quot;1&quot;&gt;
+  &lt;tr&gt;&lt;th&gt;Column 1&lt;/th&gt;&lt;th&gt;...&lt;/th&gt;&lt;/tr&gt;
+  ...
+&lt;/table&gt;</pre>
+<h2>Borders</h2>
+<p>Borders are supported. Use corresponding CSS styles. </p>
+<h1>Images</h1>
+<h2>Size </h2>
+<p>By default JPG images are supported. If the Python Imaging Library (PIL) is installed the file types supported by it are available too. As mapping pixels to points is not trivial the images may appear bigger in the PDF as in the browser. To adjust this you may want to use the <code>zoom</code> style. Here is a small example:</p>
+<pre>img { zoom: 80%; }  
+</pre>
+<h2>Position/ floating </h2>
+<p>Since Reportlab Toolkit does not yet support the use of images within paragraphs, images are always rendered in a seperate paragraph. Therefore floating is not available yet. </p>
+<h1>Barcodes</h1>
+<p><strong>XXX TO BE WRITTEN</strong></p>
+<p><strong> &lt;pdf:barcode&gt;</strong></p>
+<h1>Custom Tags </h1>
+<p><em>pisa</em> provides some custom tags. They are all prefixed by the namespace identifier <code>pdf:</code>. As the HTML5 parser used by pisa does not know about these specific tags it may be confused if they are without a block. To avoid problems you may condsider sourrounding them by <code>&lt;div&gt;</code> tags, like this: </p>
+<pre>&lt;div&gt;
+   &lt;pdf:toc /&gt;
+&lt;/div&gt;
+</pre>
+<h2>Tag-Definitions</h2>
+<h3>pdf:barcode</h3>
+<p> Creates a barcode. </p>
+<h3>pdf:pagenumber</h3>
+Prints current page number. The argument &quot;example&quot; defines the space
+the page number will require e.g. &quot;00&quot;.<br />
+<h3>pdf:nexttemplate</h3>
+<p> Defines the template to be used on the next page. </p>
+<h3>pdf:nextpage</h3>
+<p>Create a new page after this position.</p>
+<h3>pdf:nextframe</h3>
+<p> Jump to next unused frame on the same page or to the first on a new
+  page. You may not jump to a named frame.</p>
+<h3>pdf:spacer</h3>
+<p> Creates an object of a specific size.</p>
+<h3>pdf:toc</h3>
+<p> Creates a Table of Contents. </p>
+<h1>License</h1>
+<p><strong><em>pisa</em> is copyrighted by Dirk Holtwick, Germany.</strong><br />
+  <em>pisa</em> is distributed by Dirk Holtwick, Schreiberstra�e 2, 47058 Duisburg, Germany.<br />
+  <em>pisa</em> is licensed under the GNU Gerneral Public License version 2.</p>
+<p><strong>For commercial usage of <em>pisa</em> a developer license can be purchased!</strong></p>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>Unbenanntes Dokument</title>
+<style>
+.din {
+	font-family: DIN, Helvetica;
+}
+.vera {
+	font-family: rrr;
+}
+
+@font-face {
+	font-family: Forelle;
+	src: url("font/Forelle.afm");
+}
+
+.forelle {
+	font-family: Forelle;
+}
+
+</style>
+</head>
+<body>
+	<div>
+		<pdf:font name="DIN" src="font/leerc.afm" />
+		<pdf:font name="Rina, rrr" src="font/rina.ttf" />
+	</div>
+    <p>Lorem ipsum &auml;&ouml;&uuml; &Auml;&Ouml;&Uuml; &szlig; @ &euro;...</p>
+    <p class="din">Lorem ipsum &auml;&ouml;&uuml; &Auml;&Ouml;&Uuml; &szlig; @ &euro;... </p>
+    <p class="vera">Lorem ipsum &auml;&ouml;&uuml; &Auml;&Ouml;&Uuml; &szlig; @ &euro;... </p>
+    <p class="forelle">Lorem ipsum &auml;&ouml;&uuml; &Auml;&Ouml;&Uuml; &szlig; @ &euro;... </p>
+</body>
+</html>

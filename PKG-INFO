@@ -1,0 +1,76 @@
+Metadata-Version: 1.1
+Name: pisa
+Version: 3.0.33
+Summary: PDF generator using HTML and CSS
+Home-page: http://www.xhtml2pdf.com
+Author: Dirk Holtwick
+Author-email: dirk.holtwick@gmail.com
+License: GNU General Public License (GPL)
+Download-URL: http://pypi.python.org/pypi/pisa/
+Description: pisa is a html2pdf converter using the ReportLab Toolkit,
+        the HTML5lib and pyPdf. It supports HTML 5 and CSS 2.1 (and some of CSS 3).
+        It is completely written in pure Python so it is platform independent.
+        The main benefit of this tool that a user with Web skills like HTML and CSS
+        is able to generate PDF templates very quickly without learning new
+        technologies. Easy integration into Python frameworks like CherryPy,
+        KID Templating, TurboGears, Django, Zope, Plone, Google AppEngine (GAE) etc.
+        (see 'demo' folder for examples)
+Keywords: PDF,HTML,XHTML,XML,CSS
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Development Status :: 6 - Mature
+Classifier: Environment :: Console
+Classifier: Environment :: MacOS X
+Classifier: Environment :: Other Environment
+Classifier: Environment :: Web Environment
+Classifier: Environment :: Win32 (MS Windows)
+Classifier: Framework :: Django
+Classifier: Framework :: Plone
+Classifier: Framework :: Pylons
+Classifier: Framework :: TurboGears
+Classifier: Framework :: Zope2
+Classifier: Framework :: Zope3
+Classifier: Intended Audience :: Customer Service
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Education
+Classifier: Intended Audience :: Financial and Insurance Industry
+Classifier: Intended Audience :: Healthcare Industry
+Classifier: Intended Audience :: Information Technology
+Classifier: Intended Audience :: Legal Industry
+Classifier: Intended Audience :: Manufacturing
+Classifier: Intended Audience :: Science/Research
+Classifier: Intended Audience :: System Administrators
+Classifier: Intended Audience :: Telecommunications Industry
+Classifier: License :: Free for non-commercial use
+Classifier: License :: OSI Approved :: GNU General Public License (GPL)
+Classifier: Natural Language :: English
+Classifier: Natural Language :: German
+Classifier: Operating System :: MacOS
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Operating System :: Microsoft
+Classifier: Operating System :: Microsoft :: MS-DOS
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: Other OS
+Classifier: Operating System :: POSIX
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Operating System :: Unix
+Classifier: Topic :: Documentation
+Classifier: Topic :: Internet
+Classifier: Topic :: Multimedia
+Classifier: Topic :: Office/Business
+Classifier: Topic :: Office/Business :: Financial
+Classifier: Topic :: Office/Business :: Financial :: Accounting
+Classifier: Topic :: Printing
+Classifier: Topic :: Text Processing
+Classifier: Topic :: Text Processing :: Filters
+Classifier: Topic :: Text Processing :: Fonts
+Classifier: Topic :: Text Processing :: General
+Classifier: Topic :: Text Processing :: Indexing
+Classifier: Topic :: Text Processing :: Linguistic
+Classifier: Topic :: Text Processing :: Markup
+Classifier: Topic :: Text Processing :: Markup :: HTML
+Classifier: Topic :: Text Processing :: Markup :: XML
+Classifier: Topic :: Utilities
+Requires: html5lib
+Requires: pypdf
+Requires: pil

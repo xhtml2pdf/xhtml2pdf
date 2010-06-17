@@ -1,0 +1,72 @@
+<html>
+<head>
+<style type="text/css" media="all">
+html {
+	line-height: 150%;
+}
+.c1 {
+	border-top-style: solid;
+	border-top-width: 3px;
+	padding-top: 0.5em;
+	padding-bottom: 0.5em;
+	padding-left: 0.5em;
+	background-color: pink;
+}
+.c2 { 
+	border-style: solid;
+	border-color: red;
+	border-width: 1px;
+	margin-left: 20px;
+}
+.c3 { 
+	border-style: solid;
+	border-color: red;
+	border-width: 1px;
+	border-left-color: blue;
+	border-bottom-color: magenta;
+	border-right-width: 2px;
+	margin-top: 1em;
+	margin-bottom: 1em;
+	background-color: #ccc;
+}
+.b1 {
+	padding: 0;
+	margin:0;
+	border: 1px solid blue;
+}
+.b2 {
+	padding: 0;
+	margin:0;
+	border: 1px solid blue;
+}
+.b3 {
+	padding: 0;
+	margin:0;
+	background: #FFFF99;
+}
+</style>
+</head>
+<body>
+<h1 class="c1">Hello World: class=c1</h1>
+<h1 class="c2">Goodbye: <span style="background: #ccc">class=c2</span> </h1>
+<h1 class="c2" style="padding: 16px; border-top: 10px blue solid;">Goodbye: class=c2  padding: 16px;</h1>
+<h1 class="c2" style="border-top: 10px blue solid;">Goodbye: class=c2  padding: 16px;</h1>
+<h1 class="c2">Goodbye: <img src="img/denker.png"> class=c2<br>Next line </h1>
+<h1 class="c3">Mixed colors: class=c3</h1>
+<pre class="c1">Hello World: class=c1</pre>
+<pre class="c2">Goodbye: <span style="background: #ccc">class=c2</span> </pre>
+<pre class="c3">Mixed colors: class=c3</pre>
+<p style="line-height: 100%;"><span style="background: green;">This is line A with line-spacing: 100%, there should not be any space between the lines <br>
+This is line B</span></p>
+<p style="line-height: 150%;"><span style="background: green;">This is line A with line-spacing: 150%, there should be a gap <br>
+This is line B</span></p>
+<p class="b1">Lorem ipsum dolor sit amet, <span style="font-size: 300%">consectetur</span> adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+<p class="b1" style="padding-left: 10em;">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+<p class="b1" style="padding-left: 10em; padding-right: 10em;">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea <span style="font-size: 300%">consectetur</span> commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+<p class="b2">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+<p class="b2" style="margin-left: 10em;">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+<p class="b2" style="margin-left: 10em; margin-right: 10em;">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+<p class="b3" style="line-height: 250%">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+<p class="b3" style="line-height: 100%">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+</body>
+</html>

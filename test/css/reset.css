@@ -1,0 +1,217 @@
+* {
+	margin: 0;
+	padding: 0;	
+	font-weight: normal;
+	font-style: inherit;
+	font-size: 100%;
+	font-family: inherit;
+	/* vertical-align: baseline; */
+	list-style: none;
+}
+
+@media screen {
+	html, body {
+		height:100%;
+	}
+}
+
+img,
+fieldset,
+legend,
+table,
+tr,
+td,
+th,
+tbody, 
+tfoot, 
+thead,
+applet, 
+object, 
+iframe,
+frame,
+frameset {
+	border: 0;	
+}
+
+h1, 
+h2, 
+h3, 
+h4, 
+h5, 
+h6, 
+pre, 
+table, 
+blockquote {
+	clear: both;
+}
+
+body {
+	line-height: 1.5;
+	color: #000;
+	background: #fff;
+	font:13px/1.22 arial,helvetica,clean,sans-serif;
+	font-style: normal;
+	*font-size:small;
+	*font:x-small; 	
+}
+
+input, 
+textarea, 
+select {
+	font:13px/1.22 arial,helvetica,clean,sans-serif;
+	*font-size:13px;
+}
+
+pre,
+code,
+kbd,
+samp,
+tt {
+	font-family:monospace;
+	*font-size:108%;
+	line-height:99%;
+}
+
+/* Tables still need 'cellspacing="0"' in the markup. */
+table {
+	font-size:inherit;
+	font:100%;
+	table-layout: fixed;
+	border-collapse: collapse;	
+	border-spacing: 0;
+	empty-cells: show;
+}
+caption, th, td {
+	text-align: left;
+	font-weight: normal;
+	empty-cells: show;
+	vertical-align: top;
+}
+
+/* Remove possible quote marks (") from <q>, <blockquote>. */
+blockquote:before, 
+blockquote:after, 
+q:before, 
+q:after { 
+	content: ""; 
+}
+
+blockquote, q { 
+	quotes: "" ""; 
+}
+
+/* CLEAR */
+
+.clear {
+	clear: both;
+}
+
+/*
+.clear {
+	display: inline-block;
+	height: 0;
+	clear: both;
+}
+
+.clear:after, 
+.container:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
+
+* html .clear { height: 1%; }
+
+.clear { display: block; }
+*/
+
+/* HIDE */
+
+.hide,
+.hidden {
+	display: none;
+}
+
+/* FORM */
+
+textarea.validation-failed,
+input.validation-failed,
+select.validation-failed {
+	background: #FFFFCC;
+	border: 2px solid red;
+} 
+
+textarea.sample,
+input.sample {
+	color: #999;
+}
+
+input.readonly {
+	background: #eee;
+}
+
+input.required {	
+}
+
+
+/* A container should group all your columns. */
+.container {
+  text-align: left;
+  position: relative;
+  padding: 0;
+  margin: 0 auto;   /* Centers layout */
+  width: 960px;     /* Total width */
+}
+
+.sidenote {
+	width: 25%;
+	float: right;
+	margin-bottom: 0.5em;
+	margin-left: 0.5em;
+	padding: 0.5em;
+	background: #ccc;
+	overflow: hidden;
+}
+
+/* Print normalize */
+@media print {
+
+	html, body {
+		background: white !important;
+		color: black !important;
+		width: 100% !important;
+		height: inherit !important;
+	}
+
+	body a:link, 
+	body a:visited {
+		background: transparent;
+		text-decoration: underline;
+	}
+
+	body a[href*="http://"]:link:after, 
+	body a[href*="http://"]:visited:after {
+	   content: " <" attr(href) "> ";
+	}
+
+	body .noprint {
+		display: none !important;
+	}
+
+	body .print {
+		display: block !important;
+		position: static !important;
+		margin: 0 !important;
+		padding: 0 !important;
+		border: none !important;
+		width: auto !important;
+		height: auto !important;
+		float: none !important;
+		clear: both !important;
+		overflow: inherit !important;
+	}
+}
+/* CSS Document */
+

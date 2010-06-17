@@ -1,0 +1,30 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<HTML xmlns="http://www.w3.org/1999/xhtml" xml:lang="de" LANG="de">
+ <HEAD>
+  <TITLE>CSS 2.1 Test Suite: Inheritance</TITLE>
+	<STYLE TYPE="text/css">
+	<![CDATA[
+	body { color: navy; }
+	.a { text-decoration: underline; }
+	#a { font-style: italic; }
+	]]>
+	</STYLE>  
+ </HEAD>
+
+ <BODY>
+
+  <P CLASS="a"> This <![CDATA[sh<o>uld]]> be blue and underlined. </P>
+
+  <P CLASS="a"> This sentence should be underlined, including
+  <CODE>this part</CODE>, <CITE>this part</CITE>, <EM>this part</EM>,
+  and <STRONG>this part</STRONG>. </P>
+
+  <P CLASS="a" id="a"> This sentence should also be underlined, as
+  well as italics, <STRONG>including this part</STRONG>. </P>
+
+  <P> This sentence should be blue but not underlined, like
+  <STRONG>this part</STRONG>, but <EM STYLE="text-decoration:
+  underline;">this part should be underlined</EM>. </P>
+
+ </BODY>
+</HTML>

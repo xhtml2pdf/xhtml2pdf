@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://purl.org/kid/ns#">
+  <head>
+    <title>PDF Demo</title>
+  </head>
+  <body>
+    <h1>PDF Demo</h1>
+    <p>Please enter some HTML (and KID) code:</p>
+    <form action="download" method="post" enctype="multipart/form-data">
+        <textarea name="data" style="width:100%; height: 200px;"><p py:for="x in range(3)">
+  Hello
+  <strong>World</strong>
+  #${x+1}
+</p></textarea>
+        <br />
+        <input type="submit" value="Convert HTML to PDF" />
+    </form>
+  </body>
+</html>

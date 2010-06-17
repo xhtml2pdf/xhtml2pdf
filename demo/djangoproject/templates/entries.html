@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+	{% for entry in blog_entries %}
+    	<h2>{{ entry.id }} {{ entry.title|upper }}</h2>
+    	<p style="margin-left:15px">{{ entry.body }}</p>
+	{% endfor %}
+{% endblock %}
+
+{%block page_foot%}
+	Sample page {{block.super}}
+{%endblock%}
+

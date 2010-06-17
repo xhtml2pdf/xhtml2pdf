@@ -1,0 +1,42 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>
+{%block title%}	
+{%endblock%}
+</title>
+<style type="text/css">
+{% block style %}
+	@page {
+		size: {{pagesize}};
+		margin: 1cm;
+		@frame footer {
+    		-pdf-frame-content: footerContent;
+    		bottom: 1cm;
+    		margin-left: 1cm;
+    		margin-right: 1cm;
+    		height: 1cm;
+		}
+	}
+{%endblock%}	
+</style>
+</head>
+<body>
+<div>
+{%block page_header%}
+   <div>
+   		<h1>pisa html<span style="color: #FC0000;">to</span>pdf</h1>
+   		<h2>Python module for HTML/CSS to PDF conversion - Ezpdf example</h2>
+   </div>
+	<hr />
+{%endblock%}
+{%block content%}
+{%endblock%}
+</div>
+<div id="footerContent">
+{%block page_foot%}
+		<pdf:pagenumber>
+{%endblock%}
+</div>
+</body>
+</html>

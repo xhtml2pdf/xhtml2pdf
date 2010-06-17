@@ -1,0 +1,46 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>Test Media</title>
+<style type="text/css">
+
+@import url("test-css-media-1.css") print;
+@import url(css/test-css-media-3.css) print;
+@import url(test-css-media-2.css) screen;
+ 
+.green1 {
+	color: blue;
+	color: green;	
+	*color: red;
+}
+
+@media print {
+	.green2 { color: green; }
+}
+
+@media screen {
+	.green3 { color: green; }
+}
+</style>
+</head>
+<body>
+	<p>Normal</p>
+	
+	<p class="green1">Green</p>
+
+	<p class="green2">Green only in PDF</p>
+	
+	<p class="green3">Green only on screen</p>
+	
+	<p class="green4">Green only in PDF (external)</p>
+	
+	<p class="green5">Green only on screen (external)</p>
+
+	<p class="green6">Green only in PDF (external)</p>
+
+	<p class="green7">Green only in PDF (sub-external)</p>
+	
+</body>
+</html>

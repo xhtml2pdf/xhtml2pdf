@@ -1,0 +1,8 @@
+@font-face {
+	font-family: "code2000";
+	src: url("font/code2000.ttf")
+}
+
+html {
+    font-family: code2000;
+}

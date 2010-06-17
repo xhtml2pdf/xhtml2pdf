@@ -1,0 +1,30 @@
+include pisa.py
+exclude doc/*
+include doc/pisa-en.pdf
+include doc/pisa-en.html
+include doc/pisa.css
+include doc/screen.css
+include demo/*
+exclude demo/tgproject/*
+recursive-include test *.html *.jpg *.py *.css *.txt
+include test/pdf/background-sample.pdf
+exclude test/archive/*
+global-exclude .ropeproject* *.odt *.bak *.pyc .svn* *.pyo *.ttf sitecustomize.py
+exclude license/*
+exclude dist/*
+exclude lib/*
+exclude test/font/*
+include test/font/README.txt
+exclude *.bat
+exclude check*
+exclude *.jar
+exclude tests/*
+exclude xhtml2pdf/*
+exclude setup_version.py
+exclude setup_exe.py
+exclude MANIFEST.in
+include README.txt
+include CHANGELOG.txt
+include LICENSE.txt
+recursive-include tests *.html *.jpg *.py *.css *.txt *.pdf
+exclude tests/tmp/*

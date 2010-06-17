@@ -1,0 +1,636 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<link rel="Section"	href="#control"	title="Control characters">
+<link rel="Section"	href="#dir"	title="The DIR attribute">
+<link rel="Section"	href="#bdo"	title="The BDO element">
+<link rel="Section"	href="#lrm"	title="The LRM and RLM characters">
+<link rel="Section"	href="#zwnj"	title="The ZWNJ character">
+<link rel="Section"	href="#zwj"	title="The ZWJ character">
+<link rel="Next"	href="parentheses.html"	title="Parentheses Test">
+<link rel="Start"	href="./"		title="General">
+<link rel="Up"  	href="arabic.html"	title="Arabic">
+<link rel="Validate"	href="http://validator.w3.org/check?uri=referer">
+<link rel="StyleSheet"	href="screen.css"	title="April's Style"	type="text/css">
+<style	title="April's Style"	type="text/css">
+blockquote code	{ font-weight: bold }
+blockquote p	{ font-size: 125% }
+dfn		{ font-size: 120% }
+h1		{ padding-right: 1em ; text-align: center }
+h1 span		{ direction: rtl ; unicode-bidi: bidi-override }
+img		{ border-bottom: 1px solid silver }
+table		{ margin-top: 1em }
+</style>
+<link rel="StyleSheet"	href="print.css"	title="April's Style"	type="text/css"	media="print">
+<style	title="April's Style"	type="text/css"	media="print">
+img	{ border-bottom: none }
+</style>
+<title>Bidirectional Text</title>
+<style type="text/css">
+@font-face {
+    font-family: "code2000";
+    src: url("font/code2000.ttf")
+}
+
+html, * {
+    font-family: code2000 !important;
+}
+img {
+    font-familiy: Helvetica !important;
+}
+</style>
+</head>
+
+<!-- -->
+
+<body dir="ltr">
+<h1 lang="en">Bidirectional&nbsp;text &#183; <span>Bidirectional&nbsp;text</span></h1>
+
+<p lang="en">This page contains some accompanying examples to Alan Flavell&#8217;s &#8220;<a href="flavell/text-direction.html">I18n &#8211; text direction</a>&#8221;. Examples that are supposed to display <span class="fail">incorrectly</span> (i.e. not as intended) in either Mozilla or Internet Explorer&nbsp;6 are <span class="fail">in red</span>. Read the source text to understand how it&#8217;s done!</p>
+<img src="http://www.w3.org/Icons/valid-html401.gif" style="font-familiy: Helvetica">
+
+<p lang="en">You can specify text direction by (paired) Unicode control characters, by (paired) control characters written as numeric references, by HTML markup, or by CSS properties. Control characters are restricted to plain text and are <a href="http://www.w3.org/TR/unicode-xml/#Suitable"><em>not</em> suitable for use with markup languages</a> (except <a href="http://www.w3.org/TR/unicode-xml/#Format"><code>lrm</code> and <code>rlm</code></a>). The preferred method for HTML is to use HTML markup. Use control characters written as numeric references only in places where no markup is possible, such as attribute values (<code>alt</code>, <code>title</code>, etc.). Occasionally it may be convenient to specify <a href="http://www.w3.org/TR/REC-CSS2/visuren.html#direction">text direction via CSS</a>; for example, to set the <a href="table8.css.text">direction of columns in tables</a> rather than to put a <code>dir</code> attribute into each and every <code>&lt;td></code>.</p>
+
+<p lang="en">In the following table, <code>div</code> represents any block-level element, and <code>span</code> represents any inline element.</p>
+
+<table cellspacing=0>
+<col span=4>
+<thead>
+<tr>
+	<th>Plain text</th>
+	<th class="rightalign">HTML&nbsp;4</th>
+	<th>&nbsp;</th>
+	<th>CSS&nbsp;2</th>
+</tr>
+<tr class="wide">
+	<th>control&nbsp;chars</th>
+	<th>control&nbsp;chars</th>
+	<th>markup</th>
+	<th>properties</th>
+</tr>
+</thead>
+<tbody>
+<tr class="wide">
+	<td><em class="grey">not applicable</em></td>
+	<td><em class="grey">not applicable</em></td>
+	<td><code>&lt;div</code>&nbsp;<code>dir=ltr></code><br>
+	...... <code>&lt;/div></code></td>
+	<td class="narrow"><code>direction:</code> <code>ltr;</code><br>
+	<code>unicode-bidi:</code> <code>normal</code></td>
+</tr>
+<tr class="wide">
+	<td><em class="grey">not applicable</em></td>
+	<td><em class="grey">not applicable</em></td>
+	<td><code>&lt;div</code>&nbsp;<code>dir=rtl></code><br>
+	...... <code>&lt;/div></code></td>
+	<td class="narrow"><code>direction:</code> <code>rtl;</code><br>
+	<code>unicode-bidi:</code> <code>normal</code></td>
+</tr>
+<tr class="wide">
+	<td>U+202A<br>...... U+202C</td>
+	<td><code>&amp;#8234;</code><br>
+	......&nbsp;<code>&amp;#8236;</code></td>
+	<td><code>&lt;span</code>&nbsp;<code>dir=ltr></code><br>
+	...... <code>&lt;/span></code></td>
+	<td class="narrow"><code>direction:</code> <code>ltr;</code><br>
+	<code>unicode-bidi:</code> <code>embed</code></td>
+</tr>
+<tr class="wide">
+	<td>U+202B<br>...... U+202C</td>
+	<td><code>&amp;#8235;</code><br>
+	......&nbsp;<code>&amp;#8236;</code></td>
+	<td><code>&lt;span</code>&nbsp;<code>dir=rtl></code><br>
+	...... <code>&lt;/span></code></td>
+	<td class="narrow"><code>direction:</code> <code>rtl;</code><br>
+	<code>unicode-bidi:</code> <code>embed</code></td>
+</tr>
+<tr class="wide">
+	<td>U+202D<br>...... U+202C</td>
+	<td><code>&amp;#8237;</code><br>
+	......&nbsp;<code>&amp;#8236;</code></td>
+	<td><code>&lt;bdo</code>&nbsp;<code>dir=ltr></code><br>
+	...... <code>&lt;/bdo></code></td>
+	<td class="narrow"><code>direction:</code> <code>ltr;</code><br>
+	<code>unicode-bidi:</code> <code>bidi-override</code></td>
+</tr>
+<tr class="wide">
+	<td>U+202E<br>...... U+202C</td>
+	<td><code>&amp;#8238;</code><br>
+	......&nbsp;<code>&amp;#8236;</code></td>
+	<td><code>&lt;bdo</code>&nbsp;<code>dir=rtl></code><br>
+	...... <code>&lt;/bdo></code></td>
+	<td class="narrow"><code>direction:</code> <code>rtl;</code><br>
+	<code>unicode-bidi:</code> <code>bidi-override</code></td>
+</tr>
+<tr class="wide">
+	<td>U+200E</td>
+	<td><code>&amp;lrm;</code></td>
+	<td><em class="grey">not&nbsp;applicable</em></td>
+	<td class="narrow"><em class="grey">not&nbsp;applicable</em></td>
+</tr>
+<tr class="wide">
+	<td>U+200F</td>
+	<td><code>&amp;rlm;</code></td>
+	<td><em class="grey">not&nbsp;applicable</em></td>
+	<td class="narrow"><em class="grey">not&nbsp;applicable</em></td>
+</tr>
+</tbody>
+</table>
+
+<hr class="noprint">
+
+<h2 lang="en" class="newpage">Basic test</h2>
+
+<p>If the line below is displayed as &#8220;12 11 10 9 8 7 6 5 4 3 2 1 0&#8221;, then your browser recognizes the <code>dir</code> attribute and it is probably ready for <a href="right-to-left.html">right-to-left text</a>. Preferably, the line should be right-aligned.</p>
+
+<p dir="rtl"><big>0 1 2 3 4 5 6 7 8 9 10 11 12</big></p>
+
+<h2 lang="en" id="control">Control (formatting) characters</h2>
+
+<p>The control or formatting characters U+202A to U+202E are <em>not</em> suitable for use with HTML. If they are written directly into the source text, they interfere with the left-to-right markup and make editing or even viewing the source a nightmare. Furthermore, the <a href="http://www.unicode.org/reports/tr9/">bidirectional algorithm</a> stops at newlines. It would no longer be possible to structure the source text by newlines, which could separate, for example, the paired U+202B and U+202C.</p>
+
+<p>The closing U+202C or <code>&amp;#8236;</code> is sometimes implied and may be omitted like the closing <code>&lt;/p></code> and <code>&lt;/td></code> in HTML. Nevertheless, it is safer to close always explicitly.</p>
+
+<p>To write &#8220;<a href="bidi-control-characters.html" dir="rtl"><b>&#1513;&#1489;&#1514;</b> [<i>&#1513;&#1488;&#1489;&#1506;&#1505;</i>]</a>&#8221;, you can use HTML markup with <code>&lt;span</code> <code>dir=rtl></code> or, exceptionally, write the control characters <code>&amp;#8235;</code> and <code>&amp;#8236;</code> as numeric references. Inserting the control characters U+202B and U+202C directly results in a mess when <a href="bidi-control-characters.text">viewing the source</a>.</p>
+
+<blockquote>
+<p><code>&amp;#8235;&lt;B</code> <code>lang="he">&#1513;&#1489;&#1514;&lt;/b></code>
+<code>[&lt;I>&#1513;&#1488;&#1489;&#1506;&#1505;&lt;/i>]&amp;#8236;</code></p>
+
+<p class="fail"><code>&#8235;&lt;B</code> <code>lang="he">&#1513;&#1489;&#1514;&lt;/b></code>
+<code>[&lt;I>&#1513;&#1488;&#1489;&#1506;&#1505;&lt;/i>]&#8236;</code></p>
+</blockquote>
+
+<h3 lang="en">Advice</h3>
+
+<p>Never use UTF-8-encoded control characters, but only <a href="http://www.w3.org/TR/html4/charset.html#h-5.3">character references</a> like <code>&amp;#8235;</code> and <code>&amp;rlm;</code>.</p>
+
+<hr id="dir" class="noprint">
+
+<h2 lang="en" class="newpage">The <code>dir</code> attribute</h2>
+
+<h3 lang="en">Three directional levels</h3>
+
+<p>Three or more directional levels (here: Latin > Hebrew > Latin) must be de&#64257;ned by control characters or, preferably, by HTML markup. The third line has no <code>dir</code> markup and is thus displayed as having only two directional levels.</p>
+
+<blockquote>
+<p>The words mean &#8220;Congratulations!&#8221;</p>
+
+<p>The words &#8220;&#1502;&#1494;&#1500; &#1496;&#1493;&#1489;&#8221;
+mean &#8220;Congratulations!&#8221;</p>
+
+<p class="fail">The words &#8220;&#1502;&#1494;&#1500; [mazel] &#1496;&#1493;&#1489; [tov]&#8221;
+mean &#8220;Congratulations!&#8221;</p>
+
+<p dir="ltr">The words &#8220;<span dir="rtl">&#1502;&#1494;&#1500; [mazel] &#1496;&#1493;&#1489; [tov]</span>&#8221;
+mean &#8220;Congratulations!&#8221;</p>
+
+<p dir="ltr"></p>
+</blockquote>
+
+<h3 lang="en">Letters and digits</h3>
+
+<p>Numbers, which are always written from left to right, are likely to mess with right-to-left text. For example, &#8220;<code>12</code> <code>345</code>&#8221; denote two numbers and should be displayed as &#8220;345 12&#8221;. On the other hand, &#8220;<code>12&amp;nbsp;345</code>&#8221; denotes a single number and should <em>always</em> be displayed as &#8220;12&nbsp;345&#8221;.</p>
+<!--
+(However, Internet Explorer&nbsp;5 fails here: <span dir="rtl">12&nbsp;345</span>.)
+-->
+
+<p>The &#64257;rst line is from <a href="http://google.com/intl/ur/">Google&#8217;s Urdu interface</a> with overall <code>dir=rtl</code>; the second line has proper <code>dir</code> markup. (Both lines are written in the restricted <a href="mac-urdu-alphabet">MacUrdu</a> character set.)</p>
+
+<blockquote dir="rtl">
+<p class="fail">&copy; 2004 Google &#8211;
+90&nbsp;00&nbsp;000 &#1608;&#1610;&#1576; &#1589;&#1601;&#1581;&#1575;&#1578; &#1603;&#1609; &#1578;&#1604;&#1575;&#1588; &#1607;&#1608; &#1585;&#1607;&#1609; &#1607;&#1746;</p>
+
+<p    dir="ltr">&copy; 2004 Google &#8211;
+<span dir="rtl"><span dir="ltr">90&nbsp;00&nbsp;000</span>
+&#1608;&#1610;&#1576; &#1589;&#1601;&#1581;&#1575;&#1578; &#1603;&#1609; &#1578;&#1604;&#1575;&#1588; &#1607;&#1608; &#1585;&#1607;&#1609; &#1607;&#1746;</span></p>
+
+<p    dir="ltr">&copy; 2004 Google &#8211;
+9&nbsp;000&nbsp;000 veb safah&#257;t k&#299; tal&#257;&#353; ho rah&#299; hai</p>
+</blockquote>
+
+<h3 lang="en">Advice</h3>
+
+<p>Always specify the <code>dir</code> attribute for each piece of text, starting with <code>&lt;body</code> <code>dir=ltr></code> or <code>&lt;body</code> <code>dir=rtl></code>.</p>
+
+<hr id="bdo" class="noprint">
+
+<h2 lang="en" class="newpage">The <code>bdo</code> element</h2>
+
+<h3 lang="en">Left-to-right Hebrew</h3>
+
+<p>To write Hebrew letters from left to right, you need the <code>bdo</code> element in addition to the attribute <code>dir=ltr</code>.</p>
+
+<blockquote>
+<p class="fail">The vowels <span lang="el">&#945; &#949; &#951; &#953; &#959;</span> derive from
+<span lang="he">&#1488; &#1492; &#1495; &#1497; &#1506;</span>, resp.</p>
+<p>The vowels <span lang="el">&#945; &#949; &#951; &#953; &#959;</span> derive from
+<bdo dir="ltr" lang="he">&#1488; &#1492; &#1495; &#1497; &#1506;</bdo>, resp.</p>
+</blockquote>
+
+<p>The next examples assume a right-to-left context (<code>dir=rtl</code>) such as an Arabic-language page. The date 31&nbsp;December 1999 is to be shown in <a href="http://www.w3.org/QA/Tips/iso-date">all-numeric form</a>: 1999-12-31. The &#64257;rst line in each example is the one where Internet Explorer&nbsp;6 fails.</p>
+
+<h3 lang="en">European (North African) digits</h3>
+
+<p>The ASCII hyphen is a <a href="http://www.unicode.org/reports/tr9/#Bidirectional_Character_Types">European number separator</a>. Therefore, no special markup should be necessary. However, Internet Explorer&nbsp;6 needs <code>dir=ltr</code>.</p>
+
+<blockquote dir="rtl">
+<p class="fail">1999-12-31</p>
+<p    dir="ltr">1999-12-31</p>
+</blockquote>
+
+<h3 lang="en">Arabic-Indic digits with non-breaking hyphen</h3>
+
+<p>The non-breaking hyphen (<code>&amp;#8209;</code>) is <a href="http://www.unicode.org/reports/tr9/#Bidirectional_Character_Types">another neutral</a>. Therefore, markup with <code>&lt;bdo</code> <code>dir=ltr></code> is necessary for all browsers.</p>
+
+<blockquote dir="rtl">
+<p   class="fail">&#1633;&#1641;&#1641;&#1641;&#8209;&#1633;&#1634;&#8209;&#1635;&#1633;</p>
+<p><bdo dir="ltr">&#1633;&#1641;&#1641;&#1641;&#8209;&#1633;&#1634;&#8209;&#1635;&#1633;</bdo></p>
+</blockquote>
+
+<h3 lang="en">Arabic-Indic digits with slash</h3>
+
+<p>The traditional Arabic date format calls for the slash as separator and the suf&#64257;x &#1605; (m&#299;l&#257;d = birth), meaning &#8220;AD&#8221;. The slash is a <a href="http://www.unicode.org/reports/tr9/#Bidirectional_Character_Types">common number separator</a>. Therefore, no special markup should be necessary. However, Internet Explorer&nbsp;6 needs <code>&lt;bdo</code> <code>dir=ltr></code>.</p>
+
+<blockquote dir="rtl">
+<p   class="fail">&#1633;&#1641;&#1641;&#1641;/&#1633;&#1634;/&#1635;&#1633;&nbsp;&#1605;</p>
+<p><bdo dir="ltr">&#1633;&#1641;&#1641;&#1641;/&#1633;&#1634;/&#1635;&#1633;</bdo>&nbsp;&#1605;</p>
+</blockquote>
+
+<h3 lang="en">Advice</h3>
+
+<p>Use the attribute <code>dir=ltr</code> with European digits and the tag <code>&lt;bdo</code> <code>dir=ltr></code> with Arabic-Indic digits.</p>
+
+<hr id="lrm" class="noprint">
+
+<h2 lang="en" class="newpage">The <code>lrm</code> and <code>rlm</code> characters</h2>
+
+<p>The left-to-right mark (<code>&amp;lrm;</code> = <code>&amp;#8206;</code>) and the right-to-left mark (<code>&amp;rlm;</code> = <code>&amp;#8207;</code>) are alternative ways to specify the direction of neutral characters such as punctuation marks or spaces. The above examples are rewritten here using <code>&amp;lrm;</code>.</p>
+
+<h3 lang="en">Left-to-right Hebrew</h3>
+
+<blockquote>
+<p class="fail">The vowels <span lang="el">&#945; &#949; &#951; &#953; &#959;</span> derive from
+<span lang="he">&#1488; &#1492; &#1495; &#1497; &#1506;</span>, resp.</p>
+<p>The vowels <span lang="el">&#945; &#949; &#951; &#953; &#959;</span> derive from
+<span lang="he">&#1488;&lrm; &#1492;&lrm; &#1495;&lrm; &#1497;&lrm; &#1506;</span>, resp.</p>
+</blockquote>
+
+<h3 lang="en">European (North African) digits</h3>
+
+<blockquote dir="rtl">
+<p class="fail">1999-12-31</p>
+<p>&lrm;1999-12-31&lrm;</p>
+</blockquote>
+
+<h3 lang="en">Arabic-Indic digits with non-breaking hyphen</h3>
+
+<blockquote dir="rtl">
+<p class="fail">&#1633;&#1641;&#1641;&#1641;&#8209;&#1633;&#1634;&#8209;&#1635;&#1633;</p>
+<p>&#1633;&#1641;&#1641;&#1641;&lrm;&#8209;&lrm;&#1633;&#1634;&lrm;&#8209;&lrm;&#1635;&#1633;</p>
+</blockquote>
+
+<h3 lang="en">Arabic-Indic digits with slash</h3>
+
+<blockquote dir="rtl">
+<p class="fail">&#1633;&#1641;&#1641;&#1641;/&#1633;&#1634;/&#1635;&#1633;&nbsp;&#1605;</p>
+<p>&#1633;&#1641;&#1641;&#1641;&lrm;/&lrm;&#1633;&#1634;&lrm;/&lrm;&#1635;&#1633;&nbsp;&#1605;</p>
+</blockquote>
+
+<h3 lang="en">Letters and digits</h3>
+
+<blockquote dir="rtl">
+<p class="fail">&copy; 2004 Google &#8211;
+90&nbsp;00&nbsp;000 &#1608;&#1610;&#1576; &#1589;&#1601;&#1581;&#1575;&#1578; &#1603;&#1609; &#1578;&#1604;&#1575;&#1588; &#1607;&#1608; &#1585;&#1607;&#1609; &#1607;&#1746;</p>
+
+<p dir="ltr">&copy; 2004 Google &#8211;
+&rlm;90&nbsp;00&nbsp;000 &#1608;&#1610;&#1576; &#1589;&#1601;&#1581;&#1575;&#1578; &#1603;&#1609; &#1578;&#1604;&#1575;&#1588; &#1607;&#1608; &#1585;&#1607;&#1609; &#1607;&#1746;</p>
+
+<p dir="ltr">&copy; 2004 Google &#8211;
+&rlm;9000000 &#1608;&#1610;&#1576; &#1589;&#1601;&#1581;&#1575;&#1578; &#1603;&#1609; &#1578;&#1604;&#1575;&#1588; &#1607;&#1608; &#1585;&#1607;&#1609; &#1607;&#1746;</p>
+</blockquote>
+
+<p>The second line does not work in Internet Explorer&nbsp;5, which needs a number without spaces. This example shows that the explicit markup with the <code>dir</code> attribute is more reliable than the implicit <code>&amp;lrm;</code> and <code>&amp;rlm;</code> marks.</p>
+
+<hr id="zwnj" class="noprint">
+
+<h2 lang="en" class="newpage">The <code>zwnj</code> character</h2>
+
+<p>The zero-width non-joiner (<code>&amp;zwnj;</code> = <code>&amp;#8204;</code>) is necessary for writing Persian where certain af&#64257;xes and compound words do not join. It is shown by a hyphen in the transliterated words below.</p>
+
+<h3 lang="en">Persian plurals</h3>
+
+<table class="sample">
+<tr>
+	<td dir="rtl" lang="fa">&#1607;&#1601;&#1578;&#1607;</td>
+	<td>hafteh</td>
+	<td>week</td>
+</tr>
+<tr>
+	<td dir="rtl" lang="fa">&#1607;&#1601;&#1578;&#1607;&zwnj;&#1607;&#1575;</td>
+	<td>hafteh-h&#257;</td>
+	<td>weeks</td>
+</tr>
+<tr class="fail">
+	<td dir="rtl" lang="fa">&#1607;&#1601;&#1578;&#1607;&#1607;&#1575;</td>
+	<td>haftehh&#257;</td>
+	<td><em>wrong</em></td>
+<tr><td colspan=3></td></tr>
+<tr>
+	<td dir="rtl" lang="fa">&#1605;&#1608;&#1586;&#1607;</td>
+	<td>m&#363;zeh</td>
+	<td>museum</td>
+</tr>
+<tr>
+	<td dir="rtl" lang="fa">&#1605;&#1608;&#1586;&#1607;&zwnj;&#1607;&#1575;</td>
+	<td>m&#363;zeh-h&#257;</td>
+	<td>museums</td>
+</tr>
+<tr class="fail">
+	<td dir="rtl" lang="fa">&#1605;&#1608;&#1586;&#1607;&#1607;&#1575;</td>
+	<td>m&#363;zehh&#257;</td>
+	<td><em>wrong</em></td>
+</tr>
+</table>
+
+<h3 lang="en">Compound words</h3>
+
+<table class="sample">
+<tr>
+	<td dir="rtl" lang="fa">&#1587;&#1607;</td>
+	<td>seh</td>
+	<td>three</td>
+</tr>
+<tr>
+	<td dir="rtl" lang="fa">&#1587;&#1607;&zwnj;&#1588;&#1606;&#1576;&#1607;</td>
+	<td>seh-&#353;anbeh</td>
+	<td>Tuesday</td>
+</tr>
+<tr class="fail">
+	<td dir="rtl" lang="fa">&#1587;&#1607;&#1588;&#1606;&#1576;&#1607;</td>
+	<td>seh&#353;anbeh</td>
+	<td><em>wrong</em></td>
+</tr>
+<tr><td colspan=3></td></tr>
+<tr>
+	<td dir="rtl" lang="fa">&#1585;&#1575;&#1607;</td>
+	<td>r&#257;h</td>
+	<td>way, road</td>
+</tr>
+<tr>
+	<td dir="rtl" lang="fa">&#1585;&#1575;&#1607;&zwnj;&#1570;&#1607;&#1606;</td>
+	<td>r&#257;h-&#257;han</td>
+	<td>railway</td>
+</tr>
+<tr class="fail">
+	<td dir="rtl" lang="fa">&#1585;&#1575;&#1607;&#1570;&#1607;&#1606;</td>
+	<td>r&#257;h&#8217;&#257;han</td>
+	<td><em>wrong</em></td>
+</tr>
+<tr><td colspan=3></td></tr>
+<tr>
+	<td dir="rtl" lang="fa">&#1606;&#1585;&#1605;</td>
+	<td>narm</td>
+	<td>soft</td>
+</tr>
+<tr>
+	<td dir="rtl" lang="fa">&#1606;&#1585;&#1605;&zwnj;&#1575;&#1601;&#1586;&#1575;&#1585;</td>
+	<td>narm-afz&#257;r</td>
+	<td>software</td>
+</tr>
+<tr class="fail">
+	<td dir="rtl" lang="fa">&#1606;&#1585;&#1605;&#1575;&#1601;&#1586;&#1575;&#1585;</td>
+	<td>narm&#257;fz&#257;r</td>
+	<td><em>wrong</em></td>
+</tr>
+</table>
+
+<hr id="zwj" class="noprint">
+
+<h2 lang="en" class="newpage">The <code>zwj</code> character</h2>
+
+<p>The zero-width joiner (<code>&amp;zwj;</code> = <code>&amp;#8205;</code>) is necessary to show isolated glyphs of the <a href="arabic-alphabet">Arabic letters</a>. At least Mozilla needs it when Arabic letters are separated by HTML markup. (The zero-width joiner does not work with earlier browser versions such as Netscape&nbsp;7.0 or Internet Explorer&nbsp;5.)</p>
+
+<h3 lang="en">Markup inside Arabic text</h3>
+
+<table class="sample">
+<col span=3>
+<tr>
+	<td dir="rtl" lang="ar"><span>&#1580;&#1587;&zwj;</span>&zwj;&#1610;&zwj;<span>&zwj;&#1605;</span></td>
+	<td><span>j</span>a<span>s</span>&#299;<span>m</span></td>
+	<td lang="fr">gros</td>
+</tr>
+<tr>
+	<td dir="rtl" lang="ar"><span>&#1580;&#1587;&zwj;</span>&zwj;&#1575;<span>&#1605;</span></td>
+	<td><span>j</span>i<span>s</span>&#257;<span>m</span></td>
+	<td lang="fr">gros <i>pl.</i></td>
+</tr>
+<tr>
+	<td dir="rtl" lang="ar"><span>&#1580;&#1587;&zwj;</span>&zwj;&#1610;&zwj;<span>&zwj;&#1605;&zwj;</span>&zwj;&#1577;</td>
+	<td><span>j</span>a<span>s</span>&#299;<span>m</span>ah</td>
+	<td lang="fr">grosse</td>
+</tr>
+<tr>
+	<td dir="rtl" lang="ar"><span>&#1580;&#1587;&zwj;</span>&zwj;&#1610;&zwj;<span>&zwj;&#1605;&zwj;</span>&zwj;&#1575;&#1578;</td>
+	<td><span>j</span>a<span>s</span>&#299;<span>m</span>&#257;t</td>
+	<td lang="fr">grosses</td>
+</tr>
+<tr><td colspan=3></td></tr>
+<tr>
+	<td dir="rtl" lang="ar">&#1571;<span>&#1580;&#1587;&#1605;</span></td>
+	<td>a<span>js</span>a<span>m</span></td>
+	<td lang="fr">plus gros(se(s))</td>
+</tr>
+<tr><td colspan=3></td></tr>
+<tr>
+	<td dir="rtl" lang="ar">&#1575;&#1604;&#1571;<span>&#1580;&#1587;&#1605;</span></td>
+	<td>al-a<span>js</span>a<span>m</span></td>
+	<td lang="fr">le plus gros</td>
+</tr>
+<tr>
+	<td dir="rtl" lang="ar">&#1575;&#1604;&#1571;<span>&#1580;&zwj;</span>&zwj;&#1575;<span>&#1587;&#1605;</span></td>
+	<td>al-a<span>j</span>&#257;<span>s</span>i<span>m</span></td>
+	<td lang="fr">les plus gros</td>
+</tr>
+<tr>
+	<td dir="rtl" lang="ar">&#1575;&#1604;&zwj;<span>&zwj;&#1580;&#1587;&#1605;&zwj;</span>&zwj;&#1609;</td>
+	<td>al-<span>j</span>u<span>sm</span>&#257;</td>
+	<td lang="fr">la plus grosse</td>
+</tr>
+<tr>
+	<td dir="rtl" lang="ar">&#1575;&#1604;&zwj;<span>&zwj;&#1580;&#1587;&#1605;&zwj;</span>&zwj;&#1610;&#1575;&#1578;</td>
+	<td>al-<span>j</span>u<span>sm</span>ay&#257;t</td>
+	<td lang="fr">les plus grosses</td>
+</tr>
+</table>
+
+<h3 lang="en">Isolated glyphs</h3>
+
+<blockquote dir="rtl">
+<p class="fail"><dfn
+title=" nun ">&#1606;</dfn> &#183; <dfn
+title=" sin ">&#1587;</dfn> &#183; <dfn
+title=" ta " >&#1578;</dfn> &#183; <dfn
+title=" &#8216;ayn ">&#1593;</dfn> &#183; <dfn
+title=" lam ">&#1604;</dfn> &#183; <dfn
+title=" ya " >&#1610;</dfn> &#183; <dfn
+title=" qaf ">&#1602;</dfn>
+&nbsp;&#8592;&nbsp;
+<dfn
+title=" nun ">&#1606;</dfn> <dfn
+title=" sin ">&#1587;</dfn> <dfn
+title=" ta " >&#1578;</dfn> <dfn
+title=" &#8216;ayn ">&#1593;</dfn> <dfn
+title=" lam ">&#1604;</dfn> <dfn
+title=" ya " >&#1610;</dfn> <dfn
+title=" qaf ">&#1602;</dfn>
+&nbsp;&#8592;&nbsp;
+<span lang="ar"><dfn
+title=" nun ">&#1606;</dfn><dfn
+title=" sin ">&#1587;</dfn><dfn
+title=" ta " >&#1578;</dfn><dfn
+title=" &#8216;ayn ">&#1593;</dfn><dfn
+title=" lam ">&#1604;</dfn><dfn
+title=" ya " >&#1610;</dfn><dfn
+title=" qaf ">&#1602;</dfn></span></p>
+
+<!-- nasta'liq -->
+
+<p><dfn
+title=" nun ">&#1606;</dfn> &#183; <dfn
+title=" sin ">&#1587;</dfn> &#183; <dfn
+title=" ta " >&#1578;</dfn> &#183; <dfn
+title=" &lrm;&#8216;ayn ">&#1593;</dfn> &#183; <dfn
+title=" lam ">&#1604;</dfn> &#183; <dfn
+title=" ya " >&#1610;</dfn> &#183; <dfn
+title=" qaf ">&#1602;</dfn>
+&nbsp;&#8592;&nbsp;
+<dfn
+title=" nun ">&#1606;&zwj;</dfn> <dfn
+title=" sin ">&zwj;&#1587;&zwj;</dfn> <dfn
+title=" ta " >&zwj;&#1578;&zwj;</dfn> <dfn
+title=" &lrm;&#8216;ayn ">&zwj;&#1593;&zwj;</dfn> <dfn
+title=" lam ">&zwj;&#1604;&zwj;</dfn> <dfn
+title=" ya " >&zwj;&#1610;&zwj;</dfn> <dfn
+title=" qaf " >&zwj;&#1602;</dfn>
+&nbsp;&#8592;&nbsp;
+<span lang="ar"><dfn
+title=" nun ">&#1606;&zwj;</dfn><dfn
+title=" sin ">&zwj;&#1587;&zwj;</dfn><dfn
+title=" ta " >&zwj;&#1578;&zwj;</dfn><dfn
+title=" &lrm;&#8216;ayn ">&zwj;&#1593;&zwj;</dfn><dfn
+title=" lam ">&zwj;&#1604;&zwj;</dfn><dfn
+title=" ya " >&zwj;&#1610;&zwj;</dfn><dfn
+title=" qaf ">&zwj;&#1602;</dfn></span></p>
+</blockquote>
+
+<p>On the other hand, Internet Explorer&nbsp;6 joins letters even when they are separated by markup. Therefore you still need an additional <code>&amp;zwnj;</code> if the letters shall not join.</p>
+
+<blockquote dir="rtl" lang="fa">
+<p class="fail"><dfn
+title="three">&#1587;&#1607;</dfn><dfn
+title="thousand">&#1607;&#1586;&#1575;&#1585;</dfn>&nbsp;&#1548;
+<dfn
+title="ten">&#1583;&#1607;</dfn><dfn
+title="thousand">&#1607;&#1586;&#1575;&#1585;</dfn></p>
+
+<p><dfn
+title="three">&#1587;&#1607;</dfn>&zwnj;<dfn
+title="thousand">&#1607;&#1586;&#1575;&#1585;</dfn>&nbsp;&#1548;
+<dfn
+title="ten">&#1583;&#1607;</dfn>&zwnj;<dfn
+title="thousand">&#1607;&#1586;&#1575;&#1585;</dfn></p>
+</blockquote>
+
+<h3 lang="en" class="newpage">Urdu aspiration</h3>
+
+<p>The zero-width joiner can also be used to write Urdu text in and for the restricted <a href="mac-urdu-alphabet">MacUrdu</a> character set where the <a href="urdu-alphabet#x06BE">two-eyed he</a> (<code>&amp;#1726;</code>) is not available.</p>
+
+<table class="sample">
+<tr>
+	<td dir="rtl" lang="ur">&#1607;&#1601;&#1578;&#1607;</td>
+	<td>haftah</td>
+	<td>week</td>
+</tr>
+<tr class="fail">
+	<td dir="rtl" lang="ur">&#1607;&#1575;&#1578;&#1607;</td>
+	<td>h&#257;th</td>
+	<td><em>wrong</em></td>
+</tr>
+<tr>
+	<td dir="rtl" lang="ur">&#1607;&#1575;&#1578;&#1607;&zwj;</td>
+	<td>h&#257;th</td>
+	<td>hand</td>
+</tr>
+<tr><td colspan=3></td></tr>
+<tr>
+	<td dir="rtl" lang="ur">&#1583;&#1610;&#1583;&#1607;</td>
+	<td>d&#299;dah</td>
+	<td>eye</td>
+</tr>
+<tr class="fail">
+	<td dir="rtl" lang="ur">&#1583;&#1608;&#1583;&#1607;</td>
+	<td>d&#363;dh</td>
+	<td><em>wrong</em></td>
+</tr>
+<tr>
+	<td dir="rtl" lang="ur">&#1583;&#1608;&#1583;&#1607;&zwj;</td>
+	<td>d&#363;dh</td>
+	<td>milk</td>
+</tr>
+</table>
+
+<h3 lang="en">Sindhi non-connecting he</h3>
+
+<p>The sequence <code>&amp;zwj;&amp;zwnj;</code> is needed for Sindhi where the initial form of the <a href="http://www.linguistics.uiuc.edu/sindhi/script/50-h2/">letter he</a> (&#65259;) is used as consonant, while the connecting form (&#65260;) is reserved for aspiration.</p>
+
+<table class="sample">
+<tr>
+	<td dir="rtl" lang="sd">&#1580;&#1607;&#1606;&#1711;&#1604;</td>
+	<td>jhangalu</td>
+	<td>jungle</td>
+</tr>
+<tr>
+	<td dir="rtl" lang="sd">&#1711;&#1607;&#1585;</td>
+	<td>gharu</td>
+	<td>house</td>
+</tr>
+<tr><td colspan=3></td></tr>
+<tr class="fail">
+	<td dir="rtl" lang="sd">&#1605;&#1606;&#1607;&#1606;</td>
+	<td>munhun</td>
+	<td><em>wrong</em></td>
+</tr>
+<tr>
+	<td dir="rtl" lang="sd">&#1605;&#1606;&zwj;&zwnj;&#1607;&#1606;</td>
+	<td>munhun</td>
+	<td>mouth</td>
+</tr>
+<tr><td colspan=3></td></tr>
+<tr class="fail">
+	<td dir="rtl" lang="sd">&#1608;&#1610;&#1607;</td>
+	<td>v&#299;ha</td>
+	<td><em>wrong</em></td>
+</tr>
+<tr>
+	<td dir="rtl" lang="sd">&#1608;&#1610;&zwj;&zwnj;&#1607;&zwj;</td>
+	<td>v&#299;ha</td>
+	<td>twenty</td>
+</tr>
+</table>
+
+<h3 lang="en">Further reading</h3>
+
+<p><a href="http://www.laits.utexas.edu/persian/persianword/persianwp.htm">Persian word processing</a>
+&nbsp; / &nbsp;
+<a href="http://www.laits.utexas.edu/persian/persianword/zwnj.htm">ZWNJ</a>
+&nbsp; &#8211; &nbsp;
+<a href="http://www.laits.utexas.edu/persian/persianword/zwj.htm">ZWJ</a></p>
+
+<hr>
+
+<p lang="en"><a href="http://validator.w3.org/check?uri=referer">xx</a>
+<small><a href="./">Andreas Prilop</a><br>30 August 2007</small></p>
+
+</body>
+</html>

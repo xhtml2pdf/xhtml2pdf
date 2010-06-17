@@ -1,0 +1,1845 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<title>SELFHTML: HTML/XHTML / Referenz /HTML-Zeichenreferenz</title>
+<link rel="stylesheet" type="text/css" href="../../src/selfhtml.css">
+<meta name="description"    content="Welche Zeichen in HTML notiert werden dürfen, und wie internationale Zeichen umschrieben werden können.">
+<meta name="keywords"       content="SELFHTML, HTML, XHTML, Zeichen, benannte Zeichen, Entities, ISO 8859-1, Latin, griechische Buchstaben, mathematische Symbole, technische Symbole, Pfeilsymbole, Symbole, lateinisch, erweitert, Interpunktion, diakritische">
+<meta name="author"         content="Redaktion SELFHTML, selfhtml81@selfhtml.org">
+<meta name="DC.Publisher"   content="Stefan Münz">
+<meta name="DC.Date"        content="2005-10-09T16:59:23+02:00">
+<meta name="DC.Identifier"  content="http://de.selfhtml.org/html/referenz/zeichen.htm">
+<meta name="DC.Language"    content="de">
+<meta name="DC.Rights"      content="../../editorial/copyright.htm">
+<meta name="DC.Date.created" content="2001-10-27T08:00+01:00">
+<meta name="SELF.Pagetype"  content="chapter">
+
+<link rel="shortcut icon" type="image/x-icon" href="../../src/favicon.ico">
+<link rel="author" title="Impressum" href="../../editorial/impressum.htm">
+<link rel="contents" title="Inhaltsverzeichnis" href="../../navigation/inhalt.htm">
+<link rel="index" title="Stichwortverzeichnis" href="../../navigation/stichwort.htm">
+<link rel="search" title="Suche" href="../../navigation/suche/index.htm">
+<link rel="help" title="Hilfe" href="../../editorial/index.htm">
+<link rel="copyright" title="Urheberrecht" href="../../editorial/copyright.htm">
+<link rel="top" title="SELFHTML" href="../../index.htm">
+<link rel="up" title="HTML-Referenz" href="index.htm">
+<link rel="next" title="HTML-Varianten (Strict, Transitional, Frameset)" href="varianten.htm">
+<link rel="prev" title="HTML-Attribut-Referenz" href="attribute.htm">
+<link rel="first" title="HTML-Elementreferenz" href="elemente.htm">
+<link rel="last" title="HTML-Varianten (Strict, Transitional, Frameset)" href="varianten.htm">
+</head>
+<body>
+
+<table cellpadding="4" cellspacing="0" border="0" width="100%">
+
+<tr>
+<td colspan="2" class="nav"><a class="an" name="top"><img src="../../src/refkap.gif" width="16" height="13" alt="Teil von"></a> <a href="../../index.htm">SELFHTML</a>/<a href="../../navigation/index.htm" target="_parent" class="navh">Navigationshilfen</a> <img src="../../src/refkap.gif" width="16" height="13" alt="Teil von">&nbsp;<a href="../index.htm">HTML/XHTML</a> <img src="../../src/refkap.gif" width="16" height="13" alt="Teil von">&nbsp;<a href="index.htm">HTML-Referenz</a></td>
+</tr>
+<tr>
+<td class="doc" width="110"><a href="../../index.htm"><img src="../../src/logo.gif" width="106" height="109" border="0" alt="SELFHTML"></a></td>
+<td class="docbot" width="100%"><h1 class="ph1">HTML-Zeichenreferenz</h1></td>
+</tr>
+<tr>
+
+<td class="doctop">
+<img src="../../src/dokx.gif" width="30" height="20" vspace="6" alt="Informationsseite">
+</td>
+<td valign="top">
+<p>
+<img src="../../src/down.gif" width="14" height="10" alt="nach unten">&nbsp;<a href="#allgemeines">Allgemeines zur HTML-Zeichenreferenz</a><br>
+<img src="../../src/down.gif" width="14" height="10" alt="nach unten">&nbsp;<a href="#benannte_html">Benannte Zeichen für HTML-eigene Zeichen</a><br>
+<img src="../../src/down.gif" width="14" height="10" alt="nach unten">&nbsp;<a href="#benannte_iso8859_1">Benannte Zeichen für die Kodierung ISO 8859-1</a><br>
+<img src="../../src/down.gif" width="14" height="10" alt="nach unten">&nbsp;<a href="#benannte_griechisch">Benannte Zeichen für griechische Buchstaben</a><br>
+<img src="../../src/down.gif" width="14" height="10" alt="nach unten">&nbsp;<a href="#benannte_mathematische">Benannte Zeichen für mathematische Symbole</a><br>
+<img src="../../src/down.gif" width="14" height="10" alt="nach unten">&nbsp;<a href="#benannte_technische">Benannte Zeichen für technische Symbole</a><br>
+
+<img src="../../src/down.gif" width="14" height="10" alt="nach unten">&nbsp;<a href="#benannte_pfeile">Benannte Zeichen für Pfeil-Symbole</a><br>
+<img src="../../src/down.gif" width="14" height="10" alt="nach unten">&nbsp;<a href="#benannte_diverse">Benannte Zeichen für diverse Symbole</a><br>
+<img src="../../src/down.gif" width="14" height="10" alt="nach unten">&nbsp;<a href="#benannte_lateinisch_erweitert">Benannte Zeichen lateinisch erweitert</a><br>
+<img src="../../src/down.gif" width="14" height="10" alt="nach unten">&nbsp;<a href="#benannte_interpunktion">Benannte Zeichen für Interpunktion</a><br>
+<img src="../../src/down.gif" width="14" height="10" alt="nach unten">&nbsp;<a href="#benannte_diakritische">Benannte Zeichen diakritische Zeichen</a><br>
+</p>
+</td>
+</tr><tr><td colspan="2" class="doc">&nbsp;<a href="#bottom"><img src="../../src/down.gif" width="14" height="10" border="0" alt="nach unten"></a>&nbsp;</td></tr>
+</table>
+
+
+
+<h2><a class="an" name="allgemeines">Allgemeines äöü zur HTML-Zeichenreferenz</a></h2>
+
+<p>In der Zeichenreferenz geht es um Zeichen, die zwischen dem Anfangs- und dem End-Tag eines HTML-Elements als Text stehen können (siehe auch <img src="../../src/dok.gif" width="15" height="10" alt="Seite">&nbsp;<a href="elemente.htm#pcdata">#PCDATA</a>), sowie um Zeichen, die bei Wertzuweisungen an viele Attribute notiert werden können (siehe auch <img src="../../src/dok.gif" width="15" height="10" alt="Seite">&nbsp;<a href="attribute.htm#cdata">#CDATA</a>). Bei einem HTML-Konstrukt wie <code>&lt;p&nbsp;class="Aussage"&gt;Zeichen können viel bedeuten&lt;/p&gt;</code> ist zum einen die Zeichenfolge <code>Zeichen können viel bedeuten</code> relevant, und zum anderen die Zeichenfolge <code>Aussage</code>.</p>
+
+<p>Seit HTML 4.0 kann jedes Zeichen aus dem Zeichenvorrat nach ISO 10646 (deckungsgleich mit dem Unicode-Standard) notiert werden. Beliebige Zeichen aus diesem gewaltigen Zeichenvorrat können durch eine spezielle numerische Notation erzeugt werden. Das Schema für solche numerischen Notationen lautet:<br> <code>&amp;#[x][Nummer];</code><br>
+Beispiele einer Notation in HTML:<br>
+<code>&amp;#945;</code><br>
+<code>&amp;#x3B1;</code><br>
+Das <code>x</code> notieren Sie dann, wenn Sie die Nummer hexadezimal angeben. Bei dezimaler Angabe lassen Sie das <code>x</code> weg. Die Unicode-Nummer eines gewünschten Zeichens können Sie aus den Codetabellen ermitteln (siehe Abschnitt über <img src="../../src/dok.gif" width="15" height="10" alt="Seite">&nbsp;<a href="../../inter/unicode.htm">das Unicode-System</a>).</p>
+
+<p>Neben der numerischen Unicode-Notation gibt es in HTML für häufiger verwendete Sonderzeichen auch so genannte <b>named entities</b>, benannte Zeichen. Alle benannten Zeichen werden nach dem folgenden Schema notiert:<br><code>&amp;[Name];</code><br>
+Beispiel einer Notation in HTML:<br>
+<code>&amp;alpha;</code><br>
+Die verfügbaren benannten Zeichen können Sie den folgenden Tabellen entnehmen.</p>
+
+<p>In der jeweils ersten Spalte der Tabellen wird versucht, das Zeichen mit Hilfe des HTML-Namens darzustellen. Ein WWW-Browser muss jedoch HTML 4.0 interpretieren, und auch dann kann er nur solche Zeichen darstellen, für die er eine geeignete Schriftart vorfindet.</p>
+
+
+<p class="doc"><a href="#top"><img src="../../src/up.gif" width="14" height="10" border="0" alt="nach oben"></a><a href="#bottom"><img src="../../src/down.gif" width="14" height="10" border="0" alt="nach unten"></a></p>
+
+
+
+<h2><a class="an" name="benannte_html">Benannte Zeichen für HTML-eigene Zeichen</a></h2>
+
+<table class="reftable" cellpadding="3" cellspacing="0" border="1" width="100%">
+
+<tr>
+<th width="50">Zeichen</th>
+<th width="350">Beschreibung</th>
+<th>Name in HTML</th>
+
+<th>Unicode in HTML</th>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">"</span></td>
+<td class="tabxpl">Anführungszeichen oben</td>
+<td class="code"><code>&amp;quot;</code></td>
+<td class="code"><code>&amp;#34;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&amp;</span></td>
+<td class="tabxpl">Ampersand-Zeichen, kaufmännisches Und</td>
+
+<td class="code"><code>&amp;amp;</code></td>
+<td class="code"><code>&amp;#38;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&lt;</span></td>
+<td class="tabxpl">öffnende spitze Klammer</td>
+<td class="code"><code>&amp;lt;</code></td>
+<td class="code"><code>&amp;#60;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&gt;</span></td>
+<td class="tabxpl">schließende spitze Klammer</td>
+
+<td class="code"><code>&amp;gt;</code></td>
+<td class="code"><code>&amp;#62;</code></td>
+</tr>
+</table>
+
+&nbsp;
+
+<p class="doc"><a href="#top"><img src="../../src/up.gif" width="14" height="10" border="0" alt="nach oben"></a><a href="#bottom"><img src="../../src/down.gif" width="14" height="10" border="0" alt="nach unten"></a></p>
+
+
+
+<h2><a class="an" name="benannte_iso8859_1">Benannte Zeichen für die Kodierung ISO 8859-1</a></h2>
+
+<p>siehe auch: <img src="../../src/dok.gif" width="15" height="10" alt="Seite">&nbsp;<a href="../../inter/zeichenkodierungen.htm#iso8859">Codetabelle der Kodierung ISO 8859-1</a>. Die HTML-Namen dieser Zeichen sind seit HTML 3.2 verfügbar.</p>
+
+<table class="reftable" cellpadding="3" cellspacing="0" border="1" width="100%">
+
+<tr>
+<th width="50">Zeichen</th>
+<th width="350">Beschreibung</th>
+<th>Name in HTML</th>
+<th>Unicode in HTML</th>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&nbsp;</span></td>
+<td class="tabxpl">Erzwungenes Leerzeichen</td>
+
+<td class="code"><code>&amp;nbsp;</code></td>
+<td class="code"><code>&amp;#160;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&iexcl;</span></td>
+<td class="tabxpl">umgekehrtes Ausrufezeichen</td>
+<td class="code"><code>&amp;iexcl;</code></td>
+<td class="code"><code>&amp;#161;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&cent;</span></td>
+<td class="tabxpl">Cent-Zeichen</td>
+<td class="code"><code>&amp;cent;</code></td>
+
+<td class="code"><code>&amp;#162;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&pound;</span></td>
+<td class="tabxpl">Pfund-Zeichen</td>
+<td class="code"><code>&amp;pound;</code></td>
+<td class="code"><code>&amp;#163;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&curren;</span></td>
+<td class="tabxpl">Währungszeichen</td>
+<td class="code"><code>&amp;curren;</code></td>
+<td class="code"><code>&amp;#164;</code></td>
+
+</tr><tr>
+<td class="doctop"><span class="unicode">&yen;</span></td>
+<td class="tabxpl">Yen-Zeichen</td>
+<td class="code"><code>&amp;yen;</code></td>
+<td class="code"><code>&amp;#165;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&brvbar;</span></td>
+<td class="tabxpl">durchbrochener Strich</td>
+<td class="code"><code>&amp;brvbar;</code></td>
+<td class="code"><code>&amp;#166;</code></td>
+</tr><tr>
+
+<td class="doctop"><span class="unicode">&sect;</span></td>
+<td class="tabxpl">Paragraph-Zeichen</td>
+<td class="code"><code>&amp;sect;</code></td>
+<td class="code"><code>&amp;#167;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&uml;</span></td>
+<td class="tabxpl">Pünktchen oben</td>
+<td class="code"><code>&amp;uml;</code></td>
+<td class="code"><code>&amp;#168;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&copy;</span></td>
+
+<td class="tabxpl">Copyright-Zeichen</td>
+<td class="code"><code>&amp;copy;</code></td>
+<td class="code"><code>&amp;#169;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&ordf;</span></td>
+<td class="tabxpl">Ordinal-Zeichen weiblich</td>
+<td class="code"><code>&amp;ordf;</code></td>
+<td class="code"><code>&amp;#170;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&laquo;</span></td>
+<td class="tabxpl">angewinkelte Anführungszeichen links</td>
+
+<td class="code"><code>&amp;laquo;</code></td>
+<td class="code"><code>&amp;#171;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&not;</span></td>
+<td class="tabxpl">Verneinungs-Zeichen</td>
+<td class="code"><code>&amp;not;</code></td>
+<td class="code"><code>&amp;#172;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&shy;</span></td>
+<td class="tabxpl">bedingter Trennstrich</td>
+<td class="code"><code>&amp;shy;</code></td>
+
+<td class="code"><code>&amp;#173;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&reg;</span></td>
+<td class="tabxpl">Registriermarke-Zeichen</td>
+<td class="code"><code>&amp;reg;</code></td>
+<td class="code"><code>&amp;#174;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&macr;</span></td>
+<td class="tabxpl">Überstrich</td>
+<td class="code"><code>&amp;macr;</code></td>
+<td class="code"><code>&amp;#175;</code></td>
+
+</tr><tr>
+<td class="doctop"><span class="unicode">&deg;</span></td>
+<td class="tabxpl">Grad-Zeichen</td>
+<td class="code"><code>&amp;deg;</code></td>
+<td class="code"><code>&amp;#176;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&plusmn;</span></td>
+<td class="tabxpl">Plusminus-Zeichen</td>
+<td class="code"><code>&amp;plusmn;</code></td>
+<td class="code"><code>&amp;#177;</code></td>
+</tr><tr>
+
+<td class="doctop"><span class="unicode">&sup2;</span></td>
+<td class="tabxpl">Hoch-2-Zeichen</td>
+<td class="code"><code>&amp;sup2;</code></td>
+<td class="code"><code>&amp;#178;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&sup3;</span></td>
+<td class="tabxpl">Hoch-3-Zeichen</td>
+<td class="code"><code>&amp;sup3;</code></td>
+<td class="code"><code>&amp;#179;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&acute;</span></td>
+
+<td class="tabxpl">Akut-Zeichen</td>
+<td class="code"><code>&amp;acute;</code></td>
+<td class="code"><code>&amp;#180;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&micro;</span></td>
+<td class="tabxpl">Mikro-Zeichen</td>
+<td class="code"><code>&amp;micro;</code></td>
+<td class="code"><code>&amp;#181;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&para;</span></td>
+<td class="tabxpl">Absatz-Zeichen</td>
+
+<td class="code"><code>&amp;para;</code></td>
+<td class="code"><code>&amp;#182;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&middot;</span></td>
+<td class="tabxpl">Mittelpunkt</td>
+<td class="code"><code>&amp;middot;</code></td>
+<td class="code"><code>&amp;#183;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&cedil;</span></td>
+<td class="tabxpl">Häkchen unten</td>
+<td class="code"><code>&amp;cedil;</code></td>
+
+<td class="code"><code>&amp;#184;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&sup1;</span></td>
+<td class="tabxpl">Hoch-1-Zeichen</td>
+<td class="code"><code>&amp;sup1;</code></td>
+<td class="code"><code>&amp;#185;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&ordm;</span></td>
+<td class="tabxpl">Ordinal-Zeichen männlich</td>
+<td class="code"><code>&amp;ordm;</code></td>
+<td class="code"><code>&amp;#186;</code></td>
+
+</tr><tr>
+<td class="doctop"><span class="unicode">&raquo;</span></td>
+<td class="tabxpl">angewinkelte Anführungszeichen rechts</td>
+<td class="code"><code>&amp;raquo;</code></td>
+<td class="code"><code>&amp;#187;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&frac14;</span></td>
+<td class="tabxpl">ein Viertel</td>
+<td class="code"><code>&amp;frac14;</code></td>
+<td class="code"><code>&amp;#188;</code></td>
+</tr><tr>
+
+<td class="doctop"><span class="unicode">&frac12;</span></td>
+<td class="tabxpl">ein Halb</td>
+<td class="code"><code>&amp;frac12;</code></td>
+<td class="code"><code>&amp;#189;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&frac34;</span></td>
+<td class="tabxpl">drei Viertel</td>
+<td class="code"><code>&amp;frac34;</code></td>
+<td class="code"><code>&amp;#190;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&iquest;</span></td>
+
+<td class="tabxpl">umgekehrtes Fragezeichen</td>
+<td class="code"><code>&amp;iquest;</code></td>
+<td class="code"><code>&amp;#191;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&Agrave;</span></td>
+<td class="tabxpl">A mit accent grave (Gravis)</td>
+<td class="code"><code>&amp;Agrave;</code></td>
+<td class="code"><code>&amp;#192;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&Aacute;</span></td>
+<td class="tabxpl">A mit accent aigu (Akut)</td>
+
+<td class="code"><code>&amp;Aacute;</code></td>
+<td class="code"><code>&amp;#193;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&Acirc;</span></td>
+<td class="tabxpl">A mit Zirkumflex</td>
+<td class="code"><code>&amp;Acirc;</code></td>
+<td class="code"><code>&amp;#194;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&Atilde;</span></td>
+<td class="tabxpl">A mit Tilde</td>
+<td class="code"><code>&amp;Atilde;</code></td>
+
+<td class="code"><code>&amp;#195;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">Ä</span></td>
+<td class="tabxpl">A Umlaut</td>
+<td class="code"><code>&amp;Auml;</code></td>
+<td class="code"><code>&amp;#196;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&Aring;</span></td>
+<td class="tabxpl">A mit Ring</td>
+<td class="code"><code>&amp;Aring;</code></td>
+
+<td class="code"><code>&amp;#197;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&AElig;</span></td>
+<td class="tabxpl">A mit legiertem E</td>
+<td class="code"><code>&amp;AElig;</code></td>
+<td class="code"><code>&amp;#198;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&Ccedil;</span></td>
+<td class="tabxpl">C mit Häkchen</td>
+<td class="code"><code>&amp;Ccedil;</code></td>
+<td class="code"><code>&amp;#199;</code></td>
+
+</tr><tr>
+<td class="doctop"><span class="unicode">&Egrave;</span></td>
+<td class="tabxpl">E mit accent grave (Gravis)</td>
+<td class="code"><code>&amp;Egrave;</code></td>
+<td class="code"><code>&amp;#200;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&Eacute;</span></td>
+<td class="tabxpl">E mit accent aigu (Akut)</td>
+<td class="code"><code>&amp;Eacute;</code></td>
+<td class="code"><code>&amp;#201;</code></td>
+</tr><tr>
+
+<td class="doctop"><span class="unicode">&Ecirc;</span></td>
+<td class="tabxpl">E mit Zirkumflex</td>
+<td class="code"><code>&amp;Ecirc;</code></td>
+<td class="code"><code>&amp;#202;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&Euml;</span></td>
+<td class="tabxpl">E Umlaut</td>
+<td class="code"><code>&amp;Euml;</code></td>
+<td class="code"><code>&amp;#203;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&Igrave;</span></td>
+
+<td class="tabxpl">I mit accent grave (Gravis)</td>
+<td class="code"><code>&amp;Igrave;</code></td>
+<td class="code"><code>&amp;#204;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&Iacute;</span></td>
+<td class="tabxpl">I mit accent aigu (Akut)</td>
+<td class="code"><code>&amp;Iacute;</code></td>
+<td class="code"><code>&amp;#205;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&Icirc;</span></td>
+<td class="tabxpl">I mit Zirkumflex</td>
+
+<td class="code"><code>&amp;Icirc;</code></td>
+<td class="code"><code>&amp;#206;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&Iuml;</span></td>
+<td class="tabxpl">I Umlaut</td>
+<td class="code"><code>&amp;Iuml;</code></td>
+<td class="code"><code>&amp;#207;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&ETH;</span></td>
+<td class="tabxpl">großes Eth (isländisch)</td>
+<td class="code"><code>&amp;ETH;</code></td>
+
+<td class="code"><code>&amp;#208;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&Ntilde;</span></td>
+<td class="tabxpl">N mit Tilde</td>
+<td class="code"><code>&amp;Ntilde;</code></td>
+<td class="code"><code>&amp;#209;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&Ograve;</span></td>
+<td class="tabxpl">O mit accent grave (Gravis)</td>
+<td class="code"><code>&amp;Ograve;</code></td>
+<td class="code"><code>&amp;#210;</code></td>
+
+</tr><tr>
+<td class="doctop"><span class="unicode">&Oacute;</span></td>
+<td class="tabxpl">O mit accent aigu (Akut)</td>
+<td class="code"><code>&amp;Oacute;</code></td>
+<td class="code"><code>&amp;#211;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&Ocirc;</span></td>
+<td class="tabxpl">O mit Zirkumflex</td>
+<td class="code"><code>&amp;Ocirc;</code></td>
+<td class="code"><code>&amp;#212;</code></td>
+</tr><tr>
+
+<td class="doctop"><span class="unicode">&Otilde;</span></td>
+<td class="tabxpl">O mit Tilde</td>
+<td class="code"><code>&amp;Otilde;</code></td>
+<td class="code"><code>&amp;#213;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">Ö</span></td>
+<td class="tabxpl">O Umlaut</td>
+<td class="code"><code>&amp;Ouml;</code></td>
+<td class="code"><code>&amp;#214;</code></td>
+</tr><tr>
+
+<td class="doctop"><span class="unicode">&times;</span></td>
+<td class="tabxpl">Mal-Zeichen</td>
+<td class="code"><code>&amp;times;</code></td>
+<td class="code"><code>&amp;#215;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&Oslash;</span></td>
+<td class="tabxpl">O mit Schrägstrich</td>
+<td class="code"><code>&amp;Oslash;</code></td>
+<td class="code"><code>&amp;#216;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&Ugrave;</span></td>
+
+<td class="tabxpl">U mit accent grave (Gravis)</td>
+<td class="code"><code>&amp;Ugrave;</code></td>
+<td class="code"><code>&amp;#217;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&Uacute;</span></td>
+<td class="tabxpl">U mit accent aigu (Akut)</td>
+<td class="code"><code>&amp;Uacute;</code></td>
+<td class="code"><code>&amp;#218;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&Ucirc;</span></td>
+<td class="tabxpl">U mit Zirkumflex</td>
+
+<td class="code"><code>&amp;Ucirc;</code></td>
+<td class="code"><code>&amp;#219;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">Ü</span></td>
+<td class="tabxpl">U Umlaut</td>
+<td class="code"><code>&amp;Uuml;</code></td>
+<td class="code"><code>&amp;#220;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&Yacute;</span></td>
+<td class="tabxpl">Y mit accent aigu (Akut)</td>
+
+<td class="code"><code>&amp;Yacute;</code></td>
+<td class="code"><code>&amp;#221;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&THORN;</span></td>
+<td class="tabxpl">großes Thorn (isländisch)</td>
+<td class="code"><code>&amp;THORN;</code></td>
+<td class="code"><code>&amp;#222;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">ß</span></td>
+<td class="tabxpl">scharfes S</td>
+
+<td class="code"><code>&amp;szlig;</code></td>
+<td class="code"><code>&amp;#223;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&agrave;</span></td>
+<td class="tabxpl">a mit accent grave (Gravis)</td>
+<td class="code"><code>&amp;agrave;</code></td>
+<td class="code"><code>&amp;#224;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&aacute;</span></td>
+<td class="tabxpl">a mit accent aigu (Akut)</td>
+<td class="code"><code>&amp;aacute;</code></td>
+
+<td class="code"><code>&amp;#225;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&acirc;</span></td>
+<td class="tabxpl">a mit Zirkumflex</td>
+<td class="code"><code>&amp;acirc;</code></td>
+<td class="code"><code>&amp;#226;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&atilde;</span></td>
+<td class="tabxpl">a mit Tilde</td>
+<td class="code"><code>&amp;atilde;</code></td>
+<td class="code"><code>&amp;#227;</code></td>
+
+</tr><tr>
+<td class="doctop"><span class="unicode">ä</span></td>
+<td class="tabxpl">a Umlaut</td>
+<td class="code"><code>&amp;auml;</code></td>
+<td class="code"><code>&amp;#228;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&aring;</span></td>
+<td class="tabxpl">a mit Ring</td>
+<td class="code"><code>&amp;aring;</code></td>
+<td class="code"><code>&amp;#229;</code></td>
+
+</tr><tr>
+<td class="doctop"><span class="unicode">&aelig;</span></td>
+<td class="tabxpl">a mit legiertem e</td>
+<td class="code"><code>&amp;aelig;</code></td>
+<td class="code"><code>&amp;#230;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&ccedil;</span></td>
+<td class="tabxpl">c mit Häkchen</td>
+<td class="code"><code>&amp;ccedil;</code></td>
+<td class="code"><code>&amp;#231;</code></td>
+</tr><tr>
+
+<td class="doctop"><span class="unicode">&egrave;</span></td>
+<td class="tabxpl">e mit accent grave (Gravis)</td>
+<td class="code"><code>&amp;egrave;</code></td>
+<td class="code"><code>&amp;#232;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&eacute;</span></td>
+<td class="tabxpl">e mit accent aigu (Akut)</td>
+<td class="code"><code>&amp;eacute;</code></td>
+<td class="code"><code>&amp;#233;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&ecirc;</span></td>
+
+<td class="tabxpl">e mit Zirkumflex</td>
+<td class="code"><code>&amp;ecirc;</code></td>
+<td class="code"><code>&amp;#234;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&euml;</span></td>
+<td class="tabxpl">e Umlaut</td>
+<td class="code"><code>&amp;euml;</code></td>
+<td class="code"><code>&amp;#235;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&igrave;</span></td>
+<td class="tabxpl">i mit accent grave (Gravis)</td>
+
+<td class="code"><code>&amp;igrave;</code></td>
+<td class="code"><code>&amp;#236;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&iacute;</span></td>
+<td class="tabxpl">i mit accent aigu (Akut)</td>
+<td class="code"><code>&amp;iacute;</code></td>
+<td class="code"><code>&amp;#237;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&icirc;</span></td>
+<td class="tabxpl">i mit Zirkumflex</td>
+<td class="code"><code>&amp;icirc;</code></td>
+
+<td class="code"><code>&amp;#238;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&iuml;</span></td>
+<td class="tabxpl">i Umlaut</td>
+<td class="code"><code>&amp;iuml;</code></td>
+<td class="code"><code>&amp;#239;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&eth;</span></td>
+<td class="tabxpl">kleines Eth (isländisch)</td>
+<td class="code"><code>&amp;eth;</code></td>
+<td class="code"><code>&amp;#240;</code></td>
+
+</tr><tr>
+<td class="doctop"><span class="unicode">&ntilde;</span></td>
+<td class="tabxpl">n mit Tilde</td>
+<td class="code"><code>&amp;ntilde;</code></td>
+<td class="code"><code>&amp;#241;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&ograve;</span></td>
+<td class="tabxpl">o mit accent grave (Gravis)</td>
+<td class="code"><code>&amp;ograve;</code></td>
+<td class="code"><code>&amp;#242;</code></td>
+</tr><tr>
+
+<td class="doctop"><span class="unicode">&oacute;</span></td>
+<td class="tabxpl">o mit accent aigu (Akut)</td>
+<td class="code"><code>&amp;oacute;</code></td>
+<td class="code"><code>&amp;#243;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&ocirc;</span></td>
+<td class="tabxpl">o mit Zirkumflex</td>
+<td class="code"><code>&amp;ocirc;</code></td>
+<td class="code"><code>&amp;#244;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&otilde;</span></td>
+
+<td class="tabxpl">o mit Tilde</td>
+<td class="code"><code>&amp;otilde;</code></td>
+<td class="code"><code>&amp;#245;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">ö</span></td>
+<td class="tabxpl">o Umlaut</td>
+<td class="code"><code>&amp;ouml;</code></td>
+<td class="code"><code>&amp;#246;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&divide;</span></td>
+
+<td class="tabxpl">Divisions-Zeichen</td>
+<td class="code"><code>&amp;divide;</code></td>
+<td class="code"><code>&amp;#247;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&oslash;</span></td>
+<td class="tabxpl">o mit Schrägstrich</td>
+<td class="code"><code>&amp;oslash;</code></td>
+<td class="code"><code>&amp;#248;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&ugrave;</span></td>
+<td class="tabxpl">u mit accent grave (Gravis)</td>
+
+<td class="code"><code>&amp;ugrave;</code></td>
+<td class="code"><code>&amp;#249;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&uacute;</span></td>
+<td class="tabxpl">u mit accent aigu (Akut)</td>
+<td class="code"><code>&amp;uacute;</code></td>
+<td class="code"><code>&amp;#250;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&ucirc;</span></td>
+<td class="tabxpl">u mit Zirkumflex</td>
+<td class="code"><code>&amp;ucirc;</code></td>
+
+<td class="code"><code>&amp;#251;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">ü</span></td>
+<td class="tabxpl">u Umlaut</td>
+<td class="code"><code>&amp;uuml;</code></td>
+<td class="code"><code>&amp;#252;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&yacute;</span></td>
+<td class="tabxpl">y mit accent aigu (Akut)</td>
+<td class="code"><code>&amp;yacute;</code></td>
+
+<td class="code"><code>&amp;#253;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&thorn;</span></td>
+<td class="tabxpl">kleines Thorn (isländisch)</td>
+<td class="code"><code>&amp;thorn;</code></td>
+<td class="code"><code>&amp;#254;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&yuml;</span></td>
+<td class="tabxpl">y Umlaut</td>
+<td class="code"><code>&amp;yuml;</code></td>
+<td class="code"><code>&amp;#255;</code></td>
+
+</tr>
+</table>
+
+&nbsp;
+
+<p class="doc"><a href="#top"><img src="../../src/up.gif" width="14" height="10" border="0" alt="nach oben"></a><a href="#bottom"><img src="../../src/down.gif" width="14" height="10" border="0" alt="nach unten"></a></p>
+
+
+
+<h2><a class="an" name="benannte_griechisch">Benannte Zeichen für griechische Buchstaben</a></h2>
+
+<p>Die HTML-Namen dieser Zeichen sind seit HTML 4.0 verfügbar.</p>
+
+
+<table class="reftable" cellpadding="3" cellspacing="0" border="1" width="100%">
+
+<tr>
+<th width="50">Zeichen</th>
+<th width="350">Beschreibung</th>
+<th>Name in HTML</th>
+<th>Unicode in HTML</th>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Alpha;</span></td>
+<td class="tabxpl">Alpha groß</td>
+<td class="code"><code>&amp;Alpha;</code></td>
+
+<td class="code"><code>&amp;#913;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&alpha;</span></td>
+<td class="tabxpl">alpha klein</td>
+<td class="code"><code>&amp;alpha;</code></td>
+<td class="code"><code>&amp;#945;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Beta;</span></td>
+<td class="tabxpl">Beta groß</td>
+<td class="code"><code>&amp;Beta;</code></td>
+
+<td class="code"><code>&amp;#914;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&beta;</span></td>
+<td class="tabxpl">beta klein</td>
+<td class="code"><code>&amp;beta;</code></td>
+<td class="code"><code>&amp;#946;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Gamma;</span></td>
+<td class="tabxpl">Gamma groß</td>
+<td class="code"><code>&amp;Gamma;</code></td>
+
+<td class="code"><code>&amp;#915;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&gamma;</span></td>
+<td class="tabxpl">gamma klein</td>
+<td class="code"><code>&amp;gamma;</code></td>
+<td class="code"><code>&amp;#947;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Delta;</span></td>
+<td class="tabxpl">Delta groß</td>
+<td class="code"><code>&amp;Delta;</code></td>
+
+<td class="code"><code>&amp;#916;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&delta;</span></td>
+<td class="tabxpl">delta klein</td>
+<td class="code"><code>&amp;delta;</code></td>
+<td class="code"><code>&amp;#948;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Epsilon;</span></td>
+<td class="tabxpl">Epsilon groß</td>
+<td class="code"><code>&amp;Epsilon;</code></td>
+
+<td class="code"><code>&amp;#917;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&epsilon;</span></td>
+<td class="tabxpl">epsilon klein</td>
+<td class="code"><code>&amp;epsilon;</code></td>
+<td class="code"><code>&amp;#949;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Zeta;</span></td>
+<td class="tabxpl">Zeta groß</td>
+<td class="code"><code>&amp;Zeta;</code></td>
+
+<td class="code"><code>&amp;#918;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&zeta;</span></td>
+<td class="tabxpl">zeta klein</td>
+<td class="code"><code>&amp;zeta;</code></td>
+<td class="code"><code>&amp;#950;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Eta;</span></td>
+<td class="tabxpl">Eta groß</td>
+<td class="code"><code>&amp;Eta;</code></td>
+
+<td class="code"><code>&amp;#919;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&eta;</span></td>
+<td class="tabxpl">eta klein</td>
+<td class="code"><code>&amp;eta;</code></td>
+<td class="code"><code>&amp;#951;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Theta;</span></td>
+<td class="tabxpl">Theta groß</td>
+<td class="code"><code>&amp;Theta;</code></td>
+
+<td class="code"><code>&amp;#920;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&theta;</span></td>
+<td class="tabxpl">theta klein</td>
+<td class="code"><code>&amp;theta;</code></td>
+<td class="code"><code>&amp;#952;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Iota;</span></td>
+<td class="tabxpl">Iota groß</td>
+<td class="code"><code>&amp;Iota;</code></td>
+
+<td class="code"><code>&amp;#921;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&iota;</span></td>
+<td class="tabxpl">iota klein</td>
+<td class="code"><code>&amp;iota;</code></td>
+<td class="code"><code>&amp;#953;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Kappa;</span></td>
+<td class="tabxpl">Kappa groß</td>
+<td class="code"><code>&amp;Kappa;</code></td>
+
+<td class="code"><code>&amp;#922;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&kappa;</span></td>
+<td class="tabxpl">kappa klein</td>
+<td class="code"><code>&amp;kappa;</code></td>
+<td class="code"><code>&amp;#954;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Lambda;</span></td>
+<td class="tabxpl">Lambda groß</td>
+<td class="code"><code>&amp;Lambda;</code></td>
+
+<td class="code"><code>&amp;#923;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&lambda;</span></td>
+<td class="tabxpl">lambda klein</td>
+<td class="code"><code>&amp;lambda;</code></td>
+<td class="code"><code>&amp;#955;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Mu;</span></td>
+<td class="tabxpl">My groß</td>
+<td class="code"><code>&amp;Mu;</code></td>
+
+<td class="code"><code>&amp;#924;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&mu;</span></td>
+<td class="tabxpl">my klein</td>
+<td class="code"><code>&amp;mu;</code></td>
+<td class="code"><code>&amp;#956;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Nu;</span></td>
+<td class="tabxpl">Ny groß</td>
+<td class="code"><code>&amp;Nu;</code></td>
+
+<td class="code"><code>&amp;#925;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&nu;</span></td>
+<td class="tabxpl">ny klein</td>
+<td class="code"><code>&amp;nu;</code></td>
+<td class="code"><code>&amp;#957;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Xi;</span></td>
+<td class="tabxpl">Xi groß</td>
+<td class="code"><code>&amp;Xi;</code></td>
+
+<td class="code"><code>&amp;#926;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&xi;</span></td>
+<td class="tabxpl">xi klein</td>
+<td class="code"><code>&amp;xi;</code></td>
+<td class="code"><code>&amp;#958;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Omicron;</span></td>
+<td class="tabxpl">Omikron groß</td>
+<td class="code"><code>&amp;Omicron;</code></td>
+
+<td class="code"><code>&amp;#927;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&omicron;</span></td>
+<td class="tabxpl">omikron klein</td>
+<td class="code"><code>&amp;omicron;</code></td>
+<td class="code"><code>&amp;#959;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Pi;</span></td>
+<td class="tabxpl">Pi groß</td>
+<td class="code"><code>&amp;Pi;</code></td>
+
+<td class="code"><code>&amp;#928;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&pi;</span></td>
+<td class="tabxpl">pi klein</td>
+<td class="code"><code>&amp;pi;</code></td>
+<td class="code"><code>&amp;#960;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Rho;</span></td>
+<td class="tabxpl">Rho groß</td>
+<td class="code"><code>&amp;Rho;</code></td>
+
+<td class="code"><code>&amp;#929;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&rho;</span></td>
+<td class="tabxpl">rho klein</td>
+<td class="code"><code>&amp;rho;</code></td>
+<td class="code"><code>&amp;#961;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Sigma;</span></td>
+<td class="tabxpl">Sigma groß</td>
+<td class="code"><code>&amp;Sigma;</code></td>
+
+<td class="code"><code>&amp;#931;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&sigmaf;</span></td>
+<td class="tabxpl">Schluss-Sigma</td>
+<td class="code"><code>&amp;sigmaf;</code></td>
+<td class="code"><code>&amp;#962;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&sigma;</span></td>
+<td class="tabxpl">sigma klein</td>
+<td class="code"><code>&amp;sigma;</code></td>
+
+<td class="code"><code>&amp;#963;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Tau;</span></td>
+<td class="tabxpl">Tau groß</td>
+<td class="code"><code>&amp;Tau;</code></td>
+<td class="code"><code>&amp;#932;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&tau;</span></td>
+<td class="tabxpl">tau klein</td>
+<td class="code"><code>&amp;tau;</code></td>
+
+<td class="code"><code>&amp;#964;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Upsilon;</span></td>
+<td class="tabxpl">Ypsilon groß</td>
+<td class="code"><code>&amp;Upsilon;</code></td>
+<td class="code"><code>&amp;#933;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&upsilon;</span></td>
+<td class="tabxpl">ypsilon klein</td>
+<td class="code"><code>&amp;upsilon;</code></td>
+
+<td class="code"><code>&amp;#965;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Phi;</span></td>
+<td class="tabxpl">Phi groß</td>
+<td class="code"><code>&amp;Phi;</code></td>
+<td class="code"><code>&amp;#934;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&phi;</span></td>
+<td class="tabxpl">phi klein</td>
+<td class="code"><code>&amp;phi;</code></td>
+
+<td class="code"><code>&amp;#966;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Chi;</span></td>
+<td class="tabxpl">Chi groß</td>
+<td class="code"><code>&amp;Chi;</code></td>
+<td class="code"><code>&amp;#935;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&chi;</span></td>
+<td class="tabxpl">chi klein</td>
+<td class="code"><code>&amp;chi;</code></td>
+
+<td class="code"><code>&amp;#967;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Psi;</span></td>
+<td class="tabxpl">Psi groß</td>
+<td class="code"><code>&amp;Psi;</code></td>
+<td class="code"><code>&amp;#936;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&psi;</span></td>
+<td class="tabxpl">psi klein</td>
+<td class="code"><code>&amp;psi;</code></td>
+
+<td class="code"><code>&amp;#968;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Omega;</span></td>
+<td class="tabxpl">Omega groß</td>
+<td class="code"><code>&amp;Omega;</code></td>
+<td class="code"><code>&amp;#937;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&omega;</span></td>
+<td class="tabxpl">omega klein</td>
+<td class="code"><code>&amp;omega;</code></td>
+
+<td class="code"><code>&amp;#969;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&thetasym;</span></td>
+<td class="tabxpl">theta Symbol</td>
+<td class="code"><code>&amp;thetasym;</code></td>
+<td class="code"><code>&amp;#977;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&upsih;</span></td>
+<td class="tabxpl">ypsilon mit Haken</td>
+<td class="code"><code>&amp;upsih;</code></td>
+
+<td class="code"><code>&amp;#978;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&piv;</span></td>
+<td class="tabxpl">pi Symbol</td>
+<td class="code"><code>&amp;piv;</code></td>
+<td class="code"><code>&amp;#982;</code></td>
+</tr>
+</table>
+
+&nbsp;
+
+<p class="doc"><a href="#top"><img src="../../src/up.gif" width="14" height="10" border="0" alt="nach oben"></a><a href="#bottom"><img src="../../src/down.gif" width="14" height="10" border="0" alt="nach unten"></a></p>
+
+
+<h2><a class="an" name="benannte_mathematische">Benannte Zeichen für mathematische Symbole</a></h2>
+
+<p>Die HTML-Namen dieser Zeichen sind seit HTML 4.0 verfügbar.</p>
+
+<table class="reftable" cellpadding="3" cellspacing="0" border="1" width="100%">
+
+<tr>
+<th width="50">Zeichen</th>
+<th width="350">Beschreibung</th>
+<th>Name in HTML</th>
+
+<th>Unicode in HTML</th>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&forall;</span></td>
+<td class="tabxpl">für alle</td>
+<td class="code"><code>&amp;forall;</code></td>
+<td class="code"><code>&amp;#8704;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&part;</span></td>
+<td class="tabxpl">partiell</td>
+<td class="code"><code>&amp;part;</code></td>
+
+<td class="code"><code>&amp;#8706;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&exist;</span></td>
+<td class="tabxpl">existiert</td>
+<td class="code"><code>&amp;exist;</code></td>
+<td class="code"><code>&amp;#8707;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&empty;</span></td>
+<td class="tabxpl">leere Menge</td>
+<td class="code"><code>&amp;empty;</code></td>
+
+<td class="code"><code>&amp;#8709;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&nabla;</span></td>
+<td class="tabxpl">Nabla</td>
+<td class="code"><code>&amp;nabla;</code></td>
+<td class="code"><code>&amp;#8711;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&isin;</span></td>
+<td class="tabxpl">Element von</td>
+<td class="code"><code>&amp;isin;</code></td>
+
+<td class="code"><code>&amp;#8712;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&notin;</span></td>
+<td class="tabxpl">kein Element von</td>
+<td class="code"><code>&amp;notin;</code></td>
+<td class="code"><code>&amp;#8713;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&ni;</span></td>
+<td class="tabxpl">Element von (gespiegelt)</td>
+<td class="code"><code>&amp;ni;</code></td>
+
+<td class="code"><code>&amp;#8715;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&prod;</span></td>
+<td class="tabxpl">Produkt</td>
+<td class="code"><code>&amp;prod;</code></td>
+<td class="code"><code>&amp;#8719;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&sum;</span></td>
+<td class="tabxpl">Summe</td>
+<td class="code"><code>&amp;sum;</code></td>
+
+<td class="code"><code>&amp;#8721;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&minus;</span></td>
+<td class="tabxpl">minus</td>
+<td class="code"><code>&amp;minus;</code></td>
+<td class="code"><code>&amp;#8722;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&lowast;</span></td>
+<td class="tabxpl">Asterisk</td>
+<td class="code"><code>&amp;lowast;</code></td>
+
+<td class="code"><code>&amp;#8727;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&radic;</span></td>
+<td class="tabxpl">Wurzel</td>
+<td class="code"><code>&amp;radic;</code></td>
+<td class="code"><code>&amp;#8730;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&prop;</span></td>
+<td class="tabxpl">proportional zu</td>
+<td class="code"><code>&amp;prop;</code></td>
+
+<td class="code"><code>&amp;#8733;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&infin;</span></td>
+<td class="tabxpl">unendlich</td>
+<td class="code"><code>&amp;infin;</code></td>
+<td class="code"><code>&amp;#8734;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&ang;</span></td>
+<td class="tabxpl">Winkel</td>
+<td class="code"><code>&amp;ang;</code></td>
+
+<td class="code"><code>&amp;#8736;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&and;</span></td>
+<td class="tabxpl">und</td>
+<td class="code"><code>&amp;and;</code></td>
+<td class="code"><code>&amp;#8743;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&or;</span></td>
+<td class="tabxpl">oder</td>
+<td class="code"><code>&amp;or;</code></td>
+
+<td class="code"><code>&amp;#8744;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&cap;</span></td>
+<td class="tabxpl">Schnittmenge</td>
+<td class="code"><code>&amp;cap;</code></td>
+<td class="code"><code>&amp;#8745;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&cup;</span></td>
+<td class="tabxpl">Vereinigungsmenge</td>
+<td class="code"><code>&amp;cup;</code></td>
+
+<td class="code"><code>&amp;#8746;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&int;</span></td>
+<td class="tabxpl">Integral</td>
+<td class="code"><code>&amp;int;</code></td>
+<td class="code"><code>&amp;#8747;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&there4;</span></td>
+<td class="tabxpl">deshalb</td>
+<td class="code"><code>&amp;there4;</code></td>
+
+<td class="code"><code>&amp;#8756;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&sim;</span></td>
+<td class="tabxpl">ähnlich wie</td>
+<td class="code"><code>&amp;sim;</code></td>
+<td class="code"><code>&amp;#8764;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&cong;</span></td>
+<td class="tabxpl">kongruent</td>
+<td class="code"><code>&amp;cong;</code></td>
+
+<td class="code"><code>&amp;#8773;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&asymp;</span></td>
+<td class="tabxpl">beinahe gleich</td>
+<td class="code"><code>&amp;asymp;</code></td>
+<td class="code"><code>&amp;#8776;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&ne;</span></td>
+<td class="tabxpl">ungleich</td>
+<td class="code"><code>&amp;ne;</code></td>
+
+<td class="code"><code>&amp;#8800;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&equiv;</span></td>
+<td class="tabxpl">identisch mit</td>
+<td class="code"><code>&amp;equiv;</code></td>
+<td class="code"><code>&amp;#8801;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&le;</span></td>
+<td class="tabxpl">kleiner gleich</td>
+<td class="code"><code>&amp;le;</code></td>
+
+<td class="code"><code>&amp;#8804;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&ge;</span></td>
+<td class="tabxpl">größer gleich</td>
+<td class="code"><code>&amp;ge;</code></td>
+<td class="code"><code>&amp;#8805;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&sub;</span></td>
+<td class="tabxpl">Untermenge von</td>
+<td class="code"><code>&amp;sub;</code></td>
+
+<td class="code"><code>&amp;#8834;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&sup;</span></td>
+<td class="tabxpl">Obermenge von</td>
+<td class="code"><code>&amp;sup;</code></td>
+<td class="code"><code>&amp;#8835;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&nsub;</span></td>
+<td class="tabxpl">keine Untermenge von</td>
+<td class="code"><code>&amp;nsub;</code></td>
+
+<td class="code"><code>&amp;#8836;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&sube;</span></td>
+<td class="tabxpl">Untermenge von oder gleich mit</td>
+<td class="code"><code>&amp;sube;</code></td>
+<td class="code"><code>&amp;#8838;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&supe;</span></td>
+<td class="tabxpl">Obermenge von oder gleich mit</td>
+<td class="code"><code>&amp;supe;</code></td>
+
+<td class="code"><code>&amp;#8839;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&oplus;</span></td>
+<td class="tabxpl">Restklassenaddition</td>
+<td class="code"><code>&amp;oplus;</code></td>
+<td class="code"><code>&amp;#8853;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&otimes;</span></td>
+<td class="tabxpl">Kronecker-Produkt</td>
+<td class="code"><code>&amp;otimes;</code></td>
+
+<td class="code"><code>&amp;#8855;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&perp;</span></td>
+<td class="tabxpl">senkrecht zu</td>
+<td class="code"><code>&amp;perp;</code></td>
+<td class="code"><code>&amp;#8869;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&sdot;</span></td>
+<td class="tabxpl">Punkt-Operator</td>
+<td class="code"><code>&amp;sdot;</code></td>
+
+<td class="code"><code>&amp;#8901;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&loz;</span></td>
+<td class="tabxpl">Raute</td>
+<td class="code"><code>&amp;loz;</code></td>
+<td class="code"><code>&amp;#9674;</code></td>
+</tr>
+</table>
+
+&nbsp;
+
+<p class="doc"><a href="#top"><img src="../../src/up.gif" width="14" height="10" border="0" alt="nach oben"></a><a href="#bottom"><img src="../../src/down.gif" width="14" height="10" border="0" alt="nach unten"></a></p>
+
+
+
+<h2><a class="an" name="benannte_technische">Benannte Zeichen für technische Symbole</a></h2>
+
+<p>Die HTML-Namen dieser Zeichen sind seit HTML 4.0 verfügbar.</p>
+
+<table class="reftable" cellpadding="3" cellspacing="0" border="1" width="100%">
+
+<tr>
+<th width="50">Zeichen</th>
+<th width="350">Beschreibung</th>
+<th>Name in HTML</th>
+
+<th>Unicode in HTML</th>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&lceil;</span></td>
+<td class="tabxpl">links oben</td>
+<td class="code"><code>&amp;lceil;</code></td>
+<td class="code"><code>&amp;#8968;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&rceil;</span></td>
+<td class="tabxpl">rechts oben</td>
+<td class="code"><code>&amp;rceil;</code></td>
+
+<td class="code"><code>&amp;#8969;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&lfloor;</span></td>
+<td class="tabxpl">links unten</td>
+<td class="code"><code>&amp;lfloor;</code></td>
+<td class="code"><code>&amp;#8970;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&rfloor;</span></td>
+<td class="tabxpl">rechts unten</td>
+<td class="code"><code>&amp;rfloor;</code></td>
+
+<td class="code"><code>&amp;#8971;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&lang;</span></td>
+<td class="tabxpl">spitze Klammer links</td>
+<td class="code"><code>&amp;lang;</code></td>
+<td class="code"><code>&amp;#9001;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&rang;</span></td>
+<td class="tabxpl">spitze Klammer rechts</td>
+<td class="code"><code>&amp;rang;</code></td>
+
+<td class="code"><code>&amp;#9002;</code></td>
+</tr>
+</table>
+
+&nbsp;
+
+<p class="doc"><a href="#top"><img src="../../src/up.gif" width="14" height="10" border="0" alt="nach oben"></a><a href="#bottom"><img src="../../src/down.gif" width="14" height="10" border="0" alt="nach unten"></a></p>
+
+
+
+<h2><a class="an" name="benannte_pfeile">Benannte Zeichen für Pfeil-Symbole</a></h2>
+
+<p>Die HTML-Namen dieser Zeichen sind seit HTML 4.0 verfügbar.</p>
+
+<table class="reftable" cellpadding="3" cellspacing="0" border="1" width="100%">
+
+<tr>
+<th width="50">Zeichen</th>
+<th width="350">Beschreibung</th>
+<th>Name in HTML</th>
+<th>Unicode in HTML</th>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&larr;</span></td>
+<td class="tabxpl">Pfeil links</td>
+<td class="code"><code>&amp;larr;</code></td>
+
+<td class="code"><code>&amp;#8592;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&uarr;</span></td>
+<td class="tabxpl">Pfeil oben</td>
+<td class="code"><code>&amp;uarr;</code></td>
+<td class="code"><code>&amp;#8593;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&rarr;</span></td>
+<td class="tabxpl">Pfeil rechts</td>
+<td class="code"><code>&amp;rarr;</code></td>
+
+<td class="code"><code>&amp;#8594;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&darr;</span></td>
+<td class="tabxpl">Pfeil unten</td>
+<td class="code"><code>&amp;darr;</code></td>
+<td class="code"><code>&amp;#8595;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&harr;</span></td>
+<td class="tabxpl">Pfeil links/rechts</td>
+<td class="code"><code>&amp;harr;</code></td>
+
+<td class="code"><code>&amp;#8596;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&crarr;</span></td>
+<td class="tabxpl">Pfeil unten-Knick-links</td>
+<td class="code"><code>&amp;crarr;</code></td>
+<td class="code"><code>&amp;#8629;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&lArr;</span></td>
+<td class="tabxpl">Doppelpfeil links</td>
+<td class="code"><code>&amp;lArr;</code></td>
+
+<td class="code"><code>&amp;#8656;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&uArr;</span></td>
+<td class="tabxpl">Doppelpfeil oben</td>
+<td class="code"><code>&amp;uArr;</code></td>
+<td class="code"><code>&amp;#8657;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&rArr;</span></td>
+<td class="tabxpl">Doppelpfeil rechts</td>
+<td class="code"><code>&amp;rArr;</code></td>
+
+<td class="code"><code>&amp;#8658;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&dArr;</span></td>
+<td class="tabxpl">Doppelpfeil unten</td>
+<td class="code"><code>&amp;dArr;</code></td>
+<td class="code"><code>&amp;#8659;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&hArr;</span></td>
+<td class="tabxpl">Doppelpfeil links/rechts</td>
+<td class="code"><code>&amp;hArr;</code></td>
+
+<td class="code"><code>&amp;#8660;</code></td>
+</tr>
+</table>
+
+&nbsp;
+
+<p class="doc"><a href="#top"><img src="../../src/up.gif" width="14" height="10" border="0" alt="nach oben"></a><a href="#bottom"><img src="../../src/down.gif" width="14" height="10" border="0" alt="nach unten"></a></p>
+
+
+
+<h2><a class="an" name="benannte_diverse">Benannte Zeichen für diverse Symbole</a></h2>
+
+<p>Die HTML-Namen dieser Zeichen sind seit HTML 4.0 verfügbar.</p>
+
+<table class="reftable" cellpadding="3" cellspacing="0" border="1" width="100%">
+
+<tr>
+<th width="50">Zeichen</th>
+<th width="350">Beschreibung</th>
+<th>Name in HTML</th>
+<th>Unicode in HTML</th>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&bull;</span></td>
+<td class="tabxpl">Bullet-Zeichen</td>
+<td class="code"><code>&amp;bull;</code></td>
+
+<td class="code"><code>&amp;#8226;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&prime;</span></td>
+<td class="tabxpl">Minutenzeichen</td>
+<td class="code"><code>&amp;prime;</code></td>
+<td class="code"><code>&amp;#8242;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Prime;</span></td>
+<td class="tabxpl">Sekundenzeichen</td>
+<td class="code"><code>&amp;Prime;</code></td>
+
+<td class="code"><code>&amp;#8243;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&oline;</span></td>
+<td class="tabxpl">Überstrich</td>
+<td class="code"><code>&amp;oline;</code></td>
+<td class="code"><code>&amp;#8254;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&frasl;</span></td>
+<td class="tabxpl">Bruchstrich</td>
+<td class="code"><code>&amp;frasl;</code></td>
+
+<td class="code"><code>&amp;#8260;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&weierp;</span></td>
+<td class="tabxpl">Weierstraß p</td>
+<td class="code"><code>&amp;weierp;</code></td>
+<td class="code"><code>&amp;#8472;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&image;</span></td>
+<td class="tabxpl">Zeichen für "imaginär"</td>
+<td class="code"><code>&amp;image;</code></td>
+
+<td class="code"><code>&amp;#8465;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&real;</span></td>
+<td class="tabxpl">Zeichen für "real"</td>
+<td class="code"><code>&amp;real;</code></td>
+<td class="code"><code>&amp;#8476;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&trade;</span></td>
+<td class="tabxpl">Trademark-Zeichen</td>
+<td class="code"><code>&amp;trade;</code></td>
+
+<td class="code"><code>&amp;#8482;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&euro;</span></td>
+<td class="tabxpl">Euro-Zeichen</td>
+<td class="code"><code>&amp;euro;</code></td>
+<td class="code"><code>&amp;#8364;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&alefsym;</span></td>
+<td class="tabxpl">Alef-Symbol</td>
+<td class="code"><code>&amp;alefsym;</code></td>
+
+<td class="code"><code>&amp;#8501;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&spades;</span></td>
+<td class="tabxpl">Pik-Zeichen</td>
+<td class="code"><code>&amp;spades;</code></td>
+<td class="code"><code>&amp;#9824;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&clubs;</span></td>
+<td class="tabxpl">Kreuz-Zeichen</td>
+<td class="code"><code>&amp;clubs;</code></td>
+
+<td class="code"><code>&amp;#9827;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&hearts;</span></td>
+<td class="tabxpl">Herz-Zeichen</td>
+<td class="code"><code>&amp;hearts;</code></td>
+<td class="code"><code>&amp;#9829;</code></td>
+</tr><tr>
+<td class="doctop"><span class="unicode">&diams;</span></td>
+<td class="tabxpl">Karo-Zeichen</td>
+<td class="code"><code>&amp;diams;</code></td>
+<td class="code"><code>&amp;#9830;</code></td>
+
+</tr>
+</table>
+
+&nbsp;
+
+<p class="doc"><a href="#top"><img src="../../src/up.gif" width="14" height="10" border="0" alt="nach oben"></a><a href="#bottom"><img src="../../src/down.gif" width="14" height="10" border="0" alt="nach unten"></a></p>
+
+
+
+<h2><a class="an" name="benannte_lateinisch_erweitert">Benannte Zeichen lateinisch erweitert</a></h2>
+
+<p>Die HTML-Namen dieser Zeichen sind seit HTML 4.0 verfügbar.</p>
+
+<table class="reftable" cellpadding="3" cellspacing="0" border="1" width="100%">
+<tr>
+
+<th width="50">Zeichen</th>
+<th width="350">Beschreibung</th>
+<th>Name in HTML</th>
+<th>Unicode in HTML</th>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&OElig;</span></td>
+<td class="tabxpl">OE-Ligatur</td>
+<td class="code"><code>&amp;OElig;</code></td>
+<td class="code"><code>&amp;#338;</code></td>
+
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&oelig;</span></td>
+<td class="tabxpl">oe-Ligatur</td>
+<td class="code"><code>&amp;oelig;</code></td>
+<td class="code"><code>&amp;#339;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Scaron;</span></td>
+<td class="tabxpl">S mit Zirkumflex</td>
+<td class="code"><code>&amp;Scaron;</code></td>
+<td class="code"><code>&amp;#352;</code></td>
+
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&scaron;</span></td>
+<td class="tabxpl">s mit Zirkumflex</td>
+<td class="code"><code>&amp;scaron;</code></td>
+<td class="code"><code>&amp;#353;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Yuml;</span></td>
+<td class="tabxpl">Y Umlaut</td>
+<td class="code"><code>&amp;Yuml;</code></td>
+<td class="code"><code>&amp;#376;</code></td>
+
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&fnof;</span></td>
+<td class="tabxpl">Funktion</td>
+<td class="code"><code>&amp;fnof;</code></td>
+<td class="code"><code>&amp;#402;</code></td>
+</tr>
+</table>
+
+&nbsp;
+
+<p class="doc"><a href="#top"><img src="../../src/up.gif" width="14" height="10" border="0" alt="nach oben"></a><a href="#bottom"><img src="../../src/down.gif" width="14" height="10" border="0" alt="nach unten"></a></p>
+
+
+<h2><a class="an" name="benannte_interpunktion">Benannte Zeichen für Interpunktion</a></h2>
+
+<p>Die HTML-Namen dieser Zeichen sind seit HTML 4.0 verfügbar.</p>
+
+<table class="reftable" cellpadding="3" cellspacing="0" border="1" width="100%">
+
+<tr>
+<th width="50">Zeichen</th>
+<th width="350">Beschreibung</th>
+<th>Name in HTML</th>
+<th>Unicode in HTML</th>
+
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&ensp;</span></td>
+<td class="tabxpl">Leerzeichen Breite n</td>
+<td class="code"><code>&amp;ensp;</code></td>
+<td class="code"><code>&amp;#8194;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&emsp;</span></td>
+<td class="tabxpl">Leerzeichen Breite m</td>
+<td class="code"><code>&amp;emsp;</code></td>
+<td class="code"><code>&amp;#8195;</code></td>
+
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&thinsp;</span></td>
+<td class="tabxpl">Schmales Leerzeichen</td>
+<td class="code"><code>&amp;thinsp;</code></td>
+<td class="code"><code>&amp;#8201;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&zwnj;</span></td>
+<td class="tabxpl">null breiter Nichtverbinder</td>
+<td class="code"><code>&amp;zwnj;</code></td>
+<td class="code"><code>&amp;#8204;</code></td>
+
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&zwj;</span></td>
+<td class="tabxpl">null breiter Verbinder</td>
+<td class="code"><code>&amp;zwj;</code></td>
+<td class="code"><code>&amp;#8205;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&lrm;</span></td>
+<td class="tabxpl">links-nach-rechts-Zeichen</td>
+<td class="code"><code>&amp;lrm;</code></td>
+<td class="code"><code>&amp;#8206;</code></td>
+
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&rlm;</span></td>
+<td class="tabxpl">rechts-nach-links-Zeichen</td>
+<td class="code"><code>&amp;rlm;</code></td>
+<td class="code"><code>&amp;#8207;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&ndash;</span></td>
+<td class="tabxpl">Gedankenstrich Breite n</td>
+<td class="code"><code>&amp;ndash;</code></td>
+<td class="code"><code>&amp;#8211;</code></td>
+
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&mdash;</span></td>
+<td class="tabxpl">Gedankenstrich Breite m</td>
+<td class="code"><code>&amp;mdash;</code></td>
+<td class="code"><code>&amp;#8212;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&lsquo;</span></td>
+<td class="tabxpl">einfaches Anführungszeichen links</td>
+<td class="code"><code>&amp;lsquo;</code></td>
+<td class="code"><code>&amp;#8216;</code></td>
+
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&rsquo;</span></td>
+<td class="tabxpl">einfaches Anführungszeichen rechts</td>
+<td class="code"><code>&amp;rsquo;</code></td>
+<td class="code"><code>&amp;#8217;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&sbquo;</span></td>
+<td class="tabxpl">einfaches low-9-Zeichen</td>
+<td class="code"><code>&amp;sbquo;</code></td>
+<td class="code"><code>&amp;#8218;</code></td>
+
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&ldquo;</span></td>
+<td class="tabxpl">doppeltes Anführungszeichen links</td>
+<td class="code"><code>&amp;ldquo;</code></td>
+<td class="code"><code>&amp;#8220;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&rdquo;</span></td>
+<td class="tabxpl">doppeltes Anführungszeichen rechts</td>
+<td class="code"><code>&amp;rdquo;</code></td>
+<td class="code"><code>&amp;#8221;</code></td>
+
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&bdquo;</span></td>
+<td class="tabxpl">doppeltes low-9-Zeichen rechts</td>
+<td class="code"><code>&amp;bdquo;</code></td>
+<td class="code"><code>&amp;#8222;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&dagger;</span></td>
+<td class="tabxpl">Kreuz</td>
+<td class="code"><code>&amp;dagger;</code></td>
+<td class="code"><code>&amp;#8224;</code></td>
+
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&Dagger;</span></td>
+<td class="tabxpl">Doppelkreuz</td>
+<td class="code"><code>&amp;Dagger;</code></td>
+<td class="code"><code>&amp;#8225;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&hellip;</span></td>
+<td class="tabxpl">Horizontale Ellipse (Auslassungszeichen)</td>
+<td class="code"><code>&amp;hellip;</code></td>
+<td class="code"><code>&amp;#8230;</code></td>
+
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&permil;</span></td>
+<td class="tabxpl">Promille</td>
+<td class="code"><code>&amp;permil;</code></td>
+<td class="code"><code>&amp;#8240;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&lsaquo;</span></td>
+<td class="tabxpl">angewinkeltes einzelnes Anf.zeichen links</td>
+<td class="code"><code>&amp;lsaquo;</code></td>
+<td class="code"><code>&amp;#8249;</code></td>
+
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&rsaquo;</span></td>
+<td class="tabxpl">angewinkeltes einzelnes Anf.zeichen rechts</td>
+<td class="code"><code>&amp;rsaquo;</code></td>
+<td class="code"><code>&amp;#8250;</code></td>
+</tr>
+</table>
+
+&nbsp;
+
+<p class="doc"><a href="#top"><img src="../../src/up.gif" width="14" height="10" border="0" alt="nach oben"></a><a href="#bottom"><img src="../../src/down.gif" width="14" height="10" border="0" alt="nach unten"></a></p>
+
+
+<h2><a class="an" name="benannte_diakritische">Benannte Zeichen für diakritische Zeichen</a></h2>
+
+<p>Die HTML-Namen dieser Zeichen sind seit HTML 4.0 verfügbar.</p>
+
+<table class="reftable" cellpadding="3" cellspacing="0" border="1" width="100%">
+<tr>
+<th width="50">Zeichen</th>
+<th width="350">Beschreibung</th>
+<th>Name in HTML</th>
+<th>Unicode in HTML</th>
+
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&circ;</span></td>
+<td class="tabxpl">Zirkumflex</td>
+<td class="code"><code>&amp;circ;</code></td>
+<td class="code"><code>&amp;#710;</code></td>
+</tr>
+<tr>
+<td class="doctop"><span class="unicode">&tilde;</span></td>
+<td class="tabxpl">kleine Tilde</td>
+<td class="code"><code>&amp;tilde;</code></td>
+<td class="code"><code>&amp;#732;</code></td>
+
+</tr>
+</table>
+
+&nbsp;
+
+<table cellpadding="4" cellspacing="0" border="0" width="100%">
+<tr><td colspan="2" class="doc">
+&nbsp;<a href="#top"><img src="../../src/up.gif" width="14" height="10" border="0" alt="nach oben"></a>
+</td></tr>
+<tr><td class="doc"><a href="varianten.htm"><img src="../../src/next.gif" width="10" height="10" border="0" hspace="10" alt="weiter"></a></td>
+<td width="100%"><img src="../../src/dok.gif" width="15" height="10" alt="Seite">&nbsp;<a href="varianten.htm">HTML-Varianten (Strict, Transitional, Frameset)</a>
+</td></tr>
+<tr>
+<td class="doc"><a href="attribute.htm"><img src="../../src/prev.gif" width="10" height="10" border="0" hspace="10" alt="zurück"></a></td>
+<td><img src="../../src/dok.gif" width="15" height="10" alt="Seite">&nbsp;<a href="attribute.htm">HTML-Attribut-Referenz</a>
+
+</td>
+</tr>
+<tr><td colspan="2" class="doc">&nbsp;</td>
+</tr>
+<tr>
+<td colspan="2" class="nav"><a class="an" name="bottom"><img src="../../src/refkap.gif" width="16" height="13" alt="Teil von"></a> <a href="../../index.htm">SELFHTML</a>/<a href="../../navigation/index.htm" target="_parent" class="navh">Navigationshilfen</a> <img src="../../src/refkap.gif" width="16" height="13" alt="Teil von">&nbsp;<a href="../index.htm">HTML/XHTML</a> <img src="../../src/refkap.gif" width="16" height="13" alt="Teil von">&nbsp;<a href="index.htm">HTML-Referenz</a></td>
+</tr>
+</table>
+
+<p>&copy; 2005 <img src="../../src/dok.gif" width="15" height="10" alt="Seite">&nbsp;<a href="../../editorial/impressum.htm">Impressum</a></p>
+
+</body>
+</html>

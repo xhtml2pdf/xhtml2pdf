@@ -1,0 +1,147 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Test Media</title>
+<style type="text/css">
+
+@media print {
+
+    @font-face {
+        font-family: DIN;
+        src: url(font/rina.ttf);
+    }
+
+    @font-face {
+        font-family: DejaMono;
+        src: url(font/DejaVuSansMono.ttf);
+    }
+
+    @font-face {
+        font-family: DejaMono;
+        src: url(font/DejaVuSansMono-Bold.ttf);
+        font-weight: bold;
+    }
+
+    @font-face {
+        font-family: DejaMono;
+        src: url(font/DejaVuSansMono-Oblique.ttf);
+        font-style: italic;
+    }
+
+    @font-face {
+        font-family: DejaMono;
+        src: url(font/DejaVuSansMono-BoldOblique.ttf);
+        font-weight: bold;
+        font-style: italic;
+    }
+
+    @font-face {
+        font-family: DINL;
+        src: url(font/DINLt___.afm);
+    }
+
+    @font-face {
+        font-family: DINL;
+        src: url(font/DINMd___.afm);
+        font-weight: bold;
+    }
+
+    @font-face {
+        font-family: DejaSans;
+        src: url(font/DejaVuSans.ttf);
+    }
+
+    @font-face {
+        font-family: code2000;
+        src: url("font/CODE2000.TTF");
+    }
+
+}
+
+html {
+	font-family: times;
+}
+
+.din {
+	font-family: DINL, times;
+}
+
+.dejamono {
+    font-family: DejaMono;
+}
+
+.dejasans {
+    font-family: DejaSans;
+}
+
+.code2000 {
+    font-family: code2000;
+}
+
+</style>
+</head>
+<body>
+
+	<h1>Standard</h1>
+
+	<p>
+
+       This is normal
+
+       <b>becomes bold
+
+           <i>then also italic</i>
+
+       </b>
+
+       <i>and then just italic</i>
+
+    </p>
+
+	<h1>TTF (DejaVu Mono)</h1>
+
+	<p class="dejamono">
+
+	   This is normal
+
+	   <b>becomes bold
+
+	       <i>then also italic</i>
+
+	   </b>
+
+	   <i>and then just italic</i>
+
+	</p>
+
+        <p class="dejasans">
+            Some text in "Farsi":
+            به گفته وزیرخارجه روسیه، قطعنامه ای که اعضای دائم شورای امنیت سازمان ملل متحد و آلمان دیروز بر سر تصویب آن علیه ایران به توافق
+                     رسیدند، تحریمهای تازه و سختی بر این کشور اعمال نخواهد کرد
+        </p>
+
+        <p class="code2000">
+            Some text in "Korean":
+            박응용
+        </p>
+
+	<h1>Postscript (XXX)</h1>
+
+    <p class="din">
+
+       This is normal
+
+       <b>becomes bold
+
+           <i>then also italic</i>
+
+       </b>
+
+       <i>and then just italic</i>
+
+    </p>
+
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>Unbenanntes Dokument</title>
+<style>
+
+@page {
+
+	background-image: url(pdf/background-sample.pdf);
+	margin-top: 2cm;
+	margin-left: 4cm;
+	margin-right: 2cm;
+	margin-bottom: 3cm;
+	-pdf-frame-border: 1;
+
+	@frame footer {
+		-pdf-frame-content: footer;
+		-pdf-frame-border: 1;
+		bottom: 2cm;
+		left: 4cm;
+		right: 2cm;
+		height: 4cm;
+	}
+
+}
+
+@page second {
+
+	size: a5 landscape;
+	margin: 4cm;
+
+}
+
+@media screen {
+	#footer {
+		display: none;
+	}
+}
+
+</style>
+</head>
+<body>
+
+	<div id="footer">
+		This is the <strong>footer</strong> line! Page #<pdf:pagenumber>
+                <br>
+                <table border="1">
+                    <tr>
+                        <td align="left">Left side</td>
+                        <td align="right">Right side with pagenumber
+                            <pdf:pagenumber />
+                            <table border="1">
+                                <tr>
+                                    <td align="left">Left side</td>
+                                    <td align="right">Right side with pagenumber
+                                        <pdf:pagenumber /></td>
+                                </tr>
+                            </table>
+                            </td>
+                    </tr>
+                </table>
+	</div>
+
+    <p>Lorem ipsum... 1</p>
+
+	<pdf:nextframe>
+
+	<p>Lorem ipsum... 2</p>
+
+	<pdf:nextpage name="second">
+
+	<p>Lorem ipsum... 3</p>
+
+</body>
+</html>

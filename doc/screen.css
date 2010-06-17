@@ -1,0 +1,36 @@
+﻿body {
+	margin: 2em;
+	counter-reset: Ebene01;
+}
+h1:before {
+	content: counter(Ebene01) " ";
+	counter-increment: Ebene01;
+}
+h1 {
+	counter-reset: Ebene02;
+	background: #CCCC99;
+}
+h2:before {
+	content: counter(Ebene01) "." counter(Ebene02) " ";
+	counter-increment: Ebene02;
+}
+h2 {
+	border-bottom: 2px solid  #CCCC99;	
+}
+pre {
+	padding: 0.5em;
+}
+a, code {
+	background: #CCCC99;
+	color: #333333;
+}
+
+code {
+	font-weight: bold;
+}
+
+@media screen {
+	.pdf {
+		display: none;
+	}
+}

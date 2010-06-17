@@ -1,0 +1,173 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>Invoice #123</title>
+<style type="text/css">
+@page {
+	
+	size: a4;
+	
+	background-image: url('pdf/test-invoice-bg.pdf');
+	
+	@frame address {	
+		top: 2cm;
+		left: 4cm;
+		width: 10cm;
+		height: 3.5cm;	
+		-pdf-frame-border: 1;
+	}
+	
+	@frame text {
+		top: 6cm;
+		left: 4cm;
+		right: 4cm;
+		bottom: 4cm;
+		-pdf-frame-border: 1;
+	}
+	
+	@frame footer {
+		bottom: 3cm;
+		height: 2cm;
+		left: 4cm;
+		right: 4cm;	
+		-pdf-frame-content: footer;
+		-pdf-frame-border: 1;
+	}
+
+}
+
+@page followUp {
+
+	size: a4;
+	
+	@frame text {
+		top: 6cm;
+		left: 4cm;
+		right: 4cm;
+		bottom: 4cm;
+		-pdf-frame-border: 1;
+	}
+	
+	@frame footer {
+		bottom: 3cm;
+		height: 2cm;
+		left: 4cm;
+		right: 4cm;	
+		-pdf-frame-content: footer;
+		-pdf-frame-border: 1;
+	}
+
+}
+
+#footer {
+	color: #333333;
+	font-size: 75%;
+}
+
+tr{
+	padding: 0;
+	padding-bottom: 4px;
+}
+
+th {
+	background: #ccc;
+	font-weight: bold;
+}
+
+</style>
+</head>
+<body>
+
+	<div id="footer">
+		<table>
+			<tr>
+				<td>
+					Hausanschrift:<br>
+					Platanenallee 12 - 16<br>
+					D-12345 Musterhausen	
+				</td>		
+				<td>
+					Geschäftsführer:<br>
+					Klaus Mustermann
+				</td>		
+				<td>						
+					Deutsche Sparbank<br>
+					BLZ 123 345 56<br>
+					Konto 123 345 567	
+				</td>		
+				<td>		
+					Girokasse Musterhausen<br>
+					BLZ 987 654 01<br>
+					Konto 654 432 210
+				</td>
+			</tr>
+		</table>
+	</div>
+    
+	<div style="-pdf-frame-break: after; -pdf-next-page: followUp;">
+		Hans Mustermann<br>
+		Beispielweg 1<br>
+		<br>
+		12345 Musterstadt
+	</div>
+	
+	<table width="100%">
+		<tr>
+			<td><strong>Rechnung #123</strong></td>
+			<td align="right">01. Dezember 2007</td>
+		</tr>
+	</table>
+	
+    <p>Sehr geehrte Kundin, sehr geehrter Kunde,<br>
+wir lieferten Ihnen die nachfolgend aufgef&uuml;hrten Artikel, die wir Ihnen hiermit in Rechnung stellen:</p>
+
+    <table width="100%">
+      <tr style="border-bottom: 1px solid black;">
+        <th valign="top">Artikel</th>
+        <th valign="top">Menge</th>
+        <th valign="top">Einheit</th>
+        <th align="right" valign="top">Preis pro Einheit</th>
+        <th align="right" valign="top">Gesamtpreis</th>
+      </tr>
+      <tr>
+        <td valign="top">Hosentr&auml;ger</td>
+        <td valign="top">2</td>
+        <td valign="top">St&uuml;ck</td>
+        <td align="right" valign="top">9,99 &euro;</td>
+        <td align="right" valign="top">19,98 &euro;</td>
+      </tr>
+      <tr>
+        <td valign="top"></td>
+        <td valign="top"></td>
+        <td valign="top"></td>
+        <td align="right" valign="top">Zwischensumme</td>
+        <td align="right" valign="top">10,00 &euro;</td>
+      </tr>
+      <tr>
+        <td valign="top"></td>
+        <td valign="top"></td>
+        <td valign="top"></td>
+        <td align="right" valign="top">19% MWSt</td>
+        <td align="right" valign="top">10,00 &euro;</td>
+      </tr>
+      <tr>
+        <td valign="top"></td>
+        <td valign="top"></td>
+        <td valign="top"></td>
+        <td align="right" valign="top">Rechnungsbetrag</td>
+        <td align="right" valign="top">10,00 &euro; </td>
+      </tr>
+    </table>
+    <p>Bitte &uuml;berweisen Sie den Rechnungsbetrag innerhalb der n&auml;chsten <a name="Zahlungsfrist">14</a> Tage auf eines der unten angegebenen Konten. Herzlichen Dank im Voraus.</p>
+	<p>Mit freundlichen Gr&uuml;&szlig;en</p>
+	
+	<div style="-pdf-page-break: before;">
+		AGB
+		<p>
+		1.2
+	</div>
+	
+</body>
+</html>
