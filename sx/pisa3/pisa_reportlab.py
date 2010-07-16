@@ -170,7 +170,7 @@ class PmlPageTemplate(PageTemplate):
             try:
 
                 # Paint static frames
-                pagenumber = str(canvas.getPageNumber())
+                pagenumber = canvas.getPageNumber()
                 for frame in self.pisaStaticList:
 
                     frame = copy.deepcopy(frame)
@@ -181,14 +181,14 @@ class PmlPageTemplate(PageTemplate):
                         if isinstance(obj, PmlParagraph):
                             for frag in obj.frags:
                                 if frag.pageNumber:
-                                    frag.text = pagenumber
-                        elif isinstance(obj, PmlTable):
+                                    frag.text = str(pagenumber+int(frag.offset))
+                        elif isinstance(obj, PmlTable):                            
                             # Accessing private member, but is there any other way?
                             for subobj in flatten(obj._cellvalues):
                                 if isinstance(subobj, PmlParagraph):
                                     for frag in subobj.frags:
                                         if frag.pageNumber:
-                                            frag.text = pagenumber
+                                            frag.text = str(pagenumber+int(frag.offset))
 
                     frame.addFromList(story, canvas)
 

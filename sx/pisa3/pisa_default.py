@@ -144,6 +144,7 @@ TAGS = {
 
     "pdfpagenumber": (0, {
         "example":              (STRING, "0"),
+        "offset":              (STRING, "0"),
         }),
 
     "pdftoc": (0, {
