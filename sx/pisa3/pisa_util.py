@@ -396,6 +396,8 @@ class pisaTempFile(object):
             # Fallback for Google AppEnginge etc.
             self._delegate = self.STRATEGIES[0]() 
         self.write(buffer) 
+        # we must set the file's position for preparing to read
+        self.seek(0)
     
     def makeTempFile(self):
         " Switch to next startegy. If an error occured stay with the first strategy "
@@ -509,7 +511,7 @@ class pisaFileObject:
                 # log.debug("HTTP %r %r %r %r", server, path, uri, r1)
                 if (r1.status, r1.reason) == (200, "OK"):
                     # data = r1.read()
-                    self.mimetype = r1.getheader("Content-Type", None).split(";")[0]
+                    self.mimetype = r1.getheader("Content-Type", '').split(";")[0]
                     self.uri = uri
                     if r1.getheader("content-encoding") == "gzip":
                         # zbuf = cStringIO.StringIO(data)
@@ -522,7 +524,7 @@ class pisaFileObject:
                     # self.file = urlResponse
                 else:                              
                     urlResponse = urllib2.urlopen(uri)
-                    self.mimetype = urlResponse.info().get("Content-Type", None).split(";")[0]
+                    self.mimetype = urlResponse.info().get("Content-Type", '').split(";")[0]
                     self.uri = urlResponse.geturl()
                     self.file = urlResponse
 
