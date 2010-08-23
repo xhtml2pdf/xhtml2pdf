@@ -1,5 +1,5 @@
 ﻿#!/bin/python2.5
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
