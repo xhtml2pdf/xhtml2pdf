@@ -5,7 +5,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
@@ -18,7 +18,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
@@ -102,7 +102,7 @@ _borderStyleTable = {
     "groove": 1,
     "ridge": 1,
     "inset": 1,
-    "outset": 1,     
+    "outset": 1,
     }
 
 '''
@@ -151,14 +151,14 @@ def getNextPart(parts):
 
 def isSize(value):
     return value and ((type(value) is types.TupleType) or value=="0")
-        
+
 def splitBorder(parts):
     """
     The order of the elements seems to be of no importance:
-    
+
     http://www.w3.org/TR/CSS21/box.html#border-shorthand-properties
     """
-    
+
     width = style = color = None
     copy_parts = parts[:]
     # part = getNextPart(parts)
@@ -167,20 +167,20 @@ def splitBorder(parts):
         log.warn("To many elements for border style %r", parts)
 
     for part in parts:
-        # Width        
+        # Width
         if isSize(part):
             width = part
             # part = getNextPart(parts)
-        
+
         # Style
         elif _borderStyleTable.has_key(part.lower()):
             style = part
             # part = getNextPart(parts)
-    
+
         # Color
         else:
             color = part
-    
+
     # log.debug("Border styles: %r -> %r ", copy_parts, (width, style, color))
 
     return (width, style, color)
@@ -201,21 +201,21 @@ def parseSpecialRules(declarations, debug=0):
 
             # FONT
             if name == "font":
-                # [ [ <'font-style'> || <'font-variant'> || <'font-weight'> ]? <'font-size'> [ / <'line-height'> ]? <'font-family'> ] | inherit                
-                ddlen = len(dd)                            
+                # [ [ <'font-style'> || <'font-variant'> || <'font-weight'> ]? <'font-size'> [ / <'line-height'> ]? <'font-family'> ] | inherit
+                ddlen = len(dd)
                 part = getNextPart(parts)
                 # Style
-                if part and _styleTable.has_key(part):                       
+                if part and _styleTable.has_key(part):
                     dd.append(("font-style", part, last))
                     part = getNextPart(parts)
                 # Variant
-                if part and _variantTable.has_key(part):                       
+                if part and _variantTable.has_key(part):
                     dd.append(("font-variant", part, last))
                     part = getNextPart(parts)
                 # Weight
-                if part and _weightTable.has_key(part):                                       
+                if part and _weightTable.has_key(part):
                     dd.append(("font-weight", part, last))
-                    part = getNextPart(parts)                    
+                    part = getNextPart(parts)
                 # Size and Line Height
                 if isinstance(part, tuple) and len(part) == 3:
                     fontSize, slash, lineHeight = part
@@ -226,20 +226,20 @@ def parseSpecialRules(declarations, debug=0):
                     dd.append(("font-size", part, last))
                 # Face/ Family
                 dd.append(("font-face", parts, last))
-             
+
             # BACKGROUND
             elif name == "background":
                 # [<'background-color'> || <'background-image'> || <'background-repeat'> || <'background-attachment'> || <'background-position'>] | inherit
-                
+
                 # XXX We do not receive url() and parts list, so we go for a dirty work arround
                 part = getNextPart(parts) or oparts
                 if part:
-                    
+
                     if ("." in part) or ("data:" in part):
-                        dd.append(("background-image", part, last))       
+                        dd.append(("background-image", part, last))
                     else:
                         dd.append(("background-color", part, last))
-                        
+
                 if 0:
                     part = getNextPart(parts) or oparts
                     print "~", part, parts, oparts, declarations
@@ -249,8 +249,8 @@ def parseSpecialRules(declarations, debug=0):
                         part = getNextPart(parts)
                     # Background
                     if part:
-                        dd.append(("background-image", part, last))                   
-                    # XXX Incomplete! Error in url()!               
+                        dd.append(("background-image", part, last))
+                    # XXX Incomplete! Error in url()!
 
             # MARGIN
             elif name == "margin":
@@ -370,7 +370,7 @@ def parseSpecialRules(declarations, debug=0):
             # BORDER
             elif name == "border":
                 width, style, color = splitBorder(parts)
-                if width is not None:                    
+                if width is not None:
                     dd.append(("border-left-width", width, last))
                     dd.append(("border-right-width", width, last))
                     dd.append(("border-top-width", width, last))
@@ -391,20 +391,20 @@ def parseSpecialRules(declarations, debug=0):
                 direction = name[7:]
                 width, style, color = splitBorder(parts)
                 # print direction, width
-                if width is not None:                    
+                if width is not None:
                     dd.append(("border-" + direction + "-width", width, last))
                 if style is not None:
                     dd.append(("border-" + direction + "-style", style, last))
                 if color is not None:
                     dd.append(("border-" + direction + "-color", color, last))
-                                    
+
             # REST
             else:
                 dd.append(d)
 
         if debug and dd:
             log.debug("CSS special OUT:\n%s", "\n".join([repr(d) for d in dd]))
-        
+
         if 0: #declarations!=dd:
             print "###", declarations
             print "#->", dd

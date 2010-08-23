@@ -5,7 +5,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
@@ -102,11 +102,11 @@ def pisaDocument(
     raise_exception = True,
     capacity = 100 * 1024, # -1,
     **kw):
-    
-    c = None    
+
+    c = None
     if show_error_as_pdf:
         raise_exception = False
-    
+
     try:
 
         log.debug("pisaDocument options:\n  src = %r\n  dest = %r\n  path = %r\n  link_callback = %r\n  xhtml = %r",
@@ -172,18 +172,18 @@ def pisaDocument(
             doc.build(c.story)
 
         # Add watermarks
-        if pyPdf:                      
-            for bgouter in c.pisaBackgroundList:     
-                          
+        if pyPdf:
+            for bgouter in c.pisaBackgroundList:
+
                 # If we have at least one background, then lets do it
                 if bgouter:
-                    
-                    istream = out                    
+
+                    istream = out
                     try:
                         output = pyPdf.PdfFileWriter()
                         input1 = pyPdf.PdfFileReader(istream)
                         ctr = 0
-                        for bg in c.pisaBackgroundList:                            
+                        for bg in c.pisaBackgroundList:
                             page = input1.getPage(ctr)
                             if bg and not bg.notFound() and (bg.mimetype=="application/pdf"):
                                 bginput = pyPdf.PdfFileReader(bg.getFile())
@@ -198,18 +198,18 @@ def pisaDocument(
                         output.write(out)
                         # data = sout.getvalue()
                     except Exception:
-                        log.exception(c.error("pyPDF error"))   
+                        log.exception(c.error("pyPDF error"))
                         if raise_exception:
                             raise
-                 
-                    
+
+
                     # Found a background? So leave loop after first occurence
                     break
         else:
             log.warn(c.warning("pyPDF not installed!"))
 
         # In web frameworks for debugging purposes maybe an output of
-        # errors in a PDF is preferred        
+        # errors in a PDF is preferred
         if show_error_as_pdf and c and c.err:
             return pisaErrorDocument(c.dest, c)
 
@@ -217,15 +217,15 @@ def pisaDocument(
         # passed from the caller
         data = out.getvalue()
         c.dest.write(data)
-            
+
     except:
-        # log.exception(c.error("Document error"))        
+        # log.exception(c.error("Document error"))
         log.exception("Document error")
         c.err += 1
         if raise_exception:
             raise
 
     if raise_exception and c.err:
-        raise Exception("Errors occured, please see log files for more informations") 
+        raise Exception("Errors occured, please see log files for more informations")
 
     return c

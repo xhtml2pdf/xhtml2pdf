@@ -5,7 +5,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
@@ -44,10 +44,10 @@ log = logging.getLogger("ho.pisa")
 rxhttpstrip = re.compile("https?://[^/]+(.*)", re.M | re.I)
 
 class AttrContainer(dict):
-      
-    def __getattr__(self, name):       
+
+    def __getattr__(self, name):
         try:
-            return dict.__getattr__(self, name)            
+            return dict.__getattr__(self, name)
         except:
             return self[name]
 
@@ -61,31 +61,31 @@ def pisaGetAttributes(c, tag, attributes):
                 attrs[str(k)] = str(v) # XXX no Unicode! Reportlab fails with template names
             except:
                 attrs[k] = v
-                
+
     nattrs = {}
-    if TAGS.has_key(tag):        
+    if TAGS.has_key(tag):
         block, adef = TAGS[tag]
         adef["id"] = STRING
         # print block, adef
-        for k, v in adef.items():                
+        for k, v in adef.items():
             nattrs[k] = None
             # print k, v
             # defaults, wenn vorhanden
-            if type(v) == types.TupleType:                
+            if type(v) == types.TupleType:
                 if v[1] == MUST:
                     if not attrs.has_key(k):
                         log.warn(c.warning("Attribute '%s' must be set!", k))
                         nattrs[k] = None
                         continue
-                nv = attrs.get(k, v[1])                    
+                nv = attrs.get(k, v[1])
                 dfl = v[1]
                 v = v[0]
             else:
                 nv = attrs.get(k, None)
-                dfl = None               
+                dfl = None
             try:
                 if nv is not None:
-                    
+
                     if type(v) == types.ListType:
                         nv = nv.strip().lower()
                         if nv not in v:
@@ -114,10 +114,10 @@ def pisaGetAttributes(c, tag, attributes):
 
                     elif v == COLOR:
                         nv = getColor(nv)
-                    
+
                     elif v == FILE:
                         nv = c.getFile(nv)
-                                                
+
                     elif v == FONT:
                         nv = c.getFontName(nv)
 
@@ -132,13 +132,13 @@ def pisaGetAttributes(c, tag, attributes):
 
     #else:
     #    c.warning("tag <%s> is not supported" % tag)
-   
+
     return AttrContainer(nattrs)
 
 attrNames = '''
     color
-    font-family 
-    font-size 
+    font-family
+    font-size
     font-weight
     font-style
     text-decoration
@@ -184,26 +184,26 @@ attrNames = '''
     -pdf-outline-level
     -pdf-outline-open
     -pdf-line-spacing
-    -pdf-keep-in-frame-mode    
+    -pdf-keep-in-frame-mode
     '''.strip().split()
- 
+
 def getCSSAttr(self, cssCascade, attrName, default=NotImplemented):
     if attrName in self.cssAttrs:
         return self.cssAttrs[attrName]
-    
+
     try:
         result = cssCascade.findStyleFor(self.cssElement, attrName, default)
     except LookupError:
-        result = None        
+        result = None
 
     # XXX Workaround for inline styles
     try:
         style = self.cssStyle
     except:
-        style = self.cssStyle = cssCascade.parser.parseInline(self.cssElement.getStyleAttr() or '')[0]        
+        style = self.cssStyle = cssCascade.parser.parseInline(self.cssElement.getStyleAttr() or '')[0]
     if style.has_key(attrName):
-        result = style[attrName]        
-        
+        result = style[attrName]
+
     if result == 'inherit':
         if hasattr(self.parentNode, 'getCSSAttr'):
             result = self.parentNode.getCSSAttr(cssCascade, attrName, default)
@@ -211,7 +211,7 @@ def getCSSAttr(self, cssCascade, attrName, default=NotImplemented):
             return default
         else:
             raise LookupError("Could not find inherited CSS attribute value for '%s'" % (attrName,))
-    
+
     if result is not None:
         self.cssAttrs[attrName] = result
     return result
@@ -232,30 +232,30 @@ def CSSCollect(node, c):
             #except LookupError:
             #    pass
             except Exception:
-                log.debug("CSS error '%s'", cssAttrName, exc_info=1)        
+                log.debug("CSS error '%s'", cssAttrName, exc_info=1)
     return node.cssAttrs
 
-def CSS2Frag(c, kw, isBlock):    
+def CSS2Frag(c, kw, isBlock):
     # COLORS
     if c.cssAttr.has_key("color"):
-        c.frag.textColor = getColor(c.cssAttr["color"])    
+        c.frag.textColor = getColor(c.cssAttr["color"])
     if c.cssAttr.has_key("background-color"):
         c.frag.backColor = getColor(c.cssAttr["background-color"])
-    # FONT SIZE, STYLE, WEIGHT    
+    # FONT SIZE, STYLE, WEIGHT
     if c.cssAttr.has_key("font-family"):
-        c.frag.fontName = c.getFontName(c.cssAttr["font-family"])    
+        c.frag.fontName = c.getFontName(c.cssAttr["font-family"])
     if c.cssAttr.has_key("font-size"):
         # XXX inherit
-        c.frag.fontSize = max(getSize("".join(c.cssAttr["font-size"]), c.frag.fontSize, c.baseFontSize), 1.0)    
+        c.frag.fontSize = max(getSize("".join(c.cssAttr["font-size"]), c.frag.fontSize, c.baseFontSize), 1.0)
     if c.cssAttr.has_key("line-height"):
         leading = "".join(c.cssAttr["line-height"])
         c.frag.leading = getSize(leading, c.frag.fontSize)
         c.frag.leadingSource = leading
     else:
         c.frag.leading = getSize(c.frag.leadingSource, c.frag.fontSize)
-    if c.cssAttr.has_key("-pdf-line-spacing"):         
-        c.frag.leadingSpace = getSize("".join(c.cssAttr["-pdf-line-spacing"]))    
-        # print "line-spacing", c.cssAttr["-pdf-line-spacing"], c.frag.leading                            
+    if c.cssAttr.has_key("-pdf-line-spacing"):
+        c.frag.leadingSpace = getSize("".join(c.cssAttr["-pdf-line-spacing"]))
+        # print "line-spacing", c.cssAttr["-pdf-line-spacing"], c.frag.leading
     if c.cssAttr.has_key("font-weight"):
         value = c.cssAttr["font-weight"].lower()
         if value in ("bold", "bolder", "500", "600", "700", "800", "900"):
@@ -362,13 +362,13 @@ def CSS2Frag(c, kw, isBlock):
 
 def pisaPreLoop(node, c, collect=False):
     """
-    Collect all CSS definitions 
+    Collect all CSS definitions
     """
-    
-    data = u""    
+
+    data = u""
     if node.nodeType == Node.TEXT_NODE and collect:
         data = node.data
-        
+
     elif node.nodeType == Node.ELEMENT_NODE:
         name = node.tagName.lower()
 
@@ -378,20 +378,20 @@ def pisaPreLoop(node, c, collect=False):
             # print " ", attr
             media = [x.strip() for x in attr.media.lower().split(",") if x.strip()]
             # print repr(media)
-            
+
             if (attr.get("type", "").lower() in ("", "text/css") and (
-                not media or                
+                not media or
                 "all" in media or
                 "print" in media or
-                "pdf" in media)):  
-    
+                "pdf" in media)):
+
                 if name == "style":
                     for node in node.childNodes:
-                        data += pisaPreLoop(node, c, collect=True)                    
-                    c.addCSS(data)                        
+                        data += pisaPreLoop(node, c, collect=True)
+                    c.addCSS(data)
                     return u""
                     #collect = True
-                                
+
                 if name == "link" and attr.href and attr.rel.lower() == "stylesheet":
                     # print "CSS LINK", attr
                     c.addCSS('\n@import "%s" %s;' % (attr.href, ",".join(media)))
@@ -400,11 +400,11 @@ def pisaPreLoop(node, c, collect=False):
     #else:
     #    print node.nodeType
 
-    for node in node.childNodes:        
+    for node in node.childNodes:
         result = pisaPreLoop(node, c, collect=collect)
         if collect:
             data += result
-        
+
     return data
 
 def pisaLoop(node, c, path=[], **kw):
@@ -419,7 +419,7 @@ def pisaLoop(node, c, path=[], **kw):
             }
     else:
         kw = copy.copy(kw)
-        
+
     indent = len(path) * "  "
 
     # TEXT
@@ -427,26 +427,26 @@ def pisaLoop(node, c, path=[], **kw):
         # print indent, "#", repr(node.data) #, c.frag
         c.addFrag(node.data)
         # c.text.append(node.value)
-       
+
     # ELEMENT
-    elif node.nodeType == Node.ELEMENT_NODE:  
-        
+    elif node.nodeType == Node.ELEMENT_NODE:
+
         node.tagName = node.tagName.replace(":", "").lower()
-        
+
         if node.tagName in ("style", "script"):
             return
-        
+
         path = copy.copy(path) + [node.tagName]
-        
-        # Prepare attributes        
-        attr = pisaGetAttributes(c, node.tagName, node.attributes)        
+
+        # Prepare attributes
+        attr = pisaGetAttributes(c, node.tagName, node.attributes)
         # log.debug(indent + "<%s %s>" % (node.tagName, attr) + repr(node.attributes.items())) #, path
-        
-        # Calculate styles                
+
+        # Calculate styles
         c.cssAttr = CSSCollect(node, c)
         c.node = node
 
-        # Block?    
+        # Block?
         PAGE_BREAK = 1
         PAGE_BREAK_RIGHT = 2
         PAGE_BREAK_LEFT = 3
@@ -460,45 +460,45 @@ def pisaLoop(node, c, path=[], **kw):
             c.addPara()
 
             # Page break by CSS
-            if c.cssAttr.has_key("-pdf-next-page"):                 
+            if c.cssAttr.has_key("-pdf-next-page"):
                 c.addStory(NextPageTemplate(str(c.cssAttr["-pdf-next-page"])))
             if c.cssAttr.has_key("-pdf-page-break"):
                 if str(c.cssAttr["-pdf-page-break"]).lower() == "before":
-                    c.addStory(PageBreak()) 
-            if c.cssAttr.has_key("-pdf-frame-break"): 
+                    c.addStory(PageBreak())
+            if c.cssAttr.has_key("-pdf-frame-break"):
                 if str(c.cssAttr["-pdf-frame-break"]).lower() == "before":
-                    c.addStory(FrameBreak()) 
+                    c.addStory(FrameBreak())
                 if str(c.cssAttr["-pdf-frame-break"]).lower() == "after":
                     frameBreakAfter = True
-            if c.cssAttr.has_key("page-break-before"):            
+            if c.cssAttr.has_key("page-break-before"):
                 if str(c.cssAttr["page-break-before"]).lower() == "always":
-                    c.addStory(PageBreak()) 
+                    c.addStory(PageBreak())
                 if str(c.cssAttr["page-break-before"]).lower() == "right":
-                    c.addStory(PageBreak()) 
+                    c.addStory(PageBreak())
                     c.addStory(PmlRightPageBreak())
                 if str(c.cssAttr["page-break-before"]).lower() == "left":
-                    c.addStory(PageBreak()) 
+                    c.addStory(PageBreak())
                     c.addStory(PmlLeftPageBreak())
-            if c.cssAttr.has_key("page-break-after"):            
+            if c.cssAttr.has_key("page-break-after"):
                 if str(c.cssAttr["page-break-after"]).lower() == "always":
                     pageBreakAfter = PAGE_BREAK
                 if str(c.cssAttr["page-break-after"]).lower() == "right":
                     pageBreakAfter = PAGE_BREAK_RIGHT
                 if str(c.cssAttr["page-break-after"]).lower() == "left":
                     pageBreakAfter = PAGE_BREAK_LEFT
-            
+
         if display == "none":
             # print "none!"
             return
-        
-        # Translate CSS to frags 
+
+        # Translate CSS to frags
 
         # Save previous frag styles
         c.pushFrag()
-        
+
         # Map styles to Reportlab fragment properties
-        CSS2Frag(c, kw, isBlock) 
-                          
+        CSS2Frag(c, kw, isBlock)
+
         # EXTRAS
         if c.cssAttr.has_key("-pdf-keep-with-next"):
             c.frag.keepWithNext = getBool(c.cssAttr["-pdf-keep-with-next"])
@@ -517,29 +517,29 @@ def pisaLoop(node, c, path=[], **kw):
             if value not in ("shrink", "error", "overflow", "shrink", "truncate"):
                 value = None
             c.frag.keepInFrameMode = value
-                
+
         # BEGIN tag
         klass = globals().get("pisaTag%s" % node.tagName.replace(":", "").upper(), None)
-        obj = None      
+        obj = None
 
         # Static block
-        elementId = attr.get("id", None)             
+        elementId = attr.get("id", None)
         staticFrame = c.frameStatic.get(elementId, None)
         if staticFrame:
             c.frag.insideStaticFrame += 1
             oldStory = c.swapStory()
-                  
+
         # Tag specific operations
-        if klass is not None:        
+        if klass is not None:
             obj = klass(node, attr)
             obj.start(c)
-            
+
         # Visit child nodes
-        c.fragBlock = fragBlock = copy.copy(c.frag)        
+        c.fragBlock = fragBlock = copy.copy(c.frag)
         for nnode in node.childNodes:
-            pisaLoop(nnode, c, path, **kw)        
+            pisaLoop(nnode, c, path, **kw)
         c.fragBlock = fragBlock
-                            
+
         # END tag
         if obj:
             obj.end(c)
@@ -552,26 +552,26 @@ def pisaLoop(node, c, path=[], **kw):
 
             # Page break by CSS
             if pageBreakAfter:
-                c.addStory(PageBreak()) 
+                c.addStory(PageBreak())
                 if pageBreakAfter == PAGE_BREAK_RIGHT:
                     c.addStory(PmlRightPageBreak())
                 if pageBreakAfter == PAGE_BREAK_LEFT:
                     c.addStory(PmlLeftPageBreak())
-            if frameBreakAfter:                
-                c.addStory(FrameBreak()) 
+            if frameBreakAfter:
+                c.addStory(FrameBreak())
 
         # Static block, END
         if staticFrame:
             c.addPara()
             for frame in staticFrame:
-                frame.pisaStaticStory = c.story            
+                frame.pisaStaticStory = c.story
             c.swapStory(oldStory)
             c.frag.insideStaticFrame -= 1
-            
+
         # c.debug(1, indent, "</%s>" % (node.tagName))
-        
-        # Reset frag style                   
-        c.pullFrag()                                    
+
+        # Reset frag style
+        c.pullFrag()
 
     # Unknown or not handled
     else:
@@ -581,13 +581,13 @@ def pisaLoop(node, c, path=[], **kw):
             pisaLoop(node, c, path, **kw)
 
 def pisaParser(src, c, default_css="", xhtml=False, encoding=None, xml_output=None):
-    """    
+    """
     - Parse HTML and get miniDOM
     - Extract CSS informations, add default CSS, parse CSS
     - Handle the document DOM itself and build reportlab story
-    - Return Context object     
+    - Return Context object
     """
-    
+
     if xhtml:
         parser = html5lib.XHTMLParser(tree=treebuilders.getTreeBuilder("dom"))
     else:
@@ -597,11 +597,11 @@ def pisaParser(src, c, default_css="", xhtml=False, encoding=None, xml_output=No
         if type(src) is types.UnicodeType:
             encoding = "utf8"
             src = src.encode(encoding)
-        src = pisaTempFile(src, capacity=c.capacity)    
+        src = pisaTempFile(src, capacity=c.capacity)
 
     # Test for the restrictions of html5lib
     if encoding:
-        # Workaround for html5lib<0.11.1        
+        # Workaround for html5lib<0.11.1
         if hasattr(inputstream, "isValidEncoding"):
             if encoding.strip().lower() == "utf8":
                 encoding = "utf-8"
@@ -610,24 +610,24 @@ def pisaParser(src, c, default_css="", xhtml=False, encoding=None, xml_output=No
         else:
              if inputstream.codecName(encoding) is None:
                  log.error("%r is not a valid encoding", encoding)
-    
+
     document = parser.parse(
         src,
         encoding=encoding)
-        
-    if xml_output:        
-        xml_output.write(document.toprettyxml(encoding="utf8"))    
+
+    if xml_output:
+        xml_output.write(document.toprettyxml(encoding="utf8"))
 
     if default_css:
         c.addCSS(default_css)
-        
-    pisaPreLoop(document, c)    
+
+    pisaPreLoop(document, c)
     #try:
-    c.parseCSS()        
+    c.parseCSS()
     #except:
     #    c.cssText = DEFAULT_CSS
-    #    c.parseCSS()        
-    # c.debug(9, pprint.pformat(c.css))        
+    #    c.parseCSS()
+    # c.debug(9, pprint.pformat(c.css))
     pisaLoop(document, c)
     return c
 
@@ -637,6 +637,6 @@ HTML2PDF = pisaParser
 
 def XHTML2PDF(*a, **kw):
     kw["xhtml"] = True
-    return HTML2PDF(*a, **kw)  
+    return HTML2PDF(*a, **kw)
 
 XML2PDF = XHTML2PDF

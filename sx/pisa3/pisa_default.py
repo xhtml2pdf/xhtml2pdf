@@ -5,7 +5,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
@@ -147,15 +147,15 @@ TAGS = {
         }),
 
     "pdftoc": (0, {
-        }),        
-
-    "pdfversion": (0, {     
-        }),
-    
-    "pdfkeeptogether": (1, {      
         }),
 
-    "pdfkeepinframe": (1, {    
+    "pdfversion": (0, {
+        }),
+
+    "pdfkeeptogether": (1, {
+        }),
+
+    "pdfkeepinframe": (1, {
         "maxwidth":             SIZE,
         "maxheight":            SIZE,
         "mergespace":           (INT, 1),
@@ -180,17 +180,17 @@ TAGS = {
         "strokewidth":          (SIZE),
         }),
 
-    "pdfchartlabel": (0, {       
+    "pdfchartlabel": (0, {
         "value":                (STRING, MUST),
        }),
 
     "pdfbarcode": (0, {
         "value":                (STRING, MUST),
         "align":                (["left", "center", "right"], "left"),
-        }),     
-                 
+        }),
+
     # ========================================================
-    
+
     "link": (0, {
         "href":                (STRING, MUST),
         "rel":                 (STRING, ""),
@@ -203,7 +203,7 @@ TAGS = {
         "name":                (STRING, ""),
         "content":             (STRING, ""),
         }),
-        
+
     "style": (0, {
         "type":                (STRING, ""),
         "media":               (STRING, "all"),
@@ -213,7 +213,7 @@ TAGS = {
         "src":                  (FILE, MUST),
         "width":                SIZE,
         "height":               SIZE,
-        "align":                ["top", "middle", "bottom", "left", "right", 
+        "align":                ["top", "middle", "bottom", "left", "right",
                                 "texttop", "absmiddle", "absbottom", "baseline"],
         }),
 
@@ -225,7 +225,7 @@ TAGS = {
         "bgcolor":              COLOR,
         "cellpadding":          (SIZE, "0"),
         "cellspacing":          (SIZE, "0"),
-        "repeat":               (INT, "0"),  # XXX Remove this! Set to 0 
+        "repeat":               (INT, "0"),  # XXX Remove this! Set to 0
         "width":                STRING,
         #"keepmaxwidth":         SIZE,
         #"keepmaxheight":        SIZE,
@@ -247,7 +247,7 @@ TAGS = {
         "bgcolor":              COLOR,
         "border":               SIZE,
         "bordercolor":          (COLOR, "#000000"),
-        "colspan":		        INT, 
+        "colspan":		        INT,
         "rowspan":		        INT,
         }),
 
@@ -258,7 +258,7 @@ TAGS = {
         "bgcolor":              COLOR,
         "border":               SIZE,
         "bordercolor":          (COLOR, "#000000"),
-        "colspan":		        INT, 
+        "colspan":		        INT,
         "rowspan":		        INT,
         }),
 
@@ -346,22 +346,22 @@ TAGS = {
         "name":                 STRING,
         }),
 
-    "input": (0, {        
+    "input": (0, {
         "name":                 STRING,
         "value":                STRING,
         "type":                 (["text", "hidden", "checkbox"], "text"),
         }),
 
-    "textarea": (1, {        
-        "name":                 STRING,    
-        }),
-        
-    "select": (1, {        
+    "textarea": (1, {
         "name":                 STRING,
-        "value":                STRING,        
         }),
-               
-    "option": (0, {                
+
+    "select": (1, {
+        "name":                 STRING,
+        "value":                STRING,
+        }),
+
+    "option": (0, {
         "value":                STRING,
         }),
     }
@@ -369,29 +369,29 @@ TAGS = {
 # XXX use "html" not "*" as default!
 DEFAULT_CSS = """
 html {
-    font-family: Helvetica; 
-    font-size: 10px; 
+    font-family: Helvetica;
+    font-size: 10px;
     font-weight: normal;
-    color: #000000; 
+    color: #000000;
     background-color: transparent;
-    margin: 0; 
+    margin: 0;
     padding: 0;
     line-height: 150%;
     border: 1px none;
     display: inline;
     width: auto;
     height: auto;
-    white-space: normal;    
+    white-space: normal;
 }
 
-b, 
-strong { 
-    font-weight: bold; 
+b,
+strong {
+    font-weight: bold;
 }
 
-i, 
-em { 
-    font-style: italic; 
+i,
+em {
+    font-style: italic;
 }
 
 u {
@@ -432,13 +432,13 @@ h4,
 h5,
 h6 {
     font-weight:bold;
-    -pdf-outline: true;    
+    -pdf-outline: true;
     -pdf-outline-open: false;
 }
 
 h1 {
     /*18px via YUI Fonts CSS foundation*/
-    font-size:138.5%; 
+    font-size:138.5%;
     -pdf-outline-level: 0;
 }
 
@@ -572,7 +572,7 @@ blockquote {
 
 noscript {
     display: none;
-}  
+}
 """
 
 DEFAULT_FONT = {
@@ -592,7 +592,7 @@ DEFAULT_FONT = {
     "symbol": "Symbol",
     "zapfdingbats": "ZapfDingbats",
     "zapf-dingbats": "ZapfDingbats",
-    
+
     # Alias
     "arial": "Helvetica",
     "times new roman": "Times-Roman",
@@ -600,31 +600,31 @@ DEFAULT_FONT = {
     'serif':'Times-Roman',
     'sansserif':'Helvetica',
     'sans':'Helvetica',
-    'monospaced':'Courier', 
-    'monospace':'Courier', 
-    'mono':'Courier', 
-    'courier new':'Courier',    
+    'monospaced':'Courier',
+    'monospace':'Courier',
+    'mono':'Courier',
+    'courier new':'Courier',
     'verdana':'Helvetica',
     'geneva':'Helvetica',
     }
 
 PML_PAGESIZES = {
-        "a0": A0, 
-        "a1": A1, 
-        "a2": A2, 
-        "a3": A3, 
-        "a4": A4, 
-        "a5": A5, 
-        "a6": A6, 
-        "b0": B0, 
-        "b1": B1, 
-        "b2": B2, 
-        "b3": B3, 
-        "b4": B4, 
-        "b5": B5, 
-        "b6": B6, 
-        "letter": LETTER, 
-        "legal": LEGAL, 
+        "a0": A0,
+        "a1": A1,
+        "a2": A2,
+        "a3": A3,
+        "a4": A4,
+        "a5": A5,
+        "a6": A6,
+        "b0": B0,
+        "b1": B1,
+        "b2": B2,
+        "b3": B3,
+        "b4": B4,
+        "b5": B5,
+        "b6": B6,
+        "letter": LETTER,
+        "legal": LEGAL,
         "ledger": ELEVENSEVENTEEN,
-        "elevenseventeen": ELEVENSEVENTEEN, 
+        "elevenseventeen": ELEVENSEVENTEEN,
         }

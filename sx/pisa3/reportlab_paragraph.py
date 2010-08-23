@@ -55,16 +55,16 @@ _wsc_re_split=re.compile('[%s]+'% re.escape(''.join((
     )))).split
 
 def split(text, delim=None):
-    if type(text) is str: 
+    if type(text) is str:
         text = text.decode('utf8')
-    if type(delim) is str: 
+    if type(delim) is str:
         delim = delim.decode('utf8')
     elif delim is None and u'\xa0' in text:
         return [uword.encode('utf8') for uword in _wsc_re_split(text)]
     return [uword.encode('utf8') for uword in text.split(delim)]
 
 def strip(text):
-    if type(text) is str: 
+    if type(text) is str:
         text = text.decode('utf8')
     return text.strip().encode('utf8')
 
@@ -245,19 +245,19 @@ def _putFragLine(cur_x, tx, line):
                 tx.setRise(f.rise)
             text = f.text
             tx._textOut(text,f is words[-1])    # cheap textOut
-            
-            # XXX Modified for XHTML2PDF    
-            # Background colors (done like underline)            
+
+            # XXX Modified for XHTML2PDF
+            # Background colors (done like underline)
             # print "#", repr(f.text), f.fontSize, f.backColor, f.underline
-            if hasattr(f, "backColor"):            
+            if hasattr(f, "backColor"):
                 if xs.backgroundColor != f.backColor or xs.backgroundFontSize != f.fontSize:
                     if xs.backgroundColor is not None:
-                        xs.backgrounds.append((xs.background_x, cur_x_s, xs.backgroundColor, xs.backgroundFontSize))                
+                        xs.backgrounds.append((xs.background_x, cur_x_s, xs.backgroundColor, xs.backgroundFontSize))
                     xs.background_x = cur_x_s
                     xs.backgroundColor = f.backColor
                     xs.backgroundFontSize = f.fontSize
-           
-            # Underline     
+
+            # Underline
             if not xs.underline and f.underline:
                 xs.underline = 1
                 xs.underline_x = cur_x_s
@@ -271,18 +271,18 @@ def _putFragLine(cur_x, tx, line):
                     xs.underlines.append((xs.underline_x, cur_x_s, xs.underlineColor))
                     xs.underlineColor = xs.textColor
                     xs.underline_x = cur_x_s
-            
+
             # Strike
             if not xs.strike and f.strike:
                 xs.strike = 1
                 xs.strike_x = cur_x_s
                 xs.strikeColor = f.textColor
-                # XXX Modified for XHTML2PDF    
+                # XXX Modified for XHTML2PDF
                 xs.strikeFontSize = f.fontSize
             elif xs.strike:
                 if not f.strike:
                     xs.strike = 0
-                    # XXX Modified for XHTML2PDF    
+                    # XXX Modified for XHTML2PDF
                     xs.strikes.append((xs.strike_x, cur_x_s, xs.strikeColor, xs.strikeFontSize))
                     xs.strikeColor = None
                     xs.strikeFontSize = None
@@ -310,23 +310,23 @@ def _putFragLine(cur_x, tx, line):
             cur_x += txtlen
             nSpaces += text.count(' ')
     cur_x_s = cur_x+(nSpaces-1)*ws
-    
-    # XXX Modified for XHTML2PDF    
+
+    # XXX Modified for XHTML2PDF
     # Underline
     if xs.underline:
         xs.underlines.append((xs.underline_x, cur_x_s, xs.underlineColor))
-    
-    # XXX Modified for XHTML2PDF    
+
+    # XXX Modified for XHTML2PDF
     # Backcolor
-    if hasattr(f, "backColor"):  
+    if hasattr(f, "backColor"):
         if xs.backgroundColor is not None:
             xs.backgrounds.append((xs.background_x, cur_x_s, xs.backgroundColor, xs.backgroundFontSize))
-    
-    # XXX Modified for XHTML2PDF    
+
+    # XXX Modified for XHTML2PDF
     # Strike
     if xs.strike:
         xs.strikes.append((xs.strike_x, cur_x_s, xs.strikeColor, xs.strikeFontSize))
-        
+
     if xs.link:
         xs.links.append( (xs.link_x, cur_x_s, xs.link,xs.linkColor) )
     if tx._x0!=x0:
@@ -395,8 +395,8 @@ def _getFragWords(frags):
             if hangingStrip:
                 hangingStrip = False
                 text = text.lstrip()
-            #if type(text) is str: 
-            #    text = text.decode('utf8')             
+            #if type(text) is str:
+            #    text = text.decode('utf8')
             S = split(text)
             if S==[]: S = ['']
             if W!=[] and text[0] in whitespace:
@@ -491,8 +491,8 @@ def _drawBullet(canvas, offset, cur_y, bulletText, style):
                 img = image.getImage()
                 # print style.bulletIndent, offset, width
                 canvas.drawImage(
-                    img, 
-                    style.leftIndent - width - gap, 
+                    img,
+                    style.leftIndent - width - gap,
                     cur_y+getattr(style,"bulletOffsetY",0),
                     width,
                     height)
@@ -616,15 +616,15 @@ def _do_link_line(i, t_off, ws, tx):
 def _do_post_text(tx):
     """
     Try to find out what the variables mean:
-        
+
     tx         A structure containing more informations about paragraph ???
-    
+
     leading    Height of lines
     ff         1/8 of the font size
     y0         The "baseline" postion ???
     y          1/8 below the baseline
     """
-    
+
     xs = tx.XtraState
     leading = xs.style.leading
     autoLeading = xs.autoLeading
@@ -638,20 +638,20 @@ def _do_post_text(tx):
     y0 = xs.cur_y
     y = y0 - ff
 
-    # Background    
-    for x1, x2, c, fs in xs.backgrounds:       
-        inlineFF = fs * 0.125        
+    # Background
+    for x1, x2, c, fs in xs.backgrounds:
+        inlineFF = fs * 0.125
         gap = inlineFF * 1.25
-        tx._canvas.setFillColor(c)     
+        tx._canvas.setFillColor(c)
         tx._canvas.rect(x1, y - gap, x2 - x1, fs + 1, fill=1, stroke=0)
         # tx._canvas.rect(x1, y, x2 - x1, fs, fill=1, stroke=0)
     xs.backgrounds = []
     xs.background = 0
-    xs.backgroundColor = None   
-    xs.backgroundFontSize = None 
-    
-    # Underline    
-    yUnderline = y0 - 1.5 * ff   
+    xs.backgroundColor = None
+    xs.backgroundFontSize = None
+
+    # Underline
+    yUnderline = y0 - 1.5 * ff
     tx._canvas.setLineWidth(ff * 0.75)
     csc = None
     for x1,x2,c in xs.underlines:
@@ -663,14 +663,14 @@ def _do_post_text(tx):
     xs.underline=0
     xs.underlineColor=None
 
-    # Strike        
+    # Strike
     for x1,x2,c,fs in xs.strikes:
         inlineFF = fs * 0.125
         ys = y0 + 2 * inlineFF
         if c!=csc:
             tx._canvas.setStrokeColor(c)
             csc = c
-        tx._canvas.setLineWidth(inlineFF * 0.75)  
+        tx._canvas.setLineWidth(inlineFF * 0.75)
         tx._canvas.line(x1, ys, x2, ys)
     xs.strikes = []
     xs.strike=0
@@ -678,7 +678,7 @@ def _do_post_text(tx):
 
     yl = y + leading
     for x1,x2,link,c in xs.links:
-        # No automatic underlining for links, never!                
+        # No automatic underlining for links, never!
         _doLink(tx, link, (x1, y, x2, yl))
     xs.links = []
     xs.link=None
@@ -698,7 +698,7 @@ def textTransformFrags(frags,style):
         elif tt=='none':
             return
         else:
-            raise ValueError('ParaStyle.textTransform value %r is invalid' % style.textTransform) 
+            raise ValueError('ParaStyle.textTransform value %r is invalid' % style.textTransform)
         n = len(frags)
         if n==1:
             #single fragment the easy case
@@ -914,7 +914,7 @@ class Paragraph(Flowable):
                 print repr(self.getPlainText()[:80])
             except:
                 print "???"
-                
+
         # work out widths array for breaking
         self.width = availWidth
         style = self.style
@@ -969,9 +969,9 @@ class Paragraph(Flowable):
         return self.blPara.kind==0 and _split_blParaSimple or _split_blParaHard
 
     def split(self,availWidth, availHeight):
-        
+
         if self.debug:
-            print  id(self), "split"         
+            print  id(self), "split"
 
         if len(self.frags)<=0: return []
 
@@ -1044,7 +1044,7 @@ class Paragraph(Flowable):
                 ):
             if hasattr(self,a):
                 setattr(P1,a,getattr(self,a))
-                setattr(P2,a,getattr(self,a)) 
+                setattr(P2,a,getattr(self,a))
         return [P1,P2]
 
     def draw(self):
@@ -1062,7 +1062,7 @@ class Paragraph(Flowable):
                 - kind = 0
                 - fontName, fontSize, leading, textColor
                 - lines=  A list of lines
-                        
+
                         Each line has two items.
 
                         1. unused width in points
@@ -1303,7 +1303,7 @@ class Paragraph(Flowable):
 
         if self.debug:
             print id(self), "breakLinesCJK"
-            
+
         if not isinstance(width,(list,tuple)): maxWidths = [width]
         else: maxWidths = width
         style = self.style
@@ -1355,7 +1355,7 @@ class Paragraph(Flowable):
 
         if self.debug:
             print id(self), "drawPara", self.blPara.kind
-            
+
         #stash the key facts locally for speed
         canvas = self.canv
         style = self.style
@@ -1447,18 +1447,18 @@ class Paragraph(Flowable):
                     xs.style = style
                     xs.lines = lines
                     xs.underlines = []
-                    xs.underlineColor = None    
+                    xs.underlineColor = None
                     # XXX Modified for XHTML2PDF
                     xs.backgrounds = []
                     xs.backgroundColor = None
-                    xs.backgroundFontSize = None                    
+                    xs.backgroundFontSize = None
                     xs.strikes = []
                     xs.strikeColor = None
                     # XXX Modified for XHTML2PDF
                     xs.strikeFontSize = None
                     xs.links = []
                     xs.link = f.link
-                    canvas.setStrokeColor(f.textColor)                    
+                    canvas.setStrokeColor(f.textColor)
                     dx = t_off + leftIndent
                     if dpl != _justifyDrawParaLine: ws = 0
                     # XXX Never underline!
@@ -1512,8 +1512,8 @@ class Paragraph(Flowable):
                 # XXX Modified for XHTML2PDF
                 xs.background = 0
                 xs.backgrounds = []
-                xs.backgroundColor = None     
-                xs.backgroundFontSize = None           
+                xs.backgroundColor = None
+                xs.backgroundFontSize = None
                 xs.strike = 0
                 xs.strikes = []
                 xs.strikeColor = None
