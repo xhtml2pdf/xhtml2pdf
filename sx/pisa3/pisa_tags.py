@@ -22,7 +22,8 @@ from pisa_default import DEFAULT_CSS
 from pisa_reportlab import *
 from pisa_util import *
 
-from reportlab.graphics.barcode.code39 import Standard39
+from reportlab.graphics.barcode import createBarcodeDrawing
+
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus.flowables import *
 from reportlab.platypus.paraparser import tt2ps, ABag
@@ -585,17 +586,94 @@ class pisaTagPDFFONT(pisaTag):
         c.loadFont(self.attr.name, self.attr.src, self.attr.encoding)
 
 class pisaTagPDFBARCODE(pisaTag):
-    """
-    <pdf:barcode value="" align="">
-    """
+
+    _codeName = {
+            "I2OF5": "I2of5",
+            "ITF": "I2of5",
+            "CODE39": "Standard39",
+            "EXTENDEDCODE39": "Extended39",
+            "CODE93": "Standard93",
+            "EXTENDEDCODE93": "Extended93",
+            "MSI": "MSI",
+            "CODABAR": "Codabar",
+            "NW7": "Codabar",
+            "CODE11": "Code11",
+            "FIM": "FIM",
+            "POSTNET": "POSTNET",
+            "USPS4S": "USPS_4State",
+            "CODE128": "Code128",
+            "EAN13": "EAN13",
+            "EAN8": "EAN8",
+            }
+
+    class _barcodeWrapper(Flowable):
+        """Wrapper for barcode widget
+        """
+        def __init__(self, codeName="Code128", value="", **kw):
+            self.widget = createBarcodeDrawing(codeName, value=value, **kw)
+
+        def draw(self, canvas, xoffset=0, **kw):
+            # NOTE: `canvas' is mutable, so canvas.restoreState() is a MUST.
+            canvas.saveState()
+            canvas.translate(xoffset, 0)
+            self.widget.canv = canvas
+            self.widget.draw()
+            canvas.restoreState()
+
+        def wrap(self, aW, aH):
+            return self.widget.wrap(aW, aH)
+
     def start(self, c):
-        c.addPara()
         attr = self.attr
-        bc = Standard39()
-        bc.value = attr.value
-        bc.barHeight = 0.5 * inch
-        bc.lquiet = 0 # left padding
-        bc.rquiet = 0 # left padding
-        bc.hAlign = attr.align.upper()
-        c.addStory(bc)
-        c.addPara()
+        codeName = attr.type or "Code128"
+        codeName = pisaTagPDFBARCODE._codeName[codeName.upper().replace("-", "")]
+        humanReadable = bool(attr.humanreadable)
+        barWidth = attr.barwidth or 0.01*inch
+        barHeight = attr.barheight or 0.5*inch
+        fontName = c.getFontName("OCRB10,OCR-B,OCR B,OCRB")  # or "Helvetica"
+        fontSize = 2.75*mm
+
+        # Assure minimal size.
+        if codeName in ("EAN13", "EAN8"):
+            barWidth = max(barWidth, 0.264*mm)
+            fontSize = max(fontSize, 2.75*mm)
+        else: # Code39 etc.
+            barWidth = max(barWidth, 0.0075*inch)
+        #barHeight = max(barHeight, 25.93*mm)
+
+        barcode = pisaTagPDFBARCODE._barcodeWrapper(
+                codeName=codeName,
+                value=attr.value,
+                barWidth=barWidth,
+                barHeight=barHeight,
+                humanReadable=humanReadable,
+                fontName=fontName,
+                fontSize=fontSize,
+                )
+
+        width, height = barcode.wrap(c.frag.width, c.frag.height)
+
+        #barcode.spaceBefore = c.frag.spaceBefore
+        #barcode.spaceAfter = c.frag.spaceAfter
+
+        c.force = True
+
+        valign = attr.align or c.frag.vAlign or "baseline"
+        if valign in ["texttop"]:
+            valign = "top"
+        elif valign in ["absmiddle"]:
+            valign = "middle"
+        elif valign in ["absbottom", "baseline"]:
+            valign = "bottom"
+
+        afrag = c.frag.clone()
+        afrag.text = ""
+        afrag.fontName = fontName
+        afrag.cbDefn = ABag(
+            kind="barcode",
+            barcode=barcode,
+            width=width,
+            height=height,
+            valign=valign,
+            )
+        c.fragList.append(afrag)

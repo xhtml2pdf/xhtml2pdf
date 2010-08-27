@@ -218,6 +218,19 @@ def _putFragLine(cur_x, tx, line):
                 cur_x += w
                 cur_x_s += w
                 setXPos(tx,cur_x_s-tx._x0)
+            elif kind=='barcode':
+                barcode = cbDefn.barcode
+                w = cbDefn.width
+                h = cbDefn.height
+                txfs = tx._fontsize
+                if txfs is None:
+                    txfs = xs.style.fontSize
+                iy0, iy1 = imgVRange(h, cbDefn.valign, txfs)
+                cur_x_s = cur_x + nSpaces*ws
+                barcode.draw(canvas=tx._canvas, xoffset=cur_x_s)
+                cur_x += w
+                cur_x_s += w
+                setXPos(tx, cur_x_s-tx._x0)
             else:
                 name = cbDefn.name
                 if kind=='anchor':
