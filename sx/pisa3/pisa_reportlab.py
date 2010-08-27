@@ -167,6 +167,16 @@ class PmlPageTemplate(PageTemplate):
             #    # print "drawing exception", str(e)
             #    pass
 
+            def pageNumbering(objList):
+                for obj in objList:
+                    if isinstance(obj, PmlParagraph):
+                        for frag in obj.frags:
+                            if frag.pageNumber:
+                                frag.text = pagenumber
+                                #import pdb; pdb.set_trace()
+
+                    elif isinstance(obj, PmlTable):
+                        pageNumbering(flatten(obj._cellvalues))
             try:
 
                 # Paint static frames
@@ -175,20 +185,7 @@ class PmlPageTemplate(PageTemplate):
 
                     frame = copy.deepcopy(frame)
                     story = frame.pisaStaticStory
-
-                    # Modify page number
-                    for obj in story:
-                        if isinstance(obj, PmlParagraph):
-                            for frag in obj.frags:
-                                if frag.pageNumber:
-                                    frag.text = pagenumber
-                        elif isinstance(obj, PmlTable):
-                            # Accessing private member, but is there any other way?
-                            for subobj in flatten(obj._cellvalues):
-                                if isinstance(subobj, PmlParagraph):
-                                    for frag in subobj.frags:
-                                        if frag.pageNumber:
-                                            frag.text = pagenumber
+                    pageNumbering(story)
 
                     frame.addFromList(story, canvas)
 
