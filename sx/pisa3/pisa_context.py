@@ -128,6 +128,8 @@ def getParaFrag(style):
     frag.listStyleImage = None
     frag.whiteSpace = "normal"
 
+    frag.wordWrap = None
+
     frag.pageNumber = False
     frag.height = None
     frag.width = None
@@ -571,6 +573,7 @@ class pisaContext:
         style.bulletFontName = first.bulletFontName or first.fontName
         style.bulletFontSize = first.fontSize
         style.bulletIndent = first.bulletIndent
+        style.wordWrap = first.wordWrap
 
         # Border handling for Paragraph
 
