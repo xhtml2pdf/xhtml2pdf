@@ -38,7 +38,7 @@ setup(
     download_url   = "http://pypi.python.org/pypi/pisa/",
     keywords       = "PDF, HTML, XHTML, XML, CSS",
 
-    requires       = ["html5lib", "pypdf", "pil"], #, "reportlab"],
+    install_requires = ["html5lib", "pypdf", "pil", "reportlab"],
 
     include_package_data = False,
 
