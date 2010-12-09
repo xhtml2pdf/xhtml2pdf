@@ -320,9 +320,10 @@ class PmlImageReader(object):
             else:
                 im = self._image
                 mode = self.mode = im.mode
-                if mode == 'RGBA':
-                    self._dataA = PmlImageReader(im.split()[3])
-                    im = im.convert('RGB')
+                if mode == 'RGBA': 
+                    if Image.VERSION.startswith('1.1.7'): im.load() 
+                    self._dataA = ImageReader(im.split()[3]) 
+                    im = im.convert('RGB') 
                     self.mode = 'RGB'
                 elif mode not in ('L', 'RGB', 'CMYK'):
                     im = im.convert('RGB')
