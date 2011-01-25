@@ -483,15 +483,23 @@ class pisaFileObject:
         else:
 
             # Check if we have an external scheme
-            if basepath and not (uri.startswith("http://") or uri.startswith("https://")):
+            if basepath and not urlparse.urlparse(uri).scheme:
                 urlParts = urlparse.urlparse(basepath)
             else:
                 urlParts = urlparse.urlparse(uri)
 
             log.debug("URLParts: %r", urlParts)
 
+            if urlParts.scheme == 'file':
+                if basepath and uri.startswith('/'):
+                    uri = urlparse.urljoin(basepath, uri[1:])
+                urlResponse = urllib2.urlopen(uri)
+                self.mimetype = urlResponse.info().get("Content-Type", '').split(";")[0]
+                self.uri = urlResponse.geturl()
+                self.file = urlResponse
+
             # Drive letters have len==1 but we are looking for things like http:
-            if len(urlParts[0]) > 1 :
+            elif urlParts.scheme in ('http', 'https'):
 
                 # External data
                 if basepath:
@@ -510,19 +518,14 @@ class pisaFileObject:
                 r1 = conn.getresponse()
                 # log.debug("HTTP %r %r %r %r", server, path, uri, r1)
                 if (r1.status, r1.reason) == (200, "OK"):
-                    # data = r1.read()
                     self.mimetype = r1.getheader("Content-Type", '').split(";")[0]
                     self.uri = uri
                     if r1.getheader("content-encoding") == "gzip":
-                        # zbuf = cStringIO.StringIO(data)
                         import gzip
                         self.file = gzip.GzipFile(mode="rb", fileobj=r1)
-                        #data = zfile.read()
-                        #zfile.close()
                     else:
-                        self.file = r1                    
-                    # self.file = urlResponse
-                else:                              
+                        self.file = r1
+                else:
                     urlResponse = urllib2.urlopen(uri)
                     self.mimetype = urlResponse.info().get("Content-Type", '').split(";")[0]
                     self.uri = urlResponse.geturl()
@@ -534,6 +537,7 @@ class pisaFileObject:
                 if basepath:
                     uri = os.path.normpath(os.path.join(basepath, uri))
 
+                print 'final uri', uri
                 if os.path.isfile(uri):
                     self.uri = uri
                     self.local = uri
