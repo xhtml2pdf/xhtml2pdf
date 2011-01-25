@@ -318,6 +318,7 @@ class PmlImageReader(object):
                 im = self._image
                 mode = self.mode = im.mode
                 if mode == 'RGBA':
+                    if PILImage.VERSION.startswith('1.1.7'): im.load()
                     self._dataA = PmlImageReader(im.split()[3])
                     im = im.convert('RGB')
                     self.mode = 'RGB'
