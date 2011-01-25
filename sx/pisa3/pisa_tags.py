@@ -468,10 +468,11 @@ class pisaTagPDFSPACER(pisaTag):
 
 class pisaTagPDFPAGENUMBER(pisaTag):    
     """
-    <pdf:pagenumber example="" />
+    <pdf:pagenumber offset="" example="" />
     """   
     def start(self, c):
         c.frag.pageNumber = True 
+        c.frag.offset = self.attr.offset
         c.addFrag(self.attr.example)
         c.frag.pageNumber = False
         
