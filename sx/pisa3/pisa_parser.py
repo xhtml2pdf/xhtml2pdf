@@ -184,7 +184,8 @@ attrNames = '''
     -pdf-outline-level
     -pdf-outline-open
     -pdf-line-spacing
-    -pdf-keep-in-frame-mode    
+    -pdf-keep-in-frame-mode
+    -pdf-word-wrap
     '''.strip().split()
  
 def getCSSAttr(self, cssCascade, attrName, default=NotImplemented):
@@ -508,6 +509,8 @@ def pisaLoop(node, c, path=[], **kw):
             c.frag.outlineLevel = int(c.cssAttr["-pdf-outline-level"])
         if c.cssAttr.has_key("-pdf-outline-open"):
             c.frag.outlineOpen = getBool(c.cssAttr["-pdf-outline-open"])
+        if c.cssAttr.has_key("-pdf-word-wrap"):
+            c.frag.wordWrap = c.cssAttr["-pdf-word-wrap"]
         #if c.cssAttr.has_key("-pdf-keep-in-frame-max-width"):
         #    c.frag.keepInFrameMaxWidth = getSize("".join(c.cssAttr["-pdf-keep-in-frame-max-width"]))
         #if c.cssAttr.has_key("-pdf-keep-in-frame-max-height"):
