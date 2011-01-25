@@ -198,13 +198,13 @@ TAGS = {
                                   "usps4s",
                                   "code128",
                                   "ean13", "ean8",
-                                ], "code128"),
+                                 ], "code128"),
         "humanreadable":        (STRING, ""),
         "barwidth":             SIZE,
         "barheight":            SIZE,
         "align":                (["baseline", "top", "middle", "bottom"], "baseline"),
-        }),     
-                 
+        }),
+
     # ========================================================
     
     "link": (0, {

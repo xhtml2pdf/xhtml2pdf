@@ -586,7 +586,6 @@ class pisaTagPDFFONT(pisaTag):
         c.loadFont(self.attr.name, self.attr.src, self.attr.encoding)
 
 class pisaTagPDFBARCODE(pisaTag):
-           
     _codeName = {
             "I2OF5": "I2of5",
             "ITF": "I2of5",
@@ -623,27 +622,34 @@ class pisaTagPDFBARCODE(pisaTag):
         def wrap(self, aW, aH):
             return self.widget.wrap(aW, aH)
 
-    def start(self, c):        
-        attr = self.attr        
+    def start(self, c):
+        attr = self.attr
         codeName = attr.type or "Code128"
         codeName = pisaTagPDFBARCODE._codeName[codeName.upper().replace("-", "")]
         humanReadable = bool(attr.humanreadable)
         barWidth = attr.barwidth or 0.01*inch
         barHeight = attr.barheight or 0.5*inch
+        fontName = c.getFontName("OCRB10,OCR-B,OCR B,OCRB")  # or "Helvetica"
+        fontSize = 2.75*mm
 
         # Assure minimal size.
-        barWidth = max(barWidth, 0.33*mm if codeName in ("EAN13", "EAN8") else 0.0075*inch)
+        if codeName in ("EAN13", "EAN8"):
+            barWidth = max(barWidth, 0.264*mm)
+            fontSize = max(fontSize, 2.75*mm)
+        else: # Code39 etc.
+            barWidth = max(barWidth, 0.0075*inch)
         #barHeight = max(barHeight, 25.93*mm)
-                                
+
         barcode = pisaTagPDFBARCODE._barcodeWrapper(
                 codeName=codeName,
                 value=attr.value,
                 barWidth=barWidth,
                 barHeight=barHeight,
                 humanReadable=humanReadable,
-                fontName="Courier",
+                fontName=fontName,
+                fontSize=fontSize,
                 )
-                       
+
         width, height = barcode.wrap(c.frag.width, c.frag.height)
 
         #barcode.spaceBefore = c.frag.spaceBefore
@@ -651,7 +657,7 @@ class pisaTagPDFBARCODE(pisaTag):
 
         c.force = True
 
-        valign = attr.align or c.frag.vAlign or "baseline"    
+        valign = attr.align or c.frag.vAlign or "baseline"
         if valign in ["texttop"]:
             valign = "top"
         elif valign in ["absmiddle"]:
@@ -661,7 +667,7 @@ class pisaTagPDFBARCODE(pisaTag):
 
         afrag = c.frag.clone()
         afrag.text = ""
-        afrag.fontName="Courier"
+        afrag.fontName = fontName
         afrag.cbDefn = ABag(
             kind="barcode",
             barcode=barcode,
@@ -670,4 +676,3 @@ class pisaTagPDFBARCODE(pisaTag):
             valign=valign,
             )
         c.fragList.append(afrag)
-
