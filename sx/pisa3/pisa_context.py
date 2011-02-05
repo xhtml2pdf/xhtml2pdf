@@ -986,7 +986,7 @@ class pisaContext:
                         
             try:
                 
-                if suffix == "ttf":
+                if suffix in ["ttc", "ttf"]:
 
                     # determine full font name according to weight and style
                     fullFontName = "%s_%d%d" % (fontName, bold, italic)                    
