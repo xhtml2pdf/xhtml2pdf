@@ -273,6 +273,8 @@ class pisaCSSBuilder(css.CSSBuilder):
                         sizeList.append(getSize(value))
                     elif valueStr == "landscape":
                         isLandscape = True
+                    elif valueStr == "portrait":
+                        isLandscape = False
                     elif pisa_default.PML_PAGESIZES.has_key(valueStr):
                         c.pageSize = pisa_default.PML_PAGESIZES[valueStr]
                     else:
