@@ -37,7 +37,10 @@ Dependencies:
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 import copy
-import sets
+try:
+    set
+except NameError:
+    from sets import Set as set
 import cssParser
 import cssSpecial
 
@@ -526,7 +529,7 @@ class CSSInlineRuleset(CSSRuleset, CSSDeclarations):
 class CSSBuilder(cssParser.CSSBuilderAbstract):
     RulesetFactory = CSSRuleset
     SelectorFactory = CSSMutableSelector
-    MediumSetFactory = sets.Set
+    MediumSetFactory = set
     DeclarationsFactory = CSSDeclarations
     TermFunctionFactory = CSSTerminalFunction
     TermOperatorFactory = CSSTerminalOperator
