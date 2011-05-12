@@ -217,6 +217,7 @@ def pisaDocument(
         # passed from the caller
         data = out.getvalue()
         c.dest.write(data)
+        c.dest.close()
             
     except:
         # log.exception(c.error("Document error"))        
