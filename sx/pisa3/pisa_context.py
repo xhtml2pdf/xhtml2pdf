@@ -153,9 +153,11 @@ def getParaFrag(style):
     return frag
 
 def getDirName(path):
-    if path and not (path.lower().startswith("http:") or path.lower().startswith("https:")):
+    parts = urlparse.urlparse(path)
+    if parts.scheme:
+        return path
+    else:
         return os.path.dirname(os.path.abspath(path))
-    return path
 
 class pisaCSSBuilder(css.CSSBuilder):
 
@@ -403,7 +405,7 @@ class pisaCSSParser(css.CSSParser):
         result = []
         if not cssFile:
             return None
-        if self.rootPath and (self.rootPath.startswith("http:") or self.rootPath.startswith("https:")):
+        if self.rootPath and urlparse.urlparse(self.rootPath).scheme:
             self.rootPath = urlparse.urljoin(self.rootPath, cssResourceName)
         else:
             self.rootPath = getDirName(cssFile.uri)
@@ -466,10 +468,11 @@ class pisaContext:
         self.force = False
 
         self.pathCallback = None # External callback function for path calculations
-
-        # Store path to document
-        self.pathDocument = path or "__dummy__"
-        if not (self.pathDocument.lower().startswith("http:") or self.pathDocument.lower().startswith("https:")):
+        
+        # Store path to document         
+        self.pathDocument = path or "__dummy__"                 
+        parts = urlparse.urlparse(self.pathDocument)
+        if not parts.scheme:
             self.pathDocument = os.path.abspath(self.pathDocument)
         self.pathDirectory = getDirName(self.pathDocument)
 
@@ -982,8 +985,8 @@ class pisaContext:
             suffix = suffix.lower()
 
             try:
-
-                if suffix == "ttf":
+                
+                if suffix in ["ttc", "ttf"]:
 
                     # determine full font name according to weight and style
                     fullFontName = "%s_%d%d" % (fontName, bold, italic)
