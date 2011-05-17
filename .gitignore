@@ -1,2 +1,16 @@
 *.pyc
 pisa.egg-info
+.project
+.pydevproject
+.pydevproject.bak
+.settings/
+PIL-1.1.7-py2.7-linux-x86_64.egg/
+bin/
+html5lib-0.90-py2.7.egg/
+include/
+lib/
+man/
+pyPdf-1.13-py2.7.egg/
+reportlab-2.5-py2.7-linux-x86_64.egg/
+tests/tmp/
+
