@@ -5,14 +5,14 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
-# limitations under the License. 
+# limitations under the License.
 
 __version__ = "$Revision: 103 $"
 __author__  = "$Author: holtwick $"
@@ -59,7 +59,7 @@ class Filter(object):
 
     def should_filter(self, status, headers):
         print headers
-    
+
     def filter(self, status, headers, body):
         raise NotImplementedError
 
@@ -73,18 +73,18 @@ class HTMLFilter(Filter):
             if name.lower() == 'content-type':
                 return value.startswith('text/html')
         return False
-    
+
 class PisaMiddleware(HTMLFilter):
-                  
-    def filter(self, 
-            script_name, 
-            path_info, 
+
+    def filter(self,
+            script_name,
+            path_info,
             environ,
-            status, 
-            headers, 
-            body): 
-        topdf = environ.get("pisa.topdf", "")        
-        if topdf:            
+            status,
+            headers,
+            body):
+        topdf = environ.get("pisa.topdf", "")
+        if topdf:
             dst = StringIO.StringIO()
             result = pisa.CreatePDF(
                 body,
@@ -94,7 +94,6 @@ class PisaMiddleware(HTMLFilter):
             headers = [
                 ("content-type", "application/pdf"),
                 ("content-disposition", "attachment; filename=" + topdf)
-                ] 
-            body = dst.getvalue()              
+                ]
+            body = dst.getvalue()
         return status, headers, body
-        

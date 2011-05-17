@@ -5,7 +5,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
@@ -46,7 +46,7 @@ import mimetypes
 import urllib2
 import urllib
 import httplib
-import tempfile 
+import tempfile
 import shutil
 
 rgb_re = re.compile("^.*?rgb[(]([0-9]+).*?([0-9]+).*?([0-9]+)[)].*?[ ]*$")
@@ -363,42 +363,42 @@ else:
         StringIO.StringIO,
         tempfile.NamedTemporaryFile)
 
-class pisaTempFile(object): 
-    """A temporary file implementation that uses memory unless 
-    either capacity is breached or fileno is requested, at which 
-    point a real temporary file will be created and the relevant 
-    details returned 
-    
+class pisaTempFile(object):
+    """A temporary file implementation that uses memory unless
+    either capacity is breached or fileno is requested, at which
+    point a real temporary file will be created and the relevant
+    details returned
+
     If capacity is -1 the second strategy will never be used.
-    
+
     Inspired by:
     http://code.activestate.com/recipes/496744/
-    """ 
+    """
 
     STRATEGIES = STRATEGIES
-     
+
     CAPACITY = 10 * 1024
-    
-    def __init__(self, buffer="", capacity=CAPACITY): 
-        """Creates a TempFile object containing the specified buffer. 
-        If capacity is specified, we use a real temporary file once the 
-        file gets larger than that size.  Otherwise, the data is stored 
-        in memory. 
-        """ 
-        
+
+    def __init__(self, buffer="", capacity=CAPACITY):
+        """Creates a TempFile object containing the specified buffer.
+        If capacity is specified, we use a real temporary file once the
+        file gets larger than that size.  Otherwise, the data is stored
+        in memory.
+        """
+
         #if hasattr(buffer, "read"):
-        #shutil.copyfileobj(    fsrc, fdst[, length])   
-        self.capacity = capacity 
+        #shutil.copyfileobj(    fsrc, fdst[, length])
+        self.capacity = capacity
         self.strategy = int(len(buffer) > self.capacity)
         try:
             self._delegate = self.STRATEGIES[self.strategy]()
-        except: 
+        except:
             # Fallback for Google AppEnginge etc.
-            self._delegate = self.STRATEGIES[0]() 
-        self.write(buffer) 
+            self._delegate = self.STRATEGIES[0]()
+        self.write(buffer)
         # we must set the file's position for preparing to read
         self.seek(0)
-    
+
     def makeTempFile(self):
         " Switch to next startegy. If an error occured stay with the first strategy "
         if self.strategy == 0:
@@ -410,12 +410,12 @@ class pisaTempFile(object):
                 log.warn("Created temporary file %s", self.name)
             except:
                 self.capacity = - 1
-                
+
     def getFileName(self):
         " Get a named temporary file "
         self.makeTempFile()
         return self.name
-    
+
     def fileno(self):
         """Forces this buffer to use a temporary file as the underlying.
         object and returns the fileno associated with it.
@@ -433,26 +433,26 @@ class pisaTempFile(object):
 
     def write(self, value):
         " If capacity != -1 and length of file > capacity it is time to switch "
-        if self.capacity > 0 and self.strategy == 0:            
-            len_value = len(value) 
-            if len_value >= self.capacity: 
-                needs_new_strategy = True 
-            else: 
-                self.seek(0, 2)  # find end of file 
+        if self.capacity > 0 and self.strategy == 0:
+            len_value = len(value)
+            if len_value >= self.capacity:
+                needs_new_strategy = True
+            else:
+                self.seek(0, 2)  # find end of file
                 needs_new_strategy = \
-                    (self.tell() + len_value) >= self.capacity 
-            if needs_new_strategy: 
+                    (self.tell() + len_value) >= self.capacity
+            if needs_new_strategy:
                 self.makeTempFile()
         self._delegate.write(value)
 
-    def __getattr__(self, name): 
-        try: 
-            return getattr(self._delegate, name) 
-        except AttributeError: 
-            # hide the delegation 
+    def __getattr__(self, name):
+        try:
+            return getattr(self._delegate, name)
+        except AttributeError:
+            # hide the delegation
             e = "object '%s' has no attribute '%s'" \
-                     % (self.__class__.__name__, name) 
-            raise AttributeError(e) 
+                     % (self.__class__.__name__, name)
+            raise AttributeError(e)
 
 _rx_datauri = re.compile("^data:(?P<mime>[a-z]+/[a-z]+);base64,(?P<data>.*)$", re.M | re.DOTALL)
 
@@ -470,7 +470,7 @@ class pisaFileObject:
         self.uri = None
         self.local = None
         self.tmp_file = None
-        
+
         uri = str(uri)
         log.debug("FileObject %r, Basepath: %r", uri, basepath)
 
@@ -499,7 +499,7 @@ class pisaFileObject:
 
                 #path = urlparse.urlsplit(url)[2]
                 #mimetype = getMimeType(path)
-                
+
                 # Using HTTPLIB
                 server, path = urllib.splithost(uri[uri.find("//"):])
                 if uri.startswith("https://"):
@@ -520,9 +520,9 @@ class pisaFileObject:
                         #data = zfile.read()
                         #zfile.close()
                     else:
-                        self.file = r1                    
+                        self.file = r1
                     # self.file = urlResponse
-                else:                              
+                else:
                     urlResponse = urllib2.urlopen(uri)
                     self.mimetype = urlResponse.info().get("Content-Type", '').split(";")[0]
                     self.uri = urlResponse.geturl()
@@ -547,11 +547,11 @@ class pisaFileObject:
             return pisaTempFile(self.data)
         return None
 
-    def getNamedFile(self):        
+    def getNamedFile(self):
         if self.notFound():
             return None
         if self.local:
-            return str(self.local)         
+            return str(self.local)
         if not self.tmp_file:
             self.tmp_file = tempfile.NamedTemporaryFile()
             if self.file:
@@ -559,8 +559,8 @@ class pisaFileObject:
             else:
                 self.tmp_file.write(self.getData())
             self.tmp_file.flush()
-        return self.tmp_file.name        
-            
+        return self.tmp_file.name
+
     def getData(self):
         if self.data is not None:
             return self.data

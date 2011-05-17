@@ -286,12 +286,12 @@ class CSSParser(object):
         i_string2 = u'\'((?:%s|\")*)\'' % i_string_content
         i_string = _orRule(i_string1, i_string2)
         re_string = re.compile(i_string, _reflags)
-        i_uri = (u'url\\(\s*(?:(?:%s)|((?:%s)+))\s*\\)' 
+        i_uri = (u'url\\(\s*(?:(?:%s)|((?:%s)+))\s*\\)'
 		% (i_string, _orRule('[!#$%&*-~]', i_nonascii, i_escape)))
-        # XXX For now 
-        # i_uri = u'(url\\(.*?\\))'         
+        # XXX For now
+        # i_uri = u'(url\\(.*?\\))'
         re_uri = re.compile(i_uri, _reflags)
-        i_num = u'(([-+]?[0-9]+(?:\\.[0-9]+)?)|([-+]?\\.[0-9]+))' # XXX Added out paranthesis, because e.g. .5em was not parsed correctly  
+        i_num = u'(([-+]?[0-9]+(?:\\.[0-9]+)?)|([-+]?\\.[0-9]+))' # XXX Added out paranthesis, because e.g. .5em was not parsed correctly
         re_num = re.compile(i_num, _reflags)
         i_unit = '(%%|%s)?' % i_ident
         re_unit = re.compile(i_unit, _reflags)
@@ -309,7 +309,7 @@ class CSSParser(object):
         i_comment = u'(?:\/\*[^*]*\*+([^/*][^*]*\*+)*\/)'
         re_comment = re.compile(i_comment, _reflags)
         i_important = u'!\s*(important)'
-        re_important = re.compile(i_important, _reflags)       
+        re_important = re.compile(i_important, _reflags)
         del _orRule
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -350,10 +350,10 @@ class CSSParser(object):
 
         self.cssBuilder.beginStylesheet()
         try:
-            
+
             # XXX Some simple preprocessing
             src = cssSpecial.cleanupCSS(src)
-                        
+
             try:
                 src, stylesheet = self._parseStylesheet(src)
             except self.ParseError, err:
@@ -1001,10 +1001,10 @@ class CSSParser(object):
             units, src = self._getMatchResult(self.re_unit, src)
             term = self.cssBuilder.termNumber(result, units)
             return src.lstrip(), term
-              
+
         result, src = self._getString(src, self.re_uri)
         if result is not None:
-            # XXX URL!!!!            
+            # XXX URL!!!!
             term = self.cssBuilder.termURI(result)
             return src.lstrip(), term
 

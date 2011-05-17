@@ -5,7 +5,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
@@ -35,11 +35,11 @@ except:
     try:
         import Image as PILImage
     except:
-        PILImage = None    
+        PILImage = None
 
 from pisa_util import *
 from pisa_default import TAGS, STRING
-        
+
 import copy
 import cgi
 
@@ -47,7 +47,7 @@ import logging
 log = logging.getLogger("ho.pisa")
 
 MAX_IMAGE_RATIO = 0.95
- 
+
 class PmlMaxHeightMixIn:
 
     def setMaxHeight(self, availHeight):
@@ -57,19 +57,19 @@ class PmlMaxHeightMixIn:
                 if not hasattr(self.canv, "maxAvailHeightValue"):
                     self.canv.maxAvailHeightValue = 0
                 self.availHeightValue = self.canv.maxAvailHeightValue = max(
-                    availHeight, 
+                    availHeight,
                     self.canv.maxAvailHeightValue)
         else:
             self.availHeightValue = availHeight
         if not hasattr(self, "availHeightValue"):
             self.availHeightValue = 0
         return self.availHeightValue
-    
+
     def getMaxHeight(self):
         if not hasattr(self, "availHeightValue"):
             return 0
         return self.availHeightValue
-    
+
 class PmlBaseDoc(BaseDocTemplate):
 
     """
@@ -223,7 +223,7 @@ class PmlImageReader(object):
         else:
             try:
                 self.fp = open_for_read(fileName, 'b')
-                if isinstance(self.fp, StringIO.StringIO().__class__):  
+                if isinstance(self.fp, StringIO.StringIO().__class__):
                     imageReaderFlags = 0 #avoid messing with already internal files
                 if imageReaderFlags > 0:  #interning
                     data = self.fp.read()
@@ -247,7 +247,7 @@ class PmlImageReader(object):
                     #detect which library we are using and open the image
                     if not self._image:
                         self._image = self._read_image(self.fp)
-                    if getattr(self._image, 'format', None) == 'JPEG': 
+                    if getattr(self._image, 'format', None) == 'JPEG':
                         self.jpeg_fh = self._jpeg_fh
                 else:
                     from reportlab.pdfbase.pdfutils import readJPEGInfo
@@ -272,7 +272,7 @@ class PmlImageReader(object):
         if sys.platform[0:4] == 'java':
             from javax.imageio import ImageIO
             return ImageIO.read(fp)
-        elif PILImage:            
+        elif PILImage:
             return PILImage.open(fp)
 
     def _jpeg_fh(self):
@@ -325,7 +325,7 @@ class PmlImageReader(object):
                 elif mode not in ('L', 'RGB', 'CMYK'):
                     im = im.convert('RGB')
                     self.mode = 'RGB'
-                self._data = im.tostring()        
+                self._data = im.tostring()
         return self._data
 
     def getImageData(self):
@@ -348,8 +348,8 @@ class PmlImageReader(object):
                 return None
 
     def __str__(self):
-        global _ctr 
-        _ctr += 1 
+        global _ctr
+        _ctr += 1
         " This is needed because of a bug in Reportlab _digester func "
         return "PmlImageObject_%s_%d" % (id(self), _ctr)
         # return "PmlImageObject_%s_%s" % (hash(id(self)), hash(self.fileName))
@@ -359,7 +359,7 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
     #_fixedWidth = 1
     #_fixedHeight = 1
 
-    def __init__(self, data, width=None, height=None, mask="auto", mimetype=None, **kw):        
+    def __init__(self, data, width=None, height=None, mask="auto", mimetype=None, **kw):
         self.kw = kw
         self.hAlign = 'CENTER'
         self._mask = mask
@@ -370,7 +370,7 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         if img:
             self.imageWidth, self.imageHeight = img.getSize()
         self.drawWidth = width or self.imageWidth
-        self.drawHeight = height or self.imageHeight        
+        self.drawHeight = height or self.imageHeight
 
     def wrap(self, availWidth, availHeight):
         " This can be called more than once! Do not overwrite important data like drawWidth "
@@ -393,7 +393,7 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         # print id(self._imgdata), hash(img.getRGBData())
         return img
 
-    def draw(self):        
+    def draw(self):
         img = self.getImage()
         self.canv.drawImage(
             img,
@@ -415,20 +415,20 @@ class PmlParagraphAndImage(ParagraphAndImage, PmlMaxHeightMixIn):
         result = ParagraphAndImage.wrap(self, availWidth, availHeight)
         del self.I.canv
         return result
-    
+
     def split(self, availWidth, availHeight):
         # print "# split", id(self)
         if not hasattr(self, "wI"):
-            self.wI, self.hI = self.I.wrap(availWidth, availHeight) #drawWidth, self.I.drawHeight        
+            self.wI, self.hI = self.I.wrap(availWidth, availHeight) #drawWidth, self.I.drawHeight
         return ParagraphAndImage.split(self, availWidth, availHeight)
 
 # if 1:
 #    import reportlab.platypus.paragraph
 #    Paragraph = reportlab.platypus.paragraph.Paragraph
-#    class PmlParagraph(reportlab.platypus.paragraph.Paragraph):   
+#    class PmlParagraph(reportlab.platypus.paragraph.Paragraph):
 #        pass
- 
-class PmlParagraph(Paragraph, PmlMaxHeightMixIn):  
+
+class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
 
     def _calcImageMaxSizes(self, availWidth, availHeight):
         self.hasImages = False
@@ -444,7 +444,7 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
                 hfactor = float(height) / img.height
                 factor = min(wfactor, hfactor)
                 img.height = img.height * factor
-                img.width = img.width * factor                
+                img.width = img.width * factor
                 # print "after", img.width, img.height
 
     def wrap(self, availWidth, availHeight):
@@ -452,18 +452,18 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
         availHeight = self.setMaxHeight(availHeight)
 
         style = self.style
-         
+
         self.deltaWidth = style.paddingLeft + style.paddingRight + style.borderLeftWidth + style.borderRightWidth
         self.deltaHeight = style.paddingTop + style.paddingBottom + style.borderTopWidth + style.borderBottomWidth
-               
+
         # reduce the available width & height by the padding so the wrapping
         # will use the correct size
         availWidth -= self.deltaWidth
         availHeight -= self.deltaHeight
-        
+
         # Modify maxium image sizes
         self._calcImageMaxSizes(availWidth, self.getMaxHeight() - self.deltaHeight)
-        
+
         # call the base class to do wrapping and calculate the size
         Paragraph.wrap(self, availWidth, availHeight)
 
@@ -477,8 +477,8 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
         return (self.width, self.height)
 
     def split(self, availWidth, availHeight):
-        
-        if len(self.frags)<=0: 
+
+        if len(self.frags)<=0:
             return []
 
         #the split information is all inside self.blPara
@@ -566,10 +566,10 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
         # offset the origin to compensate for the padding
         canvas.saveState()
         canvas.translate(
-            (style.paddingLeft + style.borderLeftWidth), 
+            (style.paddingLeft + style.borderLeftWidth),
             -1 * (style.paddingTop + style.borderTopWidth)) # + (style.leading / 4)))
 
-        # Call the base class draw method to finish up        
+        # Call the base class draw method to finish up
         Paragraph.draw(self)
         canvas.restoreState()
 
@@ -578,7 +578,7 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
         style.backColor = bg
 
         canvas.saveState()
-        
+
         def _drawBorderLine(bstyle, width, color, x1, y1, x2, y2):
             # We need width and border style to be able to draw a border
             if width and getBorderStyle(bstyle):
@@ -590,7 +590,7 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
                     canvas.setStrokeColor(color)
                     canvas.setLineWidth(width)
                     canvas.line(x1, y1, x2, y2)
-                
+
         _drawBorderLine(style.borderLeftStyle,
                         style.borderLeftWidth,
                         style.borderLeftColor,
@@ -606,18 +606,18 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
         _drawBorderLine(style.borderBottomStyle,
                         style.borderBottomWidth,
                         style.borderBottomColor,
-                        x, y, x + w, y)        
+                        x, y, x + w, y)
 
         canvas.restoreState()
 
 class PmlKeepInFrame(KeepInFrame, PmlMaxHeightMixIn):
-  
+
     def wrap(self, availWidth, availHeight):
         availWidth = max(availWidth, 1.0)
         self.maxWidth = availWidth
-        self.maxHeight = self.setMaxHeight(availHeight)       
+        self.maxHeight = self.setMaxHeight(availHeight)
         return KeepInFrame.wrap(self, availWidth, availHeight)
-    
+
 class PmlTable(Table, PmlMaxHeightMixIn):
 
     def _normWidth(self, w, maxw):
@@ -691,7 +691,7 @@ class PmlTable(Table, PmlMaxHeightMixIn):
         diff = sum(newColWidths) - totalWidth
         if diff > 0:
             newColWidths[0] -= diff
-        
+
         # print "New values:", totalWidth, newColWidths, sum(newColWidths)
 
         return Table.wrap(self, availWidth, availHeight)

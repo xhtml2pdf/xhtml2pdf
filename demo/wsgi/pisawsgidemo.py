@@ -6,7 +6,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
@@ -19,7 +19,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
@@ -40,13 +40,13 @@ import logging
 import sx.pisa3.pisa_wsgi as pisa_wsgi
 
 def SimpleApp(environ, start_response):
-    
+
     # That's the magic!
     #
     # Set the environment variable "pisa.topdf" to the filename
-    # you would like to have for the resulting PDF 
+    # you would like to have for the resulting PDF
     environ["pisa.topdf"] = "index.pdf"
-    
+
     # Simple Hello World example
     start_response(
         '200 OK', [
@@ -59,12 +59,12 @@ if __name__ == '__main__':
     HOST = ''
     PORT = 8080
     logging.basicConfig(level=logging.DEBUG)
-    
+
     app = SimpleApp
-    
-    # Add PISA WSGI Middleware  
+
+    # Add PISA WSGI Middleware
     app = pisa_wsgi.PisaMiddleware(app)
-    
+
     httpd = make_server(HOST, PORT, app)
     print "Serving HTTP on port %d..." % PORT
     httpd.serve_forever()

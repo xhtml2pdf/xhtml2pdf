@@ -5,7 +5,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
@@ -28,7 +28,7 @@ import sys
 
 import logging
 log = logging.getLogger("ho.pisa")
-            
+
 def _width(value=None):
     if value is None:
         return None
@@ -62,7 +62,7 @@ class TableData:
 
     def add_style(self, data):
         # print self.mode, data
-        # Do we have color and 
+        # Do we have color and
         # width = data[3]
         #if data[0].startswith("LINE"):
         #    color = data[4]
@@ -81,9 +81,9 @@ class TableData:
             except:
                 pass
         return data
-   
+
     def add_cell_styles(self, c, begin, end, mode="td"):
-        def getColor(a, b): 
+        def getColor(a, b):
             return a
         self.mode = mode.upper()
         if c.frag.backColor and mode != "tr": # XXX Stimmt das so?
@@ -132,12 +132,12 @@ class TableData:
         self.add_style(('BOTTOMPADDING', begin, end, c.frag.paddingBottom or self.padding))
 
 class pisaTagTABLE(pisaTag):
-    
+
     def start(self, c):
         c.addPara()
-    
+
         attrs = self.attr
-        
+
         # Swap table data
         c.tableData, self.tableData = TableData(), c.tableData
         tdata = c.tableData
@@ -148,7 +148,7 @@ class pisaTagTABLE(pisaTag):
 
         begin = (0, 0)
         end = (-1, - 1)
-            
+
         if attrs.border and attrs.bordercolor:
             frag = c.frag
             frag.borderLeftWidth = attrs.border
@@ -165,20 +165,20 @@ class pisaTagTABLE(pisaTag):
             frag.borderBottomStyle = "solid"
 
             # tdata.add_style(("GRID", begin, end, attrs.border, attrs.bordercolor))
-        
+
         tdata.padding = attrs.cellpadding
-        
+
         #if 0: #attrs.cellpadding:
         #    tdata.add_style(('LEFTPADDING', begin, end, attrs.cellpadding))
         #    tdata.add_style(('RIGHTPADDING', begin, end, attrs.cellpadding))
         #    tdata.add_style(('TOPPADDING', begin, end, attrs.cellpadding))
         #    tdata.add_style(('BOTTOMPADDING', begin, end, attrs.cellpadding))
-            
+
         # alignment
         #~ tdata.add_style(('VALIGN', (0,0), (-1,-1), attrs.valign.upper()))
 
         # Set Border and padding styles
-        
+
         tdata.add_cell_styles(c, (0, 0), (-1, - 1), "table")
 
         # bgcolor
@@ -187,7 +187,7 @@ class pisaTagTABLE(pisaTag):
 
         tdata.align = attrs.align.upper()
         tdata.col = 0
-        tdata.row = 0        
+        tdata.row = 0
         tdata.colw = []
         tdata.rowh = []
         tdata.repeat = attrs.repeat
@@ -197,11 +197,11 @@ class pisaTagTABLE(pisaTag):
 
     def end(self, c):
         tdata = c.tableData
-        data = tdata.get_data()        
-        
+        data = tdata.get_data()
+
         # Add missing columns so that each row has the same count of columns
         # This prevents errors in Reportlab table
-        
+
         try:
             maxcols = max([len(row) for row in data] or [0])
         except ValueError:
@@ -235,51 +235,51 @@ class pisaTagTABLE(pisaTag):
                 t.totalWidth = _width(tdata.width)
                 t.spaceBefore = c.frag.spaceBefore
                 t.spaceAfter = c.frag.spaceAfter
-                
+
                 # XXX Maybe we need to copy some more properties?
                 t.keepWithNext = c.frag.keepWithNext
                 # t.hAlign = tdata.align
                 c.addStory(t)
             else:
                 log.warn(c.warning("<table> is empty"))
-        except:            
+        except:
             log.warn(c.warning("<table>"), exc_info=1)
 
         # Cleanup and re-swap table data
         c.clearFrag()
         c.tableData, self.tableData = self.tableData, None
-    
+
 class pisaTagTR(pisaTag):
-    
-    def start(self, c):            
+
+    def start(self, c):
         tdata = c.tableData
         row = tdata.row
         begin = (0, row)
         end = (-1, row)
-        
-        tdata.add_cell_styles(c, begin, end, "tr")       
+
+        tdata.add_cell_styles(c, begin, end, "tr")
         c.frag.vAlign = self.attr.valign or c.frag.vAlign
-          
+
         tdata.col = 0
         tdata.data.append([])
 
     def end(self, c):
-        c.tableData.row += 1        
+        c.tableData.row += 1
 
 class pisaTagTD(pisaTag):
-    
+
     def start(self, c):
 
         if self.attr.align is not None:
             #print self.attr.align, getAlign(self.attr.align)
             c.frag.alignment = getAlign(self.attr.align)
-            
+
         c.clearFrag()
         self.story = c.swapStory()
         # print "#", len(c.story)
-        
+
         attrs = self.attr
-        
+
         tdata = c.tableData
 
         cspan = attrs.colspan
@@ -336,7 +336,7 @@ class pisaTagTD(pisaTag):
                 tdata.add_style(('FONTSIZE', begin, end, 1.0))
                 tdata.add_style(('LEADING', begin, end, 1.0))
 
-        # Vertical align      
+        # Vertical align
         valign = self.attr.valign or c.frag.vAlign
         if valign is not None:
             tdata.add_style(('VALIGN', begin, end, valign.upper()))
@@ -358,17 +358,17 @@ class pisaTagTD(pisaTag):
 
     def end(self, c):
         tdata = c.tableData
-        
+
         c.addPara()
         cell = c.story
-        
+
         # Handle empty cells, they otherwise collapse
         #if not cell:
-        #    cell = ' '        
-            
+        #    cell = ' '
+
         # Keep in frame if needed since Reportlab does no split inside of cells
         if (not c.frag.insideStaticFrame) and (c.frag.keepInFrameMode is not None):
-            
+
             # tdata.keepinframe["content"] = cell
             cell = PmlKeepInFrame(
                 maxWidth=0,
@@ -377,9 +377,9 @@ class pisaTagTD(pisaTag):
                 content=cell)
 
         c.swapStory(self.story)
-              
+
         tdata.add_cell(cell)
-        
+
 class pisaTagTH(pisaTagTD):
     pass
 
