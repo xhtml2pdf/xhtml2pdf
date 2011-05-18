@@ -236,32 +236,32 @@ def getSize(value, relative=0, base=None, default=0.0):
         elif type(value) in (types.TupleType, types.ListType):
             value = "".join(value)
         value = str(value).strip().lower().replace(",", ".")
-        if value[ - 2:] == 'cm':
-            return float(value[: - 2].strip()) * cm
-        elif value[ - 2:] == 'mm':
-            return (float(value[: - 2].strip()) * mm) # 1mm = 0.1cm
-        elif value[ - 2:] == 'in':
-            return float(value[: - 2].strip()) * inch # 1pt == 1/72inch
-        elif value[ - 2:] == 'inch':
-            return float(value[: - 4].strip()) * inch # 1pt == 1/72inch
-        elif value[ - 2:] == 'pt':
-            return float(value[: - 2].strip())
-        elif value[ - 2:] == 'pc':
-            return float(value[: - 2].strip()) * 12.0 # 1pc == 12pt
-        elif value[ - 2:] == 'px':
-            return float(value[: - 2].strip()) * dpi96 # XXX W3C says, use 96pdi http://www.w3.org/TR/CSS21/syndata.html#length-units
-        elif value[ - 1:] == 'i':  # 1pt == 1/72inch
-            return float(value[: - 1].strip()) * inch
+        if value[-2:] == 'cm':
+            return float(value[:-2].strip()) * cm
+        elif value[-2:] == 'mm':
+            return (float(value[:-2].strip()) * mm) # 1mm = 0.1cm
+        elif value[-2:] == 'in':
+            return float(value[:-2].strip()) * inch # 1pt == 1/72inch
+        elif value[-2:] == 'inch':
+            return float(value[:-4].strip()) * inch # 1pt == 1/72inch
+        elif value[-2:] == 'pt':
+            return float(value[:-2].strip())
+        elif value[-2:] == 'pc':
+            return float(value[:-2].strip()) * 12.0 # 1pc == 12pt
+        elif value[-2:] == 'px':
+            return float(value[:-2].strip()) * dpi96 # XXX W3C says, use 96pdi http://www.w3.org/TR/CSS21/syndata.html#length-units
+        elif value[-1:] == 'i':  # 1pt == 1/72inch
+            return float(value[:-1].strip()) * inch
         elif value in ("none", "0", "auto"):
             return 0.0
         elif relative:
-            if value[ - 2:] == 'em': # XXX
-                return (float(value[: - 2].strip()) * relative) # 1em = 1 * fontSize
-            elif value[ - 2:] == 'ex': # XXX
-                return (float(value[: - 2].strip()) * (relative / 2.0)) # 1ex = 1/2 fontSize
-            elif value[ - 1:] == '%':
+            if value[-2:] == 'em': # XXX
+                return (float(value[:-2].strip()) * relative) # 1em = 1 * fontSize
+            elif value[-2:] == 'ex': # XXX
+                return (float(value[:-2].strip()) * (relative / 2.0)) # 1ex = 1/2 fontSize
+            elif value[-1:] == '%':
                 # print "%", value, relative, (relative * float(value[:-1].strip())) / 100.0
-                return (relative * float(value[: - 1].strip())) / 100.0 # 1% = (fontSize * 1) / 100
+                return (relative * float(value[:-1].strip())) / 100.0 # 1% = (fontSize * 1) / 100
             elif value in ("normal", "inherit"):
                 return relative
             elif _relativeSizeTable.has_key(value):
