@@ -1,4 +1,29 @@
 # -*- coding: utf-8 -*-
+from functools import wraps
+from reportlab.lib.colors import *
+from reportlab.lib.enums import *
+from reportlab.lib.pagesizes import *
+from reportlab.lib.styles import *
+from reportlab.lib.units import inch, cm
+from reportlab.pdfbase import pdfmetrics
+import base64
+import copy
+import httplib
+import logging
+import mimetypes
+import os
+import os.path
+import pprint
+import re
+import reportlab
+import shutil
+import string
+import sys
+import tempfile
+import types
+import urllib
+import urllib2
+import urlparse
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -19,35 +44,12 @@ __reversion__ = "$Revision: 20 $"
 __author__ = "$Author: holtwick $"
 __date__ = "$Date: 2007-10-09 12:58:24 +0200 (Di, 09 Okt 2007) $"
 
-from reportlab.lib.units import inch, cm
-from reportlab.lib.styles import *
-from reportlab.lib.enums import *
-from reportlab.lib.colors import *
-from reportlab.lib.pagesizes import *
-from reportlab.pdfbase import pdfmetrics
 
 # from reportlab.platypus import *
 # from reportlab.platypus.flowables import Flowable
 # from reportlab.platypus.tableofcontents import TableOfContents
 # from reportlab.platypus.para import Para, PageNumberObject, UNDERLINE, HotLink
 
-import reportlab
-import copy
-import types
-import os
-import os.path
-import pprint
-import sys
-import string
-import re
-import base64
-import urlparse
-import mimetypes
-import urllib2
-import urllib
-import httplib
-import tempfile
-import shutil
 
 rgb_re = re.compile("^.*?rgb[(]([0-9]+).*?([0-9]+).*?([0-9]+)[)].*?[ ]*$")
 
@@ -57,7 +59,6 @@ if not(reportlab.Version[0] == "2" and reportlab.Version[2] >= "1"):
 REPORTLAB22 = (reportlab.Version[0] == "2" and reportlab.Version[2] >= "2")
 # print "***", reportlab.Version, REPORTLAB22, reportlab.__file__
 
-import logging
 log = logging.getLogger("ho.pisa")
 
 try:
@@ -221,17 +222,66 @@ _relativeSizeTable = {
 
 MIN_FONT_SIZE = 1.0
 
+#===============================================================================
+# Memoize decorators
+#===============================================================================
+class memoized(object):
+    
+    def __init__(self, func):
+        self.funct = func
+        self.cache = {}
+    
+    def __call__(self, *args):
+        try:
+            return self.cache[args]
+        except KeyError:
+            result = self.funct(*args)
+            self.cache[args] = result
+            return result
+        except TypeError:
+            return self.funct(*args)
+
+class Cache(object):
+    def __init__(self, func):
+        self.cache = {}
+        self.func = func
+    
+    def __call__(self, *args):
+        if args not in self.cache:
+            res = self.func(*args)
+            self.cache[args] = res
+        else:
+            print 'Cache hit!'
+        return self.cache[args]
+
+#===============================================================================
+# end memoize decorators
+#===============================================================================
+
+SIZE_CACHE = {}
+
 def getSize(value, relative=0, base=None, default=0.0):
     """
     Converts strings to standard sizes
     """
+    # TODO: Figure out why it's not working with either of the memoize decorators!!!
+    cached = SIZE_CACHE.get((value, relative, base, default), None)
+    if cached:
+        #print 'CACHE HIT'
+        return cached
+    res = _get_size(value, relative, base, default)
+    SIZE_CACHE[(value, relative, base, default)] = res
+    return res
+
+def _get_size(value, relative=0, base=None, default=0.0):
+    
     try:
         original = value
         if value is None:
             return relative
         elif type(value) is types.FloatType:
             return value
-        elif type(value) is types.IntType:
+        elif isinstance(value, int):
             return float(value)
         elif type(value) in (types.TupleType, types.ListType):
             value = "".join(value)
@@ -313,7 +363,7 @@ def getBox(box, pagesize):
     box = str(box).split()
     if len(box) != 4:
         raise Exception, "box not defined right way"
-    x, y, w, h = map(getSize, box)
+    x, y, w, h = [getSize(pos) for pos in box]
     return getCoords(x, y, w, h, pagesize)
 
 def getPos(position, pagesize):
@@ -323,7 +373,7 @@ def getPos(position, pagesize):
     position = str(position).split()
     if len(position) != 2:
         raise Exception, "position not defined right way"
-    x, y = map(getSize, position)
+    x, y = [getSize(pos) for pos in position]
     return getCoords(x, y, None, None, pagesize)
 
 def getBool(s):
