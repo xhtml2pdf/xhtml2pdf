@@ -21,11 +21,10 @@ __date__    = "$Date: 2008-08-15 13:37:57 +0200 (Fr, 15 Aug 2008) $"
 __svnid__   = "$Id: setup.py 247 2008-08-15 11:37:57Z holtwick $"
 
 try:
-    from setuptools import setup, find_packages
+    from setuptools import setup
 except ImportError:
     from ez_setup import use_setuptools
     use_setuptools()
-    from setuptools import setup, find_packages
 
 setup(
     name           = "pisa",
