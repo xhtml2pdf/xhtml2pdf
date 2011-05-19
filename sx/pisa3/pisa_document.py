@@ -208,9 +208,10 @@ def pisaDocument(
         # passed from the caller
         data = out.getvalue()
         c.dest.write(data)
-
+        c.dest.close()
+            
     except: # TODO: Kill catch-all!
-        # log.exception(c.error("Document error"))
+        # log.exception(c.error("Document error"))        
         log.exception("Document error")
         c.err += 1
         if raise_exception:
