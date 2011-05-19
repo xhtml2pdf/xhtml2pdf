@@ -400,7 +400,6 @@ class pisaCSSParser(css.CSSParser):
         # print "@import", self.rootPath, cssResourceName
         oldRootPath = self.rootPath
         cssFile = self.c.getFile(cssResourceName, relative=self.rootPath)
-        result = []
         if not cssFile:
             return None
         if self.rootPath and urlparse.urlparse(self.rootPath).scheme:

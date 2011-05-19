@@ -467,7 +467,7 @@ class Text(list):
                     x += frag["width"]
                     line.append(frag)
 
-                   # Keep in mind boxes for next lines
+                    # Keep in mind boxes for next lines
                     if isinstance(frag, BoxBegin):
                         boxStack.append(frag)
                     elif isinstance(frag, BoxEnd):
@@ -562,8 +562,6 @@ class Paragraph(Flowable):
             if self.debug:
                 print "*** wrap (%f, %f) needed" % (0, 0)
             return 0, 0
-
-        style = self.style
 
         # Split lines
         width = availWidth # - style.leftIndent - style.rightIndent

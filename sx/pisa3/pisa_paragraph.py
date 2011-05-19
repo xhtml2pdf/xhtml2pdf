@@ -350,7 +350,6 @@ class Text(list):
 
             # Reset values for new line
             posBegin = pos
-            posSpace = pos
             line = Line(style)
 
             # Update boxes for next line
@@ -375,14 +374,12 @@ class Text(list):
                 # If space or linebreak handle special way
                 if frag.isSoft:
                     if frag.isLF:
-                        posSpace = pos
                         line.append(frag)
                         break
                     # First element of line should not be a space
                     if x == 0:
                         continue
                     # Keep in mind last possible line break
-                    posSpace = pos - 1
 
                 # The elements exceed the current line
                 elif (fragWidth + x > maxWidth):
@@ -480,8 +477,6 @@ class Paragraph(Flowable):
             if self.debug:
                 print "*** wrap (%f, %f) needed" % (0, 0)
             return 0, 0
-
-        style = self.style
 
         # Split lines
         width = availWidth # - style.leftIndent - style.rightIndent
