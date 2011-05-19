@@ -373,8 +373,8 @@ class pisaCSSBuilder(css.CSSBuilder):
             c.frameList = []
             c.frameStaticList = []
 
-        except Exception, e:
-            log.warn(self.c.warning("@page"), exc_info=1)
+        except Exception, e: # TODO: KILL THIS FOR THE LOVE OF GOD
+            log.error(self.c.warning("@page"), exc_info=1)
 
         return {}, {}
 
