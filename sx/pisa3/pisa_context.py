@@ -1,4 +1,25 @@
 # -*- coding: utf-8 -*-
+from reportlab.lib.enums import TA_LEFT
+from reportlab.lib.fonts import addMapping
+from reportlab.lib.pagesizes import landscape, A4
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus.frames import Frame
+from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
+from sx.pisa3.pisa_reportlab import PmlPageTemplate, PmlTableOfContents, \
+    PmlParagraph, PmlParagraphAndImage
+from sx.pisa3.pisa_util import getSize, getCoords, getFile, pisaFileObject
+from sx.w3c import css
+import copy
+import logging
+import os
+import pisa_default
+import pisa_parser
+import re
+import reportlab
+import types
+import urlparse
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -18,31 +39,8 @@ __reversion__ = "$Revision: 20 $"
 __author__ = "$Author: holtwick $"
 __date__ = "$Date: 2007-10-09 12:58:24 +0200 (Di, 09 Okt 2007) $"
 
-from pisa_util import * # TODO: Kill wild import
-from pisa_reportlab import * # TODO: Kill wild import
-
-import pisa_default
-import pisa_parser
-import re
-import urlparse
-import types
-
-from reportlab.platypus.paraparser import ParaParser, ParaFrag, ps2tt, tt2ps, ABag
-from reportlab.platypus.paragraph import cleanBlockQuotedText
-from reportlab.lib.styles import ParagraphStyle
-
-import reportlab.rl_config
 reportlab.rl_config.warnOnMissingFontGlyphs = 0
 
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.lib.fonts import addMapping
-
-from sx.w3c import css, cssDOMElementInterface
-
-from html5lib.sanitizer import * # TODO: Kill wild import
-
-import logging
 log = logging.getLogger("ho.pisa")
 
 sizeDelta = 2       # amount to reduce font size by for super and sub script
