@@ -18,8 +18,8 @@ __reversion__ = "$Revision: 20 $"
 __author__ = "$Author: holtwick $"
 __date__ = "$Date: 2007-10-09 12:58:24 +0200 (Di, 09 Okt 2007) $"
 
-from pisa_util import *
-from pisa_reportlab import *
+from pisa_util import * # TODO: Kill wild import
+from pisa_reportlab import * # TODO: Kill wild import
 
 import pisa_default
 import pisa_parser
@@ -40,7 +40,7 @@ from reportlab.lib.fonts import addMapping
 
 from sx.w3c import css, cssDOMElementInterface
 
-from html5lib.sanitizer import *
+from html5lib.sanitizer import * # TODO: Kill wild import
 
 import logging
 log = logging.getLogger("ho.pisa")
@@ -391,7 +391,7 @@ class pisaCSSBuilder(css.CSSBuilder):
                             name,
                             data,
                             size=self.c.pageSize))
-            except Exception, e:
+            except Exception, e: # TODO: Kill this
                 log.warn(self.c.warning("@frame"), exc_info=1)
         return {}, {}
 
@@ -1062,5 +1062,5 @@ class pisaContext:
                 else:
                     log.warning(self.warning("wrong attributes for <pdf:font>"))
 
-            except Exception:
+            except Exception: # TODO: Kill this
                 log.warn(self.warning("Loading font '%s'", fontName), exc_info=1)

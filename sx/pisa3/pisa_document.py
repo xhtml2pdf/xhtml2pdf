@@ -21,8 +21,8 @@ __date__      = "$Date: 2007-10-09 12:58:24 +0200 (Di, 09 Okt 2007) $"
 
 from pisa_context import pisaContext
 from pisa_parser import pisaParser
-from pisa_util import *
-from pisa_reportlab import *
+from pisa_util import * # TODO: Kill wild import
+from pisa_reportlab import * # TODO: Kill wild import
 from pisa_default import DEFAULT_CSS
 
 from reportlab.platypus.flowables import Spacer
@@ -218,7 +218,7 @@ def pisaDocument(
         data = out.getvalue()
         c.dest.write(data)
 
-    except:
+    except: # TODO: Kill catch-all!
         # log.exception(c.error("Document error"))
         log.exception("Document error")
         c.err += 1

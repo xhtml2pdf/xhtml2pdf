@@ -285,8 +285,9 @@ class Line(list):
             print "%s" % frag.get("text", frag.name.upper()),
         print
 
-class Group(list):
-    pass
+# Useless class
+#class Group(list):
+#    pass
 
 class Text(list):
 
@@ -592,6 +593,7 @@ class Paragraph(Flowable):
         canvas.restoreState()
 
 if __name__ == "__main__":
+    # TODO: This should be a test, not a main!
     from reportlab.platypus import SimpleDocTemplate
     from reportlab.lib.styles import *
     from reportlab.rl_config import *

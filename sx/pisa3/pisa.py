@@ -28,8 +28,8 @@ import urllib2
 import urlparse
 import tempfile
 
-from pisa_version import *
-from pisa_document import *
+from pisa_version import * # TODO: Kill wild import
+from pisa_document import * # TODO: Kill wild import
 from pisa_util import getFile
 from pisa_default import DEFAULT_CSS
 
@@ -256,7 +256,7 @@ def execute():
             startviewer = 1
 
         if o in ("-q", "--quiet"):
-            # Output unterdrücken
+            # Output unterdrï¿½cken
             quiet = 1
 
         if o in ("-w", "--warn"):
@@ -272,7 +272,7 @@ def execute():
                 log_level = int(a)
 
 #        if o in ("--multivalent", "--multivalent-path"):
-#            # Multivalent.jar für Booklet
+#            # Multivalent.jar fï¿½r Booklet
 #            multivalent_path = a
 
 #        if o in ("--booklet",):

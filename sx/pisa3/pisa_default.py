@@ -18,7 +18,7 @@ __reversion__ = "$Revision: 20 $"
 __author__    = "$Author: holtwick $"
 __date__      = "$Date: 2007-10-09 12:58:24 +0200 (Di, 09 Okt 2007) $"
 
-from reportlab.lib.pagesizes import *
+from reportlab.lib.pagesizes import * # TODO: Kill wild import
 
 PML_WARNING = "warning"
 PML_ERROR = "error"

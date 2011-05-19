@@ -20,7 +20,7 @@ __author__ = "$Author: holtwick $"
 __date__ = "$Date: 2007-10-09 12:58:24 +0200 (Di, 09 Okt 2007) $"
 
 from pisa_tags import pisaTag
-from pisa_util import *
+from pisa_util import * # TODO: Kill wild import
 from pisa_reportlab import PmlTable, TableStyle, PmlKeepInFrame
 
 import copy

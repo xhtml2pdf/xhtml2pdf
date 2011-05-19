@@ -30,10 +30,10 @@ from html5lib import treebuilders, serializer, treewalkers, inputstream
 from xml.dom import Node
 import xml.dom.minidom
 
-from pisa_default import *
-from pisa_util import *
-from pisa_tags import *
-from pisa_tables import *
+from pisa_default import * # TODO: Kill wild import!
+from pisa_util import * # TODO: Kill wild import!
+from pisa_tags import * # TODO: Kill wild import!
+from pisa_tables import * # TODO: Kill wild import!
 
 import sx.w3c.css as css
 import sx.w3c.cssDOMElementInterface as cssDOMElementInterface
@@ -127,7 +127,7 @@ def pisaGetAttributes(c, tag, attributes):
             #    if not nattrs.has_key(k):
             #        c.warning("attribute '%s' for tag <%s> not supported" % (k, tag))
 
-            except Exception, e:
+            except Exception, e: # TODO: Kill this catch-all!
                 log.exception(c.error("Tag handling"))
 
     #else:
@@ -232,7 +232,7 @@ def CSSCollect(node, c):
                 cssAttrMap[cssAttrName] = node.getCSSAttr(c.cssCascade, cssAttrName)
             #except LookupError:
             #    pass
-            except Exception:
+            except Exception: # TODO: Kill this catch-all!
                 log.debug("CSS error '%s'", cssAttrName, exc_info=1)
     return node.cssAttrs
 
@@ -421,7 +421,7 @@ def pisaLoop(node, c, path=[], **kw):
     else:
         kw = copy.copy(kw)
 
-    indent = len(path) * "  "
+    indent = len(path) * "  " # TODO: Figure out what this is
 
     # TEXT
     if node.nodeType == Node.TEXT_NODE:

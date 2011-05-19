@@ -27,7 +27,7 @@ from reportlab.platypus.tableofcontents import TableOfContents
 
 from reportlab_paragraph import Paragraph
 
-from reportlab.lib.utils import *
+from reportlab.lib.utils import * # TODO: Kill the wild import!
 
 try:
     import PIL.Image as PILImage
@@ -37,7 +37,7 @@ except:
     except:
         PILImage = None
 
-from pisa_util import *
+from pisa_util import * # TODO: Kill the wild import!
 from pisa_default import TAGS, STRING
 
 import copy
@@ -189,7 +189,7 @@ class PmlPageTemplate(PageTemplate):
 
                     frame.addFromList(story, canvas)
 
-            except Exception, e:
+            except Exception, e: # TODO: Kill this!
                 log.debug("PmlPageTemplate", exc_info=1)
 
 
@@ -259,7 +259,7 @@ class PmlImageReader(object):
                     self._data = self.fp.read()
                     self._dataA = None
                     self.fp.seek(0)
-            except:
+            except: # TODO: Kill the catch-all
                 et, ev, tb = sys.exc_info()
                 if hasattr(ev, 'args'):
                     a = str(ev.args[ - 1]) + (' fileName=%r' % fileName)
@@ -297,7 +297,7 @@ class PmlImageReader(object):
         if self._data is None:
             self._dataA = None
             if sys.platform[0:4] == 'java':
-                import jarray
+                import jarray # TODO: Move to top.
                 from java.awt.image import PixelGrabber
                 width, height = self.getSize()
                 buffer = jarray.zeros(width * height, 'i')

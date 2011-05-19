@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 from functools import wraps
-from reportlab.lib.colors import *
-from reportlab.lib.enums import *
-from reportlab.lib.pagesizes import *
-from reportlab.lib.styles import *
+from reportlab.lib.colors import * # TODO: Kill wild import
+from reportlab.lib.enums import * # TODO: Kill wild import
+from reportlab.lib.pagesizes import * # TODO: Kill wild import
+from reportlab.lib.styles import * # TODO: Kill wild import
 from reportlab.lib.units import inch, cm
 from reportlab.pdfbase import pdfmetrics
 import base64
@@ -81,6 +81,38 @@ try:
 except:
     renderSVG = None
 
+
+#===============================================================================
+# Memoize decorator
+#===============================================================================
+class memoized(object):
+    """
+    A kwargs-aware memoizer, better than the one in python :)
+    
+    Don't pass in too large kwargs, since this turns them into a tuple of tuples
+    Also, avoid mutable types (as usual for memoizers)
+    
+    What this does is to create a dictionnary of {(*parameters):return value},
+    and uses it as a cache for subsequent calls to the same method.
+    It is especially useful for functions that don't rely on external variables
+    and that are called often. It's a perfect match for our getSize etc... 
+    """
+    def __init__(self, func):
+        self.cache = {}
+        self.func = func
+        self.__doc__ = self.func.__doc__ # To avoid great confusion
+        self.__name__ = self.func.__name__ # This also avoids great confusion
+    
+    def __call__(self, *args, **kwargs):
+        # Make sure the following line is not actually slower than what you're
+        # trying to memoize
+        args_plus = tuple(kwargs.items()) 
+        key = (args, args_plus)
+        if key not in self.cache:
+            res = self.func(*args, **kwargs)
+            self.cache[key] = res
+        return self.cache[key]
+
 def ErrorMsg():
     """
     Helper to get a nice traceback as string
@@ -145,8 +177,12 @@ def _toColor(arg, default=None):
             raise ValueError('Invalid color value %r' % arg)
         return default
 
+@memoized
 def getColor(value, default=None):
-    " Convert to color value "
+    """ 
+    Convert to color value.
+    This returns a Color object instance from a text bit.
+    """
     try:
         original = value
         if isinstance(value, Color):
@@ -222,38 +258,17 @@ _relativeSizeTable = {
 
 MIN_FONT_SIZE = 1.0
 
-#===============================================================================
-# Memoize decorators
-#===============================================================================
-class memoized(object):
-    """
-    A kwargs-aware memoizer, better than the one in python :)
-    
-    Don't pass in too large kwargs, since this turns them into a tuple of tuples
-    Also, avoid mutable types (as usual for memoizers)
-    """
-    def __init__(self, func):
-        self.cache = {}
-        self.func = func
-        self.__doc__ = self.func.__doc__ # To avoid greate confusion
-        self.__name__ = self.func.__name__ # This also avoids great confusion
-    
-    def __call__(self, *args, **kwargs):
-        args_plus = tuple(kwargs.items())
-        key = (args, args_plus)
-        if key not in self.cache:
-            res = self.func(*args, **kwargs)
-            self.cache[key] = res
-        return self.cache[key]
-
-#===============================================================================
-# end memoize decorators
-#===============================================================================
-
 @memoized
 def getSize(value, relative=0, base=None, default=0.0):
     """
-    Converts strings to standard sizes
+    Converts strings to standard sizes.
+    That is the function taking a string of CSS size ('12pt', '1cm' and so on)
+    and converts it into a float in a standard unit (in our case, points).
+    
+    >>> getSize('12pt')
+    12.0
+    >>> getSize('1cm')
+    28.346456692913385
     """
     try:
         original = value
@@ -332,6 +347,7 @@ def getCoords(x, y, w, h, pagesize):
         return x, (ay - y - h), w, h
     return x, (ay - y)
 
+@memoized
 def getBox(box, pagesize):
     """
     Parse sizes by corners in the form:
@@ -345,6 +361,7 @@ def getBox(box, pagesize):
     x, y, w, h = [getSize(pos) for pos in box]
     return getCoords(x, y, w, h, pagesize)
 
+@memoized
 def getPos(position, pagesize):
     """
     Pair of coordinates

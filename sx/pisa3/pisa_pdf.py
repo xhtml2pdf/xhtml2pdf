@@ -50,7 +50,7 @@ class pisaPDF:
             self.files.append(doc.dest)
 
     def join(self, file=None):
-        import pyPdf
+        import pyPdf # TODO: Why is this in the middle of everything?
         if pyPdf:
             output = pyPdf.PdfFileWriter()
             for pdffile in self.files:

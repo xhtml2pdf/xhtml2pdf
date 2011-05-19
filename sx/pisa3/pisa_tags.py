@@ -19,13 +19,13 @@ __author__ = "$Author: holtwick $"
 __date__ = "$Date: 2007-10-09 12:58:24 +0200 (Di, 09 Okt 2007) $"
 
 from pisa_default import DEFAULT_CSS
-from pisa_reportlab import *
-from pisa_util import *
+from pisa_reportlab import * # TODO: Kill wild import!
+from pisa_util import * # TODO: Kill wild import!
 
 from reportlab.graphics.barcode import createBarcodeDrawing
 
 from reportlab.lib.styles import ParagraphStyle
-from reportlab.platypus.flowables import *
+from reportlab.platypus.flowables import * # TODO: Kill wild import!
 from reportlab.platypus.paraparser import tt2ps, ABag
 
 from reportlab_paragraph import cleanBlockQuotedText
@@ -359,7 +359,7 @@ class pisaTagIMG(pisaTag):
                     c.fragList.append(afrag)
                     c.fontSize = img.drawHeight
 
-            except Exception:
+            except Exception: # TODO: Kill catch-all
                 log.warn(c.warning("Error in handling image"), exc_info=1)
         else:
             log.warn(c.warning("Need a valid file name!"))
