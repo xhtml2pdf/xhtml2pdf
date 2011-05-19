@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+from pisa_reportlab import PmlTable, TableStyle, PmlKeepInFrame
+from pisa_tags import pisaTag
+from sx.pisa3.pisa_util import getSize, getBorderStyle, getAlign
+import copy
+import logging
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -19,14 +24,6 @@ __reversion__ = "$Revision: 20 $"
 __author__ = "$Author: holtwick $"
 __date__ = "$Date: 2007-10-09 12:58:24 +0200 (Di, 09 Okt 2007) $"
 
-from pisa_tags import pisaTag
-from pisa_util import * # TODO: Kill wild import
-from pisa_reportlab import PmlTable, TableStyle, PmlKeepInFrame
-
-import copy
-import sys
-
-import logging
 log = logging.getLogger("ho.pisa")
 
 def _width(value=None):
@@ -146,9 +143,6 @@ class pisaTagTABLE(pisaTag):
         #tdata.border = attrs.border
         #tdata.bordercolor = attrs.bordercolor
 
-        begin = (0, 0)
-        end = (-1, - 1)
-
         if attrs.border and attrs.bordercolor:
             frag = c.frag
             frag.borderLeftWidth = attrs.border
@@ -215,7 +209,7 @@ class pisaTagTABLE(pisaTag):
         if cols_with_no_width:  # any col width not defined
             bad_cols = filter(lambda tup: tup[1] is None, enumerate(tdata.colw))
             fair_division = str(100/float(cols_with_no_width))+'%' # get fair %
-            for i,col in bad_cols:
+            for i, _ in bad_cols:
                 tdata.colw[i] = fair_division   # fix empty with fair %
 
         try:

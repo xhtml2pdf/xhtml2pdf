@@ -1,4 +1,18 @@
 # -*- coding: utf-8 -*-
+from reportlab.graphics.barcode import createBarcodeDrawing
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import inch, mm
+from reportlab.platypus.doctemplate import NextPageTemplate, FrameBreak
+from reportlab.platypus.flowables import Spacer, HRFlowable, PageBreak, Flowable
+from reportlab.platypus.frames import Frame
+from reportlab.platypus.paraparser import tt2ps, ABag
+from sx.pisa3.pisa_reportlab import PmlImage, PmlPageTemplate
+from sx.pisa3.pisa_util import getColor, getSize, getAlign, dpi96
+import copy
+import logging
+import pisa_reportlab
+import re
+import warnings
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -18,26 +32,7 @@ __reversion__ = "$Revision: 20 $"
 __author__ = "$Author: holtwick $"
 __date__ = "$Date: 2007-10-09 12:58:24 +0200 (Di, 09 Okt 2007) $"
 
-from pisa_default import DEFAULT_CSS
-from pisa_reportlab import * # TODO: Kill wild import!
-from pisa_util import * # TODO: Kill wild import!
 
-from reportlab.graphics.barcode import createBarcodeDrawing
-
-from reportlab.lib.styles import ParagraphStyle
-from reportlab.platypus.flowables import * # TODO: Kill wild import!
-from reportlab.platypus.paraparser import tt2ps, ABag
-
-from reportlab_paragraph import cleanBlockQuotedText
-
-import reportlab.lib.utils
-
-import os
-import pprint
-import re
-import warnings
-
-import logging
 log = logging.getLogger("ho.pisa")
 
 def deprecation(message):
@@ -378,7 +373,6 @@ class pisaTagHR(pisaTag):
 
 # --- Forms
 
-import pisa_reportlab
 
 if 0:
 

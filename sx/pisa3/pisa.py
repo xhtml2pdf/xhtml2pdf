@@ -1,4 +1,16 @@
 # -*- coding: utf-8 -*-
+from pisa_default import DEFAULT_CSS
+from pisa_document import * # TODO: Kill wild import
+from pisa_util import getFile
+from sx.pisa3.pisa_version import VERSION, VERSION_STR
+import getopt
+import glob
+import logging
+import os
+import sys
+import tempfile
+import urllib2
+import urlparse
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -19,21 +31,8 @@ __reversion__ = "$Revision: 20 $"
 __author__    = "$Author: holtwick $"
 __date__      = "$Date: 2007-10-09 12:58:24 +0200 (Di, 09 Okt 2007) $"
 
-import getopt
-import sys
-import os
-import os.path
-import glob
-import urllib2
-import urlparse
-import tempfile
 
-from pisa_version import * # TODO: Kill wild import
-from pisa_document import * # TODO: Kill wild import
-from pisa_util import getFile
-from pisa_default import DEFAULT_CSS
 
-import logging
 log = logging.getLogger("ho.pisa")
 
 __version__ = VERSION

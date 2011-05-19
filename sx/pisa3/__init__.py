@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import logging
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -34,11 +35,10 @@ Optional packages:
 
 """.lstrip()
 
-import logging
 log = logging.getLogger(__name__)
 
 try:
-    from pisa import *
+    from sx.pisa3.pisa_util import REPORTLAB22
     if not REPORTLAB22:
         raise ImportError, "Reportlab Toolkit Version 2.2 or higher needed"
 except ImportError, e:
@@ -47,4 +47,5 @@ except ImportError, e:
     log.error(REQUIRED_INFO % e)
     raise
 
+from pisa_version import VERSION
 __version__   = VERSION

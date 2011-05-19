@@ -1,4 +1,13 @@
 # -*- coding: utf-8 -*-
+from pisa_context import pisaContext
+from pisa_default import DEFAULT_CSS
+from pisa_parser import pisaParser
+from reportlab.platypus.flowables import Spacer
+from reportlab.platypus.frames import Frame
+from sx.pisa3.pisa_reportlab import PmlBaseDoc, PmlPageTemplate
+from sx.pisa3.pisa_util import pisaTempFile, getBox, pyPdf
+import cgi
+import logging
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -18,19 +27,6 @@
 __reversion__ = "$Revision: 20 $"
 __author__    = "$Author: holtwick $"
 __date__      = "$Date: 2007-10-09 12:58:24 +0200 (Di, 09 Okt 2007) $"
-
-from pisa_context import pisaContext
-from pisa_parser import pisaParser
-from pisa_util import * # TODO: Kill wild import
-from pisa_reportlab import * # TODO: Kill wild import
-from pisa_default import DEFAULT_CSS
-
-from reportlab.platypus.flowables import Spacer
-
-#import os
-#import types
-#import cgi
-#import logging
 
 log = logging.getLogger("ho.pisa")
 

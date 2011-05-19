@@ -1,19 +1,13 @@
 # -*- coding: utf-8 -*-
-from functools import wraps
-from reportlab.lib.colors import * # TODO: Kill wild import
-from reportlab.lib.enums import * # TODO: Kill wild import
-from reportlab.lib.pagesizes import * # TODO: Kill wild import
-from reportlab.lib.styles import * # TODO: Kill wild import
+from reportlab.lib.colors import Color, CMYKColor, getAllNamedColors, toColor, \
+    HexColor
+from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
 from reportlab.lib.units import inch, cm
-from reportlab.pdfbase import pdfmetrics
 import base64
-import copy
 import httplib
 import logging
 import mimetypes
-import os
 import os.path
-import pprint
 import re
 import reportlab
 import shutil
@@ -43,12 +37,6 @@ import urlparse
 __reversion__ = "$Revision: 20 $"
 __author__ = "$Author: holtwick $"
 __date__ = "$Date: 2007-10-09 12:58:24 +0200 (Di, 09 Okt 2007) $"
-
-
-# from reportlab.platypus import *
-# from reportlab.platypus.flowables import Flowable
-# from reportlab.platypus.tableofcontents import TableOfContents
-# from reportlab.platypus.para import Para, PageNumberObject, UNDERLINE, HotLink
 
 
 rgb_re = re.compile("^.*?rgb[(]([0-9]+).*?([0-9]+).*?([0-9]+)[)].*?[ ]*$")

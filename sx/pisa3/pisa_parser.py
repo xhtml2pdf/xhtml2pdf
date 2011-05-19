@@ -592,6 +592,7 @@ def pisaParser(src, c, default_css="", xhtml=False, encoding=None, xml_output=No
     """
 
     if xhtml:
+        #TODO: XHTMLParser doesn't see to exist...
         parser = html5lib.XHTMLParser(tree=treebuilders.getTreeBuilder("dom"))
     else:
         parser = html5lib.HTMLParser(tree=treebuilders.getTreeBuilder("dom"))

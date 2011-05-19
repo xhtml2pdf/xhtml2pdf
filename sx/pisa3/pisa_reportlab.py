@@ -197,7 +197,7 @@ class PmlPageTemplate(PageTemplate):
             canvas.restoreState()
 
 _ctr = 1
-class PmlImageReader(object):
+class PmlImageReader(object): #TODO We need a factory here, returning either a class for java or a class for PIL
     "Wraps up either PIL or Java to get data from bitmaps"
     _cache = {}
     def __init__(self, fileName):

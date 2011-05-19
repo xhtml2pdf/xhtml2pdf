@@ -182,7 +182,7 @@ class pisaCSSBuilder(css.CSSBuilder):
                 src,
                 bold=bold,
                 italic=italic)
-        except Exception, e:
+        except Exception, e: # TODO: Kill catch-all
             log.warn(self.c.warning("@fontface"), exc_info=1)
         return {}, {}
 

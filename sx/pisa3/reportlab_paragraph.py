@@ -6,14 +6,12 @@
 __version__=''' $Id: paragraph.py 3307 2008-10-13 15:28:30Z rgbecker $ '''
 from string import join, whitespace
 from operator import truth
-from types import StringType, ListType
-from reportlab.pdfbase.pdfmetrics import stringWidth, getFont, getAscentDescent
+from reportlab.pdfbase.pdfmetrics import stringWidth, getAscentDescent
 from reportlab.platypus.paraparser import ParaParser
 from reportlab.platypus.flowables import Flowable
 from reportlab.lib.colors import Color
 from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER, TA_JUSTIFY
-from reportlab.lib.utils import _className
-from reportlab.lib.textsplit import wordSplit, ALL_CANNOT_START
+from reportlab.lib.textsplit import ALL_CANNOT_START
 from copy import deepcopy
 from reportlab.lib.abag import ABag
 import re

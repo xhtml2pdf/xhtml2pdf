@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from reportlab.lib.pagesizes import (A0, A1, A2, A3, A4, A5, A6, B0, B1, B2, B3,
+    B4, B5, B6, LETTER, LEGAL, ELEVENSEVENTEEN)
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -17,8 +19,6 @@
 __reversion__ = "$Revision: 20 $"
 __author__    = "$Author: holtwick $"
 __date__      = "$Date: 2007-10-09 12:58:24 +0200 (Di, 09 Okt 2007) $"
-
-from reportlab.lib.pagesizes import * # TODO: Kill wild import
 
 PML_WARNING = "warning"
 PML_ERROR = "error"
