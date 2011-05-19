@@ -295,7 +295,8 @@ TAGS = {
 
     "hr": (0, {
         "color":                (COLOR, "#000000"),
-        "size":                 (SIZE, "1"),
+        "size":                 (SIZE, "2"),
+        "width":                STRING,
         "align":                ["left", "center", "right", "justify"],
         }),
 

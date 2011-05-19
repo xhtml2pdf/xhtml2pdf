@@ -361,7 +361,7 @@ class pisaTagHR(pisaTag):
         c.addStory(HRFlowable(
             color=self.attr.color,
             thickness=self.attr.size,
-            width="100%",
+            width=self.attr.get('width', "100%") or "100%",
             spaceBefore=c.frag.spaceBefore,
             spaceAfter=c.frag.spaceAfter
             ))
