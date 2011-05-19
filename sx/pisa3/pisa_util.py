@@ -226,55 +226,35 @@ MIN_FONT_SIZE = 1.0
 # Memoize decorators
 #===============================================================================
 class memoized(object):
+    """
+    A kwargs-aware memoizer, better than the one in python :)
     
-    def __init__(self, func):
-        self.funct = func
-        self.cache = {}
-    
-    def __call__(self, *args):
-        try:
-            return self.cache[args]
-        except KeyError:
-            result = self.funct(*args)
-            self.cache[args] = result
-            return result
-        except TypeError:
-            return self.funct(*args)
-
-class Cache(object):
+    Don't pass in too large kwargs, since this turns them into a tuple of tuples
+    Also, avoid mutable types (as usual for memoizers)
+    """
     def __init__(self, func):
         self.cache = {}
         self.func = func
+        self.__doc__ = self.func.__doc__ # To avoid greate confusion
+        self.__name__ = self.func.__name__ # This also avoids great confusion
     
-    def __call__(self, *args):
-        if args not in self.cache:
-            res = self.func(*args)
-            self.cache[args] = res
-        else:
-            print 'Cache hit!'
-        return self.cache[args]
+    def __call__(self, *args, **kwargs):
+        args_plus = tuple(kwargs.items())
+        key = (args, args_plus)
+        if key not in self.cache:
+            res = self.func(*args, **kwargs)
+            self.cache[key] = res
+        return self.cache[key]
 
 #===============================================================================
 # end memoize decorators
 #===============================================================================
 
-SIZE_CACHE = {}
-
+@memoized
 def getSize(value, relative=0, base=None, default=0.0):
     """
     Converts strings to standard sizes
     """
-    # TODO: Figure out why it's not working with either of the memoize decorators!!!
-    cached = SIZE_CACHE.get((value, relative, base, default), None)
-    if cached:
-        #print 'CACHE HIT'
-        return cached
-    res = _get_size(value, relative, base, default)
-    SIZE_CACHE[(value, relative, base, default)] = res
-    return res
-
-def _get_size(value, relative=0, base=None, default=0.0):
-    
     try:
         original = value
         if value is None:
@@ -330,7 +310,6 @@ def _get_size(value, relative=0, base=None, default=0.0):
         return max(0, value)
     except Exception:
         log.warn("getSize %r %r", original, relative, exc_info=1)
-        # print "ERROR getSize", repr(value), repr(value), e
         return default
 
 def getCoords(x, y, w, h, pagesize):
