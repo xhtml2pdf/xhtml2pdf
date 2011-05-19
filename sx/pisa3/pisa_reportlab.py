@@ -344,11 +344,10 @@ class PmlImageReader(object): #TODO We need a factory here, returning either a c
                 return None
 
     def __str__(self):
-        global _ctr
-        _ctr += 1
-        " This is needed because of a bug in Reportlab _digester func "
-        return "PmlImageObject_%s_%d" % (id(self), _ctr)
-        # return "PmlImageObject_%s_%s" % (hash(id(self)), hash(self.fileName))
+        try:
+            return "PmlImageObject_%s" % hash(self.fileName.read())
+        except:
+            return self.fileName
 
 class PmlImage(Flowable, PmlMaxHeightMixIn):
 
