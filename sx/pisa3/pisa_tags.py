@@ -28,11 +28,6 @@ import warnings
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__reversion__ = "$Revision: 20 $"
-__author__ = "$Author: holtwick $"
-__date__ = "$Date: 2007-10-09 12:58:24 +0200 (Di, 09 Okt 2007) $"
-
-
 log = logging.getLogger("ho.pisa")
 
 def deprecation(message):

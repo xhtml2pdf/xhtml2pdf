@@ -14,11 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "$Revision: 103 $"
-__author__  = "$Author: holtwick $"
-__date__    = "$Date: 2007-10-31 17:08:54 +0100 (Mi, 31 Okt 2007) $"
-__svnid__   = "$Id: pisa.py 103 2007-10-31 16:08:54Z holtwick $"
-
 import ho.pisa as pisa
 import StringIO
 

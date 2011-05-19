@@ -16,10 +16,6 @@ from reportlab.lib.pagesizes import (A0, A1, A2, A3, A4, A5, A6, B0, B1, B2, B3,
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__reversion__ = "$Revision: 20 $"
-__author__    = "$Author: holtwick $"
-__date__      = "$Date: 2007-10-09 12:58:24 +0200 (Di, 09 Okt 2007) $"
-
 PML_WARNING = "warning"
 PML_ERROR = "error"
 PML_EXCEPTION = "PML Exception"

@@ -3,7 +3,6 @@
 # see license.txt for license details
 # history http://www.reportlab.co.uk/cgi-bin/viewcvs.cgi/public/reportlab/trunk/reportlab/platypus/paragraph.py
 # Modifications by Dirk Holtwick, 2008
-__version__=''' $Id: paragraph.py 3307 2008-10-13 15:28:30Z rgbecker $ '''
 from string import join, whitespace
 from operator import truth
 from reportlab.pdfbase.pdfmetrics import stringWidth, getAscentDescent
