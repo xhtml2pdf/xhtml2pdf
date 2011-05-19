@@ -156,11 +156,18 @@ def pisaDocument(
         # print [body] + c.templateList.values()
         doc.addPageTemplates([body] + c.templateList.values())
 
+        doc._pisa_page_counter = 0
+        def _page_counter(page_no):
+            doc._pisa_page_counter += 1
+        doc.setPageCallBack(_page_counter)
+        
         # Use multibuild e.g. if a TOC has to be created
         if c.multiBuild:
             doc.multiBuild(c.story)
         else:
             doc.build(c.story)
+
+        c._pisa_page_counter = doc._pisa_page_counter
 
         # Add watermarks
         if pyPdf:
