@@ -15,11 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "$Revision: 247 $"
-__author__  = "$Author: holtwick $"
-__date__    = "$Date: 2008-08-15 13:37:57 +0200 (Fr, 15 Aug 2008) $"
-__svnid__   = "$Id: setup.py 247 2008-08-15 11:37:57Z holtwick $"
-
 try:
     from setuptools import setup
 except ImportError:
@@ -28,7 +23,7 @@ except ImportError:
 
 setup(
     name="xhtml2pdf",
-    version="0.0.0",
+    version="0.0.1",
     description="PDF generator using HTML and CSS",
     license="Apache License 2.0",
     author="Dirk Holtwick",
@@ -44,21 +39,18 @@ setup(
     include_package_data = False,
 
     packages = [
-        'ho',
-        'ho.pisa',
-        'sx',
-        'sx.pisa3',
-        'sx.w3c',
+        'xhtml2pdf',
+        'xhtml2pdf.w3c',
         ],
 
-    test_suite = "tests",
+#    test_suite = "tests", They're not even working yet
 
-    entry_points = {
-        'console_scripts': [
-            'pisa = sx.pisa3:command',
-            'xhtml2pdf = sx.pisa3:command',
-            ]
-        },
+#    entry_points = {
+#        'console_scripts': [
+#            'pisa = sx.pisa3:command',
+#            'xhtml2pdf = sx.pisa3:command',
+#            ]
+#        },
 
     long_description = """
 pisa is a html2pdf converter using the ReportLab Toolkit,
