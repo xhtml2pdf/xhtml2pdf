@@ -6,11 +6,11 @@ from reportlab.platypus.doctemplate import NextPageTemplate, FrameBreak
 from reportlab.platypus.flowables import Spacer, HRFlowable, PageBreak, Flowable
 from reportlab.platypus.frames import Frame
 from reportlab.platypus.paraparser import tt2ps, ABag
-from sx.pisa3.pisa_reportlab import PmlImage, PmlPageTemplate
-from sx.pisa3.pisa_util import getColor, getSize, getAlign, dpi96
+from xhtml2pdf.reportlab import PmlImage, PmlPageTemplate
+from xhtml2pdf.util import getColor, getSize, getAlign, dpi96
 import copy
 import logging
-import pisa_reportlab
+from xhtml2pdf import reportlab
 import re
 import warnings
 

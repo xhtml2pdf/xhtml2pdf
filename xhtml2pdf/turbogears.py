@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from turbogears.decorator import weak_signature_decorator
-import sx.pisa3 as pisa
+import xhtml2pdf.pisa as pisa
 import StringIO
 import cherrypy
 

@@ -26,13 +26,13 @@ from html5lib import treebuilders, serializer, treewalkers, inputstream
 from xml.dom import Node
 import xml.dom.minidom
 
-from pisa_default import * # TODO: Kill wild import!
-from pisa_util import * # TODO: Kill wild import!
-from pisa_tags import * # TODO: Kill wild import!
-from pisa_tables import * # TODO: Kill wild import!
+from xhtml2pdf.default import * # TODO: Kill wild import!
+from xhtml2pdf.util import * # TODO: Kill wild import!
+from xhtml2pdf.tags import * # TODO: Kill wild import!
+from xhtml2pdf.tables import * # TODO: Kill wild import!
 
-import sx.w3c.css as css
-import sx.w3c.cssDOMElementInterface as cssDOMElementInterface
+import xhtml2pdf.w3c.css as css
+import xhtml2pdf.w3c.cssDOMElementInterface as cssDOMElementInterface
 
 import logging
 log = logging.getLogger("ho.pisa")

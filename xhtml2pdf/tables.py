@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from pisa_reportlab import PmlTable, TableStyle, PmlKeepInFrame
-from pisa_tags import pisaTag
+from xhtml2pdf.reportlab import PmlTable, TableStyle, PmlKeepInFrame
+from xhtml2pdf.tags import pisaTag
 from sx.pisa3.pisa_util import getSize, getBorderStyle, getAlign
 import copy
 import logging

@@ -7,15 +7,15 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus.frames import Frame
 from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
-from sx.pisa3.pisa_reportlab import PmlPageTemplate, PmlTableOfContents, \
+from xhtml2pdf.reportlab import PmlPageTemplate, PmlTableOfContents, \
     PmlParagraph, PmlParagraphAndImage
-from sx.pisa3.pisa_util import getSize, getCoords, getFile, pisaFileObject
-from sx.w3c import css
+from xhtml2pdf.util import getSize, getCoords, getFile, pisaFileObject
+from xhtml2pdf.w3c import css
 import copy
 import logging
 import os
-import pisa_default
-import pisa_parser
+import default
+import parser
 import re
 import reportlab
 import types

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from pisa_default import DEFAULT_CSS
-from pisa_document import * # TODO: Kill wild import
-from pisa_util import getFile
-from sx.pisa3.pisa_version import VERSION, VERSION_STR
+from xhtml2pdf.default import DEFAULT_CSS
+from xhtml2pdf.document import * # TODO: Kill wild import
+from xhtml2pdf.util import getFile
+from xhtml2pdf.version import VERSION, VERSION_STR
 import getopt
 import glob
 import logging

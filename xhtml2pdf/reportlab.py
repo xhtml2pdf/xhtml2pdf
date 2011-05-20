@@ -32,8 +32,8 @@ except:
     except:
         PILImage = None
 
-from pisa_util import * # TODO: Kill the wild import!
-from pisa_default import TAGS, STRING
+from xhtml2pdf.util import * # TODO: Kill the wild import!
+from xhtml2pdf.default import TAGS, STRING
 
 import copy
 import cgi
