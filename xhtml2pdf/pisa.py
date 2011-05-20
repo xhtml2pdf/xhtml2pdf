@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from xhtml2pdf.default import DEFAULT_CSS
-from xhtml2pdf.document import * # TODO: Kill wild import
+from xhtml2pdf.document import pisaDocument
 from xhtml2pdf.util import getFile
 from xhtml2pdf.version import VERSION, VERSION_STR
 import getopt
@@ -282,7 +282,6 @@ def execute():
             print "--------------------------------------------"
             print "OS:                ", sys.platform
             print "Python:            ", sys.version
-            import html5lib
             print "html5lib:          ", "?"
             import reportlab
             print "Reportlab:         ", reportlab.Version

@@ -4,7 +4,7 @@ from xhtml2pdf.default import DEFAULT_CSS
 from xhtml2pdf.parser import pisaParser
 from reportlab.platypus.flowables import Spacer
 from reportlab.platypus.frames import Frame
-from xhtml2pdf.reportlab import PmlBaseDoc, PmlPageTemplate
+from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlPageTemplate
 from xhtml2pdf.util import pisaTempFile, getBox, pyPdf
 import cgi
 import logging

@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-from xhtml2pdf.reportlab import PmlTable, TableStyle, PmlKeepInFrame
-from xhtml2pdf.tags import pisaTag
+from reportlab.platypus.tables import TableStyle
 from sx.pisa3.pisa_util import getSize, getBorderStyle, getAlign
+from xhtml2pdf.tags import pisaTag
+from xhtml2pdf.xhtml2pdf_reportlab import PmlTable, PmlKeepInFrame
 import copy
 import logging
 

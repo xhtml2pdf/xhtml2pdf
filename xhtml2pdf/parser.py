@@ -14,27 +14,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pprint
+from html5lib import treebuilders, serializer, treewalkers, inputstream
+from xhtml2pdf.default import * # TODO: Kill wild import!
+from xhtml2pdf.tables import * # TODO: Kill wild import!
+from xhtml2pdf.tags import * # TODO: Kill wild import!
+from xhtml2pdf.util import * # TODO: Kill wild import!
+from xhtml2pdf.xhtml2pdf_reportlab import PmlRightPageBreak, PmlLeftPageBreak
+from xml.dom import Node
 import copy
-import types
-import re
+import html5lib
+import logging
 import os
 import os.path
-
-import html5lib
-from html5lib import treebuilders, serializer, treewalkers, inputstream
-from xml.dom import Node
-import xml.dom.minidom
-
-from xhtml2pdf.default import * # TODO: Kill wild import!
-from xhtml2pdf.util import * # TODO: Kill wild import!
-from xhtml2pdf.tags import * # TODO: Kill wild import!
-from xhtml2pdf.tables import * # TODO: Kill wild import!
-
+import pprint
+import re
+import types
 import xhtml2pdf.w3c.css as css
 import xhtml2pdf.w3c.cssDOMElementInterface as cssDOMElementInterface
+import xml.dom.minidom
 
-import logging
+
+
+
 log = logging.getLogger("ho.pisa")
 
 rxhttpstrip = re.compile("https?://[^/]+(.*)", re.M | re.I)
@@ -608,9 +609,8 @@ def pisaParser(src, c, default_css="", xhtml=False, encoding=None, xml_output=No
             if not inputstream.isValidEncoding(encoding):
                 log.error("%r is not a valid encoding e.g. 'utf8' is not valid but 'utf-8' is!", encoding)
         else:
-             if inputstream.codecName(encoding) is None:
-                 log.error("%r is not a valid encoding", encoding)
-    import ipdb; ipdb.set_trace()
+            if inputstream.codecName(encoding) is None:
+                log.error("%r is not a valid encoding", encoding)
     document = parser.parse(
         src,
         encoding=encoding)
