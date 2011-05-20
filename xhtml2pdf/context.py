@@ -37,7 +37,7 @@ import urlparse
 
 reportlab.rl_config.warnOnMissingFontGlyphs = 0
 
-log = logging.getLogger("ho.pisa")
+log = logging.getLogger("xhtml2pdf")
 
 sizeDelta = 2       # amount to reduce font size by for super and sub script
 subFraction = 0.4   # fraction of font size that a sub script should be lowered

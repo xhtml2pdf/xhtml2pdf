@@ -28,7 +28,7 @@ import warnings
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-log = logging.getLogger("ho.pisa")
+log = logging.getLogger("xhtml2pdf")
 
 def deprecation(message):
     warnings.warn("<" + message + "> is deprecated!", DeprecationWarning, stacklevel=2)

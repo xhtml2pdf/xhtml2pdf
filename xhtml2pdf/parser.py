@@ -36,7 +36,7 @@ import xml.dom.minidom
 
 
 
-log = logging.getLogger("ho.pisa")
+log = logging.getLogger("xhtml2pdf")
 
 rxhttpstrip = re.compile("https?://[^/]+(.*)", re.M | re.I)
 

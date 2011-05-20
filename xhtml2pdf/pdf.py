@@ -17,7 +17,7 @@
 from xhtml2pdf.util import pisaTempFile, getFile
 
 import logging
-log = logging.getLogger("ho.pisa")
+log = logging.getLogger("xhtml2pdf")
 
 class pisaPDF:
 

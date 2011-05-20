@@ -45,7 +45,7 @@ except:
 
 
 
-log = logging.getLogger("ho.pisa")
+log = logging.getLogger("xhtml2pdf")
 
 MAX_IMAGE_RATIO = 0.95
 

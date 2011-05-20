@@ -18,7 +18,7 @@ import xhtml2pdf.pisa as pisa
 import StringIO
 
 import logging
-log = logging.getLogger("ho.pisa.wsgi")
+log = logging.getLogger("xhtml2pdf.wsgi")
 
 class Filter(object):
 
