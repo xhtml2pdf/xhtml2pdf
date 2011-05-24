@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from pisa_default import DEFAULT_CSS
-from pisa_document import * # TODO: Kill wild import
-from pisa_util import getFile
-from sx.pisa3.pisa_version import VERSION, VERSION_STR
+from xhtml2pdf.default import DEFAULT_CSS
+from xhtml2pdf.document import pisaDocument
+from xhtml2pdf.util import getFile
+from xhtml2pdf.version import VERSION, VERSION_STR
 import getopt
 import glob
 import logging
@@ -26,7 +26,7 @@ import urlparse
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-log = logging.getLogger("ho.pisa")
+log = logging.getLogger("xhtml2pdf")
 
 __version__ = VERSION
 
@@ -282,7 +282,6 @@ def execute():
             print "--------------------------------------------"
             print "OS:                ", sys.platform
             print "Python:            ", sys.version
-            import html5lib
             print "html5lib:          ", "?"
             import reportlab
             print "Reportlab:         ", reportlab.Version

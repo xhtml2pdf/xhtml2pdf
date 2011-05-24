@@ -6,11 +6,11 @@ from reportlab.platypus.doctemplate import NextPageTemplate, FrameBreak
 from reportlab.platypus.flowables import Spacer, HRFlowable, PageBreak, Flowable
 from reportlab.platypus.frames import Frame
 from reportlab.platypus.paraparser import tt2ps, ABag
-from sx.pisa3.pisa_reportlab import PmlImage, PmlPageTemplate
-from sx.pisa3.pisa_util import getColor, getSize, getAlign, dpi96
+from xhtml2pdf import xhtml2pdf_reportlab
+from xhtml2pdf.util import getColor, getSize, getAlign, dpi96
+from xhtml2pdf.xhtml2pdf_reportlab import PmlImage, PmlPageTemplate
 import copy
 import logging
-import pisa_reportlab
 import re
 import warnings
 
@@ -28,7 +28,7 @@ import warnings
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-log = logging.getLogger("ho.pisa")
+log = logging.getLogger("xhtml2pdf")
 
 def deprecation(message):
     warnings.warn("<" + message + "> is deprecated!", DeprecationWarning, stacklevel=2)
@@ -379,7 +379,7 @@ if 0:
             if attr.type == "text":
                 width = 100
                 height = 12
-            c.addStory(pisa_reportlab.PmlInput(attr.name,
+            c.addStory(xhtml2pdf_reportlab.PmlInput(attr.name,
                 type=attr.type,
                 default=attr.value,
                 width=width,
@@ -396,7 +396,7 @@ if 0:
     class pisaTagTEXTAREA(pisaTagINPUT):
 
         def _render(self, c, attr):
-            c.addStory(pisa_reportlab.PmlInput(attr.name,
+            c.addStory(xhtml2pdf_reportlab.PmlInput(attr.name,
                 default="",
                 width=100,
                 height=100))
@@ -407,7 +407,7 @@ if 0:
             c.select_options = ["One", "Two", "Three"]
 
         def _render(self, c, attr):
-            c.addStory(pisa_reportlab.PmlInput(attr.name,
+            c.addStory(xhtml2pdf_reportlab.PmlInput(attr.name,
                 type="select",
                 default=c.select_options[0],
                 options=c.select_options,

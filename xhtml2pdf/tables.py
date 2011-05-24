@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-from pisa_reportlab import PmlTable, TableStyle, PmlKeepInFrame
-from pisa_tags import pisaTag
-from sx.pisa3.pisa_util import getSize, getBorderStyle, getAlign
+from reportlab.platypus.tables import TableStyle
+from xhtml2pdf.util import getSize, getBorderStyle, getAlign
+from xhtml2pdf.tags import pisaTag
+from xhtml2pdf.xhtml2pdf_reportlab import PmlTable, PmlKeepInFrame
 import copy
 import logging
 
@@ -19,7 +20,7 @@ import logging
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-log = logging.getLogger("ho.pisa")
+log = logging.getLogger("xhtml2pdf")
 
 def _width(value=None):
     if value is None:

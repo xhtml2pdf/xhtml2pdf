@@ -14,15 +14,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from reportlab.platypus.doctemplate import BaseDocTemplate, PageTemplate, FrameBreak, NextPageTemplate
-from reportlab.platypus.tables import Table, TableStyle
-from reportlab.platypus.flowables import Flowable, Image, CondPageBreak, KeepInFrame, ParagraphAndImage
-from reportlab.platypus.frames import Frame
+from hashlib import md5
+from reportlab.lib.enums import TA_RIGHT
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.utils import flatten, open_for_read, getStringIO, \
+    LazyImageReader, haveImages
+from reportlab.platypus.doctemplate import BaseDocTemplate, PageTemplate
+from reportlab.platypus.flowables import Flowable, Image, CondPageBreak, \
+    KeepInFrame, ParagraphAndImage
 from reportlab.platypus.tableofcontents import TableOfContents
+from reportlab.platypus.tables import Table, TableStyle
+from xhtml2pdf.reportlab_paragraph import Paragraph
+from xhtml2pdf.util import getUID, getBorderStyle
+import StringIO
+import cgi
+import copy
+import logging
+import reportlab.pdfbase.pdfform as pdfform
+import sys
 
-from reportlab_paragraph import Paragraph
 
-from reportlab.lib.utils import * # TODO: Kill the wild import!
 
 try:
     import PIL.Image as PILImage
@@ -32,14 +43,9 @@ except:
     except:
         PILImage = None
 
-from pisa_util import * # TODO: Kill the wild import!
-from pisa_default import TAGS, STRING
 
-import copy
-import cgi
 
-import logging
-log = logging.getLogger("ho.pisa")
+log = logging.getLogger("xhtml2pdf")
 
 MAX_IMAGE_RATIO = 0.95
 
@@ -775,7 +781,6 @@ class PmlLeftPageBreak(CondPageBreak):
 
 # --- Pdf Form
 
-import reportlab.pdfbase.pdfform as pdfform
 
 class PmlInput(Flowable):
 

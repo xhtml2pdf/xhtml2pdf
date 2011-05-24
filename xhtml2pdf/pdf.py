@@ -14,10 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pisa_util import pisaTempFile, getFile
+from xhtml2pdf.util import pisaTempFile, getFile
 
 import logging
-log = logging.getLogger("ho.pisa")
+log = logging.getLogger("xhtml2pdf")
 
 class pisaPDF:
 

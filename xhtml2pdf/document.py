@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-from pisa_context import pisaContext
-from pisa_default import DEFAULT_CSS
-from pisa_parser import pisaParser
+from xhtml2pdf.context import pisaContext
+from xhtml2pdf.default import DEFAULT_CSS
+from xhtml2pdf.parser import pisaParser
 from reportlab.platypus.flowables import Spacer
 from reportlab.platypus.frames import Frame
-from sx.pisa3.pisa_reportlab import PmlBaseDoc, PmlPageTemplate
-from sx.pisa3.pisa_util import pisaTempFile, getBox, pyPdf
+from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlPageTemplate
+from xhtml2pdf.util import pisaTempFile, getBox, pyPdf
 import cgi
 import logging
 
@@ -23,7 +23,7 @@ import logging
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-log = logging.getLogger("ho.pisa")
+log = logging.getLogger("xhtml2pdf")
 
 def pisaErrorDocument(dest, c):
     out = pisaTempFile(capacity=c.capacity)

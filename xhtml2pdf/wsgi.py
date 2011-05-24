@@ -14,11 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ho.pisa as pisa
+import xhtml2pdf.pisa as pisa
 import StringIO
 
 import logging
-log = logging.getLogger("ho.pisa.wsgi")
+log = logging.getLogger("xhtml2pdf.wsgi")
 
 class Filter(object):
 

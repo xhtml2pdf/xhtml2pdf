@@ -7,15 +7,15 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus.frames import Frame
 from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
-from sx.pisa3.pisa_reportlab import PmlPageTemplate, PmlTableOfContents, \
+from xhtml2pdf.xhtml2pdf_reportlab import PmlPageTemplate, PmlTableOfContents, \
     PmlParagraph, PmlParagraphAndImage
-from sx.pisa3.pisa_util import getSize, getCoords, getFile, pisaFileObject
-from sx.w3c import css
+from xhtml2pdf.util import getSize, getCoords, getFile, pisaFileObject
+from xhtml2pdf.w3c import css
 import copy
 import logging
 import os
-import pisa_default
-import pisa_parser
+import xhtml2pdf.default
+import xhtml2pdf.parser
 import re
 import reportlab
 import types
@@ -37,7 +37,7 @@ import urlparse
 
 reportlab.rl_config.warnOnMissingFontGlyphs = 0
 
-log = logging.getLogger("ho.pisa")
+log = logging.getLogger("xhtml2pdf")
 
 sizeDelta = 2       # amount to reduce font size by for super and sub script
 subFraction = 0.4   # fraction of font size that a sub script should be lowered
@@ -256,7 +256,7 @@ class pisaCSSBuilder(css.CSSBuilder):
                 log.warn(self.c.warning("template '%s' has already been defined", name))
 
             if data.has_key("-pdf-page-size"):
-                c.pageSize = pisa_default.PML_PAGESIZES.get(str(data["-pdf-page-size"]).lower(), c.pageSize)
+                c.pageSize = xhtml2pdf.default.PML_PAGESIZES.get(str(data["-pdf-page-size"]).lower(), c.pageSize)
 
             if data.has_key("size"):
                 size = data["size"]
@@ -271,8 +271,8 @@ class pisaCSSBuilder(css.CSSBuilder):
                         sizeList.append(getSize(value))
                     elif valueStr == "landscape":
                         isLandscape = True
-                    elif pisa_default.PML_PAGESIZES.has_key(valueStr):
-                        c.pageSize = pisa_default.PML_PAGESIZES[valueStr]
+                    elif xhtml2pdf.default.PML_PAGESIZES.has_key(valueStr):
+                        c.pageSize = xhtml2pdf.default.PML_PAGESIZES[valueStr]
                     else:
                         log.warn(c.warning("Unknown size value for @page"))
 
@@ -415,7 +415,7 @@ class pisaContext:
     """
 
     def __init__(self, path, debug=0, capacity=-1):
-        self.fontList = copy.copy(pisa_default.DEFAULT_FONT)
+        self.fontList = copy.copy(xhtml2pdf.default.DEFAULT_FONT)
         self.path = []
         self.capacity=capacity
 
@@ -628,8 +628,8 @@ class pisaContext:
             self.node.attributes["class"] = "pdftoclevel%d" % i
             #self.node.cssAttrs = copy.deepcopy(cssAttrs)
             #self.frag = copy.deepcopy(frag)
-            self.cssAttr = pisa_parser.CSSCollect(self.node, self)
-            pisa_parser.CSS2Frag(self, {
+            self.cssAttr = xhtml2pdf.parser.CSSCollect(self.node, self)
+            xhtml2pdf.parser.CSS2Frag(self, {
                 "margin-top": 0,
                 "margin-bottom": 0,
                 "margin-left": 0,
@@ -892,7 +892,7 @@ class pisaContext:
 
     def warning(self, msg, *args):
         self.warn += 1
-        self.log.append((pisa_default.PML_WARNING, self._getLineNumber(), str(msg), self._getFragment(50)))
+        self.log.append((xhtml2pdf.default.PML_WARNING, self._getLineNumber(), str(msg), self._getFragment(50)))
         try:
             return self.context(msg % args)
         except:
@@ -900,7 +900,7 @@ class pisaContext:
 
     def error(self, msg, *args):
         self.err += 1
-        self.log.append((pisa_default.PML_ERROR, self._getLineNumber(), str(msg), self._getFragment(50)))
+        self.log.append((xhtml2pdf.default.PML_ERROR, self._getLineNumber(), str(msg), self._getFragment(50)))
         try:
             return self.context(msg % args)
         except:

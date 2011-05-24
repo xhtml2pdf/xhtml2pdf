@@ -41,7 +41,7 @@ if not(reportlab.Version[0] == "2" and reportlab.Version[2] >= "1"):
 REPORTLAB22 = (reportlab.Version[0] == "2" and reportlab.Version[2] >= "2")
 # print "***", reportlab.Version, REPORTLAB22, reportlab.__file__
 
-log = logging.getLogger("ho.pisa")
+log = logging.getLogger("xhtml2pdf")
 
 try:
     import cStringIO as StringIO
