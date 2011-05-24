@@ -80,52 +80,50 @@ def pisaGetAttributes(c, tag, attributes):
             else:
                 nv = attrs.get(k, None)
                 dfl = None
-            try:
-                if nv is not None:
 
-                    if type(v) == types.ListType:
-                        nv = nv.strip().lower()
-                        if nv not in v:
-                            #~ raise PML_EXCEPTION, "attribute '%s' of wrong value, allowed is one of: %s" % (k, repr(v))
-                            log.warn(c.warning("Attribute '%s' of wrong value, allowed is one of: %s", k, repr(v)))
-                            nv = dfl
+            if nv is not None:
+                if type(v) == types.ListType:
+                    nv = nv.strip().lower()
+                    if nv not in v:
+                        #~ raise PML_EXCEPTION, "attribute '%s' of wrong value, allowed is one of: %s" % (k, repr(v))
+                        log.warn(c.warning("Attribute '%s' of wrong value, allowed is one of: %s", k, repr(v)))
+                        nv = dfl
 
-                    elif v == BOOL:
-                        nv = nv.strip().lower()
-                        nv = nv in ("1", "y", "yes", "true", str(k))
+                elif v == BOOL:
+                    nv = nv.strip().lower()
+                    nv = nv in ("1", "y", "yes", "true", str(k))
 
-                    elif v == SIZE:
-                        try:
-                            nv = getSize(nv)
-                        except:
-                            log.warn(c.warning("Attribute '%s' expects a size value", k))
+                elif v == SIZE:
+                    try:
+                        nv = getSize(nv)
+                    except:
+                        log.warn(c.warning("Attribute '%s' expects a size value", k))
 
-                    elif v == BOX:
-                        nv = getBox(nv, c.pageSize)
+                elif v == BOX:
+                    nv = getBox(nv, c.pageSize)
 
-                    elif v == POS:
-                        nv = getPos(nv, c.pageSize)
+                elif v == POS:
+                    nv = getPos(nv, c.pageSize)
 
-                    elif v == INT:
-                        nv = int(nv)
+                elif v == INT:
+                    nv = int(nv)
 
-                    elif v == COLOR:
-                        nv = getColor(nv)
+                elif v == COLOR:
+                    nv = getColor(nv)
 
-                    elif v == FILE:
-                        nv = c.getFile(nv)
+                elif v == FILE:
+                    nv = c.getFile(nv)
 
-                    elif v == FONT:
-                        nv = c.getFontName(nv)
+                elif v == FONT:
+                    nv = c.getFontName(nv)
 
-                    nattrs[k] = nv
+                nattrs[k] = nv
 
             #for k in attrs.keys():
             #    if not nattrs.has_key(k):
             #        c.warning("attribute '%s' for tag <%s> not supported" % (k, tag))
 
-            except Exception, e: # TODO: Kill this catch-all!
-                log.exception(c.error("Tag handling"))
+
 
     #else:
     #    c.warning("tag <%s> is not supported" % tag)
