@@ -26,7 +26,7 @@ import urlparse
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-log = logging.getLogger("ho.pisa")
+log = logging.getLogger("xhtml2pdf")
 
 __version__ = VERSION
 
