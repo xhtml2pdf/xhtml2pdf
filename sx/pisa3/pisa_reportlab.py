@@ -313,8 +313,7 @@ class PmlImageReader(object): #TODO We need a factory here, returning either a c
                 im = self._image
                 mode = self.mode = im.mode
                 if mode == 'RGBA':
-                    if Image.VERSION.startswith('1.1.7'):
-                        im.load()
+                    im.load()
                     self._dataA = PmlImageReader(im.split()[3])
                     im = im.convert('RGB')
                     self.mode = 'RGB'
