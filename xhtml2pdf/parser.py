@@ -214,6 +214,7 @@ def getCSSAttr(self, cssCascade, attrName, default=NotImplemented):
         self.cssAttrs[attrName] = result
     return result
 
+#TODO: Monkeypatching standard lib should go away.
 xml.dom.minidom.Element.getCSSAttr = getCSSAttr
 
 def CSSCollect(node, c):
@@ -358,7 +359,7 @@ def CSS2Frag(c, kw, isBlock):
         if c.cssAttr.has_key("border-right-color"):
             c.frag.borderRightColor = getColor(c.cssAttr["border-right-color"])
 
-def pisaPreLoop(node, c, collect=False):
+def pisaPreLoop(node, context, collect=False):
     """
     Collect all CSS definitions
     """
@@ -372,7 +373,7 @@ def pisaPreLoop(node, c, collect=False):
 
         # print name, node.attributes.items()
         if name in ("style", "link"):
-            attr = pisaGetAttributes(c, name, node.attributes)
+            attr = pisaGetAttributes(context, name, node.attributes)
             # print " ", attr
             media = [x.strip() for x in attr.media.lower().split(",") if x.strip()]
             # print repr(media)
@@ -385,27 +386,27 @@ def pisaPreLoop(node, c, collect=False):
 
                 if name == "style":
                     for node in node.childNodes:
-                        data += pisaPreLoop(node, c, collect=True)
-                    c.addCSS(data)
+                        data += pisaPreLoop(node, context, collect=True)
+                    context.addCSS(data)
                     return u""
                     #collect = True
 
                 if name == "link" and attr.href and attr.rel.lower() == "stylesheet":
                     # print "CSS LINK", attr
-                    c.addCSS('\n@import "%s" %s;' % (attr.href, ",".join(media)))
-                    # c.addCSS(unicode(file(attr.href, "rb").read(), attr.charset))
+                    context.addCSS('\n@import "%s" %s;' % (attr.href, ",".join(media)))
+                    # context.addCSS(unicode(file(attr.href, "rb").read(), attr.charset))
 
     #else:
     #    print node.nodeType
 
     for node in node.childNodes:
-        result = pisaPreLoop(node, c, collect=collect)
+        result = pisaPreLoop(node, context, collect=collect)
         if collect:
             data += result
 
     return data
 
-def pisaLoop(node, c, path=[], **kw):
+def pisaLoop(node, context, path=[], **kw):
 
     # Initialize KW
     if not kw:
@@ -422,9 +423,9 @@ def pisaLoop(node, c, path=[], **kw):
 
     # TEXT
     if node.nodeType == Node.TEXT_NODE:
-        # print indent, "#", repr(node.data) #, c.frag
-        c.addFrag(node.data)
-        # c.text.append(node.value)
+        # print indent, "#", repr(node.data) #, context.frag
+        context.addFrag(node.data)
+        # context.text.append(node.value)
 
     # ELEMENT
     elif node.nodeType == Node.ELEMENT_NODE:
@@ -437,12 +438,12 @@ def pisaLoop(node, c, path=[], **kw):
         path = copy.copy(path) + [node.tagName]
 
         # Prepare attributes
-        attr = pisaGetAttributes(c, node.tagName, node.attributes)
+        attr = pisaGetAttributes(context, node.tagName, node.attributes)
         # log.debug(indent + "<%s %s>" % (node.tagName, attr) + repr(node.attributes.items())) #, path
 
         # Calculate styles
-        c.cssAttr = CSSCollect(node, c)
-        c.node = node
+        context.cssAttr = CSSCollect(node, context)
+        context.node = node
 
         # Block?
         PAGE_BREAK = 1
@@ -451,38 +452,38 @@ def pisaLoop(node, c, path=[], **kw):
 
         pageBreakAfter = False
         frameBreakAfter = False
-        display = c.cssAttr.get("display", "inline").lower()
-        # print indent, node.tagName, display, c.cssAttr.get("background-color", None), attr
+        display = context.cssAttr.get("display", "inline").lower()
+        # print indent, node.tagName, display, context.cssAttr.get("background-color", None), attr
         isBlock = (display == "block")
         if isBlock:
-            c.addPara()
+            context.addPara()
 
             # Page break by CSS
-            if c.cssAttr.has_key("-pdf-next-page"):
-                c.addStory(NextPageTemplate(str(c.cssAttr["-pdf-next-page"])))
-            if c.cssAttr.has_key("-pdf-page-break"):
-                if str(c.cssAttr["-pdf-page-break"]).lower() == "before":
-                    c.addStory(PageBreak())
-            if c.cssAttr.has_key("-pdf-frame-break"):
-                if str(c.cssAttr["-pdf-frame-break"]).lower() == "before":
-                    c.addStory(FrameBreak())
-                if str(c.cssAttr["-pdf-frame-break"]).lower() == "after":
+            if context.cssAttr.has_key("-pdf-next-page"):
+                context.addStory(NextPageTemplate(str(context.cssAttr["-pdf-next-page"])))
+            if context.cssAttr.has_key("-pdf-page-break"):
+                if str(context.cssAttr["-pdf-page-break"]).lower() == "before":
+                    context.addStory(PageBreak())
+            if context.cssAttr.has_key("-pdf-frame-break"):
+                if str(context.cssAttr["-pdf-frame-break"]).lower() == "before":
+                    context.addStory(FrameBreak())
+                if str(context.cssAttr["-pdf-frame-break"]).lower() == "after":
                     frameBreakAfter = True
-            if c.cssAttr.has_key("page-break-before"):
-                if str(c.cssAttr["page-break-before"]).lower() == "always":
-                    c.addStory(PageBreak())
-                if str(c.cssAttr["page-break-before"]).lower() == "right":
-                    c.addStory(PageBreak())
-                    c.addStory(PmlRightPageBreak())
-                if str(c.cssAttr["page-break-before"]).lower() == "left":
-                    c.addStory(PageBreak())
-                    c.addStory(PmlLeftPageBreak())
-            if c.cssAttr.has_key("page-break-after"):
-                if str(c.cssAttr["page-break-after"]).lower() == "always":
+            if context.cssAttr.has_key("page-break-before"):
+                if str(context.cssAttr["page-break-before"]).lower() == "always":
+                    context.addStory(PageBreak())
+                if str(context.cssAttr["page-break-before"]).lower() == "right":
+                    context.addStory(PageBreak())
+                    context.addStory(PmlRightPageBreak())
+                if str(context.cssAttr["page-break-before"]).lower() == "left":
+                    context.addStory(PageBreak())
+                    context.addStory(PmlLeftPageBreak())
+            if context.cssAttr.has_key("page-break-after"):
+                if str(context.cssAttr["page-break-after"]).lower() == "always":
                     pageBreakAfter = PAGE_BREAK
-                if str(c.cssAttr["page-break-after"]).lower() == "right":
+                if str(context.cssAttr["page-break-after"]).lower() == "right":
                     pageBreakAfter = PAGE_BREAK_RIGHT
-                if str(c.cssAttr["page-break-after"]).lower() == "left":
+                if str(context.cssAttr["page-break-after"]).lower() == "left":
                     pageBreakAfter = PAGE_BREAK_LEFT
 
         if display == "none":
@@ -492,31 +493,31 @@ def pisaLoop(node, c, path=[], **kw):
         # Translate CSS to frags
 
         # Save previous frag styles
-        c.pushFrag()
+        context.pushFrag()
 
         # Map styles to Reportlab fragment properties
-        CSS2Frag(c, kw, isBlock)
+        CSS2Frag(context, kw, isBlock)
 
         # EXTRAS
-        if c.cssAttr.has_key("-pdf-keep-with-next"):
-            c.frag.keepWithNext = getBool(c.cssAttr["-pdf-keep-with-next"])
-        if c.cssAttr.has_key("-pdf-outline"):
-            c.frag.outline = getBool(c.cssAttr["-pdf-outline"])
-        if c.cssAttr.has_key("-pdf-outline-level"):
-            c.frag.outlineLevel = int(c.cssAttr["-pdf-outline-level"])
-        if c.cssAttr.has_key("-pdf-outline-open"):
-            c.frag.outlineOpen = getBool(c.cssAttr["-pdf-outline-open"])
-        if c.cssAttr.has_key("-pdf-word-wrap"):
-            c.frag.wordWrap = c.cssAttr["-pdf-word-wrap"]
-        #if c.cssAttr.has_key("-pdf-keep-in-frame-max-width"):
-        #    c.frag.keepInFrameMaxWidth = getSize("".join(c.cssAttr["-pdf-keep-in-frame-max-width"]))
-        #if c.cssAttr.has_key("-pdf-keep-in-frame-max-height"):
-        #    c.frag.keepInFrameMaxHeight = getSize("".join(c.cssAttr["-pdf-keep-in-frame-max-height"]))
-        if c.cssAttr.has_key("-pdf-keep-in-frame-mode"):
-            value = str(c.cssAttr["-pdf-keep-in-frame-mode"]).strip().lower()
+        if context.cssAttr.has_key("-pdf-keep-with-next"):
+            context.frag.keepWithNext = getBool(context.cssAttr["-pdf-keep-with-next"])
+        if context.cssAttr.has_key("-pdf-outline"):
+            context.frag.outline = getBool(context.cssAttr["-pdf-outline"])
+        if context.cssAttr.has_key("-pdf-outline-level"):
+            context.frag.outlineLevel = int(context.cssAttr["-pdf-outline-level"])
+        if context.cssAttr.has_key("-pdf-outline-open"):
+            context.frag.outlineOpen = getBool(context.cssAttr["-pdf-outline-open"])
+        if context.cssAttr.has_key("-pdf-word-wrap"):
+            context.frag.wordWrap = context.cssAttr["-pdf-word-wrap"]
+        #if context.cssAttr.has_key("-pdf-keep-in-frame-max-width"):
+        #    context.frag.keepInFrameMaxWidth = getSize("".join(context.cssAttr["-pdf-keep-in-frame-max-width"]))
+        #if context.cssAttr.has_key("-pdf-keep-in-frame-max-height"):
+        #    context.frag.keepInFrameMaxHeight = getSize("".join(context.cssAttr["-pdf-keep-in-frame-max-height"]))
+        if context.cssAttr.has_key("-pdf-keep-in-frame-mode"):
+            value = str(context.cssAttr["-pdf-keep-in-frame-mode"]).strip().lower()
             if value not in ("shrink", "error", "overflow", "shrink", "truncate"):
                 value = None
-            c.frag.keepInFrameMode = value
+            context.frag.keepInFrameMode = value
 
         # BEGIN tag
         klass = globals().get("pisaTag%s" % node.tagName.replace(":", "").upper(), None)
@@ -524,63 +525,63 @@ def pisaLoop(node, c, path=[], **kw):
 
         # Static block
         elementId = attr.get("id", None)
-        staticFrame = c.frameStatic.get(elementId, None)
+        staticFrame = context.frameStatic.get(elementId, None)
         if staticFrame:
-            c.frag.insideStaticFrame += 1
-            oldStory = c.swapStory()
+            context.frag.insideStaticFrame += 1
+            oldStory = context.swapStory()
 
         # Tag specific operations
         if klass is not None:
             obj = klass(node, attr)
-            obj.start(c)
+            obj.start(context)
 
         # Visit child nodes
-        c.fragBlock = fragBlock = copy.copy(c.frag)
+        context.fragBlock = fragBlock = copy.copy(context.frag)
         for nnode in node.childNodes:
-            pisaLoop(nnode, c, path, **kw)
-        c.fragBlock = fragBlock
+            pisaLoop(nnode, context, path, **kw)
+        context.fragBlock = fragBlock
 
         # END tag
         if obj:
-            obj.end(c)
+            obj.end(context)
 
         # Block?
         if isBlock:
-            c.addPara()
+            context.addPara()
 
             # XXX Buggy!
 
             # Page break by CSS
             if pageBreakAfter:
-                c.addStory(PageBreak())
+                context.addStory(PageBreak())
                 if pageBreakAfter == PAGE_BREAK_RIGHT:
-                    c.addStory(PmlRightPageBreak())
+                    context.addStory(PmlRightPageBreak())
                 if pageBreakAfter == PAGE_BREAK_LEFT:
-                    c.addStory(PmlLeftPageBreak())
+                    context.addStory(PmlLeftPageBreak())
             if frameBreakAfter:
-                c.addStory(FrameBreak())
+                context.addStory(FrameBreak())
 
         # Static block, END
         if staticFrame:
-            c.addPara()
+            context.addPara()
             for frame in staticFrame:
-                frame.pisaStaticStory = c.story
-            c.swapStory(oldStory)
-            c.frag.insideStaticFrame -= 1
+                frame.pisaStaticStory = context.story
+            context.swapStory(oldStory)
+            context.frag.insideStaticFrame -= 1
 
-        # c.debug(1, indent, "</%s>" % (node.tagName))
+        # context.debug(1, indent, "</%s>" % (node.tagName))
 
         # Reset frag style
-        c.pullFrag()
+        context.pullFrag()
 
     # Unknown or not handled
     else:
-        # c.debug(1, indent, "???", node, node.nodeType, repr(node))
+        # context.debug(1, indent, "???", node, node.nodeType, repr(node))
         # Loop over children
         for node in node.childNodes:
-            pisaLoop(node, c, path, **kw)
+            pisaLoop(node, context, path, **kw)
 
-def pisaParser(src, c, default_css="", xhtml=False, encoding=None, xml_output=None):
+def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_output=None):
     """
     - Parse HTML and get miniDOM
     - Extract CSS informations, add default CSS, parse CSS
@@ -598,7 +599,7 @@ def pisaParser(src, c, default_css="", xhtml=False, encoding=None, xml_output=No
         if type(src) is types.UnicodeType:
             encoding = "utf8"
             src = src.encode(encoding)
-        src = pisaTempFile(src, capacity=c.capacity)
+        src = pisaTempFile(src, capacity=context.capacity)
 
     # Test for the restrictions of html5lib
     if encoding:
@@ -619,17 +620,17 @@ def pisaParser(src, c, default_css="", xhtml=False, encoding=None, xml_output=No
         xml_output.write(document.toprettyxml(encoding="utf8"))
 
     if default_css:
-        c.addCSS(default_css)
+        context.addCSS(default_css)
 
-    pisaPreLoop(document, c)
+    pisaPreLoop(document, context)
     #try:
-    c.parseCSS()
+    context.parseCSS()
     #except:
-    #    c.cssText = DEFAULT_CSS
-    #    c.parseCSS()
-    # c.debug(9, pprint.pformat(c.css))
-    pisaLoop(document, c)
-    return c
+    #    context.cssText = DEFAULT_CSS
+    #    context.parseCSS()
+    # context.debug(9, pprint.pformat(context.css))
+    pisaLoop(document, context)
+    return context
 
 # Shortcuts
 
