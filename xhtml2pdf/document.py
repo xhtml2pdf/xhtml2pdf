@@ -39,190 +39,140 @@ def pisaErrorDocument(dest, c):
 
     return pisaDocument(out.getvalue(), dest, raise_exception=False)
 
-def pisaStory(
-    src,
-    path = None,
-    link_callback = None,
-    debug = 0,
-    default_css = None,
-    xhtml = False,
-    encoding = None,
-    c = None,
-    xml_output = None,
-    **kw):
+def pisaStory(src, path = None, link_callback = None, debug = 0, default_css = None,
+              xhtml = False, encoding = None, context = None, xml_output = None,
+              **kw):
 
     # Prepare Context
-    if not c:
-        c = pisaContext(path, debug=debug)
-        c.pathCallback = link_callback
+    if not context:
+        context = pisaContext(path, debug=debug)
+        context.pathCallback = link_callback
 
     # Use a default set of CSS definitions to get an expected output
     if default_css is None:
         default_css = DEFAULT_CSS
 
     # Parse and fill the story
-    pisaParser(src, c, default_css, xhtml, encoding, xml_output)
-
-    #if 0:
-    #    import reportlab.pdfbase.pdfmetrics as pm
-    #    pm.dumpFontData()
+    pisaParser(src, context, default_css, xhtml, encoding, xml_output)
 
     # Avoid empty documents
-    if not c.story:
-        c.story = [Spacer(1,1)]
-        # c.addPara(force=True)
+    if not context.story:
+        context.story = [Spacer(1,1)]
 
     # Remove anchors if they do not exist (because of a bug in Reportlab)
-    for frag, anchor in c.anchorFrag:
-        if anchor not in c.anchorName:
+    for frag, anchor in context.anchorFrag:
+        if anchor not in context.anchorName:
             frag.link = None
+    return context
 
-    return c
+def pisaDocument(src, dest = None, path = None, link_callback = None, debug = 0,
+                 default_css = None, xhtml = False, encoding = None, xml_output = None,
+                 raise_exception = True, capacity = 100 * 1024, **kw):
 
-def pisaDocument(
-    src,
-    dest = None,
-    path = None,
-    link_callback = None,
-    debug = 0,
-    show_error_as_pdf = False,
-    default_css = None,
-    xhtml = False,
-    encoding = None,
-    xml_output = None,
-    raise_exception = True,
-    capacity = 100 * 1024, # -1,
-    **kw):
+    log.debug("pisaDocument options:\n  src = %r\n  dest = %r\n  path = %r\n  link_callback = %r\n  xhtml = %r",
+        src,
+        dest,
+        path,
+        link_callback,
+        xhtml)
 
-    c = None
-    if show_error_as_pdf:
-        raise_exception = False
+    # Prepare simple context
+    context = pisaContext(path, debug=debug, capacity=capacity)
+    context.pathCallback = link_callback
 
-    try:
+    # Build story
+    context = pisaStory(src, path, link_callback, debug, default_css, xhtml, encoding, 
+                  context=context, xml_output=xml_output)
 
-        log.debug("pisaDocument options:\n  src = %r\n  dest = %r\n  path = %r\n  link_callback = %r\n  xhtml = %r",
-            src,
-            dest,
-            path,
-            link_callback,
-            xhtml)
+    # Buffer PDF into memory
+    out = pisaTempFile(capacity=context.capacity)
 
-        # Prepare simple context
-        c = pisaContext(path, debug=debug, capacity=capacity)
-        c.pathCallback = link_callback
+    doc = PmlBaseDoc(
+        out,
+        pagesize = context.pageSize,
+        author = context.meta["author"].strip(),
+        subject = context.meta["subject"].strip(),
+        keywords = [x.strip() for x in context.meta["keywords"].strip().split(",") if x],
+        title = context.meta["title"].strip(),
+        showBoundary = 0,
+        allowSplitting = 1)
 
-        if dest is None:
-            dest = pisaTempFile(capacity=c.capacity)
-        c.dest = dest
+    # Prepare templates and their frames
+    if context.templateList.has_key("body"):
+        body = context.templateList["body"]
+        del context.templateList["body"]
+    else:
+        x, y, w, h = getBox("1cm 1cm -1cm -1cm", context.pageSize)
+        body = PmlPageTemplate(
+            id="body",
+            frames=[
+                Frame(x, y, w, h,
+                    id = "body",
+                    leftPadding = 0,
+                    rightPadding = 0,
+                    bottomPadding = 0,
+                    topPadding = 0)],
+            pagesize = context.pageSize)
 
-        # Build story
-        c = pisaStory(src, path, link_callback, debug, default_css, xhtml, encoding, c=c, xml_output=xml_output)
+    doc.addPageTemplates([body] + context.templateList.values())
 
-        # Buffer PDF into memory
-        out = pisaTempFile(capacity=c.capacity)
-
-        doc = PmlBaseDoc(
-            out,
-            pagesize = c.pageSize,
-            author = c.meta["author"].strip(),
-            subject = c.meta["subject"].strip(),
-            keywords = [x.strip() for x in c.meta["keywords"].strip().split(",") if x],
-            title = c.meta["title"].strip(),
-            showBoundary = 0,
-            allowSplitting = 1)
-
-        # XXX It is not possible to access PDF info, because it is private in canvas
-        # doc.info.producer = "pisa <http://www.holtwick.it>"
-
-        # Prepare templates and their frames
-        if c.templateList.has_key("body"):
-            body = c.templateList["body"]
-            del c.templateList["body"]
-        else:
-            x, y, w, h = getBox("1cm 1cm -1cm -1cm", c.pageSize)
-            body = PmlPageTemplate(
-                id="body",
-                frames=[
-                    Frame(x, y, w, h,
-                        id = "body",
-                        leftPadding = 0,
-                        rightPadding = 0,
-                        bottomPadding = 0,
-                        topPadding = 0)],
-                pagesize = c.pageSize)
-
-        # print body.frames
-
-        # print [body] + c.templateList.values()
-        doc.addPageTemplates([body] + c.templateList.values())
-
-        doc._pisa_page_counter = 0
-        def _page_counter(page_no):
-            doc._pisa_page_counter += 1
-        doc.setPageCallBack(_page_counter)
+    # handle counting pages properly (to allow "page X/Y" stuff)
+    doc._pisa_page_counter = 0
+    def _page_counter(page_no):
+        doc._pisa_page_counter += 1
         
-        # Use multibuild e.g. if a TOC has to be created
-        if c.multiBuild:
-            doc.multiBuild(c.story)
-        else:
-            doc.build(c.story)
+    doc.setPageCallBack(_page_counter)
+    
+    # Use multibuild e.g. if a TOC has to be created
+    if context.multiBuild:
+        doc.multiBuild(context.story)
+    else:
+        doc.build(context.story)
 
-        c._pisa_page_counter = doc._pisa_page_counter
+    context._pisa_page_counter = doc._pisa_page_counter
 
-        # Add watermarks
-        if pyPdf:
-            for bgouter in c.pisaBackgroundList:
+    # Add watermarks
+    if pyPdf:
+        
+        for bgouter in context.pisaBackgroundList:
 
-                # If we have at least one background, then lets do it
-                if bgouter:
+            # If we have at least one background, then lets do it
+            if bgouter:
 
-                    istream = out
-                    try:
-                        output = pyPdf.PdfFileWriter()
-                        input1 = pyPdf.PdfFileReader(istream)
-                        ctr = 0
-                        for bg in c.pisaBackgroundList:
-                            page = input1.getPage(ctr)
-                            if bg and not bg.notFound() and (bg.mimetype=="application/pdf"):
-                                bginput = pyPdf.PdfFileReader(bg.getFile())
-                                pagebg = bginput.getPage(0)
-                                pagebg.mergePage(page)
-                                page = pagebg
-                            else:
-                                log.warn(c.warning("Background PDF %s doesn't exist.", bg))
-                            output.addPage(page)
-                            ctr += 1
-                        out = pisaTempFile(capacity=c.capacity)
-                        output.write(out)
-                        # data = sout.getvalue()
-                    except Exception:
-                        log.exception(c.error("pyPDF error"))
-                        if raise_exception:
-                            raise
+                istream = out
+            
+                output = pyPdf.PdfFileWriter()
+                input1 = pyPdf.PdfFileReader(istream)
+                ctr = 0
+                #TODO: Why do we loop over the same list again? see bgouter at line 137
+                for bg in context.pisaBackgroundList:
+                    page = input1.getPage(ctr)
+                    if bg and not bg.notFound() and (bg.mimetype=="application/pdf"):
+                        bginput = pyPdf.PdfFileReader(bg.getFile())
+                        pagebg = bginput.getPage(0)
+                        pagebg.mergePage(page)
+                        page = pagebg
+                    else:
+                        log.warn(context.warning("Background PDF %s doesn't exist.", bg))
+                    output.addPage(page)
+                    ctr += 1
+                out = pisaTempFile(capacity=context.capacity)
+                output.write(out)
+                # data = sout.getvalue()
+                # Found a background? So leave loop after first occurence
+                break
+    else:
+        log.warn(context.warning("pyPDF not installed!"))
 
+    # Get the resulting PDF and write it to the file object
+    # passed from the caller
+    
+    if dest is None:
+        # No output file was passed - Let's use a pisaTempFile
+        dest = pisaTempFile(capacity=context.capacity)
+    context.dest = dest
+    
+    data = out.getvalue() # TODO: That load all the tempfile in RAM - Why bother with a swapping tempfile then?
+    context.dest.write(data) # TODO: context.dest is a tempfile as well...
 
-                    # Found a background? So leave loop after first occurence
-                    break
-        else:
-            log.warn(c.warning("pyPDF not installed!"))
-
-        # In web frameworks for debugging purposes maybe an output of
-        # errors in a PDF is preferred
-        if show_error_as_pdf and c and c.err:
-            return pisaErrorDocument(c.dest, c)
-
-        # Get the resulting PDF and write it to the file object
-        # passed from the caller
-        data = out.getvalue()
-        c.dest.write(data)
-    except: # TODO: Kill catch-all!
-        # log.exception(c.error("Document error"))        
-        log.exception("Document error")
-        c.err += 1
-        if raise_exception:
-            raise
-
-    if raise_exception and c.err:
-        raise Exception("Errors occured, please see log files for more informations")
-
-    return c
+    return context
