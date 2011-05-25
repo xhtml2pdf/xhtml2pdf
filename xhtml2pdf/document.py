@@ -65,9 +65,9 @@ def pisaStory(src, path = None, link_callback = None, debug = 0, default_css = N
             frag.link = None
     return context
 
-def pisaDocument(src, dest = None, path = None, link_callback = None, debug = 0,
-                 default_css = None, xhtml = False, encoding = None, xml_output = None,
-                 raise_exception = True, capacity = 100 * 1024, **kw):
+def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
+                 default_css=None, xhtml=False, encoding=None, xml_output=None,
+                 raise_exception=True, capacity=100 * 1024, **kw):
 
     log.debug("pisaDocument options:\n  src = %r\n  dest = %r\n  path = %r\n  link_callback = %r\n  xhtml = %r",
         src,
