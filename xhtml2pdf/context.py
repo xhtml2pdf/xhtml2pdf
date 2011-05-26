@@ -214,7 +214,7 @@ class pisaCSSBuilder(css.CSSBuilder):
         # box = getCoords(left, top, width, height, self.c.pageSize)
         # print "BOX", box
         # print top, left, w, h
-        return left, top, right, bottom
+        return left, top, right - left, bottom - top
 
     def _pisaAddFrame(self, name, data, first=False, border=None, size=(0,0)):
         c = self.c
