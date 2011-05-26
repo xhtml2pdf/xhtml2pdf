@@ -21,17 +21,15 @@ REQUIREMENTS
 ============
 
 - [Reportlab Toolkit 2.2+](http://www.reportlab.org/)
-
 - [html5lib 0.11.1+](http://code.google.com/p/html5lib/)
-
 - [pyPdf 1.11+ (optional)](http://pybrary.net/pyPdf/)
 
 EXAMPLES
 ========
 
-> xhtml2pdf -s test\test-loremipsum.html
-> xhtml2pdf -s http://www.python.org
-> xhtml2pdf test\test-*.html
+    xhtml2pdf -s test\test-loremipsum.html
+    xhtml2pdf -s http://www.python.org
+    xhtml2pdf test\test-*.html
 
 PYTHON INTEGRATION
 ==================
