@@ -15,19 +15,16 @@ KID Templating, TurboGears, Django, Zope, Plone, Google AppEngine (GAE) etc.
 HELP
 ====
 
-> xhtml2pdf -h
+    xhtml2pdf -h
 
 REQUIREMENTS
 ============
 
-- Reportlab Toolkit 2.2+
-  <http://www.reportlab.org/>
+- [Reportlab Toolkit 2.2+](http://www.reportlab.org/)
 
-- html5lib 0.11.1+
-  <http://code.google.com/p/html5lib/>
+- [html5lib 0.11.1+](http://code.google.com/p/html5lib/)
 
-- pyPdf 1.11+ (optional)
-  <http://pybrary.net/pyPdf/>
+- [pyPdf 1.11+ (optional)](http://pybrary.net/pyPdf/)
 
 EXAMPLES
 ========
