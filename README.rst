@@ -15,32 +15,29 @@ KID Templating, TurboGears, Django, Zope, Plone, Google AppEngine (GAE) etc.
 HELP
 ====
 
-> xhtml2pdf -h
+    xhtml2pdf -h
 
 REQUIREMENTS
 ============
 
-- Reportlab Toolkit 2.2+
-  <http://www.reportlab.org/>
-
-- html5lib 0.11.1+
-  <http://code.google.com/p/html5lib/>
-
-- pyPdf 1.11+ (optional)
-  <http://pybrary.net/pyPdf/>
+- `Reportlab Toolkit 2.2+ <http://www.reportlab.org/>`_
+- `html5lib 0.11.1+ <http://code.google.com/p/html5lib/>`_
+- `pyPdf 1.11+ (optional) <http://pybrary.net/pyPdf/>`_
 
 EXAMPLES
 ========
 
-> xhtml2pdf -s test\test-loremipsum.html
-> xhtml2pdf -s http://www.python.org
-> xhtml2pdf test\test-*.html
+::
+
+    xhtml2pdf -s test/test-loremipsum.html
+    xhtml2pdf -s http://www.python.org
+    xhtml2pdf test/test-*.html
 
 PYTHON INTEGRATION
 ==================
 
 Some simple demos of how to integrate PISA into
-a Python program may be found here: test\simple.py
+a Python program may be found here: test/simple.py
 
 CONTACT
 =======

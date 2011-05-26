@@ -7,8 +7,8 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus.frames import Frame
 from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
-from xhtml2pdf.xhtml2pdf_reportlab import PmlPageTemplate, PmlTableOfContents, \
-    PmlParagraph, PmlParagraphAndImage
+from xhtml2pdf.xhtml2pdf_reportlab import PmlPageTemplate, PmlTableOfContents
+from xhtml2pdf.xhtml2pdf_reportlab import PmlParagraph, PmlParagraphAndImage
 from xhtml2pdf.util import getSize, getCoords, getFile, pisaFileObject
 from xhtml2pdf.w3c import css
 import copy
