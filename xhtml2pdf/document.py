@@ -39,8 +39,8 @@ def pisaErrorDocument(dest, c):
 
     return pisaDocument(out.getvalue(), dest, raise_exception=False)
 
-def pisaStory(src, path = None, link_callback = None, debug = 0, default_css = None,
-              xhtml = False, encoding = None, context = None, xml_output = None,
+def pisaStory(src, path=None, link_callback=None, debug=0, default_css=None,
+              xhtml=False, encoding=None, context=None, xml_output=None,
               **kw):
 
     # Prepare Context
@@ -65,9 +65,9 @@ def pisaStory(src, path = None, link_callback = None, debug = 0, default_css = N
             frag.link = None
     return context
 
-def pisaDocument(src, dest = None, path = None, link_callback = None, debug = 0,
-                 default_css = None, xhtml = False, encoding = None, xml_output = None,
-                 raise_exception = True, capacity = 100 * 1024, **kw):
+def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
+                 default_css=None, xhtml=False, encoding=None, xml_output=None,
+                 raise_exception=True, capacity=100*1024, **kw):
 
     log.debug("pisaDocument options:\n  src = %r\n  dest = %r\n  path = %r\n  link_callback = %r\n  xhtml = %r",
         src,
@@ -81,21 +81,22 @@ def pisaDocument(src, dest = None, path = None, link_callback = None, debug = 0,
     context.pathCallback = link_callback
 
     # Build story
-    context = pisaStory(src, path, link_callback, debug, default_css, xhtml, encoding, 
-                  context=context, xml_output=xml_output)
+    context = pisaStory(src, path, link_callback, debug, default_css, xhtml, 
+                        encoding, context=context, xml_output=xml_output)
 
     # Buffer PDF into memory
     out = pisaTempFile(capacity=context.capacity)
 
     doc = PmlBaseDoc(
         out,
-        pagesize = context.pageSize,
-        author = context.meta["author"].strip(),
-        subject = context.meta["subject"].strip(),
-        keywords = [x.strip() for x in context.meta["keywords"].strip().split(",") if x],
-        title = context.meta["title"].strip(),
-        showBoundary = 0,
-        allowSplitting = 1)
+        pagesize=context.pageSize,
+        author=context.meta["author"].strip(),
+        subject=context.meta["subject"].strip(),
+        keywords=[x.strip() for x in 
+                  context.meta["keywords"].strip().split(",") if x],
+        title=context.meta["title"].strip(),
+        showBoundary=0,
+        allowSplitting=1)
 
     # Prepare templates and their frames
     if context.templateList.has_key("body"):
@@ -107,11 +108,11 @@ def pisaDocument(src, dest = None, path = None, link_callback = None, debug = 0,
             id="body",
             frames=[
                 Frame(x, y, w, h,
-                    id = "body",
-                    leftPadding = 0,
-                    rightPadding = 0,
-                    bottomPadding = 0,
-                    topPadding = 0)],
+                      id="body",
+                      leftPadding=0,
+                      rightPadding=0,
+                      bottomPadding=0,
+                      topPadding=0)],
             pagesize = context.pageSize)
 
     doc.addPageTemplates([body] + context.templateList.values())
@@ -133,27 +134,27 @@ def pisaDocument(src, dest = None, path = None, link_callback = None, debug = 0,
 
     # Add watermarks
     if pyPdf:
-        
         for bgouter in context.pisaBackgroundList:
-
             # If we have at least one background, then lets do it
             if bgouter:
-
                 istream = out
             
                 output = pyPdf.PdfFileWriter()
                 input1 = pyPdf.PdfFileReader(istream)
                 ctr = 0
-                #TODO: Why do we loop over the same list again? see bgouter at line 137
+                # TODO: Why do we loop over the same list again? 
+                # see bgouter at line 137
                 for bg in context.pisaBackgroundList:
                     page = input1.getPage(ctr)
-                    if bg and not bg.notFound() and (bg.mimetype=="application/pdf"):
+                    if (bg and not bg.notFound() 
+                        and (bg.mimetype=="application/pdf")):
                         bginput = pyPdf.PdfFileReader(bg.getFile())
                         pagebg = bginput.getPage(0)
                         pagebg.mergePage(page)
                         page = pagebg
                     else:
-                        log.warn(context.warning("Background PDF %s doesn't exist.", bg))
+                        log.warn(context.warning(
+                                "Background PDF %s doesn't exist.", bg))
                     output.addPage(page)
                     ctr += 1
                 out = pisaTempFile(capacity=context.capacity)
