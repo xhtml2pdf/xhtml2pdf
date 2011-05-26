@@ -22,6 +22,8 @@ except ImportError:
     from ez_setup import use_setuptools
     use_setuptools()
 
+README = open(os.path.join(os.path.dirname(__file__), 'README.md')).read()
+
 setup(
     name="xhtml2pdf",
     version="0.0.1",
@@ -32,25 +34,18 @@ setup(
     maintainer="Christopher Glass",
     maintainer_email="tribaal@gmail.com",
     url="http://www.xhtml2pdf.com",
-#    download_url   = "http://pypi.python.org/pypi/pisa/", DONT DO THIS!!!
     keywords="PDF, HTML, XHTML, XML, CSS",
-
     install_requires = ["html5lib", "pypdf", "pil", "reportlab"],
-
     include_package_data = True,
-
     packages=find_packages(exclude=["tests", "tests.*"]),
-
 #    test_suite = "tests", They're not even working yet
-
 #    entry_points = {
 #        'console_scripts': [
 #            'pisa = sx.pisa3:command',
 #            'xhtml2pdf = sx.pisa3:command',
 #            ]
 #        },
-
-    long_description=open(os.path.join(os.path.dirname(__file__), 'README.txt')).read(),
+    long_description=README,
     classifiers =[
         'License :: OSI Approved :: Apache Software License',
         'Development Status :: 4 - Beta',
