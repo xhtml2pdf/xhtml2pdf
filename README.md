@@ -27,15 +27,15 @@ REQUIREMENTS
 EXAMPLES
 ========
 
-    xhtml2pdf -s test\test-loremipsum.html
+    xhtml2pdf -s test/test-loremipsum.html
     xhtml2pdf -s http://www.python.org
-    xhtml2pdf test\test-*.html
+    xhtml2pdf test/test-*.html
 
 PYTHON INTEGRATION
 ==================
 
 Some simple demos of how to integrate PISA into
-a Python program may be found here: test\simple.py
+a Python program may be found here: test/simple.py
 
 CONTACT
 =======
