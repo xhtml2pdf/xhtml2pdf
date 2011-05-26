@@ -338,7 +338,7 @@ def execute():
         usage()
         sys.exit(2)
 
-    if len(args)==2:
+    if len(args) == 2:
         a_src, a_dest = args
     else:
         a_src = args[0]
@@ -360,7 +360,7 @@ def execute():
         lc = None
         wpath = None
 
-        if src=="-" or base_dir!=None:
+        if src == "-" or base_dir != None:
             # Output to console
             fsrc = sys.stdin
             wpath = os.getcwd()
@@ -395,7 +395,7 @@ def execute():
 
         fdestclose = 0
 
-        if dest=="-" or base_dir:
+        if dest == "-" or base_dir:
             if sys.platform == "win32":
                 import msvcrt
                 msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
@@ -445,10 +445,8 @@ def execute():
                 startViewer(dest)
 
         except:
-
             if not quiet:
                 print "*** ERRORS OCCURED"
-
             sys.exit(1)
 
 def startViewer(filename):
