@@ -39,12 +39,12 @@ setup(
     include_package_data = True,
     packages=find_packages(exclude=["tests", "tests.*"]),
 #    test_suite = "tests", They're not even working yet
-#    entry_points = {
-#        'console_scripts': [
-#            'pisa = sx.pisa3:command',
-#            'xhtml2pdf = sx.pisa3:command',
-#            ]
-#        },
+    entry_points = {
+        'console_scripts': [
+            'pisa = xhtml2pdf.pisa:command',
+            'xhtml2pdf = xhtml2pdf.pisa:command',
+            ]
+        },
     long_description=README,
     classifiers =[
         'License :: OSI Approved :: Apache Software License',
