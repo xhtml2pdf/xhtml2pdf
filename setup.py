@@ -22,11 +22,11 @@ except ImportError:
     from ez_setup import use_setuptools
     use_setuptools()
 
-README = open(os.path.join(os.path.dirname(__file__), 'README.md')).read()
+README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 
 setup(
     name="xhtml2pdf",
-    version="0.0.1",
+    version="0.0.2",
     description="PDF generator using HTML and CSS",
     license="Apache License 2.0",
     author="Dirk Holtwick",
