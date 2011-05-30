@@ -191,8 +191,8 @@ class pisaCSSBuilder(css.CSSBuilder):
             return [getSize(x) for x in box]
         top = getSize(data.get("top", 0), height)
         left = getSize(data.get("left", 0), width)
-        bottom = - getSize(data.get("bottom", 0), height)
-        right = - getSize(data.get("right", 0), width)
+        bottom = getSize(data.get("bottom", 0), height)
+        right = getSize(data.get("right", 0), width)
         w = getSize(data.get("width", 0), width, default=None)
         h = getSize(data.get("height", 0), height, default=None)
         #print width, height, top, left, bottom, right, w, h
