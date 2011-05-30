@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from html5lib import treebuilders, serializer, treewalkers, inputstream
+from html5lib import treebuilders, inputstream
 from xhtml2pdf.default import * # TODO: Kill wild import!
 from xhtml2pdf.tables import * # TODO: Kill wild import!
 from xhtml2pdf.tags import * # TODO: Kill wild import!
@@ -24,12 +24,8 @@ from xml.dom import Node
 import copy
 import html5lib
 import logging
-import os
-import os.path
-import pprint
 import re
 import types
-import xhtml2pdf.w3c.css as css
 import xhtml2pdf.w3c.cssDOMElementInterface as cssDOMElementInterface
 import xml.dom.minidom
 

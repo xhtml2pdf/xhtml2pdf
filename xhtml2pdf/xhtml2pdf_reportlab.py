@@ -20,7 +20,7 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.utils import flatten, open_for_read, getStringIO, \
     LazyImageReader, haveImages
 from reportlab.platypus.doctemplate import BaseDocTemplate, PageTemplate
-from reportlab.platypus.flowables import Flowable, Image, CondPageBreak, \
+from reportlab.platypus.flowables import Flowable, CondPageBreak, \
     KeepInFrame, ParagraphAndImage
 from reportlab.platypus.tableofcontents import TableOfContents
 from reportlab.platypus.tables import Table, TableStyle
@@ -190,7 +190,7 @@ class PmlPageTemplate(PageTemplate):
 
                     frame.addFromList(story, canvas)
 
-            except Exception, e: # TODO: Kill this!
+            except Exception: # TODO: Kill this!
                 log.debug("PmlPageTemplate", exc_info=1)
 
 

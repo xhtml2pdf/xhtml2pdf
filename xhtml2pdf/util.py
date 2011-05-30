@@ -99,7 +99,7 @@ def ErrorMsg():
     """
     Helper to get a nice traceback as string
     """
-    import traceback, sys, cgi
+    import traceback, sys
     type = value = tb = limit = None
     type, value, tb = sys.exc_info()
     list = traceback.format_tb(tb, limit) + traceback.format_exception_only(type, value)

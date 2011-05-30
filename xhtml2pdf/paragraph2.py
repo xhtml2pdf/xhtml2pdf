@@ -686,7 +686,6 @@ if __name__ == "__main__":
     import os
     import copy
     import re
-    import pprint
 
     styles = getSampleStyleSheet()
 
