@@ -200,7 +200,7 @@ class pisaTagTABLE(pisaTag):
 
         for i, row in enumerate(data):
             data[i] += [''] * (maxcols - len(row))
-        
+
         cols_with_no_width = len(filter(lambda col: col is None, tdata.colw))
         if cols_with_no_width:  # any col width not defined
             bad_cols = filter(lambda tup: tup[1] is None, enumerate(tdata.colw))
