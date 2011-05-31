@@ -137,34 +137,28 @@ class pisaLinkLoader:
             os.remove(path)
 
     def getFileName(self, name, relative=None):
-        try:
-            url = urlparse.urljoin(relative or self.src, name)
-            path = urlparse.urlsplit(url)[2]
-            suffix = ""
-            if "." in path:
-                new_suffix = "." + path.split(".")[-1].lower()
-                if new_suffix in (".css", ".gif", ".jpg", ".png"):
-                    suffix = new_suffix
-            path = tempfile.mktemp(prefix="pisa-", suffix = suffix)
-            ufile = urllib2.urlopen(url)
-            tfile = file(path, "wb")
-            while True:
-                data = ufile.read(1024)
-                if not data:
-                    break
-                # print data
-                tfile.write(data)
-            ufile.close()
-            tfile.close()
-            self.tfileList.append(path)
-            if not self.quiet:
-                print "  Loading", url, "to", path
-            return path
-        except Exception, e:
-            if not self.quiet:
-                print "  ERROR:", e
-            log.exception("pisaLinkLoader.getFileName")
-        return None
+        url = urlparse.urljoin(relative or self.src, name)
+        path = urlparse.urlsplit(url)[2]
+        suffix = ""
+        if "." in path:
+            new_suffix = "." + path.split(".")[-1].lower()
+            if new_suffix in (".css", ".gif", ".jpg", ".png"):
+                suffix = new_suffix
+        path = tempfile.mktemp(prefix="pisa-", suffix = suffix)
+        ufile = urllib2.urlopen(url)
+        tfile = file(path, "wb")
+        while True:
+            data = ufile.read(1024)
+            if not data:
+                break
+            # print data
+            tfile.write(data)
+        ufile.close()
+        tfile.close()
+        self.tfileList.append(path)
+        if not self.quiet:
+            print "  Loading", url, "to", path
+        return path
 
 def command():
     if "--profile" in sys.argv:
@@ -414,40 +408,33 @@ def execute():
         if not quiet:
             print "Converting %s to %s..." % (src, dest)
 
-        try:
+        pdf = pisaDocument(
+            fsrc,
+            fdest,
+            debug = debug,
+            path = wpath,
+            errout = sys.stdout,
+            #multivalent_path = multivalent_path,
+            #booklet = booklet,
+            tempdir = tempdir,
+            format = format,
+            link_callback = lc,
+            default_css = css,
+            xhtml = xhtml,
+            encoding = encoding,
+            xml_output = xml_output,
+            )
 
-            pdf = pisaDocument(
-                fsrc,
-                fdest,
-                debug = debug,
-                path = wpath,
-                errout = sys.stdout,
-                #multivalent_path = multivalent_path,
-                #booklet = booklet,
-                tempdir = tempdir,
-                format = format,
-                link_callback = lc,
-                default_css = css,
-                xhtml = xhtml,
-                encoding = encoding,
-                xml_output = xml_output,
-                )
+        if xml_output:
+            xml_output.getvalue()
 
-            if xml_output:
-                xml_output.getvalue()
+        if fdestclose:
+            fdest.close()
 
-            if fdestclose:
-                fdest.close()
-
-            if (not errors) and startviewer:
-                if not quiet:
-                    print "Open viewer for file %s" % dest
-                startViewer(dest)
-
-        except:
+        if (not errors) and startviewer:
             if not quiet:
-                print "*** ERRORS OCCURED"
-            sys.exit(1)
+                print "Open viewer for file %s" % dest
+            startViewer(dest)
 
 def startViewer(filename):
     " Helper for opening a PDF file"

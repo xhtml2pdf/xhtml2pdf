@@ -237,138 +237,133 @@ class pisaCSSBuilder(css.CSSBuilder):
             x, y, w, h)
 
     def atPage(self, name, pseudopage, declarations):
-        try:
+        c = self.c
+        data = {}
+        name = name or "body"
+        pageBorder = None
 
-            c = self.c
-            data = {}
-            name = name or "body"
-            pageBorder = None
+        if declarations:
+            result = self.ruleset([self.selector('*')], declarations)
+            # print "@PAGE", name, pseudopage, declarations, result
 
             if declarations:
-                result = self.ruleset([self.selector('*')], declarations)
-                # print "@PAGE", name, pseudopage, declarations, result
+                data = result[0].values()[0]
+                pageBorder = data.get("-pdf-frame-border", None)
 
-                if declarations:
-                    data = result[0].values()[0]
-                    pageBorder = data.get("-pdf-frame-border", None)
+        if c.templateList.has_key(name):
+            log.warn(self.c.warning("template '%s' has already been defined", name))
 
-            if c.templateList.has_key(name):
-                log.warn(self.c.warning("template '%s' has already been defined", name))
+        if data.has_key("-pdf-page-size"):
+            c.pageSize = xhtml2pdf.default.PML_PAGESIZES.get(str(data["-pdf-page-size"]).lower(), c.pageSize)
 
-            if data.has_key("-pdf-page-size"):
-                c.pageSize = xhtml2pdf.default.PML_PAGESIZES.get(str(data["-pdf-page-size"]).lower(), c.pageSize)
-
-            if data.has_key("size"):
-                size = data["size"]
-                # print size, c.pageSize
-                if type(size) is not types.ListType:
-                    size = [size]
-                isLandscape = False
-                sizeList = []
-                for value in size:
-                    valueStr = str(value).lower()
-                    if type(value) is types.TupleType:
-                        sizeList.append(getSize(value))
-                    elif valueStr == "landscape":
-                        isLandscape = True
-                    elif xhtml2pdf.default.PML_PAGESIZES.has_key(valueStr):
-                        c.pageSize = xhtml2pdf.default.PML_PAGESIZES[valueStr]
-                    else:
-                        log.warn(c.warning("Unknown size value for @page"))
-
-                if len(sizeList) == 2:
-                    c.pageSize = sizeList
-                if isLandscape:
-                    c.pageSize = landscape(c.pageSize)
-
-            for prop in [
-                "margin-top",
-                "margin-left",
-                "margin-right",
-                "margin-bottom",
-                "top",
-                "left",
-                "right",
-                "bottom",
-                "width",
-                "height"
-                ]:
-                if data.has_key(prop):
-                    c.frameList.append(self._pisaAddFrame(name, data, first=True, border=pageBorder, size=c.pageSize))
-                    break
-            # self._drawing = PmlPageDrawing(self._pagesize)
-
-            #if not c.frameList:
-            #    c.warning("missing frame definitions for template")
-            #    return {}, {}
-
-            # Frames have to be calculated after we know the pagesize
-            frameList = []
-            staticList = []
-            for fname, static, border, x, y, w, h in c.frameList:
-                x, y, w, h = getCoords(x, y, w, h, c.pageSize)
-                if w <= 0 or h <= 0:
-                    log.warn(self.c.warning("Negative width or height of frame. Check @frame definitions."))
-                frame = Frame(
-                    x, y, w, h,
-                    id=fname,
-                    leftPadding=0,
-                    rightPadding=0,
-                    bottomPadding=0,
-                    topPadding=0,
-                    showBoundary=border or pageBorder)
-                if static:
-                    frame.pisaStaticStory = []
-                    c.frameStatic[static] = [frame] + c.frameStatic.get(static, [])
-                    staticList.append(frame)
+        if data.has_key("size"):
+            size = data["size"]
+            # print size, c.pageSize
+            if type(size) is not types.ListType:
+                size = [size]
+            isLandscape = False
+            sizeList = []
+            for value in size:
+                valueStr = str(value).lower()
+                if type(value) is types.TupleType:
+                    sizeList.append(getSize(value))
+                elif valueStr == "landscape":
+                    isLandscape = True
+                elif xhtml2pdf.default.PML_PAGESIZES.has_key(valueStr):
+                    c.pageSize = xhtml2pdf.default.PML_PAGESIZES[valueStr]
                 else:
-                    frameList.append(frame)
+                    log.warn(c.warning("Unknown size value for @page"))
 
-            background = data.get("background-image", None)
-            if background:
-                background = self.c.getFile(background)
-            # print background
+            if len(sizeList) == 2:
+                c.pageSize = sizeList
+            if isLandscape:
+                c.pageSize = landscape(c.pageSize)
 
-            # print frameList
-            if not frameList:
-                # print 999
-                log.warn(c.warning("missing explicit frame definition for content or just static frames"))
-                fname, static, border, x, y, w, h = self._pisaAddFrame(name, data, first=True, border=pageBorder, size=c.pageSize)
-                x, y, w, h = getCoords(x, y, w, h, c.pageSize)
-                if w <= 0 or h <= 0:
-                    log.warn(c.warning("Negative width or height of frame. Check @page definitions."))
-                frameList.append(Frame(
-                    x, y, w, h,
-                    id=fname,
-                    leftPadding=0,
-                    rightPadding=0,
-                    bottomPadding=0,
-                    topPadding=0,
-                    showBoundary=border or pageBorder))
+        for prop in [
+            "margin-top",
+            "margin-left",
+            "margin-right",
+            "margin-bottom",
+            "top",
+            "left",
+            "right",
+            "bottom",
+            "width",
+            "height"
+            ]:
+            if data.has_key(prop):
+                c.frameList.append(self._pisaAddFrame(name, data, first=True, border=pageBorder, size=c.pageSize))
+                break
+        # self._drawing = PmlPageDrawing(self._pagesize)
 
-            pt = PmlPageTemplate(
-                id=name,
-                frames=frameList,
-                pagesize=c.pageSize,
-                )
-            pt.pisaStaticList = staticList
-            pt.pisaBackground = background
-            pt.pisaBackgroundList = c.pisaBackgroundList
+        #if not c.frameList:
+        #    c.warning("missing frame definitions for template")
+        #    return {}, {}
 
-            # self._pagesize)
-            # pt.pml_statics = self._statics
-            # pt.pml_draw = self._draw
-            # pt.pml_drawing = self._drawing
-            # pt.pml_background = attrs.background
-            # pt.pml_bgstory = self._bgstory
+        # Frames have to be calculated after we know the pagesize
+        frameList = []
+        staticList = []
+        for fname, static, border, x, y, w, h in c.frameList:
+            x, y, w, h = getCoords(x, y, w, h, c.pageSize)
+            if w <= 0 or h <= 0:
+                log.warn(self.c.warning("Negative width or height of frame. Check @frame definitions."))
+            frame = Frame(
+                x, y, w, h,
+                id=fname,
+                leftPadding=0,
+                rightPadding=0,
+                bottomPadding=0,
+                topPadding=0,
+                showBoundary=border or pageBorder)
+            if static:
+                frame.pisaStaticStory = []
+                c.frameStatic[static] = [frame] + c.frameStatic.get(static, [])
+                staticList.append(frame)
+            else:
+                frameList.append(frame)
 
-            c.templateList[name] = pt
-            c.template = None
-            c.frameList = []
-            c.frameStaticList = []
+        background = data.get("background-image", None)
+        if background:
+            background = self.c.getFile(background)
+        # print background
 
-        except Exception, e: # TODO: KILL THIS FOR THE LOVE OF GOD
-            log.error(self.c.warning("@page"), exc_info=1)
+        # print frameList
+        if not frameList:
+            # print 999
+            log.warn(c.warning("missing explicit frame definition for content or just static frames"))
+            fname, static, border, x, y, w, h = self._pisaAddFrame(name, data, first=True, border=pageBorder, size=c.pageSize)
+            x, y, w, h = getCoords(x, y, w, h, c.pageSize)
+            if w <= 0 or h <= 0:
+                log.warn(c.warning("Negative width or height of frame. Check @page definitions."))
+            frameList.append(Frame(
+                x, y, w, h,
+                id=fname,
+                leftPadding=0,
+                rightPadding=0,
+                bottomPadding=0,
+                topPadding=0,
+                showBoundary=border or pageBorder))
+
+        pt = PmlPageTemplate(
+            id=name,
+            frames=frameList,
+            pagesize=c.pageSize,
+            )
+        pt.pisaStaticList = staticList
+        pt.pisaBackground = background
+        pt.pisaBackgroundList = c.pisaBackgroundList
+
+        # self._pagesize)
+        # pt.pml_statics = self._statics
+        # pt.pml_draw = self._draw
+        # pt.pml_drawing = self._drawing
+        # pt.pml_background = attrs.background
+        # pt.pml_bgstory = self._bgstory
+
+        c.templateList[name] = pt
+        c.template = None
+        c.frameList = []
+        c.frameStaticList = []
 
         return {}, {}
 
@@ -376,18 +371,17 @@ class pisaCSSBuilder(css.CSSBuilder):
         if declarations:
             result = self.ruleset([self.selector('*')], declarations)
             # print "@BOX", name, declarations, result
-            try:
-                data = result[0]
-                if data:
-                    data = data.values()[0]
-                    self.c.frameList.append(
-                        self._pisaAddFrame(
-                            name,
-                            data,
-                            size=self.c.pageSize))
-            except Exception, e: # TODO: Kill this
-                log.warn(self.c.warning("@frame"), exc_info=1)
-        return {}, {}
+            
+            data = result[0]
+            if data:
+                data = data.values()[0]
+                self.c.frameList.append(
+                    self._pisaAddFrame(
+                        name,
+                        data,
+                        size=self.c.pageSize))
+            
+        return {}, {} # TODO: It always returns empty dicts?
 
 class pisaCSSParser(css.CSSParser):
 
