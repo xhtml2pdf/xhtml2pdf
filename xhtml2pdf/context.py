@@ -219,7 +219,7 @@ class pisaCSSBuilder(css.CSSBuilder):
         height = page_height - (top + bottom)
         return left, top, width, height
 
-    def _pisaAddFrame(self, name, data, first=False, border=None, page_size=(0,0)):
+    def _pisaAddFrame(self, name, data, first=False, border=None, size=(0,0)):
         c = self.c
         if not name:
             name = "-pdf-frame-%d" % c.UID()
