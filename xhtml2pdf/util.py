@@ -565,7 +565,6 @@ class pisaFileObject:
                 if basepath:
                     uri = os.path.normpath(os.path.join(basepath, uri))
 
-                print 'final uri', uri
                 if os.path.isfile(uri):
                     self.uri = uri
                     self.local = uri
