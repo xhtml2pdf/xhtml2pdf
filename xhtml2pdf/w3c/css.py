@@ -676,9 +676,15 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
         return None
 
     def atPage(self, page, pseudopage, declarations):
+        """
+        This is overriden by xhtml2pdf.context.pisaCSSBuilder
+        """
         return self.ruleset([self.selector('*')], declarations)
 
     def atFontFace(self, declarations):
+        """
+        This is overriden by xhtml2pdf.context.pisaCSSBuilder
+        """
         return self.ruleset([self.selector('*')], declarations)
 
     def atIdent(self, atIdent, cssParser, src):
