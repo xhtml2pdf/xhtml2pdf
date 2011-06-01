@@ -158,28 +158,24 @@ class pisaCSSBuilder(css.CSSBuilder):
     def atFontFace(self, declarations):
         " Embed fonts "
         result = self.ruleset([self.selector('*')], declarations)
-        # print "@FONT-FACE", declarations, result
-        try:
-            data = result[0].values()[0]
-            names = data["font-family"]
+        data = result[0].values()[0]
+        names = data["font-family"]
 
-            # Font weight
-            fweight = str(data.get("font-weight", "normal")).lower()
-            bold = fweight in ("bold", "bolder", "500", "600", "700", "800", "900")
-            if not bold and fweight <> "normal":
-                log.warn(self.c.warning("@fontface, unknown value font-weight '%s'", fweight))
+        # Font weight
+        fweight = str(data.get("font-weight", "normal")).lower()
+        bold = fweight in ("bold", "bolder", "500", "600", "700", "800", "900")
+        if not bold and fweight <> "normal":
+            log.warn(self.c.warning("@fontface, unknown value font-weight '%s'", fweight))
 
-            # Font style
-            italic = str(data.get("font-style", "")).lower() in ("italic", "oblique")
+        # Font style
+        italic = str(data.get("font-style", "")).lower() in ("italic", "oblique")
 
-            src = self.c.getFile(data["src"])
-            self.c.loadFont(
-                names,
-                src,
-                bold=bold,
-                italic=italic)
-        except Exception, e: # TODO: Kill catch-all
-            log.warn(self.c.warning("@fontface"), exc_info=1)
+        src = self.c.getFile(data["src"])
+        self.c.loadFont(
+            names,
+            src,
+            bold=bold,
+            italic=italic)
         return {}, {}
 
     def _pisaDimensions(self, data, page_width, page_height):
@@ -228,16 +224,10 @@ class pisaCSSBuilder(css.CSSBuilder):
         #if not (w and h):
         #    return None
         if first:
-            return (
-                name,
-                None,
-                data.get("-pdf-frame-border", border),
-                x, y, w, h)
-        return (
-            name,
-            data.get("-pdf-frame-content", None),
-            data.get("-pdf-frame-border", border),
-            x, y, w, h)
+            return (name, None, data.get("-pdf-frame-border", border), x, y, w, h)
+        
+        return (name, data.get("-pdf-frame-content", None), 
+                data.get("-pdf-frame-border", border), x, y, w, h)
 
     def atPage(self, name, pseudopage, declarations):
         c = self.c
@@ -282,18 +272,8 @@ class pisaCSSBuilder(css.CSSBuilder):
             if isLandscape:
                 c.pageSize = landscape(c.pageSize)
 
-        for prop in [
-            "margin-top",
-            "margin-left",
-            "margin-right",
-            "margin-bottom",
-            "top",
-            "left",
-            "right",
-            "bottom",
-            "width",
-            "height"
-            ]:
+        for prop in ["margin-top", "margin-left", "margin-right", "margin-bottom",
+                     "top", "left", "right", "bottom", "width", "height"]:
             if data.has_key(prop):
                 c.frameList.append(self._pisaAddFrame(name, data, first=True, border=pageBorder, size=c.pageSize))
                 break
@@ -379,10 +359,7 @@ class pisaCSSBuilder(css.CSSBuilder):
             if data:
                 data = data.values()[0]
                 self.c.frameList.append(
-                    self._pisaAddFrame(
-                        name,
-                        data,
-                        size=self.c.pageSize))
+                    self._pisaAddFrame(name, data, size=self.c.pageSize))
             
         return {}, {} # TODO: It always returns empty dicts?
 
@@ -404,7 +381,7 @@ class pisaCSSParser(css.CSSParser):
         self.rootPath = oldRootPath
         return result
 
-class pisaContext:
+class pisaContext(object):
 
     """
     Helper class for creation of reportlab story and container for
@@ -974,83 +951,79 @@ class pisaContext:
             baseName, suffix = ".".join(parts[: - 1]), parts[ - 1]
             suffix = suffix.lower()
 
-            try:
-                
-                if suffix in ["ttc", "ttf"]:
+            if suffix in ["ttc", "ttf"]:
 
-                    # determine full font name according to weight and style
-                    fullFontName = "%s_%d%d" % (fontName, bold, italic)
+                # determine full font name according to weight and style
+                fullFontName = "%s_%d%d" % (fontName, bold, italic)
 
-                    # check if font has already been registered
-                    if fullFontName in self.fontList:
-                        log.warn(self.warning("Repeated font embed for %s, skip new embed ", fullFontName))
-                    else:
-
-                        # Register TTF font and special name
-                        filename = file.getNamedFile()
-                        pdfmetrics.registerFont(TTFont(fullFontName, filename))
-
-                        # Add or replace missing styles
-                        for bold in (0, 1):
-                            for italic in (0, 1):
-                                if ("%s_%d%d" % (fontName, bold, italic)) not in self.fontList:
-                                    addMapping(fontName, bold, italic, fullFontName)
-
-                        # Register "normal" name and the place holder for style
-                        self.registerFont(fontName, fontAlias + [fullFontName])
-
-                elif suffix in ("afm", "pfb"):
-
-                    if suffix == "afm":
-                        afm = file.getNamedFile()
-                        tfile = pisaFileObject(baseName + ".pfb")
-                        pfb = tfile.getNamedFile()
-                    else:
-                        pfb  = file.getNamedFile()
-                        tfile = pisaFileObject(baseName + ".afm")
-                        afm = tfile.getNamedFile()
-
-                    #afm = baseName + ".afm"
-                    #pfb = baseName + ".pfb"
-
-                    # determine full font name according to weight and style
-                    fullFontName = "%s_%d%d" % (fontName, bold, italic)
-
-                    #fontNameOriginal = ""
-                    #for line in open(afm).readlines()[:-1]:
-                    #    if line[:16] == 'StartCharMetrics':
-                    #        self.error("Font name not found")
-                    #    if line[:8] == 'FontName':
-                    #        fontNameOriginal = line[9:].strip()
-                    #        break
-
-                    # check if font has already been registered
-                    if fullFontName in self.fontList:
-                        log.warn(self.warning("Repeated font embed for %s, skip new embed", fontName))
-                    else:
-
-                        # Include font
-                        face = pdfmetrics.EmbeddedType1Face(afm, pfb)
-                        fontNameOriginal = face.name
-                        pdfmetrics.registerTypeFace(face)
-                        # print fontName, fontNameOriginal, fullFontName
-                        justFont = pdfmetrics.Font(fullFontName, fontNameOriginal, encoding)
-                        pdfmetrics.registerFont(justFont)
-
-                        # Add or replace missing styles
-                        for bold in (0, 1):
-                            for italic in (0, 1):
-                                if ("%s_%d%d" % (fontName, bold, italic)) not in self.fontList:
-                                    addMapping(fontName, bold, italic, fontNameOriginal)
-
-                        # Register "normal" name and the place holder for style
-                        self.registerFont(fontName, fontAlias + [fullFontName, fontNameOriginal])
-
-                        #import pprint
-                        #pprint.pprint(self.fontList)
-
+                # check if font has already been registered
+                if fullFontName in self.fontList:
+                    log.warn(self.warning("Repeated font embed for %s, skip new embed ", fullFontName))
                 else:
-                    log.warning(self.warning("wrong attributes for <pdf:font>"))
 
-            except Exception: # TODO: Kill this
-                log.warn(self.warning("Loading font '%s'", fontName), exc_info=1)
+                    # Register TTF font and special name
+                    filename = file.getNamedFile()
+                    pdfmetrics.registerFont(TTFont(fullFontName, filename))
+
+                    # Add or replace missing styles
+                    for bold in (0, 1):
+                        for italic in (0, 1):
+                            if ("%s_%d%d" % (fontName, bold, italic)) not in self.fontList:
+                                addMapping(fontName, bold, italic, fullFontName)
+
+                    # Register "normal" name and the place holder for style
+                    self.registerFont(fontName, fontAlias + [fullFontName])
+
+            elif suffix in ("afm", "pfb"):
+
+                if suffix == "afm":
+                    afm = file.getNamedFile()
+                    tfile = pisaFileObject(baseName + ".pfb")
+                    pfb = tfile.getNamedFile()
+                else:
+                    pfb  = file.getNamedFile()
+                    tfile = pisaFileObject(baseName + ".afm")
+                    afm = tfile.getNamedFile()
+
+                #afm = baseName + ".afm"
+                #pfb = baseName + ".pfb"
+
+                # determine full font name according to weight and style
+                fullFontName = "%s_%d%d" % (fontName, bold, italic)
+
+                #fontNameOriginal = ""
+                #for line in open(afm).readlines()[:-1]:
+                #    if line[:16] == 'StartCharMetrics':
+                #        self.error("Font name not found")
+                #    if line[:8] == 'FontName':
+                #        fontNameOriginal = line[9:].strip()
+                #        break
+
+                # check if font has already been registered
+                if fullFontName in self.fontList:
+                    log.warn(self.warning("Repeated font embed for %s, skip new embed", fontName))
+                else:
+
+                    # Include font
+                    face = pdfmetrics.EmbeddedType1Face(afm, pfb)
+                    fontNameOriginal = face.name
+                    pdfmetrics.registerTypeFace(face)
+                    # print fontName, fontNameOriginal, fullFontName
+                    justFont = pdfmetrics.Font(fullFontName, fontNameOriginal, encoding)
+                    pdfmetrics.registerFont(justFont)
+
+                    # Add or replace missing styles
+                    for bold in (0, 1):
+                        for italic in (0, 1):
+                            if ("%s_%d%d" % (fontName, bold, italic)) not in self.fontList:
+                                addMapping(fontName, bold, italic, fontNameOriginal)
+
+                    # Register "normal" name and the place holder for style
+                    self.registerFont(fontName, fontAlias + [fullFontName, fontNameOriginal])
+
+                    #import pprint
+                    #pprint.pprint(self.fontList)
+
+            else:
+                log.warning(self.warning("wrong attributes for <pdf:font>"))
+
