@@ -309,6 +309,7 @@ def getSize(value, relative=0, base=None, default=0.0):
         log.warn("getSize %r %r", original, relative, exc_info=1)
         return default
 
+@memoized
 def getCoords(x, y, w, h, pagesize):
     """
     As a stupid programmer I like to use the upper left
