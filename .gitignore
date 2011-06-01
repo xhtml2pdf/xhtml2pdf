@@ -15,3 +15,4 @@ reportlab-2.5-py2.7-linux-x86_64.egg/
 tests/tmp/
 build/
 dist/
+testrender/output/
