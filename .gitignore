@@ -16,3 +16,4 @@ tests/tmp/
 build/
 dist/
 testrender/output/
+*.swp
