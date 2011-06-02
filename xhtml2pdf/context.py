@@ -138,10 +138,6 @@ def getParaFrag(style):
     frag.outlineLevel = 0
     frag.outlineOpen = False
 
-    frag.keepInFrameMode = "shrink"
-    #frag.keepInFrameMaxWidth = None
-    #frag.keepInFrameMaxHeight = None
-
     frag.insideStaticFrame = 0
 
     return frag
@@ -412,6 +408,8 @@ class pisaContext(object):
         self.frameStatic = {}
         self.frameStaticList = []
         self.pisaBackgroundList = []
+
+        self.keepInFrameIndex = None
 
         self.baseFontSize = getSize("12pt")
 

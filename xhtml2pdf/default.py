@@ -526,7 +526,6 @@ pdftoc {
 }
 
 table {
-     -pdf-keep-in-frame-mode: shrink;
 }
 
 tr,

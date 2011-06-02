@@ -357,13 +357,13 @@ class pisaTagTD(pisaTag):
         #    cell = ' '
 
         # Keep in frame if needed since Reportlab does no split inside of cells
-        if (not c.frag.insideStaticFrame) and (c.frag.keepInFrameMode is not None):
+        if not c.frag.insideStaticFrame:
 
             # tdata.keepinframe["content"] = cell
             cell = PmlKeepInFrame(
                 maxWidth=0,
                 maxHeight=0,
-                mode=c.frag.keepInFrameMode,
+                mode='shrink',
                 content=cell)
 
         c.swapStory(self.story)
