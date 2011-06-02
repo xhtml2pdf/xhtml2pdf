@@ -15,11 +15,16 @@
 # limitations under the License.
 
 from html5lib import treebuilders, inputstream
-from xhtml2pdf.default import * # TODO: Kill wild import!
-from xhtml2pdf.tables import * # TODO: Kill wild import!
-from xhtml2pdf.tags import * # TODO: Kill wild import!
-from xhtml2pdf.util import * # TODO: Kill wild import!
+from xhtml2pdf.default import TAGS, STRING, INT, BOOL, SIZE, COLOR, FILE
+from xhtml2pdf.default import BOX, POS, MUST, FONT
+from xhtml2pdf.util import getSize, getBool, toList, getColor, getAlign
+from xhtml2pdf.util import getBox, getPos, pisaTempFile
+from reportlab.platypus.doctemplate import NextPageTemplate, FrameBreak
+from reportlab.platypus.flowables import PageBreak
 from xhtml2pdf.xhtml2pdf_reportlab import PmlRightPageBreak, PmlLeftPageBreak
+from xhtml2pdf.tags import * # TODO: Kill wild import!
+from xhtml2pdf.tables import * # TODO: Kill wild import!
+from xhtml2pdf.util import * # TODO: Kill wild import!
 from xml.dom import Node
 import copy
 import html5lib
@@ -413,7 +418,7 @@ def pisaLoop(node, context, path=[], **kw):
     else:
         kw = copy.copy(kw)
 
-    indent = len(path) * "  " # TODO: Figure out what this is
+    # indent = len(path) * "  " # only used for debug print statements
 
     # TEXT
     if node.nodeType == Node.TEXT_NODE:
