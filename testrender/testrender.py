@@ -129,9 +129,9 @@ def create_html_file(results, template_file, output_dir, options):
         for i, page in enumerate(pages):
             vars = dict(((k, os.path.basename(v)) for k,v in page.items()
                          if k != 'diff_value'))
-            vars['diff_value'] = page['diff_value']
             vars['page'] = i+1
             if 'diff' in page:
+                vars['diff_value'] = page['diff_value']
                 if vars['diff_value']:
                     vars['class'] = 'result-page-diff error'
                 else:
