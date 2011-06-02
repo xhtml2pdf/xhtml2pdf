@@ -82,7 +82,7 @@ def render_file(filename, output_dir, ref_dir, options):
     pdf = render_pdf(filename, output_dir, options)
     pngs = convert_to_png(pdf, output_dir, options)
     if options.create_reference:
-        return
+        return None, None, 0
     thumbs = [create_thumbnail(png, options) for png in pngs]
     pages = [{'png': p, 'png_thumb': thumbs[i]}
              for i,p in enumerate(pngs)]
@@ -216,7 +216,7 @@ def main():
     num = len(results)
 
     if options.create_reference is not None:
-        print 'Create reference for %i file%s' % (num, '' if num == 1 else 's')
+        print 'Created reference for %i file%s' % (num, '' if num == 1 else 's')
     else:
         htmlfile = create_html_file(results, template_file, output_dir, options)
         if not options.quiet:
