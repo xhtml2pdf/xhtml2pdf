@@ -1,7 +1,8 @@
 #-*- coding: utf-8 -*-
 from reportlab.lib.colors import Color
 from unittest import TestCase
-from xhtml2pdf.util import getCoords, getColor, getSize, getFrameDimensions
+from xhtml2pdf.util import getCoords, getColor, getSize, getFrameDimensions, \
+    getPos, getBox
 
 class UtilsCoordTestCase(TestCase):
     
@@ -226,3 +227,17 @@ class PisaDimensionTestCase(TestCase):
         expected = (0.0, 20.0, 100.0, 40.0)
         result = getFrameDimensions(dims, 100, 200)
         self.assertEquals(expected, result)
+        
+class GetPosTestCase(TestCase):
+    def test_get_pos_simple(self):
+        res = getBox("1pt 1pt 10pt 10pt", (10,10))
+        self.assertEqual(res,(1.0, -1.0, 10, 10))
+        
+    def test_get_pos_raising(self):
+        raised = False
+        try:
+            getBox("1pt 1pt 10pt", (10,10))
+        except Exception:
+            raised = True
+        self.assertTrue(raised)
+        

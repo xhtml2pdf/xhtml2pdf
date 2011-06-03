@@ -174,10 +174,12 @@ class PmlPageTemplate(PageTemplate):
                         for frag in obj.frags:
                             if frag.pageNumber:
                                 frag.text = pagenumber
-                                #import pdb; pdb.set_trace()
 
                     elif isinstance(obj, PmlTable):
-                        pageNumbering(flatten(obj._cellvalues))
+                        # Flatten the cells ([[1,2], [3,4]] becomes [1,2,3,4])
+                        flat_cells = [item for sublist in obj._cellvalues for item in sublist]
+                        pageNumbering(flat_cells)
+                        
             try:
 
                 # Paint static frames
