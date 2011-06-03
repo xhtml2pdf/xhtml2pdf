@@ -112,29 +112,29 @@ def toList(value):
         return [value]
     return list(value)
 
-def _toColor(arg, default=None):
-    '''try to map an arbitrary arg to a color instance'''
-    if isinstance(arg, Color): 
-        return arg
-    tArg = type(arg)
-    if tArg in (types.ListType, types.TupleType):
-        assert 3 <= len(arg) <= 4, 'Can only convert 3 and 4 sequences to color'
-        assert 0 <= min(arg) and max(arg) <= 1
-        return len(arg) == 3 and Color(arg[0], arg[1], arg[2]) or CMYKColor(arg[0], arg[1], arg[2], arg[3])
-    elif tArg == types.StringType:
-        C = getAllNamedColors()
-        s = arg.lower()
-        if C.has_key(s): return C[s]
-        try:
-            return toColor(eval(arg))
-        except:
-            pass
-    try:
-        return HexColor(arg)
-    except:
-        if default is None:
-            raise ValueError('Invalid color value %r' % arg)
-        return default
+#def _toColor(arg, default=None):
+#    '''try to map an arbitrary arg to a color instance'''
+#    if isinstance(arg, Color): 
+#        return arg
+#    tArg = type(arg)
+#    if tArg in (types.ListType, types.TupleType):
+#        assert 3 <= len(arg) <= 4, 'Can only convert 3 and 4 sequences to color'
+#        assert 0 <= min(arg) and max(arg) <= 1
+#        return len(arg) == 3 and Color(arg[0], arg[1], arg[2]) or CMYKColor(arg[0], arg[1], arg[2], arg[3])
+#    elif tArg == types.StringType:
+#        C = getAllNamedColors()
+#        s = arg.lower()
+#        if C.has_key(s): return C[s]
+#        try:
+#            return toColor(eval(arg))
+#        except:
+#            pass
+#    try:
+#        return HexColor(arg)
+#    except:
+#        if default is None:
+#            raise ValueError('Invalid color value %r' % arg)
+#        return default
 
 @memoized
 def getColor(value, default=None):
@@ -142,31 +142,26 @@ def getColor(value, default=None):
     Convert to color value.
     This returns a Color object instance from a text bit.
     """
-    try:
-        original = value
-        if isinstance(value, Color):
-            return value
-        value = str(value).strip().lower()
-        if value == "transparent" or value == "none":
-            return default
-        if value in COLOR_BY_NAME:
-            return COLOR_BY_NAME[value]
-        if value.startswith("#") and len(value) == 4:
-            value = "#" + value[1] + value[1] + value[2] + value[2] + value[3] + value[3]
-        elif rgb_re.search(value):
-            # e.g., value = "<css function: rgb(153, 51, 153)>", go figure:
-            r, g, b = [int(x) for x in rgb_re.search(value).groups()]
-            value = "#%02x%02x%02x" % (r, g, b)
-        else:
-            # Shrug
-            pass
 
-        # XXX Throws illegal in 2.1 e.g. toColor('none'),
-        # therefore we have a workaround here
-        return _toColor(value)
-    except ValueError, e:
-        log.warn("Unknown color %r", original)
-    return default
+    if isinstance(value, Color):
+        return value
+    value = str(value).strip().lower()
+    if value == "transparent" or value == "none":
+        return default
+    if value in COLOR_BY_NAME:
+        return COLOR_BY_NAME[value]
+    if value.startswith("#") and len(value) == 4:
+        value = "#" + value[1] + value[1] + value[2] + value[2] + value[3] + value[3]
+    elif rgb_re.search(value):
+        # e.g., value = "<css function: rgb(153, 51, 153)>", go figure:
+        r, g, b = [int(x) for x in rgb_re.search(value).groups()]
+        value = "#%02x%02x%02x" % (r, g, b)
+    else:
+        # Shrug
+        pass
+
+    return toColor(value, default) # Calling the reportlab function
+
 
 def getBorderStyle(value, default=None):
     # log.debug(value)
