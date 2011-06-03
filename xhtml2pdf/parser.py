@@ -14,22 +14,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from html5lib import treebuilders, serializer, treewalkers, inputstream
-from xhtml2pdf.default import * # TODO: Kill wild import!
-from xhtml2pdf.tables import * # TODO: Kill wild import!
-from xhtml2pdf.tags import * # TODO: Kill wild import!
-from xhtml2pdf.util import * # TODO: Kill wild import!
+from html5lib import treebuilders, inputstream
+from xhtml2pdf.default import TAGS, STRING, INT, BOOL, SIZE, COLOR, FILE
+from xhtml2pdf.default import BOX, POS, MUST, FONT
+from xhtml2pdf.util import getSize, getBool, toList, getColor, getAlign
+from xhtml2pdf.util import getBox, getPos, pisaTempFile
+from reportlab.platypus.doctemplate import NextPageTemplate, FrameBreak
+from reportlab.platypus.flowables import PageBreak, KeepInFrame
 from xhtml2pdf.xhtml2pdf_reportlab import PmlRightPageBreak, PmlLeftPageBreak
+from xhtml2pdf.tags import * # TODO: Kill wild import!
+from xhtml2pdf.tables import * # TODO: Kill wild import!
+from xhtml2pdf.util import * # TODO: Kill wild import!
 from xml.dom import Node
 import copy
 import html5lib
 import logging
-import os
-import os.path
-import pprint
 import re
 import types
-import xhtml2pdf.w3c.css as css
 import xhtml2pdf.w3c.cssDOMElementInterface as cssDOMElementInterface
 import xml.dom.minidom
 
@@ -417,7 +418,7 @@ def pisaLoop(node, context, path=[], **kw):
     else:
         kw = copy.copy(kw)
 
-    indent = len(path) * "  " # TODO: Figure out what this is
+    # indent = len(path) * "  " # only used for debug print statements
 
     # TEXT
     if node.nodeType == Node.TEXT_NODE:
@@ -507,15 +508,26 @@ def pisaLoop(node, context, path=[], **kw):
             context.frag.outlineOpen = getBool(context.cssAttr["-pdf-outline-open"])
         if context.cssAttr.has_key("-pdf-word-wrap"):
             context.frag.wordWrap = context.cssAttr["-pdf-word-wrap"]
-        #if context.cssAttr.has_key("-pdf-keep-in-frame-max-width"):
-        #    context.frag.keepInFrameMaxWidth = getSize("".join(context.cssAttr["-pdf-keep-in-frame-max-width"]))
-        #if context.cssAttr.has_key("-pdf-keep-in-frame-max-height"):
-        #    context.frag.keepInFrameMaxHeight = getSize("".join(context.cssAttr["-pdf-keep-in-frame-max-height"]))
+
+        # handle keep-in-frame
+        keepInFrameMode = None
+        keepInFrameMaxWidth = 0
+        keepInFrameMaxHeight = 0
         if context.cssAttr.has_key("-pdf-keep-in-frame-mode"):
             value = str(context.cssAttr["-pdf-keep-in-frame-mode"]).strip().lower()
-            if value not in ("shrink", "error", "overflow", "shrink", "truncate"):
-                value = None
-            context.frag.keepInFrameMode = value
+            if value in ("shrink", "error", "overflow", "truncate"):
+                keepInFrameMode = value
+        if context.cssAttr.has_key("-pdf-keep-in-frame-max-width"):
+            keepInFrameMaxWidth = getSize("".join(context.cssAttr["-pdf-keep-in-frame-max-width"]))
+        if context.cssAttr.has_key("-pdf-keep-in-frame-max-height"):
+            keepInFrameMaxHeight = getSize("".join(context.cssAttr["-pdf-keep-in-frame-max-height"]))
+
+        # ignore nested keep-in-frames, tables have their own KIF handling
+        keepInFrame = keepInFrameMode is not None and context.keepInFrameIndex is None
+        if keepInFrame:
+            # keep track of current story index, so we can wrap everythink
+            # added after this point in a KeepInFrame
+            context.keepInFrameIndex = len(context.story)
 
         # BEGIN tag
         klass = globals().get("pisaTag%s" % node.tagName.replace(":", "").upper(), None)
@@ -558,6 +570,18 @@ def pisaLoop(node, context, path=[], **kw):
                     context.addStory(PmlLeftPageBreak())
             if frameBreakAfter:
                 context.addStory(FrameBreak())
+
+        if keepInFrame:
+            # get all content added after start of -pdf-keep-in-frame and wrap
+            # it in a KeepInFrame
+            substory = context.story[context.keepInFrameIndex:]
+            context.story = context.story[:context.keepInFrameIndex]
+            context.story.append(
+                KeepInFrame(
+                    content=substory,
+                    maxWidth=keepInFrameMaxWidth,
+                    maxHeight=keepInFrameMaxHeight))
+            context.keepInFrameIndex = None
 
         # Static block, END
         if staticFrame:
