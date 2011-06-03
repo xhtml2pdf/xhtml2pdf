@@ -1,0 +1,21 @@
+FONT DIFFERENCES
+----------------
+
+Due to slight differences in PDF -> PNG conversion on different platforms,
+the "difference images" may show a lot of highlighted pixels, especially on
+rendered text.
+
+To get around this problem, first make sure that the differences reported
+by the tool are really only marginal font-rendering shifts. Then create 
+your own set of reference images with the following command:
+
+$ ./testrender.py --create-reference <REFDIR>
+
+This will create a new set of reference PNGs rendered with your font engine
+to the directory <REFDIR>. ATTENTION: the directory you specify here will be
+deleted and recreated!
+
+After the images haven been created, you can use your reference dir for
+your test renderings:
+
+$ ./testrender.py --ref-dir <REFDIR>

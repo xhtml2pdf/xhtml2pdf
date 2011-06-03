@@ -138,10 +138,6 @@ def getParaFrag(style):
     frag.outlineLevel = 0
     frag.outlineOpen = False
 
-    frag.keepInFrameMode = "shrink"
-    #frag.keepInFrameMaxWidth = None
-    #frag.keepInFrameMaxHeight = None
-
     frag.insideStaticFrame = 0
 
     return frag
@@ -413,6 +409,8 @@ class pisaContext(object):
         self.frameStaticList = []
         self.pisaBackgroundList = []
 
+        self.keepInFrameIndex = None
+
         self.baseFontSize = getSize("12pt")
 
         self.anchorFrag = []
@@ -435,9 +433,9 @@ class pisaContext(object):
         self.force = False
 
         self.pathCallback = None # External callback function for path calculations
-        
-        # Store path to document         
-        self.pathDocument = path or "__dummy__"                 
+
+        # Store path to document
+        self.pathDocument = path or "__dummy__"
         parts = urlparse.urlparse(self.pathDocument)
         if not parts.scheme:
             self.pathDocument = os.path.abspath(self.pathDocument)
@@ -579,7 +577,7 @@ class pisaContext(object):
         style.paddingBottom = first.paddingBottom
         style.paddingLeft = first.paddingLeft
         style.paddingRight = first.paddingRight
-        
+
         # This is the old code replaced by the above, kept for reference
         #style.borderWidth = 0
         #if getBorderStyle(first.borderTopStyle):

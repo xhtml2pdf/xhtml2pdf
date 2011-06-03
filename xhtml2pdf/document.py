@@ -81,7 +81,7 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
     context.pathCallback = link_callback
 
     # Build story
-    context = pisaStory(src, path, link_callback, debug, default_css, xhtml, 
+    context = pisaStory(src, path, link_callback, debug, default_css, xhtml,
                         encoding, context=context, xml_output=xml_output)
 
     # Buffer PDF into memory
@@ -92,7 +92,7 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
         pagesize=context.pageSize,
         author=context.meta["author"].strip(),
         subject=context.meta["subject"].strip(),
-        keywords=[x.strip() for x in 
+        keywords=[x.strip() for x in
                   context.meta["keywords"].strip().split(",") if x],
         title=context.meta["title"].strip(),
         showBoundary=0,
@@ -121,9 +121,9 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
     doc._pisa_page_counter = 0
     def _page_counter(page_no):
         doc._pisa_page_counter += 1
-        
+
     doc.setPageCallBack(_page_counter)
-    
+
     # Use multibuild e.g. if a TOC has to be created
     if context.multiBuild:
         doc.multiBuild(context.story)
@@ -138,15 +138,15 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
             # If we have at least one background, then lets do it
             if bgouter:
                 istream = out
-            
+
                 output = pyPdf.PdfFileWriter()
                 input1 = pyPdf.PdfFileReader(istream)
                 ctr = 0
-                # TODO: Why do we loop over the same list again? 
+                # TODO: Why do we loop over the same list again?
                 # see bgouter at line 137
                 for bg in context.pisaBackgroundList:
                     page = input1.getPage(ctr)
-                    if (bg and not bg.notFound() 
+                    if (bg and not bg.notFound()
                         and (bg.mimetype=="application/pdf")):
                         bginput = pyPdf.PdfFileReader(bg.getFile())
                         pagebg = bginput.getPage(0)
@@ -167,12 +167,12 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
 
     # Get the resulting PDF and write it to the file object
     # passed from the caller
-    
+
     if dest is None:
         # No output file was passed - Let's use a pisaTempFile
         dest = pisaTempFile(capacity=context.capacity)
     context.dest = dest
-    
+
     data = out.getvalue() # TODO: That load all the tempfile in RAM - Why bother with a swapping tempfile then?
     context.dest.write(data) # TODO: context.dest is a tempfile as well...
 
