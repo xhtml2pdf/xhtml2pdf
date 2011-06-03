@@ -17,3 +17,5 @@ build/
 dist/
 testrender/output/
 *.swp
+.coverage
+htmlcov/
