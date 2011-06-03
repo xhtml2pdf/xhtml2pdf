@@ -7,19 +7,20 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus.frames import Frame
 from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
-from xhtml2pdf.xhtml2pdf_reportlab import PmlPageTemplate, PmlTableOfContents
-from xhtml2pdf.xhtml2pdf_reportlab import PmlParagraph, PmlParagraphAndImage
-from xhtml2pdf.util import getSize, getCoords, getFile, pisaFileObject
+from xhtml2pdf.util import getSize, getCoords, getFile, pisaFileObject, \
+    getFrameDimensions
 from xhtml2pdf.w3c import css
+from xhtml2pdf.xhtml2pdf_reportlab import PmlPageTemplate, PmlTableOfContents, \
+    PmlParagraph, PmlParagraphAndImage
 import copy
 import logging
 import os
-import xhtml2pdf.default
-import xhtml2pdf.parser
 import re
 import reportlab
 import types
 import urlparse
+import xhtml2pdf.default
+import xhtml2pdf.parser
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -174,48 +175,11 @@ class pisaCSSBuilder(css.CSSBuilder):
             italic=italic)
         return {}, {}
 
-    def _pisaDimensions(self, data, page_width, page_height):
-        """Calculate dimensions of a frame
-        
-        Returns left, top, width and height of the frame in points. 
-        """
-        box = data.get("-pdf-frame-box", [])
-        if len(box) == 4:
-            return [getSize(x) for x in box]
-        top = getSize(data.get("top", 0))
-        left = getSize(data.get("left", 0))
-        bottom = getSize(data.get("bottom", 0))
-        right = getSize(data.get("right", 0))
-        if "height" in data:
-            height = getSize(data["height"])
-            if "top" in data:
-                top = getSize(data["top"])
-                bottom = page_height - (top + height)
-            elif "bottom" in data:
-                bottom = getSize(data["bottom"])
-                top = page_height - (bottom + height)
-        if "width" in data:
-            width = getSize(data["width"])
-            if "left" in data:
-                left = getSize(data["left"])
-                right = page_width - (left + width)
-            elif "right" in data:
-                right = getSize(data["right"])
-                left = page_width - (right + width)
-        top += getSize(data.get("margin-top", 0))
-        left += getSize(data.get("margin-left", 0))
-        bottom += getSize(data.get("margin-bottom", 0))
-        right += getSize(data.get("margin-right", 0))
-
-        width = page_width - (left + right)
-        height = page_height - (top + bottom)
-        return left, top, width, height
-
     def _pisaAddFrame(self, name, data, first=False, border=None, size=(0,0)):
         c = self.c
         if not name:
             name = "-pdf-frame-%d" % c.UID()
-        x, y, w, h = self._pisaDimensions(data, size[0], size[1])
+        x, y, w, h = getFrameDimensions(data, size[0], size[1])
         # print name, x, y, w, h
         #if not (w and h):
         #    return None

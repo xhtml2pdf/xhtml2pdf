@@ -1,7 +1,7 @@
 #-*- coding: utf-8 -*-
 from reportlab.lib.colors import Color
 from unittest import TestCase
-from xhtml2pdf.util import getCoords, getColor, getSize
+from xhtml2pdf.util import getCoords, getColor, getSize, getFrameDimensions
 
 class UtilsCoordTestCase(TestCase):
     
@@ -130,3 +130,99 @@ class UtilsGetSizeTestCase(TestCase):
         self.assertEqual(res, 0.0)
         res = getSize("auto") # Really?
         self.assertEqual(res, 0.0)
+        
+class PisaDimensionTestCase(TestCase):
+        
+    def test_FrameDimensions_left_top_width_height(self):
+        #builder = pisaCSSBuilder(mediumSet=['all'])
+        dims = {
+            'left': '10pt',
+            'top': '20pt',
+            'width': '30pt',
+            'height': '40pt',
+        }
+        expected = (10.0, 20.0, 30.0, 40.0)
+        result = getFrameDimensions(dims, 100, 200)
+        self.assertEquals(expected, result)
+    
+    def test_FrameDimensions_left_top_bottom_right(self):
+        dims = {
+            'left': '10pt',
+            'top': '20pt',
+            'bottom': '30pt',
+            'right': '40pt',
+        }
+        expected = (10.0, 20.0, 50.0, 150.0)
+        result = getFrameDimensions(dims, 100, 200)
+        self.assertEquals(expected, result)
+
+    def test_FrameDimensions_bottom_right_width_height(self):
+        dims = {
+            'bottom': '10pt',
+            'right': '20pt',
+            'width': '70pt',
+            'height': '80pt',
+        }
+        expected = (10.0, 110.0, 70.0, 80.0)
+        result = getFrameDimensions(dims, 100, 200)
+        self.assertEquals(expected, result)
+    
+    def test_FrameDimensions_left_top_width_height_with_margin(self):
+        dims = {
+            'left': '10pt',
+            'top': '20pt',
+            'width': '70pt',
+            'height': '80pt',
+            'margin-top': '10pt',
+            'margin-left': '15pt',
+            'margin-bottom': '20pt',
+            'margin-right': '25pt',
+        }
+        expected = (25.0, 30.0, 30.0, 50.0)
+        result = getFrameDimensions(dims, 100, 200)
+        self.assertEquals(expected, result)
+    
+    def test_FrameDimensions_bottom_right_width_height_with_margin(self):
+        dims = {
+            'bottom': '10pt',
+            'right': '20pt',
+            'width': '70pt',
+            'height': '80pt',
+            'margin-top': '10pt',
+            'margin-left': '15pt',
+            'margin-bottom': '20pt',
+            'margin-right': '25pt',
+        }
+        expected = (25.0, 120.0, 30.0, 50.0)
+        result = getFrameDimensions(dims, 100, 200)
+        self.assertEquals(expected, result)
+        
+    def test_frame_dimensions_for_box_len_eq_4(self):
+        dims = {
+                '-pdf-frame-box': ['12pt','12,pt','12pt','12pt']
+                }
+        expected = [12.0, 12.0, 12.0, 12.0]
+        result = getFrameDimensions(dims, 100, 200)
+        self.assertEqual(result, expected)
+        
+    def test_trame_dimentions_for_height_without_top_or_bottom(self):
+        dims = {
+            'left': '10pt',
+            #'top': '20pt',
+            'width': '30pt',
+            'height': '40pt',
+        }
+        expected = (10.0, 0.0, 30.0, 200.0)
+        result = getFrameDimensions(dims, 100, 200)
+        self.assertEquals(expected, result)
+        
+    def test_trame_dimentions_for_width_without_left_or_right(self):
+        dims = {
+            #'left': '10pt',
+            'top': '20pt',
+            'width': '30pt',
+            'height': '40pt',
+        }
+        expected = (0.0, 20.0, 100.0, 40.0)
+        result = getFrameDimensions(dims, 100, 200)
+        self.assertEquals(expected, result)
