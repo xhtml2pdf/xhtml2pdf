@@ -169,11 +169,11 @@ class PmlPageTemplate(PageTemplate):
             #    pass
 
             def pageNumbering(objList):
-                for obj in objList:
+                for obj in flatten(objList):
                     if isinstance(obj, PmlParagraph):
                         for frag in obj.frags:
                             if frag.pageNumber:
-                                frag.text = pagenumber
+                                frag.text = str(pagenumber)
 
                     elif isinstance(obj, PmlTable):
                         # Flatten the cells ([[1,2], [3,4]] becomes [1,2,3,4])
