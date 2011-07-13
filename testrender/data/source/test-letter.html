@@ -1,0 +1,116 @@
+<!-- 
+This is intended to be rendered to a PDF using pisa, not in a browser.
+Therefore, the HTML and CSS here can look a bit fishy. Please refer to 
+http://www.htmltopdf.org/doc/pisa-en.html for reference 
+-->
+<html>
+<style>
+/* Page layout using CSS and the -pdf-frame-content special attribute*/
+@page {
+    @frame {
+        -pdf-frame-content: company_logo;
+        /*-pdf-frame-border: 1;*/
+        right: 3cm;
+        width: 5cm;
+        top: 1cm;
+        height: 1.5cm;
+    }
+    @frame {
+        -pdf-frame-content: address_sender;
+        /*-pdf-frame-border: 1;*/
+        right: 3cm;
+        width: 5cm;
+        top: 5cm;
+        height: 3cm;
+    }
+    @frame {
+        -pdf-frame-content: address_receiver;
+        /*-pdf-frame-border: 1;*/
+        left: 3cm;
+        width: 5cm;
+        top: 5cm;
+        height: 3cm;
+    }
+    @frame {
+        -pdf-frame-content: main_text;
+        /*-pdf-frame-border: 1;*/
+        right: 2cm;
+        left: 2cm;
+        top: 9cm;
+    }
+    @frame {
+        -pdf-frame-content: barcode;
+        /*-pdf-frame-border: 1;*/
+        left: 2cm;
+        width: 6cm;
+        top: 1cm;
+        height: 3cm;
+    }
+    @frame {
+        -pdf-frame-content: signature;
+        /*-pdf-frame-border: 1;*/
+        left: 2cm;
+        width: 10cm;
+        bottom: 3cm;
+        height: 3cm;
+    }
+    @frame {
+        -pdf-frame-content: footer;
+        /*-pdf-frame-border: 1;*/
+        left: 2cm;
+        right 2cm;
+        bottom: 1cm;
+        height: 1cm;
+    }
+}
+
+h1, h2, h3, h4 { /* Don't add an outline to the document */
+    -pdf-outline: false;
+}
+
+.top_image {
+    zoom: 60%;
+}
+
+.centered {
+    text-align: center;
+}
+
+</style>
+<body>
+<div id="company_logo">
+        <img src="img/test_logo.jpg" class="top_image" />
+</div>
+<div id="address_sender" class="compact">
+    Beispiel AG<br />
+    Bahnhofstrasse 99<br />
+    CH-8022 Z&uuml;rich<br />
+    Whatever<br /> 
+</div>
+<div id="address_receiver" class="compact">
+    Beispiel2 AG<br />
+    Bahnhofstrasse 98<br />
+    CH-8022 Z&uuml;rich<br />
+    Whatever<br />
+</div>
+<div id="main_text">
+    <h3>Lorem Ipsum?</h3>    
+    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi pretium dignissim eros, posuere venenatis purus varius vitae. Suspendisse quis elit ligula. Cras vulputate metus vitae lectus iaculis nec adipiscing est fermentum. Praesent ac urna ante. Cras semper malesuada sapien at consectetur. Vivamus arcu sapien, dignissim sit amet mollis quis, scelerisque nec nibh. In hac habitasse platea dictumst. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam rutrum interdum felis, quis suscipit justo malesuada at. Mauris luctus justo id nulla placerat et pharetra mi interdum. Mauris rhoncus augue eu tortor luctus convallis. Nulla facilisi. Morbi ut arcu enim. Nullam in leo arcu, sed ultrices felis. Etiam scelerisque rhoncus ultrices. Nulla in elit ut dolor luctus semper. In eleifend consectetur eros, et pellentesque nulla vehicula non. Nam nec lorem ut dui pellentesque dapibus. Etiam condimentum vulputate lectus.</p>
+    <p>Fusce tempus ullamcorper magna, vitae placerat ligula convallis eget. Phasellus sed ullamcorper felis. Vivamus sit amet purus eu mi pretium tempus. Aenean tristique purus id justo suscipit fringilla. Nam egestas felis non velit luctus volutpat. Aliquam interdum congue elementum. Mauris pulvinar fermentum nisl at dignissim. Ut ornare, dolor vitae consectetur iaculis, augue diam porttitor dolor, ut lobortis lorem sem a tellus. Praesent blandit sem in arcu hendrerit ornare. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Proin non nibh nulla, sed lacinia ante. In viverra congue sapien, ut aliquet justo sagittis vitae. Morbi dictum venenatis eros, et pulvinar enim pretium eu.</p>
+    <p>Fusce tempus ullamcorper magna, vitae placerat ligula convallis eget. Phasellus sed ullamcorper felis. Vivamus sit amet purus eu mi pretium tempus. Aenean tristique purus id justo suscipit fringilla. Nam egestas felis non velit luctus volutpat. Aliquam interdum congue elementum. Mauris pulvinar fermentum nisl at dignissim. Ut ornare, dolor vitae consectetur iaculis, augue diam porttitor dolor, ut lobortis lorem sem a tellus. Praesent blandit sem in arcu hendrerit ornare. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Proin non nibh nulla, sed lacinia ante. In viverra congue sapien, ut aliquet justo sagittis vitae. Morbi dictum venenatis eros, et pulvinar enim pretium eu.</p>
+    <p>Fusce tempus ullamcorper magna, vitae placerat ligula convallis eget. Phasellus sed ullamcorper felis. Vivamus sit amet purus eu mi pretium tempus. Aenean tristique purus id justo suscipit fringilla. Nam egestas felis non velit luctus volutpat. Aliquam interdum congue elementum. Mauris pulvinar fermentum nisl at dignissim. Ut ornare, dolor vitae consectetur iaculis, augue diam porttitor dolor, ut lobortis lorem sem a tellus. Praesent blandit sem in arcu hendrerit ornare. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Proin non nibh nulla, sed lacinia ante. In viverra congue sapien, ut aliquet justo sagittis vitae. Morbi dictum venenatis eros, et pulvinar enim pretium eu.</p>
+    <p>Fusce tempus ullamcorper magna, vitae placerat ligula convallis eget. Phasellus sed ullamcorper felis. Vivamus sit amet purus eu mi pretium tempus. Aenean tristique purus id justo suscipit fringilla. Nam egestas felis non velit luctus volutpat. Aliquam interdum congue elementum. Mauris pulvinar fermentum nisl at dignissim. Ut ornare, dolor vitae consectetur iaculis, augue diam porttitor dolor, ut lobortis lorem sem a tellus. Praesent blandit sem in arcu hendrerit ornare. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Proin non nibh nulla, sed lacinia ante. In viverra congue sapien, ut aliquet justo sagittis vitae. Morbi dictum venenatis eros, et pulvinar enim pretium eu.</p>
+</div>
+<div id="signature">
+    <p>Name:_____________________________________________________________</p>
+    <br />
+    <p>Datum:________________________ Unterschrift:__________________________</p>
+</div>
+<div id="barcode">
+    <h1><pdf:barcode value="Beispiel-Barcode" type="code126" humanreadable="1" align="baseline" /></h1>
+</div>
+<div id="footer">
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+</div>
+</body>
+</html>
