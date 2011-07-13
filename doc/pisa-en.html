@@ -323,8 +323,8 @@ pdftoc.pdftoclevel2 {
 <h2>Position/ floating </h2>
 <p>Since Reportlab Toolkit does not yet support the use of images within paragraphs, images are always rendered in a seperate paragraph. Therefore floating is not available yet. </p>
 <h1>Barcodes</h1>
-<p><strong>XXX TO BE WRITTEN</strong></p>
-<p><strong> &lt;pdf:barcode&gt;</strong></p>
+<p>You can embed barcodes automatically in a document. Various barcode formats are supported through the <code>type</code> attribute. If you want the original barcode text to be appeared on the document, simply add <code>humanreadable="1"</code>, otherwise simply omit this attribute. Alignment is achieved through <code>align</code> attribute and available values are any of <code>"baseline", "top", "middle", "bottom"</code> whereas default is <code>baseline</code>. Finally, bar width and height can be controlled through <code>barwidth</code> and <code>barheight</code> attributes respectively.</p>
+<pre>&lt;pdf:barcode value="BARCODE TEXT COMES HERE" type="code128" humanreadable="1" align="right" /&gt;</pre>
 <h1>Custom Tags </h1>
 <p><em>pisa</em> provides some custom tags. They are all prefixed by the namespace identifier <code>pdf:</code>. As the HTML5 parser used by pisa does not know about these specific tags it may be confused if they are without a block. To avoid problems you may condsider sourrounding them by <code>&lt;div&gt;</code> tags, like this: </p>
 <pre>&lt;div&gt;
