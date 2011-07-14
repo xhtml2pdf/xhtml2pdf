@@ -22,7 +22,7 @@ REQUIREMENTS
 #. `html5lib 0.11.1+ <http://code.google.com/p/html5lib/>`_
 #. `pyPdf 1.11+ (optional) <http://pybrary.net/pyPdf/>`_
 
-  All requirements are listed in ``requirements.txt`` file.
+   All requirements are listed in ``requirements.txt`` file.
 
 DEVELOPMENT ENVIRONMENT
 =======================
@@ -105,9 +105,9 @@ Two different test suites are available to assert xhtml2pdf works reliably:
 CONTACT
 =======
 
-IRC: #xhtml2pdf on freenode
-Mailing list: xhtml2pdf@googlegroups.com
-Google group: http://groups.google.com/group/xhtml2pdf
+* IRC: #xhtml2pdf on freenode
+* Mailing list: xhtml2pdf@googlegroups.com
+* Google group: http://groups.google.com/group/xhtml2pdf
 
 Maintainer: Chris Glass <tribaal@gmail.com>
 
