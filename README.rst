@@ -36,14 +36,14 @@ Python, virtualenv and dependencies
 
     sudo easy_install pip
 
-  For more information about ``pip`` refer to http://www.pip-installer.org/.
+   For more information about ``pip`` refer to http://www.pip-installer.org/.
 
 #. I will recommend using ``virtualenv`` for development. This is great to have separate environment for
    each project, keeping the dependencies for multiple projects separated::
 
     sudo pip install virtualenv
 
-  For more information about ``virtualenv`` refer to http://www.virtualenv.org/
+   For more information about ``virtualenv`` refer to http://www.virtualenv.org/
 
 #. Create virtualenv for the project. This can be inside the project directory, but cannot be under
    version control::
@@ -66,7 +66,7 @@ Python, virtualenv and dependencies
 
     nosetests --with-coverage
 
-  You should have log with success status::
+   You should have log with success status::
 
     Ran 35 tests in 0.322s
 
