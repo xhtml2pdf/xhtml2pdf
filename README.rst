@@ -4,7 +4,7 @@ xhtml2pdf
 
 HTML/CSS to PDF converter based on Python
 
-ABOUT
+About
 =====
 
 ``xhtml2pdf`` is a html2pdf converter using the ReportLab Toolkit,
@@ -15,7 +15,7 @@ The main benefit of this tool that a user with Web skills like HTML and CSS
 is able to generate PDF templates very quickly without learning new
 technologies.
 
-REQUIREMENTS
+Requirements
 ============
 
 #. `Reportlab Toolkit 2.2+ <http://www.reportlab.org/>`_
@@ -24,7 +24,7 @@ REQUIREMENTS
 
    All requirements are listed in ``requirements.txt`` file.
 
-DEVELOPMENT ENVIRONMENT
+Development environment
 =======================
 
 Python, virtualenv and dependencies
@@ -72,13 +72,13 @@ Python, virtualenv and dependencies
 
     OK
 
-PYTHON INTEGRATION
+Python integration
 ==================
 
 Some simple demos of how to integrate xhtml2pdf into
 a Python program may be found here: test/simple.py
 
-CONTRIBUTING
+Contributing
 ============
 
 Development for this software happend on github, and the main fork is
@@ -88,7 +88,7 @@ Contributions are welcome in any format, but using github's pull request
 system is very highly preferred since it makes review and integration
 much easier.
 
-RUNNING TESTS
+Running tests
 =============
 
 Two different test suites are available to assert xhtml2pdf works reliably:
@@ -102,7 +102,7 @@ Two different test suites are available to assert xhtml2pdf works reliably:
 #. Functional tests. Thanks to mawe42's super cool work, a full functional
    test suite lives in testrender/.
 
-CONTACT
+Contact
 =======
 
 * IRC: #xhtml2pdf on freenode
@@ -111,7 +111,7 @@ CONTACT
 
 Maintainer: Chris Glass <tribaal@gmail.com>
 
-LICENSE
+License
 =======
 
 Copyright 2010 Dirk Holtwick, holtwick.it
