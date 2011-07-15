@@ -139,6 +139,27 @@ if __name__==&quot;__main__&quot;:
 <pre>@page {
   margin: 1cm;
 } </pre>
+<p>Optionally, @page rules can have one pseudo-class (':left', or ':right') and/or one named page. See the example:</p>
+<pre>
+  @page template {
+    size: a4 portrait;
+    left: 5cm;
+    right: 2cm;
+  }
+
+  @page template:right {
+    size: a4 portrait;
+    left: 3cm;
+    right: 2cm;
+  }
+
+  @page template:left {
+    size: a4 portrait;
+    left: 2cm;
+    right: 3cm;
+  }
+
+</pre>
 <p>To define more frames just add some more <code>@frame</code> blocks. You may use the following properties to define the dimensions of the frame:</p>
 <ul>
   <li><code>marign</code></li>

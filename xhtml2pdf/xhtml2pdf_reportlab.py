@@ -26,14 +26,13 @@ from reportlab.platypus.tableofcontents import TableOfContents
 from reportlab.platypus.tables import Table, TableStyle
 from xhtml2pdf.reportlab_paragraph import Paragraph
 from xhtml2pdf.util import getUID, getBorderStyle
+from types import StringType, TupleType, ListType, IntType
 import StringIO
 import cgi
 import copy
 import logging
 import reportlab.pdfbase.pdfform as pdfform
 import sys
-
-
 
 try:
     import PIL.Image as PILImage
@@ -43,11 +42,24 @@ except:
     except:
         PILImage = None
 
-
-
 log = logging.getLogger("xhtml2pdf")
 
 MAX_IMAGE_RATIO = 0.95
+
+
+class PTCycle(list):
+    def __init__(self):
+        self._restart = 0
+        self._idx = 0
+        list.__init__(self)
+
+    def cyclicIterator(self):
+        while 1:
+            yield self[self._idx]
+            self._idx += 1
+            if self._idx >= len(self):
+                self._idx = self._restart
+
 
 class PmlMaxHeightMixIn:
 
@@ -71,6 +83,7 @@ class PmlMaxHeightMixIn:
             return 0
         return self.availHeightValue
 
+
 class PmlBaseDoc(BaseDocTemplate):
 
     """
@@ -81,7 +94,8 @@ class PmlBaseDoc(BaseDocTemplate):
     def beforePage(self):
 
         # Tricky way to set producer, because of not real privateness in Python
-        self.canv._doc.info.producer = "pisa HTML to PDF <http://www.htmltopdf.org>"
+        info = "pisa HTML to PDF <http://www.htmltopdf.org>"
+        self.canv._doc.info.producer = info
 
         '''
         # Convert to ASCII because there is a Bug in Reportlab not
@@ -114,6 +128,60 @@ class PmlBaseDoc(BaseDocTemplate):
                 cgi.escape(copy.deepcopy(flowable.text), 1),
                 self.page))
 
+    def handle_nextPageTemplate(self, pt):
+        '''
+        if pt has also templates for even and odd page convert it to list
+        '''
+        has_left_template = self._has_template_for_name(pt + '_left')
+        has_right_template = self._has_template_for_name(pt + '_right')
+
+        if has_left_template and has_right_template:
+            pt = [pt + '_left', pt + '_right']
+
+        '''On endPage change to the page template with name or index pt'''
+        if type(pt) is StringType:
+            if hasattr(self, '_nextPageTemplateCycle'):
+                del self._nextPageTemplateCycle
+            for t in self.pageTemplates:
+                if t.id == pt:
+                    self._nextPageTemplateIndex = self.pageTemplates.index(t)
+                    return
+            raise ValueError("can't find template('%s')" % pt)
+        elif type(pt) is IntType:
+            if hasattr(self, '_nextPageTemplateCycle'):
+                del self._nextPageTemplateCycle
+            self._nextPageTemplateIndex = pt
+        elif type(pt) in (ListType, TupleType):
+            #used for alternating left/right pages
+            #collect the refs to the template objects, complain if any are bad
+            c = PTCycle()
+            for ptn in pt:
+                 #special case name used to short circuit the iteration
+                if ptn == '*':
+                    c._restart = len(c)
+                    continue
+                for t in self.pageTemplates:
+                    if t.id == ptn.strip():
+                        c.append(t)
+                        break
+            if not c:
+                raise ValueError("No valid page templates in cycle")
+            elif c._restart > len(c):
+                raise ValueError("Invalid cycle restart position")
+
+            #ensure we start on the first one$
+            self._nextPageTemplateCycle = c.cyclicIterator()
+        else:
+            raise TypeError("Argument pt should be string or integer or list")
+
+    def _has_template_for_name(self, name):
+        result = False
+        for template in self.pageTemplates:
+            if template.id == name.strip():
+                result = True
+        return result
+
+
 class PmlPageTemplate(PageTemplate):
 
     def __init__(self, **kw):
@@ -141,9 +209,9 @@ class PmlPageTemplate(PageTemplate):
                         iw, ih = img.getSize()
                         pw, ph = canvas._pagesize
 
-                        width = pw # min(iw, pw) # max
+                        width = pw  # min(iw, pw) # max
                         wfactor = float(width) / iw
-                        height = ph # min(ih, ph) # max
+                        height = ph  # min(ih, ph) # max
                         hfactor = float(height) / ih
                         factor = min(wfactor, hfactor)
                         w = iw * factor
@@ -169,17 +237,16 @@ class PmlPageTemplate(PageTemplate):
             #    pass
 
             def pageNumbering(objList):
-                for obj in objList:
+                for obj in flatten(objList):
                     if isinstance(obj, PmlParagraph):
                         for frag in obj.frags:
                             if frag.pageNumber:
-                                frag.text = pagenumber
+                                frag.text = str(pagenumber)
 
                     elif isinstance(obj, PmlTable):
                         # Flatten the cells ([[1,2], [3,4]] becomes [1,2,3,4])
                         flat_cells = [item for sublist in obj._cellvalues for item in sublist]
                         pageNumbering(flat_cells)
-                        
             try:
 
                 # Paint static frames
@@ -192,20 +259,21 @@ class PmlPageTemplate(PageTemplate):
 
                     frame.addFromList(story, canvas)
 
-            except Exception: # TODO: Kill this!
+            except Exception:  # TODO: Kill this!
                 log.debug("PmlPageTemplate", exc_info=1)
-
-
         finally:
             canvas.restoreState()
 
 _ctr = 1
-class PmlImageReader(object): #TODO We need a factory here, returning either a class for java or a class for PIL
+
+
+class PmlImageReader(object):  # TODO We need a factory here, returning either a class for java or a class for PIL
     "Wraps up either PIL or Java to get data from bitmaps"
     _cache = {}
+
     def __init__(self, fileName):
         if isinstance(fileName, PmlImageReader):
-            self.__dict__ = fileName.__dict__   #borgize
+            self.__dict__ = fileName.__dict__   # borgize
             return
         #start wih lots of null private fields, to be populated by
         #the relevant engine.
@@ -227,15 +295,15 @@ class PmlImageReader(object): #TODO We need a factory here, returning either a c
             try:
                 self.fp = open_for_read(fileName, 'b')
                 if isinstance(self.fp, StringIO.StringIO().__class__):
-                    imageReaderFlags = 0 #avoid messing with already internal files
-                if imageReaderFlags > 0:  #interning
+                    imageReaderFlags = 0  # avoid messing with already internal files
+                if imageReaderFlags > 0:  # interning
                     data = self.fp.read()
-                    if imageReaderFlags & 2:  #autoclose
+                    if imageReaderFlags & 2:  # autoclose
                         try:
                             self.fp.close()
                         except:
                             pass
-                    if imageReaderFlags & 4:  #cache the data
+                    if imageReaderFlags & 4:  # cache the data
                         if not self._cache:
                             from rl_config import register_reset
                             register_reset(self._cache.clear)
@@ -244,7 +312,7 @@ class PmlImageReader(object): #TODO We need a factory here, returning either a c
                 elif imageReaderFlags == - 1 and isinstance(fileName, (str, unicode)):
                     #try Ralf Schmitt's re-opening technique of avoiding too many open files
                     self.fp.close()
-                    del self.fp #will become a property in the next statement
+                    del self.fp  # will become a property in the next statement
                     self.__class__ = LazyImageReader
                 if haveImages:
                     #detect which library we are using and open the image
@@ -262,10 +330,10 @@ class PmlImageReader(object): #TODO We need a factory here, returning either a c
                     self._data = self.fp.read()
                     self._dataA = None
                     self.fp.seek(0)
-            except: # TODO: Kill the catch-all
+            except:  # TODO: Kill the catch-all
                 et, ev, tb = sys.exc_info()
                 if hasattr(ev, 'args'):
-                    a = str(ev.args[ - 1]) + (' fileName=%r' % fileName)
+                    a = str(ev.args[- 1]) + (' fileName=%r' % fileName)
                     ev.args = ev.args[: - 1] + (a,)
                     raise et, ev, tb
                 else:
@@ -300,7 +368,7 @@ class PmlImageReader(object): #TODO We need a factory here, returning either a c
         if self._data is None:
             self._dataA = None
             if sys.platform[0:4] == 'java':
-                import jarray # TODO: Move to top.
+                import jarray  # TODO: Move to top.
                 from java.awt.image import PixelGrabber
                 width, height = self.getSize()
                 buffer = jarray.zeros(width * height, 'i')
@@ -356,6 +424,7 @@ class PmlImageReader(object): #TODO We need a factory here, returning either a c
         except:
             return self.fileName
 
+
 class PmlImage(Flowable, PmlMaxHeightMixIn):
 
     #_fixedWidth = 1
@@ -408,6 +477,7 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         r = Flowable.identity(self, maxLen)
         return r
 
+
 class PmlParagraphAndImage(ParagraphAndImage, PmlMaxHeightMixIn):
 
     def wrap(self, availWidth, availHeight):
@@ -421,7 +491,7 @@ class PmlParagraphAndImage(ParagraphAndImage, PmlMaxHeightMixIn):
     def split(self, availWidth, availHeight):
         # print "# split", id(self)
         if not hasattr(self, "wI"):
-            self.wI, self.hI = self.I.wrap(availWidth, availHeight) #drawWidth, self.I.drawHeight
+            self.wI, self.hI = self.I.wrap(availWidth, availHeight)  # drawWidth, self.I.drawHeight
         return ParagraphAndImage.split(self, availWidth, availHeight)
 
 # if 1:
@@ -429,6 +499,7 @@ class PmlParagraphAndImage(ParagraphAndImage, PmlMaxHeightMixIn):
 #    Paragraph = reportlab.platypus.paragraph.Paragraph
 #    class PmlParagraph(reportlab.platypus.paragraph.Paragraph):
 #        pass
+
 
 class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
 
@@ -480,13 +551,13 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
 
     def split(self, availWidth, availHeight):
 
-        if len(self.frags)<=0:
+        if len(self.frags) <= 0:
             return []
 
         #the split information is all inside self.blPara
         # if not hasattr(self,'blPara'):
-        if not hasattr(self,'deltaWidth'):
-            self.wrap(availWidth,availHeight)
+        if not hasattr(self, 'deltaWidth'):
+            self.wrap(availWidth, availHeight)
 
         availWidth -= self.deltaWidth
         availHeight -= self.deltaHeight
@@ -548,7 +619,7 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
         style = self.style
         bg = style.backColor
         leftIndent = style.leftIndent
-        bp = 0 #style.borderPadding
+        bp = 0  # style.borderPadding
 
         x = leftIndent - bp
         y = - bp
@@ -569,7 +640,7 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
         canvas.saveState()
         canvas.translate(
             (style.paddingLeft + style.borderLeftWidth),
-            -1 * (style.paddingTop + style.borderTopWidth)) # + (style.leading / 4)))
+            -1 * (style.paddingTop + style.borderTopWidth))  # + (style.leading / 4)))
 
         # Call the base class draw method to finish up
         Paragraph.draw(self)
@@ -612,6 +683,7 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
 
         canvas.restoreState()
 
+
 class PmlKeepInFrame(KeepInFrame, PmlMaxHeightMixIn):
 
     def wrap(self, availWidth, availHeight):
@@ -619,6 +691,7 @@ class PmlKeepInFrame(KeepInFrame, PmlMaxHeightMixIn):
         self.maxWidth = availWidth
         self.maxHeight = self.setMaxHeight(availHeight)
         return KeepInFrame.wrap(self, availWidth, availHeight)
+
 
 class PmlTable(Table, PmlMaxHeightMixIn):
 
@@ -674,7 +747,7 @@ class PmlTable(Table, PmlMaxHeightMixIn):
             for i in range(len(newColWidths)):
                 if newColWidths[i] is None:
                     # print "*** ", i, newColWidths[i], remainingWidth, remainingCols
-                    newColWidths[i] = max(minCellWidth, remainingWidth / remainingCols) # - 0.1
+                    newColWidths[i] = max(minCellWidth, remainingWidth / remainingCols)  # - 0.1
 
         # Bigger than totalWidth? Lets reduce the fix entries propotionally
 
@@ -697,6 +770,7 @@ class PmlTable(Table, PmlMaxHeightMixIn):
         # print "New values:", totalWidth, newColWidths, sum(newColWidths)
 
         return Table.wrap(self, availWidth, availHeight)
+
 
 class PmlTableOfContents(TableOfContents):
 
@@ -728,7 +802,7 @@ class PmlTableOfContents(TableOfContents):
         for entry in _tempEntries:
             level, text, pageNum = entry[:3]
             leftColStyle = self.levelStyles[level]
-            if i: # Not for first element
+            if i:  # Not for first element
                 tableStyle.append((
                     'TOPPADDING',
                     (0, i), (- 1, i),
@@ -753,6 +827,7 @@ class PmlTableOfContents(TableOfContents):
         self.width, self.height = self._table.wrapOn(self.canv, availWidth, availHeight)
         return (self.width, self.height)
 
+
 class PmlRightPageBreak(CondPageBreak):
 
     def __init__(self):
@@ -766,6 +841,7 @@ class PmlRightPageBreak(CondPageBreak):
         self.width = 0
         self.height = 0
         return (0, 0)
+
 
 class PmlLeftPageBreak(CondPageBreak):
 

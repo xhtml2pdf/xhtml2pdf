@@ -31,6 +31,7 @@ the maintainer should theses names be changed to something more relevant.
 * Stefan Foulis
 * Ethan Jucovy
 * Marcus Weseloh
+* Jacob Richardson
 
 Special thanks
 ==============
