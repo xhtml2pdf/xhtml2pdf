@@ -32,6 +32,7 @@ the maintainer should theses names be changed to something more relevant.
 * Ethan Jucovy
 * Marcus Weseloh
 * Jacob Richardson
+* Krzysztof Grodzicki
 
 Special thanks
 ==============
