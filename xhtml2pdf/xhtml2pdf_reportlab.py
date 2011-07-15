@@ -129,8 +129,13 @@ class PmlBaseDoc(BaseDocTemplate):
                 self.page))
 
     def handle_nextPageTemplate(self, pt):
-        ''' if pt has also templates for even and odd page convert it to list '''
-        if self._has_template_for_name(pt + '_left') and self._has_template_for_name(pt + '_right'):
+        '''
+        if pt has also templates for even and odd page convert it to list
+        '''
+        has_left_template = self._has_template_for_name(pt + '_left')
+        has_right_template = self._has_template_for_name(pt + '_right')
+
+        if has_left_template and has_right_template:
             pt = [pt + '_left', pt + '_right']
 
         '''On endPage change to the page template with name or index pt'''
