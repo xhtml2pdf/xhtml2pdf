@@ -26,6 +26,7 @@ from reportlab.platypus.tableofcontents import TableOfContents
 from reportlab.platypus.tables import Table, TableStyle
 from xhtml2pdf.reportlab_paragraph import Paragraph
 from xhtml2pdf.util import getUID, getBorderStyle
+from types import StringType, TupleType, ListType, IntType
 import StringIO
 import cgi
 import copy
@@ -48,6 +49,19 @@ except:
 log = logging.getLogger("xhtml2pdf")
 
 MAX_IMAGE_RATIO = 0.95
+
+class PTCycle(list):
+    def __init__(self):
+        self._restart = 0
+        self._idx = 0
+        list.__init__(self)
+
+    def cyclicIterator(self):
+        while 1:
+            yield self[self._idx]
+            self._idx += 1
+            if self._idx>=len(self):
+                self._idx = self._restart
 
 class PmlMaxHeightMixIn:
 
@@ -113,6 +127,51 @@ class PmlBaseDoc(BaseDocTemplate):
                 flowable.outlineLevel,
                 cgi.escape(copy.deepcopy(flowable.text), 1),
                 self.page))
+
+    def handle_nextPageTemplate(self,pt):
+        ''' if pt has also templates for even and odd page convert it to list '''
+        if self._has_template_for_name(pt + '_left') and self._has_template_for_name(pt + '_right'):
+            pt = [pt + '_left', pt + '_right']
+
+        '''On endPage change to the page template with name or index pt'''
+        if type(pt) is StringType:
+            if hasattr(self, '_nextPageTemplateCycle'): del self._nextPageTemplateCycle
+            for t in self.pageTemplates:
+                if t.id == pt:
+                    self._nextPageTemplateIndex = self.pageTemplates.index(t)
+                    return
+            raise ValueError, "can't find template('%s')"%pt
+        elif type(pt) is IntType:
+            if hasattr(self, '_nextPageTemplateCycle'): del self._nextPageTemplateCycle
+            self._nextPageTemplateIndex = pt
+        elif type(pt) in (ListType, TupleType):
+            #used for alternating left/right pages
+            #collect the refs to the template objects, complain if any are bad
+            c = PTCycle()
+            for ptn in pt:
+                if ptn=='*':    #special case name used to short circuit the iteration
+                    c._restart = len(c)
+                    continue
+                for t in self.pageTemplates:
+                    if t.id == ptn.strip():
+                        c.append(t)
+                        break
+            if not c:
+                raise ValueError("No valid page templates in cycle")
+            elif c._restart>len(c):
+                raise ValueError("Invalid cycle restart position")
+
+            #ensure we start on the first one$
+            self._nextPageTemplateCycle = c.cyclicIterator()
+        else:
+            raise TypeError("Argument pt should be string or integer or list")
+
+    def _has_template_for_name(self, name):
+        result = False
+        for template in self.pageTemplates:
+            if template.id == name.strip():
+                result = True
+        return result
 
 class PmlPageTemplate(PageTemplate):
 

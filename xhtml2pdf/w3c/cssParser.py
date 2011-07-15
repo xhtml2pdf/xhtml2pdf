@@ -639,6 +639,7 @@ class CSSParser(object):
         page, src = self._getIdent(src)
         if src[:1] == ':':
             pseudopage, src = self._getIdent(src[1:])
+            page = page + '_' + pseudopage
         else:
             pseudopage = None
 
