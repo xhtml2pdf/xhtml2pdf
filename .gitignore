@@ -19,3 +19,5 @@ testrender/output/
 *.swp
 .coverage
 htmlcov/
+xhtml2pdf.egg-info
+*.pdf
