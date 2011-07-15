@@ -20,3 +20,4 @@ testrender/output/
 .coverage
 htmlcov/
 xhtml2pdf.egg-info
+*.pdf
