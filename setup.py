@@ -30,7 +30,6 @@ setup(
     description="PDF generator using HTML and CSS",
     license="Apache License 2.0",
     author="Dirk Holtwick",
-    author_email="dirk.holtwick@gmail.com",
     maintainer="Christopher Glass",
     maintainer_email="tribaal@gmail.com",
     url="http://www.xhtml2pdf.com",
