@@ -209,12 +209,12 @@ class pisaCSSBuilder(css.CSSBuilder):
         if data.has_key("-pdf-page-size"):
             c.pageSize = xhtml2pdf.default.PML_PAGESIZES.get(str(data["-pdf-page-size"]).lower(), c.pageSize)
 
+        isLandscape = False
         if data.has_key("size"):
             size = data["size"]
             # print size, c.pageSize
             if type(size) is not types.ListType:
                 size = [size]
-            isLandscape = False
             sizeList = []
             for value in size:
                 valueStr = str(value).lower()
@@ -295,6 +295,9 @@ class pisaCSSBuilder(css.CSSBuilder):
         pt.pisaStaticList = staticList
         pt.pisaBackground = background
         pt.pisaBackgroundList = c.pisaBackgroundList
+
+        if isLandscape:
+            pt.pageorientation = pt.LANDSCAPE
 
         # self._pagesize)
         # pt.pml_statics = self._statics
