@@ -184,11 +184,23 @@ class PmlBaseDoc(BaseDocTemplate):
 
 class PmlPageTemplate(PageTemplate):
 
+    PORTRAIT = 'portrait'
+    LANDSCAPE = 'landscape'
+    # by default portrait
+    pageorientation = PORTRAIT
+
     def __init__(self, **kw):
         self.pisaStaticList = []
         self.pisaBackgroundList = []
         self.pisaBackground = None
         PageTemplate.__init__(self, **kw)
+
+    def isPortrait(self):
+        return self.pageorientation == self.PORTRAIT
+
+    def isLandscape(self):
+        return self.pageorientation == self.LANDSCAPE
+
 
     def beforeDrawPage(self, canvas, doc):
         canvas.saveState()
@@ -213,12 +225,17 @@ class PmlPageTemplate(PageTemplate):
                         wfactor = float(width) / iw
                         height = ph  # min(ih, ph) # max
                         hfactor = float(height) / ih
-                        factor = min(wfactor, hfactor)
-                        w = iw * factor
-                        h = ih * factor
+                        factor_min = min(wfactor, hfactor)
 
-                        canvas.drawImage(img, 0, ph - h, w, h)
-                        # print repr(img)
+                        if self.isPortrait():
+                            w = iw * factor_min
+                            h = ih * factor_min
+                            canvas.drawImage(img, 0, ph - h, w, h)
+                        elif self.isLandscape():
+                            factor_max = max(wfactor, hfactor)
+                            w = ih * factor_max
+                            h = iw * factor_min
+                            canvas.drawImage(img, 0, 0, w, h)
                     except:
                         log.exception("Draw background")
 
