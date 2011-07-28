@@ -10,7 +10,8 @@ __date__ = "$Date: 2011-01-15 10:11:47 +0100 (Fr, 15 July 2011) $"
 
 """
 HTML/CSS to PDF converter
-TODO add description
+Test background image generation on the `portrait` and `landscape`
+page.
 """
 
 from cookbook import HTML2PDF
