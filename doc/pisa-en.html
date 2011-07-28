@@ -6,21 +6,20 @@
     >
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-<title>pisa Documentation</title>
-<link href="pisa.css" type="text/css" rel="stylesheet" media="all" />
+<title>xhtml2pdf Documentation</title>
+<link href="xhtml2pdf.css" type="text/css" rel="stylesheet" media="all" />
 <link href="screen.css" type="text/css" rel="stylesheet" media="screen" />
 </head>
 <body>
-<div id="footer" class="pdf"> <em>pisa</em> HTML/CSS to PDF.
+<div id="footer" class="pdf"> <em>xhtml2pdf</em> HTML/CSS to PDF.
   Page
   <pdf:pagenumber />
 </div>
-<p class="title"><em>pisa</em>
+<p class="title"><em>xhtml2pdf</em>
   <!--VERSION-->3.0.33<!--VERSION-->
 </p>
 <p class="subtitle">XHTML/HTML/CSS to PDF converter </p>
 <p class="copyright">(C)opyright by Dirk Holtwick, Germany <br />
-  <a href="mailto:dirk.holtwick@gmail.com">dirk.holtwick@gmail.com</a><br />
   <a href="http://www.xhtml2pdf.com">http://www.xhtml2pdf.com</a></p>
 <pdf:nexttemplate name="regular"/>
 <h1 style="-pdf-outline: false;" class="pdf">Table of Contents</h1>
@@ -28,14 +27,14 @@
   <pdf:toc />
 </div>
 <h1>Introduction</h1>
-<p><em>pisa</em> is a HTML/XHTML/CSS to PDF converter written in Python and based on Reportlab Toolkit, pyPDF, TechGame Networks CSS Library and HTML5lib. The primary focus is not on generating perfect printable webpages but to use HTML and CSS as commonly known tools to generate PDF files within Applications. For example generating documentations (like this one), generating invoices or other office documents etc.</p>
+<p><em>xhtml2pdf</em> is a HTML/XHTML/CSS to PDF converter written in Python and based on Reportlab Toolkit, pyPDF, TechGame Networks CSS Library and HTML5lib. The primary focus is not on generating perfect printable webpages but to use HTML and CSS as commonly known tools to generate PDF files within Applications. For example generating documentations (like this one), generating invoices or other office documents etc.</p>
 <h1>Installation</h1>
-<p>As pisa is a Python pakage an installed version of Python &lt;<a href="http://www.python.org">http://www.python.org</a>&gt; is needed. For the moment Python 2.3 to 2.5 is supported. For  Python 3000 a special version will be needed, because it is not compatible with the 2.x series. A proper version will be made available as soon as Python 3000 becomes stable.</p>
-<p>The easiest way to install <em>pisa</em> is to use easy_install:</p>
-<pre>$ easy_install pisa</pre>
-<p>But you may also download the source code of <em>pisa</em>, then enter the main directory and execute this command (on Linux and MacOS you may prepend a <code>sudo</code> command):</p>
+<p>As xhtml2pdf is a Python pakage an installed version of Python &lt;<a href="http://www.python.org">http://www.python.org</a>&gt; is needed. For the moment Python 2.3 to 2.5 is supported. For  Python 3000 a special version will be needed, because it is not compatible with the 2.x series. A proper version will be made available as soon as Python 3000 becomes stable.</p>
+<p>The easiest way to install <em>xhtml2pdf</em> is to use easy_install:</p>
+<pre>$ easy_install xhtml2pdf</pre>
+<p>But you may also download the source code of <em>xhtml2pdf</em>, then enter the main directory and execute this command (on Linux and MacOS you may prepend a <code>sudo</code> command):</p>
 <pre>$ python setup.py install</pre>
-<p><em>pisa</em> needs also some additional Python packages to be installed to work. Please follow the setup instruction for each package:</p>
+<p><em>xhtml2pdf</em> needs also some additional Python packages to be installed to work. Please follow the setup instruction for each package:</p>
 <ul>
   <li><strong>ReportlabToolkit</strong> 2.2+ (required)<br />
     <a href="http://www.reportlab.org/downloads.html">http://www.reportlab.org/downloads.html</a><br />
@@ -56,7 +55,7 @@
 <p>For Windows a precompiled version exists that includes Python and all needed libraries. The package contains the file <code>xhtml2pdf.exe</code>. Please add the directory where <code>xhtml2pdf.exe</code> is placed to the Windows <code>PATH</code> variable.</p>
 <p>The Windows version is distributed via the Website &lt;<a href="http://www.xhtml2pdf.com">http://www.xhtml2pdf.com</a>&gt; in the &quot;Download&quot; section.</p>
 <h1>Command line</h1>
-<p>If you do not want to integrate <em>pisa</em> in your own application, you may use the command line tool that gives you a simple interface to the features of <em>pisa</em>. Just call <code>xhtml2pdf --help</code> to get the following help informations:</p>
+<p>If you do not want to integrate <em>xhtml2pdf</em> in your own application, you may use the command line tool that gives you a simple interface to the features of <em>xhtml2pdf</em>. Just call <code>xhtml2pdf --help</code> to get the following help informations:</p>
 <!--HELP--><pre></pre><!--HELP-->
 <h2>Converting HTML data </h2>
 <p>To generate a PDF from an HTML file called <code>test.html</code> call:</p>
@@ -68,37 +67,37 @@
 <pre>$ xhtml2pdf -s http://www.xhtml2pdf.com/</pre>
 <h2>Using special properties</h2>
 <p>If the conversion doesn't work as expected some more informations may be usefull. You may turn on the output of warnings adding <code>-w</code> or even the debugging output by using <code>-d</code>.</p>
-<p>Another reason could be, that the parsing failed. Consider trying the <code>-xhtml</code> and <code>-html</code> options. <em>pisa</em> uses the HTMLT5lib parser that offers two internal parsing modes: one for HTML and one for XHTML.</p>
-<p>When generating the HTML output <em>pisa</em> uses an internal default CSS definition (otherwise all tags would appear with no diffences). To get an impression of how this one looks like start <em>pisa</em> like this:</p>
+<p>Another reason could be, that the parsing failed. Consider trying the <code>-xhtml</code> and <code>-html</code> options. <em>xhtml2pdf</em> uses the HTMLT5lib parser that offers two internal parsing modes: one for HTML and one for XHTML.</p>
+<p>When generating the HTML output <em>xhtml2pdf</em> uses an internal default CSS definition (otherwise all tags would appear with no diffences). To get an impression of how this one looks like start <em>xhtml2pdf</em> like this:</p>
 <pre>$ xhtml2pdf --css-dump &gt; xhtml2pdf-default.css</pre>
-<p>The CSS will be dumped into the file <code>pisa-default.css</code>. You may modify this or even take a totaly self defined one and hand it in by using the <code>-css</code> option, e.g.: </p>
+<p>The CSS will be dumped into the file <code>xhtml2pdf-default.css</code>. You may modify this or even take a totaly self defined one and hand it in by using the <code>-css</code> option, e.g.: </p>
 <pre>$ xhtml2pdf --css=xhtml2pdf-default.css test.html  </pre>
 <h1>Python module</h1>
 <p><strong>XXX TO BE COMPLETED </strong></p>
 <p>The integration into a Python program is quite easy. We will start with a simple &quot;Hello World&quot; example:</p>
-<pre>import ho.pisa as pisa                        (1)
+<pre>import ho.xhtml2pdf as xhtml2pdf                        (1)
 
 def helloWorld():
   filename = __file__ + &quot;.pdf&quot;                (2)
-  pdf = pisa.CreatePDF(                       (3)
+  pdf = xhtml2pdf.CreatePDF(                       (3)
     &quot;Hello &lt;strong&gt;World&lt;/strong&gt;&quot;,
     file(filename, &quot;wb&quot;))
   if not pdf.err:                             (4)
-    pisa.startViewer(filename)                (5)
+    xhtml2pdf.startViewer(filename)                (5)
 
 if __name__==&quot;__main__&quot;:
-  pisa.showLogging()                          (6)
+  xhtml2pdf.showLogging()                          (6)
   helloWorld()
 </pre>
 <p><strong>Comments:</strong></p>
-<p>(1) Import the <em>pisa</em> Python module <br />
+<p>(1) Import the <em>xhtml2pdf</em> Python module <br />
   (2) Calculate a sample filename. If your demo is saved under <code>test.py</code> the filename will be <code>test.py.pdf</code>.<br />
   (3) The function <code>CreatePDF</code> is called with the source and the destination. In this case the source is a string and the destination is a fileobject. Other values will be discussed later (XXX to do!). An object will be returned as result and saved in <code>pdf</code>. <br />
   (4) The property <code>pdf.err</code> is checked to find out if errors occured<br />
   (5) If no errors occured a helper function will open a PDF Reader with the resulting file<br />
   (6) Errors and warnings are written as log entries by using the Python standard module <code>logging</code>. This helper enables printing warnings on the console. </p>
 <h2>Create PDF</h2>
-<p>The main function of pisa is called CreatePDF(). It offers the following arguments in this order:</p>
+<p>The main function of xhtml2pdf is called CreatePDF(). It offers the following arguments in this order:</p>
 <ul>
   <li><strong>src</strong>: The source to be parsed. This can be a file handle or a <code>String</code> - or even better - a <code>Unicode</code> object.</li>
   <li><strong>dest</strong>: The destination for the resulting PDF. This has to be a file object wich will not be closed by <code>CreatePDF</code>. (XXX allow file name?) </li>
@@ -106,24 +105,24 @@ if __name__==&quot;__main__&quot;:
   <li><strong>link_callback</strong>: Handler for special file paths (see below).</li>
   <li><strong>debug</strong>: ** DEPRECATED ** </li>
   <li><strong>show_error_as_pdf</strong>: Boolean that indicates that the errors will be dumped into a PDF. This is usefull if that is the only way to show the errors like in simple web applications.</li>
-  <li><strong>default_css</strong>: Here you can pass a default CSS definition in as a <code>String</code>. If set to <code>None</code> the predefined CSS of pisa is used. </li>
+  <li><strong>default_css</strong>: Here you can pass a default CSS definition in as a <code>String</code>. If set to <code>None</code> the predefined CSS of xhtml2pdf is used. </li>
   <li><strong>xhtml</strong>: Boolean to force parsing the source as XHTML. By default the HTML5 parser tries to guess this. </li>
   <li><strong>encoding</strong>: The encoding name of the source. By default this is guessed by the HTML5 parser. But HTML with no meta information this may not work an then this argument is helpfull. </li>
 </ul>
 <h2>Link callback</h2>
-<p>Images, backgrounds and stylesheets are loaded form an HTML document. Normaly <em>pisa</em> expects these files to be found on the local drive. They may also be referenced relative to the original document. But the programmer might want to load form different kind of sources like the Internet via HTTP requests or from a database or anything else. Therefore you may define a <code>link_callback</code> that handles these reuests. </p>
+<p>Images, backgrounds and stylesheets are loaded form an HTML document. Normaly <em>xhtml2pdf</em> expects these files to be found on the local drive. They may also be referenced relative to the original document. But the programmer might want to load form different kind of sources like the Internet via HTTP requests or from a database or anything else. Therefore you may define a <code>link_callback</code> that handles these reuests. </p>
 <p>XXX</p>
 <h2>Web applications</h2>
 <p>XXX</p>
 <h1>Defaults</h1>
 <p>Some notes on some default values: </p>
 <ul>
-  <li>Usually the position (0, 0) in PDF files is found in the lower left corner. For <em>pisa</em> it is the upper left corner like it is for HTML.</li>
+  <li>Usually the position (0, 0) in PDF files is found in the lower left corner. For <em>xhtml2pdf</em> it is the upper left corner like it is for HTML.</li>
   <li>The default page size is the German DIN A4 with portrait orientation.</li>
   <li>The name of the first layout template is <code>body</code>, but you better leave the name empty for defining the default template  (XXX May be changed in the future!) </li>
 </ul>
 <h1>Cascading Style Sheets</h1>
-<p><em>pisa</em> supports a lot of Cascading Style Sheet (CSS). The following styles are supported:</p>
+<p><em>xhtml2pdf</em> supports a lot of Cascading Style Sheet (CSS). The following styles are supported:</p>
 <pre>background-color<br />border-bottom-color<br />border-bottom-style<br />border-bottom-width<br />border-left-color<br />border-left-style<br />border-left-width<br />border-right-color<br />border-right-style<br />border-right-width<br />border-top-color<br />border-top-style<br />border-top-width<br />color<br />display<br />font-family <br />font-size <br />font-style<br />font-weight<br />height<br />line-height<br />list-style-type<br />margin-bottom<br />margin-left<br />margin-right<br />margin-top<br />padding-bottom<br />padding-left<br />padding-right<br />padding-top<br />page-break-after<br />page-break-before<br />size<br />text-align<br />text-decoration<br />text-indent<br />vertical-align<br />white-space<br />width<br />zoom</pre>
 <p>And it adds some vendor specific styles: </p>
 <pre>-pdf-frame-border<br />-pdf-frame-break<br />-pdf-frame-content<br />-pdf-keep-with-next<br />-pdf-next-page<br />-pdf-outline<br />-pdf-outline-level<br />-pdf-outline-open<br />-pdf-page-break</pre>
@@ -244,7 +243,7 @@ if __name__==&quot;__main__&quot;:
 &lt;/html&gt;</pre>
 <p>For better debugging you may want to add this property for each frame definition: <code>-pdf-frame-border: 1</code>. It will paint a border around the frame. </p>
 <h1>Fonts</h1>
-<p>By default there is just a certain set of fonts available for PDF. Here is the complete list - and their repective alias names - <em>pisa</em> knows  by default (the names are not case sensitive):</p>
+<p>By default there is just a certain set of fonts available for PDF. Here is the complete list - and their repective alias names - <em>xhtml2pdf</em> knows  by default (the names are not case sensitive):</p>
 <ul>
   <li><strong>Times-Roman</strong>: Times New Roman, Times, Georgia, serif </li>
   <li><strong>Helvetica</strong>: Arial, Verdana, Geneva, sansserif, sans </li>
@@ -287,7 +286,7 @@ if __name__==&quot;__main__&quot;:
    font-style: italic;
 }</pre>
 <h1>Outlines/ Bookmarks </h1>
-<p>PDF supports outlines (Adobe calls them &quot;bookmarks&quot;). By default <em>pisa</em> defines the <code>&lt;h1&gt;</code> to <code>&lt;h6&gt;</code> tags to be shown in the outline. But you can specify exactly for every tag which outline behaviour it should have. Therefore you may want to use the following vendor specific styles:</p>
+<p>PDF supports outlines (Adobe calls them &quot;bookmarks&quot;). By default <em>xhtml2pdf</em> defines the <code>&lt;h1&gt;</code> to <code>&lt;h6&gt;</code> tags to be shown in the outline. But you can specify exactly for every tag which outline behaviour it should have. Therefore you may want to use the following vendor specific styles:</p>
 <ul>
   <li><code>-pdf-outline </code><br />
     set it to &quot;true&quot; if the block element should appear in the outline</li>
@@ -302,7 +301,7 @@ if __name__==&quot;__main__&quot;:
   -pdf-open: false;
 }</pre>
 <h1>Table of Contents</h1>
-<p>It is possible to automatically generate a Table of Contents (TOC) with <em>pisa</em>. By default all headings from <code>&lt;h1&gt;</code> to <code>&lt;h6&gt;</code> will be inserted into that TOC. But you may change that behaviour by setting the CSS property <code>-pdf-outline</code> to <code>true</code> or <code>false</code>. To generate the TOC simply insert <code>&lt;pdf:toc /&gt;</code> into your document. You then may modify the look of it by defining styles for the <code>pdf:toc</code> tag and the classes <code>pdftoc.pdftoclevel0</code> to <code>pdftoc.pdftoclevel5</code>. Here is a simple example for a nice looking CSS:</p>
+<p>It is possible to automatically generate a Table of Contents (TOC) with <em>xhtml2pdf</em>. By default all headings from <code>&lt;h1&gt;</code> to <code>&lt;h6&gt;</code> will be inserted into that TOC. But you may change that behaviour by setting the CSS property <code>-pdf-outline</code> to <code>true</code> or <code>false</code>. To generate the TOC simply insert <code>&lt;pdf:toc /&gt;</code> into your document. You then may modify the look of it by defining styles for the <code>pdf:toc</code> tag and the classes <code>pdftoc.pdftoclevel0</code> to <code>pdftoc.pdftoclevel5</code>. Here is a simple example for a nice looking CSS:</p>
 <pre>pdftoc {
     color: #666;
 }
@@ -347,7 +346,7 @@ pdftoc.pdftoclevel2 {
 <p>You can embed barcodes automatically in a document. Various barcode formats are supported through the <code>type</code> attribute. If you want the original barcode text to be appeared on the document, simply add <code>humanreadable="1"</code>, otherwise simply omit this attribute. Alignment is achieved through <code>align</code> attribute and available values are any of <code>"baseline", "top", "middle", "bottom"</code> whereas default is <code>baseline</code>. Finally, bar width and height can be controlled through <code>barwidth</code> and <code>barheight</code> attributes respectively.</p>
 <pre>&lt;pdf:barcode value="BARCODE TEXT COMES HERE" type="code128" humanreadable="1" align="right" /&gt;</pre>
 <h1>Custom Tags </h1>
-<p><em>pisa</em> provides some custom tags. They are all prefixed by the namespace identifier <code>pdf:</code>. As the HTML5 parser used by pisa does not know about these specific tags it may be confused if they are without a block. To avoid problems you may condsider sourrounding them by <code>&lt;div&gt;</code> tags, like this: </p>
+<p><em>xhtml2pdf</em> provides some custom tags. They are all prefixed by the namespace identifier <code>pdf:</code>. As the HTML5 parser used by xhtml2pdf does not know about these specific tags it may be confused if they are without a block. To avoid problems you may condsider sourrounding them by <code>&lt;div&gt;</code> tags, like this: </p>
 <pre>&lt;div&gt;
    &lt;pdf:toc /&gt;
 &lt;/div&gt;
@@ -370,9 +369,6 @@ the page number will require e.g. &quot;00&quot;.<br />
 <h3>pdf:toc</h3>
 <p> Creates a Table of Contents. </p>
 <h1>License</h1>
-<p><strong><em>pisa</em> is copyrighted by Dirk Holtwick, Germany.</strong><br />
-  <em>pisa</em> is distributed by Dirk Holtwick, Schreiberstra�e 2, 47058 Duisburg, Germany.<br />
-  <em>pisa</em> is licensed under the GNU Gerneral Public License version 2.</p>
-<p><strong>For commercial usage of <em>pisa</em> a developer license can be purchased!</strong></p>
+<p><strong><em>xhtml2pdf</em> is copyrighted by Dirk Holtwick, Germany.</strong><br />
 </body>
 </html>
