@@ -182,6 +182,8 @@ class pisaCSSBuilder(css.CSSBuilder):
         c = self.c
         if not name:
             name = "-pdf-frame-%d" % c.UID()
+        if data.get('is_landscape', False):
+            size = (size[1], size[0])
         x, y, w, h = getFrameDimensions(data, size[0], size[1])
         # print name, x, y, w, h
         #if not (w and h):
