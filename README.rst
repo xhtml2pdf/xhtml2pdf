@@ -30,7 +30,7 @@ Development environment
 Python, virtualenv and dependencies
 -----------------------------------
 
-#. Install Python 2.6.x or 2.7.x. Installation steps depends on yours operating system.
+#. Install Python 2.6.x or 2.7.x. Installation steps depends on your operating system.
 
 #. Install Pip, the python package installer::
 
@@ -62,11 +62,11 @@ Python, virtualenv and dependencies
 
     pip install -r requirements.xml
 
-#. Run tests to check you configuration::
+#. Run tests to check your configuration::
 
     nosetests --with-coverage
 
-   You should have log with success status::
+   You should have a log with success status::
 
     Ran 35 tests in 0.322s
 
