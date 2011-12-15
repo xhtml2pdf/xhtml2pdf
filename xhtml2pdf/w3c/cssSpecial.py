@@ -173,7 +173,7 @@ def splitBorder(parts):
             # part = getNextPart(parts)
 
         # Style
-        elif _borderStyleTable.has_key(part.lower()):
+        elif hasattr(part,'lower') and _borderStyleTable.has_key(part.lower()):
             style = part
             # part = getNextPart(parts)
 
@@ -235,7 +235,7 @@ def parseSpecialRules(declarations, debug=0):
                 part = getNextPart(parts) or oparts
                 if part:
 
-                    if ("." in part) or ("data:" in part):
+                    if hasattr(part, '__iter__') and (type("." in part) or ("data:" in part)):
                         dd.append(("background-image", part, last))
                     else:
                         dd.append(("background-color", part, last))
