@@ -872,7 +872,7 @@ class CSSParser(object):
         ctxsrc = src
         if not src.startswith(':'):
             raise self.ParseError('Selector Pseudo \':\' not found', src, ctxsrc)
-        src = src[1:]
+        src = re.search('^:{1,2}(.*)', src, re.M | re.S).group(1)
 
         name, src = self._getIdent(src)
         if not name:
