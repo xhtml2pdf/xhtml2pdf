@@ -184,10 +184,10 @@ class pisaCSSBuilder(css.CSSBuilder):
         #if not (w and h):
         #    return None
         if first:
-            return (name, None, data.get("-pdf-frame-border", border), x, y, w, h)
+            return (name, None, data.get("-pdf-frame-border", border), x, y, w, h, data)
         
         return (name, data.get("-pdf-frame-content", None), 
-                data.get("-pdf-frame-border", border), x, y, w, h)
+                data.get("-pdf-frame-border", border), x, y, w, h, data)
 
     def atPage(self, name, pseudopage, declarations):
         c = self.c
@@ -246,7 +246,10 @@ class pisaCSSBuilder(css.CSSBuilder):
         # Frames have to be calculated after we know the pagesize
         frameList = []
         staticList = []
-        for fname, static, border, x, y, w, h in c.frameList:
+        for fname, static, border, x, y, w, h, fdata in c.frameList:
+            #fix frame sizing problem.
+            if static:
+                x, y, w, h = getFrameDimensions(fdata, c.pageSize[0], c.pageSize[1])
             x, y, w, h = getCoords(x, y, w, h, c.pageSize)
             if w <= 0 or h <= 0:
                 log.warn(self.c.warning("Negative width or height of frame. Check @frame definitions."))
