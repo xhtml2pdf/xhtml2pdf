@@ -126,6 +126,7 @@ def getParaFrag(style):
     frag.wordWrap = None
 
     frag.pageNumber = False
+    frag.pageCount = False
     frag.height = None
     frag.width = None
 

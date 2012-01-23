@@ -465,6 +465,15 @@ class pisaTagPDFPAGENUMBER(pisaTag):
         c.addFrag(self.attr.example)
         c.frag.pageNumber = False
 
+class pisaTagPDFPAGECOUNT(pisaTag):
+    """
+    <pdf:pagecount example="" />
+    """
+    def start(self, c):
+        c.frag.pageCount = True
+        c.addFrag(self.attr.example)
+        c.frag.pageCount = False
+
 class pisaTagPDFTOC(pisaTag):
     """
     <pdf:toc />
@@ -538,6 +547,13 @@ class pisaTagPDFTEMPLATE(pisaTag):
         '''
 
         # self._drawing = PmlPageDrawing(self._pagesize)
+        c.frag.pageNumber = True
+        c.frag.pageNumber = True
+        c.frag.pageNumber = True
+        c.frag.pageNumber = True
+        c.frag.pageNumber = True
+        c.frag.pageNumber = True
+        c.frag.pageNumber = True
 
     def end(self, c):
         attrs = self.attr

@@ -142,6 +142,10 @@ TAGS = {
         "example":              (STRING, "0"),
         }),
 
+    "pdfpagecount": (0, {
+        "example":              (STRING, "0"),
+        }),
+
     "pdftoc": (0, {
         }),
 
