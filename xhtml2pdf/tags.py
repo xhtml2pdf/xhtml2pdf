@@ -547,13 +547,6 @@ class pisaTagPDFTEMPLATE(pisaTag):
         '''
 
         # self._drawing = PmlPageDrawing(self._pagesize)
-        c.frag.pageNumber = True
-        c.frag.pageNumber = True
-        c.frag.pageNumber = True
-        c.frag.pageNumber = True
-        c.frag.pageNumber = True
-        c.frag.pageNumber = True
-        c.frag.pageNumber = True
 
     def end(self, c):
         attrs = self.attr
