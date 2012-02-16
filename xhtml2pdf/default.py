@@ -193,6 +193,7 @@ TAGS = {
                                   "usps4s",
                                   "code128",
                                   "ean13", "ean8",
+                                  "qr",
                                  ], "code128"),
         "humanreadable":        (STRING, ""),
         "barwidth":             SIZE,
