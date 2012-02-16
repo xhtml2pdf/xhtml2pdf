@@ -593,6 +593,7 @@ class pisaTagPDFBARCODE(pisaTag):
             "CODE128": "Code128",
             "EAN13": "EAN13",
             "EAN8": "EAN8",
+            "QR": "QR",
             }
 
     class _barcodeWrapper(Flowable):
