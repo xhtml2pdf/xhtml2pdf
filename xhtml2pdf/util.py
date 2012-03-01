@@ -114,7 +114,7 @@ def toList(value):
 
 #def _toColor(arg, default=None):
 #    '''try to map an arbitrary arg to a color instance'''
-#    if isinstance(arg, Color): 
+#    if isinstance(arg, Color):
 #        return arg
 #    tArg = type(arg)
 #    if tArg in (types.ListType, types.TupleType):
@@ -318,8 +318,8 @@ def getBox(box, pagesize):
 
 def getFrameDimensions(data, page_width, page_height):
     """Calculate dimensions of a frame
-    
-    Returns left, top, width and height of the frame in points. 
+
+    Returns left, top, width and height of the frame in points.
     """
     box = data.get("-pdf-frame-box", [])
     if len(box) == 4:
@@ -564,7 +564,10 @@ class pisaFileObject:
                     else:
                         self.file = r1
                 else:
-                    urlResponse = urllib2.urlopen(uri)
+                    try:
+                        urlResponse = urllib2.urlopen(uri)
+                    except urllib.HTTPError:
+                        return
                     self.mimetype = urlResponse.info().get("Content-Type", '').split(";")[0]
                     self.uri = urlResponse.geturl()
                     self.file = urlResponse
