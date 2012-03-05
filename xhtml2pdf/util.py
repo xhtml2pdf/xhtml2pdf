@@ -566,7 +566,7 @@ class pisaFileObject:
                 else:
                     try:
                         urlResponse = urllib2.urlopen(uri)
-                    except urllib.HTTPError:
+                    except urllib2.HTTPError:
                         return
                     self.mimetype = urlResponse.info().get("Content-Type", '').split(";")[0]
                     self.uri = urlResponse.geturl()
