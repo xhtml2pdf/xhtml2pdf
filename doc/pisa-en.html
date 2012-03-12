@@ -358,7 +358,8 @@ pdftoc.pdftoclevel2 {
 Prints current page number. The argument &quot;example&quot; defines the space
 the page number will require e.g. &quot;00&quot;.<br />
 <h3>pdf:nexttemplate</h3>
-<p> Defines the template to be used on the next page. </p>
+<p> Defines the template to be used on the next page. The name of the template is passed via the <code>name</code> attribute and refers to a <code>@page templateName</code> style definition:</p>
+<pre>&lt;pdf:nexttemplate name="templateName"&gt;</pre>
 <h3>pdf:nextpage</h3>
 <p>Create a new page after this position.</p>
 <h3>pdf:nextframe</h3>
