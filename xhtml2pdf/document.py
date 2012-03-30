@@ -4,10 +4,41 @@ from xhtml2pdf.default import DEFAULT_CSS
 from xhtml2pdf.parser import pisaParser
 from reportlab.platypus.flowables import Spacer
 from reportlab.platypus.frames import Frame
+from reportlab.pdfgen import canvas
 from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlPageTemplate
 from xhtml2pdf.util import pisaTempFile, getBox, pyPdf
 import cgi
 import logging
+
+
+# http://code.activestate.com/recipes/576832/
+
+class NumberedCanvas(canvas.Canvas):
+    def __init__(self, *args, **kwargs):
+        canvas.Canvas.__init__(self, *args, **kwargs)
+        self._saved_page_states = []
+        self._to_page_count = None
+
+    def showPage(self):
+        self._saved_page_states.append(dict(self.__dict__))
+        self._startPage()
+
+    def save(self):
+        """add page info to each page (page x of y)"""
+        num_pages = len(self._saved_page_states)
+        for state in self._saved_page_states:
+            self.__dict__.update(state)
+            self.draw_page_number(num_pages)
+            canvas.Canvas.showPage(self)
+        canvas.Canvas.save(self)
+
+    def draw_page_number(self, page_count):
+        if self._to_page_count:
+            for i in range(len(self._code)):
+                if self._to_page_count in self._code[i]:
+                    self._code[i] = self._code[i].replace(\
+                        self._to_page_count, str(page_count))
+
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -126,9 +157,9 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
 
     # Use multibuild e.g. if a TOC has to be created
     if context.multiBuild:
-        doc.multiBuild(context.story)
+        doc.multiBuild(context.story, canvasmaker=NumberedCanvas)
     else:
-        doc.build(context.story)
+        doc.build(context.story, canvasmaker=NumberedCanvas)
 
     context._pisa_page_counter = doc._pisa_page_counter
 

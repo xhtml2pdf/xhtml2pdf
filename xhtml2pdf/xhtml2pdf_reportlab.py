@@ -253,17 +253,20 @@ class PmlPageTemplate(PageTemplate):
             #    # print "drawing exception", str(e)
             #    pass
 
-            def pageNumbering(objList):
+            def pageNumbering(objList, canvas):
                 for obj in flatten(objList):
                     if isinstance(obj, PmlParagraph):
                         for frag in obj.frags:
                             if frag.pageNumber:
                                 frag.text = str(pagenumber)
+                            if frag.pageCount:
+                                frag.text = u"##PAGES##"
+                                canvas._to_page_count = frag.text
 
                     elif isinstance(obj, PmlTable):
                         # Flatten the cells ([[1,2], [3,4]] becomes [1,2,3,4])
                         flat_cells = [item for sublist in obj._cellvalues for item in sublist]
-                        pageNumbering(flat_cells)
+                        pageNumbering(flat_cells, canvas)
             try:
 
                 # Paint static frames
@@ -272,7 +275,7 @@ class PmlPageTemplate(PageTemplate):
 
                     frame = copy.deepcopy(frame)
                     story = frame.pisaStaticStory
-                    pageNumbering(story)
+                    pageNumbering(story, canvas)
 
                     frame.addFromList(story, canvas)
 
