@@ -621,7 +621,7 @@ class pisaTagPDFBARCODE(pisaTag):
         barWidth = attr.barwidth or 0.01*inch
         barHeight = attr.barheight or 0.5*inch
         fontName = c.getFontName("OCRB10,OCR-B,OCR B,OCRB")  # or "Helvetica"
-        fontSize = 2.75*mm
+        fontSize = attr.fontsize or 2.75*mm
 
         # Assure minimal size.
         if codeName in ("EAN13", "EAN8"):

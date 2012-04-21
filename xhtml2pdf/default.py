@@ -198,6 +198,7 @@ TAGS = {
         "humanreadable":        (STRING, ""),
         "barwidth":             SIZE,
         "barheight":            SIZE,
+        "fontsize":             SIZE,
         "align":                (["baseline", "top", "middle", "bottom"], "baseline"),
         }),
 
