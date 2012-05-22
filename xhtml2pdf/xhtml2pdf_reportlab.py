@@ -19,7 +19,7 @@ from reportlab.lib.enums import TA_RIGHT
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.utils import flatten, open_for_read, getStringIO, \
     LazyImageReader, haveImages
-from reportlab.platypus.doctemplate import BaseDocTemplate, PageTemplate
+from reportlab.platypus.doctemplate import BaseDocTemplate, PageTemplate, IndexingFlowable
 from reportlab.platypus.flowables import Flowable, CondPageBreak, \
     KeepInFrame, ParagraphAndImage
 from reportlab.platypus.tableofcontents import TableOfContents
@@ -194,6 +194,16 @@ class PmlPageTemplate(PageTemplate):
         self.pisaBackgroundList = []
         self.pisaBackground = None
         PageTemplate.__init__(self, **kw)
+        self._page_count = 0
+        self._first_flow = True
+
+    def isFirstFlow(self, canvas):
+        if self._first_flow:
+            if canvas.getPageNumber() <= self._page_count:
+                self._first_flow = False
+            else:
+                self._page_count = canvas.getPageNumber()
+        return self._first_flow
 
     def isPortrait(self):
         return self.pageorientation == self.PORTRAIT
@@ -208,7 +218,8 @@ class PmlPageTemplate(PageTemplate):
 
             # Background
             pisaBackground = None
-            if (hasattr(self, "pisaBackground")
+            if (self.isFirstFlow(canvas)
+                and hasattr(self, "pisaBackground")
                 and self.pisaBackground
                 and (not self.pisaBackground.notFound())):
                 # print self.pisaBackground.mimetype
@@ -244,7 +255,8 @@ class PmlPageTemplate(PageTemplate):
                     pisaBackground = self.pisaBackground
 
             # print "+", pisaBackground
-            self.pisaBackgroundList.append(pisaBackground)
+            if pisaBackground:
+                self.pisaBackgroundList.append(pisaBackground)
 
             # canvas.saveState()
             #try:
@@ -259,6 +271,8 @@ class PmlPageTemplate(PageTemplate):
                         for frag in obj.frags:
                             if frag.pageNumber:
                                 frag.text = str(pagenumber)
+                            elif frag.pageCount:
+                                frag.text = str(self._page_count)
 
                     elif isinstance(obj, PmlTable):
                         # Flatten the cells ([[1,2], [3,4]] becomes [1,2,3,4])
@@ -788,6 +802,20 @@ class PmlTable(Table, PmlMaxHeightMixIn):
 
         return Table.wrap(self, availWidth, availHeight)
 
+
+class PmlPageCount(IndexingFlowable):
+
+    def __init__(self):
+        IndexingFlowable.__init__(self)
+        self.second_round = False
+
+    def isSatisfied(self):
+        s = self.second_round
+        self.second_round = True
+        return s
+
+    def drawOn(self, canvas, x, y, _sW=0):
+        pass
 
 class PmlTableOfContents(TableOfContents):
 

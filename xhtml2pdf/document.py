@@ -59,6 +59,9 @@ def pisaStory(src, path=None, link_callback=None, debug=0, default_css=None,
     if not context.story:
         context.story = [Spacer(1,1)]
 
+    if context.indexing_story:
+        context.story.append(context.indexing_story)
+
     # Remove anchors if they do not exist (because of a bug in Reportlab)
     for frag, anchor in context.anchorFrag:
         if anchor not in context.anchorName:
@@ -117,20 +120,11 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
 
     doc.addPageTemplates([body] + context.templateList.values())
 
-    # handle counting pages properly (to allow "page X/Y" stuff)
-    doc._pisa_page_counter = 0
-    def _page_counter(page_no):
-        doc._pisa_page_counter += 1
-
-    doc.setPageCallBack(_page_counter)
-
     # Use multibuild e.g. if a TOC has to be created
     if context.multiBuild:
         doc.multiBuild(context.story)
     else:
         doc.build(context.story)
-
-    context._pisa_page_counter = doc._pisa_page_counter
 
     # Add watermarks
     if pyPdf:
