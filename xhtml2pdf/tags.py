@@ -465,6 +465,19 @@ class pisaTagPDFPAGENUMBER(pisaTag):
         c.addFrag(self.attr.example)
         c.frag.pageNumber = False
 
+class pisaTagPDFPAGECOUNT(pisaTag):
+    """
+    <pdf:pagecount />
+    """
+    def start(self, c):
+        c.frag.pageCount = True
+        c.addFrag()
+        c.frag.pageCount = False
+
+    def end(self, c):
+        c.multiBuild = True
+        c.addPageCount()
+
 class pisaTagPDFTOC(pisaTag):
     """
     <pdf:toc />

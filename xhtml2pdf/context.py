@@ -11,7 +11,7 @@ from xhtml2pdf.util import getSize, getCoords, getFile, pisaFileObject, \
     getFrameDimensions
 from xhtml2pdf.w3c import css
 from xhtml2pdf.xhtml2pdf_reportlab import PmlPageTemplate, PmlTableOfContents, \
-    PmlParagraph, PmlParagraphAndImage
+    PmlParagraph, PmlParagraphAndImage, PmlPageCount
 import copy
 import logging
 import os
@@ -126,6 +126,7 @@ def getParaFrag(style):
     frag.wordWrap = None
 
     frag.pageNumber = False
+    frag.pageCount = False
     frag.height = None
     frag.width = None
 
@@ -362,6 +363,7 @@ class pisaContext(object):
         self.node = None
         self.toc = PmlTableOfContents()
         self.story = []
+        self.indexing_story = None
         self.text = []
         self.log = []
         self.err = 0
@@ -583,7 +585,14 @@ class pisaContext(object):
 
         # log.warn("%r", self.fragBlock.textColor)
         self.toc.levelStyles = styles
-        self.addStory(self.toc)
+        self.setIndexingStory(self.toc)
+
+    def addPageCount(self):
+        self.setIndexingStory(PmlPageCount())
+
+    def setIndexingStory(self, data):
+        if not (self.indexing_story and isinstance(data, PmlPageCount)):
+            self.indexing_story = data
 
     def dumpPara(self, frags, style):
         return
