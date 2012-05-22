@@ -585,14 +585,13 @@ class pisaContext(object):
 
         # log.warn("%r", self.fragBlock.textColor)
         self.toc.levelStyles = styles
-        self.setIndexingStory(self.toc)
+        self.addStory(self.toc)
+        self.indexing_story = None
 
     def addPageCount(self):
-        self.setIndexingStory(PmlPageCount())
-
-    def setIndexingStory(self, data):
-        if not (self.indexing_story and isinstance(data, PmlPageCount)):
-            self.indexing_story = data
+        if not self.multiBuild:
+            self.indexing_story = PmlPageCount()
+            self.multiBuild = True
 
     def dumpPara(self, frags, style):
         return
