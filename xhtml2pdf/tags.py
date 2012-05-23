@@ -475,7 +475,6 @@ class pisaTagPDFPAGECOUNT(pisaTag):
         c.frag.pageCount = False
 
     def end(self, c):
-        c.multiBuild = True
         c.addPageCount()
 
 class pisaTagPDFTOC(pisaTag):
