@@ -33,6 +33,8 @@ the maintainer should theses names be changed to something more relevant.
 * Marcus Weseloh
 * Jacob Richardson
 * Krzysztof Grodzicki
+* Ted Liang
+* fsx999
 
 Special thanks
 ==============
