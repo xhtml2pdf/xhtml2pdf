@@ -35,6 +35,7 @@ the maintainer should theses names be changed to something more relevant.
 * Krzysztof Grodzicki
 * Ted Liang
 * fsx999
+* Andrea Bravetti
 
 Special thanks
 ==============
