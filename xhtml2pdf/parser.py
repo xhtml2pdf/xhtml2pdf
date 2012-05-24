@@ -34,8 +34,7 @@ import types
 import xhtml2pdf.w3c.cssDOMElementInterface as cssDOMElementInterface
 import xml.dom.minidom
 
-
-
+CSSAttrCache={}
 
 log = logging.getLogger("xhtml2pdf")
 
@@ -220,6 +219,15 @@ def CSSCollect(node, c):
     #node.cssAttrs = {}
     #return node.cssAttrs
     if c.css:
+
+        _key = "%s_%s" % (node.parentNode, node.attributes.items())
+        if hasattr(node.parentNode, "tagName"):
+            if node.parentNode.tagName.lower() != "html":
+                _key = "%s_%s" % (node.parentNode, node.attributes.items())
+                CachedCSSAttr = CSSAttrCache.get(_key, None)
+                if CachedCSSAttr is not None:
+                    return CachedCSSAttr
+
         node.cssElement = cssDOMElementInterface.CSSDOMElementInterface(node)
         node.cssAttrs = {}
         # node.cssElement.onCSSParserVisit(c.cssCascade.parser)
@@ -231,6 +239,9 @@ def CSSCollect(node, c):
             #    pass
             except Exception: # TODO: Kill this catch-all!
                 log.debug("CSS error '%s'", cssAttrName, exc_info=1)
+
+        CSSAttrCache[_key] = node.cssAttrs
+
     return node.cssAttrs
 
 def CSS2Frag(c, kw, isBlock):
@@ -610,6 +621,8 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
     - Handle the document DOM itself and build reportlab story
     - Return Context object
     """
+
+    CSSAttrCache={}
 
     if xhtml:
         #TODO: XHTMLParser doesn't see to exist...
