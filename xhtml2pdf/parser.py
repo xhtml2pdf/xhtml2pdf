@@ -220,10 +220,9 @@ def CSSCollect(node, c):
     #return node.cssAttrs
     if c.css:
 
-        _key = "%s_%s" % (node.parentNode, node.attributes.items())
+        _key = "%s_%s" % (id(node.parentNode), node.attributes.items())
         if hasattr(node.parentNode, "tagName"):
             if node.parentNode.tagName.lower() != "html":
-                _key = "%s_%s" % (node.parentNode, node.attributes.items())
                 CachedCSSAttr = CSSAttrCache.get(_key, None)
                 if CachedCSSAttr is not None:
                     return CachedCSSAttr
