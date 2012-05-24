@@ -215,12 +215,23 @@ def getCSSAttr(self, cssCascade, attrName, default=NotImplemented):
 #TODO: Monkeypatching standard lib should go away.
 xml.dom.minidom.Element.getCSSAttr = getCSSAttr
 
+def getCSSAttrCacheKey(node):
+    _cl = _id = _st = ''
+    for i in node.attributes.items():
+        if i[0] == 'class':
+            _cl = i[1]
+        elif i[0] == 'id':
+            _id = i[1]
+        elif i[0] == 'style':
+            _st = i[1]
+    return "%s#%s#%s#%s" % (id(node.parentNode), _cl, _id, _st)
+
 def CSSCollect(node, c):
     #node.cssAttrs = {}
     #return node.cssAttrs
     if c.css:
 
-        _key = "%s_%s" % (id(node.parentNode), node.attributes.items())
+        _key = getCSSAttrCacheKey(node)
         if hasattr(node.parentNode, "tagName"):
             if node.parentNode.tagName.lower() != "html":
                 CachedCSSAttr = CSSAttrCache.get(_key, None)
