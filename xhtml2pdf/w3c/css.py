@@ -33,6 +33,13 @@ Dependencies:
 """
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~ To replace any for with list comprehension
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+def stopIter(value):
+    raise StopIteration, value
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~ Imports
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -152,8 +159,28 @@ class CSSCascadeStrategy(object):
         rules = []
 
         inline = element.getInlineStyle()
-        for ruleset in self.iterCSSRulesets(inline):
-            rules += ruleset.findCSSRuleFor(element, attrName)
+
+        # Generator are wonderfull but sometime slow...
+        #for ruleset in self.iterCSSRulesets(inline):
+        #    rules += ruleset.findCSSRuleFor(element, attrName)
+
+        if self.userAgenr is not None:
+            rules += self.userAgenr[0].findCSSRuleFor(element, attrName)
+            rules += self.userAgenr[1].findCSSRuleFor(element, attrName)
+
+        if self.user is not None:
+            rules += self.user[0].findCSSRuleFor(element, attrName)
+
+        if self.author is not None:
+            rules += self.author[0].findCSSRuleFor(element, attrName)
+            rules += self.author[1].findCSSRuleFor(element, attrName)
+
+        if inline:
+            rules += inline[0].findCSSRuleFor(element, attrName)
+            rules += inline[1].findCSSRuleFor(element, attrName)
+
+        if self.user is not None:
+            rules += self.user[1].findCSSRuleFor(element, attrName)
 
         rules.sort()
         return rules
@@ -264,7 +291,10 @@ class CSSSelectorBase(object):
         if element is None:
             return False
 
-        if not element.matchesNode(self.fullName):
+        # with  CSSDOMElementInterface.matchesNode(self, (namespace, tagName)) replacement:
+        if self.fullName[1] not in ('*', element.domElement.tagName):
+            return False
+        if self.fullName[0] not in (None, '', '*') and self.fullName[0] != element.domElement.namespaceURI:
             return False
 
         for qualifier in self.qualifiers:
@@ -384,8 +414,13 @@ class CSSSelectorClassQualifier(CSSSelectorQualifierBase):
     def asString(self):
         return '.'+self.classId
     def matches(self, element):
-        return self.classId in element.getClassAttr().split()
-
+        #return self.classId in element.getClassAttr().split()
+        attrValue = element.domElement.attributes.get('class')
+        if attrValue is not None:
+            return self.classId in attrValue.value.split()
+        else:
+            return False
+ 
 class CSSSelectorAttributeQualifier(CSSSelectorQualifierBase):
     name, op, value = None, None, NotImplemented
 
@@ -404,15 +439,24 @@ class CSSSelectorAttributeQualifier(CSSSelectorQualifierBase):
             return '[%s]' % (self.name,)
         else: return '[%s%s%s]' % (self.name, self.op, self.value)
     def matches(self, element):
-        op = self.op
-        if op is None:
+        if self.op is None:
             return element.getAttr(self.name, NotImplemented) != NotImplemented
-        elif op == '=':
+        elif self.op == '=':
             return self.value == element.getAttr(self.name, NotImplemented)
-        elif op == '~=':
-            return self.value in element.getAttr(self.name, '').split()
-        elif op == '|=':
-            return self.value in element.getAttr(self.name, '').split('-')
+        elif self.op == '~=':
+            #return self.value in element.getAttr(self.name, '').split()
+            attrValue = element.domElement.attributes.get(self.name)
+            if attrValue is not None:
+                return self.value in attrValue.value.split()
+            else:
+                return False
+        elif self.op == '|=':
+            #return self.value in element.getAttr(self.name, '').split('-')
+            attrValue = element.domElement.attributes.get(self.name)
+            if attrValue is not None:
+                return self.value in attrValue.value.split('-')
+            else:
+                return False
         else:
             raise RuntimeError("Unknown operator %r for %r" % (self.op, self))
 
@@ -445,22 +489,23 @@ class CSSSelectorCombinationQualifier(CSSSelectorQualifierBase):
     def asString(self):
         return '%s%s' % (self.selector.asString(), self.op)
     def matches(self, element):
-        op, selector = self.op, self.selector
-        if op == ' ':
-            for parent in element.iterXMLParents():
-                if selector.matches(parent):
-                    return True
-            else:
-                return False
-        elif op == '>':
-            for parent in element.iterXMLParents():
-                if selector.matches(parent):
-                    return True
-                else:
-                    return False
-        elif op == '+':
-            return selector.matches(element.getPreviousSibling())
-
+        if self.op == ' ':
+            if element is not None:
+                if element.matchesNode(self.selector.fullName):
+                    try:
+                        [ None for qualifier in self.selector.qualifiers if qualifier.matches(element) and stopIter(None) ]
+                    except StopIteration:
+                        return True
+            return False
+        elif self.op == '>':
+            if element is not None:
+                if element.matchesNode(self.selector.fullName):
+                    if self.selector.qualifiers[0].matches(element):
+                        return True
+            return False
+        elif self.op == '+':
+            return self.selector.matches(element.getPreviousSibling())
+ 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~ CSS Misc
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -489,18 +534,15 @@ class CSSDeclarations(dict):
 
 class CSSRuleset(dict):
     def findCSSRulesFor(self, element, attrName):
-        ruleResults = []
-        append = ruleResults.append
-        for nodeFilter, declarations in self.iteritems():
-            if (attrName in declarations) and (nodeFilter.matches(element)):
-                append((nodeFilter, declarations))
+        ruleResults = [ (nodeFilter, declarations) for nodeFilter, declarations in self.iteritems() if (attrName in declarations) and (nodeFilter.matches(element)) ]
         ruleResults.sort()
         return ruleResults
 
-    def findCSSRuleFor(self, *args, **kw):
-        # rule is packed in a list to differentiate from "no rule" vs "rule
-        # whose value evalutates as False"
-        return self.findCSSRulesFor(*args, **kw)[-1:]
+    def findCSSRuleFor(self, element, attrName):
+        try:
+            return [ None for nodeFilter, declarations in self.iteritems() if (attrName in declarations) and (nodeFilter.matches(element)) and stopIter((nodeFilter, declarations)) ]
+        except StopIteration, value:
+            return [value]
 
     def mergeStyles(self, styles):
         " XXX Bugfix for use in PISA "
