@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from turbogears.decorator import weak_signature_decorator
-import xhtml2pdf.pisa as pisa
+from decorator import weak_signature_decorator
+import pisa
 import StringIO
 import cherrypy
 
