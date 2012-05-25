@@ -14,25 +14,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from hashlib import md5
-from reportlab.lib.enums import TA_RIGHT
-from reportlab.lib.styles import ParagraphStyle
-from reportlab.lib.utils import flatten, open_for_read, getStringIO, \
-    LazyImageReader, haveImages
-from reportlab.platypus.doctemplate import BaseDocTemplate, PageTemplate, IndexingFlowable
-from reportlab.platypus.flowables import Flowable, CondPageBreak, \
-    KeepInFrame, ParagraphAndImage
-from reportlab.platypus.tableofcontents import TableOfContents
-from reportlab.platypus.tables import Table, TableStyle
-from xhtml2pdf.reportlab_paragraph import Paragraph
-from xhtml2pdf.util import getUID, getBorderStyle
-from types import StringType, TupleType, ListType, IntType
-import StringIO
+import sys
 import cgi
 import copy
 import logging
+import StringIO
+from types import StringType, TupleType, ListType, IntType
+
+from hashlib import md5
+from reportlab.lib.enums import TA_RIGHT
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.utils import flatten, open_for_read, getStringIO, LazyImageReader, haveImages
+from reportlab.platypus.doctemplate import BaseDocTemplate, PageTemplate, IndexingFlowable
+from reportlab.platypus.flowables import Flowable, CondPageBreak, KeepInFrame, ParagraphAndImage
+from reportlab.platypus.tableofcontents import TableOfContents
+from reportlab.platypus.tables import Table, TableStyle
 import reportlab.pdfbase.pdfform as pdfform
-import sys
+
+from reportlab_paragraph import Paragraph
+from util import getUID, getBorderStyle
 
 try:
     import PIL.Image as PILImage
