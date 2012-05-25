@@ -1,26 +1,4 @@
 # -*- coding: utf-8 -*-
-from reportlab.lib.enums import TA_LEFT
-from reportlab.lib.fonts import addMapping
-from reportlab.lib.pagesizes import landscape, A4
-from reportlab.lib.styles import ParagraphStyle
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus.frames import Frame
-from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
-from xhtml2pdf.util import getSize, getCoords, getFile, pisaFileObject, \
-    getFrameDimensions
-from xhtml2pdf.w3c import css
-from xhtml2pdf.xhtml2pdf_reportlab import PmlPageTemplate, PmlTableOfContents, \
-    PmlParagraph, PmlParagraphAndImage, PmlPageCount
-import copy
-import logging
-import os
-import re
-import reportlab
-import types
-import urlparse
-import xhtml2pdf.default
-import xhtml2pdf.parser
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -35,6 +13,30 @@ import xhtml2pdf.parser
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import os
+import re
+import copy
+import types
+import logging
+import urlparse
+
+import reportlab
+from reportlab.lib.enums import TA_LEFT
+from reportlab.lib.fonts import addMapping
+from reportlab.lib.pagesizes import landscape, A4
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus.frames import Frame
+from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
+
+from w3c import css
+
+from util import getSize, getCoords, getFile, pisaFileObject, getFrameDimensions
+from xhtml2pdf_reportlab import PmlPageTemplate, PmlTableOfContents, PmlParagraph, PmlParagraphAndImage, PmlPageCount
+import default as xhtml2pdf_default
+import parser as xhtml2pdf_parser
 
 reportlab.rl_config.warnOnMissingFontGlyphs = 0
 
