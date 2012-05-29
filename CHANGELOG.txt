@@ -5,6 +5,7 @@ Version next
 ------------
 
 * Huge performance improvements (thanks Andrea Bravetti!)
+* Bugfixes.
 
 Version 0.0.4
 -------------
