@@ -278,7 +278,7 @@ class pisaCSSBuilder(css.CSSBuilder):
         if not frameList:
             # print 999
             log.warn(c.warning("missing explicit frame definition for content or just static frames"))
-            fname, static, border, x, y, w, h = self._pisaAddFrame(name, data, first=True, border=pageBorder, size=c.pageSize)
+            fname, static, border, x, y, w, h, data = self._pisaAddFrame(name, data, first=True, border=pageBorder, size=c.pageSize)
             x, y, w, h = getCoords(x, y, w, h, c.pageSize)
             if w <= 0 or h <= 0:
                 log.warn(c.warning("Negative width or height of frame. Check @page definitions."))
