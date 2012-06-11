@@ -233,8 +233,8 @@ class pisaCSSBuilder(css.CSSBuilder):
             if isLandscape:
                 c.pageSize = landscape(c.pageSize)
 
-        for prop in ["margin-top", "margin-left", "margin-right", "margin-bottom",
-                     "top", "left", "right", "bottom", "width", "height"]:
+        for prop in ("margin-top", "margin-left", "margin-right", "margin-bottom",
+                     "top", "left", "right", "bottom", "width", "height"):
             if data.has_key(prop):
                 c.frameList.append(self._pisaAddFrame(name, data, first=True, border=pageBorder, size=c.pageSize))
                 break
@@ -568,7 +568,7 @@ class pisaContext(object):
         #cssAttrs = copy.deepcopy(self.node.cssAttrs)
         #frag = copy.deepcopy(self.frag)
         styles = []
-        for i in range(0, 20):
+        for i in xrange(20):
             self.node.attributes["class"] = "pdftoclevel%d" % i
             #self.node.cssAttrs = copy.deepcopy(cssAttrs)
             #self.frag = copy.deepcopy(frag)
@@ -632,7 +632,7 @@ class pisaContext(object):
             maxLeading = max(leading, frag.fontSize + frag.leadingSpace, maxLeading)
             frag.leading = leading
 
-        if force  or (self.text.strip() and self.fragList):
+        if force or (self.text.strip() and self.fragList):
 
             # Strip trailing whitespaces
             #for f in self.fragList:
@@ -917,7 +917,7 @@ class pisaContext(object):
             if type(names) is types.ListType:
                 fontAlias = names
             else:
-                fontAlias = [x.lower().strip() for x in names.split(",") if x]
+                fontAlias = (x.lower().strip() for x in names.split(",") if x)
 
             # XXX Problems with unicode here
             fontAlias = [str(x) for x in fontAlias]

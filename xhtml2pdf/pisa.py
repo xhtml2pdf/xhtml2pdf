@@ -377,7 +377,7 @@ def execute():
             if dest_part.lower().endswith(".html") or dest_part.lower().endswith(".htm"):
                 dest_part = ".".join(src.split(".")[:-1])
             dest = dest_part + "." + format.lower()
-            for i in range(10):
+            for i in xrange(10):
                 try:
                     open(dest, "wb").close()
                     break

@@ -307,15 +307,15 @@ class Line(list):
             lineWidth = self[ - 1]["x"] + self[ - 1]["width"]
             emptySpace = width - lineWidth
             if alignment == TA_RIGHT:
-                for j, frag in enumerate(self):
+                for frag in self:
                     frag["x"] += emptySpace
             elif alignment == TA_CENTER:
-                for j, frag in enumerate(self):
+                for frag in self:
                     frag["x"] += emptySpace / 2.0
             elif alignment == TA_JUSTIFY and not self.br: # XXX Just spaces! Currently divides also sticky fragments
                 delta = emptySpace / (len(self) - 1)
-                for j, frag in enumerate(self):
-                    frag["x"] += j * delta
+                for i, frag in enumerate(self):
+                    frag["x"] += i * delta
 
         # Boxes
         for frag in self:
@@ -381,7 +381,8 @@ class Text(list):
         """
         Calculate sizes of fragments.
         """
-        [word.calc() for word in self]
+        for word in self:
+            word.calc()
 
     def getGroup(self):
         self.oldSpace = self.newSpace # For Space recycing
@@ -426,7 +427,7 @@ class Text(list):
             x = style["textIndent"]
 
         # Loop for each line
-        while 1:
+        while True:
 
             # Reset values for new line
             posBegin = self.pos
@@ -438,7 +439,7 @@ class Text(list):
                 line.append(BoxBegin(box))
 
             # Loop for collecting line elements
-            while 1:
+            while True:
 
                 # Get next group of unbreakable elements
                 self.groupPos = self.pos
@@ -500,7 +501,8 @@ class Text(list):
 
         # Apply alignment
         self.lines[ - 1].br = True
-        [line.doAlignment(maxWidth, style["textAlign"]) for line in self.lines]
+        for line in self.lines:
+            line.doAlignment(maxWidth, style["textAlign"])
 
         return None
 
@@ -508,11 +510,9 @@ class Text(list):
         """
         For debugging dump all line and their content
         """
-        i = 0
-        for line in self.lines:
+        for i, line in enumerate(self.lines):
             print "Line %d:" % i,
             line.dumpFragments()
-            i += 1
 
 class Paragraph(Flowable):
     """A simple Paragraph class respecting alignment.
@@ -911,7 +911,7 @@ if __name__ == "__main__":
             style,
             debug=0))
 
-        if 0:
+        if 0:  # FIXME: Why is this here?
             for i in range(10):
                 style = copy.deepcopy(style)
                 style["textAlign"] = ALIGNMENTS[i % 4]
@@ -937,7 +937,7 @@ if __name__ == "__main__":
 
     # test2()
 
-    if 1:
+    if 1:  # FIXME: Again, why this? And the commented lines around here.
         test()
         os.system("start test.pdf")
 

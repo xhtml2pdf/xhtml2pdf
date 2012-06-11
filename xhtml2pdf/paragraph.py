@@ -238,15 +238,15 @@ class Line(list):
             lineWidth = self[ - 1]["x"] + self[ - 1]["width"]
             emptySpace = width - lineWidth
             if alignment == TA_RIGHT:
-                for j, frag in enumerate(self):
+                for frag in self:
                     frag["x"] += emptySpace
             elif alignment == TA_CENTER:
-                for j, frag in enumerate(self):
+                for frag in self:
                     frag["x"] += emptySpace / 2.0
             elif alignment == TA_JUSTIFY and not self.isLast: # XXX last line before split
                 delta = emptySpace / (len(self) - 1)
-                for j, frag in enumerate(self):
-                    frag["x"] += j * delta
+                for i, frag in enumerate(self):
+                    frag["x"] += i * delta
 
         # Boxes
         for frag in self:
@@ -324,7 +324,8 @@ class Text(list):
         #        self.groups.append(group)
         #        self.
         #        gWidth += width
-        [word.calc() for word in self]
+        for word in self:
+            word.calc()
 
     def splitIntoLines(self, maxWidth, maxHeight, splitted=False):
         """
@@ -415,7 +416,8 @@ class Text(list):
 
         # Apply alignment
         self.lines[ - 1].isLast = True
-        [line.doAlignment(maxWidth, style["textAlign"]) for line in self.lines]
+        for line in self.lines:
+            line.doAlignment(maxWidth, style["textAlign"])
 
         return None
 
@@ -423,11 +425,9 @@ class Text(list):
         """
         For debugging dump all line and their content
         """
-        i = 0
-        for line in self.lines:
+        for i, line in enumerate(self.lines):
             print "Line %d:" % i,
             line.dumpFragments()
-            i += 1
 
 class Paragraph(Flowable):
     """A simple Paragraph class respecting alignment.
@@ -825,4 +825,5 @@ if __name__ == "__main__":
     test()
     os.system("start test.pdf")
 
+    # FIXME: Useless line?
     # createText(TEXT, styles["Normal"].fontName, styles["Normal"].fontSize)
