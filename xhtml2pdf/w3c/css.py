@@ -540,7 +540,7 @@ class CSSRuleset(dict):
 
     def mergeStyles(self, styles):
         " XXX Bugfix for use in PISA "
-        for k, v in styles.items():
+        for k, v in styles.iteritems():
             if k in self and self[k]:
                 self[k] = copy.copy(self[k])
                 self[k].update(v)

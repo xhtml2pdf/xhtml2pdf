@@ -540,7 +540,7 @@ class Paragraph(Flowable):
         self.splitted = splitted
 
         # More attributes
-        for k, v in kwDict.items():
+        for k, v in kwDict.iteritems():
             setattr(self, k, v)
 
         # set later...
