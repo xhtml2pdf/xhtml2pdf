@@ -204,14 +204,14 @@ class pisaCSSBuilder(css.CSSBuilder):
                 data = result[0].values()[0]
                 pageBorder = data.get("-pdf-frame-border", None)
 
-        if c.templateList.has_key(name):
+        if name in c.templateList:
             log.warn(self.c.warning("template '%s' has already been defined", name))
 
-        if data.has_key("-pdf-page-size"):
+        if "-pdf-page-size" in data:
             c.pageSize = xhtml2pdf.default.PML_PAGESIZES.get(str(data["-pdf-page-size"]).lower(), c.pageSize)
 
         isLandscape = False
-        if data.has_key("size"):
+        if "size" in data:
             size = data["size"]
             # print size, c.pageSize
             if type(size) is not types.ListType:
@@ -223,7 +223,7 @@ class pisaCSSBuilder(css.CSSBuilder):
                     sizeList.append(getSize(value))
                 elif valueStr == "landscape":
                     isLandscape = True
-                elif xhtml2pdf.default.PML_PAGESIZES.has_key(valueStr):
+                elif valueStr in xhtml2pdf.default.PML_PAGESIZES:
                     c.pageSize = xhtml2pdf.default.PML_PAGESIZES[valueStr]
                 else:
                     log.warn(c.warning("Unknown size value for @page"))
@@ -233,9 +233,9 @@ class pisaCSSBuilder(css.CSSBuilder):
             if isLandscape:
                 c.pageSize = landscape(c.pageSize)
 
-        for prop in ["margin-top", "margin-left", "margin-right", "margin-bottom",
-                     "top", "left", "right", "bottom", "width", "height"]:
-            if data.has_key(prop):
+        for prop in ("margin-top", "margin-left", "margin-right", "margin-bottom",
+                     "top", "left", "right", "bottom", "width", "height"):
+            if prop in data:
                 c.frameList.append(self._pisaAddFrame(name, data, first=True, border=pageBorder, size=c.pageSize))
                 break
         # self._drawing = PmlPageDrawing(self._pagesize)
@@ -568,7 +568,7 @@ class pisaContext(object):
         #cssAttrs = copy.deepcopy(self.node.cssAttrs)
         #frag = copy.deepcopy(self.frag)
         styles = []
-        for i in range(0, 20):
+        for i in xrange(20):
             self.node.attributes["class"] = "pdftoclevel%d" % i
             #self.node.cssAttrs = copy.deepcopy(cssAttrs)
             #self.frag = copy.deepcopy(frag)
@@ -632,7 +632,7 @@ class pisaContext(object):
             maxLeading = max(leading, frag.fontSize + frag.leadingSpace, maxLeading)
             frag.leading = leading
 
-        if force  or (self.text.strip() and self.fragList):
+        if force or (self.text.strip() and self.fragList):
 
             # Strip trailing whitespaces
             #for f in self.fragList:
@@ -917,7 +917,7 @@ class pisaContext(object):
             if type(names) is types.ListType:
                 fontAlias = names
             else:
-                fontAlias = [x.lower().strip() for x in names.split(",") if x]
+                fontAlias = (x.lower().strip() for x in names.split(",") if x)
 
             # XXX Problems with unicode here
             fontAlias = [str(x) for x in fontAlias]

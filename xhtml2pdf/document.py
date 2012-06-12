@@ -102,7 +102,7 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
         allowSplitting=1)
 
     # Prepare templates and their frames
-    if context.templateList.has_key("body"):
+    if "body" in context.templateList:
         body = context.templateList["body"]
         del context.templateList["body"]
     else:

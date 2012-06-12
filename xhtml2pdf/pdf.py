@@ -50,7 +50,7 @@ class pisaPDF:
             output = pyPdf.PdfFileWriter()
             for pdffile in self.files:
                 input = pyPdf.PdfFileReader(pdffile)
-                for pageNumber in range(0, input.getNumPages()):
+                for pageNumber in xrange(input.getNumPages()):
                     output.addPage(input.getPage(pageNumber))
         if file is not None:
             output.write(file)

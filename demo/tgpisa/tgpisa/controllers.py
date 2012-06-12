@@ -23,7 +23,7 @@ def pdf(filename=None, content_type="application/pdf"):
         def decorated(func, *args, **kw):
             def kwpop(default, *names):
                 for name in names:
-                    if kw.has_key(name):
+                    if name in kw:
                         return kw.pop(name)
                 return default
 
