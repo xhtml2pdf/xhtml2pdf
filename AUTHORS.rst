@@ -37,6 +37,7 @@ the maintainer should theses names be changed to something more relevant.
 * fsx999
 * Andrea Bravetti
 * Dale O'Brien
+* Bertrand Bordage
 
 Special thanks
 ==============
