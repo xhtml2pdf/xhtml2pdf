@@ -186,7 +186,7 @@ class CSSCascadeStrategy(object):
         return rules
 
     def findCSSRulesForEach(self, element, attrNames):
-        rules = dict([(name, []) for name in attrNames])
+        rules = dict((name, []) for name in attrNames)
 
         inline = element.getInlineStyle()
         for ruleset in self.iterCSSRulesets(inline):
@@ -207,8 +207,7 @@ class CSSCascadeStrategy(object):
             return style[attrName]
         elif default is not NotImplemented:
             return default
-        else:
-            raise LookupError("Could not find style for '%s' in %r" % (attrName, rule))
+        raise LookupError("Could not find style for '%s' in %r" % (attrName, rule))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~ CSS Selectors
@@ -229,8 +228,7 @@ class CSSSelectorBase(object):
     def __hash__(self):
         if self._hash is None:
             return object.__hash__(self)
-        else:
-            return self._hash
+        return self._hash
 
     def getNSPrefix(self):
         return self.completeName[0]
@@ -418,8 +416,7 @@ class CSSSelectorClassQualifier(CSSSelectorQualifierBase):
         attrValue = element.domElement.attributes.get('class')
         if attrValue is not None:
             return self.classId in attrValue.value.split()
-        else:
-            return False
+        return False
  
 class CSSSelectorAttributeQualifier(CSSSelectorQualifierBase):
     name, op, value = None, None, NotImplemented
@@ -437,7 +434,7 @@ class CSSSelectorAttributeQualifier(CSSSelectorQualifierBase):
     def asString(self):
         if self.value is NotImplemented:
             return '[%s]' % (self.name,)
-        else: return '[%s%s%s]' % (self.name, self.op, self.value)
+        return '[%s%s%s]' % (self.name, self.op, self.value)
     def matches(self, element):
         if self.op is None:
             return element.getAttr(self.name, NotImplemented) != NotImplemented
@@ -448,17 +445,14 @@ class CSSSelectorAttributeQualifier(CSSSelectorQualifierBase):
             attrValue = element.domElement.attributes.get(self.name)
             if attrValue is not None:
                 return self.value in attrValue.value.split()
-            else:
-                return False
+            return False
         elif self.op == '|=':
             #return self.value in element.getAttr(self.name, '').split('-')
             attrValue = element.domElement.attributes.get(self.name)
             if attrValue is not None:
                 return self.value in attrValue.value.split('-')
-            else:
-                return False
-        else:
-            raise RuntimeError("Unknown operator %r for %r" % (self.op, self))
+            return False
+        raise RuntimeError("Unknown operator %r for %r" % (self.op, self))
 
 class CSSSelectorPseudoQualifier(CSSSelectorQualifierBase):
     def __init__(self, attrName, params=()):
@@ -547,7 +541,7 @@ class CSSRuleset(dict):
     def mergeStyles(self, styles):
         " XXX Bugfix for use in PISA "
         for k, v in styles.items():
-            if self.has_key(k) and self[k]:
+            if k in self and self[k]:
                 self[k] = copy.copy(self[k])
                 self[k].update(v)
             else:
@@ -557,8 +551,7 @@ class CSSInlineRuleset(CSSRuleset, CSSDeclarations):
     def findCSSRulesFor(self, element, attrName):
         if attrName in self:
             return [(CSSInlineSelector(), self)]
-        else:
-            return []
+        return []
     def findCSSRuleFor(self, *args, **kw):
         # rule is packed in a list to differentiate from "no rule" vs "rule
         # whose value evalutates as False"
@@ -745,16 +738,14 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
     def property(self, name, value, important=False):
         if self.trackImportance:
             return (name, value, important)
-        else:
-            return (name, value)
+        return (name, value)
 
     def combineTerms(self, termA, op, termB):
         if op in (',', ' '):
             if isinstance(termA, list):
                 termA.append(termB)
                 return termA
-            else:
-                return [termA, termB]
+            return [termA, termB]
         elif op is None and termB is None:
             return [termA]
         else:
@@ -763,8 +754,7 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
                 # the (recursively) last element of the list
                 termA[-1] = self.combineTerms(termA[-1], op, termB)
                 return termA
-            else:
-                return self.TermOperatorFactory(termA, op, termB)
+            return self.TermOperatorFactory(termA, op, termB)
 
     def termIdent(self, value):
         return value
@@ -772,8 +762,7 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
     def termNumber(self, value, units=None):
         if units:
             return value, units
-        else:
-            return value
+        return value
 
     def termRGB(self, value):
         return value
@@ -813,6 +802,5 @@ class CSSParser(cssParser.CSSParser):
         if os.path.isfile(cssResourceName):
             cssFile = file(cssResourceName, 'r')
             return self.parseFile(cssFile, True)
-        else:
-            raise RuntimeError("Cannot resolve external CSS file: \"%s\"" % cssResourceName)
+        raise RuntimeError("Cannot resolve external CSS file: \"%s\"" % cssResourceName)
 

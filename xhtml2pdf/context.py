@@ -204,14 +204,14 @@ class pisaCSSBuilder(css.CSSBuilder):
                 data = result[0].values()[0]
                 pageBorder = data.get("-pdf-frame-border", None)
 
-        if c.templateList.has_key(name):
+        if name in c.templateList:
             log.warn(self.c.warning("template '%s' has already been defined", name))
 
-        if data.has_key("-pdf-page-size"):
+        if "-pdf-page-size" in data:
             c.pageSize = xhtml2pdf.default.PML_PAGESIZES.get(str(data["-pdf-page-size"]).lower(), c.pageSize)
 
         isLandscape = False
-        if data.has_key("size"):
+        if "size" in data:
             size = data["size"]
             # print size, c.pageSize
             if type(size) is not types.ListType:
@@ -223,7 +223,7 @@ class pisaCSSBuilder(css.CSSBuilder):
                     sizeList.append(getSize(value))
                 elif valueStr == "landscape":
                     isLandscape = True
-                elif xhtml2pdf.default.PML_PAGESIZES.has_key(valueStr):
+                elif valueStr in xhtml2pdf.default.PML_PAGESIZES:
                     c.pageSize = xhtml2pdf.default.PML_PAGESIZES[valueStr]
                 else:
                     log.warn(c.warning("Unknown size value for @page"))
@@ -235,7 +235,7 @@ class pisaCSSBuilder(css.CSSBuilder):
 
         for prop in ("margin-top", "margin-left", "margin-right", "margin-bottom",
                      "top", "left", "right", "bottom", "width", "height"):
-            if data.has_key(prop):
+            if prop in data:
                 c.frameList.append(self._pisaAddFrame(name, data, first=True, border=pageBorder, size=c.pageSize))
                 break
         # self._drawing = PmlPageDrawing(self._pagesize)

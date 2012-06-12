@@ -535,7 +535,7 @@ class pisaTagPDFTEMPLATE(pisaTag):
         name = attrs["name"]
         c.frameList = []
         c.frameStaticList = []
-        if c.templateList.has_key(name):
+        if name in c.templateList:
             log.warn(c.warning("template '%s' has already been defined", name))
 
         '''
