@@ -53,7 +53,7 @@ def pisaGetAttributes(c, tag, attributes):
 
     attrs = {}
     if attributes:
-        for k, v in attributes.iteritems():
+        for k, v in attributes.items():
             try:
                 attrs[str(k)] = str(v) # XXX no Unicode! Reportlab fails with template names
             except:
@@ -216,7 +216,7 @@ xml.dom.minidom.Element.getCSSAttr = getCSSAttr
 
 def getCSSAttrCacheKey(node):
     _cl = _id = _st = ''
-    for k, v in node.attributes.iteritems():
+    for k, v in node.attributes.items():
         if k == 'class':
             _cl = v
         elif k == 'id':
