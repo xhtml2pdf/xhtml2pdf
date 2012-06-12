@@ -205,8 +205,7 @@ def getCSSAttr(self, cssCascade, attrName, default=NotImplemented):
             result = self.parentNode.getCSSAttr(cssCascade, attrName, default)
         elif default is not NotImplemented:
             return default
-        else:
-            raise LookupError("Could not find inherited CSS attribute value for '%s'" % (attrName,))
+        raise LookupError("Could not find inherited CSS attribute value for '%s'" % (attrName,))
 
     if result is not None:
         self.cssAttrs[attrName] = result
@@ -217,13 +216,13 @@ xml.dom.minidom.Element.getCSSAttr = getCSSAttr
 
 def getCSSAttrCacheKey(node):
     _cl = _id = _st = ''
-    for i in node.attributes.iteritems():
-        if i[0] == 'class':
-            _cl = i[1]
-        elif i[0] == 'id':
-            _id = i[1]
-        elif i[0] == 'style':
-            _st = i[1]
+    for k, v in node.attributes.iteritems():
+        if k == 'class':
+            _cl = v
+        elif k == 'id':
+            _id = v
+        elif k == 'style':
+            _st = v
     return "%s#%s#%s#%s" % (id(node.parentNode), _cl, _id, _st)
 
 def CSSCollect(node, c):
