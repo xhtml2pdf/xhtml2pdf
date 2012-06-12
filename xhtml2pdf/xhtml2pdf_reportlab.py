@@ -175,11 +175,10 @@ class PmlBaseDoc(BaseDocTemplate):
             raise TypeError("Argument pt should be string or integer or list")
 
     def _has_template_for_name(self, name):
-        result = False
         for template in self.pageTemplates:
             if template.id == name.strip():
-                result = True
-        return result
+                return True
+        return False
 
 
 class PmlPageTemplate(PageTemplate):
@@ -409,8 +408,7 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
                 # I just haven't found it yet...
                 pixels = []
                 a = pixels.append
-                for i in range(len(buffer)):
-                    rgb = buffer[i]
+                for rgb in buffer:
                     a(chr((rgb >> 16) & 0xff))
                     a(chr((rgb >> 8) & 0xff))
                     a(chr(rgb & 0xff))
@@ -437,17 +435,16 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
     def getTransparent(self):
         if sys.platform[0:4] == 'java':
             return None
+        elif "transparency" in self._image.info:
+            transparency = self._image.info["transparency"] * 3
+            palette = self._image.palette
+            try:
+                palette = palette.palette
+            except:
+                palette = palette.data
+            return map(ord, palette[transparency:transparency + 3])
         else:
-            if self._image.info.has_key("transparency"):
-                transparency = self._image.info["transparency"] * 3
-                palette = self._image.palette
-                try:
-                    palette = palette.palette
-                except:
-                    palette = palette.data
-                return map(ord, palette[transparency:transparency + 3])
-            else:
-                return None
+            return None
 
     def __str__(self):
         try:
@@ -762,8 +759,7 @@ class PmlTable(Table, PmlMaxHeightMixIn):
         # Calculate widths that are fix
         # IMPORTANT!!! We can not substitute the private value
         # self._colWidths therefore we have to modify list in place
-        for i in range(len(newColWidths)):
-            colWidth = newColWidths[i]
+        for i, colWidth in enumerate(newColWidths):
             if (colWidth is not None) or (colWidth == '*'):
                 colWidth = self._normWidth(colWidth, totalWidth)
                 remainingWidth -= colWidth
@@ -775,8 +771,8 @@ class PmlTable(Table, PmlMaxHeightMixIn):
         # Distribute remaining space
         minCellWidth = totalWidth * 0.01
         if remainingCols > 0:
-            for i in range(len(newColWidths)):
-                if newColWidths[i] is None:
+            for i, colWidth in enumerate(newColWidths):
+                if colWidth is None:
                     # print "*** ", i, newColWidths[i], remainingWidth, remainingCols
                     newColWidths[i] = max(minCellWidth, remainingWidth / remainingCols)  # - 0.1
 
@@ -790,8 +786,7 @@ class PmlTable(Table, PmlMaxHeightMixIn):
         if sum(newColWidths) > totalWidth:
             quotient = totalWidth / sum(newColWidths)
             # print quotient
-            for i in range(len(newColWidths)):
-                newColWidths[i] = newColWidths[i] * quotient
+            newColWidths = [w * quotient for w in newColWidths]
 
         # To avoid rounding errors adjust one col with the difference
         diff = sum(newColWidths) - totalWidth
@@ -834,7 +829,6 @@ class PmlTableOfContents(TableOfContents):
         else:
             _tempEntries = self._lastEntries
 
-        i = 0
         lastMargin = 0
         tableData = []
         tableStyle = [
@@ -844,7 +838,7 @@ class PmlTableOfContents(TableOfContents):
             ('TOPPADDING', (0, 0), (- 1, - 1), 0),
             ('BOTTOMPADDING', (0, 0), (- 1, - 1), 0),
             ]
-        for entry in _tempEntries:
+        for i, entry in enumerate(_tempEntries):
             level, text, pageNum = entry[:3]
             leftColStyle = self.levelStyles[level]
             if i:  # Not for first element
@@ -862,7 +856,6 @@ class PmlTableOfContents(TableOfContents):
             leftPara = Paragraph(text, leftColStyle)
             rightPara = Paragraph(str(pageNum), rightColStyle)
             tableData.append([leftPara, rightPara])
-            i += 1
 
         self._table = Table(
             tableData,
@@ -870,7 +863,7 @@ class PmlTableOfContents(TableOfContents):
             style=TableStyle(tableStyle))
 
         self.width, self.height = self._table.wrapOn(self.canv, availWidth, availHeight)
-        return (self.width, self.height)
+        return self.width, self.height
 
 
 class PmlRightPageBreak(CondPageBreak):
@@ -879,13 +872,12 @@ class PmlRightPageBreak(CondPageBreak):
         pass
 
     def wrap(self, availWidth, availHeight):
-        if (0 == (self.canv.getPageNumber() % 2)):
+        if not self.canv.getPageNumber() % 2:
             self.width = availWidth
             self.height = availHeight
-            return (availWidth, availHeight)
-        self.width = 0
-        self.height = 0
-        return (0, 0)
+            return availWidth, availHeight
+        self.width = self.height = 0
+        return 0, 0
 
 
 class PmlLeftPageBreak(CondPageBreak):
@@ -894,13 +886,12 @@ class PmlLeftPageBreak(CondPageBreak):
         pass
 
     def wrap(self, availWidth, availHeight):
-        if (1 == (self.canv.getPageNumber() % 2)):
+        if self.canv.getPageNumber() % 2:
             self.width = availWidth
             self.height = availHeight
-            return (availWidth, availHeight)
-        self.width = 0
-        self.height = 0
-        return (0, 0)
+            return availWidth, availHeight
+        self.width = self.height = 0
+        return 0, 0
 
 # --- Pdf Form
 

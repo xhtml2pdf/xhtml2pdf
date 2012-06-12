@@ -173,7 +173,7 @@ def splitBorder(parts):
             # part = getNextPart(parts)
 
         # Style
-        elif hasattr(part,'lower') and _borderStyleTable.has_key(part.lower()):
+        elif hasattr(part,'lower') and part.lower() in _borderStyleTable:
             style = part
             # part = getNextPart(parts)
 
@@ -205,15 +205,15 @@ def parseSpecialRules(declarations, debug=0):
                 ddlen = len(dd)
                 part = getNextPart(parts)
                 # Style
-                if part and _styleTable.has_key(part):
+                if part and part in _styleTable:
                     dd.append(("font-style", part, last))
                     part = getNextPart(parts)
                 # Variant
-                if part and _variantTable.has_key(part):
+                if part and part in _variantTable:
                     dd.append(("font-variant", part, last))
                     part = getNextPart(parts)
                 # Weight
-                if part and _weightTable.has_key(part):
+                if part and part in _weightTable:
                     dd.append(("font-weight", part, last))
                     part = getNextPart(parts)
                 # Size and Line Height

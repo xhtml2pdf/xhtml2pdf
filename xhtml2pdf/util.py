@@ -88,7 +88,7 @@ class memoized(object):
     def __call__(self, *args, **kwargs):
         # Make sure the following line is not actually slower than what you're
         # trying to memoize
-        args_plus = tuple(kwargs.items())
+        args_plus = tuple(kwargs.iteritems())
         key = (args, args_plus)
         if key not in self.cache:
             res = self.func(*args, **kwargs)
@@ -263,11 +263,11 @@ def getSize(value, relative=0, base=None, default=0.0):
                 return (relative * float(value[:-1].strip())) / 100.0 # 1% = (fontSize * 1) / 100
             elif value in ("normal", "inherit"):
                 return relative
-            elif _relativeSizeTable.has_key(value):
+            elif value in _relativeSizeTable:
                 if base:
                     return max(MIN_FONT_SIZE, base * _relativeSizeTable[value])
                 return max(MIN_FONT_SIZE, relative * _relativeSizeTable[value])
-            elif _absoluteSizeTable.has_key(value):
+            elif value in _absoluteSizeTable:
                 if base:
                     return max(MIN_FONT_SIZE, base * _absoluteSizeTable[value])
                 return max(MIN_FONT_SIZE, relative * _absoluteSizeTable[value])
