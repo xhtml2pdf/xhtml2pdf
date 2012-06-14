@@ -786,7 +786,8 @@ class PmlTable(Table, PmlMaxHeightMixIn):
         if sum(newColWidths) > totalWidth:
             quotient = totalWidth / sum(newColWidths)
             # print quotient
-            newColWidths = [w * quotient for w in newColWidths]
+            for i in range(len(newColWidths)):
+                newColWidths[i] = newColWidths[i] * quotient
 
         # To avoid rounding errors adjust one col with the difference
         diff = sum(newColWidths) - totalWidth
