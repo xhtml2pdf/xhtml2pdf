@@ -38,7 +38,7 @@ Optional packages:
 log = logging.getLogger(__name__)
 
 try:
-    from xhtml2pdf.util import REPORTLAB22
+    from util import REPORTLAB22
     if not REPORTLAB22:
         raise ImportError, "Reportlab Toolkit Version 2.2 or higher needed"
 except ImportError, e:
@@ -47,5 +47,5 @@ except ImportError, e:
     log.error(REQUIRED_INFO % e)
     raise
 
-from xhtml2pdf.version import VERSION
+from version import VERSION
 __version__   = VERSION

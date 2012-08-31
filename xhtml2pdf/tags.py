@@ -1,18 +1,4 @@
 # -*- coding: utf-8 -*-
-from reportlab.graphics.barcode import createBarcodeDrawing
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.units import inch, mm
-from reportlab.platypus.doctemplate import NextPageTemplate, FrameBreak
-from reportlab.platypus.flowables import Spacer, HRFlowable, PageBreak, Flowable
-from reportlab.platypus.frames import Frame
-from reportlab.platypus.paraparser import tt2ps, ABag
-from xhtml2pdf import xhtml2pdf_reportlab
-from xhtml2pdf.util import getColor, getSize, getAlign, dpi96
-from xhtml2pdf.xhtml2pdf_reportlab import PmlImage, PmlPageTemplate
-import copy
-import logging
-import re
-import warnings
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -27,6 +13,23 @@ import warnings
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import re
+import copy
+import logging
+import warnings
+
+from reportlab.graphics.barcode import createBarcodeDrawing
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import inch, mm
+from reportlab.platypus.doctemplate import NextPageTemplate, FrameBreak
+from reportlab.platypus.flowables import Spacer, HRFlowable, PageBreak, Flowable
+from reportlab.platypus.frames import Frame
+from reportlab.platypus.paraparser import tt2ps, ABag
+
+import xhtml2pdf_reportlab
+from util import getColor, getSize, getAlign, dpi96
+from xhtml2pdf_reportlab import PmlImage, PmlPageTemplate
 
 log = logging.getLogger("xhtml2pdf")
 

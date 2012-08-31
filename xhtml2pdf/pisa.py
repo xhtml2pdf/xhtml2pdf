@@ -1,16 +1,4 @@
 # -*- coding: utf-8 -*-
-from xhtml2pdf.default import DEFAULT_CSS
-from xhtml2pdf.document import pisaDocument
-from xhtml2pdf.util import getFile
-from xhtml2pdf.version import VERSION, VERSION_STR
-import getopt
-import glob
-import logging
-import os
-import sys
-import tempfile
-import urllib2
-import urlparse
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -25,6 +13,20 @@ import urlparse
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import os
+import sys
+import glob
+import getopt
+import logging
+import urllib2
+import tempfile
+import urlparse
+
+from default import DEFAULT_CSS
+from document import pisaDocument
+from util import getFile
+from version import VERSION, VERSION_STR
 
 log = logging.getLogger("xhtml2pdf")
 
