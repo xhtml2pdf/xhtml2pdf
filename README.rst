@@ -48,7 +48,7 @@ Python, virtualenv and dependencies
 #. Create virtualenv for the project. This can be inside the project directory, but cannot be under
    version control::
 
-    virtualenv --distribute xhtml2pdfenv
+    virtualenv --distribute xhtml2pdfenv --python=python2
 
 #. Activate your virtualenv::
 
