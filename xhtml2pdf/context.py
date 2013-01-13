@@ -860,9 +860,9 @@ class pisaContext(object):
 
     def _getFileDeprecated(self, name, relative):
         try:
+            path = relative or self.pathDirectory
             if name.startswith("data:"):
                 return name
-            path = relative or self.pathDirectory
             if self.pathCallback is not None:
                 nv = self.pathCallback(name, relative)
             else:
