@@ -3,9 +3,10 @@ from reportlab.lib.colors import Color
 from unittest import TestCase
 from xhtml2pdf.util import getCoords, getColor, getSize, getFrameDimensions, \
     getPos, getBox
+from xhtml2pdf.tags import int_to_roman
 
 class UtilsCoordTestCase(TestCase):
-    
+
     def test_getCoords_simple(self):
         
         res = getCoords(1, 1, 10, 10, (10,10))
@@ -240,4 +241,11 @@ class GetPosTestCase(TestCase):
         except Exception:
             raised = True
         self.assertTrue(raised)
+
+class TestTagUtils(TestCase):
+    def test_roman_numeral_conversion(self):
+        self.assertEqual("I", int_to_roman(1))
+        self.assertEqual("L", int_to_roman(50))
+        self.assertEqual("XLII", int_to_roman(42))
+        self.assertEqual("XXVI", int_to_roman(26))
         
