@@ -271,6 +271,8 @@ def getSize(value, relative=0, base=None, default=0.0):
                 if base:
                     return max(MIN_FONT_SIZE, base * _absoluteSizeTable[value])
                 return max(MIN_FONT_SIZE, relative * _absoluteSizeTable[value])
+            else:
+                return max(MIN_FONT_SIZE, relative * float(value))
         try:
             value = float(value)
         except:
