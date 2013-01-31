@@ -2,6 +2,19 @@
 xhtml2pdf
 *********
 
+THIS PROJECT WAS INHERITED BY NECESSITY - PLEASE DO NOT CONTACT ME DIRECTLY
+FOR HELP BUT USE THE MAILING LIST INSTEAD.
+
+I picked up the code because I needed to patch it, and nobody was around to 
+merge my pull requests in. So now 
+I can merge pull requests in, but I did not write the code.
+
+If you think you can do a better job maintaing this project, feel free to let me know
+and I'll give you commit rights (or ownership, or whatever).
+
+Thanks!
+
+
 HTML/CSS to PDF converter based on Python
 
 About
