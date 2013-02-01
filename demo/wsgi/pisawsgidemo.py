@@ -1,4 +1,4 @@
-﻿#!/bin/python2.5
+#!/bin/python
 # -*- coding: utf-8 -*-
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
@@ -37,7 +37,7 @@ __svnid__   = "$Id: pisa.py 103 2007-10-31 16:08:54Z holtwick $"
 from wsgiref.simple_server import make_server
 import logging
 
-import sx.pisa3.pisa_wsgi as pisa_wsgi
+from xhtml2pdf import wsgi
 
 def SimpleApp(environ, start_response):
 
@@ -63,7 +63,7 @@ if __name__ == '__main__':
     app = SimpleApp
 
     # Add PISA WSGI Middleware
-    app = pisa_wsgi.PisaMiddleware(app)
+    app = wsgi.PisaMiddleware(app)
 
     httpd = make_server(HOST, PORT, app)
     print "Serving HTTP on port %d..." % PORT
