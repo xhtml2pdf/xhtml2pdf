@@ -4,6 +4,7 @@
 Version next
 ------------
 
+* Converted the docs to rst (thanks tomscytale!)
 * Huge performance improvements (thanks Andrea Bravetti!)
 * Bugfixes.
 

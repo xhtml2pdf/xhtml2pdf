@@ -38,6 +38,7 @@ the maintainer should theses names be changed to something more relevant.
 * Andrea Bravetti
 * Dale O'Brien
 * Bertrand Bordage
+* "tomscytale"
 
 Special thanks
 ==============
