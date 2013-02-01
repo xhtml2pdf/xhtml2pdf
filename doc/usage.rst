@@ -5,9 +5,9 @@ Usage
 Command line
 ============
 
-If you do not want to integrate *xhtml2pdf* in your own application, you
+If you do not want to integrate ``xhtml2pdf`` in your own application, you
 may use the command line tool that gives you a simple interface to the
-features of *xhtml2pdf*. Just call ``xhtml2pdf --help`` to get the
+features of ``xhtml2pdf``. Just call ``xhtml2pdf --help`` to get the
 following help informations:
 
 ::
@@ -47,12 +47,12 @@ usefull. You may turn on the output of warnings adding ``-w`` or even
 the debugging output by using ``-d``.
 
 Another reason could be, that the parsing failed. Consider trying the
-``-xhtml`` and ``-html`` options. *xhtml2pdf* uses the HTMLT5lib parser
+``-xhtml`` and ``-html`` options. ``xhtml2pdf`` uses the HTMLT5lib parser
 that offers two internal parsing modes: one for HTML and one for XHTML.
 
-When generating the HTML output *xhtml2pdf* uses an internal default CSS
+When generating the HTML output ``xhtml2pdf`` uses an internal default CSS
 definition (otherwise all tags would appear with no diffences). To get
-an impression of how this one looks like start *xhtml2pdf* like this:
+an impression of how this one looks like start ``xhtml2pdf`` like this:
 
 ::
 
@@ -92,7 +92,7 @@ a simple "Hello World" example:
 
 **Comments:**
 
- (1) Import the *xhtml2pdf* Python module
+ (1) Import the ``xhtml2pdf`` Python module
  (2) Calculate a sample filename. If your demo is saved under ``test.py`` the filename will be ``test.py.pdf``.
  (3) The function ``CreatePDF`` is called with the source and the destination. In this case the source is a string and the destination is a fileobject. Other values will be discussed later (XXX to do!). An object will be returned as result and saved in ``pdf``.
  (4) The property ``pdf.err`` is checked to find out if errors occured
@@ -131,7 +131,7 @@ Link callback
 -------------
 
 Images, backgrounds and stylesheets are loaded form an HTML document.
-Normaly *xhtml2pdf* expects these files to be found on the local drive.
+Normaly ``xhtml2pdf`` expects these files to be found on the local drive.
 They may also be referenced relative to the original document. But the
 programmer might want to load form different kind of sources like the
 Internet via HTTP requests or from a database or anything else.
@@ -150,7 +150,7 @@ Defaults
 Some notes on some default values:
 
 -  Usually the position (0, 0) in PDF files is found in the lower left
-   corner. For *xhtml2pdf* it is the upper left corner like it is for
+   corner. For ``xhtml2pdf`` it is the upper left corner like it is for
    HTML.
 -  The default page size is the German DIN A4 with portrait orientation.
 -  The name of the first layout template is ``body``, but you better
@@ -160,7 +160,7 @@ Some notes on some default values:
 Cascading Style Sheets
 ======================
 
-*xhtml2pdf* supports a lot of Cascading Style Sheet (CSS). The following
+``xhtml2pdf`` supports a lot of Cascading Style Sheet (CSS). The following
 styles are supported:
 
 ::
@@ -403,7 +403,7 @@ Fonts
 =====
 
 By default there is just a certain set of fonts available for PDF. Here
-is the complete list - and their repective alias names - *xhtml2pdf*
+is the complete list - and their repective alias names - ``xhtml2pdf``
 knows by default (the names are not case sensitive):
 
 -  **Times-Roman**: Times New Roman, Times, Georgia, serif
@@ -466,7 +466,7 @@ Outlines/ Bookmarks
 ===================
 
 PDF supports outlines (Adobe calls them "bookmarks"). By default
-*xhtml2pdf* defines the ``<h1>`` to ``<h6>`` tags to be shown in the
+``xhtml2pdf`` defines the ``<h1>`` to ``<h6>`` tags to be shown in the
 outline. But you can specify exactly for every tag which outline
 behaviour it should have. Therefore you may want to use the following
 vendor specific styles:
@@ -493,7 +493,7 @@ Table of Contents
 =================
 
 It is possible to automatically generate a Table of Contents (TOC) with
-*xhtml2pdf*. By default all headings from ``<h1>`` to ``<h6>`` will be
+``xhtml2pdf``. By default all headings from ``<h1>`` to ``<h6>`` will be
 inserted into that TOC. But you may change that behaviour by setting the
 CSS property ``-pdf-outline`` to ``true`` or ``false``. To generate the
 TOC simply insert ``<pdf:toc />`` into your document. You then may
@@ -532,7 +532,7 @@ table mechanism of ReportLab.
 Long cells
 ----------
 
-Pisa is not able to split table cells that are larger than the available
+``xhtml2pdf`` is not able to split table cells that are larger than the available
 space. To work around it you may define what should happen in this case.
 The ``-pdf-keep-in-frame-mode`` can be one of: "error", "overflow",
 "shrink", "truncate", where "shrink" is the default value.
@@ -609,7 +609,7 @@ is achieved through ``align`` attribute and available values are any of
 Custom Tags
 ===========
 
-*xhtml2pdf* provides some custom tags. They are all prefixed by the
+``xhtml2pdf`` provides some custom tags. They are all prefixed by the
 namespace identifier ``pdf:``. As the HTML5 parser used by xhtml2pdf
 does not know about these specific tags it may be confused if they are
 without a block. To avoid problems you may condsider sourrounding them
@@ -666,9 +666,3 @@ pdf:toc
 ~~~~~~~
 
 Creates a Table of Contents.
-
-License
-=======
-
-***xhtml2pdf* is copyrighted by Dirk Holtwick, Germany.**
-
