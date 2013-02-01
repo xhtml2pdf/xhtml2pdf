@@ -1,81 +1,6 @@
-*xhtml2pdf* HTML/CSS to PDF. Page
-
-*xhtml2pdf* 3.0.33
-
-XHTML/HTML/CSS to PDF converter
-
-(C)opyright by Dirk Holtwick, Germany
- `http://www.xhtml2pdf.com <http://www.xhtml2pdf.com>`_
-
-Table of Contents
-=================
-
-Introduction
-============
-
-*xhtml2pdf* is a HTML/XHTML/CSS to PDF converter written in Python and
-based on Reportlab Toolkit, pyPDF, TechGame Networks CSS Library and
-HTML5lib. The primary focus is not on generating perfect printable
-webpages but to use HTML and CSS as commonly known tools to generate PDF
-files within Applications. For example generating documentations (like
-this one), generating invoices or other office documents etc.
-
-Installation
-============
-
-As xhtml2pdf is a Python pakage an installed version of Python
-<`http://www.python.org <http://www.python.org>`_\ > is needed. For the
-moment Python 2.3 to 2.5 is supported. For Python 3000 a special version
-will be needed, because it is not compatible with the 2.x series. A
-proper version will be made available as soon as Python 3000 becomes
-stable.
-
-The easiest way to install *xhtml2pdf* is to use easy\_install:
-
-::
-
-    $ easy_install xhtml2pdf
-
-But you may also download the source code of *xhtml2pdf*, then enter the
-main directory and execute this command (on Linux and MacOS you may
-prepend a ``sudo`` command):
-
-::
-
-    $ python setup.py install
-
-*xhtml2pdf* needs also some additional Python packages to be installed
-to work. Please follow the setup instruction for each package:
-
--  **ReportlabToolkit** 2.2+ (required)
-
-   `http://www.reportlab.org/downloads.html <http://www.reportlab.org/downloads.html>`_
-    Provides the Python to PDF conversion functionality
--  **html5lib** 0.11.1+ (required)
-
-   `http://code.google.com/p/html5lib/ <http://code.google.com/p/html5lib/>`_
-    The parser for HTML and XHTML
--  **pyPdf** 1.11+ (optional)
-    `http://pybrary.net/pyPdf/ <http://pybrary.net/pyPdf/>`_
-    Will be used if you like to place another PDF as a watermark in the
-   background of PDF pages
--  **PIL** 1.1.6+ (optional)
-
-   `http://www.pythonware.com/products/pil/ <http://www.pythonware.com/products/pil/>`_
-    The Python Imaging Library (PIL) is requred by ReportLab for
-   handling of different image formats like GIF and PNG.
-
-Windows precompiled version
----------------------------
-
-For Windows a precompiled version exists that includes Python and all
-needed libraries. The package contains the file ``xhtml2pdf.exe``.
-Please add the directory where ``xhtml2pdf.exe`` is placed to the
-Windows ``PATH`` variable.
-
-The Windows version is distributed via the Website
-<`http://www.xhtml2pdf.com <http://www.xhtml2pdf.com>`_\ > in the
-"Download" section.
+*********
+Usage
+*********
 
 Command line
 ============
@@ -151,35 +76,28 @@ a simple "Hello World" example:
 
 ::
 
-    import ho.xhtml2pdf as xhtml2pdf                        (1)
+    import xhtml2pdf                          (1)
 
     def helloWorld():
-      filename = __file__ + ".pdf"                (2)
-      pdf = xhtml2pdf.CreatePDF(                       (3)
+      filename = __file__ + ".pdf"               (2)
+      pdf = xhtml2pdf.CreatePDF(                 (3)
         "Hello <strong>World</strong>",
         file(filename, "wb"))
-      if not pdf.err:                             (4)
-        xhtml2pdf.startViewer(filename)                (5)
+      if not pdf.err:                            (4)
+        xhtml2pdf.startViewer(filename)          (5)
 
     if __name__=="__main__":
-      xhtml2pdf.showLogging()                          (6)
+      xhtml2pdf.showLogging()                    (6)
       helloWorld()
 
 **Comments:**
 
-(1) Import the *xhtml2pdf* Python module
- (2) Calculate a sample filename. If your demo is saved under
-``test.py`` the filename will be ``test.py.pdf``.
- (3) The function ``CreatePDF`` is called with the source and the
-destination. In this case the source is a string and the destination is
-a fileobject. Other values will be discussed later (XXX to do!). An
-object will be returned as result and saved in ``pdf``.
+ (1) Import the *xhtml2pdf* Python module
+ (2) Calculate a sample filename. If your demo is saved under ``test.py`` the filename will be ``test.py.pdf``.
+ (3) The function ``CreatePDF`` is called with the source and the destination. In this case the source is a string and the destination is a fileobject. Other values will be discussed later (XXX to do!). An object will be returned as result and saved in ``pdf``.
  (4) The property ``pdf.err`` is checked to find out if errors occured
- (5) If no errors occured a helper function will open a PDF Reader with
-the resulting file
- (6) Errors and warnings are written as log entries by using the Python
-standard module ``logging``. This helper enables printing warnings on
-the console.
+ (5) If no errors occured a helper function will open a PDF Reader with the resulting file
+ (6) Errors and warnings are written as log entries by using the Python standard module ``logging``. This helper enables printing warnings on the console.
 
 Create PDF
 ----------
@@ -247,13 +165,59 @@ styles are supported:
 
 ::
 
-    background-colorborder-bottom-colorborder-bottom-styleborder-bottom-widthborder-left-colorborder-left-styleborder-left-widthborder-right-colorborder-right-styleborder-right-widthborder-top-colorborder-top-styleborder-top-widthcolordisplayfont-family font-size font-stylefont-weightheightline-heightlist-style-typemargin-bottommargin-leftmargin-rightmargin-toppadding-bottompadding-leftpadding-rightpadding-toppage-break-afterpage-break-beforesizetext-aligntext-decorationtext-indentvertical-alignwhite-spacewidthzoom
+    background-color
+    border-bottom-color
+    border-bottom-style
+    border-bottom-width
+    border-left-color
+    border-left-style
+    border-left-width
+    border-right-color
+    border-right-style
+    border-right-width
+    border-top-color
+    border-top-style
+    border-top-width
+    colordisplay
+    font-family
+    font-size 
+    font-style
+    font-weight
+    height
+    line-height
+    list-style-type
+    margin-bottom
+    margin-left
+    margin-right
+    margin-top
+    padding-bottom
+    padding-left
+    padding-right
+    padding-top
+    page-break-after
+    page-break-before
+    size
+    text-align
+    text-decoration
+    text-indent
+    vertical-align
+    white-space
+    width
+    zoom
 
 And it adds some vendor specific styles:
 
 ::
 
-    -pdf-frame-border-pdf-frame-break-pdf-frame-content-pdf-keep-with-next-pdf-next-page-pdf-outline-pdf-outline-level-pdf-outline-open-pdf-page-break
+     pdf-frame-border
+     pdf-frame-break
+     pdf-frame-content
+     pdf-keep-with-next
+     pdf-next-page
+     pdf-outline
+     pdf-outline-level
+     pdf-outline-open
+     pdf-page-break
 
 Layout Definition
 =================
