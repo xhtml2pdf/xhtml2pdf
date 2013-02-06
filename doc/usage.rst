@@ -80,7 +80,7 @@ a simple "Hello World" example:
 
     def helloWorld():
       filename = __file__ + ".pdf"               (2)
-      pdf = xhtml2pdf.CreatePDF(                 (3)
+      pdf = xhtml2pdf.document.pisaDocument(     (3)
         "Hello <strong>World</strong>",
         file(filename, "wb"))
       if not pdf.err:                            (4)
