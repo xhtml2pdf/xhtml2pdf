@@ -229,7 +229,7 @@ class pisaCSSBuilder(css.CSSBuilder):
                     log.warn(c.warning("Unknown size value for @page"))
 
             if len(sizeList) == 2:
-                c.pageSize = sizeList
+                c.pageSize = tuple(sizeList)
             if isLandscape:
                 c.pageSize = landscape(c.pageSize)
 
