@@ -24,7 +24,7 @@ import cgi
 import cStringIO
 import logging
 
-import ho.pisa as pisa
+import xhtml2pdf.pisa as pisa
 
 # Shortcut for dumping all logs to the screen
 pisa.showLogging()
