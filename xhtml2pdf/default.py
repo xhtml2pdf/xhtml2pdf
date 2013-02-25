@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from reportlab.lib.pagesizes import (A0, A1, A2, A3, A4, A5, A6, B0, B1, B2, B3,
-    B4, B5, B6, LETTER, LEGAL, ELEVENSEVENTEEN)
+                                     B4, B5, B6, LETTER, LEGAL, ELEVENSEVENTEEN)
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -22,17 +22,17 @@ PML_EXCEPTION = "PML Exception"
 PML_PREFIX = "pdf:"
 
 #CLASS   = 1
-BOOL    = 2
-FONT    = 3
-COLOR   = 4
-FILE    = 5
-SIZE    = 6
-INT     = 7
-STRING  = 8
-BOX     = 9
-POS     = 10
+BOOL = 2
+FONT = 3
+COLOR = 4
+FILE = 5
+SIZE = 6
+INT = 7
+STRING = 8
+BOX = 9
+POS = 10
 #STYLE   = 11
-MUST    = 23
+MUST = 23
 
 """
 Definition of all known tags. Also used for building the reference
@@ -57,20 +57,20 @@ TAGS = {
     #    }),
 
     "pdftemplate": (1, {
-        "name":                 (STRING, "body"),
-        "format":               (["a0", "a1", "a2", "a3", "a4", "a5", "a6",
-                                  "b0", "b1", "b2", "b3", "b4", "b5", "b6",
-                                  "letter", "legal", "elevenseventeen"], "a4"),
-        "orientation":          ["portrait", "landscape"],
-        "background":           FILE,
-        }),
+        "name": (STRING, "body"),
+        "format": (["a0", "a1", "a2", "a3", "a4", "a5", "a6",
+                    "b0", "b1", "b2", "b3", "b4", "b5", "b6",
+                    "letter", "legal", "elevenseventeen"], "a4"),
+        "orientation": ["portrait", "landscape"],
+        "background": FILE,
+    }),
 
     "pdfframe": (0, {
-        "name":                 (STRING, ""),
-        "box":                  (BOX, MUST),
-        "border":               (BOOL, "0"),
-        "static":               (BOOL, "0"),
-        }),
+        "name": (STRING, ""),
+        "box": (BOX, MUST),
+        "border": (BOOL, "0"),
+        "static": (BOOL, "0"),
+    }),
 
     #"static": (1, {
     #    "name":                 STRING,
@@ -79,309 +79,309 @@ TAGS = {
     #    }),
 
     "pdfnexttemplate": (0, {
-        "name":                 (STRING, "body"),
-        }),
+        "name": (STRING, "body"),
+    }),
 
     "pdfnextpage": (0, {
-        "name":                 (STRING, ""),
+        "name": (STRING, ""),
         # "background":           FILE,
-        }),
+    }),
 
     "pdfnextframe": (0, {}),
 
     "pdffont": (0, {
-        "src":                  (FILE, MUST),
-        "name":                 (STRING, MUST),
+        "src": (FILE, MUST),
+        "name": (STRING, MUST),
         # "print":                (BOOL, "0"),
-        "encoding":             (STRING, "WinAnsiEncoding"),
-        }),
+        "encoding": (STRING, "WinAnsiEncoding"),
+    }),
 
     "pdfdrawline": (0, {
-        "from":                 (POS, MUST),
-        "to":                   (POS, MUST),
-        "color":                (COLOR, "#000000"),
-        "width":                (SIZE, 1),
-        }),
+        "from": (POS, MUST),
+        "to": (POS, MUST),
+        "color": (COLOR, "#000000"),
+        "width": (SIZE, 1),
+    }),
 
     "drawpoint": (0, {
-        "pos":                  (POS, MUST),
-        "color":                (COLOR, "#000000"),
-        "width":                (SIZE, 1),
-        }),
+        "pos": (POS, MUST),
+        "color": (COLOR, "#000000"),
+        "width": (SIZE, 1),
+    }),
 
     "pdfdrawlines": (0, {
-        "coords":               (STRING, MUST),
-        "color":                (COLOR, "#000000"),
-        "width":                (SIZE, 1),
-        }),
+        "coords": (STRING, MUST),
+        "color": (COLOR, "#000000"),
+        "width": (SIZE, 1),
+    }),
 
     "pdfdrawstring": (0, {
-        "pos":                  (POS, MUST),
-        "text":                 (STRING, MUST),
-        "color":                (COLOR, "#000000"),
-        "align":                (["left", "center", "right"], "right"),
-        "valign":               (["top", "middle", "bottom"], "bottom"),
+        "pos": (POS, MUST),
+        "text": (STRING, MUST),
+        "color": (COLOR, "#000000"),
+        "align": (["left", "center", "right"], "right"),
+        "valign": (["top", "middle", "bottom"], "bottom"),
         # "class":                CLASS,
-        "rotate":               (INT, "0"),
-        }),
+        "rotate": (INT, "0"),
+    }),
 
     "pdfdrawimg": (0, {
-        "pos":                  (POS, MUST),
-        "src":                  (FILE, MUST),
-        "width":                SIZE,
-        "height":               SIZE,
-        "align":                (["left", "center", "right"], "right"),
-        "valign":               (["top", "middle", "bottom"], "bottom"),
-        }),
+        "pos": (POS, MUST),
+        "src": (FILE, MUST),
+        "width": SIZE,
+        "height": SIZE,
+        "align": (["left", "center", "right"], "right"),
+        "valign": (["top", "middle", "bottom"], "bottom"),
+    }),
 
-    "pdfspacer" : (0, {
-        "height":               (SIZE, MUST),
-        }),
+    "pdfspacer": (0, {
+        "height": (SIZE, MUST),
+    }),
 
     "pdfpagenumber": (0, {
-        "example":              (STRING, "0"),
-        }),
+        "example": (STRING, "0"),
+    }),
 
     "pdfpagecount": (0, {
-        }),
+    }),
 
     "pdftoc": (0, {
-        }),
+    }),
 
     "pdfversion": (0, {
-        }),
+    }),
 
     "pdfkeeptogether": (1, {
-        }),
+    }),
 
     "pdfkeepinframe": (1, {
-        "maxwidth":             SIZE,
-        "maxheight":            SIZE,
-        "mergespace":           (INT, 1),
-        "mode":                 (["error", "overflow", "shrink", "truncate"], "shrink"),
-        "name":                 (STRING, "")
-        }),
+        "maxwidth": SIZE,
+        "maxheight": SIZE,
+        "mergespace": (INT, 1),
+        "mode": (["error", "overflow", "shrink", "truncate"], "shrink"),
+        "name": (STRING, "")
+    }),
 
     # The chart example, see pml_charts
     "pdfchart": (1, {
-        "type":                 (["spider","bar"], "bar"),
-        "strokecolor":          (COLOR, "#000000"),
-        "width":                (SIZE, MUST),
-        "height":               (SIZE, MUST),
-        }),
+        "type": (["spider", "bar"], "bar"),
+        "strokecolor": (COLOR, "#000000"),
+        "width": (SIZE, MUST),
+        "height": (SIZE, MUST),
+    }),
 
     "pdfchartdata": (0, {
-        "set":                  (STRING, MUST),
-        "value":                (STRING),
+        "set": (STRING, MUST),
+        "value": (STRING),
         # "label":                (STRING),
-        "strokecolor":          (COLOR),
-        "fillcolor":            (COLOR),
-        "strokewidth":          (SIZE),
-        }),
+        "strokecolor": (COLOR),
+        "fillcolor": (COLOR),
+        "strokewidth": (SIZE),
+    }),
 
     "pdfchartlabel": (0, {
-        "value":                (STRING, MUST),
-       }),
+        "value": (STRING, MUST),
+    }),
 
     "pdfbarcode": (0, {
-        "value":                (STRING, MUST),
-        "type":                 (["i2of5", "itf",
-                                  "code39", "extendedcode39",
-                                  "code93", "extendedcode93",
-                                  "msi",
-                                  "codabar", "nw7",
-                                  "code11",
-                                  "fim",
-                                  "postnet",
-                                  "usps4s",
-                                  "code128",
-                                  "ean13", "ean8",
-                                  "qr",
-                                 ], "code128"),
-        "humanreadable":        (STRING, ""),
-        "barwidth":             SIZE,
-        "barheight":            SIZE,
-        "fontsize":             SIZE,
-        "align":                (["baseline", "top", "middle", "bottom"], "baseline"),
-        }),
+        "value": (STRING, MUST),
+        "type": (["i2of5", "itf",
+                  "code39", "extendedcode39",
+                  "code93", "extendedcode93",
+                  "msi",
+                  "codabar", "nw7",
+                  "code11",
+                  "fim",
+                  "postnet",
+                  "usps4s",
+                  "code128",
+                  "ean13", "ean8",
+                  "qr",
+                 ], "code128"),
+        "humanreadable": (STRING, ""),
+        "barwidth": SIZE,
+        "barheight": SIZE,
+        "fontsize": SIZE,
+        "align": (["baseline", "top", "middle", "bottom"], "baseline"),
+    }),
 
     # ========================================================
 
     "link": (0, {
-        "href":                (STRING, MUST),
-        "rel":                 (STRING, ""),
-        "type":                (STRING, ""),
-        "media":               (STRING, "all"),
-        "charset":             (STRING, "latin1"), # XXX Must be something else...
-        }),
+        "href": (STRING, MUST),
+        "rel": (STRING, ""),
+        "type": (STRING, ""),
+        "media": (STRING, "all"),
+        "charset": (STRING, "latin1"), # XXX Must be something else...
+    }),
 
     "meta": (0, {
-        "name":                (STRING, ""),
-        "content":             (STRING, ""),
-        }),
+        "name": (STRING, ""),
+        "content": (STRING, ""),
+    }),
 
     "style": (0, {
-        "type":                (STRING, ""),
-        "media":               (STRING, "all"),
-        }),
+        "type": (STRING, ""),
+        "media": (STRING, "all"),
+    }),
 
     "img": (0, {
-        "src":                  (FILE, MUST),
-        "width":                SIZE,
-        "height":               SIZE,
-        "align":                ["top", "middle", "bottom", "left", "right",
-                                "texttop", "absmiddle", "absbottom", "baseline"],
-        }),
+        "src": (FILE, MUST),
+        "width": SIZE,
+        "height": SIZE,
+        "align": ["top", "middle", "bottom", "left", "right",
+                  "texttop", "absmiddle", "absbottom", "baseline"],
+    }),
 
     "table": (1, {
-        "align":                (["left", "center", "right"], "left"),
-        "valign":               (["top", "bottom", "middle"], "middle"),
-        "border":               (SIZE, "0"),
-        "bordercolor":          (COLOR, "#000000"),
-        "bgcolor":              COLOR,
-        "cellpadding":          (SIZE, "0"),
-        "cellspacing":          (SIZE, "0"),
-        "repeat":               (INT, "0"),  # XXX Remove this! Set to 0
-        "width":                STRING,
+        "align": (["left", "center", "right"], "left"),
+        "valign": (["top", "bottom", "middle"], "middle"),
+        "border": (SIZE, "0"),
+        "bordercolor": (COLOR, "#000000"),
+        "bgcolor": COLOR,
+        "cellpadding": (SIZE, "0"),
+        "cellspacing": (SIZE, "0"),
+        "repeat": (INT, "0"), # XXX Remove this! Set to 0
+        "width": STRING,
         #"keepmaxwidth":         SIZE,
         #"keepmaxheight":        SIZE,
         #"keepmergespace":       (INT, 1),
         #"keepmode":             (["error", "overflow", "shrink", "truncate"], "shrink"),
-        }),
+    }),
 
     "tr": (1, {
-        "bgcolor":              COLOR,
-        "valign":               ["top", "bottom", "middle"],
-        "border":               SIZE,
-        "bordercolor":          (COLOR, "#000000"),
-        }),
+        "bgcolor": COLOR,
+        "valign": ["top", "bottom", "middle"],
+        "border": SIZE,
+        "bordercolor": (COLOR, "#000000"),
+    }),
 
     "td": (1, {
-        "align":                ["left", "center", "right", "justify"],
-        "valign":               ["top", "bottom", "middle"],
-        "width":                STRING,
-        "bgcolor":              COLOR,
-        "border":               SIZE,
-        "bordercolor":          (COLOR, "#000000"),
-        "colspan":		        INT,
-        "rowspan":		        INT,
-        }),
+        "align": ["left", "center", "right", "justify"],
+        "valign": ["top", "bottom", "middle"],
+        "width": STRING,
+        "bgcolor": COLOR,
+        "border": SIZE,
+        "bordercolor": (COLOR, "#000000"),
+        "colspan": INT,
+        "rowspan": INT,
+    }),
 
     "th": (1, {
-        "align":                ["left", "center", "right", "justify"],
-        "valign":               ["top", "bottom", "middle"],
-        "width":                STRING,
-        "bgcolor":              COLOR,
-        "border":               SIZE,
-        "bordercolor":          (COLOR, "#000000"),
-        "colspan":		        INT,
-        "rowspan":		        INT,
-        }),
+        "align": ["left", "center", "right", "justify"],
+        "valign": ["top", "bottom", "middle"],
+        "width": STRING,
+        "bgcolor": COLOR,
+        "border": SIZE,
+        "bordercolor": (COLOR, "#000000"),
+        "colspan": INT,
+        "rowspan": INT,
+    }),
 
     "dl": (1, {
-        }),
+    }),
 
     "dd": (1, {
-        }),
+    }),
 
     "dt": (1, {
-        }),
+    }),
 
     "ol": (1, {
-        "type":                 (["1", "a", "A", "i", "I"], "1"),
-        }),
+        "type": (["1", "a", "A", "i", "I"], "1"),
+    }),
 
     "ul": (1, {
-        "type":                 (["circle", "disk", "square"], "disk"),
-        }),
+        "type": (["circle", "disk", "square"], "disk"),
+    }),
 
     "li": (1, {
-        }),
+    }),
 
     "hr": (0, {
-        "color":                (COLOR, "#000000"),
-        "size":                 (SIZE, "1"),
-        "width":                STRING,
-        "align":                ["left", "center", "right", "justify"],
-        }),
+        "color": (COLOR, "#000000"),
+        "size": (SIZE, "1"),
+        "width": STRING,
+        "align": ["left", "center", "right", "justify"],
+    }),
 
     "div": (1, {
-        "align":                ["left", "center", "right", "justify"],
-        }),
+        "align": ["left", "center", "right", "justify"],
+    }),
 
     "p": (1, {
-        "align":                ["left", "center", "right", "justify"],
-        }),
+        "align": ["left", "center", "right", "justify"],
+    }),
 
     "br": (0, {
-        }),
+    }),
 
     "h1": (1, {
-        "outline":              STRING,
-        "closed":               (INT, 0),
-        "align":                ["left", "center", "right", "justify"],
-        }),
+        "outline": STRING,
+        "closed": (INT, 0),
+        "align": ["left", "center", "right", "justify"],
+    }),
 
     "h2": (1, {
-        "outline":              STRING,
-        "closed":               (INT, 0),
-        "align":                ["left", "center", "right", "justify"],
-        }),
+        "outline": STRING,
+        "closed": (INT, 0),
+        "align": ["left", "center", "right", "justify"],
+    }),
 
     "h3": (1, {
-        "outline":              STRING,
-        "closed":               (INT, 0),
-        "align":                ["left", "center", "right", "justify"],
-        }),
+        "outline": STRING,
+        "closed": (INT, 0),
+        "align": ["left", "center", "right", "justify"],
+    }),
 
     "h4": (1, {
-        "outline":              STRING,
-        "closed":               (INT, 0),
-        "align":                ["left", "center", "right", "justify"],
-        }),
+        "outline": STRING,
+        "closed": (INT, 0),
+        "align": ["left", "center", "right", "justify"],
+    }),
 
     "h5": (1, {
-        "outline":              STRING,
-        "closed":               (INT, 0),
-        "align":                ["left", "center", "right", "justify"],
-        }),
+        "outline": STRING,
+        "closed": (INT, 0),
+        "align": ["left", "center", "right", "justify"],
+    }),
 
     "h6": (1, {
-        "outline":              STRING,
-        "closed":               (INT, 0),
-        "align":                ["left", "center", "right", "justify"],
-        }),
+        "outline": STRING,
+        "closed": (INT, 0),
+        "align": ["left", "center", "right", "justify"],
+    }),
 
     "font": (1, {
-        "face":                 FONT,
-        "color":                COLOR,
-        "size":                 STRING,
-        }),
+        "face": FONT,
+        "color": COLOR,
+        "size": STRING,
+    }),
 
     "a": (1, {
-        "href":                 STRING,
-        "name":                 STRING,
-        }),
+        "href": STRING,
+        "name": STRING,
+    }),
 
     "input": (0, {
-        "name":                 STRING,
-        "value":                STRING,
-        "type":                 (["text", "hidden", "checkbox"], "text"),
-        }),
+        "name": STRING,
+        "value": STRING,
+        "type": (["text", "hidden", "checkbox"], "text"),
+    }),
 
     "textarea": (1, {
-        "name":                 STRING,
-        }),
+        "name": STRING,
+    }),
 
     "select": (1, {
-        "name":                 STRING,
-        "value":                STRING,
-        }),
+        "name": STRING,
+        "value": STRING,
+    }),
 
     "option": (0, {
-        "value":                STRING,
-        }),
-    }
+        "value": STRING,
+    }),
+}
 
 # XXX use "html" not "*" as default!
 DEFAULT_CSS = """
@@ -613,34 +613,34 @@ DEFAULT_FONT = {
     "arial": "Helvetica",
     "times new roman": "Times-Roman",
     "georgia": "Times-Roman",
-    'serif':'Times-Roman',
-    'sansserif':'Helvetica',
-    'sans':'Helvetica',
-    'monospaced':'Courier',
-    'monospace':'Courier',
-    'mono':'Courier',
-    'courier new':'Courier',
-    'verdana':'Helvetica',
-    'geneva':'Helvetica',
-    }
+    'serif': 'Times-Roman',
+    'sansserif': 'Helvetica',
+    'sans': 'Helvetica',
+    'monospaced': 'Courier',
+    'monospace': 'Courier',
+    'mono': 'Courier',
+    'courier new': 'Courier',
+    'verdana': 'Helvetica',
+    'geneva': 'Helvetica',
+}
 
 PML_PAGESIZES = {
-        "a0": A0,
-        "a1": A1,
-        "a2": A2,
-        "a3": A3,
-        "a4": A4,
-        "a5": A5,
-        "a6": A6,
-        "b0": B0,
-        "b1": B1,
-        "b2": B2,
-        "b3": B3,
-        "b4": B4,
-        "b5": B5,
-        "b6": B6,
-        "letter": LETTER,
-        "legal": LEGAL,
-        "ledger": ELEVENSEVENTEEN,
-        "elevenseventeen": ELEVENSEVENTEEN,
-        }
+    "a0": A0,
+    "a1": A1,
+    "a2": A2,
+    "a3": A3,
+    "a4": A4,
+    "a5": A5,
+    "a6": A6,
+    "b0": B0,
+    "b1": B1,
+    "b2": B2,
+    "b3": B3,
+    "b4": B4,
+    "b5": B5,
+    "b6": B6,
+    "letter": LETTER,
+    "legal": LEGAL,
+    "ledger": ELEVENSEVENTEEN,
+    "elevenseventeen": ELEVENSEVENTEEN,
+}

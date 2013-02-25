@@ -18,11 +18,12 @@ import xhtml2pdf.pisa as pisa
 import StringIO
 
 import logging
+
+
 log = logging.getLogger("xhtml2pdf.wsgi")
 
 
 class Filter(object):
-
     def __init__(self, app):
         self.app = app
 
@@ -38,6 +39,7 @@ class Filter(object):
             else:
                 sent[:] = [status, headers, exc_info]
                 return written_response.write
+
         app_iter = self.app(environ, replacement_start_response)
         if not sent:
             return app_iter
@@ -62,7 +64,6 @@ class Filter(object):
 
 
 class HTMLFilter(Filter):
-
     def should_filter(self, status, headers):
         if not status.startswith('200'):
             return False
@@ -73,7 +74,6 @@ class HTMLFilter(Filter):
 
 
 class PisaMiddleware(HTMLFilter):
-
     def filter(self, script_name, path_info, environ, status, headers, body):
         topdf = environ.get("pisa.topdf", "")
         if topdf:

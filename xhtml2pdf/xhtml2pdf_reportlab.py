@@ -34,6 +34,7 @@ import logging
 import reportlab.pdfbase.pdfform as pdfform
 import sys
 
+
 try:
     import PIL.Image as PILImage
 except:
@@ -62,7 +63,6 @@ class PTCycle(list):
 
 
 class PmlMaxHeightMixIn:
-
     def setMaxHeight(self, availHeight):
         self.availHeightValue = availHeight
         if availHeight < 70000:
@@ -85,7 +85,6 @@ class PmlMaxHeightMixIn:
 
 
 class PmlBaseDoc(BaseDocTemplate):
-
     """
     We use our own document template to get access to the canvas
     and set some informations once.
@@ -156,7 +155,7 @@ class PmlBaseDoc(BaseDocTemplate):
             #collect the refs to the template objects, complain if any are bad
             c = PTCycle()
             for ptn in pt:
-                 #special case name used to short circuit the iteration
+            #special case name used to short circuit the iteration
                 if ptn == '*':
                     c._restart = len(c)
                     continue
@@ -182,7 +181,6 @@ class PmlBaseDoc(BaseDocTemplate):
 
 
 class PmlPageTemplate(PageTemplate):
-
     PORTRAIT = 'portrait'
     LANDSCAPE = 'landscape'
     # by default portrait
@@ -210,7 +208,6 @@ class PmlPageTemplate(PageTemplate):
     def isLandscape(self):
         return self.pageorientation == self.LANDSCAPE
 
-
     def beforeDrawPage(self, canvas, doc):
         canvas.saveState()
         try:
@@ -221,7 +218,6 @@ class PmlPageTemplate(PageTemplate):
                 and hasattr(self, "pisaBackground")
                 and self.pisaBackground
                 and (not self.pisaBackground.notFound())):
-                # print self.pisaBackground.mimetype
 
                 # Is image not PDF
                 if self.pisaBackground.mimetype.startswith("image/"):
@@ -253,16 +249,8 @@ class PmlPageTemplate(PageTemplate):
                 else:
                     pisaBackground = self.pisaBackground
 
-            # print "+", pisaBackground
             if pisaBackground:
                 self.pisaBackgroundList.append(pisaBackground)
-
-            # canvas.saveState()
-            #try:
-            #    self.pml_drawing.draw(canvas)
-            #except Exception, e:
-            #    # print "drawing exception", str(e)
-            #    pass
 
             def pageNumbering(objList):
                 for obj in flatten(objList):
@@ -277,12 +265,12 @@ class PmlPageTemplate(PageTemplate):
                         # Flatten the cells ([[1,2], [3,4]] becomes [1,2,3,4])
                         flat_cells = [item for sublist in obj._cellvalues for item in sublist]
                         pageNumbering(flat_cells)
+
             try:
 
                 # Paint static frames
                 pagenumber = canvas.getPageNumber()
                 for frame in self.pisaStaticList:
-
                     frame = copy.deepcopy(frame)
                     story = frame.pisaStaticStory
                     pageNumbering(story)
@@ -294,18 +282,21 @@ class PmlPageTemplate(PageTemplate):
         finally:
             canvas.restoreState()
 
+
 _ctr = 1
 
 
 class PmlImageReader(object):  # TODO We need a factory here, returning either a class for java or a class for PIL
-    "Wraps up either PIL or Java to get data from bitmaps"
+    """
+    Wraps up either PIL or Java to get data from bitmaps
+    """
     _cache = {}
 
     def __init__(self, fileName):
         if isinstance(fileName, PmlImageReader):
             self.__dict__ = fileName.__dict__   # borgize
             return
-        #start wih lots of null private fields, to be populated by
+            #start wih lots of null private fields, to be populated by
         #the relevant engine.
         self.fileName = fileName
         self._image = None
@@ -337,6 +328,7 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
                         if not self._cache:
                             from rl_config import register_reset
                             register_reset(self._cache.clear)
+
                         data = self._cache.setdefault(md5(data).digest(), data)
                     self.fp = getStringIO(data)
                 elif imageReaderFlags == - 1 and isinstance(fileName, (str, unicode)):
@@ -352,6 +344,7 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
                         self.jpeg_fh = self._jpeg_fh
                 else:
                     from reportlab.pdfbase.pdfutils import readJPEGInfo
+
                     try:
                         self._width, self._height, c = readJPEGInfo(self.fp)
                     except:
@@ -385,13 +378,13 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
         return None
 
     def getSize(self):
-        if (self._width is None or self._height is None):
+        if self._width is None or self._height is None:
             if sys.platform[0:4] == 'java':
                 self._width = self._image.getWidth()
                 self._height = self._image.getHeight()
             else:
                 self._width, self._height = self._image.size
-        return (self._width, self._height)
+        return self._width, self._height
 
     def getRGBData(self):
         "Return byte array of RGB data as string"
@@ -400,6 +393,7 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
             if sys.platform[0:4] == 'java':
                 import jarray  # TODO: Move to top.
                 from java.awt.image import PixelGrabber
+
                 width, height = self.getSize()
                 buffer = jarray.zeros(width * height, 'i')
                 pg = PixelGrabber(self._image, 0, 0, width, height, buffer, 0, width)
@@ -455,9 +449,6 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
 
 class PmlImage(Flowable, PmlMaxHeightMixIn):
 
-    #_fixedWidth = 1
-    #_fixedHeight = 1
-
     def __init__(self, data, width=None, height=None, mask="auto", mimetype=None, **kw):
         self.kw = kw
         self.hAlign = 'CENTER'
@@ -483,13 +474,10 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         self.dWidth = self.drawWidth * factor
         self.dHeight = self.drawHeight * factor
         # print "imgage result", factor, self.dWidth, self.dHeight
-        return (self.dWidth, self.dHeight)
+        return self.dWidth, self.dHeight
 
     def getImage(self):
-        #if self.kw:
-        #    print "img", self.kw, hash(self._imgdata)
         img = PmlImageReader(StringIO.StringIO(self._imgdata))
-        # print id(self._imgdata), hash(img.getRGBData())
         return img
 
     def draw(self):
@@ -507,10 +495,7 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
 
 
 class PmlParagraphAndImage(ParagraphAndImage, PmlMaxHeightMixIn):
-
     def wrap(self, availWidth, availHeight):
-        # print "# wrap", id(self), self.canv
-        # availHeight = self.setMaxHeight(availHeight)
         self.I.canv = self.canv
         result = ParagraphAndImage.wrap(self, availWidth, availHeight)
         del self.I.canv
@@ -522,15 +507,8 @@ class PmlParagraphAndImage(ParagraphAndImage, PmlMaxHeightMixIn):
             self.wI, self.hI = self.I.wrap(availWidth, availHeight)  # drawWidth, self.I.drawHeight
         return ParagraphAndImage.split(self, availWidth, availHeight)
 
-# if 1:
-#    import reportlab.platypus.paragraph
-#    Paragraph = reportlab.platypus.paragraph.Paragraph
-#    class PmlParagraph(reportlab.platypus.paragraph.Paragraph):
-#        pass
-
 
 class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
-
     def _calcImageMaxSizes(self, availWidth, availHeight):
         self.hasImages = False
         availHeight = self.getMaxHeight()
@@ -538,15 +516,13 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
             if hasattr(frag, "cbDefn") and frag.cbDefn.kind == "img":
                 self.hasImages = True
                 img = frag.cbDefn
-                # print "before", img.width, img.height
                 width = min(img.width, availWidth)
                 wfactor = float(width) / img.width
                 height = min(img.height, availHeight * MAX_IMAGE_RATIO)  # XXX 99% because 100% do not work...
                 hfactor = float(height) / img.height
                 factor = min(wfactor, hfactor)
-                img.height = img.height * factor
-                img.width = img.width * factor
-                # print "after", img.width, img.height
+                img.height *= factor
+                img.width *= factor
 
     def wrap(self, availWidth, availHeight):
 
@@ -575,7 +551,7 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
         self.width = self.width + self.deltaWidth
         self.height = self.height + self.deltaHeight
 
-        return (self.width, self.height)
+        return self.width, self.height
 
     def split(self, availWidth, availHeight):
 
@@ -583,31 +559,15 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
             return []
 
         #the split information is all inside self.blPara
-        # if not hasattr(self,'blPara'):
         if not hasattr(self, 'deltaWidth'):
             self.wrap(availWidth, availHeight)
 
         availWidth -= self.deltaWidth
         availHeight -= self.deltaHeight
 
-        #if self.hasImages:
-        #    return []
-
         return Paragraph.split(self, availWidth, availHeight)
 
     def draw(self):
-
-        # Insert page number
-        '''
-        if 0: #for line in self.blPara.lines:
-            try:
-                for frag in line.words:
-                    #print 111,frag.pageNumber, frag.text
-                    if frag.pageNumber:
-                        frag.text = str(self.canv.getPageNumber())
-            except Exception, e:
-                log.debug("PmlParagraph", exc_info=1)
-        '''
 
         # Create outline
         if getattr(self, "outline", False):
@@ -627,7 +587,7 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
             self.canv.outlineLast = self.outlineLevel
 
             key = getUID()
-            # print " OUTLINE", self.outlineLevel, self.text
+
             self.canv.bookmarkPage(key)
             self.canv.addOutlineEntry(
                 self.text,
@@ -635,9 +595,6 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
                 self.outlineLevel,
                 not self.outlineOpen)
             last += 1
-
-        #else:
-        #    print repr(self.text)[:80]
 
         # Draw the background and borders here before passing control on to
         # ReportLab. This is because ReportLab can't handle the individual
@@ -686,7 +643,7 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
                 # If no color for border is given, the text color is used (like defined by W3C)
                 if color is None:
                     color = style.textColor
-                # print "Border", bstyle, width, color
+                    # print "Border", bstyle, width, color
                 if color is not None:
                     canvas.setStrokeColor(color)
                     canvas.setLineWidth(width)
@@ -713,7 +670,6 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
 
 
 class PmlKeepInFrame(KeepInFrame, PmlMaxHeightMixIn):
-
     def wrap(self, availWidth, availHeight):
         availWidth = max(availWidth, 1.0)
         self.maxWidth = availWidth
@@ -722,9 +678,10 @@ class PmlKeepInFrame(KeepInFrame, PmlMaxHeightMixIn):
 
 
 class PmlTable(Table, PmlMaxHeightMixIn):
-
     def _normWidth(self, w, maxw):
-        " Helper for calculating percentages "
+        """
+        Helper for calculating percentages
+        """
         if type(w) == type(""):
             w = ((maxw / 100.0) * float(w[: - 1]))
         elif (w is None) or (w == "*"):
@@ -753,9 +710,6 @@ class PmlTable(Table, PmlMaxHeightMixIn):
         remainingCols = 0
         newColWidths = self._colWidths
 
-        #print
-        #print "TABLE", newColWidths
-
         # Calculate widths that are fix
         # IMPORTANT!!! We can not substitute the private value
         # self._colWidths therefore we have to modify list in place
@@ -773,19 +727,12 @@ class PmlTable(Table, PmlMaxHeightMixIn):
         if remainingCols > 0:
             for i, colWidth in enumerate(newColWidths):
                 if colWidth is None:
-                    # print "*** ", i, newColWidths[i], remainingWidth, remainingCols
                     newColWidths[i] = max(minCellWidth, remainingWidth / remainingCols)  # - 0.1
 
         # Bigger than totalWidth? Lets reduce the fix entries propotionally
 
-        # print "New values:", totalWidth, newColWidths, sum(newColWidths)
-
-        # Call original method "wrap()"
-        # self._colWidths = newColWidths
-
         if sum(newColWidths) > totalWidth:
             quotient = totalWidth / sum(newColWidths)
-            # print quotient
             for i in range(len(newColWidths)):
                 newColWidths[i] = newColWidths[i] * quotient
 
@@ -794,13 +741,10 @@ class PmlTable(Table, PmlMaxHeightMixIn):
         if diff > 0:
             newColWidths[0] -= diff
 
-        # print "New values:", totalWidth, newColWidths, sum(newColWidths)
-
         return Table.wrap(self, availWidth, availHeight)
 
 
 class PmlPageCount(IndexingFlowable):
-
     def __init__(self):
         IndexingFlowable.__init__(self)
         self.second_round = False
@@ -813,10 +757,12 @@ class PmlPageCount(IndexingFlowable):
     def drawOn(self, canvas, x, y, _sW=0):
         pass
 
-class PmlTableOfContents(TableOfContents):
 
+class PmlTableOfContents(TableOfContents):
     def wrap(self, availWidth, availHeight):
-        "All table properties should be known by now."
+        """
+        All table properties should be known by now.
+        """
 
         widths = (availWidth - self.rightColumnWidth,
                   self.rightColumnWidth)
@@ -838,7 +784,7 @@ class PmlTableOfContents(TableOfContents):
             ('RIGHTPADDING', (0, 0), (- 1, - 1), 0),
             ('TOPPADDING', (0, 0), (- 1, - 1), 0),
             ('BOTTOMPADDING', (0, 0), (- 1, - 1), 0),
-            ]
+        ]
         for i, entry in enumerate(_tempEntries):
             level, text, pageNum = entry[:3]
             leftColStyle = self.levelStyles[level]
@@ -847,7 +793,7 @@ class PmlTableOfContents(TableOfContents):
                     'TOPPADDING',
                     (0, i), (- 1, i),
                     max(lastMargin, leftColStyle.spaceBefore)))
-            # print leftColStyle.leftIndent
+                # print leftColStyle.leftIndent
             lastMargin = leftColStyle.spaceAfter
             #right col style is right aligned
             rightColStyle = ParagraphStyle(name='leftColLevel%d' % level,
@@ -868,7 +814,6 @@ class PmlTableOfContents(TableOfContents):
 
 
 class PmlRightPageBreak(CondPageBreak):
-
     def __init__(self):
         pass
 
@@ -882,7 +827,6 @@ class PmlRightPageBreak(CondPageBreak):
 
 
 class PmlLeftPageBreak(CondPageBreak):
-
     def __init__(self):
         pass
 
@@ -898,7 +842,6 @@ class PmlLeftPageBreak(CondPageBreak):
 
 
 class PmlInput(Flowable):
-
     def __init__(self, name, type="text", width=10, height=10, default="", options=[]):
         self.width = width
         self.height = height
@@ -908,7 +851,7 @@ class PmlInput(Flowable):
         self.options = options
 
     def wrap(self, *args):
-        return (self.width, self.height)
+        return self.width, self.height
 
     def draw(self):
         c = self.canv
@@ -919,103 +862,15 @@ class PmlInput(Flowable):
             pdfform.textFieldRelative(c, self.name, 0, 0, self.width, self.height)
             c.rect(0, 0, self.width, self.height)
         elif self.type == "radio":
-            #pdfform.buttonFieldRelative(c, "field2", "Yes", 0, 0)
             c.rect(0, 0, self.width, self.height)
         elif self.type == "checkbox":
             if self.default:
                 pdfform.buttonFieldRelative(c, self.name, "Yes", 0, 0)
             else:
                 pdfform.buttonFieldRelative(c, self.name, "Off", 0, 0)
-            # pdfform.buttonFieldRelative(c, self.name, "Yes" if self.default else "Off", 0, 0)
             c.rect(0, 0, self.width, self.height)
         elif self.type == "select":
             pdfform.selectFieldRelative(c, self.name, self.default, self.options, 0, 0, self.width, self.height)
             c.rect(0, 0, self.width, self.height)
 
         c.restoreState()
-
-        '''
-        canvas.setLineWidth(6)
-        canvas.setFillColor(self.fillcolor)
-        canvas.setStrokeColor(self.strokecolor)
-        canvas.translate(self.xoffset+self.size,0)
-        canvas.rotate(90)
-        canvas.scale(self.scale, self.scale)
-        hand(canvas, debug=0, fill=1)
-        '''
-
-"""
-# --- Flowable example
-
-def hand(canvas, debug=1, fill=0):
-    (startx, starty) = (0, 0)
-    curves = [
-        (0, 2), (0, 4), (0, 8), # back of hand
-        (5, 8), (7, 10), (7, 14),
-        (10, 14), (10, 13), (7.5, 8), # thumb
-        (13, 8), (14, 8), (17, 8),
-        (19, 8), (19, 6), (17, 6),
-        (15, 6), (13, 6), (11, 6), # index, pointing
-        (12, 6), (13, 6), (14, 6),
-        (16, 6), (16, 4), (14, 4),
-        (13, 4), (12, 4), (11, 4), # middle
-        (11.5, 4), (12, 4), (13, 4),
-        (15, 4), (15, 2), (13, 2),
-        (12.5, 2), (11.5, 2), (11, 2), # ring
-        (11.5, 2), (12, 2), (12.5, 2),
-        (14, 2), (14, 0), (12.5, 0),
-        (10, 0), (8, 0), (6, 0), # pinky, then close
-        ]
-    from reportlab.lib.units import inch
-    if debug: canvas.setLineWidth(6)
-    u = inch * 0.2
-    p = canvas.beginPath()
-    p.moveTo(startx, starty)
-    ccopy = list(curves)
-    while ccopy:
-        [(x1, y1), (x2, y2), (x3, y3)] = ccopy[:3]
-        del ccopy[:3]
-        p.curveTo(x1 * u, y1 * u, x2 * u, y2 * u, x3 * u, y3 * u)
-    p.close()
-    canvas.drawPath(p, fill=fill)
-    if debug:
-        from reportlab.lib.colors import red, green
-        (lastx, lasty) = (startx, starty)
-        ccopy = list(curves)
-        while ccopy:
-            [(x1, y1), (x2, y2), (x3, y3)] = ccopy[:3]
-            del ccopy[:3]
-            canvas.setStrokeColor(red)
-            canvas.line(lastx * u, lasty * u, x1 * u, y1 * u)
-            canvas.setStrokeColor(green)
-            canvas.line(x2 * u, y2 * u, x3 * u, y3 * u)
-            (lastx, lasty) = (x3, y3)
-
-from reportlab.lib.colors import tan, green
-
-class HandAnnotation(Flowable):
-
-    '''A hand flowable.'''
-
-    def __init__(self, xoffset=0, size=None, fillcolor=tan, strokecolor=green):
-        from reportlab.lib.units import inch
-        if size is None: size = 4 * inch
-        self.fillcolor, self.strokecolor = fillcolor, strokecolor
-        self.xoffset = xoffset
-        self.size = size
-        # normal size is 4 inches
-        self.scale = size / (4.0 * inch)
-
-    def wrap(self, *args):
-        return (self.xoffset, self.size)
-
-    def draw(self):
-        canvas = self.canv
-        canvas.setLineWidth(6)
-        canvas.setFillColor(self.fillcolor)
-        canvas.setStrokeColor(self.strokecolor)
-        canvas.translate(self.xoffset + self.size, 0)
-        canvas.rotate(90)
-        canvas.scale(self.scale, self.scale)
-        hand(canvas, debug=0, fill=1)
-"""
