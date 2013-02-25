@@ -22,6 +22,7 @@ import time
 import re
 import cgi
 
+
 VERSION = open("VERSION.txt", "r").read().strip()
 BUILD = time.strftime("%Y-%m-%d")
 FILES = [
@@ -30,17 +31,17 @@ FILES = [
     # "setup_egg.py",
     "sx/pisa3/pisa_version.py",
     "doc/pisa-en.html",
-    ]
+]
 try:
     HELP = cgi.escape(open("HELP.txt", "r").read(), 1)
 except:
     HELP = ""
 HELP = "<!--HELP--><pre>" + HELP + "</pre><!--HELP-->"
 
-rxversion = re.compile("VERSION{.*?}VERSION", re.MULTILINE|re.IGNORECASE|re.DOTALL)
-rxbuild = re.compile("BUILD{.*?}BUILD", re.MULTILINE|re.IGNORECASE|re.DOTALL)
-rxversionhtml = re.compile("\<\!--VERSION--\>.*?\<\!--VERSION--\>", re.MULTILINE|re.IGNORECASE|re.DOTALL)
-rxhelphtml = re.compile("\<\!--HELP--\>.*?\<\!--HELP--\>", re.MULTILINE|re.IGNORECASE|re.DOTALL)
+rxversion = re.compile("VERSION{.*?}VERSION", re.MULTILINE | re.IGNORECASE | re.DOTALL)
+rxbuild = re.compile("BUILD{.*?}BUILD", re.MULTILINE | re.IGNORECASE | re.DOTALL)
+rxversionhtml = re.compile("\<\!--VERSION--\>.*?\<\!--VERSION--\>", re.MULTILINE | re.IGNORECASE | re.DOTALL)
+rxhelphtml = re.compile("\<\!--HELP--\>.*?\<\!--HELP--\>", re.MULTILINE | re.IGNORECASE | re.DOTALL)
 
 for fname in FILES:
     print "Update", fname, "..."
