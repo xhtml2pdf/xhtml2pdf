@@ -46,7 +46,7 @@ class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
 
         # XXX 'first-line':
 
-        }
+    }
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~ Definitions
@@ -58,11 +58,13 @@ class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
         if cssParser is not None:
             self.onCSSParserVisit(cssParser)
 
+
     def onCSSParserVisit(self, cssParser):
         styleSrc = self.getStyleAttr()
         if styleSrc:
             style = cssParser.parseInline(styleSrc)
             self.setInlineStyle(style)
+
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -75,6 +77,7 @@ class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
         else: # full compare
             return namespace == self.domElement.namespaceURI
 
+
     def getAttr(self, name, default=NotImplemented):
         attrValue = self.domElement.attributes.get(name)
         if attrValue is not None:
@@ -82,16 +85,23 @@ class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
         else:
             return default
 
+
     def getIdAttr(self):
         return self.getAttr('id', '')
+
+
     def getClassAttr(self):
         return self.getAttr('class', '')
+
+
     def getStyleAttr(self):
         return self.getAttr('style', None)
+
 
     def inPseudoState(self, name, params=()):
         handler = self._pseudoStateHandlerLookup.get(name, lambda self: False)
         return handler(self)
+
 
     def iterXMLParents(self, includeSelf=False):
         klass = self.__class__
@@ -102,6 +112,7 @@ class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
             yield klass(current)
             current = current.parentNode
 
+
     def getPreviousSibling(self):
         sibling = self.domElement.previousSibling
         while sibling:
@@ -110,6 +121,8 @@ class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
             else:
                 sibling = sibling.previousSibling
         return None
+
+
     def getNextSibling(self):
         sibling = self.domElement.nextSibling
         while sibling:
@@ -119,8 +132,11 @@ class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
                 sibling = sibling.nextSibling
         return None
 
+
     def getInlineStyle(self):
         return self.style
+
+
     def setInlineStyle(self, style):
         self.style = style
 

@@ -16,9 +16,11 @@
 # limitations under the License.
 
 __version__ = "$Revision: 221 $"
-__author__  = "$Author: holtwick $"
-__date__    = "$Date: 2008-05-31 18:56:27 +0200 (Sa, 31 Mai 2008) $"
-__svnid__   = "$Id: pisa.py 221 2008-05-31 16:56:27Z holtwick $"
+__author__ = "$Author: holtwick $"
+__date__ = "$Date: 2008-05-31 18:56:27 +0200 (Sa, 31 Mai 2008) $"
+__svnid__ = "$Id: pisa.py 221 2008-05-31 16:56:27Z holtwick $"
 
 import xhtml2pdf.pisa as pisa
+
+
 pisa.command()

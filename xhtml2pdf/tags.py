@@ -31,11 +31,12 @@ import string
 
 log = logging.getLogger("xhtml2pdf")
 
+
 def deprecation(message):
     warnings.warn("<" + message + "> is deprecated!", DeprecationWarning, stacklevel=2)
 
-class pisaTag:
 
+class pisaTag:
     """
     The default class for a tag definition
     """
@@ -51,8 +52,8 @@ class pisaTag:
     def end(self, c):
         pass
 
-class pisaTagBODY(pisaTag):
 
+class pisaTagBODY(pisaTag):
     """
     We can also asume that there is a BODY tag because html5lib
     adds it for us. Here we take the base font size for later calculations
@@ -63,34 +64,42 @@ class pisaTagBODY(pisaTag):
         c.baseFontSize = c.frag.fontSize
         # print "base font size", c.baseFontSize
 
+
 class pisaTagTITLE(pisaTag):
     def end(self, c):
         c.meta["title"] = c.text
         c.clearFrag()
 
+
 class pisaTagSTYLE(pisaTag):
     def start(self, c):
         c.addPara()
+
+
     def end(self, c):
         c.clearFrag()
+
 
 class pisaTagMETA(pisaTag):
     def start(self, c):
         name = self.attr.name.lower()
-        if name in ("author" , "subject", "keywords"):
+        if name in ("author", "subject", "keywords"):
             c.meta[name] = self.attr.content
+
 
 class pisaTagSUP(pisaTag):
     def start(self, c):
         c.frag.super = 1
 
+
 class pisaTagSUB(pisaTag):
     def start(self, c):
         c.frag.sub = 1
 
-class pisaTagA(pisaTag):
 
+class pisaTagA(pisaTag):
     rxLink = re.compile("^(#|[a-z]+\:).*")
+
 
     def start(self, c):
         attr = self.attr
@@ -102,7 +111,7 @@ class pisaTagA(pisaTag):
             # These 3 lines are needed to fix an error with non internal fonts
             afrag.fontName = "Helvetica"
             afrag.bold = 0
-            afrag.italic =  0
+            afrag.italic = 0
             afrag.cbDefn = ABag(
                 kind="anchor",
                 name=attr.name,
@@ -115,8 +124,8 @@ class pisaTagA(pisaTag):
     def end(self, c):
         pass
 
-class pisaTagFONT(pisaTag):
 
+class pisaTagFONT(pisaTag):
     # Source: http://www.w3.org/TR/CSS21/fonts.html#propdef-font-size
 
     def start(self, c):
@@ -131,31 +140,54 @@ class pisaTagFONT(pisaTag):
     def end(self, c):
         pass
 
+
 class pisaTagP(pisaTag):
     def start(self, c):
         # save the type of tag; it's used in PmlBaseDoc.afterFlowable()
         # to check if we need to add an outline-entry
         # c.frag.tag = self.tag
         if self.attr.align is not None:
-            #print self.attr.align, getAlign(self.attr.align)
             c.frag.alignment = getAlign(self.attr.align)
 
-class pisaTagDIV(pisaTagP): pass
-class pisaTagH1(pisaTagP): pass
-class pisaTagH2(pisaTagP): pass
-class pisaTagH3(pisaTagP): pass
-class pisaTagH4(pisaTagP): pass
-class pisaTagH5(pisaTagP): pass
-class pisaTagH6(pisaTagP): pass
+
+class pisaTagDIV(pisaTagP):
+    pass
+
+
+class pisaTagH1(pisaTagP):
+    pass
+
+
+class pisaTagH2(pisaTagP):
+    pass
+
+
+class pisaTagH3(pisaTagP):
+    pass
+
+
+class pisaTagH4(pisaTagP):
+    pass
+
+
+class pisaTagH5(pisaTagP):
+    pass
+
+
+class pisaTagH6(pisaTagP):
+    pass
+
 
 def listDecimal(c):
     c.listCounter += 1
     return unicode("%d." % c.listCounter)
 
+
 roman_numeral_map = zip(
     (1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1),
     ('M', 'CM', 'D', 'CD', 'C', 'XC', 'L', 'XL', 'X', 'IX', 'V', 'IV', 'I')
 )
+
 
 def int_to_roman(i):
     result = []
@@ -165,13 +197,16 @@ def int_to_roman(i):
         i -= integer * count
     return ''.join(result)
 
+
 def listUpperRoman(c):
     c.listCounter += 1
     roman = int_to_roman(c.listCounter)
     return unicode("%s." % roman)
 
+
 def listLowerRoman(c):
     return listUpperRoman(c).lower()
+
 
 def listUpperAlpha(c):
     c.listCounter += 1
@@ -182,18 +217,20 @@ def listUpperAlpha(c):
         # needs to start over and double the character
         # this will probably fail for anything past the 2nd time
         alpha = string.ascii_uppercase[index - 26]
-        alpha = alpha * 2
+        alpha *= 2
     return unicode("%s." % alpha)
+
 
 def listLowerAlpha(c):
     return listUpperAlpha(c).lower()
+
 
 _bullet = u"\u2022"
 _list_style_type = {
     "none": u"",
     "disc": _bullet,
-    "circle": _bullet, # XXX PDF has no equivalent
-    "square": _bullet, # XXX PDF has no equivalent
+    "circle": _bullet,  # XXX PDF has no equivalent
+    "square": _bullet,  # XXX PDF has no equivalent
     "decimal": listDecimal,
     "decimal-leading-zero": listDecimal,
     "lower-roman": listLowerRoman,
@@ -213,8 +250,8 @@ _list_style_type = {
     "lower-greek": listDecimal,
 }
 
-class pisaTagUL(pisaTagP):
 
+class pisaTagUL(pisaTagP):
     def start(self, c):
         self.counter, c.listCounter = c.listCounter, 0
 
@@ -224,29 +261,15 @@ class pisaTagUL(pisaTagP):
         c.addStory(Spacer(width=1, height=c.fragBlock.spaceAfter))
         c.listCounter = self.counter
 
+
 class pisaTagOL(pisaTagUL):
     pass
 
-class pisaTagLI(pisaTag):
 
+class pisaTagLI(pisaTag):
     def start(self, c):
         lst = _list_style_type.get(c.frag.listStyleType or "disc", _bullet)
-
-        #log.debug("frag %r", c.copyFrag(
-        #        text=lst,
-        #        bulletFontName=c.getFontName("helvetica"),
-        #        fontName=c.getFontName("helvetica")))
-        # c.addFrag("")
-
-        #frag = ParaFrag()
-        #frag.fontName = frag.bulletFontName = c.getFontName("helvetica")
-        #frag.fontSize = c.frag.fontSize
-        #c.frag.fontName = c.getFontName("helvetica")
-
         frag = copy.copy(c.frag)
-        #print "###", c.frag.fontName
-        #frag.fontName = "au_00" # c.getFontName("helvetica")
-        #frag.bulletFontName = "au_00" # c.getFontName("helvetica")
 
         self.offset = 0
         if frag.listStyleImage is not None:
@@ -278,30 +301,23 @@ class pisaTagLI(pisaTag):
     def end(self, c):
         c.fragBlock.spaceBefore += self.offset
 
-        #c.fragBlock.bulletText = self.bulletText
-        #print 999, self.bulletText
-        # c.addPara()
 
 class pisaTagBR(pisaTag):
-
     def start(self, c):
-        # print "BR", c.text[-40:]
         c.frag.lineBreak = 1
         c.addFrag()
         c.fragStrip = True
         del c.frag.lineBreak
         c.force = True
 
-class pisaTagIMG(pisaTag):
 
+class pisaTagIMG(pisaTag):
     def start(self, c):
         attr = self.attr
         if attr.src and (not attr.src.notFound()):
 
             try:
                 align = attr.align or c.frag.vAlign or "baseline"
-                # print "align", align, attr.align, c.frag.vAlign
-
                 width = c.frag.width
                 height = c.frag.height
 
@@ -355,7 +371,7 @@ class pisaTagIMG(pisaTag):
                     c.image = img
                     c.imageData = dict(
                         align=align
-                        )
+                    )
 
                 else:
 
@@ -373,26 +389,26 @@ class pisaTagIMG(pisaTag):
 
                     afrag = c.frag.clone()
                     afrag.text = ""
-                    afrag.fontName="Helvetica" # Fix for a nasty bug!!!
+                    afrag.fontName = "Helvetica" # Fix for a nasty bug!!!
                     afrag.cbDefn = ABag(
                         kind="img",
-                        image=img, #.getImage(), # XXX Inline?
+                        image=img, # .getImage(), # XXX Inline?
                         valign=valign,
                         fontName="Helvetica",
                         fontSize=img.drawHeight,
                         width=img.drawWidth,
                         height=img.drawHeight)
-                    # print "add frag", id(afrag), img.drawWidth, img.drawHeight
+
                     c.fragList.append(afrag)
                     c.fontSize = img.drawHeight
 
-            except Exception: # TODO: Kill catch-all
+            except Exception:  # TODO: Kill catch-all
                 log.warn(c.warning("Error in handling image"), exc_info=1)
         else:
             log.warn(c.warning("Need a valid file name!"))
 
-class pisaTagHR(pisaTag):
 
+class pisaTagHR(pisaTag):
     def start(self, c):
         c.addPara()
         c.addStory(HRFlowable(
@@ -401,7 +417,7 @@ class pisaTagHR(pisaTag):
             width=self.attr.get('width', "100%") or "100%",
             spaceBefore=c.frag.spaceBefore,
             spaceAfter=c.frag.spaceAfter
-            ))
+        ))
 
 # --- Forms
 
@@ -417,11 +433,11 @@ if 0:
                 width = 100
                 height = 12
             c.addStory(xhtml2pdf_reportlab.PmlInput(attr.name,
-                type=attr.type,
-                default=attr.value,
-                width=width,
-                height=height,
-                ))
+                                                    type=attr.type,
+                                                    default=attr.value,
+                                                    width=width,
+                                                    height=height,
+            ))
 
         def end(self, c):
             c.addPara()
@@ -434,9 +450,9 @@ if 0:
 
         def _render(self, c, attr):
             c.addStory(xhtml2pdf_reportlab.PmlInput(attr.name,
-                default="",
-                width=100,
-                height=100))
+                                                    default="",
+                                                    width=100,
+                                                    height=100))
 
     class pisaTagSELECT(pisaTagINPUT):
 
@@ -445,23 +461,23 @@ if 0:
 
         def _render(self, c, attr):
             c.addStory(xhtml2pdf_reportlab.PmlInput(attr.name,
-                type="select",
-                default=c.select_options[0],
-                options=c.select_options,
-                width=100,
-                height=40))
+                                                    type="select",
+                                                    default=c.select_options[0],
+                                                    options=c.select_options,
+                                                    width=100,
+                                                    height=40))
             c.select_options = None
 
     class pisaTagOPTION(pisaTag):
 
         pass
 
-# ============================================
 
 class pisaTagPDFNEXTPAGE(pisaTag):
     """
     <pdf:nextpage name="" />
     """
+
     def start(self, c):
         # deprecation("pdf:nextpage")
         c.addPara()
@@ -469,43 +485,53 @@ class pisaTagPDFNEXTPAGE(pisaTag):
             c.addStory(NextPageTemplate(self.attr.name))
         c.addStory(PageBreak())
 
+
 class pisaTagPDFNEXTTEMPLATE(pisaTag):
     """
     <pdf:nexttemplate name="" />
     """
+
     def start(self, c):
         # deprecation("pdf:frame")
         c.addStory(NextPageTemplate(self.attr["name"]))
+
 
 class pisaTagPDFNEXTFRAME(pisaTag):
     """
     <pdf:nextframe name="" />
     """
+
     def start(self, c):
         c.addPara()
         c.addStory(FrameBreak())
+
 
 class pisaTagPDFSPACER(pisaTag):
     """
     <pdf:spacer height="" />
     """
+
     def start(self, c):
         c.addPara()
         c.addStory(Spacer(1, self.attr.height))
+
 
 class pisaTagPDFPAGENUMBER(pisaTag):
     """
     <pdf:pagenumber example="" />
     """
+
     def start(self, c):
         c.frag.pageNumber = True
         c.addFrag(self.attr.example)
         c.frag.pageNumber = False
 
+
 class pisaTagPDFPAGECOUNT(pisaTag):
     """
     <pdf:pagecount />
     """
+
     def start(self, c):
         c.frag.pageCount = True
         c.addFrag()
@@ -514,18 +540,22 @@ class pisaTagPDFPAGECOUNT(pisaTag):
     def end(self, c):
         c.addPageCount()
 
+
 class pisaTagPDFTOC(pisaTag):
     """
     <pdf:toc />
     """
+
     def end(self, c):
         c.multiBuild = True
         c.addTOC()
+
 
 class pisaTagPDFFRAME(pisaTag):
     """
     <pdf:frame name="" static box="" />
     """
+
     def start(self, c):
         deprecation("pdf:frame")
         attrs = self.attr
@@ -536,13 +566,13 @@ class pisaTagPDFFRAME(pisaTag):
 
         x, y, w, h = attrs.box
         self.frame = Frame(
-                x, y, w, h,
-                id=name,
-                leftPadding=0,
-                rightPadding=0,
-                bottomPadding=0,
-                topPadding=0,
-                showBoundary=attrs.border)
+            x, y, w, h,
+            id=name,
+            leftPadding=0,
+            rightPadding=0,
+            bottomPadding=0,
+            topPadding=0,
+            showBoundary=attrs.border)
 
         self.static = False
         if self.attr.static:
@@ -559,12 +589,14 @@ class pisaTagPDFFRAME(pisaTag):
             c.frameStaticList.append(self.frame)
             c.swapStory(self.story)
 
+
 class pisaTagPDFTEMPLATE(pisaTag):
     """
     <pdf:template name="" static box="" >
         <pdf:frame...>
     </pdf:template>
     """
+
     def start(self, c):
         deprecation("pdf:template")
         attrs = self.attr
@@ -574,19 +606,6 @@ class pisaTagPDFTEMPLATE(pisaTag):
         c.frameStaticList = []
         if name in c.templateList:
             log.warn(c.warning("template '%s' has already been defined", name))
-
-        '''
-        self.oldpagesize = A4 # self._pagesize
-
-        self._pagesize = PML_PAGESIZES[attrs.format]
-        if attrs.orientation is not None:
-            if attrs.orientation == "landscape":
-                self._pagesize = landscape(self._pagesize)
-            elif attrs.orientation == "portrait":
-                self._pagesize = portrait(self._pagesize)
-        '''
-
-        # self._drawing = PmlPageDrawing(self._pagesize)
 
     def end(self, c):
         attrs = self.attr
@@ -598,55 +617,51 @@ class pisaTagPDFTEMPLATE(pisaTag):
             id=name,
             frames=c.frameList,
             pagesize=A4,
-            )
+        )
         pt.pisaStaticList = c.frameStaticList
         pt.pisaBackgroundList = c.pisaBackgroundList
         pt.pisaBackground = self.attr.background
-
-        # self._pagesize)
-        # pt.pml_statics = self._statics
-        # pt.pml_draw = self._draw
-        # pt.pml_drawing = self._drawing
-        # pt.pml_background = attrs.background
-        # pt.pml_bgstory = self._bgstory
 
         c.templateList[name] = pt
         c.template = None
         c.frameList = []
         c.frameStaticList = []
 
+
 class pisaTagPDFFONT(pisaTag):
     """
     <pdf:fontembed name="" src="" />
     """
+
     def start(self, c):
         deprecation("pdf:font")
         c.loadFont(self.attr.name, self.attr.src, self.attr.encoding)
 
-class pisaTagPDFBARCODE(pisaTag):
 
+class pisaTagPDFBARCODE(pisaTag):
     _codeName = {
-            "I2OF5": "I2of5",
-            "ITF": "I2of5",
-            "CODE39": "Standard39",
-            "EXTENDEDCODE39": "Extended39",
-            "CODE93": "Standard93",
-            "EXTENDEDCODE93": "Extended93",
-            "MSI": "MSI",
-            "CODABAR": "Codabar",
-            "NW7": "Codabar",
-            "CODE11": "Code11",
-            "FIM": "FIM",
-            "POSTNET": "POSTNET",
-            "USPS4S": "USPS_4State",
-            "CODE128": "Code128",
-            "EAN13": "EAN13",
-            "EAN8": "EAN8",
-            "QR": "QR",
-            }
+        "I2OF5": "I2of5",
+        "ITF": "I2of5",
+        "CODE39": "Standard39",
+        "EXTENDEDCODE39": "Extended39",
+        "CODE93": "Standard93",
+        "EXTENDEDCODE93": "Extended93",
+        "MSI": "MSI",
+        "CODABAR": "Codabar",
+        "NW7": "Codabar",
+        "CODE11": "Code11",
+        "FIM": "FIM",
+        "POSTNET": "POSTNET",
+        "USPS4S": "USPS_4State",
+        "CODE128": "Code128",
+        "EAN13": "EAN13",
+        "EAN8": "EAN8",
+        "QR": "QR",
+    }
 
     class _barcodeWrapper(Flowable):
-        """Wrapper for barcode widget
+        """
+        Wrapper for barcode widget
         """
         def __init__(self, codeName="Code128", value="", **kw):
             self.widget = createBarcodeDrawing(codeName, value=value, **kw)
@@ -667,34 +682,29 @@ class pisaTagPDFBARCODE(pisaTag):
         codeName = attr.type or "Code128"
         codeName = pisaTagPDFBARCODE._codeName[codeName.upper().replace("-", "")]
         humanReadable = bool(attr.humanreadable)
-        barWidth = attr.barwidth or 0.01*inch
-        barHeight = attr.barheight or 0.5*inch
+        barWidth = attr.barwidth or 0.01 * inch
+        barHeight = attr.barheight or 0.5 * inch
         fontName = c.getFontName("OCRB10,OCR-B,OCR B,OCRB")  # or "Helvetica"
-        fontSize = attr.fontsize or 2.75*mm
+        fontSize = attr.fontsize or 2.75 * mm
 
         # Assure minimal size.
         if codeName in ("EAN13", "EAN8"):
-            barWidth = max(barWidth, 0.264*mm)
-            fontSize = max(fontSize, 2.75*mm)
-        else: # Code39 etc.
-            barWidth = max(barWidth, 0.0075*inch)
-        #barHeight = max(barHeight, 25.93*mm)
+            barWidth = max(barWidth, 0.264 * mm)
+            fontSize = max(fontSize, 2.75 * mm)
+        else:  # Code39 etc.
+            barWidth = max(barWidth, 0.0075 * inch)
 
         barcode = pisaTagPDFBARCODE._barcodeWrapper(
-                codeName=codeName,
-                value=attr.value,
-                barWidth=barWidth,
-                barHeight=barHeight,
-                humanReadable=humanReadable,
-                fontName=fontName,
-                fontSize=fontSize,
-                )
+            codeName=codeName,
+            value=attr.value,
+            barWidth=barWidth,
+            barHeight=barHeight,
+            humanReadable=humanReadable,
+            fontName=fontName,
+            fontSize=fontSize,
+        )
 
         width, height = barcode.wrap(c.frag.width, c.frag.height)
-
-        #barcode.spaceBefore = c.frag.spaceBefore
-        #barcode.spaceAfter = c.frag.spaceAfter
-
         c.force = True
 
         valign = attr.align or c.frag.vAlign or "baseline"
@@ -714,5 +724,5 @@ class pisaTagPDFBARCODE(pisaTag):
             width=width,
             height=height,
             valign=valign,
-            )
+        )
         c.fragList.append(afrag)
