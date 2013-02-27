@@ -17,10 +17,12 @@
 from xhtml2pdf.util import pisaTempFile, getFile
 
 import logging
+
+
 log = logging.getLogger("xhtml2pdf")
 
-class pisaPDF:
 
+class pisaPDF:
     def __init__(self, capacity=-1):
         self.capacity = capacity
         self.files = []
@@ -46,12 +48,13 @@ class pisaPDF:
 
     def join(self, file=None):
         import pyPdf # TODO: Why is this in the middle of everything?
-        if pyPdf:
-            output = pyPdf.PdfFileWriter()
-            for pdffile in self.files:
-                input = pyPdf.PdfFileReader(pdffile)
-                for pageNumber in xrange(input.getNumPages()):
-                    output.addPage(input.getPage(pageNumber))
+
+        output = pyPdf.PdfFileWriter()
+        for pdffile in self.files:
+            input = pyPdf.PdfFileReader(pdffile)
+            for pageNumber in xrange(input.getNumPages()):
+                output.addPage(input.getPage(pageNumber))
+
         if file is not None:
             output.write(file)
             return file

@@ -29,8 +29,8 @@
 
 
 __reversion__ = "$Revision: 20 $"
-__author__    = "$Author: holtwick $"
-__date__      = "$Date: 2007-10-09 12:58:24 +0200 (Di, 09 Okt 2007) $"
+__author__ = "$Author: holtwick $"
+__date__ = "$Date: 2007-10-09 12:58:24 +0200 (Di, 09 Okt 2007) $"
 
 """
 Helper for complex CSS definitons like font, margin, padding and border
@@ -39,23 +39,27 @@ Optimized for use with PISA
 
 import types
 import logging
+
+
 log = logging.getLogger("ho.css")
 
+
 def toList(value):
-    if type(value)!=types.ListType:
+    if type(value) != types.ListType:
         return [value]
     return value
+
 
 _styleTable = {
     "normal": "",
     "italic": "",
     "oblique": "",
-    }
+}
 
 _variantTable = {
     "normal": None,
     "small-caps": None,
-    }
+}
 
 _weightTable = {
     "light": 300,
@@ -77,7 +81,7 @@ _weightTable = {
     #wx.LIGHT: 300,
     #wx.NORMAL: 400,
     #wx.BOLD: 700,
-    }
+}
 
 #_absSizeTable = {
 #    "xx-small" : 3./5.,
@@ -103,7 +107,7 @@ _borderStyleTable = {
     "ridge": 1,
     "inset": 1,
     "outset": 1,
-    }
+}
 
 '''
 _relSizeTable = {
@@ -142,6 +146,7 @@ _relSizeTable = {
     }
 '''
 
+
 def getNextPart(parts):
     if parts:
         part = parts.pop(0)
@@ -149,8 +154,10 @@ def getNextPart(parts):
         part = None
     return part
 
+
 def isSize(value):
-    return value and ((type(value) is types.TupleType) or value=="0")
+    return value and ((type(value) is types.TupleType) or value == "0")
+
 
 def splitBorder(parts):
     """
@@ -163,7 +170,7 @@ def splitBorder(parts):
     copy_parts = parts[:]
     # part = getNextPart(parts)
 
-    if len(parts)>3:
+    if len(parts) > 3:
         log.warn("To many elements for border style %r", parts)
 
     for part in parts:
@@ -173,7 +180,7 @@ def splitBorder(parts):
             # part = getNextPart(parts)
 
         # Style
-        elif hasattr(part,'lower') and part.lower() in _borderStyleTable:
+        elif hasattr(part, 'lower') and part.lower() in _borderStyleTable:
             style = part
             # part = getNextPart(parts)
 
@@ -185,231 +192,233 @@ def splitBorder(parts):
 
     return (width, style, color)
 
+
 def parseSpecialRules(declarations, debug=0):
-        # print selectors, declarations
-        # CSS MODIFY!
-        dd = []
+    # print selectors, declarations
+    # CSS MODIFY!
+    dd = []
 
-        for d in declarations:
+    for d in declarations:
 
-            if debug:
-                log.debug("CSS special  IN: %r", d)
+        if debug:
+            log.debug("CSS special  IN: %r", d)
 
-            name, parts, last = d
-            oparts = parts
-            parts = toList(parts)
+        name, parts, last = d
+        oparts = parts
+        parts = toList(parts)
 
-            # FONT
-            if name == "font":
-                # [ [ <'font-style'> || <'font-variant'> || <'font-weight'> ]? <'font-size'> [ / <'line-height'> ]? <'font-family'> ] | inherit
-                ddlen = len(dd)
+        # FONT
+        if name == "font":
+            # [ [ <'font-style'> || <'font-variant'> || <'font-weight'> ]? <'font-size'> [ / <'line-height'> ]? <'font-family'> ] | inherit
+            ddlen = len(dd)
+            part = getNextPart(parts)
+            # Style
+            if part and part in _styleTable:
+                dd.append(("font-style", part, last))
                 part = getNextPart(parts)
-                # Style
-                if part and part in _styleTable:
-                    dd.append(("font-style", part, last))
-                    part = getNextPart(parts)
                 # Variant
-                if part and part in _variantTable:
-                    dd.append(("font-variant", part, last))
-                    part = getNextPart(parts)
+            if part and part in _variantTable:
+                dd.append(("font-variant", part, last))
+                part = getNextPart(parts)
                 # Weight
-                if part and part in _weightTable:
-                    dd.append(("font-weight", part, last))
-                    part = getNextPart(parts)
+            if part and part in _weightTable:
+                dd.append(("font-weight", part, last))
+                part = getNextPart(parts)
                 # Size and Line Height
-                if isinstance(part, tuple) and len(part) == 3:
-                    fontSize, slash, lineHeight = part
-                    assert slash == '/'
-                    dd.append(("font-size", fontSize, last))
-                    dd.append(("line-height", lineHeight, last))
-                else:
-                    dd.append(("font-size", part, last))
+            if isinstance(part, tuple) and len(part) == 3:
+                fontSize, slash, lineHeight = part
+                assert slash == '/'
+                dd.append(("font-size", fontSize, last))
+                dd.append(("line-height", lineHeight, last))
+            else:
+                dd.append(("font-size", part, last))
                 # Face/ Family
-                dd.append(("font-face", parts, last))
+            dd.append(("font-face", parts, last))
 
-            # BACKGROUND
-            elif name == "background":
-                # [<'background-color'> || <'background-image'> || <'background-repeat'> || <'background-attachment'> || <'background-position'>] | inherit
+        # BACKGROUND
+        elif name == "background":
+            # [<'background-color'> || <'background-image'> || <'background-repeat'> || <'background-attachment'> || <'background-position'>] | inherit
 
-                # XXX We do not receive url() and parts list, so we go for a dirty work arround
+            # XXX We do not receive url() and parts list, so we go for a dirty work arround
+            part = getNextPart(parts) or oparts
+            if part:
+
+                if hasattr(part, '__iter__') and (type("." in part) or ("data:" in part)):
+                    dd.append(("background-image", part, last))
+                else:
+                    dd.append(("background-color", part, last))
+
+            if 0:
                 part = getNextPart(parts) or oparts
-                if part:
-
-                    if hasattr(part, '__iter__') and (type("." in part) or ("data:" in part)):
-                        dd.append(("background-image", part, last))
-                    else:
-                        dd.append(("background-color", part, last))
-
-                if 0:
-                    part = getNextPart(parts) or oparts
-                    print "~", part, parts, oparts, declarations
-                    # Color
-                    if part and (not part.startswith("url")):
-                        dd.append(("background-color", part, last))
-                        part = getNextPart(parts)
+                print "~", part, parts, oparts, declarations
+                # Color
+                if part and (not part.startswith("url")):
+                    dd.append(("background-color", part, last))
+                    part = getNextPart(parts)
                     # Background
-                    if part:
-                        dd.append(("background-image", part, last))
+                if part:
+                    dd.append(("background-image", part, last))
                     # XXX Incomplete! Error in url()!
 
-            # MARGIN
-            elif name == "margin":
-                if len(parts)==1:
-                    top = bottom = left = right = parts[0]
-                elif len(parts)==2:
-                    top = bottom = parts[0]
-                    left = right = parts[1]
-                elif len(parts)==3:
-                    top = parts[0]
-                    left = right = parts[1]
-                    bottom = parts[2]
-                elif len(parts)==4:
-                    top = parts[0]
-                    right = parts[1]
-                    bottom = parts[2]
-                    left = parts[3]
-                else:
-                    continue
-                dd.append(("margin-left", left, last))
-                dd.append(("margin-right", right, last))
-                dd.append(("margin-top", top, last))
-                dd.append(("margin-bottom", bottom, last))
-
-            # PADDING
-            elif name == "padding":
-                if len(parts)==1:
-                    top = bottom = left = right = parts[0]
-                elif len(parts)==2:
-                    top = bottom = parts[0]
-                    left = right = parts[1]
-                elif len(parts)==3:
-                    top = parts[0]
-                    left = right = parts[1]
-                    bottom = parts[2]
-                elif len(parts)==4:
-                    top = parts[0]
-                    right = parts[1]
-                    bottom = parts[2]
-                    left = parts[3]
-                else:
-                    continue
-                dd.append(("padding-left", left, last))
-                dd.append(("padding-right", right, last))
-                dd.append(("padding-top", top, last))
-                dd.append(("padding-bottom", bottom, last))
-
-            # BORDER WIDTH
-            elif name == "border-width":
-                if len(parts)==1:
-                    top = bottom = left = right = parts[0]
-                elif len(parts)==2:
-                    top = bottom = parts[0]
-                    left = right = parts[1]
-                elif len(parts)==3:
-                    top = parts[0]
-                    left = right = parts[1]
-                    bottom = parts[2]
-                elif len(parts)==4:
-                    top = parts[0]
-                    right = parts[1]
-                    bottom = parts[2]
-                    left = parts[3]
-                else:
-                    continue
-                dd.append(("border-left-width", left, last))
-                dd.append(("border-right-width", right, last))
-                dd.append(("border-top-width", top, last))
-                dd.append(("border-bottom-width", bottom, last))
-
-            # BORDER COLOR
-            elif name == "border-color":
-                if len(parts)==1:
-                    top = bottom = left = right = parts[0]
-                elif len(parts)==2:
-                    top = bottom = parts[0]
-                    left = right = parts[1]
-                elif len(parts)==3:
-                    top = parts[0]
-                    left = right = parts[1]
-                    bottom = parts[2]
-                elif len(parts)==4:
-                    top = parts[0]
-                    right = parts[1]
-                    bottom = parts[2]
-                    left = parts[3]
-                else:
-                    continue
-                dd.append(("border-left-color", left, last))
-                dd.append(("border-right-color", right, last))
-                dd.append(("border-top-color", top, last))
-                dd.append(("border-bottom-color", bottom, last))
-
-            # BORDER STYLE
-            elif name == "border-style":
-                if len(parts)==1:
-                    top = bottom = left = right = parts[0]
-                elif len(parts)==2:
-                    top = bottom = parts[0]
-                    left = right = parts[1]
-                elif len(parts)==3:
-                    top = parts[0]
-                    left = right = parts[1]
-                    bottom = parts[2]
-                elif len(parts)==4:
-                    top = parts[0]
-                    right = parts[1]
-                    bottom = parts[2]
-                    left = parts[3]
-                else:
-                    continue
-                dd.append(("border-left-style", left, last))
-                dd.append(("border-right-style", right, last))
-                dd.append(("border-top-style", top, last))
-                dd.append(("border-bottom-style", bottom, last))
-
-            # BORDER
-            elif name == "border":
-                width, style, color = splitBorder(parts)
-                if width is not None:
-                    dd.append(("border-left-width", width, last))
-                    dd.append(("border-right-width", width, last))
-                    dd.append(("border-top-width", width, last))
-                    dd.append(("border-bottom-width", width, last))
-                if style is not None:
-                    dd.append(("border-left-style", style, last))
-                    dd.append(("border-right-style", style, last))
-                    dd.append(("border-top-style", style, last))
-                    dd.append(("border-bottom-style", style, last))
-                if color is not None:
-                    dd.append(("border-left-color", color, last))
-                    dd.append(("border-right-color", color, last))
-                    dd.append(("border-top-color", color, last))
-                    dd.append(("border-bottom-color", color, last))
-
-            # BORDER TOP, BOTTOM, LEFT, RIGHT
-            elif name in ("border-top", "border-bottom", "border-left", "border-right"):
-                direction = name[7:]
-                width, style, color = splitBorder(parts)
-                # print direction, width
-                if width is not None:
-                    dd.append(("border-" + direction + "-width", width, last))
-                if style is not None:
-                    dd.append(("border-" + direction + "-style", style, last))
-                if color is not None:
-                    dd.append(("border-" + direction + "-color", color, last))
-
-            # REST
+        # MARGIN
+        elif name == "margin":
+            if len(parts) == 1:
+                top = bottom = left = right = parts[0]
+            elif len(parts) == 2:
+                top = bottom = parts[0]
+                left = right = parts[1]
+            elif len(parts) == 3:
+                top = parts[0]
+                left = right = parts[1]
+                bottom = parts[2]
+            elif len(parts) == 4:
+                top = parts[0]
+                right = parts[1]
+                bottom = parts[2]
+                left = parts[3]
             else:
-                dd.append(d)
+                continue
+            dd.append(("margin-left", left, last))
+            dd.append(("margin-right", right, last))
+            dd.append(("margin-top", top, last))
+            dd.append(("margin-bottom", bottom, last))
 
-        if debug and dd:
-            log.debug("CSS special OUT:\n%s", "\n".join([repr(d) for d in dd]))
+        # PADDING
+        elif name == "padding":
+            if len(parts) == 1:
+                top = bottom = left = right = parts[0]
+            elif len(parts) == 2:
+                top = bottom = parts[0]
+                left = right = parts[1]
+            elif len(parts) == 3:
+                top = parts[0]
+                left = right = parts[1]
+                bottom = parts[2]
+            elif len(parts) == 4:
+                top = parts[0]
+                right = parts[1]
+                bottom = parts[2]
+                left = parts[3]
+            else:
+                continue
+            dd.append(("padding-left", left, last))
+            dd.append(("padding-right", right, last))
+            dd.append(("padding-top", top, last))
+            dd.append(("padding-bottom", bottom, last))
 
-        if 0: #declarations!=dd:
-            print "###", declarations
-            print "#->", dd
+        # BORDER WIDTH
+        elif name == "border-width":
+            if len(parts) == 1:
+                top = bottom = left = right = parts[0]
+            elif len(parts) == 2:
+                top = bottom = parts[0]
+                left = right = parts[1]
+            elif len(parts) == 3:
+                top = parts[0]
+                left = right = parts[1]
+                bottom = parts[2]
+            elif len(parts) == 4:
+                top = parts[0]
+                right = parts[1]
+                bottom = parts[2]
+                left = parts[3]
+            else:
+                continue
+            dd.append(("border-left-width", left, last))
+            dd.append(("border-right-width", right, last))
+            dd.append(("border-top-width", top, last))
+            dd.append(("border-bottom-width", bottom, last))
+
+        # BORDER COLOR
+        elif name == "border-color":
+            if len(parts) == 1:
+                top = bottom = left = right = parts[0]
+            elif len(parts) == 2:
+                top = bottom = parts[0]
+                left = right = parts[1]
+            elif len(parts) == 3:
+                top = parts[0]
+                left = right = parts[1]
+                bottom = parts[2]
+            elif len(parts) == 4:
+                top = parts[0]
+                right = parts[1]
+                bottom = parts[2]
+                left = parts[3]
+            else:
+                continue
+            dd.append(("border-left-color", left, last))
+            dd.append(("border-right-color", right, last))
+            dd.append(("border-top-color", top, last))
+            dd.append(("border-bottom-color", bottom, last))
+
+        # BORDER STYLE
+        elif name == "border-style":
+            if len(parts) == 1:
+                top = bottom = left = right = parts[0]
+            elif len(parts) == 2:
+                top = bottom = parts[0]
+                left = right = parts[1]
+            elif len(parts) == 3:
+                top = parts[0]
+                left = right = parts[1]
+                bottom = parts[2]
+            elif len(parts) == 4:
+                top = parts[0]
+                right = parts[1]
+                bottom = parts[2]
+                left = parts[3]
+            else:
+                continue
+            dd.append(("border-left-style", left, last))
+            dd.append(("border-right-style", right, last))
+            dd.append(("border-top-style", top, last))
+            dd.append(("border-bottom-style", bottom, last))
+
+        # BORDER
+        elif name == "border":
+            width, style, color = splitBorder(parts)
+            if width is not None:
+                dd.append(("border-left-width", width, last))
+                dd.append(("border-right-width", width, last))
+                dd.append(("border-top-width", width, last))
+                dd.append(("border-bottom-width", width, last))
+            if style is not None:
+                dd.append(("border-left-style", style, last))
+                dd.append(("border-right-style", style, last))
+                dd.append(("border-top-style", style, last))
+                dd.append(("border-bottom-style", style, last))
+            if color is not None:
+                dd.append(("border-left-color", color, last))
+                dd.append(("border-right-color", color, last))
+                dd.append(("border-top-color", color, last))
+                dd.append(("border-bottom-color", color, last))
+
+        # BORDER TOP, BOTTOM, LEFT, RIGHT
+        elif name in ("border-top", "border-bottom", "border-left", "border-right"):
+            direction = name[7:]
+            width, style, color = splitBorder(parts)
+            # print direction, width
+            if width is not None:
+                dd.append(("border-" + direction + "-width", width, last))
+            if style is not None:
+                dd.append(("border-" + direction + "-style", style, last))
+            if color is not None:
+                dd.append(("border-" + direction + "-color", color, last))
+
+        # REST
+        else:
+            dd.append(d)
+
+    if debug and dd:
+        log.debug("CSS special OUT:\n%s", "\n".join([repr(d) for d in dd]))
+
+    if 0: #declarations!=dd:
+        print "###", declarations
+        print "#->", dd
         # CSS MODIFY! END
-        return dd
+    return dd
+
 
 #import re
 #_rxhttp = re.compile(r"url\([\'\"]?http\:\/\/[^\/]", re.IGNORECASE|re.DOTALL)

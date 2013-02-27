@@ -19,6 +19,7 @@ import xhtml2pdf.pisa as pisa
 import StringIO
 import cherrypy
 
+
 def to_pdf(filename=None, content_type="application/pdf"):
     def entangle(func):
         def decorated(func, *args, **kw):
@@ -27,14 +28,17 @@ def to_pdf(filename=None, content_type="application/pdf"):
             result = pisa.CreatePDF(
                 StringIO.StringIO(output),
                 dst
-                )
+            )
             if not result.err:
                 cherrypy.response.headers["Content-Type"] = content_type
                 if filename:
                     cherrypy.response.headers["Content-Disposition"] = "attachment; filename=" + filename
                 output = dst.getvalue()
             return output
+
         return decorated
+
     return weak_signature_decorator(entangle)
+
 
 topdf = to_pdf

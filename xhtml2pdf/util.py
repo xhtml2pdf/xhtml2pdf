@@ -35,7 +35,7 @@ import urlparse
 
 rgb_re = re.compile("^.*?rgb[(]([0-9]+).*?([0-9]+).*?([0-9]+)[)].*?[ ]*$")
 
-if not(reportlab.Version[0] == "2" and reportlab.Version[2] >= "1"):
+if not (reportlab.Version[0] == "2" and reportlab.Version[2] >= "1"):
     raise ImportError("Reportlab Version 2.1+ is needed!")
 
 REPORTLAB22 = (reportlab.Version[0] == "2" and reportlab.Version[2] >= "2")
@@ -79,11 +79,14 @@ class memoized(object):
     It is especially useful for functions that don't rely on external variables
     and that are called often. It's a perfect match for our getSize etc...
     """
+
+
     def __init__(self, func):
         self.cache = {}
         self.func = func
         self.__doc__ = self.func.__doc__ # To avoid great confusion
         self.__name__ = self.func.__name__ # This also avoids great confusion
+
 
     def __call__(self, *args, **kwargs):
         # Make sure the following line is not actually slower than what you're
@@ -95,46 +98,27 @@ class memoized(object):
             self.cache[key] = res
         return self.cache[key]
 
+
 def ErrorMsg():
     """
     Helper to get a nice traceback as string
     """
     import traceback, sys
+
+
     type = value = tb = limit = None
     type, value, tb = sys.exc_info()
     list = traceback.format_tb(tb, limit) + traceback.format_exception_only(type, value)
     return "Traceback (innermost last):\n" + "%-20s %s" % (
         string.join(list[: - 1], ""),
-        list[ - 1])
+        list[- 1])
+
 
 def toList(value):
     if type(value) not in (types.ListType, types.TupleType):
         return [value]
     return list(value)
 
-#def _toColor(arg, default=None):
-#    '''try to map an arbitrary arg to a color instance'''
-#    if isinstance(arg, Color):
-#        return arg
-#    tArg = type(arg)
-#    if tArg in (types.ListType, types.TupleType):
-#        assert 3 <= len(arg) <= 4, 'Can only convert 3 and 4 sequences to color'
-#        assert 0 <= min(arg) and max(arg) <= 1
-#        return len(arg) == 3 and Color(arg[0], arg[1], arg[2]) or CMYKColor(arg[0], arg[1], arg[2], arg[3])
-#    elif tArg == types.StringType:
-#        C = getAllNamedColors()
-#        s = arg.lower()
-#        if C.has_key(s): return C[s]
-#        try:
-#            return toColor(eval(arg))
-#        except:
-#            pass
-#    try:
-#        return HexColor(arg)
-#    except:
-#        if default is None:
-#            raise ValueError('Invalid color value %r' % arg)
-#        return default
 
 @memoized
 def getColor(value, default=None):
@@ -169,6 +153,7 @@ def getBorderStyle(value, default=None):
         return value
     return default
 
+
 mm = cm / 10.0
 dpi96 = (1.0 / 96.0 * inch)
 
@@ -188,14 +173,6 @@ _absoluteSizeTable = {
     "xx-large": 175.0 / 100.0,
     "7": 200.0 / 100.0,
     "xxx-large": 200.0 / 100.0,
-    #"xx-small" : 3./5.,
-    #"x-small": 3./4.,
-    #"small": 8./9.,
-    #"medium": 1./1.,
-    #"large": 6./5.,
-    #"x-large": 3./2.,
-    #"xx-large": 2./1.,
-    #"xxx-large": 3./1.,
 }
 
 _relativeSizeTable = {
@@ -208,9 +185,10 @@ _relativeSizeTable = {
     "-1": 75.0 / 100.0,
     "-2": 50.0 / 100.0,
     "-3": 25.0 / 100.0,
-    }
+}
 
 MIN_FONT_SIZE = 1.0
+
 
 @memoized
 def getSize(value, relative=0, base=None, default=0.0):
@@ -238,28 +216,28 @@ def getSize(value, relative=0, base=None, default=0.0):
         if value[-2:] == 'cm':
             return float(value[:-2].strip()) * cm
         elif value[-2:] == 'mm':
-            return (float(value[:-2].strip()) * mm) # 1mm = 0.1cm
+            return float(value[:-2].strip()) * mm  # 1mm = 0.1cm
         elif value[-2:] == 'in':
-            return float(value[:-2].strip()) * inch # 1pt == 1/72inch
+            return float(value[:-2].strip()) * inch  # 1pt == 1/72inch
         elif value[-2:] == 'inch':
-            return float(value[:-4].strip()) * inch # 1pt == 1/72inch
+            return float(value[:-4].strip()) * inch  # 1pt == 1/72inch
         elif value[-2:] == 'pt':
             return float(value[:-2].strip())
         elif value[-2:] == 'pc':
             return float(value[:-2].strip()) * 12.0 # 1pc == 12pt
         elif value[-2:] == 'px':
-            return float(value[:-2].strip()) * dpi96 # XXX W3C says, use 96pdi http://www.w3.org/TR/CSS21/syndata.html#length-units
+            return float(value[
+                         :-2].strip()) * dpi96  # XXX W3C says, use 96pdi http://www.w3.org/TR/CSS21/syndata.html#length-units
         elif value[-1:] == 'i':  # 1pt == 1/72inch
             return float(value[:-1].strip()) * inch
         elif value in ("none", "0", "auto"):
             return 0.0
         elif relative:
-            if value[-2:] == 'em': # XXX
-                return (float(value[:-2].strip()) * relative) # 1em = 1 * fontSize
+            if value[-2:] == 'em':  # XXX
+                return float(value[:-2].strip()) * relative  # 1em = 1 * fontSize
             elif value[-2:] == 'ex': # XXX
-                return (float(value[:-2].strip()) * (relative / 2.0)) # 1ex = 1/2 fontSize
+                return float(value[:-2].strip()) * (relative / 2.0) # 1ex = 1/2 fontSize
             elif value[-1:] == '%':
-                # print "%", value, relative, (relative * float(value[:-1].strip())) / 100.0
                 return (relative * float(value[:-1].strip())) / 100.0 # 1% = (fontSize * 1) / 100
             elif value in ("normal", "inherit"):
                 return relative
@@ -277,11 +255,12 @@ def getSize(value, relative=0, base=None, default=0.0):
             value = float(value)
         except:
             log.warn("getSize: Not a float %r", value)
-            return default #value = 0
+            return default  # value = 0
         return max(0, value)
     except Exception:
         log.warn("getSize %r %r", original, relative, exc_info=1)
         return default
+
 
 @memoized
 def getCoords(x, y, w, h, pagesize):
@@ -304,6 +283,7 @@ def getCoords(x, y, w, h, pagesize):
         return x, (ay - y - h), w, h
     return x, (ay - y)
 
+
 @memoized
 def getBox(box, pagesize):
     """
@@ -317,6 +297,7 @@ def getBox(box, pagesize):
         raise Exception, "box not defined right way"
     x, y, w, h = [getSize(pos) for pos in box]
     return getCoords(x, y, w, h, pagesize)
+
 
 def getFrameDimensions(data, page_width, page_height):
     """Calculate dimensions of a frame
@@ -355,6 +336,7 @@ def getFrameDimensions(data, page_width, page_height):
     height = page_height - (top + bottom)
     return left, top, width, height
 
+
 @memoized
 def getPos(position, pagesize):
     """
@@ -366,16 +348,21 @@ def getPos(position, pagesize):
     x, y = [getSize(pos) for pos in position]
     return getCoords(x, y, None, None, pagesize)
 
+
 def getBool(s):
     " Is it a boolean? "
     return str(s).lower() in ("y", "yes", "1", "true")
 
+
 _uid = 0
+
+
 def getUID():
     " Unique ID "
     global _uid
     _uid += 1
     return str(_uid)
+
 
 _alignments = {
     "left": TA_LEFT,
@@ -383,14 +370,11 @@ _alignments = {
     "middle": TA_CENTER,
     "right": TA_RIGHT,
     "justify": TA_JUSTIFY,
-    }
+}
+
 
 def getAlign(value, default=TA_LEFT):
     return _alignments.get(str(value).lower(), default)
-
-#def getVAlign(value):
-#    # Unused
-#    return str(value).upper()
 
 GAE = "google.appengine" in sys.modules
 
@@ -403,8 +387,10 @@ else:
         StringIO.StringIO,
         tempfile.NamedTemporaryFile)
 
+
 class pisaTempFile(object):
-    """A temporary file implementation that uses memory unless
+    """
+    A temporary file implementation that uses memory unless
     either capacity is breached or fileno is requested, at which
     point a real temporary file will be created and the relevant
     details returned
@@ -426,8 +412,6 @@ class pisaTempFile(object):
         in memory.
         """
 
-        #if hasattr(buffer, "read"):
-        #shutil.copyfileobj(    fsrc, fdst[, length])
         self.capacity = capacity
         self.strategy = int(len(buffer) > self.capacity)
         try:
@@ -440,7 +424,10 @@ class pisaTempFile(object):
         self.seek(0)
 
     def makeTempFile(self):
-        " Switch to next startegy. If an error occured stay with the first strategy "
+        """
+        Switch to next startegy. If an error occured stay with the first strategy
+        """
+
         if self.strategy == 0:
             try:
                 new_delegate = self.STRATEGIES[1]()
@@ -452,19 +439,26 @@ class pisaTempFile(object):
                 self.capacity = - 1
 
     def getFileName(self):
-        " Get a named temporary file "
+        """
+        Get a named temporary file
+        """
+
         self.makeTempFile()
         return self.name
 
     def fileno(self):
-        """Forces this buffer to use a temporary file as the underlying.
+        """
+        Forces this buffer to use a temporary file as the underlying.
         object and returns the fileno associated with it.
         """
         self.makeTempFile()
         return self._delegate.fileno()
 
     def getvalue(self):
-        " Get value of file. Work around for second strategy "
+        """
+        Get value of file. Work around for second strategy
+        """
+
         if self.strategy == 0:
             return self._delegate.getvalue()
         self._delegate.flush()
@@ -472,7 +466,10 @@ class pisaTempFile(object):
         return self._delegate.read()
 
     def write(self, value):
-        " If capacity != -1 and length of file > capacity it is time to switch "
+        """
+        If capacity != -1 and length of file > capacity it is time to switch
+        """
+
         if self.capacity > 0 and self.strategy == 0:
             len_value = len(value)
             if len_value >= self.capacity:
@@ -491,13 +488,14 @@ class pisaTempFile(object):
         except AttributeError:
             # hide the delegation
             e = "object '%s' has no attribute '%s'" \
-                     % (self.__class__.__name__, name)
+                % (self.__class__.__name__, name)
             raise AttributeError(e)
+
 
 _rx_datauri = re.compile("^data:(?P<mime>[a-z]+/[a-z]+);base64,(?P<data>.*)$", re.M | re.DOTALL)
 
-class pisaFileObject:
 
+class pisaFileObject:
     """
     XXX
     """
@@ -562,6 +560,7 @@ class pisaFileObject:
                     self.uri = uri
                     if r1.getheader("content-encoding") == "gzip":
                         import gzip
+
                         self.file = gzip.GzipFile(mode="rb", fileobj=r1)
                     else:
                         self.file = r1
@@ -624,186 +623,189 @@ class pisaFileObject:
         if mimetype is not None:
             self.mimetype = mimetypes.guess_type(name)[0].split(";")[0]
 
-def getFile(*a , **kw):
+
+def getFile(*a, **kw):
     file = pisaFileObject(*a, **kw)
     if file.notFound():
         return None
     return file
 
+
 COLOR_BY_NAME = {
- 'activeborder': Color(212, 208, 200),
- 'activecaption': Color(10, 36, 106),
- 'aliceblue': Color(.941176, .972549, 1),
- 'antiquewhite': Color(.980392, .921569, .843137),
- 'appworkspace': Color(128, 128, 128),
- 'aqua': Color(0, 1, 1),
- 'aquamarine': Color(.498039, 1, .831373),
- 'azure': Color(.941176, 1, 1),
- 'background': Color(58, 110, 165),
- 'beige': Color(.960784, .960784, .862745),
- 'bisque': Color(1, .894118, .768627),
- 'black': Color(0, 0, 0),
- 'blanchedalmond': Color(1, .921569, .803922),
- 'blue': Color(0, 0, 1),
- 'blueviolet': Color(.541176, .168627, .886275),
- 'brown': Color(.647059, .164706, .164706),
- 'burlywood': Color(.870588, .721569, .529412),
- 'buttonface': Color(212, 208, 200),
- 'buttonhighlight': Color(255, 255, 255),
- 'buttonshadow': Color(128, 128, 128),
- 'buttontext': Color(0, 0, 0),
- 'cadetblue': Color(.372549, .619608, .627451),
- 'captiontext': Color(255, 255, 255),
- 'chartreuse': Color(.498039, 1, 0),
- 'chocolate': Color(.823529, .411765, .117647),
- 'coral': Color(1, .498039, .313725),
- 'cornflowerblue': Color(.392157, .584314, .929412),
- 'cornsilk': Color(1, .972549, .862745),
- 'crimson': Color(.862745, .078431, .235294),
- 'cyan': Color(0, 1, 1),
- 'darkblue': Color(0, 0, .545098),
- 'darkcyan': Color(0, .545098, .545098),
- 'darkgoldenrod': Color(.721569, .52549, .043137),
- 'darkgray': Color(.662745, .662745, .662745),
- 'darkgreen': Color(0, .392157, 0),
- 'darkgrey': Color(.662745, .662745, .662745),
- 'darkkhaki': Color(.741176, .717647, .419608),
- 'darkmagenta': Color(.545098, 0, .545098),
- 'darkolivegreen': Color(.333333, .419608, .184314),
- 'darkorange': Color(1, .54902, 0),
- 'darkorchid': Color(.6, .196078, .8),
- 'darkred': Color(.545098, 0, 0),
- 'darksalmon': Color(.913725, .588235, .478431),
- 'darkseagreen': Color(.560784, .737255, .560784),
- 'darkslateblue': Color(.282353, .239216, .545098),
- 'darkslategray': Color(.184314, .309804, .309804),
- 'darkslategrey': Color(.184314, .309804, .309804),
- 'darkturquoise': Color(0, .807843, .819608),
- 'darkviolet': Color(.580392, 0, .827451),
- 'deeppink': Color(1, .078431, .576471),
- 'deepskyblue': Color(0, .74902, 1),
- 'dimgray': Color(.411765, .411765, .411765),
- 'dimgrey': Color(.411765, .411765, .411765),
- 'dodgerblue': Color(.117647, .564706, 1),
- 'firebrick': Color(.698039, .133333, .133333),
- 'floralwhite': Color(1, .980392, .941176),
- 'forestgreen': Color(.133333, .545098, .133333),
- 'fuchsia': Color(1, 0, 1),
- 'gainsboro': Color(.862745, .862745, .862745),
- 'ghostwhite': Color(.972549, .972549, 1),
- 'gold': Color(1, .843137, 0),
- 'goldenrod': Color(.854902, .647059, .12549),
- 'gray': Color(.501961, .501961, .501961),
- 'graytext': Color(128, 128, 128),
- 'green': Color(0, .501961, 0),
- 'greenyellow': Color(.678431, 1, .184314),
- 'grey': Color(.501961, .501961, .501961),
- 'highlight': Color(10, 36, 106),
- 'highlighttext': Color(255, 255, 255),
- 'honeydew': Color(.941176, 1, .941176),
- 'hotpink': Color(1, .411765, .705882),
- 'inactiveborder': Color(212, 208, 200),
- 'inactivecaption': Color(128, 128, 128),
- 'inactivecaptiontext': Color(212, 208, 200),
- 'indianred': Color(.803922, .360784, .360784),
- 'indigo': Color(.294118, 0, .509804),
- 'infobackground': Color(255, 255, 225),
- 'infotext': Color(0, 0, 0),
- 'ivory': Color(1, 1, .941176),
- 'khaki': Color(.941176, .901961, .54902),
- 'lavender': Color(.901961, .901961, .980392),
- 'lavenderblush': Color(1, .941176, .960784),
- 'lawngreen': Color(.486275, .988235, 0),
- 'lemonchiffon': Color(1, .980392, .803922),
- 'lightblue': Color(.678431, .847059, .901961),
- 'lightcoral': Color(.941176, .501961, .501961),
- 'lightcyan': Color(.878431, 1, 1),
- 'lightgoldenrodyellow': Color(.980392, .980392, .823529),
- 'lightgray': Color(.827451, .827451, .827451),
- 'lightgreen': Color(.564706, .933333, .564706),
- 'lightgrey': Color(.827451, .827451, .827451),
- 'lightpink': Color(1, .713725, .756863),
- 'lightsalmon': Color(1, .627451, .478431),
- 'lightseagreen': Color(.12549, .698039, .666667),
- 'lightskyblue': Color(.529412, .807843, .980392),
- 'lightslategray': Color(.466667, .533333, .6),
- 'lightslategrey': Color(.466667, .533333, .6),
- 'lightsteelblue': Color(.690196, .768627, .870588),
- 'lightyellow': Color(1, 1, .878431),
- 'lime': Color(0, 1, 0),
- 'limegreen': Color(.196078, .803922, .196078),
- 'linen': Color(.980392, .941176, .901961),
- 'magenta': Color(1, 0, 1),
- 'maroon': Color(.501961, 0, 0),
- 'mediumaquamarine': Color(.4, .803922, .666667),
- 'mediumblue': Color(0, 0, .803922),
- 'mediumorchid': Color(.729412, .333333, .827451),
- 'mediumpurple': Color(.576471, .439216, .858824),
- 'mediumseagreen': Color(.235294, .701961, .443137),
- 'mediumslateblue': Color(.482353, .407843, .933333),
- 'mediumspringgreen': Color(0, .980392, .603922),
- 'mediumturquoise': Color(.282353, .819608, .8),
- 'mediumvioletred': Color(.780392, .082353, .521569),
- 'menu': Color(212, 208, 200),
- 'menutext': Color(0, 0, 0),
- 'midnightblue': Color(.098039, .098039, .439216),
- 'mintcream': Color(.960784, 1, .980392),
- 'mistyrose': Color(1, .894118, .882353),
- 'moccasin': Color(1, .894118, .709804),
- 'navajowhite': Color(1, .870588, .678431),
- 'navy': Color(0, 0, .501961),
- 'oldlace': Color(.992157, .960784, .901961),
- 'olive': Color(.501961, .501961, 0),
- 'olivedrab': Color(.419608, .556863, .137255),
- 'orange': Color(1, .647059, 0),
- 'orangered': Color(1, .270588, 0),
- 'orchid': Color(.854902, .439216, .839216),
- 'palegoldenrod': Color(.933333, .909804, .666667),
- 'palegreen': Color(.596078, .984314, .596078),
- 'paleturquoise': Color(.686275, .933333, .933333),
- 'palevioletred': Color(.858824, .439216, .576471),
- 'papayawhip': Color(1, .937255, .835294),
- 'peachpuff': Color(1, .854902, .72549),
- 'peru': Color(.803922, .521569, .247059),
- 'pink': Color(1, .752941, .796078),
- 'plum': Color(.866667, .627451, .866667),
- 'powderblue': Color(.690196, .878431, .901961),
- 'purple': Color(.501961, 0, .501961),
- 'red': Color(1, 0, 0),
- 'rosybrown': Color(.737255, .560784, .560784),
- 'royalblue': Color(.254902, .411765, .882353),
- 'saddlebrown': Color(.545098, .270588, .07451),
- 'salmon': Color(.980392, .501961, .447059),
- 'sandybrown': Color(.956863, .643137, .376471),
- 'scrollbar': Color(212, 208, 200),
- 'seagreen': Color(.180392, .545098, .341176),
- 'seashell': Color(1, .960784, .933333),
- 'sienna': Color(.627451, .321569, .176471),
- 'silver': Color(.752941, .752941, .752941),
- 'skyblue': Color(.529412, .807843, .921569),
- 'slateblue': Color(.415686, .352941, .803922),
- 'slategray': Color(.439216, .501961, .564706),
- 'slategrey': Color(.439216, .501961, .564706),
- 'snow': Color(1, .980392, .980392),
- 'springgreen': Color(0, 1, .498039),
- 'steelblue': Color(.27451, .509804, .705882),
- 'tan': Color(.823529, .705882, .54902),
- 'teal': Color(0, .501961, .501961),
- 'thistle': Color(.847059, .74902, .847059),
- 'threeddarkshadow': Color(64, 64, 64),
- 'threedface': Color(212, 208, 200),
- 'threedhighlight': Color(255, 255, 255),
- 'threedlightshadow': Color(212, 208, 200),
- 'threedshadow': Color(128, 128, 128),
- 'tomato': Color(1, .388235, .278431),
- 'turquoise': Color(.25098, .878431, .815686),
- 'violet': Color(.933333, .509804, .933333),
- 'wheat': Color(.960784, .870588, .701961),
- 'white': Color(1, 1, 1),
- 'whitesmoke': Color(.960784, .960784, .960784),
- 'window': Color(255, 255, 255),
- 'windowframe': Color(0, 0, 0),
- 'windowtext': Color(0, 0, 0),
- 'yellow': Color(1, 1, 0),
- 'yellowgreen': Color(.603922, .803922, .196078)}
+    'activeborder': Color(212, 208, 200),
+    'activecaption': Color(10, 36, 106),
+    'aliceblue': Color(.941176, .972549, 1),
+    'antiquewhite': Color(.980392, .921569, .843137),
+    'appworkspace': Color(128, 128, 128),
+    'aqua': Color(0, 1, 1),
+    'aquamarine': Color(.498039, 1, .831373),
+    'azure': Color(.941176, 1, 1),
+    'background': Color(58, 110, 165),
+    'beige': Color(.960784, .960784, .862745),
+    'bisque': Color(1, .894118, .768627),
+    'black': Color(0, 0, 0),
+    'blanchedalmond': Color(1, .921569, .803922),
+    'blue': Color(0, 0, 1),
+    'blueviolet': Color(.541176, .168627, .886275),
+    'brown': Color(.647059, .164706, .164706),
+    'burlywood': Color(.870588, .721569, .529412),
+    'buttonface': Color(212, 208, 200),
+    'buttonhighlight': Color(255, 255, 255),
+    'buttonshadow': Color(128, 128, 128),
+    'buttontext': Color(0, 0, 0),
+    'cadetblue': Color(.372549, .619608, .627451),
+    'captiontext': Color(255, 255, 255),
+    'chartreuse': Color(.498039, 1, 0),
+    'chocolate': Color(.823529, .411765, .117647),
+    'coral': Color(1, .498039, .313725),
+    'cornflowerblue': Color(.392157, .584314, .929412),
+    'cornsilk': Color(1, .972549, .862745),
+    'crimson': Color(.862745, .078431, .235294),
+    'cyan': Color(0, 1, 1),
+    'darkblue': Color(0, 0, .545098),
+    'darkcyan': Color(0, .545098, .545098),
+    'darkgoldenrod': Color(.721569, .52549, .043137),
+    'darkgray': Color(.662745, .662745, .662745),
+    'darkgreen': Color(0, .392157, 0),
+    'darkgrey': Color(.662745, .662745, .662745),
+    'darkkhaki': Color(.741176, .717647, .419608),
+    'darkmagenta': Color(.545098, 0, .545098),
+    'darkolivegreen': Color(.333333, .419608, .184314),
+    'darkorange': Color(1, .54902, 0),
+    'darkorchid': Color(.6, .196078, .8),
+    'darkred': Color(.545098, 0, 0),
+    'darksalmon': Color(.913725, .588235, .478431),
+    'darkseagreen': Color(.560784, .737255, .560784),
+    'darkslateblue': Color(.282353, .239216, .545098),
+    'darkslategray': Color(.184314, .309804, .309804),
+    'darkslategrey': Color(.184314, .309804, .309804),
+    'darkturquoise': Color(0, .807843, .819608),
+    'darkviolet': Color(.580392, 0, .827451),
+    'deeppink': Color(1, .078431, .576471),
+    'deepskyblue': Color(0, .74902, 1),
+    'dimgray': Color(.411765, .411765, .411765),
+    'dimgrey': Color(.411765, .411765, .411765),
+    'dodgerblue': Color(.117647, .564706, 1),
+    'firebrick': Color(.698039, .133333, .133333),
+    'floralwhite': Color(1, .980392, .941176),
+    'forestgreen': Color(.133333, .545098, .133333),
+    'fuchsia': Color(1, 0, 1),
+    'gainsboro': Color(.862745, .862745, .862745),
+    'ghostwhite': Color(.972549, .972549, 1),
+    'gold': Color(1, .843137, 0),
+    'goldenrod': Color(.854902, .647059, .12549),
+    'gray': Color(.501961, .501961, .501961),
+    'graytext': Color(128, 128, 128),
+    'green': Color(0, .501961, 0),
+    'greenyellow': Color(.678431, 1, .184314),
+    'grey': Color(.501961, .501961, .501961),
+    'highlight': Color(10, 36, 106),
+    'highlighttext': Color(255, 255, 255),
+    'honeydew': Color(.941176, 1, .941176),
+    'hotpink': Color(1, .411765, .705882),
+    'inactiveborder': Color(212, 208, 200),
+    'inactivecaption': Color(128, 128, 128),
+    'inactivecaptiontext': Color(212, 208, 200),
+    'indianred': Color(.803922, .360784, .360784),
+    'indigo': Color(.294118, 0, .509804),
+    'infobackground': Color(255, 255, 225),
+    'infotext': Color(0, 0, 0),
+    'ivory': Color(1, 1, .941176),
+    'khaki': Color(.941176, .901961, .54902),
+    'lavender': Color(.901961, .901961, .980392),
+    'lavenderblush': Color(1, .941176, .960784),
+    'lawngreen': Color(.486275, .988235, 0),
+    'lemonchiffon': Color(1, .980392, .803922),
+    'lightblue': Color(.678431, .847059, .901961),
+    'lightcoral': Color(.941176, .501961, .501961),
+    'lightcyan': Color(.878431, 1, 1),
+    'lightgoldenrodyellow': Color(.980392, .980392, .823529),
+    'lightgray': Color(.827451, .827451, .827451),
+    'lightgreen': Color(.564706, .933333, .564706),
+    'lightgrey': Color(.827451, .827451, .827451),
+    'lightpink': Color(1, .713725, .756863),
+    'lightsalmon': Color(1, .627451, .478431),
+    'lightseagreen': Color(.12549, .698039, .666667),
+    'lightskyblue': Color(.529412, .807843, .980392),
+    'lightslategray': Color(.466667, .533333, .6),
+    'lightslategrey': Color(.466667, .533333, .6),
+    'lightsteelblue': Color(.690196, .768627, .870588),
+    'lightyellow': Color(1, 1, .878431),
+    'lime': Color(0, 1, 0),
+    'limegreen': Color(.196078, .803922, .196078),
+    'linen': Color(.980392, .941176, .901961),
+    'magenta': Color(1, 0, 1),
+    'maroon': Color(.501961, 0, 0),
+    'mediumaquamarine': Color(.4, .803922, .666667),
+    'mediumblue': Color(0, 0, .803922),
+    'mediumorchid': Color(.729412, .333333, .827451),
+    'mediumpurple': Color(.576471, .439216, .858824),
+    'mediumseagreen': Color(.235294, .701961, .443137),
+    'mediumslateblue': Color(.482353, .407843, .933333),
+    'mediumspringgreen': Color(0, .980392, .603922),
+    'mediumturquoise': Color(.282353, .819608, .8),
+    'mediumvioletred': Color(.780392, .082353, .521569),
+    'menu': Color(212, 208, 200),
+    'menutext': Color(0, 0, 0),
+    'midnightblue': Color(.098039, .098039, .439216),
+    'mintcream': Color(.960784, 1, .980392),
+    'mistyrose': Color(1, .894118, .882353),
+    'moccasin': Color(1, .894118, .709804),
+    'navajowhite': Color(1, .870588, .678431),
+    'navy': Color(0, 0, .501961),
+    'oldlace': Color(.992157, .960784, .901961),
+    'olive': Color(.501961, .501961, 0),
+    'olivedrab': Color(.419608, .556863, .137255),
+    'orange': Color(1, .647059, 0),
+    'orangered': Color(1, .270588, 0),
+    'orchid': Color(.854902, .439216, .839216),
+    'palegoldenrod': Color(.933333, .909804, .666667),
+    'palegreen': Color(.596078, .984314, .596078),
+    'paleturquoise': Color(.686275, .933333, .933333),
+    'palevioletred': Color(.858824, .439216, .576471),
+    'papayawhip': Color(1, .937255, .835294),
+    'peachpuff': Color(1, .854902, .72549),
+    'peru': Color(.803922, .521569, .247059),
+    'pink': Color(1, .752941, .796078),
+    'plum': Color(.866667, .627451, .866667),
+    'powderblue': Color(.690196, .878431, .901961),
+    'purple': Color(.501961, 0, .501961),
+    'red': Color(1, 0, 0),
+    'rosybrown': Color(.737255, .560784, .560784),
+    'royalblue': Color(.254902, .411765, .882353),
+    'saddlebrown': Color(.545098, .270588, .07451),
+    'salmon': Color(.980392, .501961, .447059),
+    'sandybrown': Color(.956863, .643137, .376471),
+    'scrollbar': Color(212, 208, 200),
+    'seagreen': Color(.180392, .545098, .341176),
+    'seashell': Color(1, .960784, .933333),
+    'sienna': Color(.627451, .321569, .176471),
+    'silver': Color(.752941, .752941, .752941),
+    'skyblue': Color(.529412, .807843, .921569),
+    'slateblue': Color(.415686, .352941, .803922),
+    'slategray': Color(.439216, .501961, .564706),
+    'slategrey': Color(.439216, .501961, .564706),
+    'snow': Color(1, .980392, .980392),
+    'springgreen': Color(0, 1, .498039),
+    'steelblue': Color(.27451, .509804, .705882),
+    'tan': Color(.823529, .705882, .54902),
+    'teal': Color(0, .501961, .501961),
+    'thistle': Color(.847059, .74902, .847059),
+    'threeddarkshadow': Color(64, 64, 64),
+    'threedface': Color(212, 208, 200),
+    'threedhighlight': Color(255, 255, 255),
+    'threedlightshadow': Color(212, 208, 200),
+    'threedshadow': Color(128, 128, 128),
+    'tomato': Color(1, .388235, .278431),
+    'turquoise': Color(.25098, .878431, .815686),
+    'violet': Color(.933333, .509804, .933333),
+    'wheat': Color(.960784, .870588, .701961),
+    'white': Color(1, 1, 1),
+    'whitesmoke': Color(.960784, .960784, .960784),
+    'window': Color(255, 255, 255),
+    'windowframe': Color(0, 0, 0),
+    'windowtext': Color(0, 0, 0),
+    'yellow': Color(1, 1, 0),
+    'yellowgreen': Color(.603922, .803922, .196078)
+}
 
