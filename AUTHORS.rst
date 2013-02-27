@@ -39,6 +39,7 @@ the maintainer should theses names be changed to something more relevant.
 * Dale O'Brien
 * Bertrand Bordage
 * "tomscytale"
+* Nick Pack
 
 Special thanks
 ==============
