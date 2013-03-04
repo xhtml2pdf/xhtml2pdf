@@ -519,7 +519,6 @@ class pisaFileObject:
             self.data = base64.decodestring(m.group("data"))
 
         else:
-
             # Check if we have an external scheme
             if basepath and not urlparse.urlparse(uri).scheme:
                 urlParts = urlparse.urlparse(basepath)
@@ -560,8 +559,12 @@ class pisaFileObject:
                     self.uri = uri
                     if r1.getheader("content-encoding") == "gzip":
                         import gzip
+                        try:
+                            import cStringIO as StringIO
+                        except:
+                            import StringIO
 
-                        self.file = gzip.GzipFile(mode="rb", fileobj=r1)
+                        self.file = gzip.GzipFile(mode="rb", fileobj=StringIO.StringIO(r1.read()))
                     else:
                         self.file = r1
                 else:
