@@ -432,10 +432,12 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
         elif "transparency" in self._image.info:
             transparency = self._image.info["transparency"] * 3
             palette = self._image.palette
-            try:
+            if hasattr(palette, 'palette'):
                 palette = palette.palette
-            except:
+            elif hasattr(palette, 'data'):
                 palette = palette.data
+            else:
+                return None
             return map(ord, palette[transparency:transparency + 3])
         else:
             return None
