@@ -516,17 +516,16 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
         availHeight = self.getMaxHeight()
         for frag in self.frags:
             if hasattr(frag, "cbDefn") and frag.cbDefn.kind == "img":
-                self.hasImages = True
-                img = frag.cbDefn
-                width = min(img.width, availWidth)
-                wfactor = 0
-                if img.width != 0:
+                if img.width > 0 and img.height > 0:
+                    self.hasImages = True
+                    img = frag.cbDefn
+                    width = min(img.width, availWidth)
                     wfactor = float(width) / img.width
-                height = min(img.height, availHeight * MAX_IMAGE_RATIO)  # XXX 99% because 100% do not work...
-                hfactor = float(height) / img.height
-                factor = min(wfactor, hfactor)
-                img.height *= factor
-                img.width *= factor
+                    height = min(img.height, availHeight * MAX_IMAGE_RATIO)  # XXX 99% because 100% do not work...
+                    hfactor = float(height) / img.height
+                    factor = min(wfactor, hfactor)
+                    img.height *= factor
+                    img.width *= factor
 
     def wrap(self, availWidth, availHeight):
 
