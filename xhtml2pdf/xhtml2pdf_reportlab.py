@@ -516,9 +516,9 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
         availHeight = self.getMaxHeight()
         for frag in self.frags:
             if hasattr(frag, "cbDefn") and frag.cbDefn.kind == "img":
+                img = frag.cbDefn
                 if img.width > 0 and img.height > 0:
                     self.hasImages = True
-                    img = frag.cbDefn
                     width = min(img.width, availWidth)
                     wfactor = float(width) / img.width
                     height = min(img.height, availHeight * MAX_IMAGE_RATIO)  # XXX 99% because 100% do not work...
