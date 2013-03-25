@@ -1,9 +1,10 @@
  CHANGELOG
 =========
 
-Version next
-------------
+Version 0.0.5
+-------------
 
+* Switched dependency to Pillow instead of PIL.
 * Converted the docs to rst (thanks tomscytale!)
 * Huge performance improvements (thanks Andrea Bravetti!)
 * Bugfixes.
