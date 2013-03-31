@@ -596,7 +596,10 @@ Barcodes
 You can embed barcodes automatically in a document. Various barcode
 formats are supported through the ``type`` attribute. If you want the
 original barcode text to be appeared on the document, simply add
-``humanreadable="1"``, otherwise simply omit this attribute. Alignment
+``humanreadable="1"``, otherwise simply omit this attribute. Some barcode 
+formats have a checksum as an option and it will be on by default, set
+``checksum="0"`` to override. 
+Alignment
 is achieved through ``align`` attribute and available values are any of
 ``"baseline", "top", "middle", "bottom"`` whereas default is
 ``baseline``. Finally, bar width and height can be controlled through
