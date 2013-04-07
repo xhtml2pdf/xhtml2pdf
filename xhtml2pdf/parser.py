@@ -132,6 +132,7 @@ attrNames = '''
     font-style
     text-decoration
     line-height
+    letter-spacing
     background-color
     display
     margin-left
@@ -270,6 +271,8 @@ def CSS2Frag(c, kw, isBlock):
         c.frag.leadingSource = leading
     else:
         c.frag.leading = getSize(c.frag.leadingSource, c.frag.fontSize)
+    if "letter-spacing" in c.cssAttr:
+        c.frag.letterSpacing = c.cssAttr["letter-spacing"]
     if "-pdf-line-spacing" in c.cssAttr:
         c.frag.leadingSpace = getSize("".join(c.cssAttr["-pdf-line-spacing"]))
         # print "line-spacing", c.cssAttr["-pdf-line-spacing"], c.frag.leading
@@ -432,6 +435,7 @@ def pisaLoop(node, context, path=None, **kw):
     if node.nodeType == Node.TEXT_NODE:
         # print indent, "#", repr(node.data) #, context.frag
         context.addFrag(node.data)
+        
         # context.text.append(node.value)
 
     # ELEMENT

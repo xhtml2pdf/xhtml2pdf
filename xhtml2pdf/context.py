@@ -79,6 +79,7 @@ def getParaFrag(style):
 
     # Extras
     frag.leading = 0
+    frag.letterSpacing = "normal"
     frag.leadingSource = "150%"
     frag.leadingSpace = 0
     frag.backColor = None
@@ -441,6 +442,7 @@ class pisaContext(object):
         style = ParagraphStyle('default%d' % self.UID(), keepWithNext=first.keepWithNext)
         style.fontName = first.fontName
         style.fontSize = first.fontSize
+        style.letterSpacing = first.letterSpacing
         style.leading = max(first.leading + first.leadingSpace, first.fontSize * 1.25)
         style.backColor = first.backColor
         style.spaceBefore = first.spaceBefore
