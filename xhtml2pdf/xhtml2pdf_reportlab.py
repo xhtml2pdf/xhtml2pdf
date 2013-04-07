@@ -432,10 +432,12 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
         elif "transparency" in self._image.info:
             transparency = self._image.info["transparency"] * 3
             palette = self._image.palette
-            try:
+            if hasattr(palette, 'palette'):
                 palette = palette.palette
-            except:
+            elif hasattr(palette, 'data'):
                 palette = palette.data
+            else:
+                return None
             return map(ord, palette[transparency:transparency + 3])
         else:
             return None
@@ -514,15 +516,16 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
         availHeight = self.getMaxHeight()
         for frag in self.frags:
             if hasattr(frag, "cbDefn") and frag.cbDefn.kind == "img":
-                self.hasImages = True
                 img = frag.cbDefn
-                width = min(img.width, availWidth)
-                wfactor = float(width) / img.width
-                height = min(img.height, availHeight * MAX_IMAGE_RATIO)  # XXX 99% because 100% do not work...
-                hfactor = float(height) / img.height
-                factor = min(wfactor, hfactor)
-                img.height *= factor
-                img.width *= factor
+                if img.width > 0 and img.height > 0:
+                    self.hasImages = True
+                    width = min(img.width, availWidth)
+                    wfactor = float(width) / img.width
+                    height = min(img.height, availHeight * MAX_IMAGE_RATIO)  # XXX 99% because 100% do not work...
+                    hfactor = float(height) / img.height
+                    factor = min(wfactor, hfactor)
+                    img.height *= factor
+                    img.width *= factor
 
     def wrap(self, availWidth, availHeight):
 
