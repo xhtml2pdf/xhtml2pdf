@@ -681,7 +681,8 @@ class pisaTagPDFBARCODE(pisaTag):
         attr = self.attr
         codeName = attr.type or "Code128"
         codeName = pisaTagPDFBARCODE._codeName[codeName.upper().replace("-", "")]
-        humanReadable = bool(attr.humanreadable)
+        humanReadable = int(attr.humanreadable)
+        checksum = int(attr.checksum)
         barWidth = attr.barwidth or 0.01 * inch
         barHeight = attr.barheight or 0.5 * inch
         fontName = c.getFontName("OCRB10,OCR-B,OCR B,OCRB")  # or "Helvetica"
@@ -700,6 +701,7 @@ class pisaTagPDFBARCODE(pisaTag):
             barWidth=barWidth,
             barHeight=barHeight,
             humanReadable=humanReadable,
+            checksum=checksum,
             fontName=fontName,
             fontSize=fontSize,
         )
