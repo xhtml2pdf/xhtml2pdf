@@ -365,7 +365,9 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
     def _read_image(self, fp):
         if sys.platform[0:4] == 'java':
             from javax.imageio import ImageIO
-            return ImageIO.read(fp)
+            from java.io import ByteArrayInputStream
+            input_stream = ByteArrayInputStream(fp.read())
+            return ImageIO.read(input_stream)
         elif PILImage:
             return PILImage.open(fp)
 
