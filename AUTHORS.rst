@@ -40,6 +40,7 @@ the maintainer should theses names be changed to something more relevant.
 * Bertrand Bordage
 * "tomscytale"
 * Nick Pack
+* Jeff Tchang
 
 Special thanks
 ==============
