@@ -213,6 +213,11 @@ def _putFragLine(cur_x, tx, line):
                 xs.cur_y = cur_y
         tx._olb = cur_y - descent
         tx._oleading = leading
+
+    # Letter spacing
+    if xs.style.letterSpacing != 'normal':
+        tx.setCharSpace(int(xs.style.letterSpacing))
+
     ws = getattr(tx, '_wordSpace', 0)
     nSpaces = 0
     words = line.words
@@ -536,7 +541,6 @@ def _drawBullet(canvas, offset, cur_y, bulletText, style):
                 tx2.setFont(f.fontName, f.fontSize)
                 tx2.setFillColor(f.textColor)
                 tx2.textOut(f.text)
-
     canvas.drawText(tx2)
     #AR making definition lists a bit less ugly
     #bulletEnd = tx2.getX()
@@ -1512,7 +1516,7 @@ class Paragraph(Flowable):
 
                 #now the font for the rest of the paragraph
                 tx.setFont(f.fontName, f.fontSize, leading)
-                ws = lines[0][0]
+                ws = getattr(tx, '_wordSpace', 0)  
                 t_off = dpl(tx, offset, ws, lines[0][1], noJustifyLast and nLines == 1)
                 if f.underline or f.link or f.strike:
                     xs = tx.XtraState = ABag()
