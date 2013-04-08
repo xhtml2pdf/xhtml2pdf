@@ -41,6 +41,7 @@ the maintainer should theses names be changed to something more relevant.
 * "tomscytale"
 * Nick Pack
 * Jeff Tchang
+* Andreas Stocker
 
 Special thanks
 ==============
