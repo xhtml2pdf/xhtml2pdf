@@ -221,19 +221,22 @@ def getCSSAttrCacheKey(node):
             _id = v
         elif k == 'style':
             _st = v
-    return "%s#%s#%s#%s" % (id(node.parentNode), _cl, _id, _st)
+    return "%s#%s#%s#%s#%s" % (node.tagName, id(node.parentNode), _cl, _id, _st)
 
 
 def CSSCollect(node, c):
     #node.cssAttrs = {}
     #return node.cssAttrs
+
     if c.css:
 
         _key = getCSSAttrCacheKey(node)
+
         if hasattr(node.parentNode, "tagName"):
             if node.parentNode.tagName.lower() != "html":
                 CachedCSSAttr = CSSAttrCache.get(_key, None)
                 if CachedCSSAttr is not None:
+                    node.cssAttrs = CachedCSSAttr
                     return CachedCSSAttr
 
         node.cssElement = cssDOMElementInterface.CSSDOMElementInterface(node)
@@ -251,7 +254,6 @@ def CSSCollect(node, c):
         CSSAttrCache[_key] = node.cssAttrs
 
     return node.cssAttrs
-
 
 def CSS2Frag(c, kw, isBlock):
     # COLORS
@@ -429,7 +431,7 @@ def pisaLoop(node, context, path=None, **kw):
     else:
         kw = copy.copy(kw)
 
-    # indent = len(path) * "  " # only used for debug print statements
+    #indent = len(path) * "  " # only used for debug print statements
 
     # TEXT
     if node.nodeType == Node.TEXT_NODE:
@@ -440,7 +442,7 @@ def pisaLoop(node, context, path=None, **kw):
 
     # ELEMENT
     elif node.nodeType == Node.ELEMENT_NODE:
-
+    
         node.tagName = node.tagName.replace(":", "").lower()
 
         if node.tagName in ("style", "script"):
@@ -450,7 +452,7 @@ def pisaLoop(node, context, path=None, **kw):
 
         # Prepare attributes
         attr = pisaGetAttributes(context, node.tagName, node.attributes)
-        # log.debug(indent + "<%s %s>" % (node.tagName, attr) + repr(node.attributes.items())) #, path
+        #log.debug(indent + "<%s %s>" % (node.tagName, attr) + repr(node.attributes.items())) #, path
 
         # Calculate styles
         context.cssAttr = CSSCollect(node, context)
@@ -666,6 +668,7 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
     #    context.cssText = DEFAULT_CSS
     #    context.parseCSS()
     # context.debug(9, pprint.pformat(context.css))
+    
     pisaLoop(document, context)
     return context
 
