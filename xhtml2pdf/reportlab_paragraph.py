@@ -860,7 +860,12 @@ def cjkFragSplit(frags, maxWidths, calcBounds, encoding='utf8'):
         lineBreak = hasattr(u.frag, 'lineBreak')
         endLine = (widthUsed > maxWidth + _FUZZ and widthUsed > 0) or lineBreak
         if endLine:
-            if lineBreak: continue
+            if lineBreak:
+                lines.append(makeCJKParaLine(U[lineStartPos:i], 0, calcBounds))
+                lineStartPos = i
+                i -= 1
+                continue
+
             extraSpace = maxWidth - widthUsed + w
             #This is the most important of the Japanese typography rules.
             #if next character cannot start a line, wrap it up to this line so it hangs
