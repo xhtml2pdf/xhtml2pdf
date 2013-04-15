@@ -14,6 +14,7 @@ from reportlab.lib.textsplit import ALL_CANNOT_START
 from copy import deepcopy
 from reportlab.lib.abag import ABag
 import re
+from util import getSize
 
 
 PARAGRAPH_DEBUG = False
@@ -216,7 +217,7 @@ def _putFragLine(cur_x, tx, line):
 
     # Letter spacing
     if xs.style.letterSpacing != 'normal':
-        tx.setCharSpace(int(xs.style.letterSpacing))
+        tx.setCharSpace(getSize(xs.style.letterSpacing))
 
     ws = getattr(tx, '_wordSpace', 0)
     nSpaces = 0
@@ -854,6 +855,8 @@ def cjkFragSplit(frags, maxWidths, calcBounds, encoding='utf8'):
     for i, u in enumerate(U):
         w = u.width
         widthUsed += w
+        if widthUsed < maxWidth:
+            widthUsed += u.frag.rightIndent
         lineBreak = hasattr(u.frag, 'lineBreak')
         endLine = (widthUsed > maxWidth + _FUZZ and widthUsed > 0) or lineBreak
         if endLine:
@@ -1058,7 +1061,8 @@ class Paragraph(Flowable):
         leading = style.leading
         lines = blPara.lines
         if blPara.kind == 1 and autoLeading not in ('', 'off'):
-            s = height = 0
+            s = 0
+            height = self.getSpaceBefore() + self.getSpaceAfter() #0 hepo
             if autoLeading == 'max':
                 for i, l in enumerate(blPara.lines):
                     h = max(l.ascent - l.descent, leading)
