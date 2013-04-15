@@ -216,8 +216,9 @@ def _putFragLine(cur_x, tx, line):
         tx._oleading = leading
 
     # Letter spacing
+    letter_spacing = getSize(xs.style.letterSpacing)
     if xs.style.letterSpacing != 'normal':
-        tx.setCharSpace(getSize(xs.style.letterSpacing))
+        tx.setCharSpace(letter_spacing)
 
     ws = getattr(tx, '_wordSpace', 0)
     nSpaces = 0
@@ -340,6 +341,7 @@ def _putFragLine(cur_x, tx, line):
                     xs.link_x = cur_x_s
                     xs.linkColor = xs.textColor
             txtlen = tx._canvas.stringWidth(text, tx._fontname, tx._fontsize)
+            txtlen += (len(text) - 1) * letter_spacing
             cur_x += txtlen
             nSpaces += text.count(' ')
     cur_x_s = cur_x + (nSpaces - 1) * ws
