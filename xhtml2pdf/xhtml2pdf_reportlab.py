@@ -452,9 +452,15 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
 
     def __str__(self):
         try:
-            return "PmlImageObject_%s" % hash(self.fileName.read())
+            fn = self.fileName.read()
+            if not fn:
+                fn = id(self)
+            return "PmlImageObject_%s" % hash(fn)
         except:
-            return self.fileName
+            fn = self.fileName
+            if not fn:
+                fn = id(self)
+            return fn
 
 
 class PmlImage(Flowable, PmlMaxHeightMixIn):
