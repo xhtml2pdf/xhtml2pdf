@@ -14,6 +14,7 @@ from reportlab.lib.textsplit import ALL_CANNOT_START
 from copy import deepcopy
 from reportlab.lib.abag import ABag
 import re
+from util import getSize
 
 
 PARAGRAPH_DEBUG = False
@@ -215,8 +216,9 @@ def _putFragLine(cur_x, tx, line):
         tx._oleading = leading
 
     # Letter spacing
+    letter_spacing = getSize(xs.style.letterSpacing)
     if xs.style.letterSpacing != 'normal':
-        tx.setCharSpace(int(xs.style.letterSpacing))
+        tx.setCharSpace(letter_spacing)
 
     ws = getattr(tx, '_wordSpace', 0)
     nSpaces = 0
@@ -339,6 +341,7 @@ def _putFragLine(cur_x, tx, line):
                     xs.link_x = cur_x_s
                     xs.linkColor = xs.textColor
             txtlen = tx._canvas.stringWidth(text, tx._fontname, tx._fontsize)
+            txtlen += (len(text) - 1) * letter_spacing
             cur_x += txtlen
             nSpaces += text.count(' ')
     cur_x_s = cur_x + (nSpaces - 1) * ws
@@ -854,10 +857,18 @@ def cjkFragSplit(frags, maxWidths, calcBounds, encoding='utf8'):
     for i, u in enumerate(U):
         w = u.width
         widthUsed += w
+        if widthUsed < maxWidth:
+            widthUsed += u.frag.rightIndent
         lineBreak = hasattr(u.frag, 'lineBreak')
         endLine = (widthUsed > maxWidth + _FUZZ and widthUsed > 0) or lineBreak
         if endLine:
-            if lineBreak: continue
+            if lineBreak:
+                lines.append(makeCJKParaLine(U[lineStartPos:i], 0, calcBounds))
+                lineStartPos = i
+                widthUsed = w
+                i -= 1
+                continue
+
             extraSpace = maxWidth - widthUsed + w
             #This is the most important of the Japanese typography rules.
             #if next character cannot start a line, wrap it up to this line so it hangs
@@ -1058,7 +1069,8 @@ class Paragraph(Flowable):
         leading = style.leading
         lines = blPara.lines
         if blPara.kind == 1 and autoLeading not in ('', 'off'):
-            s = height = 0
+            s = 0
+            height = self.getSpaceBefore() + self.getSpaceAfter() #0 hepo
             if autoLeading == 'max':
                 for i, l in enumerate(blPara.lines):
                     h = max(l.ascent - l.descent, leading)
@@ -1379,6 +1391,9 @@ class Paragraph(Flowable):
 
         if self.debug:
             print id(self), "breakLinesCJK"
+
+        if not getattr(self.frags[0], 'text', None):
+            return self.breakLines(width)
 
         if not isinstance(width, (list, tuple)):
             maxWidths = [width]

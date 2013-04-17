@@ -411,8 +411,9 @@ class pisaTagIMG(pisaTag):
 class pisaTagHR(pisaTag):
     def start(self, c):
         c.addPara()
+        line_color = c.cssAttr.get('background') or c.cssAttr.get('color') or self.attr.color
         c.addStory(HRFlowable(
-            color=self.attr.color,
+            color=line_color,
             thickness=self.attr.size,
             width=self.attr.get('width', "100%") or "100%",
             spaceBefore=c.frag.spaceBefore,
