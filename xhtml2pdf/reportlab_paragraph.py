@@ -865,6 +865,7 @@ def cjkFragSplit(frags, maxWidths, calcBounds, encoding='utf8'):
             if lineBreak:
                 lines.append(makeCJKParaLine(U[lineStartPos:i], 0, calcBounds))
                 lineStartPos = i
+                widthUsed = w
                 i -= 1
                 continue
 
@@ -1390,6 +1391,9 @@ class Paragraph(Flowable):
 
         if self.debug:
             print id(self), "breakLinesCJK"
+
+        if not getattr(self.frags[0], 'text', None):
+            return self.breakLines(width)
 
         if not isinstance(width, (list, tuple)):
             maxWidths = [width]
