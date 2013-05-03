@@ -167,7 +167,7 @@ class pisaCSSBuilder(css.CSSBuilder):
         # Font style
         italic = str(data.get("font-style", "")).lower() in ("italic", "oblique")
 
-        src = self.c.getFile(data["src"])
+        src = self.c.getFile(data["src"], relative=self.c.cssParser.rootPath)
         self.c.loadFont(
             names,
             src,
@@ -265,7 +265,8 @@ class pisaCSSBuilder(css.CSSBuilder):
 
         background = data.get("background-image", None)
         if background:
-            background = self.c.getFile(background)
+            #should be relative to the css file
+            background = self.c.getFile(background, relative=self.c.cssParser.rootPath)
 
         if not frameList:
             log.warn(c.warning("missing explicit frame definition for content or just static frames"))

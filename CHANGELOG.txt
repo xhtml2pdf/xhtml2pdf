@@ -4,6 +4,7 @@
 Version Next
 ------------
 
+* get css backgrounds and fonts relative to the css file path
 
 
 Version 0.0.5
