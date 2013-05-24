@@ -221,8 +221,7 @@ def getCSSAttrCacheKey(node):
             _id = v
         elif k == 'style':
             _st = v
-    return "%s#%s#%s#%s#%s" % (node.tagName, id(node.parentNode), _cl, _id, _st)
-
+    return "%s#%s#%s#%s#%s" % (id(node.parentNode), node.tagName.lower(), _cl, _id, _st)
 
 def CSSCollect(node, c):
     #node.cssAttrs = {}
@@ -626,6 +625,7 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
     - Return Context object
     """
 
+    global CSSAttrCache
     CSSAttrCache = {}
 
     if xhtml:
