@@ -76,7 +76,7 @@ a simple "Hello World" example:
 
 ::
 
-    import xhtml2pdf                          (1)
+    import xhtml2pdf.pisa                          (1)
 
     def helloWorld():
       filename = __file__ + ".pdf"               (2)
@@ -84,10 +84,10 @@ a simple "Hello World" example:
         "Hello <strong>World</strong>",
         file(filename, "wb"))
       if not pdf.err:                            (4)
-        xhtml2pdf.startViewer(filename)          (5)
+        xhtml2pdf.pisa.startViewer(filename)          (5)
 
     if __name__=="__main__":
-      xhtml2pdf.showLogging()                    (6)
+      xhtml2pdf.pisa.showLogging()                    (6)
       helloWorld()
 
 **Comments:**
