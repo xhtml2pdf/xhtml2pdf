@@ -43,6 +43,9 @@ the maintainer should theses names be changed to something more relevant.
 * Jeff Tchang
 * Andreas Stocker
 * Dylan Jay
+* mthornhill
+* Andrea Bravetti
+* sbisinger
 
 Special thanks
 ==============
