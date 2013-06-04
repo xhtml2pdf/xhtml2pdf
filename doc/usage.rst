@@ -638,6 +638,11 @@ pdf:pagenumber
 Prints current page number. The argument "example" defines the space the
 page number will require e.g. "00".
 
+pdf:pagecount
+~~~~~~~~~~~~~~
+
+Prints total page count.
+
 pdf:nexttemplate
 ~~~~~~~~~~~~~~~~
 
