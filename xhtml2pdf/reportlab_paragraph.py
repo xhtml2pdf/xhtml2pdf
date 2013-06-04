@@ -1544,7 +1544,7 @@ class Paragraph(Flowable):
                     strike = f.strike
                     link = f.link
                     if underline:
-                        do_under_line(0, dx, ws, tx)
+                        _do_under_line(0, dx, ws, tx)
                     if strike:
                         _do_under_line(0, dx, ws, tx, lm=0.125)
                     if link: _do_link_line(0, dx, ws, tx)
