@@ -42,6 +42,7 @@ the maintainer should theses names be changed to something more relevant.
 * Nick Pack
 * Jeff Tchang
 * Andreas Stocker
+* Dylan Jay
 
 Special thanks
 ==============
