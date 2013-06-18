@@ -336,6 +336,9 @@ class CSSParser(object):
         i_nmchar = _orRule('[-0-9A-Za-z_]', i_nonascii, i_escape)
         i_ident = '((?:%s)(?:%s)*)' % (i_nmstart, i_nmchar)
         re_ident = re.compile(i_ident, _reflags)
+        # Caution: treats all characters above 0x7f as legal for an identifier.
+        i_unicodeid = ur'([^\u0000-\u007f]+)'
+        re_unicodeid = re.compile(i_unicodeid, _reflags)
         i_element_name = '((?:%s)|\*)' % (i_ident[1:-1],)
         re_element_name = re.compile(i_element_name, _reflags)
         i_namespace_selector = '((?:%s)|\*|)\|(?!=)' % (i_ident[1:-1],)
@@ -1136,6 +1139,11 @@ class CSSParser(object):
         if result is not None:
             if nsPrefix is not None:
                 result = self.cssBuilder.resolveNamespacePrefix(nsPrefix, result)
+            term = self.cssBuilder.termIdent(result)
+            return src.lstrip(), term
+
+        result, src = self._getMatchResult(self.re_unicodeid, src)
+        if result is not None:
             term = self.cssBuilder.termIdent(result)
             return src.lstrip(), term
 

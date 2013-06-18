@@ -636,7 +636,9 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
 
     if type(src) in types.StringTypes:
         if type(src) is types.UnicodeType:
-            encoding = "utf8"
+            # If an encoding was provided, do not change it.
+            if not encoding:
+                encoding = "utf-8"
             src = src.encode(encoding)
         src = pisaTempFile(src, capacity=context.capacity)
 
@@ -656,7 +658,7 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
         encoding=encoding)
 
     if xml_output:
-        xml_output.write(document.toprettyxml(encoding="utf8"))
+        xml_output.write(document.toprettyxml(encoding=encoding))
 
     if default_css:
         context.addCSS(default_css)

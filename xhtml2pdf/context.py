@@ -156,6 +156,9 @@ class pisaCSSBuilder(css.CSSBuilder):
         """
         result = self.ruleset([self.selector('*')], declarations)
         data = result[0].values()[0]
+        if "src" not in data:
+            # invalid - source is required, ignore this specification
+            return {}, {}
         names = data["font-family"]
 
         # Font weight
@@ -759,9 +762,13 @@ class pisaContext(object):
         """
         # print names, self.fontList
         if type(names) is not types.ListType:
-            names = str(names).strip().split(",")
+            if type(names) not in types.StringTypes:
+                names = str(names)
+            names = names.strip().split(",")
         for name in names:
-            font = self.fontList.get(str(name).strip().lower(), None)
+            if type(name) not in types.StringTypes:
+                name = str(name)
+            font = self.fontList.get(name.strip().lower(), None)
             if font is not None:
                 return font
         return self.fontList.get(default, None)
@@ -769,7 +776,9 @@ class pisaContext(object):
     def registerFont(self, fontname, alias=[]):
         self.fontList[str(fontname).lower()] = str(fontname)
         for a in alias:
-            self.fontList[str(a)] = str(fontname)
+            if type(fontname) not in types.StringTypes:
+                fontname = str(fontname)
+            self.fontList[str(a)] = fontname
 
     def loadFont(self, names, src, encoding="WinAnsiEncoding", bold=0, italic=0):
 
