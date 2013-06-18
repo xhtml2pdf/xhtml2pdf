@@ -45,7 +45,7 @@ the maintainer should theses names be changed to something more relevant.
 * Dylan Jay
 * mthornhill
 * Andrea Bravetti
-* sbisinger
+* Stéphane Bisinger
 
 Special thanks
 ==============
