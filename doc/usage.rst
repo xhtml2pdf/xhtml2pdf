@@ -6,7 +6,7 @@ Introduction
 ========
 
 **xhtml2pdf** enables users to generate PDF documents from HTML content
-easily and with automated flow control such as pagination and keep-paragraph-text-together.
+easily and with automated flow control such as pagination and keeping text together.
 The **Python module** can be used in any Python environment, including Django.
 The **Command line tool** is a stand-alone program that can be executed from the command line.
 
@@ -73,7 +73,7 @@ PDF vs. HTML
 ========
 
 Before we discuss how to define page layouts with xhtml2pdf style sheets, it helps
-to understand some of the inherent differneces between PDF and HTML.
+to understand some of the inherent differences between PDF and HTML.
 
 PDF is specifically designed around pages of a specific width and height.
 PDF page elements (such as paragraphs, tables and images) are positioned
@@ -96,8 +96,8 @@ makes use of the concept of **Pages** and **Frames**. Pages define the
 size, orientation and margins of pages. Frames are rectangular regions
 with in each page.
 
-The **Frame ***location*** is specified in absolute (X,Y) coordinates**,
-while the **Frame ***content*** is used to flow HTML content using the
+The **Frame location is specified in absolute (X,Y) coordinates**,
+while the **Frame content is used to flow HTML content using the
 relative positioning rules of HTML**.
 This is the essence from which the power of xhtml2pdf stems.
 
@@ -110,7 +110,8 @@ Defining Page Layouts
 
 xhtml2pdf facilitates the conversion of HTML content into a PDF document by flowing
 the continuous HTML content through one or more pages using Pages and Frames.
-A Frame can be thought of as a rectangular region of a page through which the HTML
+A page represents a page layout within a PDF document.
+A Frame represents a rectangular region within a page through which the HTML
 content will flow.
 
 Pages
@@ -137,7 +138,7 @@ A @page object can hold one or more @frame objects.
 The @frame definition follows the style sheet convention of ordinary CSS style sheets:
 
 Here's a definition of a page template with one Content Frame.
-It makes use of the a Letter page size of 612pt x 792pt.
+It makes use of the Letter page size of 612pt x 792pt.
 
 ::
 
@@ -182,7 +183,10 @@ across different pages (like headers and footers), and uses **Content Frames**
 to position the to-be-converted HTML content.
 
 Static Frames are defined through use of the @frame property ``-pdf-frame-content``.
-Content Frames are @frame objects without this property defined.
+Regular HTML content will not flow through Static Frames.
+
+Content Frames are @frame objects without this property defined. Regular HTML
+content will flow through Content Frames.
 
 Example with 2 Static Frames and 1 Content Frame
 --------
@@ -328,6 +332,7 @@ Here's an example where paragraphs and tables are kept together until a 'separat
 appears in the HTML content flow.
 
 ::
+
     <style>
         table { -pdf-keep-with-next: true; }
         p { margin: 0; -pdf-keep-with-next: true; }
@@ -351,7 +356,7 @@ Named Page templates
 
 Page templates can be named by providing the name after the @page keyword::
 
-    @page template {
+    @page my_page {
         margin: 40pt;
     }
 
@@ -378,7 +383,7 @@ large 5cm margins and regular pages with regular 2cm margins.
     
     <body>    
         <h1>Title Page</h1>
-        This is a title page without a large 5cm margin.
+        This is a title page with a large 5cm margin.
     
         <!-- switch page templates -->
         <pdf:nexttemplate name="regular_template" />
@@ -392,9 +397,9 @@ large 5cm margins and regular pages with regular 2cm margins.
 Using xhtml2pdf in Django
 --------
 
-To allow URL references be resolved using Django's STATIC_URL and MEDIA_URL settings,
+To allow URL references to be resolved using Django's STATIC_URL and MEDIA_URL settings,
 xhtml2pdf allows users to specify a ``link_callback`` paramter to point to a function
-that converts relative URL to absolute system paths.
+that converts relative URLs to absolute system paths.
 
 ::
 
@@ -406,22 +411,20 @@ from django.template.loader import get_template
 # Convert HTML URIs to absolute system paths so xhtml2pdf can access those resources
 def link_callback(uri, rel):
     # use short variable names
-    mUrl = settings.MEDIA_URL       # Usually /static/media/
-    mRoot = settings.MEDIA_ROOT     # Usually /home/userX/project_static/media/
-    sUrl = settings.STATIC_URL      # Usually /static/
-    sRoot = settings.STATIC_ROOT    # Usually /home/userX/project_static/
+    sUrl = settings.STATIC_URL      # Typically /static/
+    sRoot = settings.STATIC_ROOT    # Typically /home/userX/project_static/
+    mUrl = settings.MEDIA_URL       # Typically /static/media/
+    mRoot = settings.MEDIA_ROOT     # Typically /home/userX/project_static/media/
 
     # convert URIs to absolute system paths
-    if uri.startswith(settings.MEDIA_URL):
-        # convert /static/media/XYZ to /home/userX/project_static/media/XYZ
+    if uri.startswith(mUrl):
         path = os.path.join(mRoot, uri.replace(mUrl, ""))
-    elif uri.startswith(settings.STATIC_URL):
-        # convert /static/XYZ to /home/userX/project_static/XYZ
+    elif uri.startswith(sUrl):
         path = os.path.join(sRoot, uri.replace(sUrl, ""))
 
     # make sure that file exists
     if not os.path.isfile(path):
-            raise UnsupportedMediaPathException(
+            raise Exception(
                     'media URI must start with %s or %s' % \
                     (sUrl, mUrl))
     return path
@@ -431,15 +434,15 @@ def generate_pdf(request, type):
     data = {}
     data['today'] = datetime.date.today()
     data['farmer'] = 'Old MacDonald'
-    data['animals'] = [('Cow', 'Moo'), ('Goat', 'baa'), ('Pig', 'Oink')]
+    data['animals'] = [('Cow', 'Moo'), ('Goat', 'Baa'), ('Pig', 'Oink')]
     
     # Render html content through html template with context
-    template = get_template('directory/pdf_directory.html')
+    template = get_template('lyrics/oldmacdonald.html')
     html  = template.render(Context(data))
  
     # Write PDF to file
     file = open(os.join(settings.MEDIA_ROOT, 'test.pdf'), "w+b")
-    pisaStatus = pisa.pisaDocument(html, dest=file,
+    pisaStatus = pisa.CreatePDF(html, dest=file,
             link_callback = link_callback)
     
     # Return PDF document through a Django HTTP response
