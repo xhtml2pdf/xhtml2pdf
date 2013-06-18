@@ -619,8 +619,9 @@ class CSSSelectorCombinationQualifier(CSSSelectorQualifierBase):
             if element is not None:
                 if element.matchesNode(self.selector.fullName):
                     try:
-                        [None for qualifier in self.selector.qualifiers if
-                         qualifier.matches(element) and stopIter(None)]
+                        for parent in element.iterXMLParents():
+                            [None for qualifier in self.selector.qualifiers if
+                             qualifier.matches(parent) and stopIter((None,))]
                     except StopIteration:
                         return True
             return False
