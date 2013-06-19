@@ -93,10 +93,14 @@ class memoized(object):
         # trying to memoize
         args_plus = tuple(kwargs.iteritems())
         key = (args, args_plus)
-        if key not in self.cache:
-            res = self.func(*args, **kwargs)
-            self.cache[key] = res
-        return self.cache[key]
+        try:
+            if key not in self.cache:
+                res = self.func(*args, **kwargs)
+                self.cache[key] = res
+            return self.cache[key]
+        except TypeError:
+            # happens if any of the parameters is a list
+            return self.func(*args, **kwargs)
 
 
 def ErrorMsg():
