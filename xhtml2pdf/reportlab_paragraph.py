@@ -1391,7 +1391,7 @@ class Paragraph(Flowable):
         if len(self.frags) > 1:
             autoLeading = getattr(self, 'autoLeading', getattr(style, 'autoLeading', ''))
             calcBounds = autoLeading not in ('', 'off')
-            return cjkFragSplit(self.frags, maxWidths, calcBounds)
+            return cjkFragSplit(self.frags, maxWidths, calcBounds, self.encoding)
 
         elif not len(self.frags):
             return ParaLines(kind=0, fontSize=style.fontSize, fontName=style.fontName,
