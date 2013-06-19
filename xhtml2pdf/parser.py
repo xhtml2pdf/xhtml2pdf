@@ -436,12 +436,12 @@ def pisaLoop(node, context, path=None, **kw):
     if node.nodeType == Node.TEXT_NODE:
         # print indent, "#", repr(node.data) #, context.frag
         context.addFrag(node.data)
-        
+
         # context.text.append(node.value)
 
     # ELEMENT
     elif node.nodeType == Node.ELEMENT_NODE:
-    
+
         node.tagName = node.tagName.replace(":", "").lower()
 
         if node.tagName in ("style", "script"):
@@ -668,7 +668,7 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
     #    context.cssText = DEFAULT_CSS
     #    context.parseCSS()
     # context.debug(9, pprint.pformat(context.css))
-    
+
     pisaLoop(document, context)
     return context
 

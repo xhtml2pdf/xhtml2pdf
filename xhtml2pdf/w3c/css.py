@@ -32,12 +32,15 @@ Dependencies:
     sets, cssParser, re (via cssParser)
 """
 
+import sys
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~ To replace any for with list comprehension
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
 def stopIter(value):
-    raise StopIteration, value
+    raise StopIteration(*value)
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -616,8 +619,9 @@ class CSSSelectorCombinationQualifier(CSSSelectorQualifierBase):
             if element is not None:
                 if element.matchesNode(self.selector.fullName):
                     try:
-                        [None for qualifier in self.selector.qualifiers if
-                         qualifier.matches(element) and stopIter(None)]
+                        for parent in element.iterXMLParents():
+                            [None for qualifier in self.selector.qualifiers if
+                             qualifier.matches(parent) and stopIter((None,))]
                     except StopIteration:
                         return True
             return False
@@ -673,7 +677,8 @@ class CSSRuleset(dict):
             return [None for nodeFilter, declarations in self.iteritems() if
                     (attrName in declarations) and (nodeFilter.matches(element)) and stopIter(
                         (nodeFilter, declarations))]
-        except StopIteration, value:
+        except StopIteration:
+            value = sys.exc_info()[1]
             return [value]
 
 
