@@ -336,7 +336,7 @@ appears in the HTML content flow.
     <style>
         table { -pdf-keep-with-next: true; }
         p { margin: 0; -pdf-keep-with-next: true; }
-        p.sepparator { -pdf-keep-with-next: false; font-size: 6pt; }
+        p.separator { -pdf-keep-with-next: false; font-size: 6pt; }
     </style>
       ...
     <body>
@@ -344,11 +344,11 @@ appears in the HTML content flow.
         <table><tr><td>And this table</td></tr></table>
         <p>together in one frame</p>
     
-        <p class="sepparator">&nbsp;<p>
+        <p class="separator">&nbsp;<p>
 
         <p>Keep these sets of lines</p>
         <p>may appear in a different frame</p>
-        <p class="sepparator">&nbsp;<p>
+        <p class="separator">&nbsp;<p>
     </body>
 
 Named Page templates

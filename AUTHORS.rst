@@ -46,6 +46,7 @@ the maintainer should theses names be changed to something more relevant.
 * mthornhill
 * Andrea Bravetti
 * Stéphane Bisinger
+* Ling Thio
 
 Special thanks
 ==============
