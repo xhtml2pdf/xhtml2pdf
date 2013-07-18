@@ -406,6 +406,7 @@ that converts relative URLs to absolute system paths.
     import os
     from django.conf import settings
     from django.http import HttpResponse
+    from django.template import Context
     from django.template.loader import get_template
 
     # Convert HTML URIs to absolute system paths so xhtml2pdf can access those resources
