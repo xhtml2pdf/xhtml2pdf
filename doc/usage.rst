@@ -27,7 +27,7 @@ Basic Python module usage
     # Utility function
     def convertHtmlToPdf(sourceHtml, outputFilename):
         # open output file for writing (truncated binary)
-        resultFile = open(outputFileName, "w+b")
+        resultFile = open(outputFilename, "w+b")
     
         # convert HTML to PDF
         pisaStatus = pisa.CreatePDF(
