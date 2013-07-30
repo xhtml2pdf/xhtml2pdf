@@ -185,7 +185,7 @@ def getCSSAttr(self, cssCascade, attrName, default=NotImplemented):
 
     try:
         result = cssCascade.findStyleFor(self.cssElement, attrName, default)
-    except:
+    except LookupError:
         result = None
 
     # XXX Workaround for inline styles
