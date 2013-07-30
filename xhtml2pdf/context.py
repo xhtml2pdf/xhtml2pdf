@@ -441,7 +441,7 @@ class pisaContext(object):
 
         self.css = self.cssParser.parse(self.cssText)
         self.cssDefault = self.cssParser.parse(self.cssDefaultText)
-        self.cssCascade = css.CSSCascadeStrategy(author=self.cssDefault, user=self.css)
+        self.cssCascade = css.CSSCascadeStrategy(userAgent=self.cssDefault, user=self.css)
         self.cssCascade.parser = self.cssParser
 
     # METHODS FOR STORY
