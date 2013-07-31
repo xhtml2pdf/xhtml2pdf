@@ -22,3 +22,4 @@ htmlcov/
 xhtml2pdf.egg-info
 *.pdf
 tests/_trial_temp/
+.idea/*
