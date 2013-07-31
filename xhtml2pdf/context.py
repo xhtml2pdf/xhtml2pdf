@@ -387,6 +387,7 @@ class pisaContext(object):
         self.listCounter = 0
 
         self.cssText = ""
+        self.cssDefaultText = ""
 
         self.image = None
         self.imageData = {}
@@ -422,6 +423,14 @@ class pisaContext(object):
             value = value[4: - 3]
         self.cssText += value.strip() + "\n"
 
+    # METHODS FOR CSS
+    def addDefaultCSS(self, value):
+        value = value.strip()
+        if value.startswith("<![CDATA["):
+            value = value[9: - 3]
+        if value.startswith("<!--"):
+            value = value[4: - 3]
+        self.cssDefaultText += value.strip() + "\n"
 
     def parseCSS(self):
         self.cssBuilder = pisaCSSBuilder(mediumSet=["all", "print", "pdf"])
@@ -431,7 +440,8 @@ class pisaContext(object):
         self.cssParser.c = self
 
         self.css = self.cssParser.parse(self.cssText)
-        self.cssCascade = css.CSSCascadeStrategy(self.css)
+        self.cssDefault = self.cssParser.parse(self.cssDefaultText)
+        self.cssCascade = css.CSSCascadeStrategy(userAgent=self.cssDefault, user=self.css)
         self.cssCascade.parser = self.cssParser
 
     # METHODS FOR STORY
