@@ -116,7 +116,6 @@ class CSSCascadeStrategy(object):
         if userAgent is not None:
             self.userAgenr = userAgent
 
-
     def copyWithUpdate(self, author=None, user=None, userAgent=None):
         if author is None:
             author = self.author
@@ -130,23 +129,23 @@ class CSSCascadeStrategy(object):
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def iterCSSRulesets(self, inline=None):
-        if self.userAgenr is not None:
-            yield self.userAgenr[0]
-            yield self.userAgenr[1]
-
         if self.user is not None:
-            yield self.user[0]
-
-        if self.author is not None:
-            yield self.author[0]
-            yield self.author[1]
+            yield self.user[1]
 
         if inline:
             yield inline[0]
             yield inline[1]
 
+        if self.author is not None:
+            yield self.author[0]
+            yield self.author[1]
+
         if self.user is not None:
-            yield self.user[1]
+            yield self.user[0]
+
+        if self.userAgenr is not None:
+            yield self.userAgenr[0]
+            yield self.userAgenr[1]
 
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -204,6 +203,7 @@ class CSSCascadeStrategy(object):
             rules += self.user[1].findCSSRuleFor(element, attrName)
 
         rules.sort()
+        rules.reverse()
         return rules
 
 

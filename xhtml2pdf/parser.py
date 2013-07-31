@@ -467,6 +467,7 @@ def pisaLoop(node, context, path=None, **kw):
         display = context.cssAttr.get("display", "inline").lower()
         # print indent, node.tagName, display, context.cssAttr.get("background-color", None), attr
         isBlock = (display == "block")
+
         if isBlock:
             context.addPara()
 
@@ -665,7 +666,7 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
 
 
     if default_css:
-        context.addCSS(default_css)
+        context.addDefaultCSS(default_css)
 
     pisaPreLoop(document, context)
     #try:
