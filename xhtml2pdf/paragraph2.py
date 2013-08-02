@@ -209,7 +209,7 @@ class BoxBegin(Fragment):
         self["width"] = self.get("marginLeft", 0) + self.get("paddingLeft", 0) # + border if border
 
     def drawBefore(self, canvas, y):
-        print repr(self)
+        # print repr(self)
         x = self.get("marginLeft", 0) + self["x"]
         w = self["length"] + self.get("paddingRight", 0)
         h = self["fontSize"]
