@@ -267,7 +267,7 @@ class Line(list):
 
         # Handle the rest
         for frag in self.boxStack:
-            print "***", x, frag["x"]
+            # print "***", x, frag["x"]
             frag["length"] = x - frag["x"]
 
     def doLayout(self, width):

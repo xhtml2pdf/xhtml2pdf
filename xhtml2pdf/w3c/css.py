@@ -129,23 +129,23 @@ class CSSCascadeStrategy(object):
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def iterCSSRulesets(self, inline=None):
-        if self.user is not None:
-            yield self.user[1]
+        if self.userAgenr is not None:
+            yield self.userAgenr[0]
+            yield self.userAgenr[1]
 
-        if inline:
-            yield inline[0]
-            yield inline[1]
+        if self.user is not None:
+            yield self.user[0]
 
         if self.author is not None:
             yield self.author[0]
             yield self.author[1]
 
-        if self.user is not None:
-            yield self.user[0]
+        if inline:
+            yield inline[0]
+            yield inline[1]
 
-        if self.userAgenr is not None:
-            yield self.userAgenr[0]
-            yield self.userAgenr[1]
+        if self.user is not None:
+            yield self.user[1]
 
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -203,7 +203,6 @@ class CSSCascadeStrategy(object):
             rules += self.user[1].findCSSRuleFor(element, attrName)
 
         rules.sort()
-        rules.reverse()
         return rules
 
 
@@ -678,8 +677,7 @@ class CSSRuleset(dict):
                     (attrName in declarations) and (nodeFilter.matches(element)) and stopIter(
                         (nodeFilter, declarations))]
         except StopIteration:
-            value = sys.exc_info()[1]
-            return [value]
+            return [(nodeFilter, declarations)]
 
 
     def mergeStyles(self, styles):
