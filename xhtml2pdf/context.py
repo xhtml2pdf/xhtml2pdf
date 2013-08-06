@@ -5,10 +5,10 @@ from reportlab.lib.pagesizes import landscape, A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus.frames import Frame
+from reportlab.platypus.frames import Frame, ShowBoundaryValue
 from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
 from xhtml2pdf.util import getSize, getCoords, getFile, pisaFileObject, \
-    getFrameDimensions
+    getFrameDimensions, getColor
 from xhtml2pdf.w3c import css
 from xhtml2pdf.xhtml2pdf_reportlab import PmlPageTemplate, PmlTableOfContents, \
     PmlParagraph, PmlParagraphAndImage, PmlPageCount
@@ -192,6 +192,20 @@ class pisaCSSBuilder(css.CSSBuilder):
         return (name, data.get("-pdf-frame-content", None),
                 data.get("-pdf-frame-border", border), x, y, w, h, data)
 
+    def _getFromData(self, data, attr, default=None, func=None):
+        if not func:
+            func = lambda x: x
+
+        if type(attr) in (list, tuple):
+            for a in attr:
+                if a in data:
+                    return func(data[a])
+                return default
+        else:
+            if attr in data:
+                return func(data[attr])
+            return default
+
     def atPage(self, name, pseudopage, declarations):
         c = self.c
         data = {}
@@ -233,18 +247,14 @@ class pisaCSSBuilder(css.CSSBuilder):
             if isLandscape:
                 c.pageSize = landscape(c.pageSize)
 
-        padding_top = 0
-        padding_left = 0
-        padding_right = 0
-        padding_bottom = 0
-        if "padding-top" in data:
-            padding_top = getSize(data["padding-top"])
-        if "padding-left" in data:
-            padding_left = getSize(data["padding-left"])
-        if "padding-right" in data:
-            padding_right = getSize(data["padding-right"])
-        if "padding-bottom" in data:
-            padding_bottom = getSize(data["padding-bottom"])
+        padding_top = self._getFromData(data, 'padding-top', 0, getSize)
+        padding_left = self._getFromData(data, 'padding-left', 0, getSize)
+        padding_right = self._getFromData(data, 'padding-right', 0, getSize)
+        padding_bottom = self._getFromData(data, 'padding-bottom', 0, getSize)
+        border_color = self._getFromData(data, ('border-top-color', 'border-bottom-color',\
+                                                'border-left-color', 'border-right-color'), None, getColor)
+        border_width = self._getFromData(data, ('border-top-width', 'border-bottom-width',\
+                                                'border-left-width', 'border-right-width'), 0, getSize)
 
         for prop in ("margin-top", "margin-left", "margin-right", "margin-bottom",
                      "top", "left", "right", "bottom", "width", "height"):
@@ -256,18 +266,19 @@ class pisaCSSBuilder(css.CSSBuilder):
         frameList = []
         staticList = []
         for fname, static, border, x, y, w, h, fdata in c.frameList:
-            fpadding_top = padding_top
-            fpadding_left = padding_left
-            fpadding_right = padding_right
-            fpadding_bottom = padding_bottom
-            if "padding-top" in fdata:
-                fpadding_top = getSize(fdata["padding-top"])
-            if "padding-left" in fdata:
-                fpadding_left = getSize(fdata["padding-left"])
-            if "padding-right" in fdata:
-                fpadding_right = getSize(fdata["padding-right"])
-            if "padding-bottom" in fdata:
-                fpadding_bottom = getSize(fdata["padding-bottom"])
+            fpadding_top = self._getFromData(fdata, 'padding-top', padding_top, getSize)
+            fpadding_left = self._getFromData(fdata, 'padding-left', padding_left, getSize)
+            fpadding_right = self._getFromData(fdata, 'padding-right', padding_right, getSize)
+            fpadding_bottom = self._getFromData(fdata, 'padding-bottom', padding_bottom, getSize)
+            fborder_color = self._getFromData(fdata, ('border-top-color', 'border-bottom-color',\
+                                                      'border-left-color', 'border-right-color'), border_color, getColor)
+            fborder_width = self._getFromData(fdata, ('border-top-width', 'border-bottom-width',\
+                                                      'border-left-width', 'border-right-width'), border_width, getSize)
+
+            if border or pageBorder:
+                frame_border = ShowBoundaryValue()
+            else:
+                frame_border = ShowBoundaryValue(color=fborder_color, width=fborder_width)
 
             #fix frame sizing problem.
             if static:
@@ -283,7 +294,7 @@ class pisaCSSBuilder(css.CSSBuilder):
                 rightPadding=fpadding_right,
                 bottomPadding=fpadding_bottom,
                 topPadding=fpadding_top,
-                showBoundary=border or pageBorder)
+                showBoundary=frame_border)
 
             if static:
                 frame.pisaStaticStory = []
@@ -305,6 +316,11 @@ class pisaCSSBuilder(css.CSSBuilder):
             if w <= 0 or h <= 0:
                 log.warn(c.warning("Negative width or height of frame. Check @page definitions."))
 
+            if border or pageBorder:
+                frame_border = ShowBoundaryValue()
+            else:
+                frame_border = ShowBoundaryValue(color=border_color, width=border_width)
+
             frameList.append(Frame(
                 x, y, w, h,
                 id=fname,
@@ -312,7 +328,7 @@ class pisaCSSBuilder(css.CSSBuilder):
                 rightPadding=padding_right,
                 bottomPadding=padding_bottom,
                 topPadding=padding_top,
-                showBoundary=border or pageBorder))
+                showBoundary=frame_border))
 
         pt = PmlPageTemplate(
             id=name,
