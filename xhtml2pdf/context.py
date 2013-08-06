@@ -233,6 +233,19 @@ class pisaCSSBuilder(css.CSSBuilder):
             if isLandscape:
                 c.pageSize = landscape(c.pageSize)
 
+        padding_top = 0
+        padding_left = 0
+        padding_right = 0
+        padding_bottom = 0
+        if "padding-top" in data:
+            padding_top = getSize(data["padding-top"])
+        if "padding-left" in data:
+            padding_left = getSize(data["padding-left"])
+        if "padding-right" in data:
+            padding_right = getSize(data["padding-right"])
+        if "padding-bottom" in data:
+            padding_bottom = getSize(data["padding-bottom"])
+
         for prop in ("margin-top", "margin-left", "margin-right", "margin-bottom",
                      "top", "left", "right", "bottom", "width", "height"):
             if prop in data:
@@ -243,6 +256,19 @@ class pisaCSSBuilder(css.CSSBuilder):
         frameList = []
         staticList = []
         for fname, static, border, x, y, w, h, fdata in c.frameList:
+            fpadding_top = padding_top
+            fpadding_left = padding_left
+            fpadding_right = padding_right
+            fpadding_bottom = padding_bottom
+            if "padding-top" in fdata:
+                fpadding_top = getSize(fdata["padding-top"])
+            if "padding-left" in fdata:
+                fpadding_left = getSize(fdata["padding-left"])
+            if "padding-right" in fdata:
+                fpadding_right = getSize(fdata["padding-right"])
+            if "padding-bottom" in fdata:
+                fpadding_bottom = getSize(fdata["padding-bottom"])
+
             #fix frame sizing problem.
             if static:
                 x, y, w, h = getFrameDimensions(fdata, c.pageSize[0], c.pageSize[1])
@@ -253,10 +279,10 @@ class pisaCSSBuilder(css.CSSBuilder):
             frame = Frame(
                 x, y, w, h,
                 id=fname,
-                leftPadding=0,
-                rightPadding=0,
-                bottomPadding=0,
-                topPadding=0,
+                leftPadding=fpadding_left,
+                rightPadding=fpadding_right,
+                bottomPadding=fpadding_bottom,
+                topPadding=fpadding_top,
                 showBoundary=border or pageBorder)
 
             if static:
@@ -278,13 +304,14 @@ class pisaCSSBuilder(css.CSSBuilder):
             x, y, w, h = getCoords(x, y, w, h, c.pageSize)
             if w <= 0 or h <= 0:
                 log.warn(c.warning("Negative width or height of frame. Check @page definitions."))
+
             frameList.append(Frame(
                 x, y, w, h,
                 id=fname,
-                leftPadding=0,
-                rightPadding=0,
-                bottomPadding=0,
-                topPadding=0,
+                leftPadding=padding_left,
+                rightPadding=padding_right,
+                bottomPadding=padding_bottom,
+                topPadding=padding_top,
                 showBoundary=border or pageBorder))
 
         pt = PmlPageTemplate(
