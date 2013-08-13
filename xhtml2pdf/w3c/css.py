@@ -672,12 +672,9 @@ class CSSRuleset(dict):
 
 
     def findCSSRuleFor(self, element, attrName):
-        try:
-            return [None for nodeFilter, declarations in self.iteritems() if
-                    (attrName in declarations) and (nodeFilter.matches(element)) and stopIter(
-                        (nodeFilter, declarations))]
-        except StopIteration:
-            return [(nodeFilter, declarations)]
+        # rule is packed in a list to differentiate from "no rule" vs "rule
+        # whose value evalutates as False"
+        return self.findCSSRulesFor(element, attrName)[-1:]
 
 
     def mergeStyles(self, styles):
