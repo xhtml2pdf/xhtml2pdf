@@ -512,7 +512,7 @@ class pisaFileObject:
         self.uri = None
         self.local = None
         self.tmp_file = None
-
+        uri = uri.encode('utf-8')
         log.debug("FileObject %r, Basepath: %r", uri, basepath)
 
         # Data URI
