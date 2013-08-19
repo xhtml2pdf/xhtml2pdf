@@ -513,7 +513,6 @@ class pisaFileObject:
         self.local = None
         self.tmp_file = None
 
-        uri = str(uri)
         log.debug("FileObject %r, Basepath: %r", uri, basepath)
 
         # Data URI
