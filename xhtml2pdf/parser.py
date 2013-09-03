@@ -211,6 +211,17 @@ def getCSSAttr(self, cssCascade, attrName, default=NotImplemented):
 #TODO: Monkeypatching standard lib should go away.
 xml.dom.minidom.Element.getCSSAttr = getCSSAttr
 
+# Create an aliasing system.  Many sources use non-standard tags, because browsers allow
+# them to.  This allows us to map a nonstandard name to the standard one.
+nonStandardAttrNames = {
+    'bgcolor': 'background-color',
+}
+
+def mapNonStandardAttrs(c, n, attrList):
+    for attr in nonStandardAttrNames:
+        if attr in attrList and nonStandardAttrNames[attr] not in c:
+            c[nonStandardAttrNames[attr]] = attrList[attr]
+    return c
 
 def getCSSAttrCacheKey(node):
     _cl = _id = _st = ''
@@ -455,6 +466,7 @@ def pisaLoop(node, context, path=None, **kw):
 
         # Calculate styles
         context.cssAttr = CSSCollect(node, context)
+        context.cssAttr = mapNonStandardAttrs(context.cssAttr, node, attr)
         context.node = node
 
         # Block?
