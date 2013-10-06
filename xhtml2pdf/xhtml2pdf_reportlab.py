@@ -527,7 +527,6 @@ class PmlParagraphAndImage(ParagraphAndImage, PmlMaxHeightMixIn):
 class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
     def _calcImageMaxSizes(self, availWidth, availHeight):
         self.hasImages = False
-        availHeight = self.getMaxHeight()
         for frag in self.frags:
             if hasattr(frag, "cbDefn") and frag.cbDefn.kind == "img":
                 img = frag.cbDefn
@@ -556,7 +555,7 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
         availHeight -= self.deltaHeight
 
         # Modify maxium image sizes
-        self._calcImageMaxSizes(availWidth, self.getMaxHeight() - self.deltaHeight)
+        self._calcImageMaxSizes(availWidth, availHeight)
 
         # call the base class to do wrapping and calculate the size
         Paragraph.wrap(self, availWidth, availHeight)
