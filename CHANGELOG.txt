@@ -5,7 +5,7 @@ Version Next
 ------------
 
 * get css backgrounds and fonts relative to the css file path
-
+* fix CSS parser breaking on "@media screen and ..." (issue 132)
 
 Version 0.0.5
 -------------

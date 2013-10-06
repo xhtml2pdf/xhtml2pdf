@@ -677,6 +677,13 @@ class CSSParser(object):
             medium, src = self._getIdent(src)
             if medium is None:
                 raise self.ParseError('@media rule expected media identifier', src, ctxsrc)
+            # make "and ... {" work
+            if medium == u'and':
+                # strip up to curly bracket
+                pattern = re.compile('.*({.*)')
+                match = re.match(pattern, src)
+                src = src[match.end()-1:]
+                break
             mediums.append(medium)
             if src[0] == ',':
                 src = src[1:].lstrip()
