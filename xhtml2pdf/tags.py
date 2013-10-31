@@ -664,12 +664,16 @@ class pisaTagPDFBARCODE(pisaTag):
         Wrapper for barcode widget
         """
         def __init__(self, codeName="Code128", value="", **kw):
+            self.vertical = kw.get('vertical', 0)
             self.widget = createBarcodeDrawing(codeName, value=value, **kw)
 
         def draw(self, canvas, xoffset=0, **kw):
             # NOTE: `canvas' is mutable, so canvas.restoreState() is a MUST.
             canvas.saveState()
             canvas.translate(xoffset, 0)
+            # NOTE: checking vertical value to rotate the barcode
+            if self.vertical:
+                canvas.rotate(90)
             self.widget.canv = canvas
             self.widget.draw()
             canvas.restoreState()
@@ -682,6 +686,7 @@ class pisaTagPDFBARCODE(pisaTag):
         codeName = attr.type or "Code128"
         codeName = pisaTagPDFBARCODE._codeName[codeName.upper().replace("-", "")]
         humanReadable = int(attr.humanreadable)
+        vertical = int(attr.vertical)
         checksum = int(attr.checksum)
         barWidth = attr.barwidth or 0.01 * inch
         barHeight = attr.barheight or 0.5 * inch
@@ -701,6 +706,7 @@ class pisaTagPDFBARCODE(pisaTag):
             barWidth=barWidth,
             barHeight=barHeight,
             humanReadable=humanReadable,
+            vertical=vertical,
             checksum=checksum,
             fontName=fontName,
             fontSize=fontSize,
