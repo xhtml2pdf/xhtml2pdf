@@ -200,6 +200,7 @@ class PmlPageTemplate(PageTemplate):
                 self._first_flow = False
             else:
                 self._page_count = canvas.getPageNumber()
+                canvas._doctemplate._page_count = canvas.getPageNumber()
         return self._first_flow
 
     def isPortrait(self):
@@ -259,7 +260,7 @@ class PmlPageTemplate(PageTemplate):
                             if frag.pageNumber:
                                 frag.text = str(pagenumber)
                             elif frag.pageCount:
-                                frag.text = str(self._page_count)
+                                frag.text = str(canvas._doctemplate._page_count)
 
                     elif isinstance(obj, PmlTable):
                         # Flatten the cells ([[1,2], [3,4]] becomes [1,2,3,4])
