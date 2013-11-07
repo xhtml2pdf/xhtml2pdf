@@ -668,12 +668,16 @@ class pisaTagPDFBARCODE(pisaTag):
             self.widget = createBarcodeDrawing(codeName, value=value, **kw)
 
         def draw(self, canvas, xoffset=0, **kw):
-            # NOTE: `canvas' is mutable, so canvas.restoreState() is a MUST.
+            # NOTE: 'canvas' is mutable, so canvas.restoreState() is a MUST.
             canvas.saveState()
-            canvas.translate(xoffset, 0)
             # NOTE: checking vertical value to rotate the barcode
             if self.vertical:
+                width, height = self.wrap(0, 0)
+                # Note: moving our canvas to the new origin
+                canvas.translate(height, -width)
                 canvas.rotate(90)
+            else:
+                canvas.translate(xoffset, 0)
             self.widget.canv = canvas
             self.widget.draw()
             canvas.restoreState()
