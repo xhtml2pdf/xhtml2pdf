@@ -49,9 +49,9 @@ except:
     import StringIO
 
 try:
-    import pyPdf
+    import PyPDF2
 except:
-    pyPdf = None
+    PyPDF2 = None
 
 try:
     from reportlab.graphics import renderPM
