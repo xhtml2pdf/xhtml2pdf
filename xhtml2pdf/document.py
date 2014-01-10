@@ -5,7 +5,7 @@ from xhtml2pdf.parser import pisaParser
 from reportlab.platypus.flowables import Spacer
 from reportlab.platypus.frames import Frame
 from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlPageTemplate
-from xhtml2pdf.util import pisaTempFile, getBox, pyPdf
+from xhtml2pdf.util import pisaTempFile, getBox, PyPDF2
 import cgi
 import logging
 
@@ -128,14 +128,14 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
         doc.build(context.story)
 
     # Add watermarks
-    if pyPdf:
+    if PyPDF2:
         for bgouter in context.pisaBackgroundList:
             # If we have at least one background, then lets do it
             if bgouter:
                 istream = out
 
-                output = pyPdf.PdfFileWriter()
-                input1 = pyPdf.PdfFileReader(istream)
+                output = PyPDF2.PdfFileWriter()
+                input1 = PyPDF2.PdfFileReader(istream)
                 ctr = 0
                 # TODO: Why do we loop over the same list again?
                 # see bgouter at line 137
@@ -143,7 +143,7 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                     page = input1.getPage(ctr)
                     if (bg and not bg.notFound()
                         and (bg.mimetype == "application/pdf")):
-                        bginput = pyPdf.PdfFileReader(bg.getFile())
+                        bginput = PyPDF2.PdfFileReader(bg.getFile())
                         pagebg = bginput.getPage(0)
                         pagebg.mergePage(page)
                         page = pagebg
@@ -158,7 +158,7 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                 # Found a background? So leave loop after first occurence
                 break
     else:
-        log.warn(context.warning("pyPDF not installed!"))
+        log.warn(context.warning("PyPDF2 not installed!"))
 
     # Get the resulting PDF and write it to the file object
     # passed from the caller

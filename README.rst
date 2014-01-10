@@ -33,9 +33,9 @@ Requirements
 
 #. `Reportlab Toolkit 2.2+ <http://www.reportlab.org/>`_
 #. `html5lib 0.11.1+ <http://code.google.com/p/html5lib/>`_
-#. `pyPdf 1.11+ (optional) <http://pybrary.net/pyPdf/>`_
+#. `PyPDF2 1.19+ (optional) <https://pypi.python.org/pypi/PyPDF2>`_
 
-   All requirements are listed in ``requirements.xml`` file.
+   All requirements are listed in ``requirements.txt`` file.
 
 Development environment
 =======================
@@ -71,9 +71,9 @@ Python, virtualenv and dependencies
 
     deactivate
 
-#. Next step will be to install/upgrade dependencies from ``requirements.xml`` file::
+#. Next step will be to install/upgrade dependencies from ``requirements.txt`` file::
 
-    pip install -r requirements.xml
+    pip install -r requirements.txt
 
 #. Run tests to check your configuration::
 
@@ -81,7 +81,7 @@ Python, virtualenv and dependencies
 
    You should have a log with success status::
 
-    Ran 35 tests in 0.322s
+    Ran 36 tests in 0.322s
 
     OK
 

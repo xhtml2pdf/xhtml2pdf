@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from xhtml2pdf.util import pisaTempFile, getFile
+from xhtml2pdf.util import pisaTempFile, getFile, PyPDF2
 
 import logging
 
@@ -47,11 +47,9 @@ class pisaPDF:
             self.files.append(doc.dest)
 
     def join(self, file=None):
-        import pyPdf # TODO: Why is this in the middle of everything?
-
-        output = pyPdf.PdfFileWriter()
+        output = PyPDF2.PdfFileWriter()
         for pdffile in self.files:
-            input = pyPdf.PdfFileReader(pdffile)
+            input = PyPDF2.PdfFileReader(pdffile)
             for pageNumber in xrange(input.getNumPages()):
                 output.addPage(input.getPage(pageNumber))
 
