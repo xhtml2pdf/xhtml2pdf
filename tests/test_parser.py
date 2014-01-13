@@ -1,7 +1,6 @@
 import unittest
-from sx.pisa3.pisa_parser import pisaParser
-from sx.pisa3.pisa_context import pisaContext
-import StringIO
+from xhtml2pdf.parser import pisaParser
+from xhtml2pdf.context import pisaContext
 
 _data = """
 <!doctype html>

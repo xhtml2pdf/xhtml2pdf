@@ -1,11 +1,11 @@
-# -*- coding: ISO-8859-1 -*-
+# -*- coding: utf-8 -*-
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
@@ -24,9 +24,8 @@ HTML/CSS to PDF converter
 Most people know how to write a page with HTML and CSS. Why not using these skills to dynamically generate PDF documents using it? The "pisa" project http://www.htmltopdf.org enables you to to this quite simple.
 """
 
-import cStringIO
-import ho.pisa as pisa
-import os
+from xhtml2pdf import pisa
+import cStringIO as StringIO
 
 # Shortcut for dumping all logs to the screen
 pisa.showLogging()
@@ -40,7 +39,7 @@ def HTML2PDF(data, filename, open=False):
     """
 
     pdf = pisa.CreatePDF(
-        cStringIO.StringIO(data),
+        StringIO.StringIO(data),
         file(filename, "wb"))
 
     if open and (not pdf.err):
@@ -72,4 +71,4 @@ if __name__=="__main__":
     </body></html>
     """
 
-    HTML2PDF(HTMLTEST, "test.pdf", open=True)
+    HTML2PDF(HTMLTEST, "test.pdf", open=False)

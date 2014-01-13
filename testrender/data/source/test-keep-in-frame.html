@@ -1,0 +1,138 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>Keep-In-Frame Test</title>
+<style type="text/css">
+  @page {
+    @frame f1 {
+      -pdf-frame-border: 1;
+      -pdf-frame-content: f1;
+      top: 1cm;
+      left: 1cm;
+      width: 4cm;
+      height: 4cm;
+    }
+
+    @frame f2 {
+      -pdf-frame-border: 1;
+      -pdf-frame-content: f2;
+      top: 1cm;
+      left: 6cm;
+      width: 14cm;
+      height: 4cm;
+    }
+    @frame f3 {
+      -pdf-frame-border: 1;
+      -pdf-frame-content: f3;
+      top: 6cm;
+      left: 1cm;
+      width: 4cm;
+      height: 8cm;
+    }
+
+    @frame f4 {
+      -pdf-frame-border: 1;
+      -pdf-frame-content: f4;
+      top: 6cm;
+      left: 6cm;
+      width: 14cm;
+      height: 8cm;
+    }
+
+    @frame f5 {
+      -pdf-frame-border: 1;
+      top: 15cm;
+      left: 1cm;
+      width: 4cm;
+      height: 4cm;
+    }
+
+    @frame f6 {
+      -pdf-frame-border: 1;
+      top: 15cm;
+      left: 6cm;
+      width: 14cm;
+      height: 8cm;
+    }
+  }
+  div {
+    -pdf-keep-in-frame-mode: shrink;
+  }
+</style>
+</head>
+<body>
+<div id="f1">STATIC FRAME - Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Donec euismod ante sed mi. Mauris tortor purus, fermentum sit amet, interdum et, rutrum nec, risus. Suspendisse erat nisi, vestibulum a, mattis at, dignissim quis, ante. Ut in dui. Etiam sed elit nec tellus vulputate tincidunt. Nunc tortor risus, dignissim in, tempor a, sodales vel, erat. Aenean metus ipsum, vulputate vel, eleifend sed, tristique sed, nibh. Aliquam erat volutpat. Sed lobortis fringilla mauris. Nullam convallis ullamcorper urna. Integer id justo sed pede suscipit convallis. Cras non purus sed nisi faucibus scelerisque. Donec ullamcorper massa id risus. Vivamus tristique hendrerit neque. Maecenas pulvinar ipsum dictum ante. Cras eleifend lacus. Suspendisse et massa. Vestibulum sit amet lacus. In sed libero. Duis quis enim sit amet lorem ultrices rhoncus.</div>
+<div id="f2">STATIC FRAME - Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Donec euismod ante sed mi. Mauris tortor purus, fermentum sit amet, interdum et, rutrum nec, risus. Suspendisse erat nisi, vestibulum a, mattis at, dignissim quis, ante. Ut in dui. Etiam sed elit nec tellus vulputate tincidunt. Nunc tortor risus, dignissim in, tempor a, sodales vel, erat. Aenean metus ipsum, vulputate vel, eleifend sed, tristique sed, nibh. Aliquam erat volutpat. Sed lobortis fringilla mauris. Nullam convallis ullamcorper urna. Integer id justo sed pede suscipit convallis. Cras non purus sed nisi faucibus scelerisque. Donec ullamcorper massa id risus. Vivamus tristique hendrerit neque. Maecenas pulvinar ipsum dictum ante. Cras eleifend lacus. Suspendisse et massa. Vestibulum sit amet lacus. In sed libero. Duis quis enim sit amet lorem ultrices rhoncus.</div>
+<div id="f3">
+  <p>STATIC FRAME - Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Donec euismod ante sed mi. Mauris tortor purus, fermentum sit amet, interdum et, rutrum nec, risus. Suspendisse erat nisi, vestibulum a, mattis at, dignissim quis, ante. Ut in dui. Etiam sed elit nec tellus vulputate tincidunt. Nunc tortor risus, dignissim in, tempor a, sodales vel, erat. Aenean metus ipsum, vulputate vel, eleifend sed, tristique sed, nibh. Aliquam erat volutpat. Sed lobortis fringilla mauris. Nullam convallis ullamcorper urna. Integer id justo sed pede suscipit convallis. Cras non purus sed nisi faucibus scelerisque. Donec ullamcorper massa id risus. Vivamus tristique hendrerit neque. Maecenas pulvinar ipsum dictum ante. Cras eleifend lacus. Suspendisse et massa. Vestibulum sit amet lacus. In sed libero. Duis quis enim sit amet lorem ultrices rhoncus.</p>
+  <img src="img/test_logo.jpg"/>
+  <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit.</p>
+  <table>
+    <tr>
+      <td>First Col</td>
+      <td>Second Col</td>
+      <td>Last Col</td>
+    </tr>
+    <tr>
+      <td>First Col</td>
+      <td>Second Col</td>
+      <td>Last Col</td>
+    </tr>
+  </table>
+</div>
+<div id="f4">
+  <p>STATIC FRAME - Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Donec euismod ante sed mi. Mauris tortor purus, fermentum sit amet, interdum et, rutrum nec, risus. Suspendisse erat nisi, vestibulum a, mattis at, dignissim quis, ante. Ut in dui. Etiam sed elit nec tellus vulputate tincidunt. Nunc tortor risus, dignissim in, tempor a, sodales vel, erat. Aenean metus ipsum, vulputate vel, eleifend sed, tristique sed, nibh. Aliquam erat volutpat. Sed lobortis fringilla mauris. Nullam convallis ullamcorper urna. Integer id justo sed pede suscipit convallis. Cras non purus sed nisi faucibus scelerisque. Donec ullamcorper massa id risus. Vivamus tristique hendrerit neque. Maecenas pulvinar ipsum dictum ante. Cras eleifend lacus. Suspendisse et massa. Vestibulum sit amet lacus. In sed libero. Duis quis enim sit amet lorem ultrices rhoncus.</p>
+  <img src="img/test_logo.jpg"/>
+  <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit.</p>
+  <table width="100%">
+    <tr>
+      <td>First Col</td>
+      <td>Second Col</td>
+      <td>Last Col</td>
+    </tr>
+    <tr>
+      <td>First Col</td>
+      <td>Second Col</td>
+      <td>Last Col</td>
+    </tr>
+  </table>
+</div>
+<div>
+  <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Donec euismod ante sed mi. Mauris tortor purus, fermentum sit amet, interdum et, rutrum nec, risus. Suspendisse erat nisi, vestibulum a, mattis at, dignissim quis, ante. Ut in dui. Etiam sed elit nec tellus vulputate tincidunt. Nunc tortor risus, dignissim in, tempor a, sodales vel, erat. Aenean metus ipsum, vulputate vel, eleifend sed, tristique sed, nibh. Aliquam erat volutpat. Sed lobortis fringilla mauris. Nullam convallis ullamcorper urna. Integer id justo sed pede suscipit convallis. Cras non purus sed nisi faucibus scelerisque. Donec ullamcorper massa id risus. Vivamus tristique hendrerit neque. Maecenas pulvinar ipsum dictum ante. Cras eleifend lacus. Suspendisse et massa. Vestibulum sit amet lacus. In sed libero. Duis quis enim sit amet lorem ultrices rhoncus.</p>
+  <img src="img/test_logo.jpg"/>
+  <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit.</p>
+  <table>
+    <tr>
+      <td>First Col</td>
+      <td>Second Col</td>
+      <td>Last Col</td>
+    </tr>
+    <tr>
+      <td>First Col</td>
+      <td>Second Col</td>
+      <td>Last Col</td>
+    </tr>
+  </table>
+</div>
+<div>
+  <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Donec euismod ante sed mi. Mauris tortor purus, fermentum sit amet, interdum et, rutrum nec, risus. Suspendisse erat nisi, vestibulum a, mattis at, dignissim quis, ante. Ut in dui. Etiam sed elit nec tellus vulputate tincidunt. Nunc tortor risus, dignissim in, tempor a, sodales vel, erat. Aenean metus ipsum, vulputate vel, eleifend sed, tristique sed, nibh. Aliquam erat volutpat. Sed lobortis fringilla mauris. Nullam convallis ullamcorper urna. Integer id justo sed pede suscipit convallis. Cras non purus sed nisi faucibus scelerisque. Donec ullamcorper massa id risus. Vivamus tristique hendrerit neque. Maecenas pulvinar ipsum dictum ante. Cras eleifend lacus. Suspendisse et massa. Vestibulum sit amet lacus. In sed libero. Duis quis enim sit amet lorem ultrices rhoncus.</p>
+  <img src="img/test_logo.jpg"/>
+  <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit.</p>
+  <table>
+    <tr>
+      <td>First Col</td>
+      <td>Second Col</td>
+      <td>Last Col</td>
+    </tr>
+    <tr>
+      <td>First Col</td>
+      <td>Second Col</td>
+      <td>Last Col</td>
+    </tr>
+  </table>
+</div>
+</body>
+</html>
+

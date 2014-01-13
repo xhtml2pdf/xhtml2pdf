@@ -1,0 +1,5 @@
+/* CSS Document */
+
+@import "../test-css-media-4.css" print;
+
+.green6 { color: green; }

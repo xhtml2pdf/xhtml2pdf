@@ -1,0 +1,7 @@
+Pillow>=2.0.0
+coverage==3.5
+html5lib==0.90
+httplib2==0.7.6
+nose==1.0.0
+pyPdf2==1.19
+reportlab==2.5
