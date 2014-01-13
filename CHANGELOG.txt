@@ -1,6 +1,34 @@
  CHANGELOG
 =========
 
+Version Next
+------------
+
+* get css backgrounds and fonts relative to the css file path
+* fix CSS parser breaking on "@media screen and ..." (issue 132)
+
+Version 0.0.5
+-------------
+
+* Switched dependency to Pillow instead of PIL.
+* Converted the docs to rst (thanks tomscytale!)
+* Huge performance improvements (thanks Andrea Bravetti!)
+* Bugfixes.
+
+Version 0.0.4
+-------------
+
+* Added a <pdf:pagecount/> tag to write the total number of pages.
+* The <pdf:barcode/> tag now accepts a fontsize argument for the human-readable
+  font.
+* Various bugfixes and enhancements
+
+
+LEGACY
+======
+
+The following changelog entries were relevant before the maintainer change.
+
 ********************************************************************************
   "I would like to thank the people mentioned in brackets in this change log
   very much for their help and support!" - Dirk

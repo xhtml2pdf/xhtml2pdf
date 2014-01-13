@@ -1,0 +1,424 @@
+.content * {
+	margin: 0;
+	padding: 0;
+	/* font-weight: normal; */
+	font-style: inherit;
+	font-size: 100%;
+	font-family: inherit;
+	/* vertical-align: baseline; */
+	list-style: none;
+}
+
+.content img,
+.content fieldset,
+.content legend,
+.content table,
+.content tr,
+.content td,
+.content th {
+	border: 0;	
+}
+
+.content {
+	/* color: #000;
+	background: #fff; */
+	font: 13px arial,helvetica,clean,sans-serif;
+	font-style: normal;
+		
+	line-height: 150%;
+}
+
+.content h1,
+.content h2,
+.content h3,
+.content h4,
+.content h5,
+.content h6,
+.content pre,
+.content table,
+.content blockquote {
+	clear: both;
+}
+
+.content input, 
+.content textarea, 
+.content select {
+	font:13px/1.22 arial,helvetica,clean,sans-serif;
+	
+}
+
+.content table {
+	font-size:inherit;	
+}
+
+.content pre,
+.content code,
+.content kbd,
+.content samp,
+.content tt {
+	font-family:monospace;	
+	line-height:99%;
+	background-color: #eee;
+}
+
+/* Tables still need 'cellspacing="0"' in the markup. */
+.content table {
+	font-size:100%;
+	table-layout: fixed;
+	border-collapse: collapse;	
+	border-spacing: 0;
+	empty-cells: show;
+}
+.content caption, 
+.content th, 
+.content td {
+	text-align: left;
+	vertical-align: top;
+	font-weight: normal;
+}
+
+.content blockquote:before, 
+.content blockquote:after, 
+.content q:before, 
+.content q:after { 
+	content: ""; 
+}
+.content blockquote, 
+.content q { 
+	quotes: "" ""; 
+}
+
+.content h1 {
+	/*18px via YUI Fonts CSS foundation*/
+	font-size:138.5%;
+}
+.content h2 {
+	/*16px via YUI Fonts CSS foundation*/
+	font-size:123.1%;
+}
+.content h3 {
+	/*14px via YUI Fonts CSS foundation*/
+	font-size:108%;
+}
+.content h1,
+.content h2,
+.content h3 {
+	margin:1em 0;
+}
+.content h1,
+.content h2,
+.content h3,
+.content h4,
+.content h5,
+.content h6,
+.content strong {
+	font-weight:bold;
+}
+.content abbr,
+.content acronym {
+	border-bottom:1px dotted #000;
+	cursor:help;
+}
+.content sup,
+.content sub {
+	line-height:-1px;
+	vertical-align: text-top; 
+	font-size: 80%;
+}
+.content sub {
+	vertical-align:text-bottom;
+}
+.content ins {
+	color: green;
+	text-decoration: underline;
+}
+.content del {
+	color: red;
+	text-decoration: line-through;
+}
+.content em,
+.content i {
+	font-style: italic;
+}
+.content strong,
+.content b {
+	font-weight: bold;
+}
+.content blockquote.blockquote {
+	font-family: Georgia, "Times New Roman", Times, serif;
+	font-style: italic;
+	color: #111;
+}
+.content pre.content-pre {
+	background: #eee;
+	padding: .5em;
+	border: 0;
+}
+.content pre {
+	margin-bottom: 1em;
+}
+.content blockquote,
+.content ul,
+.content ol,
+.content dl {
+	margin:1em;
+}
+.content ol,
+.content ul,
+.content dl {
+	margin-left:2em;
+}
+.content li ol,
+.content li ul,
+.content li dl {
+	margin-top: 0;
+	margin-bottom: 0;
+}
+.content ol li {
+	list-style: decimal outside;
+}
+.content ul li {
+	list-style: disc outside;
+}
+.content dl dd {
+	margin-left:1em;
+}
+
+/*** TABLE ***/
+
+.content table {
+	border-collapse: separate;
+	border-spacing: 0;
+	/* table-layout: fixed; */
+}
+
+.content caption {
+	margin-bottom:.5em;
+	text-align:center;
+}
+
+/* TABLE BLACK */
+
+.content table.table-black {
+	border-left:1px solid #000;
+	border-top:1px solid #000;
+	border-collapse: separate;
+	border-spacing: 0;
+	margin-bottom:1em;
+}
+
+.content table.table-black th,
+.content table.table-black td {
+	border-bottom:1px solid #000;
+	border-right:1px solid #000;
+	padding:.5em;	
+}
+
+.content table.table-black th,
+.content table.table-black td.table-th {
+	background: #000;
+	color: #FFFFFF;
+	font-weight: bold;
+}
+
+.content table.table-black tr.row-0 {
+	background: #fff;
+}
+.content table.table-black tr.row-1  {
+	background: #eee;
+}
+.content table.table-black tr.row-2 {
+	background: #ddd;
+}
+
+/* TABLE RED */
+
+.content table.table-red {
+	border-left:1px solid red;
+	border-top:1px solid red;
+	border-collapse: separate;
+	border-spacing: 0;
+	margin-bottom:1em;
+}
+
+.content table.table-red th,
+.content table.table-red td {
+	border-bottom:1px solid red;
+	border-right:1px solid red;
+	padding:.5em;	
+}
+
+.content table.table-red th,
+.content table.table-red td.table-th {
+	background: red;
+	color: #FFFFFF;
+	font-weight: bold;
+}
+
+.content table.table-red tr.row-0 {
+	background: #fff;
+}
+.content table.table-red tr.row-1  {
+	background-color: #FFDDDD;
+}
+.content table.table-red tr.row-2 {
+	background-color: #FFBBBB;
+}
+
+/* TABLE RED */
+
+.content table.table-blue {
+	border-left:1px solid blue;
+	border-top:1px solid blue;
+	border-collapse: separate;
+	border-spacing: 0;
+	margin-bottom:1em;
+}
+
+.content table.table-blue th,
+.content table.table-blue td {
+	border-bottom:1px solid blue;
+	border-right:1px solid blue;
+	padding:.5em;	
+}
+
+.content table.table-blue th,
+.content table.table-blue td.table-th {
+	background: blue;
+	color: #FFFFFF;
+	font-weight: bold;
+}
+
+.content table.table-blue tr.row-0 {
+	background: #fff;
+}
+.content table.table-blue tr.row-1  {
+	background-color: #DDDDFF;
+}
+.content table.table-blue tr.row-2 {
+	background-color: #BBBBFF;
+}
+
+/* The above separated solution is a workaround for Firefox who
+   draws the left border 1�x outside of the box */ 
+
+* html .content table.table-black,
+* html .content table.table-red,
+* html .content table.table-blue  {
+	border-collapse: collapse;
+}
+
+/*
+* html .content th,
+* html .content td {
+	border: 1px solid #000;
+}
+*/
+.content p,
+.content fieldset {
+	margin-bottom:1em;
+}
+
+.content img.align-right {
+	margin-left: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+/* .content img[align=left] */
+.content img.align-left {	
+	margin-right: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+/* Helpers */
+
+.content .readonly {
+	background: #eee;
+}
+
+.content hr {
+  background: #000;
+  color: #000;
+  clear: both;
+  float: none;
+  width: 100%;
+  height: 0.1em;
+  margin: 0 0 1.4em 0;
+  border: none;
+}
+
+* html .content hr { 
+	margin: 0 0 1.2em 0; 
+}
+
+.content label,
+.content .label {
+	display: block;
+	margin-top: 1em;
+	margin-bottom: 0.25em;
+	font-weight: bold;
+}
+
+.content fieldset legend {
+	display: none;
+}
+
+.content fieldset label {
+	font-weight: normal;
+	margin: 0;
+}
+
+.content .highlight {
+	background: yellow;	
+}
+
+/*** COLUMNS ***/
+
+div.col-left {
+	float: left;
+	clear: both;
+	width: 48%;
+	padding-right: 0.5em;
+	overflow-x: hidden;
+}
+
+div.col-right {
+	float: right;
+	width: 48%;
+	padding-left: 0.5em;
+	overflow-x: hidden;
+}
+
+.content .clear {
+	clear: both;
+}
+
+/*** EDIT ***/
+
+.content-edit {
+	margin: 0 !important;
+	padding: 1em !important;
+	width: auto !important;
+}
+
+/* Ob das so Sinn macht, wegen Margin Collapse
+
+.content-edit div,
+.content-edit iframe,
+.content-edit blockquote,
+.content-edit fieldset,
+.content-edit pre {
+	border: 1px dotted #ccc;
+}
+*/
+
+.content-edit table {
+	border-left: 1px dotted #ccc;
+	border-top: 1px dotted #ccc;	
+}
+
+.content-edit td,
+.content-edit th {
+	border-bottom: 1px dotted #ccc;
+	border-right: 1px dotted #ccc;
+}

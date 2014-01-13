@@ -5,7 +5,7 @@ from django import http
 from django.shortcuts import render_to_response
 from django.template.loader import get_template
 from django.template import Context
-import ho.pisa as pisa
+import xhtml2pdf.pisa as pisa
 import cStringIO as StringIO
 import cgi
 
