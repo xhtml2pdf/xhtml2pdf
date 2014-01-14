@@ -476,11 +476,22 @@ class pisaContext(object):
         self.cssDefaultText += value.strip() + "\n"
 
     def parseCSS(self):
+        # This self-reference really should be refactored. But for now
+        # we'll settle for using weak references. This avoids memory
+        # leaks because the garbage collector (at least on cPython
+        # 2.7.3) isn't aggressive enough.
+        import weakref
+
         self.cssBuilder = pisaCSSBuilder(mediumSet=["all", "print", "pdf"])
-        self.cssBuilder.c = self
+        #self.cssBuilder.c = self
+        self.cssBuilder._c = weakref.ref(self)
+        pisaCSSBuilder.c = property(lambda self: self._c())
+
         self.cssParser = pisaCSSParser(self.cssBuilder)
         self.cssParser.rootPath = self.pathDirectory
-        self.cssParser.c = self
+        #self.cssParser.c = self
+        self.cssParser._c = weakref.ref(self)
+        pisaCSSParser.c = property(lambda self: self._c())
 
         self.css = self.cssParser.parse(self.cssText)
         self.cssDefault = self.cssParser.parse(self.cssDefaultText)
