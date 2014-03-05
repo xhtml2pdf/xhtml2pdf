@@ -35,11 +35,9 @@ import html5lib
 import logging
 import re
 import types
-import xhtml2pdf.w3c.cssDOMElementInterface as cssDOMElementInterface
+from xhtml2pdf.w3c.cssDOMElementInterface import CSSDOMElementInterface
 import xml.dom.minidom
 
-
-CSSAttrCache = {}
 
 log = logging.getLogger("xhtml2pdf")
 
@@ -202,91 +200,70 @@ attrNames = '''
     '''.strip().split()
 
 
-def getCSSAttr(self, cssCascade, attrName, default=NotImplemented):
-    if attrName in self.cssAttrs:
-        return self.cssAttrs[attrName]
-
-    try:
-        result = cssCascade.findStyleFor(self.cssElement, attrName, default)
-    except LookupError:
-        result = None
-
-    # XXX Workaround for inline styles
-    try:
-        style = self.cssStyle
-    except:
-        style = self.cssStyle = cssCascade.parser.parseInline(self.cssElement.getStyleAttr() or '')[0]
-    if attrName in style:
-        result = style[attrName]
-
-    if result == 'inherit':
-        if hasattr(self.parentNode, 'getCSSAttr'):
-            result = self.parentNode.getCSSAttr(cssCascade, attrName, default)
-        elif default is not NotImplemented:
-            return default
-        raise LookupError("Could not find inherited CSS attribute value for '%s'" % (attrName,))
-
-    if result is not None:
-        self.cssAttrs[attrName] = result
-    return result
-
-
-#TODO: Monkeypatching standard lib should go away.
-xml.dom.minidom.Element.getCSSAttr = getCSSAttr
-
 # Create an aliasing system.  Many sources use non-standard tags, because browsers allow
 # them to.  This allows us to map a nonstandard name to the standard one.
 nonStandardAttrNames = {
     'bgcolor': 'background-color',
 }
 
-def mapNonStandardAttrs(c, n, attrList):
-    for attr in nonStandardAttrNames:
-        if attr in attrList and nonStandardAttrNames[attr] not in c:
-            c[nonStandardAttrNames[attr]] = attrList[attr]
-    return c
 
 def getCSSAttrCacheKey(node):
-    _cl = _id = _st = ''
-    for k, v in node.attributes.items():
-        if k == 'class':
-            _cl = v
-        elif k == 'id':
-            _id = v
-        elif k == 'style':
-            _st = v
-    return "%s#%s#%s#%s#%s" % (id(node.parentNode), node.tagName.lower(), _cl, _id, _st)
+    return "%s#%s#%s#%s#%s" % (
+        id(node.parentNode),
+        node.tagName.lower(),
+        node.attributes.get('class') or '',
+        node.attributes.get('id') or '',
+        node.attributes.get('style') or '',
+        )
 
-def CSSCollect(node, c):
+
+def get_css_attribute(node, cssCascade, attrName):
+    # XXX Workaround for inline styles
+    if not hasattr(node, 'cssStyle'):
+        node.cssStyle = cssCascade.parser.parseInline(node.cssElement.getStyleAttr() or '')[0]
+    result = node.cssStyle.get(attrName, MISSING)
+
+    if result is MISSING:
+        result = cssCascade.findStyleFor(node.cssElement, attrName, None)
+
+    if result == 'inherit':
+        result = get_css_attribute(node.parentNode, cssCascade, attrName)
+
+    return result
+
+
+def CSSCollect(node, context, pisa_attributes, css_cache):
     #node.cssAttrs = {}
     #return node.cssAttrs
 
-    if c.css:
+    attributes = {}
+    if context.css:
+        cached_css = MISSING
+        cache_key = getCSSAttrCacheKey(node)
+        parent_tag_name = getattr(node.parentNode, 'tagName', None)
+        if parent_tag_name and parent_tag_name.lower() != 'html':
+            cached_css = css_cache.get(cache_key, MISSING)
 
-        _key = getCSSAttrCacheKey(node)
+        if cached_css is not MISSING:
+            attributes = cached_css.copy()
+        else:
+            node.cssElement = CSSDOMElementInterface(node)
 
-        if hasattr(node.parentNode, "tagName"):
-            if node.parentNode.tagName.lower() != "html":
-                CachedCSSAttr = CSSAttrCache.get(_key, None)
-                if CachedCSSAttr is not None:
-                    node.cssAttrs = CachedCSSAttr
-                    return CachedCSSAttr
+            for attribute in attrNames:
+                value = get_css_attribute(node, context.cssCascade, attribute)
+                if value is not None:
+                    attributes[attribute] = value
 
-        node.cssElement = cssDOMElementInterface.CSSDOMElementInterface(node)
-        node.cssAttrs = {}
-        # node.cssElement.onCSSParserVisit(c.cssCascade.parser)
-        cssAttrMap = {}
-        for cssAttrName in attrNames:
-            try:
-                cssAttrMap[cssAttrName] = node.getCSSAttr(c.cssCascade, cssAttrName)
-            #except LookupError:
-            #    pass
-            except Exception: # TODO: Kill this catch-all!
-                log.debug("CSS error '%s'", cssAttrName, exc_info=1)
+            # Map non standard attrs
+            for key, value in nonStandardAttrNames.items():
+                if pisa_attributes.has_key(key) and not attributes.has_key(value):
+                    attributes[value] = pisa_attributes[key]
 
-        CSSAttrCache[_key] = node.cssAttrs
+            css_cache[cache_key] = attributes
 
-    return node.cssAttrs
+    node.cssAttrs = attributes
+    return attributes
+
 
 def CSS2Frag(c, kw, isBlock):
     # COLORS
@@ -464,6 +441,7 @@ def pisaPreLoop(node, context, collect=False):
 def pisaLoop(node, context, path=None, **kw):
     #paths = [path]  # DEBUG LINE
 
+    css_cache = {}
     actions = deque([(node, kw, None)])
     add_action = actions.appendleft
     get_action = actions.popleft
@@ -496,8 +474,7 @@ def pisaLoop(node, context, path=None, **kw):
                 #log.debug(indent + "<%s %s>" % (node.tagName, attr) + repr(node.attributes.items())) #, path  # DEBUG LINE
 
                 # Calculate styles
-                context.cssAttr = CSSCollect(node, context)
-                context.cssAttr = mapNonStandardAttrs(context.cssAttr, node, attr)
+                context.cssAttr = CSSCollect(node, context, attr, css_cache)
                 context.node = node
 
                 options = {}
@@ -703,10 +680,6 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
     - Handle the document DOM itself and build reportlab story
     - Return Context object
     """
-
-    global CSSAttrCache
-    CSSAttrCache = {}
-
     if xhtml:
         #TODO: XHTMLParser doesn't see to exist...
         parser = html5lib.XHTMLParser(tree=treebuilders.getTreeBuilder("dom"))
