@@ -422,6 +422,10 @@ def pisaPreLoop(node, context, collect=False):
             break
 
         node, collect = actions.pop(0)
+
+        for child in reversed(node.childNodes):
+            actions.insert(0, (child, collect))
+
         if node.nodeType == TEXT_NODE:
             if collect:
                 add_data(node.data)
@@ -443,9 +447,6 @@ def pisaPreLoop(node, context, collect=False):
                     elif name == "link" and attr.href and attr.rel.lower() == "stylesheet":
                         # print "CSS LINK", attr
                         add_data(u'\n@import "%s" %s;' % (attr.href, u",".join(media)))
-
-        for child in reversed(node.childNodes):
-            actions.insert(0, (child, collect))
 
     if css_data:
         data = u''.join(css_data)
