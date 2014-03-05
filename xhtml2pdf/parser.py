@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections import deque
+
 from html5lib import treebuilders, inputstream
 from xhtml2pdf import tables
 from xhtml2pdf import tags
@@ -413,18 +415,21 @@ def pisaPreLoop(node, context, collect=False):
     """
     Collect all CSS definitions
     """
-    css_data = []
+
+    css_data = deque()
     add_data = css_data.append
-    actions = [(node, collect)]
+    actions = deque([(node, collect)])
+    add_action = actions.appendleft
+    get_action = actions.popleft
 
     while True:
         if not actions:
             break
 
-        node, collect = actions.pop(0)
+        node, collect = get_action()
 
         for child in reversed(node.childNodes):
-            actions.insert(0, (child, collect))
+            add_action((child, collect))
 
         if node.nodeType == TEXT_NODE:
             if collect:
@@ -442,7 +447,7 @@ def pisaPreLoop(node, context, collect=False):
 
                     if name == "style":
                         for child in reversed(node.childNodes):
-                            actions.insert(0, (child, True))
+                            add_action((child, True))
 
                     elif name == "link" and attr.href and attr.rel.lower() == "stylesheet":
                         # print "CSS LINK", attr
@@ -457,14 +462,17 @@ def pisaPreLoop(node, context, collect=False):
 
 
 def pisaLoop(node, context, path=None, **kw):
-    actions = [(node, kw, None)]
     #paths = [path]  # DEBUG LINE
+
+    actions = deque([(node, kw, None)])
+    add_action = actions.appendleft
+    get_action = actions.popleft
 
     while True:
         if not actions:
             break
 
-        node, kw, options = actions.pop(0)
+        node, kw, options = get_action()
 
         #path = list(paths.pop(0) or [])  # DEBUG LINE
         #indent = ' ' * len(path)  # DEBUG LINE
@@ -618,14 +626,14 @@ def pisaLoop(node, context, path=None, **kw):
                     options['obj'] = obj
 
                 context.fragBlock = options['fragBlock'] = copy.copy(context.frag)
-                actions.insert(0, (node, kw, options))
+                add_action((node, kw, options))
 
                 #path.append(node.tagName)  # DEBUG LINE
                 #paths.insert(0, path)  # DEBUG LINE
 
                 # Visit child nodes
                 for child in reversed(node.childNodes):
-                    actions.insert(0, (child, kw, None))
+                    add_action((child, kw, None))
                     #paths.insert(0, path)  # DEBUG LINE
 
             else:
@@ -684,7 +692,7 @@ def pisaLoop(node, context, path=None, **kw):
         # Unknown or not handled
         else:
             for child in reversed(node.childNodes):
-                actions.insert(0, (child, kw, None))
+                add_action((child, kw, None))
                 #paths.insert(0, path)  # DEBUG LINE
 
 
