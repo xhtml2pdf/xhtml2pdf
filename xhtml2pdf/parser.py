@@ -15,6 +15,8 @@
 # limitations under the License.
 
 from html5lib import treebuilders, inputstream
+from xhtml2pdf import tables
+from xhtml2pdf import tags
 from xhtml2pdf.default import TAGS, STRING, INT, BOOL, SIZE, COLOR, FILE
 from xhtml2pdf.default import BOX, POS, MUST, FONT
 from xhtml2pdf.util import getSize, getBool, toList, getColor, getAlign
@@ -40,6 +42,25 @@ CSSAttrCache = {}
 log = logging.getLogger("xhtml2pdf")
 
 rxhttpstrip = re.compile("https?://[^/]+(.*)", re.M | re.I)
+
+PISA_TAGS = {}
+for module in [tags, tables]:
+    for key in dir(module):
+        if key.startswith('pisaTag'):
+            tag = key.split('pisaTag', 1)[1]
+            PISA_TAGS[tag] = getattr(module, key)
+
+DEFAULT_LOOP_KWARGS = {
+    'margin-top': 0,
+    'margin-bottom': 0,
+    'margin-left': 0,
+    'margin-right': 0,
+    }
+
+MISSING = object()
+FRAME_MODE_TYPES = ('shrink', 'error', 'overflow', 'truncate')
+ELEMENT_NODE = Node.ELEMENT_NODE
+TEXT_NODE = Node.TEXT_NODE
 
 
 class AttrContainer(dict):
@@ -392,242 +413,278 @@ def pisaPreLoop(node, context, collect=False):
     """
     Collect all CSS definitions
     """
+    css_data = []
+    add_data = css_data.append
+    actions = [(node, collect)]
 
-    data = u""
-    if node.nodeType == Node.TEXT_NODE and collect:
-        data = node.data
+    while True:
+        if not actions:
+            break
 
-    elif node.nodeType == Node.ELEMENT_NODE:
-        name = node.tagName.lower()
+        node, collect = actions.pop(0)
+        if node.nodeType == TEXT_NODE:
+            if collect:
+                add_data(node.data)
 
-        if name in ("style", "link"):
-            attr = pisaGetAttributes(context, name, node.attributes)
-            media = [x.strip() for x in attr.media.lower().split(",") if x.strip()]
+        elif node.nodeType == ELEMENT_NODE:
+            name = node.tagName.lower()
 
-            if attr.get("type", "").lower() in ("", "text/css") and \
-                    (not media or "all" in media or "print" in media or "pdf" in media):
+            if name in ("style", "link"):
+                attr = pisaGetAttributes(context, name, node.attributes)
+                media = [x.strip() for x in attr.media.lower().split(",") if x.strip()]
 
-                if name == "style":
-                    for node in node.childNodes:
-                        data += pisaPreLoop(node, context, collect=True)
-                    context.addCSS(data)
-                    return u""
+                if attr.get("type", "").lower() in ("", "text/css") and \
+                   (not media or "all" in media or "print" in media or "pdf" in media):
 
-                if name == "link" and attr.href and attr.rel.lower() == "stylesheet":
-                    # print "CSS LINK", attr
-                    context.addCSS('\n@import "%s" %s;' % (attr.href, ",".join(media)))
+                    if name == "style":
+                        for child in reversed(node.childNodes):
+                            actions.insert(0, (child, True))
 
-    for node in node.childNodes:
-        result = pisaPreLoop(node, context, collect=collect)
-        if collect:
-            data += result
+                    elif name == "link" and attr.href and attr.rel.lower() == "stylesheet":
+                        # print "CSS LINK", attr
+                        add_data(u'\n@import "%s" %s;' % (attr.href, u",".join(media)))
 
-    return data
+        for child in reversed(node.childNodes):
+            actions.insert(0, (child, collect))
+
+    if css_data:
+        data = u''.join(css_data)
+        context.addCSS(data)
+        return data
+    else:
+        return u''
 
 
 def pisaLoop(node, context, path=None, **kw):
+    actions = [(node, kw, None)]
+    #paths = [path]  # DEBUG LINE
 
-    if path is None:
-        path = []
+    while True:
+        if not actions:
+            break
 
-    # Initialize KW
-    if not kw:
-        kw = {
-            "margin-top": 0,
-            "margin-bottom": 0,
-            "margin-left": 0,
-            "margin-right": 0,
-        }
-    else:
-        kw = copy.copy(kw)
+        node, kw, options = actions.pop(0)
 
-    #indent = len(path) * "  " # only used for debug print statements
+        #path = list(paths.pop(0) or [])  # DEBUG LINE
+        #indent = ' ' * len(path)  # DEBUG LINE
 
-    # TEXT
-    if node.nodeType == Node.TEXT_NODE:
-        # print indent, "#", repr(node.data) #, context.frag
-        context.addFrag(node.data)
+        # TEXT
+        if node.nodeType == TEXT_NODE:
+            context.addFrag(node.data)
 
-        # context.text.append(node.value)
+            #print indent, "#", repr(node.data) #, context.frag  # DEBUG LINE
+            #context.text.append(node.value)
 
-    # ELEMENT
-    elif node.nodeType == Node.ELEMENT_NODE:
+        # ELEMENT
+        elif node.nodeType == ELEMENT_NODE:
+            if not options:
+                node.tagName = node.tagName.replace(":", "").lower()
+                if node.tagName in ("style", "script"):
+                    continue
 
-        node.tagName = node.tagName.replace(":", "").lower()
+                # Prepare attributes
+                attr = pisaGetAttributes(context, node.tagName, node.attributes)
+                #log.debug(indent + "<%s %s>" % (node.tagName, attr) + repr(node.attributes.items())) #, path  # DEBUG LINE
 
-        if node.tagName in ("style", "script"):
-            return
+                # Calculate styles
+                context.cssAttr = CSSCollect(node, context)
+                context.cssAttr = mapNonStandardAttrs(context.cssAttr, node, attr)
+                context.node = node
 
-        path = copy.copy(path) + [node.tagName]
+                options = {}
+                display = context.cssAttr.get("display", "inline").lower()
+                isBlock = (display == "block")
 
-        # Prepare attributes
-        attr = pisaGetAttributes(context, node.tagName, node.attributes)
-        #log.debug(indent + "<%s %s>" % (node.tagName, attr) + repr(node.attributes.items())) #, path
+                #print indent, node.tagName, display, context.cssAttr.get("background-color", None), attr  # DEBUG LINE
 
-        # Calculate styles
-        context.cssAttr = CSSCollect(node, context)
-        context.cssAttr = mapNonStandardAttrs(context.cssAttr, node, attr)
-        context.node = node
+                if isBlock:
+                    context.addPara()
 
-        # Block?
-        PAGE_BREAK = 1
-        PAGE_BREAK_RIGHT = 2
-        PAGE_BREAK_LEFT = 3
+                    # Page break by CSS
+                    pdf_next_page = context.cssAttr.get('-pdf-next-page')
+                    if pdf_next_page:
+                        pdf_next_page = str(pdf_next_page)
+                        context.addStory(NextPageTemplate(pdf_next_page))
 
-        pageBreakAfter = False
-        frameBreakAfter = False
-        display = context.cssAttr.get("display", "inline").lower()
-        # print indent, node.tagName, display, context.cssAttr.get("background-color", None), attr
-        isBlock = (display == "block")
+                    pdf_page_break = context.cssAttr.get('-pdf-page-break')
+                    if pdf_page_break:
+                        if str(pdf_page_break).lower() == "before":
+                            context.addStory(PageBreak())
 
-        if isBlock:
-            context.addPara()
+                    pdf_frame_break = context.cssAttr.get('-pdf-frame-break')
+                    if pdf_frame_break:
+                        pdf_frame_break = str(pdf_frame_break).lower()
+                        if pdf_frame_break == "before":
+                            context.addStory(FrameBreak())
+                        elif pdf_frame_break == "after":
+                            options['frameBreakAfter'] = True
 
-            # Page break by CSS
-            if "-pdf-next-page" in context.cssAttr:
-                context.addStory(NextPageTemplate(str(context.cssAttr["-pdf-next-page"])))
-            if "-pdf-page-break" in context.cssAttr:
-                if str(context.cssAttr["-pdf-page-break"]).lower() == "before":
-                    context.addStory(PageBreak())
-            if "-pdf-frame-break" in context.cssAttr:
-                if str(context.cssAttr["-pdf-frame-break"]).lower() == "before":
-                    context.addStory(FrameBreak())
-                if str(context.cssAttr["-pdf-frame-break"]).lower() == "after":
-                    frameBreakAfter = True
-            if "page-break-before" in context.cssAttr:
-                if str(context.cssAttr["page-break-before"]).lower() == "always":
-                    context.addStory(PageBreak())
-                if str(context.cssAttr["page-break-before"]).lower() == "right":
-                    context.addStory(PageBreak())
-                    context.addStory(PmlRightPageBreak())
-                if str(context.cssAttr["page-break-before"]).lower() == "left":
-                    context.addStory(PageBreak())
-                    context.addStory(PmlLeftPageBreak())
-            if "page-break-after" in context.cssAttr:
-                if str(context.cssAttr["page-break-after"]).lower() == "always":
-                    pageBreakAfter = PAGE_BREAK
-                if str(context.cssAttr["page-break-after"]).lower() == "right":
-                    pageBreakAfter = PAGE_BREAK_RIGHT
-                if str(context.cssAttr["page-break-after"]).lower() == "left":
-                    pageBreakAfter = PAGE_BREAK_LEFT
+                    page_break_before = context.cssAttr.get('page-break-before')
+                    if page_break_before:
+                        page_break_before = str(page_break_before).lower()
+                        if page_break_before == "always":
+                            context.addStory(PageBreak())
+                        elif page_break_before == "right":
+                            context.addStory(PageBreak())
+                            context.addStory(PmlRightPageBreak())
+                        elif page_break_before == "left":
+                            context.addStory(PageBreak())
+                            context.addStory(PmlLeftPageBreak())
 
-        if display == "none":
-            # print "none!"
-            return
+                if display == "none":
+                    continue
 
-        # Translate CSS to frags
+                if isBlock:
+                    options['isBlock'] = isBlock
+                    page_break_after = context.cssAttr.get('page-break-after')
+                    if page_break_after:
+                        options['page_break_after'] = str(page_break_after).lower()
 
-        # Save previous frag styles
-        context.pushFrag()
+                # Translate CSS to frags
 
-        # Map styles to Reportlab fragment properties
-        CSS2Frag(context, kw, isBlock)
+                # Save previous frag styles
+                context.pushFrag()
 
-        # EXTRAS
-        if "-pdf-keep-with-next" in context.cssAttr:
-            context.frag.keepWithNext = getBool(context.cssAttr["-pdf-keep-with-next"])
-        if "-pdf-outline" in context.cssAttr:
-            context.frag.outline = getBool(context.cssAttr["-pdf-outline"])
-        if "-pdf-outline-level" in context.cssAttr:
-            context.frag.outlineLevel = int(context.cssAttr["-pdf-outline-level"])
-        if "-pdf-outline-open" in context.cssAttr:
-            context.frag.outlineOpen = getBool(context.cssAttr["-pdf-outline-open"])
-        if "-pdf-word-wrap" in context.cssAttr:
-            context.frag.wordWrap = context.cssAttr["-pdf-word-wrap"]
+                # Map styles to Reportlab fragment properties
+                kw = (kw or DEFAULT_LOOP_KWARGS).copy()
+                CSS2Frag(context, kw, isBlock)
 
-        # handle keep-in-frame
-        keepInFrameMode = None
-        keepInFrameMaxWidth = 0
-        keepInFrameMaxHeight = 0
-        if "-pdf-keep-in-frame-mode" in context.cssAttr:
-            value = str(context.cssAttr["-pdf-keep-in-frame-mode"]).strip().lower()
-            if value in ("shrink", "error", "overflow", "truncate"):
-                keepInFrameMode = value
-        if "-pdf-keep-in-frame-max-width" in context.cssAttr:
-            keepInFrameMaxWidth = getSize("".join(context.cssAttr["-pdf-keep-in-frame-max-width"]))
-        if "-pdf-keep-in-frame-max-height" in context.cssAttr:
-            keepInFrameMaxHeight = getSize("".join(context.cssAttr["-pdf-keep-in-frame-max-height"]))
+                # EXTRAS
+                pdf_keep_with_next = context.cssAttr.get('-pdf-keep-with-next', MISSING)
+                if pdf_keep_with_next is not MISSING:
+                    context.frag.keepWithNext = getBool(pdf_keep_with_next)
 
-        # ignore nested keep-in-frames, tables have their own KIF handling
-        keepInFrame = keepInFrameMode is not None and context.keepInFrameIndex is None
-        if keepInFrame:
-            # keep track of current story index, so we can wrap everythink
-            # added after this point in a KeepInFrame
-            context.keepInFrameIndex = len(context.story)
+                pdf_outline = context.cssAttr.get('-pdf-outline', MISSING)
+                if pdf_outline is not MISSING:
+                    context.frag.outline = getBool(pdf_outline)
 
-        # BEGIN tag
-        klass = globals().get("pisaTag%s" % node.tagName.replace(":", "").upper(), None)
-        obj = None
+                pdf_outline_level = context.cssAttr.get('-pdf-outline-level', MISSING)
+                if pdf_outline_level is not MISSING:
+                    context.frag.outlineLevel = int(pdf_outline_level)
 
-        # Static block
-        elementId = attr.get("id", None)
-        staticFrame = context.frameStatic.get(elementId, None)
-        if staticFrame:
-            context.frag.insideStaticFrame += 1
-            oldStory = context.swapStory()
+                pdf_outline_open = context.cssAttr.get('-pdf-outline-open', MISSING)
+                if pdf_outline_open is not MISSING:
+                    context.frag.outlineOpen = getBool(pdf_outline_open)
 
-        # Tag specific operations
-        if klass is not None:
-            obj = klass(node, attr)
-            obj.start(context)
+                pdf_word_wrap = context.cssAttr.get('-pdf-word-wrap', MISSING)
+                if pdf_word_wrap is not MISSING:
+                    context.frag.wordWrap = pdf_word_wrap
 
-        # Visit child nodes
-        context.fragBlock = fragBlock = copy.copy(context.frag)
-        for nnode in node.childNodes:
-            pisaLoop(nnode, context, path, **kw)
-        context.fragBlock = fragBlock
+                # handle keep-in-frame
+                keepInFrameMode = None
+                pdf_keep_in_frame_mode = context.cssAttr.get('-pdf-keep-in-frame-mode')
+                if pdf_keep_in_frame_mode:
+                    pdf_keep_in_frame_mode = str(pdf_keep_in_frame_mode).strip().lower()
+                    if pdf_keep_in_frame_mode in FRAME_MODE_TYPES:
+                        keepInFrameMode = pdf_keep_in_frame_mode
 
-        # END tag
-        if obj:
-            obj.end(context)
+                # ignore nested keep-in-frames, tables have their own KIF handling
+                keepInFrame = bool(keepInFrameMode is not None and \
+                                   context.keepInFrameIndex is None)
+                if keepInFrame:
+                    options['keepInFrame'] = True
+                    # keep track of current story index, so we can wrap everythink
+                    # added after this point in a KeepInFrame
+                    context.keepInFrameIndex = len(context.story)
 
-        # Block?
-        if isBlock:
-            context.addPara()
+                    max_width = context.cssAttr.get('-pdf-keep-in-frame-max-width')
+                    if max_width:
+                        max_width = getSize("".join(max_width))
+                    options['keepInFrameMaxWidth'] = max_width or 0
 
-            # XXX Buggy!
+                    max_height = context.cssAttr.get('-pdf-keep-in-frame-max-height')
+                    if max_height:
+                        max_height = getSize("".join(max_height))
+                    options['keepInFrameMaxHeight'] = max_height or 0
 
-            # Page break by CSS
-            if pageBreakAfter:
-                context.addStory(PageBreak())
-                if pageBreakAfter == PAGE_BREAK_RIGHT:
-                    context.addStory(PmlRightPageBreak())
-                if pageBreakAfter == PAGE_BREAK_LEFT:
-                    context.addStory(PmlLeftPageBreak())
-            if frameBreakAfter:
-                context.addStory(FrameBreak())
+                # BEGIN tag
+                klass = PISA_TAGS.get(node.tagName.upper())
 
-        if keepInFrame:
-            # get all content added after start of -pdf-keep-in-frame and wrap
-            # it in a KeepInFrame
-            substory = context.story[context.keepInFrameIndex:]
-            context.story = context.story[:context.keepInFrameIndex]
-            context.story.append(
-                KeepInFrame(
-                    content=substory,
-                    maxWidth=keepInFrameMaxWidth,
-                    maxHeight=keepInFrameMaxHeight))
-            context.keepInFrameIndex = None
+                # Static block
+                elementId = attr.get("id", None)
+                staticFrame = context.frameStatic.get(elementId, None)
+                if staticFrame:
+                    context.frag.insideStaticFrame += 1
+                    options.update((
+                        ('oldStory', context.swapStory()),
+                        ('staticFrame', staticFrame),
+                        ))
 
-        # Static block, END
-        if staticFrame:
-            context.addPara()
-            for frame in staticFrame:
-                frame.pisaStaticStory = context.story
-            context.swapStory(oldStory)
-            context.frag.insideStaticFrame -= 1
+                # Tag specific operations
+                if klass is not None:
+                    obj = klass(node, attr)
+                    obj.start(context)
+                    options['obj'] = obj
 
-        # context.debug(1, indent, "</%s>" % (node.tagName))
+                context.fragBlock = options['fragBlock'] = copy.copy(context.frag)
+                actions.insert(0, (node, kw, options))
 
-        # Reset frag style
-        context.pullFrag()
+                #path.append(node.tagName)  # DEBUG LINE
+                #paths.insert(0, path)  # DEBUG LINE
 
-    # Unknown or not handled
-    else:
-        # context.debug(1, indent, "???", node, node.nodeType, repr(node))
-        # Loop over children
-        for node in node.childNodes:
-            pisaLoop(node, context, path, **kw)
+                # Visit child nodes
+                for child in reversed(node.childNodes):
+                    actions.insert(0, (child, kw, None))
+                    #paths.insert(0, path)  # DEBUG LINE
+
+            else:
+                context.fragBlock = options['fragBlock']
+
+                # END tag
+                obj = options.get('obj')
+                if obj:
+                    obj.end(context)
+
+                # Block?
+                if options.get('isBlock'):
+                    context.addPara()
+
+                    # XXX Buggy!
+
+                    # Page break by CSS
+                    page_break_after = options.get('page_break_after')
+                    if page_break_after:
+                        context.addStory(PageBreak())
+
+                        if page_break_after == 'right':
+                            context.addStory(PmlRightPageBreak())
+                        elif page_break_after == 'left':
+                            context.addStory(PmlLeftPageBreak())
+
+                    if options.get('frameBreakAfter'):
+                        context.addStory(FrameBreak())
+
+                if options.get('keepInFrame'):
+                    # get all content added after start of -pdf-keep-in-frame and wrap
+                    # it in a KeepInFrame
+                    substory = context.story[context.keepInFrameIndex:]
+                    context.story = context.story[:context.keepInFrameIndex]
+                    context.story.append(
+                        KeepInFrame(
+                            content=substory,
+                            maxWidth=options['keepInFrameMaxWidth'],
+                            maxHeight=options['keepInFrameMaxHeight']))
+                    context.keepInFrameIndex = None
+
+                # Static block, END
+                staticFrame = options.get('staticFrame')
+                if staticFrame:
+                    context.addPara()
+                    for frame in staticFrame:
+                        frame.pisaStaticStory = context.story
+                    context.swapStory(options['oldStory'])
+                    context.frag.insideStaticFrame -= 1
+
+                #log.debug(1, indent, "</%s>" % (node.tagName))  # DEBUG LINE
+
+                # Reset frag style
+                context.pullFrag()
+
+        # Unknown or not handled
+        else:
+            for child in reversed(node.childNodes):
+                actions.insert(0, (child, kw, None))
+                #paths.insert(0, path)  # DEBUG LINE
 
 
 def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_output=None):
