@@ -26,17 +26,13 @@ from xhtml2pdf.util import getBox, getPos, pisaTempFile
 from reportlab.platypus.doctemplate import NextPageTemplate, FrameBreak
 from reportlab.platypus.flowables import PageBreak, KeepInFrame
 from xhtml2pdf.xhtml2pdf_reportlab import PmlRightPageBreak, PmlLeftPageBreak
-from xhtml2pdf.tags import * # TODO: Kill wild import!
-from xhtml2pdf.tables import * # TODO: Kill wild import!
 from xhtml2pdf.util import * # TODO: Kill wild import!
 from xml.dom import Node
-import copy
 import html5lib
 import logging
 import re
 import types
 from xhtml2pdf.w3c.cssDOMElementInterface import CSSDOMElementInterface
-import xml.dom.minidom
 
 
 log = logging.getLogger("xhtml2pdf")
