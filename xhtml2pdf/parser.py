@@ -596,7 +596,7 @@ def pisaLoop(node, context, path=None, **kw):
                     obj.start(context)
                     options['obj'] = obj
 
-                context.fragBlock = options['fragBlock'] = copy.copy(context.frag)
+                context.fragBlock = options['fragBlock'] = context.frag.clone()
                 add_action((node, kw, options))
 
                 #path.append(node.tagName)  # DEBUG LINE
