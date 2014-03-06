@@ -399,10 +399,7 @@ def pisaPreLoop(node, context, collect=False):
     add_action = actions.appendleft
     get_action = actions.popleft
 
-    while True:
-        if not actions:
-            break
-
+    while actions:
         node, collect = get_action()
 
         for child in reversed(node.childNodes):
@@ -446,10 +443,7 @@ def pisaLoop(node, context, path=None, **kw):
     add_action = actions.appendleft
     get_action = actions.popleft
 
-    while True:
-        if not actions:
-            break
-
+    while actions:
         node, kw, options = get_action()
 
         #path = list(paths.pop(0) or [])  # DEBUG LINE
