@@ -228,37 +228,37 @@ def get_css_attribute(node, cssCascade, attrName):
     return result
 
 
-def CSSCollect(node, context, pisa_attributes, css_cache):
+def CSSCollect(node, context, pisa_attributes=None, css_cache=None):
     #node.cssAttrs = {}
     #return node.cssAttrs
 
-    attributes = {}
+    node.cssAttrs = {}
     if context.css:
-        cached_css = MISSING
-        cache_key = getCSSAttrCacheKey(node)
-        parent_tag_name = getattr(node.parentNode, 'tagName', None)
-        if parent_tag_name and parent_tag_name.lower() != 'html':
-            cached_css = css_cache.get(cache_key, MISSING)
+        if css_cache is not None:
+            cache_key = getCSSAttrCacheKey(node)
+            parent_tag_name = getattr(node.parentNode, 'tagName', None)
+            if parent_tag_name and parent_tag_name.lower() != 'html':
+                cached_css = css_cache.get(cache_key, MISSING)
+                if cached_css is not MISSING:
+                    node.cssAttrs.update(cached_css)
+                    return node.cssAttrs
 
-        if cached_css is not MISSING:
-            attributes = cached_css.copy()
-        else:
-            node.cssElement = CSSDOMElementInterface(node)
+            css_cache[cache_key] = node.cssAttrs
 
-            for attribute in attrNames:
-                value = get_css_attribute(node, context.cssCascade, attribute)
-                if value is not None:
-                    attributes[attribute] = value
+        node.cssElement = CSSDOMElementInterface(node)
 
+        for attribute in attrNames:
+            value = get_css_attribute(node, context.cssCascade, attribute)
+            if value is not None:
+                node.cssAttrs[attribute] = value
+
+        if pisa_attributes is not None:
             # Map non standard attrs
             for key, value in nonStandardAttrNames.items():
-                if pisa_attributes.has_key(key) and not attributes.has_key(value):
-                    attributes[value] = pisa_attributes[key]
+                if pisa_attributes.has_key(key) and not node.cssAttrs.has_key(value):
+                    node.cssAttrs[value] = pisa_attributes[key]
 
-            css_cache[cache_key] = attributes
-
-    node.cssAttrs = attributes
-    return attributes
+    return node.cssAttrs
 
 
 def CSS2Frag(c, kw, isBlock):
