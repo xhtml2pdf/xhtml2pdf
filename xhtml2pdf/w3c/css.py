@@ -32,7 +32,12 @@ Dependencies:
     sets, cssParser, re (via cssParser)
 """
 
+from collections import defaultdict
 import sys
+
+
+DEFAULT_LIST = lambda: defaultdict(list)
+
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~ To replace any for with list comprehension
@@ -664,12 +669,24 @@ class CSSDeclarations(dict):
 
 
 class CSSRuleset(dict):
-    def findCSSRulesFor(self, element, attrName):
-        ruleResults = [(nodeFilter, declarations) for nodeFilter, declarations in self.iteritems() if
-                       (attrName in declarations) and (nodeFilter.matches(element))]
-        ruleResults.sort()
-        return ruleResults
+    def __init__(self, *args, **kwargs):
+        dict.__init__(self, *args, **kwargs)
+        self._elements_cache = defaultdict(DEFAULT_LIST)
 
+    def findCSSRulesFor(self, element, attrName):
+        id_element = id(element)
+        result = self._elements_cache.get(id_element)
+        if result is None:
+            result = self._elements_cache[id_element]
+            for nodeFilter, declarations in self.iteritems():
+                if nodeFilter.matches(element):
+                    for attr in declarations:
+                        result[attr].append((nodeFilter, declarations))
+
+            for values in result.values():
+                values.sort()
+
+        return list(result[attrName])
 
     def findCSSRuleFor(self, element, attrName):
         # rule is packed in a list to differentiate from "no rule" vs "rule
