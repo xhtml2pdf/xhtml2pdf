@@ -263,6 +263,7 @@ TAGS = {
         "align": ["left", "center", "right", "justify"],
         "valign": ["top", "bottom", "middle"],
         "width": STRING,
+        "height": STRING,
         "bgcolor": COLOR,
         "border": SIZE,
         "bordercolor": (COLOR, "#000000"),
@@ -274,6 +275,7 @@ TAGS = {
         "align": ["left", "center", "right", "justify"],
         "valign": ["top", "bottom", "middle"],
         "width": STRING,
+        "height": STRING,
         "bgcolor": COLOR,
         "border": SIZE,
         "bordercolor": (COLOR, "#000000"),
@@ -542,6 +544,8 @@ td {
 
     vertical-align: middle;
     width: auto;
+    height: auto;
+    overflow:hidden;
 }
 
 th {
