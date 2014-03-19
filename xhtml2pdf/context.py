@@ -117,6 +117,7 @@ def getParaFrag(style):
 
     frag.listStyleType = None
     frag.listStyleImage = None
+    frag.listStylePosition = "outside"
     frag.whiteSpace = "normal"
 
     frag.wordWrap = None

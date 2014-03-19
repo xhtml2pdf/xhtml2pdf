@@ -202,7 +202,6 @@ class CSSCascadeStrategy(object):
         if self.user is not None:
             rules += self.user[1].findCSSRuleFor(element, attrName)
 
-        rules.sort()
         return rules
 
 
@@ -660,14 +659,47 @@ class CSSTerminalOperator(tuple):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 class CSSDeclarations(dict):
-    pass
+
+    def __init__(self, *args, **kwargs):
+        super(CSSDeclarations, self).__init__(*args, **kwargs)
+        self.index = []
+        seq = kwargs.get('seq', [])
+        if not seq and args[0:]:
+            seq = args[0]
+        self.index.extend([a[0] for a in seq])
+        self.index.extend(kwargs.keys())
+
+    def popitem(self):
+        try:
+            k = self.index.pop(0)
+        except IndexError:
+            raise KeyError('popitem(): dictionary is empty')
+        self.pop(k)
+
+    def items(self):
+        return map(lambda k: (k, self[k]), self.index)
+
+    def iteritems(self):
+        return ((k, self[k]) for k in self.index)
+
+    def __iter__(self):
+        return iter(self.index)
+
+    def __delitem__(self, key):
+        self.index.pop(key, None)
+        super(CSSDeclarations).__delitem__(key)
+
+    def __setitem__(self, key, value):
+        super(CSSDeclarations, self).__setitem__(key, value)
+        if key not in self.index:
+            self.index.append(key)
 
 
-class CSSRuleset(dict):
+class CSSRuleset(CSSDeclarations):
     def findCSSRulesFor(self, element, attrName):
         ruleResults = [(nodeFilter, declarations) for nodeFilter, declarations in self.iteritems() if
                        (attrName in declarations) and (nodeFilter.matches(element))]
-        ruleResults.sort()
+
         return ruleResults
 
 

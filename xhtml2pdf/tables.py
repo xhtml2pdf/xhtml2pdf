@@ -283,9 +283,9 @@ class pisaTagTD(pisaTag):
 
         # Calculate heights
         if row + 1 > len(tdata.rowh):
-            tdata.rowh = tdata.rowh + ((row + 1 - len(tdata.rowh)) * [_width()])
+            tdata.rowh = tdata.rowh + ((row + 1 - len(tdata.rowh)) * [_height()])
         if not rspan:
-            height = None
+            height = c.frag.height or self.attr.height
             if height is not None:
                 tdata.rowh[row] = _height(height)
                 tdata.add_style(('FONTSIZE', begin, end, 1.0))
