@@ -229,8 +229,8 @@ _bullet = u"\u2022"
 _list_style_type = {
     "none": u"",
     "disc": _bullet,
-    "circle": _bullet,  # XXX PDF has no equivalent
-    "square": _bullet,  # XXX PDF has no equivalent
+    "circle": u'\u25cf',  # XXX PDF has no equivalent
+    "square": u'\u25a0',  # XXX PDF has no equivalent
     "decimal": listDecimal,
     "decimal-leading-zero": listDecimal,
     "lower-roman": listLowerRoman,
@@ -270,6 +270,9 @@ class pisaTagLI(pisaTag):
     def start(self, c):
         lst = _list_style_type.get(c.frag.listStyleType or "disc", _bullet)
         frag = copy.copy(c.frag)
+
+        if frag.listStylePosition == "outside":
+            c.frag.bulletIndent -= 15
 
         self.offset = 0
         if frag.listStyleImage is not None:

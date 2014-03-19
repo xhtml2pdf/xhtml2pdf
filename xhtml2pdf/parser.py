@@ -350,6 +350,8 @@ def CSS2Frag(c, kw, isBlock):
             c.frag.listStyleType = str(c.cssAttr["list-style-type"]).lower()
         if "list-style-image" in c.cssAttr:
             c.frag.listStyleImage = c.getFile(c.cssAttr["list-style-image"])
+        if "list-style-position" in c.cssAttr:
+            c.frag.listStylePosition = str(c.cssAttr["list-style-position"])
         # PADDINGS
     if isBlock:
         if "padding-top" in c.cssAttr:
