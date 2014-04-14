@@ -3,7 +3,7 @@
 # see license.txt for license details
 # history http://www.reportlab.co.uk/cgi-bin/viewcvs.cgi/public/reportlab/trunk/reportlab/platypus/paragraph.py
 # Modifications by Dirk Holtwick, 2008
-from string import join, whitespace
+from string import whitespace
 from operator import truth
 from reportlab.pdfbase.pdfmetrics import stringWidth, getAscentDescent
 from reportlab.platypus.paraparser import ParaParser
@@ -98,7 +98,7 @@ _parser = ParaParser()
 
 
 def _lineClean(L):
-    return join(filter(truth, split(strip(L))))
+    return ' '.join(filter(truth, split(strip(L))))
 
 
 def cleanBlockQuotedText(text, joiner=' '):
@@ -106,7 +106,7 @@ def cleanBlockQuotedText(text, joiner=' '):
     quoted text form within the document and returns
     (hopefully) the paragraph the user intended originally."""
     L = filter(truth, map(_lineClean, split(text, '\n')))
-    return join(L, joiner)
+    return joiner.join(L)
 
 
 def setXPos(tx, dx):
@@ -116,7 +116,7 @@ def setXPos(tx, dx):
 
 def _leftDrawParaLine(tx, offset, extraspace, words, last=0):
     setXPos(tx, offset)
-    tx._textOut(join(words), 1)
+    tx._textOut(' '.join(words), 1)
     setXPos(tx, -offset)
     return offset
 
@@ -124,7 +124,7 @@ def _leftDrawParaLine(tx, offset, extraspace, words, last=0):
 def _centerDrawParaLine(tx, offset, extraspace, words, last=0):
     m = offset + 0.5 * extraspace
     setXPos(tx, m)
-    tx._textOut(join(words), 1)
+    tx._textOut(' '.join(words), 1)
     setXPos(tx, -m)
     return m
 
@@ -132,14 +132,14 @@ def _centerDrawParaLine(tx, offset, extraspace, words, last=0):
 def _rightDrawParaLine(tx, offset, extraspace, words, last=0):
     m = offset + extraspace
     setXPos(tx, m)
-    tx._textOut(join(words), 1)
+    tx._textOut(' '.join(words), 1)
     setXPos(tx, -m)
     return m
 
 
 def _justifyDrawParaLine(tx, offset, extraspace, words, last=0):
     setXPos(tx, offset)
-    text = join(words)
+    text = ' '.join(words)
     if last:
         #last one, left align
         tx._textOut(text, 1)
@@ -633,7 +633,7 @@ def splitLines0(frags, widths):
 
 def _do_under_line(i, t_off, ws, tx, lm=-0.125):
     y = tx.XtraState.cur_y - i * tx.XtraState.style.leading + lm * tx.XtraState.f.fontSize
-    textlen = tx._canvas.stringWidth(join(tx.XtraState.lines[i][1]), tx._fontname, tx._fontsize)
+    textlen = tx._canvas.stringWidth(' '.join(tx.XtraState.lines[i][1]), tx._fontname, tx._fontsize)
     tx._canvas.line(t_off, y, t_off + textlen + ws, y)
 
 
@@ -660,7 +660,7 @@ def _do_link_line(i, t_off, ws, tx):
     xs = tx.XtraState
     leading = xs.style.leading
     y = xs.cur_y - i * leading - xs.f.fontSize / 8.0 # 8.0 factor copied from para.py
-    text = join(xs.lines[i][1])
+    text = ' '.join(xs.lines[i][1])
     textlen = tx._canvas.stringWidth(text, tx._fontname, tx._fontsize)
     _doLink(tx, xs.link, (t_off, y, t_off + textlen + ws, y + leading))
 
@@ -817,14 +817,14 @@ def makeCJKParaLine(U, extraSpace, calcBounds):
         minDescent = min(minDescent, descent)
         if not _sameFrag(f0, f):
             f0 = f0.clone()
-            f0.text = u''.join(CW)
+            f0.text = ''.join(CW)
             words.append(f0)
             CW = []
             f0 = f
         CW.append(u)
     if CW:
         f0 = f0.clone()
-        f0.text = u''.join(CW)
+        f0.text = ''.join(CW)
         words.append(f0)
     return FragLine(kind=1, extraSpace=extraSpace, wordCount=1, words=words[1:], fontSize=maxSize, ascent=maxAscent,
                     descent=minDescent)
@@ -978,11 +978,11 @@ class Paragraph(Flowable):
     def wrap(self, availWidth, availHeight):
 
         if self.debug:
-            print id(self), "wrap"
+            print (id(self), "wrap")
             try:
-                print repr(self.getPlainText()[:80])
+                print (repr(self.getPlainText()[:80]))
             except:
-                print "???"
+                print ("???")
 
         # work out widths array for breaking
         self.width = availWidth
@@ -1044,7 +1044,7 @@ class Paragraph(Flowable):
     def split(self, availWidth, availHeight):
 
         if self.debug:
-            print  id(self), "split"
+            print  (id(self), "split")
 
         if len(self.frags) <= 0: return []
 
@@ -1159,7 +1159,7 @@ class Paragraph(Flowable):
         """
 
         if self.debug:
-            print id(self), "breakLines"
+            print (id(self), "breakLines")
 
         if not isinstance(width, (tuple, list)):
             maxWidths = [width]
@@ -1378,7 +1378,7 @@ class Paragraph(Flowable):
         Cannot handle font variations."""
 
         if self.debug:
-            print id(self), "breakLinesCJK"
+            print (id(self), "breakLinesCJK")
 
         if not isinstance(width, (list, tuple)):
             maxWidths = [width]
@@ -1433,7 +1433,7 @@ class Paragraph(Flowable):
         algorithm will go infinite."""
 
         if self.debug:
-            print id(self), "drawPara", self.blPara.kind
+            print (id(self), "drawPara", self.blPara.kind)
 
         #stash the key facts locally for speed
         canvas = self.canv
@@ -1635,7 +1635,7 @@ class Paragraph(Flowable):
             for frag in frags:
                 if hasattr(frag, 'text'):
                     plains.append(frag.text)
-            return join(plains, '')
+            return ''.join(plains)
         elif identify:
             text = getattr(self, 'text', None)
             if text is None: text = repr(self)
@@ -1661,7 +1661,7 @@ class Paragraph(Flowable):
 
 if __name__ == '__main__':    # NORUNTESTS
     def dumpParagraphLines(P):
-        print 'dumpParagraphLines(<Paragraph @ %d>)' % id(P)
+        print ('dumpParagraphLines(<Paragraph @ %d>)') % id(P)
         lines = P.blPara.lines
         for l, line in enumerate(lines):
             line = lines[l]
@@ -1670,10 +1670,10 @@ if __name__ == '__main__':    # NORUNTESTS
             else:
                 words = line[1]
             nwords = len(words)
-            print 'line%d: %d(%s)\n  ' % (l, nwords, str(getattr(line, 'wordCount', 'Unknown'))),
+            print ('line%d: %d(%s)\n  ') % (l, nwords, str(getattr(line, 'wordCount', 'Unknown'))),
             for w in xrange(nwords):
-                print "%d:'%s'" % (w, getattr(words[w], 'text', words[w])),
-            print
+                print ("%d:'%s'") % (w, getattr(words[w], 'text', words[w])),
+            print()
 
     def fragDump(w):
         R = ["'%s'" % w[1]]
@@ -1683,21 +1683,21 @@ if __name__ == '__main__':    # NORUNTESTS
         return ', '.join(R)
 
     def dumpParagraphFrags(P):
-        print 'dumpParagraphFrags(<Paragraph @ %d>) minWidth() = %.2f' % (id(P), P.minWidth())
+        print ('dumpParagraphFrags(<Paragraph @ %d>) minWidth() = %.2f') % (id(P), P.minWidth())
         frags = P.frags
         n = len(frags)
         for l in xrange(n):
-            print "frag%d: '%s' %s" % (
+            print ("frag%d: '%s' %s") % (
             l, frags[l].text, ' '.join(['%s=%s' % (k, getattr(frags[l], k)) for k in frags[l].__dict__ if k != text]))
 
         l = 0
         cum = 0
         for W in _getFragWords(frags):
             cum += W[0]
-            print "fragword%d: cum=%3d size=%d" % (l, cum, W[0]),
+            print ("fragword%d: cum=%3d size=%d") % (l, cum, W[0]),
             for w in W[1:]:
-                print '(%s)' % fragDump(w),
-            print
+                print ('(%s)') % fragDump(w),
+            print()
             l += 1
 
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -1770,12 +1770,12 @@ umfassend zu sein."""
         P = Paragraph(text, B)
         dumpParagraphFrags(P)
         w, h = P.wrap(aW, aH)
-        print 'After initial wrap', w, h
+        print ('After initial wrap', w, h)
         dumpParagraphLines(P)
         S = P.split(aW, aH)
         dumpParagraphFrags(S[0])
         w0, h0 = S[0].wrap(aW, aH)
-        print 'After split wrap', w0, h0
+        print ('After split wrap', w0, h0)
         dumpParagraphLines(S[0])
 
     if flagged(5):
@@ -1810,7 +1810,7 @@ umfassend zu sein."""
         w, h = P.wrap(6 * 72, 9.7 * 72)
         dumpParagraphLines(P)
         S = P.split(6 * 72, h / 2.0)
-        print len(S)
+        print (len(S))
         dumpParagraphLines(S[0])
         dumpParagraphLines(S[1])
 
