@@ -164,7 +164,7 @@ class pisaCSSBuilder(css.CSSBuilder):
         # Font weight
         fweight = str(data.get("font-weight", "normal")).lower()
         bold = fweight in ("bold", "bolder", "500", "600", "700", "800", "900")
-        if not bold and fweight <> "normal":
+        if not bold and fweight != "normal":
             log.warn(self.c.warning("@fontface, unknown value font-weight '%s'", fweight))
 
         # Font style
