@@ -4,7 +4,10 @@ from reportlab.lib.colors import Color, CMYKColor, getAllNamedColors, toColor, \
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
 from reportlab.lib.units import inch, cm
 import base64
-import httplib
+try:
+    import httplib
+except ImportError:
+    import http.client
 import logging
 import mimetypes
 import os.path
@@ -16,8 +19,14 @@ import sys
 import tempfile
 import types
 import urllib
-import urllib2
-import urlparse
+try:
+    import urllib2
+except ImportError:
+    import urllib.request as urllib2
+try:
+    import urlparse
+except ImportError:
+    import urllib.parse as urlparse
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -45,9 +54,12 @@ REPORTLAB22 = _reportlab_version >= (2, 2)
 log = logging.getLogger("xhtml2pdf")
 
 try:
-    import cStringIO as StringIO
+    import cStringIO as io
 except:
-    import StringIO
+    try:
+        import StringIO as io
+    except ImportError:
+        import io
 
 try:
     import PyPDF2
@@ -299,7 +311,7 @@ def getBox(box, pagesize):
     """
     box = str(box).split()
     if len(box) != 4:
-        raise Exception, "box not defined right way"
+        raise Exception("box not defined right way")
     x, y, w, h = [getSize(pos) for pos in box]
     return getCoords(x, y, w, h, pagesize)
 
@@ -349,7 +361,7 @@ def getPos(position, pagesize):
     """
     position = str(position).split()
     if len(position) != 2:
-        raise Exception, "position not defined right way"
+        raise Exception("position not defined right way")
     x, y = [getSize(pos) for pos in position]
     return getCoords(x, y, None, None, pagesize)
 
@@ -385,11 +397,11 @@ GAE = "google.appengine" in sys.modules
 
 if GAE:
     STRATEGIES = (
-        StringIO.StringIO,
-        StringIO.StringIO)
+        io.StringIO,
+        io.StringIO)
 else:
     STRATEGIES = (
-        StringIO.StringIO,
+        io.StringIO,
         tempfile.NamedTemporaryFile)
 
 
@@ -564,11 +576,14 @@ class pisaFileObject:
                     if r1.getheader("content-encoding") == "gzip":
                         import gzip
                         try:
-                            import cStringIO as StringIO
+                            import cStringIO as io
                         except:
-                            import StringIO
+                            try:
+                                import StringIO as io
+                            except ImportError:
+                                import io
 
-                        self.file = gzip.GzipFile(mode="rb", fileobj=StringIO.StringIO(r1.read()))
+                        self.file = gzip.GzipFile(mode="rb", fileobj=io.StringIO(r1.read()))
                     else:
                         self.file = r1
                 else:
