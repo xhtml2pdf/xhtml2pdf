@@ -422,7 +422,11 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
                 elif mode not in ('L', 'RGB', 'CMYK'):
                     im = im.convert('RGB')
                     self.mode = 'RGB'
-                self._data = im.tobytes()
+                if hasattr(im, 'tobytes'):
+                    self._data = im.tobytes()
+                else:
+                    # PIL compatibility
+                    self._data = im.tostring()
         return self._data
 
     def getImageData(self):
