@@ -7,7 +7,7 @@ import base64
 try:
     import httplib
 except ImportError:
-    import http.client
+    import http.client as httplib
 import logging
 import mimetypes
 import os.path
