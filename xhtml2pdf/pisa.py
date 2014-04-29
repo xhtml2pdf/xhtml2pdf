@@ -87,7 +87,7 @@ LOG_FORMAT_DEBUG = "%(levelname)s [%(name)s] %(pathname)s line %(lineno)d: %(mes
 
 
 def usage():
-    print USAGE
+    print (USAGE)
 
 
 class pisaLinkLoader:
@@ -128,14 +128,14 @@ class pisaLinkLoader:
         self.tfileList.append(path)
 
         if not self.quiet:
-            print "  Loading", url, "to", path
+            print ("  Loading", url, "to", path)
 
         return path
 
 
 def command():
     if "--profile" in sys.argv:
-        print "*** PROFILING ENABLED"
+        print ("*** PROFILING ENABLED")
         import cProfile as profile
         import pstats
 
@@ -218,20 +218,20 @@ def execute():
                 log_level = int(a)
 
         if o in ("--copyright", "--version"):
-            print COPYRIGHT
+            print (COPYRIGHT)
             sys.exit(0)
 
         if o in ("--system",):
-            print COPYRIGHT
-            print
-            print "SYSTEM INFORMATIONS"
-            print "--------------------------------------------"
-            print "OS:                ", sys.platform
-            print "Python:            ", sys.version
-            print "html5lib:          ", "?"
+            print (COPYRIGHT)
+            print ()
+            print ("SYSTEM INFORMATIONS")
+            print ("--------------------------------------------")
+            print ("OS:                ", sys.platform)
+            print ("Python:            ", sys.version)
+            print ("html5lib:          ", "?")
             import reportlab
 
-            print "Reportlab:         ", reportlab.Version
+            print ("Reportlab:         ", reportlab.Version)
             sys.exit(0)
 
         if o in ("-t", "--format"):
@@ -251,7 +251,7 @@ def execute():
 
         if o in ("--css-dump",):
             # CSS dump
-            print DEFAULT_CSS
+            print (DEFAULT_CSS)
             return
 
         if o in ("--xml-dump",):
@@ -340,13 +340,13 @@ def execute():
             try:
                 open(dest, "wb").close()
             except:
-                print "File '%s' seems to be in use of another application." % dest
+                print ("File '%s' seems to be in use of another application.") % dest
                 sys.exit(2)
             fdest = open(dest, "wb")
             fdestclose = 1
 
         if not quiet:
-            print "Converting %s to %s..." % (src, dest)
+            print ("Converting %s to %s...") % (src, dest)
 
         pdf = pisaDocument(
             fsrc,
@@ -371,7 +371,7 @@ def execute():
 
         if (not errors) and startviewer:
             if not quiet:
-                print "Open viewer for file %s" % dest
+                print ("Open viewer for file %s") % dest
             startViewer(dest)
 
 
