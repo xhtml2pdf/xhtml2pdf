@@ -4,7 +4,10 @@ from reportlab.lib.colors import Color, CMYKColor, getAllNamedColors, toColor, \
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
 from reportlab.lib.units import inch, cm
 import base64
-import httplib
+try:
+    import httplib
+except ImportError:
+    import http.client
 import logging
 import mimetypes
 import os.path
@@ -299,7 +302,7 @@ def getBox(box, pagesize):
     """
     box = str(box).split()
     if len(box) != 4:
-        raise Exception, "box not defined right way"
+        raise Exception("box not defined right way")
     x, y, w, h = [getSize(pos) for pos in box]
     return getCoords(x, y, w, h, pagesize)
 
@@ -349,7 +352,7 @@ def getPos(position, pagesize):
     """
     position = str(position).split()
     if len(position) != 2:
-        raise Exception, "position not defined right way"
+        raise Exception("position not defined right way")
     x, y = [getSize(pos) for pos in position]
     return getCoords(x, y, None, None, pagesize)
 
