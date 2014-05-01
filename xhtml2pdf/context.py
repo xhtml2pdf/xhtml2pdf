@@ -18,7 +18,10 @@ import os
 import re
 import reportlab
 import types
-import urlparse
+try:
+    import urlparse
+except ImportError:
+    import urllib.parse as urlparse
 import xhtml2pdf.default
 import xhtml2pdf.parser
 
