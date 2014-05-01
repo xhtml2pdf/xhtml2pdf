@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-from reportlab.lib.colors import Color, CMYKColor, getAllNamedColors, toColor, \
-    HexColor
+from reportlab.lib.colors import Color, toColor
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
 from reportlab.lib.units import inch, cm
 import base64
@@ -45,7 +44,7 @@ except ImportError:
 rgb_re = re.compile("^.*?rgb[(]([0-9]+).*?([0-9]+).*?([0-9]+)[)].*?[ ]*$")
 
 _reportlab_version = tuple(map(int, reportlab.Version.split('.')))
-if _reportlab_version < (2,1):
+if _reportlab_version < (2, 1):
     raise ImportError("Reportlab Version 2.1+ is needed!")
 
 REPORTLAB22 = _reportlab_version >= (2, 2)
@@ -77,15 +76,16 @@ except:
     renderSVG = None
 
 
-#===============================================================================
+#=========================================================================
 # Memoize decorator
-#===============================================================================
+#=========================================================================
 class memoized(object):
+
     """
     A kwargs-aware memoizer, better than the one in python :)
 
-    Don't pass in too large kwargs, since this turns them into a tuple of tuples
-    Also, avoid mutable types (as usual for memoizers)
+    Don't pass in too large kwargs, since this turns them into a tuple of
+    tuples. Also, avoid mutable types (as usual for memoizers)
 
     What this does is to create a dictionnary of {(*parameters):return value},
     and uses it as a cache for subsequent calls to the same method.
@@ -93,13 +93,11 @@ class memoized(object):
     and that are called often. It's a perfect match for our getSize etc...
     """
 
-
     def __init__(self, func):
         self.cache = {}
         self.func = func
-        self.__doc__ = self.func.__doc__ # To avoid great confusion
-        self.__name__ = self.func.__name__ # This also avoids great confusion
-
+        self.__doc__ = self.func.__doc__  # To avoid great confusion
+        self.__name__ = self.func.__name__  # This also avoids great confusion
 
     def __call__(self, *args, **kwargs):
         # Make sure the following line is not actually slower than what you're
@@ -120,12 +118,13 @@ def ErrorMsg():
     """
     Helper to get a nice traceback as string
     """
-    import traceback, sys
-
+    import traceback
+    import sys
 
     type = value = tb = limit = None
     type, value, tb = sys.exc_info()
-    list = traceback.format_tb(tb, limit) + traceback.format_exception_only(type, value)
+    list = traceback.format_tb(tb, limit) + \
+        traceback.format_exception_only(type, value)
     return "Traceback (innermost last):\n" + "%-20s %s" % (
         string.join(list[: - 1], ""),
         list[- 1])
@@ -152,7 +151,8 @@ def getColor(value, default=None):
     if value in COLOR_BY_NAME:
         return COLOR_BY_NAME[value]
     if value.startswith("#") and len(value) == 4:
-        value = "#" + value[1] + value[1] + value[2] + value[2] + value[3] + value[3]
+        value = "#" + value[1] + value[1] + \
+            value[2] + value[2] + value[3] + value[3]
     elif rgb_re.search(value):
         # e.g., value = "<css function: rgb(153, 51, 153)>", go figure:
         r, g, b = [int(x) for x in rgb_re.search(value).groups()]
@@ -161,7 +161,7 @@ def getColor(value, default=None):
         # Shrug
         pass
 
-    return toColor(value, default) # Calling the reportlab function
+    return toColor(value, default)  # Calling the reportlab function
 
 
 def getBorderStyle(value, default=None):
@@ -241,21 +241,25 @@ def getSize(value, relative=0, base=None, default=0.0):
         elif value[-2:] == 'pt':
             return float(value[:-2].strip())
         elif value[-2:] == 'pc':
-            return float(value[:-2].strip()) * 12.0 # 1pc == 12pt
+            return float(value[:-2].strip()) * 12.0  # 1pc == 12pt
         elif value[-2:] == 'px':
-            return float(value[
-                         :-2].strip()) * dpi96  # XXX W3C says, use 96pdi http://www.w3.org/TR/CSS21/syndata.html#length-units
+            # XXX W3C says, use 96pdi
+            # http://www.w3.org/TR/CSS21/syndata.html#length-units
+            return float(value[:-2].strip()) * dpi96
         elif value[-1:] == 'i':  # 1pt == 1/72inch
             return float(value[:-1].strip()) * inch
         elif value in ("none", "0", "auto"):
             return 0.0
         elif relative:
             if value[-2:] == 'em':  # XXX
-                return float(value[:-2].strip()) * relative  # 1em = 1 * fontSize
-            elif value[-2:] == 'ex': # XXX
-                return float(value[:-2].strip()) * (relative / 2.0) # 1ex = 1/2 fontSize
+                # 1em = 1 * fontSize
+                return float(value[:-2].strip()) * relative
+            elif value[-2:] == 'ex':  # XXX
+                # 1ex = 1/2 fontSize
+                return float(value[:-2].strip()) * (relative / 2.0)
             elif value[-1:] == '%':
-                return (relative * float(value[:-1].strip())) / 100.0 # 1% = (fontSize * 1) / 100
+                # 1% = (fontSize * 1) / 100
+                return (relative * float(value[:-1].strip())) / 100.0
             elif value in ("normal", "inherit"):
                 return relative
             elif value in _relativeSizeTable:
@@ -292,7 +296,7 @@ def getCoords(x, y, w, h, pagesize):
         x = ax + x
     if y < 0:
         y = ay + y
-    if w != None and h != None:
+    if w is not None and h is not None:
         if w <= 0:
             w = (ax - x + w)
         if h <= 0:
@@ -406,6 +410,7 @@ else:
 
 
 class pisaTempFile(object):
+
     """
     A temporary file implementation that uses memory unless
     either capacity is breached or fileno is requested, at which
@@ -442,7 +447,8 @@ class pisaTempFile(object):
 
     def makeTempFile(self):
         """
-        Switch to next startegy. If an error occured stay with the first strategy
+        Switch to next startegy. If an error occured,
+        stay with the first strategy
         """
 
         if self.strategy == 0:
@@ -509,10 +515,12 @@ class pisaTempFile(object):
             raise AttributeError(e)
 
 
-_rx_datauri = re.compile("^data:(?P<mime>[a-z]+/[a-z]+);base64,(?P<data>.*)$", re.M | re.DOTALL)
+_rx_datauri = re.compile(
+    "^data:(?P<mime>[a-z]+/[a-z]+);base64,(?P<data>.*)$", re.M | re.DOTALL)
 
 
 class pisaFileObject:
+
     """
     XXX
     """
@@ -547,11 +555,13 @@ class pisaFileObject:
                 if basepath and uri.startswith('/'):
                     uri = urlparse.urljoin(basepath, uri[1:])
                 urlResponse = urllib2.urlopen(uri)
-                self.mimetype = urlResponse.info().get("Content-Type", '').split(";")[0]
+                self.mimetype = urlResponse.info().get(
+                    "Content-Type", '').split(";")[0]
                 self.uri = urlResponse.geturl()
                 self.file = urlResponse
 
-            # Drive letters have len==1 but we are looking for things like http:
+            # Drive letters have len==1 but we are looking
+            # for things like http:
             elif urlParts.scheme in ('http', 'https'):
 
                 # External data
@@ -571,7 +581,8 @@ class pisaFileObject:
                 r1 = conn.getresponse()
                 # log.debug("HTTP %r %r %r %r", server, path, uri, r1)
                 if (r1.status, r1.reason) == (200, "OK"):
-                    self.mimetype = r1.getheader("Content-Type", '').split(";")[0]
+                    self.mimetype = r1.getheader(
+                        "Content-Type", '').split(";")[0]
                     self.uri = uri
                     if r1.getheader("content-encoding") == "gzip":
                         import gzip
@@ -583,7 +594,8 @@ class pisaFileObject:
                             except ImportError:
                                 import io
 
-                        self.file = gzip.GzipFile(mode="rb", fileobj=io.StringIO(r1.read()))
+                        self.file = gzip.GzipFile(
+                            mode="rb", fileobj=io.StringIO(r1.read()))
                     else:
                         self.file = r1
                 else:
@@ -591,7 +603,8 @@ class pisaFileObject:
                         urlResponse = urllib2.urlopen(uri)
                     except urllib2.HTTPError:
                         return
-                    self.mimetype = urlResponse.info().get("Content-Type", '').split(";")[0]
+                    self.mimetype = urlResponse.info().get(
+                        "Content-Type", '').split(";")[0]
                     self.uri = urlResponse.geturl()
                     self.file = urlResponse
 
@@ -830,4 +843,3 @@ COLOR_BY_NAME = {
     'yellow': Color(1, 1, 0),
     'yellowgreen': Color(.603922, .803922, .196078)
 }
-
