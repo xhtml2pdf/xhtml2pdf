@@ -19,6 +19,11 @@ class TestCase(unittest.TestCase):
         r = pisaParser(_data, c)
         self.assertEqual(c, r)
 
+    def test_getFile(self):
+        c = pisaContext(".")
+        r = pisaParser(_data, c)
+        self.assertEqual(c.getFile(None), None)
+
 def buildTestSuite():
     return unittest.defaultTestLoader.loadTestsFromName(__name__)
 
