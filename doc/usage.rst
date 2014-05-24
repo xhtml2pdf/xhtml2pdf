@@ -150,7 +150,7 @@ It makes use of the Letter page size of 612pt x 792pt.
                 width: 512pt;
                 top: 50pt;
                 height: 692pt;
-                -pdf-frame-border: 1;    # for debugging the layout
+                -pdf-frame-border: 1;    /* for debugging the layout */
             }
         }
     </style>
@@ -198,14 +198,14 @@ Example with 2 Static Frames and 1 Content Frame
     <style>
         @page {
             size: a4 portrait;
-            @frame header_frame {           # Static Frame
+            @frame header_frame {           /* Static Frame */
                 -pdf-frame-content: header_content;
                 left: 50pt; width: 512pt; top: 50pt; height: 40pt; 
             }
-            @frame content_frame {          # Content Frame
+            @frame content_frame {          /* Content Frame */
                 left: 50pt; width: 512pt; top: 90pt; height: 632pt;
             }
-            @frame footer_frame {           # Another static Frame
+            @frame footer_frame {           /* Another static Frame */
                 -pdf-frame-content: footer_content;
                 left: 50pt; width: 512pt; top: 772pt; height: 20pt; 
             }
@@ -273,17 +273,17 @@ Example page template with a header, two columns, and a footer
     <style>
         @page {
             size: letter portrait;
-            @frame header_frame {           # Static frame
+            @frame header_frame {           /* Static frame */
                 -pdf-frame-content: header_content;
                 left: 50pt; width: 512pt; top: 50pt; height: 40pt; 
             }
-            @frame col1_frame {             # Content frame 1
+            @frame col1_frame {             /* Content frame 1 */
                 left: 44pt; width: 245pt; top: 90pt; height: 632pt;
             }
-            @frame col2_frame {             # Content frame 2
+            @frame col2_frame {             /* Content frame 2 */
                 left: 323pt; width: 245pt; top: 90pt; height: 632pt;
             } 
-            @frame footer_frame {           # Static frame
+            @frame footer_frame {           /* Static frame */
                 -pdf-frame-content: footer_content;
                 left: 50pt; width: 512pt; top: 772pt; height: 20pt; 
             }
