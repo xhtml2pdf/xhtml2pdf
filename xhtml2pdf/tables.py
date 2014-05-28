@@ -280,6 +280,14 @@ class pisaTagTD(pisaTag):
             # If is value, the set it in the right place in the arry
             if width is not None:
                 tdata.colw[col] = _width(width)
+            else:
+               # If there are no child nodes, nothing within the column can change the
+               # width.  Set the column width to the sum of the right and left padding
+               # rather than letting it default.
+               if len(self.node.childNodes) == 0:
+                   width = c.frag.paddingLeft + c.frag.paddingRight
+                   tdata.colw[col] = _width(width)
+
 
         # Calculate heights
         if row + 1 > len(tdata.rowh):
