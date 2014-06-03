@@ -242,6 +242,8 @@ class pisaCSSBuilder(css.CSSBuilder):
                     sizeList.append(getSize(value))
                 elif valueStr == "landscape":
                     isLandscape = True
+                elif valueStr == "portrait":
+                    isLandscape = False
                 elif valueStr in xhtml2pdf.default.PML_PAGESIZES:
                     c.pageSize = xhtml2pdf.default.PML_PAGESIZES[valueStr]
                 else:
