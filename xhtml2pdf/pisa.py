@@ -9,9 +9,14 @@ import logging
 import os
 import sys
 import tempfile
-import urllib2
-import urlparse
-
+try:
+    import urllib2
+except ImportError:
+    import urllib.request as urllib2
+try:
+    import urlparse
+except ImportError:
+    import urllib.parse as urlparse
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
