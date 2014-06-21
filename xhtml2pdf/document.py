@@ -28,15 +28,18 @@ log = logging.getLogger("xhtml2pdf")
 
 def pisaErrorDocument(dest, c):
     out = pisaTempFile(capacity=c.capacity)
-    out.write("<p style='background-color:red;'><strong>%d error(s) occured:</strong><p>" % c.err)
+    out.write("<p style='background-color:red;'>" +
+              "<strong>%d error(s) occured:</strong><p>" % c.err)
     for mode, line, msg, _ in c.log:
         if mode == "error":
-            out.write("<pre>%s in line %d: %s</pre>" % (mode, line, cgi.escape(msg)))
+            out.write("<pre>%s in line %d: %s</pre>"
+                      % (mode, line, cgi.escape(msg)))
 
     out.write("<p><strong>%d warning(s) occured:</strong><p>" % c.warn)
     for mode, line, msg, _ in c.log:
         if mode == "warning":
-            out.write("<p>%s in line %d: %s</p>" % (mode, line, cgi.escape(msg)))
+            out.write("<p>%s in line %d: %s</p>"
+                      % (mode, line, cgi.escape(msg)))
 
     return pisaDocument(out.getvalue(), dest, raise_exception=False)
 
@@ -73,7 +76,8 @@ def pisaStory(src, path=None, link_callback=None, debug=0, default_css=None,
 def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                  default_css=None, xhtml=False, encoding=None, xml_output=None,
                  raise_exception=True, capacity=100 * 1024, **kw):
-    log.debug("pisaDocument options:\n  src = %r\n  dest = %r\n  path = %r\n  link_callback = %r\n  xhtml = %r",
+    log.debug("pisaDocument options:\n  src = %r\n  dest = %r\n  " +
+              "path = %r\n  link_callback = %r\n  xhtml = %r",
               src,
               dest,
               path,
@@ -142,7 +146,7 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                 for bg in context.pisaBackgroundList:
                     page = input1.getPage(ctr)
                     if (bg and not bg.notFound()
-                        and (bg.mimetype == "application/pdf")):
+                            and (bg.mimetype == "application/pdf")):
                         bginput = PyPDF2.PdfFileReader(bg.getFile())
                         pagebg = bginput.getPage(0)
                         pagebg.mergePage(page)
