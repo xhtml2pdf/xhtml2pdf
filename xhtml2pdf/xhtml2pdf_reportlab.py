@@ -240,8 +240,8 @@ class PmlPageTemplate(PageTemplate):
                             canvas.drawImage(img, 0, ph - h, w, h)
                         elif self.isLandscape():
                             factor_max = max(wfactor, hfactor)
-                            w = ih * factor_max
-                            h = iw * factor_min
+                            h = ih * factor_max
+                            w = iw * factor_min
                             canvas.drawImage(img, 0, 0, w, h)
                     except:
                         log.exception("Draw background")
