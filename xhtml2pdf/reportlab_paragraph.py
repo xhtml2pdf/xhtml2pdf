@@ -3,7 +3,7 @@
 # see license.txt for license details
 # history http://www.reportlab.co.uk/cgi-bin/viewcvs.cgi/public/reportlab/trunk/reportlab/platypus/paragraph.py
 # Modifications by Dirk Holtwick, 2008
-from string import join, whitespace
+from string import whitespace
 from operator import truth
 from reportlab.pdfbase.pdfmetrics import stringWidth, getAscentDescent
 from reportlab.platypus.paraparser import ParaParser
@@ -14,6 +14,13 @@ from reportlab.lib.textsplit import ALL_CANNOT_START
 from copy import deepcopy
 from reportlab.lib.abag import ABag
 import re
+
+# Python 3 Support
+try:
+    unicode = unicode
+except NameError:
+    unicode = str
+
 
 
 PARAGRAPH_DEBUG = False
@@ -98,7 +105,7 @@ _parser = ParaParser()
 
 
 def _lineClean(L):
-    return join(filter(truth, split(strip(L))))
+    return filter(truth, split(strip(L))).join()
 
 
 def cleanBlockQuotedText(text, joiner=' '):
@@ -106,7 +113,7 @@ def cleanBlockQuotedText(text, joiner=' '):
     quoted text form within the document and returns
     (hopefully) the paragraph the user intended originally."""
     L = filter(truth, map(_lineClean, split(text, '\n')))
-    return join(L, joiner)
+    return L.join(joiner)
 
 
 def setXPos(tx, dx):
@@ -116,7 +123,7 @@ def setXPos(tx, dx):
 
 def _leftDrawParaLine(tx, offset, extraspace, words, last=0):
     setXPos(tx, offset)
-    tx._textOut(join(words), 1)
+    tx._textOut(words.join(), 1)
     setXPos(tx, -offset)
     return offset
 
@@ -124,7 +131,7 @@ def _leftDrawParaLine(tx, offset, extraspace, words, last=0):
 def _centerDrawParaLine(tx, offset, extraspace, words, last=0):
     m = offset + 0.5 * extraspace
     setXPos(tx, m)
-    tx._textOut(join(words), 1)
+    tx._textOut(words.join(), 1)
     setXPos(tx, -m)
     return m
 
@@ -132,14 +139,14 @@ def _centerDrawParaLine(tx, offset, extraspace, words, last=0):
 def _rightDrawParaLine(tx, offset, extraspace, words, last=0):
     m = offset + extraspace
     setXPos(tx, m)
-    tx._textOut(join(words), 1)
+    tx._textOut(words.join(), 1)
     setXPos(tx, -m)
     return m
 
 
 def _justifyDrawParaLine(tx, offset, extraspace, words, last=0):
     setXPos(tx, offset)
-    text = join(words)
+    text = words.join()
     if last:
         #last one, left align
         tx._textOut(text, 1)
@@ -633,7 +640,7 @@ def splitLines0(frags, widths):
 
 def _do_under_line(i, t_off, ws, tx, lm=-0.125):
     y = tx.XtraState.cur_y - i * tx.XtraState.style.leading + lm * tx.XtraState.f.fontSize
-    textlen = tx._canvas.stringWidth(join(tx.XtraState.lines[i][1]), tx._fontname, tx._fontsize)
+    textlen = tx._canvas.stringWidth(tx.XtraState.lines[i][1].join(), tx._fontname, tx._fontsize)
     tx._canvas.line(t_off, y, t_off + textlen + ws, y)
 
 
@@ -660,7 +667,7 @@ def _do_link_line(i, t_off, ws, tx):
     xs = tx.XtraState
     leading = xs.style.leading
     y = xs.cur_y - i * leading - xs.f.fontSize / 8.0 # 8.0 factor copied from para.py
-    text = join(xs.lines[i][1])
+    text = xs.lines[i][1].join()
     textlen = tx._canvas.stringWidth(text, tx._fontname, tx._fontsize)
     _doLink(tx, xs.link, (t_off, y, t_off + textlen + ws, y + leading))
 
@@ -1635,7 +1642,7 @@ class Paragraph(Flowable):
             for frag in frags:
                 if hasattr(frag, 'text'):
                     plains.append(frag.text)
-            return join(plains, '')
+            return plains.join('')
         elif identify:
             text = getattr(self, 'text', None)
             if text is None: text = repr(self)

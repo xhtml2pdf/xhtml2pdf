@@ -102,7 +102,9 @@ class memoized(object):
     def __call__(self, *args, **kwargs):
         # Make sure the following line is not actually slower than what you're
         # trying to memoize
-        args_plus = tuple(kwargs.iteritems())
+
+        args_plus = tuple(kwargs.items())
+
         key = (args, args_plus)
         try:
             if key not in self.cache:
