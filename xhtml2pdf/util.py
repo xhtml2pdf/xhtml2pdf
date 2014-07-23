@@ -102,7 +102,9 @@ class memoized(object):
     def __call__(self, *args, **kwargs):
         # Make sure the following line is not actually slower than what you're
         # trying to memoize
-        args_plus = tuple(kwargs.iteritems())
+
+        args_plus = tuple(kwargs.items())
+
         key = (args, args_plus)
         try:
             if key not in self.cache:
@@ -131,7 +133,7 @@ def ErrorMsg():
 
 
 def toList(value):
-    if type(value) not in (types.ListType, types.TupleType):
+    if not isinstance(value, list) or not isinstance(value, tuple):
         return [value]
     return list(value)
 
@@ -223,11 +225,11 @@ def getSize(value, relative=0, base=None, default=0.0):
         original = value
         if value is None:
             return relative
-        elif type(value) is types.FloatType:
+        elif isinstance(value, float):
             return value
         elif isinstance(value, int):
             return float(value)
-        elif type(value) in (types.TupleType, types.ListType):
+        elif isinstance(value, tuple) or isinstance(value, list):
             value = "".join(value)
         value = str(value).strip().lower().replace(",", ".")
         if value[-2:] == 'cm':
@@ -538,7 +540,7 @@ class pisaFileObject:
         log.debug("FileObject %r, Basepath: %r", uri, basepath)
 
         # Data URI
-        if uri.startswith("data:"):
+        if uri.startswith(b"data:"):
             m = _rx_datauri.match(uri)
             self.mimetype = m.group("mime")
             self.data = base64.decodestring(m.group("data"))
@@ -613,7 +615,7 @@ class pisaFileObject:
 
                 # Local data
                 if basepath:
-                    uri = os.path.normpath(os.path.join(basepath, uri))
+                    uri = os.path.normpath(os.path.join(basepath, str(uri)))
 
                 if os.path.isfile(uri):
                     self.uri = uri

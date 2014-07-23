@@ -26,8 +26,7 @@ from reportlab.platypus.tableofcontents import TableOfContents
 from reportlab.platypus.tables import Table, TableStyle
 from xhtml2pdf.reportlab_paragraph import Paragraph
 from xhtml2pdf.util import getUID, getBorderStyle
-from types import StringType, TupleType, ListType, IntType
-import StringIO
+import io
 import cgi
 import copy
 import logging
@@ -138,7 +137,7 @@ class PmlBaseDoc(BaseDocTemplate):
             pt = [pt + '_left', pt + '_right']
 
         '''On endPage change to the page template with name or index pt'''
-        if type(pt) is StringType:
+        if isinstance(pt, str):
             if hasattr(self, '_nextPageTemplateCycle'):
                 del self._nextPageTemplateCycle
             for t in self.pageTemplates:
@@ -146,11 +145,13 @@ class PmlBaseDoc(BaseDocTemplate):
                     self._nextPageTemplateIndex = self.pageTemplates.index(t)
                     return
             raise ValueError("can't find template('%s')" % pt)
-        elif type(pt) is IntType:
+
+
+        elif isinstance(pt, int):
             if hasattr(self, '_nextPageTemplateCycle'):
                 del self._nextPageTemplateCycle
             self._nextPageTemplateIndex = pt
-        elif type(pt) in (ListType, TupleType):
+        elif isinstance(pt, list) or isinstance(pt, tuple):
             #used for alternating left/right pages
             #collect the refs to the template objects, complain if any are bad
             c = PTCycle()
@@ -224,7 +225,7 @@ class PmlPageTemplate(PageTemplate):
                 if self.pisaBackground.mimetype.startswith("image/"):
 
                     try:
-                        img = PmlImageReader(StringIO.StringIO(self.pisaBackground.getData()))
+                        img = PmlImageReader(io.StringIO(self.pisaBackground.getData()))
                         iw, ih = img.getSize()
                         pw, ph = canvas._pagesize
 
@@ -316,7 +317,7 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
         else:
             try:
                 self.fp = open_for_read(fileName, 'b')
-                if isinstance(self.fp, StringIO.StringIO().__class__):
+                if isinstance(self.fp, io.StringIO().__class__):
                     imageReaderFlags = 0  # avoid messing with already internal files
                 if imageReaderFlags > 0:  # interning
                     data = self.fp.read()
@@ -359,7 +360,7 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
                 if hasattr(ev, 'args'):
                     a = str(ev.args[- 1]) + (' fileName=%r' % fileName)
                     ev.args = ev.args[: - 1] + (a,)
-                    raise et, ev, tb
+                    raise et.with_traceback(tb)
                 else:
                     raise
 
@@ -498,7 +499,7 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         return self.dWidth, self.dHeight
 
     def getImage(self):
-        img = PmlImageReader(StringIO.StringIO(self._imgdata))
+        img = PmlImageReader(io.StringIO(self._imgdata))
         return img
 
     def draw(self):
