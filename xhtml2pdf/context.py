@@ -173,7 +173,16 @@ class pisaCSSBuilder(css.CSSBuilder):
         # Font style
         italic = str(data.get("font-style", "")).lower() in ("italic", "oblique")
 
-        src = self.c.getFile(data["src"], relative=self.c.cssParser.rootPath)
+        # The "src" attribute can be a CSS group but in that case
+        # ignore everything except the font URI
+        uri = data['src']
+        if not isinstance(data['src'], str):
+            for part in uri:
+                if isinstance(part, str):
+                    uri = part
+                    break
+
+        src = self.c.getFile(uri, relative=self.c.cssParser.rootPath)
         self.c.loadFont(
             names,
             src,
