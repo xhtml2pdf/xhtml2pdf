@@ -1,0 +1,28 @@
+language: python
+install:
+    - pip install tox 
+script:
+    - tox
+env:
+    - TOXENV=py26-r24
+    - TOXENV=py26-r25
+    - TOXENV=py26-r26
+    - TOXENV=py26-r27
+
+    - TOXENV=py27-r24
+    - TOXENV=py27-r25
+    - TOXENV=py27-r26
+    - TOXENV=py27-r27
+    - TOXENV=py27-r30
+    - TOXENV=py27-r31
+
+    - TOXENV=py33-r30
+    - TOXENV=py33-r31
+
+    - TOXENV=py34-r31
+
+matrix:
+    allow_failures:
+        - env: TOXENV=py33-r30
+        - env: TOXENV=py33-r31
+        - env: TOXENV=py34-r31
