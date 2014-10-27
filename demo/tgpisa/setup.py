@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 from turbogears.finddata import find_package_data
 
 import os
-execfile(os.path.join("tgpisa", "release.py"))
+exec(open(os.path.join("tgpisa", "release.py")).read())
 
 packages=find_packages()
 package_data = find_package_data(where='tgpisa',
