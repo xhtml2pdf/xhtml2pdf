@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from __future__ import unicode_literals
+from __future__ import print_function, unicode_literals
 
 __version__ = "$Revision: 194 $"
 __author__  = "$Author: holtwick $"
@@ -91,4 +91,4 @@ if __name__=="__main__":
     pisa.showLogging()
     helloWorld()
 
-    # print repr(open("img/denker.png", "rb").read())
+    # print(repr(open("img/denker.png", "rb").read()))

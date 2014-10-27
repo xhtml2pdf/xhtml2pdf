@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from turbogears import controllers, expose, flash
 # from tgpisa import model
 import pkg_resources
@@ -5,10 +7,10 @@ try:
     pkg_resources.require("SQLObject>=0.8,<=0.10.0")
 except pkg_resources.DistributionNotFound:
     import sys
-    print >> sys.stderr, """You are required to install SQLObject but appear not to have done so.
+    print("""You are required to install SQLObject but appear not to have done so.
 Please run your projects setup.py or run `easy_install SQLObject`.
 
-"""
+""", file=sys.stderr)
     sys.exit(1)
 # import logging
 # log = logging.getLogger("tgpisa.controllers")
@@ -36,7 +38,7 @@ def pdf(filename=None, content_type="application/pdf"):
                 dst
                 )
 
-            # print cherrypy.url("index.html")
+            # print(cherrypy.url("index.html"))
             if not result.err:
                 cherrypy.response.headers["Content-Type"] = content_type
                 if filename:

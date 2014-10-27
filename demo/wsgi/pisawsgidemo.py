@@ -27,6 +27,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import print_function
 
 
 __version__ = "$Revision: 103 $"
@@ -66,5 +67,5 @@ if __name__ == '__main__':
     app = wsgi.PisaMiddleware(app)
 
     httpd = make_server(HOST, PORT, app)
-    print "Serving HTTP on port %d..." % PORT
+    print("Serving HTTP on port %d..." % PORT)
     httpd.serve_forever()

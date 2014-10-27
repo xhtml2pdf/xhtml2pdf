@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from __future__ import print_function
+
 import datetime
 import os
 import shutil
@@ -12,7 +14,7 @@ from xhtml2pdf import pisa
 
 def render_pdf(filename, output_dir, options):
     if options.debug:
-        print 'Rendering %s' % filename
+        print('Rendering %s' % filename)
     basename = os.path.basename(filename)
     outname = '%s.pdf' % os.path.splitext(basename)[0]
     outfile = os.path.join(output_dir, outname)
@@ -26,14 +28,14 @@ def render_pdf(filename, output_dir, options):
     output.close()
 
     if result.err:
-        print 'Error rendering %s: %s' % (filename, result.err)
+        print('Error rendering %s: %s' % (filename, result.err))
         sys.exit(1)
     return outfile
 
 
 def convert_to_png(infile, output_dir, options):
     if options.debug:
-        print 'Converting %s to PNG' % infile
+        print('Converting %s to PNG' % infile)
     basename = os.path.basename(infile)
     filename = os.path.splitext(basename)[0]
     outname = '%s.page%%0d.png' % filename
@@ -47,7 +49,7 @@ def convert_to_png(infile, output_dir, options):
 
 def create_diff_image(srcfile1, srcfile2, output_dir, options):
     if options.debug:
-        print 'Creating difference image for %s and %s' % (srcfile1, srcfile2)
+        print('Creating difference image for %s and %s' % (srcfile1, srcfile2))
 
     outname = '%s.diff%s' % os.path.splitext(srcfile1)
     outfile = os.path.join(output_dir, outname)
@@ -55,13 +57,13 @@ def create_diff_image(srcfile1, srcfile2, output_dir, options):
     diff_value = int(result.strip())
     if diff_value > 0:
         if not options.quiet:
-            print 'Image %s differs from reference, value is %i' % (srcfile1, diff_value)
+            print('Image %s differs from reference, value is %i' % (srcfile1, diff_value))
     return outfile, diff_value
 
 
 def copy_ref_image(srcname, output_dir, options):
     if options.debug:
-        print 'Copying reference image %s ' % srcname
+        print('Copying reference image %s ' % srcname)
     dstname = os.path.basename(srcname)
     dstfile = os.path.join(output_dir, '%s.ref%s' % os.path.splitext(dstname))
     shutil.copyfile(srcname, dstfile)
@@ -71,14 +73,14 @@ def copy_ref_image(srcname, output_dir, options):
 def create_thumbnail(filename, options):
     thumbfile = '%s.thumb%s' % os.path.splitext(filename)
     if options.debug:
-        print 'Creating thumbnail of %s' % filename
+        print('Creating thumbnail of %s' % filename)
     exec_cmd(options, options.convert_cmd, '-resize', '20%', filename, thumbfile)
     return thumbfile
 
 
 def render_file(filename, output_dir, ref_dir, options):
     if not options.quiet:
-        print 'Rendering %s' % filename
+        print('Rendering %s' % filename)
     pdf = render_pdf(filename, output_dir, options)
     pngs = convert_to_png(pdf, output_dir, options)
     if options.create_reference:
@@ -91,7 +93,7 @@ def render_file(filename, output_dir, ref_dir, options):
         for page in pages:
             refsrc = os.path.join(ref_dir, os.path.basename(page['png']))
             if not os.path.isfile(refsrc):
-                print 'Reference image for %s not found!' % page['png']
+                print('Reference image for %s not found!' % page['png'])
                 continue
             page['ref'] = copy_ref_image(refsrc, output_dir, options)
             page['ref_thumb'] = create_thumbnail(page['ref'], options)
@@ -106,13 +108,13 @@ def render_file(filename, output_dir, ref_dir, options):
 
 def exec_cmd(options, *args):
     if options.debug:
-        print 'Executing %s' % ' '.join(args)
+        print('Executing %s' % ' '.join(args))
     proc = Popen(args, stdout=PIPE, stderr=PIPE)
     result = proc.communicate()
     if options.debug:
-        print result[0], result[1]
+        print(result[0], result[1])
     if proc.returncode:
-        print 'exec error (%i): %s' % (proc.returncode, result[1])
+        print('exec error (%i): %s' % (proc.returncode, result[1]))
         sys.exit(1)
     return result[0], result[1]
 
@@ -216,15 +218,15 @@ def main():
     num = len(results)
 
     if options.create_reference is not None:
-        print 'Created reference for %i file%s' % (num, '' if num == 1 else 's')
+        print('Created reference for %i file%s' % (num, '' if num == 1 else 's'))
     else:
         htmlfile = create_html_file(results, template_file, output_dir, options)
         if not options.quiet:
-            print 'Rendered %i file%s' % (num, '' if num == 1 else 's')
-            print '%i file%s differ%s from reference' % \
+            print('Rendered %i file%s' % (num, '' if num == 1 else 's'))
+            print('%i file%s differ%s from reference' % \
                     (diff_count, diff_count != 1 and 's' or '',
-                     diff_count == 1 and 's' or '')
-            print 'Check %s for results' % htmlfile
+                     diff_count == 1 and 's' or ''))
+            print('Check %s for results' % htmlfile)
         if diff_count:
             sys.exit(1)
 
