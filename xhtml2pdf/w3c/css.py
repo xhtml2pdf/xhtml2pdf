@@ -993,7 +993,7 @@ class CSSParser(cssParser.CSSParser):
 
     def parseExternal(self, cssResourceName):
         if os.path.isfile(cssResourceName):
-            cssFile = file(cssResourceName, 'r')
+            cssFile = open(cssResourceName, 'r')
             return self.parseFile(cssFile, True)
         raise RuntimeError("Cannot resolve external CSS file: \"%s\"" % cssResourceName)
 

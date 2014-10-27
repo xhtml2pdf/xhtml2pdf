@@ -25,7 +25,7 @@ class PDFDemo(object):
     @cp.expose
     def index(self):
         if kid:
-            return file("demo-cherrypy.html","r").read()
+            return open("demo-cherrypy.html","r").read()
 
         return """
         <html><body>

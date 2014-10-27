@@ -25,7 +25,7 @@ def helloWorld():
     filename = __file__ + ".pdf"
     pdf = pisa.CreatePDF(
         "Hello <strong>World</strong>",
-        file(filename, "wb")
+        open(filename, "wb")
         )
     if not pdf.err:
         pisa.startViewer(filename)
