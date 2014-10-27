@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import unicode_literals
 
 __version__ = "$Revision: 194 $"
 __author__  = "$Author: holtwick $"
@@ -74,7 +75,7 @@ def helloWorld():
     lc = myLinkLoader(database="some_name", port=666).getFileName
 
     pdf = pisa.CreatePDF(
-        u"""
+        """
             <p>
             Hello <strong>World</strong>
             <p>

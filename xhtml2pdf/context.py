@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.fonts import addMapping
@@ -50,7 +50,7 @@ sizeDelta = 2       # amount to reduce font size by for super and sub script
 subFraction = 0.4   # fraction of font size that a sub script should be lowered
 superFraction = 0.4
 
-NBSP = u"\u00a0"
+NBSP = "\u00a0"
 
 
 def clone(self, **kwargs):
@@ -409,7 +409,7 @@ class pisaContext(object):
         self.log = []
         self.err = 0
         self.warn = 0
-        self.text = u""
+        self.text = ""
         self.uidctr = 0
         self.multiBuild = False
 
@@ -682,7 +682,7 @@ class pisaContext(object):
     def clearFrag(self):
         self.fragList = []
         self.fragStrip = True
-        self.text = u""
+        self.text = ""
 
     def copyFrag(self, **kw):
         return self.frag.clone(**kw)
@@ -719,9 +719,9 @@ class pisaContext(object):
 
         # Replace &shy; with empty and normalize NBSP
         text = (text
-                .replace(u"\xad", u"")
-                .replace(u"\xc2\xa0", NBSP)
-                .replace(u"\xa0", NBSP))
+                .replace("\xad", "")
+                .replace("\xc2\xa0", NBSP)
+                .replace("\xa0", NBSP))
 
         if frag.whiteSpace == "pre":
 
@@ -737,7 +737,7 @@ class pisaContext(object):
                     self._appendFrag(frag)
                 else:
                     # Handle tabs in a simple way
-                    text = text.replace(u"\t", 8 * u" ")
+                    text = text.replace("\t", 8 * " ")
                     # Somehow for Reportlab NBSP have to be inserted
                     # as single character fragments
                     for text in re.split(r'(\ )', text):
@@ -747,7 +747,7 @@ class pisaContext(object):
                         frag.text = text
                         self._appendFrag(frag)
         else:
-            for text in re.split(u'(' + NBSP + u')', text):
+            for text in re.split('(' + NBSP + ')', text):
                 frag = baseFrag.clone()
                 if text == NBSP:
                     self.force = True

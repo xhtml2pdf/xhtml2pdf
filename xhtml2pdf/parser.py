@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 
 from html5lib import treebuilders, inputstream
 from xhtml2pdf.default import TAGS, STRING, INT, BOOL, SIZE, COLOR, FILE
@@ -395,7 +395,7 @@ def pisaPreLoop(node, context, collect=False):
     Collect all CSS definitions
     """
 
-    data = u""
+    data = ""
     if node.nodeType == Node.TEXT_NODE and collect:
         data = node.data
 
@@ -413,7 +413,7 @@ def pisaPreLoop(node, context, collect=False):
                     for node in node.childNodes:
                         data += pisaPreLoop(node, context, collect=True)
                     context.addCSS(data)
-                    return u""
+                    return ""
 
                 if name == "link" and attr.href and attr.rel.lower() == "stylesheet":
                     # print("CSS LINK", attr)

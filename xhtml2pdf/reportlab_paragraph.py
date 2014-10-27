@@ -3,7 +3,7 @@
 # see license.txt for license details
 # history http://www.reportlab.co.uk/cgi-bin/viewcvs.cgi/public/reportlab/trunk/reportlab/platypus/paragraph.py
 # Modifications by Dirk Holtwick, 2008
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 
 from string import whitespace
 from operator import truth
@@ -30,36 +30,36 @@ EMPTY_STRING = ''.encode(ENCODING)
 SPACE = ' '.encode(ENCODING)
 
 _wsc_re_split = re.compile('[%s]+' % re.escape(''.join((
-    u'\u0009',  # HORIZONTAL TABULATION
-    u'\u000A',  # LINE FEED
-    u'\u000B',  # VERTICAL TABULATION
-    u'\u000C',  # FORM FEED
-    u'\u000D',  # CARRIAGE RETURN
-    u'\u001C',  # FILE SEPARATOR
-    u'\u001D',  # GROUP SEPARATOR
-    u'\u001E',  # RECORD SEPARATOR
-    u'\u001F',  # UNIT SEPARATOR
-    u'\u0020',  # SPACE
-    u'\u0085',  # NEXT LINE
-    #u'\u00A0', # NO-BREAK SPACE
-    u'\u1680',  # OGHAM SPACE MARK
-    u'\u2000',  # EN QUAD
-    u'\u2001',  # EM QUAD
-    u'\u2002',  # EN SPACE
-    u'\u2003',  # EM SPACE
-    u'\u2004',  # THREE-PER-EM SPACE
-    u'\u2005',  # FOUR-PER-EM SPACE
-    u'\u2006',  # SIX-PER-EM SPACE
-    u'\u2007',  # FIGURE SPACE
-    u'\u2008',  # PUNCTUATION SPACE
-    u'\u2009',  # THIN SPACE
-    u'\u200A',  # HAIR SPACE
-    u'\u200B',  # ZERO WIDTH SPACE
-    u'\u2028',  # LINE SEPARATOR
-    u'\u2029',  # PARAGRAPH SEPARATOR
-    u'\u202F',  # NARROW NO-BREAK SPACE
-    u'\u205F',  # MEDIUM MATHEMATICAL SPACE
-    u'\u3000',  # IDEOGRAPHIC SPACE
+    '\u0009',  # HORIZONTAL TABULATION
+    '\u000A',  # LINE FEED
+    '\u000B',  # VERTICAL TABULATION
+    '\u000C',  # FORM FEED
+    '\u000D',  # CARRIAGE RETURN
+    '\u001C',  # FILE SEPARATOR
+    '\u001D',  # GROUP SEPARATOR
+    '\u001E',  # RECORD SEPARATOR
+    '\u001F',  # UNIT SEPARATOR
+    '\u0020',  # SPACE
+    '\u0085',  # NEXT LINE
+    #'\u00A0', # NO-BREAK SPACE
+    '\u1680',  # OGHAM SPACE MARK
+    '\u2000',  # EN QUAD
+    '\u2001',  # EM QUAD
+    '\u2002',  # EN SPACE
+    '\u2003',  # EM SPACE
+    '\u2004',  # THREE-PER-EM SPACE
+    '\u2005',  # FOUR-PER-EM SPACE
+    '\u2006',  # SIX-PER-EM SPACE
+    '\u2007',  # FIGURE SPACE
+    '\u2008',  # PUNCTUATION SPACE
+    '\u2009',  # THIN SPACE
+    '\u200A',  # HAIR SPACE
+    '\u200B',  # ZERO WIDTH SPACE
+    '\u2028',  # LINE SEPARATOR
+    '\u2029',  # PARAGRAPH SEPARATOR
+    '\u202F',  # NARROW NO-BREAK SPACE
+    '\u205F',  # MEDIUM MATHEMATICAL SPACE
+    '\u3000',  # IDEOGRAPHIC SPACE
 )))).split
 
 
@@ -68,7 +68,7 @@ def split(text, delim=None):
         text = text.decode('utf8')
     if isinstance(delim, binary_type):
         delim = delim.decode('utf8')
-    elif delim is None and u'\xa0' in text:
+    elif delim is None and '\xa0' in text:
         return [uword.encode('utf8') for uword in _wsc_re_split(text)]
     return [uword.encode('utf8') for uword in text.split(delim)]
 
@@ -770,13 +770,13 @@ def textTransformFrags(frags, style):
                 t = f.text
                 if not t: continue
                 u = t.decode('utf8')
-                if u.startswith(u' ') or pb:
+                if u.startswith(' ') or pb:
                     u = tt(u)
                 else:
-                    i = u.find(u' ')
+                    i = u.find(' ')
                     if i >= 0:
                         u = u[:i] + tt(u[i:])
-                pb = u.endswith(u' ')
+                pb = u.endswith(' ')
                 f.text = u.encode('utf8')
         else:
             for f in frags:
@@ -825,14 +825,14 @@ def makeCJKParaLine(U, extraSpace, calcBounds):
         minDescent = min(minDescent, descent)
         if not _sameFrag(f0, f):
             f0 = f0.clone()
-            f0.text = u''.join(CW)
+            f0.text = ''.join(CW)
             words.append(f0)
             CW = []
             f0 = f
         CW.append(u)
     if CW:
         f0 = f0.clone()
-        f0.text = u''.join(CW)
+        f0.text = ''.join(CW)
         words.append(f0)
     return FragLine(kind=1, extraSpace=extraSpace, wordCount=1, words=words[1:], fontSize=maxSize, ascent=maxAscent,
                     descent=minDescent)

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 
 from reportlab.graphics.barcode import createBarcodeDrawing
 from reportlab.lib.pagesizes import A4
@@ -240,9 +240,9 @@ def listLowerAlpha(c):
     return listUpperAlpha(c).lower()
 
 
-_bullet = u"\u2022"
+_bullet = "\u2022"
 _list_style_type = {
-    "none": u"",
+    "none": "",
     "disc": _bullet,
     "circle": _bullet,  # XXX PDF has no equivalent
     "square": _bullet,  # XXX PDF has no equivalent
@@ -288,7 +288,7 @@ class pisaTagLI(pisaTag):
 
         self.offset = 0
         if frag.listStyleImage is not None:
-            frag.text = u""
+            frag.text = ""
             f = frag.listStyleImage
             if f and (not f.notFound()):
                 img = PmlImage(
@@ -303,7 +303,7 @@ class pisaTagLI(pisaTag):
                 frag.image = img
                 self.offset = max(0, img.drawHeight - c.frag.fontSize)
         else:
-            if type(lst) == type(u""):
+            if type(lst) == type(""):
                 frag.text = lst
             else:
                 # XXX This should be the recent font, but it throws errors in Reportlab!

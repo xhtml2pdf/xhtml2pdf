@@ -31,6 +31,7 @@ Dependencies:
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~ Imports
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+from __future__ import unicode_literals
 
 import re
 from . import cssSpecial
@@ -327,9 +328,9 @@ class CSSParser(object):
         _orRule = lambda *args: '|'.join(args)
         _reflags = re.I | re.M | re.U
         i_hex = '[0-9a-fA-F]'
-        i_nonascii = u'[\200-\377]'
+        i_nonascii = '[\200-\377]'
         i_unicode = '\\\\(?:%s){1,6}\s?' % i_hex
-        i_escape = _orRule(i_unicode, u'\\\\[ -~\200-\377]')
+        i_escape = _orRule(i_unicode, '\\\\[ -~\200-\377]')
         # i_nmstart = _orRule('[A-Za-z_]', i_nonascii, i_escape)
         i_nmstart = _orRule('\-[^0-9]|[A-Za-z_]', i_nonascii,
                             i_escape) # XXX Added hyphen, http://www.w3.org/TR/CSS21/syndata.html#value-def-identifier
@@ -349,36 +350,36 @@ class CSSParser(object):
         re_hash = re.compile(i_hash, _reflags)
         i_rgbcolor = '(#%s{6}|#%s{3})' % (i_hex, i_hex)
         re_rgbcolor = re.compile(i_rgbcolor, _reflags)
-        i_nl = u'\n|\r\n|\r|\f'
-        i_escape_nl = u'\\\\(?:%s)' % i_nl
-        i_string_content = _orRule(u'[\t !#$%&(-~]', i_escape_nl, i_nonascii, i_escape)
-        i_string1 = u'\"((?:%s|\')*)\"' % i_string_content
-        i_string2 = u'\'((?:%s|\")*)\'' % i_string_content
+        i_nl = '\n|\r\n|\r|\f'
+        i_escape_nl = '\\\\(?:%s)' % i_nl
+        i_string_content = _orRule('[\t !#$%&(-~]', i_escape_nl, i_nonascii, i_escape)
+        i_string1 = '\"((?:%s|\')*)\"' % i_string_content
+        i_string2 = '\'((?:%s|\")*)\'' % i_string_content
         i_string = _orRule(i_string1, i_string2)
         re_string = re.compile(i_string, _reflags)
-        i_uri = (u'url\\(\s*(?:(?:%s)|((?:%s)+))\s*\\)'
+        i_uri = ('url\\(\s*(?:(?:%s)|((?:%s)+))\s*\\)'
                  % (i_string, _orRule('[!#$%&*-~]', i_nonascii, i_escape)))
         # XXX For now
-        # i_uri = u'(url\\(.*?\\))'
+        # i_uri = '(url\\(.*?\\))'
         re_uri = re.compile(i_uri, _reflags)
-        i_num = u'(([-+]?[0-9]+(?:\\.[0-9]+)?)|([-+]?\\.[0-9]+))' # XXX Added out paranthesis, because e.g. .5em was not parsed correctly
+        i_num = '(([-+]?[0-9]+(?:\\.[0-9]+)?)|([-+]?\\.[0-9]+))' # XXX Added out paranthesis, because e.g. .5em was not parsed correctly
         re_num = re.compile(i_num, _reflags)
         i_unit = '(%%|%s)?' % i_ident
         re_unit = re.compile(i_unit, _reflags)
         i_function = i_ident + '\\('
         re_function = re.compile(i_function, _reflags)
-        i_functionterm = u'[-+]?' + i_function
+        i_functionterm = '[-+]?' + i_function
         re_functionterm = re.compile(i_functionterm, _reflags)
         i_unicoderange1 = "(?:U\\+%s{1,6}-%s{1,6})" % (i_hex, i_hex)
         i_unicoderange2 = "(?:U\\+\?{1,6}|{h}(\?{0,5}|{h}(\?{0,4}|{h}(\?{0,3}|{h}(\?{0,2}|{h}(\??|{h}))))))"
-        i_unicoderange = i_unicoderange1 # u'(%s|%s)' % (i_unicoderange1, i_unicoderange2)
+        i_unicoderange = i_unicoderange1 # '(%s|%s)' % (i_unicoderange1, i_unicoderange2)
         re_unicoderange = re.compile(i_unicoderange, _reflags)
 
-        # i_comment = u'(?:\/\*[^*]*\*+([^/*][^*]*\*+)*\/)|(?://.*)'
+        # i_comment = '(?:\/\*[^*]*\*+([^/*][^*]*\*+)*\/)|(?://.*)'
         # gabriel: only C convention for comments is allowed in CSS
-        i_comment = u'(?:\/\*[^*]*\*+([^/*][^*]*\*+)*\/)'
+        i_comment = '(?:\/\*[^*]*\*+([^/*][^*]*\*+)*\/)'
         re_comment = re.compile(i_comment, _reflags)
-        i_important = u'!\s*(important)'
+        i_important = '!\s*(important)'
         re_important = re.compile(i_important, _reflags)
         del _orRule
 
@@ -511,7 +512,7 @@ class CSSParser(object):
         ;
         """
         # Get rid of the comments
-        src = self.re_comment.sub(u'', src)
+        src = self.re_comment.sub('', src)
 
         # [ CHARSET_SYM S* STRING S* ';' ]?
         src = self._parseAtCharset(src)
@@ -678,7 +679,7 @@ class CSSParser(object):
             if medium is None:
                 raise self.ParseError('@media rule expected media identifier', src, ctxsrc)
             # make "and ... {" work
-            if medium == u'and':
+            if medium == 'and':
                 # strip up to curly bracket
                 pattern = re.compile('.*({.*)')
                 match = re.match(pattern, src)
