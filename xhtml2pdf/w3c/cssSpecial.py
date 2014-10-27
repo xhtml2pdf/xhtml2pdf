@@ -26,6 +26,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import print_function
 
 
 __reversion__ = "$Revision: 20 $"
@@ -37,7 +38,6 @@ Helper for complex CSS definitons like font, margin, padding and border
 Optimized for use with PISA
 """
 
-import types
 import logging
 
 
@@ -45,7 +45,7 @@ log = logging.getLogger("ho.css")
 
 
 def toList(value):
-    if type(value) != types.ListType:
+    if not isinstance(value, list):
         return [value]
     return value
 
@@ -156,7 +156,7 @@ def getNextPart(parts):
 
 
 def isSize(value):
-    return value and ((type(value) is types.TupleType) or value == "0")
+    return value and (isinstance(value, tuple) or value == "0")
 
 
 def splitBorder(parts):
@@ -194,7 +194,7 @@ def splitBorder(parts):
 
 
 def parseSpecialRules(declarations, debug=0):
-    # print selectors, declarations
+    # print(selectors, declarations)
     # CSS MODIFY!
     dd = []
 
@@ -250,7 +250,7 @@ def parseSpecialRules(declarations, debug=0):
 
             if 0:
                 part = getNextPart(parts) or oparts
-                print ("~", part, parts, oparts, declarations)
+                print("~", part, parts, oparts, declarations)
                 # Color
                 if part and (not part.startswith("url")):
                     dd.append(("background-color", part, last))
@@ -398,7 +398,7 @@ def parseSpecialRules(declarations, debug=0):
         elif name in ("border-top", "border-bottom", "border-left", "border-right"):
             direction = name[7:]
             width, style, color = splitBorder(parts)
-            # print direction, width
+            # print(direction, width)
             if width is not None:
                 dd.append(("border-" + direction + "-width", width, last))
             if style is not None:
@@ -414,8 +414,8 @@ def parseSpecialRules(declarations, debug=0):
         log.debug("CSS special OUT:\n%s", "\n".join([repr(d) for d in dd]))
 
     if 0: #declarations!=dd:
-        print ("###", declarations)
-        print ("#->", dd)
+        print("###", declarations)
+        print("#->", dd)
         # CSS MODIFY! END
     return dd
 

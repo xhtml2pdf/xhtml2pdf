@@ -31,6 +31,7 @@ Dependencies:
     python 2.3 (or greater)
     sets, cssParser, re (via cssParser)
 """
+from __future__ import print_function
 
 import sys
 
@@ -54,8 +55,8 @@ try:
     set
 except NameError:
     from sets import Set as set
-import cssParser
-import cssSpecial
+from . import cssParser
+from . import cssSpecial
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~ Constants / Variables / Etc.
@@ -172,7 +173,7 @@ class CSSCascadeStrategy(object):
         """
         rules = self.findCSSRulesForEach(element, attrNames)
         return [(attrName, self._extractStyleForRule(rule, attrName, default))
-                for attrName, rule in rules.iteritems()]
+                for attrName, rule in rules.items()]
 
 
     def findCSSRulesFor(self, element, attrName):
@@ -211,7 +212,7 @@ class CSSCascadeStrategy(object):
 
         inline = element.getInlineStyle()
         for ruleset in self.iterCSSRulesets(inline):
-            for attrName, attrRules in rules.iteritems():
+            for attrName, attrRules in rules.items():
                 attrRules += ruleset.findCSSRuleFor(element, attrName)
 
         for attrRules in rules.itervalues():
@@ -427,7 +428,7 @@ class CSSMutableSelector(CSSSelectorBase, cssParser.CSSSelectorAbstract):
 
 class CSSImmutableSelector(CSSSelectorBase):
     def __init__(self, completeName='*', qualifiers=()):
-        # print completeName, qualifiers
+        # print(completeName, qualifiers)
         self.qualifiers = tuple(qualifiers)
         CSSSelectorBase.__init__(self, completeName)
         self._updateHash()
@@ -665,7 +666,7 @@ class CSSDeclarations(dict):
 
 class CSSRuleset(dict):
     def findCSSRulesFor(self, element, attrName):
-        ruleResults = [(nodeFilter, declarations) for nodeFilter, declarations in self.iteritems() if
+        ruleResults = [(nodeFilter, declarations) for nodeFilter, declarations in self.items() if
                        (attrName in declarations) and (nodeFilter.matches(element))]
         ruleResults.sort()
         return ruleResults
@@ -679,7 +680,7 @@ class CSSRuleset(dict):
 
     def mergeStyles(self, styles):
         " XXX Bugfix for use in PISA "
-        for k, v in styles.iteritems():
+        for k, v in styles.items():
             if k in self and self[k]:
                 self[k] = copy.copy(self[k])
                 self[k].update(v)

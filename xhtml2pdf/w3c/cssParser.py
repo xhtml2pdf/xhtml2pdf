@@ -33,7 +33,7 @@ Dependencies:
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 import re
-import cssSpecial
+from . import cssSpecial
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~ Definitions
@@ -471,7 +471,7 @@ class CSSParser(object):
         try:
             properties = []
             try:
-                for propertyName, src in kwAttributes.iteritems():
+                for propertyName, src in kwAttributes.items():
                     src, property = self._parseDeclarationProperty(src.strip(), propertyName)
                     properties.append(property)
 
@@ -1168,7 +1168,7 @@ class CSSParser(object):
             rexpression = self.re_string
         result = rexpression.match(src)
         if result:
-            strres = filter(None, result.groups())
+            strres = [_f for _f in result.groups() if _f]
             if strres:
                 strres = strres[0]
             else:

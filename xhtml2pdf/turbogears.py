@@ -16,17 +16,18 @@
 
 from turbogears.decorator import weak_signature_decorator
 import xhtml2pdf.pisa as pisa
-import StringIO
 import cherrypy
+
+from six import StringIO
 
 
 def to_pdf(filename=None, content_type="application/pdf"):
     def entangle(func):
         def decorated(func, *args, **kw):
             output = func(*args, **kw)
-            dst = StringIO.StringIO()
+            dst = StringIO()
             result = pisa.CreatePDF(
-                StringIO.StringIO(output),
+                StringIO(output),
                 dst
             )
             if not result.err:

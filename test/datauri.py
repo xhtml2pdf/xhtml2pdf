@@ -49,7 +49,7 @@ def helloWorld():
         """ % (bguri, datauri)
     pdf = pisa.pisaDocument(
         html,
-        file(filename, "wb"),
+        open(filename, "wb"),
         path = __file__
         )
     if not pdf.err:

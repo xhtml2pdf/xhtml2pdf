@@ -56,7 +56,7 @@ class myLinkLoader:
                 if new_suffix in (".css", ".gif", ".jpg", ".png"):
                     suffix = new_suffix
             tmpPath = tempfile.mktemp(prefix="pisa-", suffix = suffix)
-            tmpFile = file(tmpPath, "wb")
+            tmpFile = open(tmpPath, "wb")
             try:
                 # Here you may add your own stuff
                 tmpFile.write(dummyLoader(path))
@@ -64,7 +64,7 @@ class myLinkLoader:
                 tmpFile.close()
             self.tmpFileList.append(tmpPath)
             return tmpPath
-        except Exception, e:
+        except Exception as e:
             log.exception("myLinkLoader.getFileName")
         return None
 
@@ -80,7 +80,7 @@ def helloWorld():
             <p>
             <img src="apath/some.png">
         """,
-        file(filename, "wb"),
+        open(filename, "wb"),
         link_callback = lc,
         )
     if not pdf.err:

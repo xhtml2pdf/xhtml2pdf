@@ -145,7 +145,7 @@ class PisaDimensionTestCase(TestCase):
         }
         expected = (10.0, 20.0, 30.0, 40.0)
         result = getFrameDimensions(dims, 100, 200)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
     
     def test_FrameDimensions_left_top_bottom_right(self):
         dims = {
@@ -156,7 +156,7 @@ class PisaDimensionTestCase(TestCase):
         }
         expected = (10.0, 20.0, 50.0, 150.0)
         result = getFrameDimensions(dims, 100, 200)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_FrameDimensions_bottom_right_width_height(self):
         dims = {
@@ -167,7 +167,7 @@ class PisaDimensionTestCase(TestCase):
         }
         expected = (10.0, 110.0, 70.0, 80.0)
         result = getFrameDimensions(dims, 100, 200)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
     
     def test_FrameDimensions_left_top_width_height_with_margin(self):
         dims = {
@@ -182,7 +182,7 @@ class PisaDimensionTestCase(TestCase):
         }
         expected = (25.0, 30.0, 30.0, 50.0)
         result = getFrameDimensions(dims, 100, 200)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
     
     def test_FrameDimensions_bottom_right_width_height_with_margin(self):
         dims = {
@@ -197,7 +197,7 @@ class PisaDimensionTestCase(TestCase):
         }
         expected = (25.0, 120.0, 30.0, 50.0)
         result = getFrameDimensions(dims, 100, 200)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
         
     def test_frame_dimensions_for_box_len_eq_4(self):
         dims = {
@@ -216,7 +216,7 @@ class PisaDimensionTestCase(TestCase):
         }
         expected = (10.0, 0.0, 30.0, 200.0)
         result = getFrameDimensions(dims, 100, 200)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
         
     def test_trame_dimentions_for_width_without_left_or_right(self):
         dims = {
@@ -227,7 +227,7 @@ class PisaDimensionTestCase(TestCase):
         }
         expected = (0.0, 20.0, 100.0, 40.0)
         result = getFrameDimensions(dims, 100, 200)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
         
 class GetPosTestCase(TestCase):
     def test_get_pos_simple(self):

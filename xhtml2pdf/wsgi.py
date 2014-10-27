@@ -13,11 +13,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import print_function
 
 import xhtml2pdf.pisa as pisa
-import StringIO
 
 import logging
+
+from six import StringIO
 
 
 log = logging.getLogger("xhtml2pdf.wsgi")
@@ -31,7 +33,7 @@ class Filter(object):
         script_name = environ.get('SCRIPT_NAME', '')
         path_info = environ.get('PATH_INFO', '')
         sent = []
-        written_response = StringIO.StringIO()
+        written_response = StringIO()
 
         def replacement_start_response(status, headers, exc_info=None):
             if not self.should_filter(status, headers):
@@ -57,7 +59,7 @@ class Filter(object):
         return [body]
 
     def should_filter(self, status, headers):
-        print (headers)
+        print(headers)
 
     def filter(self, status, headers, body):
         raise NotImplementedError
@@ -77,7 +79,7 @@ class PisaMiddleware(HTMLFilter):
     def filter(self, script_name, path_info, environ, status, headers, body):
         topdf = environ.get("pisa.topdf", "")
         if topdf:
-            dst = StringIO.StringIO()
+            dst = StringIO()
             pisa.CreatePDF(body, dst, show_error_as_pdf=True)
             headers = [
                 ("content-type", "application/pdf"),

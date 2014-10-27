@@ -18,6 +18,7 @@ from xhtml2pdf.util import pisaTempFile, getFile, PyPDF2
 
 import logging
 
+from six.moves import range
 
 log = logging.getLogger("xhtml2pdf")
 
@@ -50,7 +51,7 @@ class pisaPDF:
         output = PyPDF2.PdfFileWriter()
         for pdffile in self.files:
             input = PyPDF2.PdfFileReader(pdffile)
-            for pageNumber in xrange(input.getNumPages()):
+            for pageNumber in range(input.getNumPages()):
                 output.addPage(input.getPage(pageNumber))
 
         if file is not None:

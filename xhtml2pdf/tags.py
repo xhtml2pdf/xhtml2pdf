@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
+
 from reportlab.graphics.barcode import createBarcodeDrawing
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import inch, mm
@@ -14,6 +16,8 @@ import logging
 import re
 import warnings
 import string
+
+from six import text_type
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -62,7 +66,7 @@ class pisaTagBODY(pisaTag):
 
     def start(self, c):
         c.baseFontSize = c.frag.fontSize
-        # print "base font size", c.baseFontSize
+        # print("base font size", c.baseFontSize)
 
 
 class pisaTagTITLE(pisaTag):
@@ -180,28 +184,39 @@ class pisaTagH6(pisaTagP):
 
 def listDecimal(c):
     c.listCounter += 1
-    return unicode("%d." % c.listCounter)
+    return text_type("%d." % c.listCounter)
 
 
-roman_numeral_map = zip(
-    (1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1),
-    ('M', 'CM', 'D', 'CD', 'C', 'XC', 'L', 'XL', 'X', 'IX', 'V', 'IV', 'I')
+roman_numeral_map = (
+    (1000, 'M'),
+    (900, 'CM'),
+    (500, 'D'),
+    (400, 'CD'),
+    (100, 'C'),
+    (90, 'XC'),
+    (50, 'L'),
+    (40, 'XL'),
+    (10, 'X'),
+    (9, 'IX'),
+    (5, 'V'),
+    (4, 'IV'),
+    (1, 'I'),
 )
 
 
 def int_to_roman(i):
     result = []
     for integer, numeral in roman_numeral_map:
-        count = int(i / integer)
-        result.append(numeral * count)
-        i -= integer * count
+        while i >= integer:
+            result.append(numeral)
+            i -= integer
     return ''.join(result)
 
 
 def listUpperRoman(c):
     c.listCounter += 1
     roman = int_to_roman(c.listCounter)
-    return unicode("%s." % roman)
+    return text_type("%s." % roman)
 
 
 def listLowerRoman(c):
@@ -218,7 +233,7 @@ def listUpperAlpha(c):
         # this will probably fail for anything past the 2nd time
         alpha = string.ascii_uppercase[index - 26]
         alpha *= 2
-    return unicode("%s." % alpha)
+    return text_type("%s." % alpha)
 
 
 def listLowerAlpha(c):
@@ -354,7 +369,7 @@ class pisaTagIMG(pisaTag):
                 img.spaceBefore = c.frag.spaceBefore
                 img.spaceAfter = c.frag.spaceAfter
 
-                # print "image", id(img), img.drawWidth, img.drawHeight
+                # print("image", id(img), img.drawWidth, img.drawHeight)
 
                 '''
                 TODO:
@@ -600,7 +615,7 @@ class pisaTagPDFTEMPLATE(pisaTag):
     def start(self, c):
         deprecation("pdf:template")
         attrs = self.attr
-        #print attrs
+        #print(attrs)
         name = attrs["name"]
         c.frameList = []
         c.frameStaticList = []
