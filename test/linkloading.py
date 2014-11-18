@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import print_function, unicode_literals
 
 __version__ = "$Revision: 194 $"
 __author__  = "$Author: holtwick $"
@@ -56,7 +57,7 @@ class myLinkLoader:
                 if new_suffix in (".css", ".gif", ".jpg", ".png"):
                     suffix = new_suffix
             tmpPath = tempfile.mktemp(prefix="pisa-", suffix = suffix)
-            tmpFile = file(tmpPath, "wb")
+            tmpFile = open(tmpPath, "wb")
             try:
                 # Here you may add your own stuff
                 tmpFile.write(dummyLoader(path))
@@ -64,7 +65,7 @@ class myLinkLoader:
                 tmpFile.close()
             self.tmpFileList.append(tmpPath)
             return tmpPath
-        except Exception, e:
+        except Exception as e:
             log.exception("myLinkLoader.getFileName")
         return None
 
@@ -74,13 +75,13 @@ def helloWorld():
     lc = myLinkLoader(database="some_name", port=666).getFileName
 
     pdf = pisa.CreatePDF(
-        u"""
+        """
             <p>
             Hello <strong>World</strong>
             <p>
             <img src="apath/some.png">
         """,
-        file(filename, "wb"),
+        open(filename, "wb"),
         link_callback = lc,
         )
     if not pdf.err:
@@ -90,4 +91,4 @@ if __name__=="__main__":
     pisa.showLogging()
     helloWorld()
 
-    # print repr(open("img/denker.png", "rb").read())
+    # print(repr(open("img/denker.png", "rb").read()))

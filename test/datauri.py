@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import unicode_literals
 
 __version__ = "$Revision: 194 $"
 __author__  = "$Author: holtwick $"
@@ -28,7 +29,7 @@ def helloWorld():
     datauri = pisa.makeDataURIFromFile('img/denker.png')
     bguri = os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir, "pdf/background-sample.pdf"))
     bguri = pisa.makeDataURIFromFile(bguri)
-    html = u"""
+    html = """
             <style>
             @page {
                 background: url("%s");
@@ -49,7 +50,7 @@ def helloWorld():
         """ % (bguri, datauri)
     pdf = pisa.pisaDocument(
         html,
-        file(filename, "wb"),
+        open(filename, "wb"),
         path = __file__
         )
     if not pdf.err:

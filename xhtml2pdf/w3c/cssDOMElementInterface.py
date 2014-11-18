@@ -12,8 +12,9 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~ Imports
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+from __future__ import print_function
 
-import css
+from . import css
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~ Definitions
@@ -54,7 +55,7 @@ class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
 
     def __init__(self, domElement, cssParser=None):
         self.domElement = domElement
-        # print self.domElement.attributes
+        # print(self.domElement.attributes)
         if cssParser is not None:
             self.onCSSParserVisit(cssParser)
 
@@ -69,7 +70,7 @@ class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def matchesNode(self, namespace_tagName):
-        namespace,tagName = namespace_tagName
+        namespace, tagName = namespace_tagName
         if tagName not in ('*', self.domElement.tagName):
             return False
         if namespace in (None, '', '*'):

@@ -1,31 +1,24 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
+
 from reportlab.lib.colors import Color, toColor
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
 from reportlab.lib.units import inch, cm
 import base64
-try:
-    import httplib
-except ImportError:
-    import http.client as httplib
 import logging
 import mimetypes
 import os.path
 import re
 import reportlab
 import shutil
-import string
 import sys
 import tempfile
-import types
-import urllib
-try:
-    import urllib2
-except ImportError:
-    import urllib.request as urllib2
-try:
-    import urlparse
-except ImportError:
-    import urllib.parse as urlparse
+
+from six import binary_type, BytesIO
+from six.moves.http_client import HTTPConnection, HTTPSConnection
+from six.moves.urllib.error import HTTPError
+from six.moves.urllib.parse import urljoin, urlparse, urlsplit
+from six.moves.urllib.request import urlopen
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -48,17 +41,9 @@ if _reportlab_version < (2, 1):
     raise ImportError("Reportlab Version 2.1+ is needed!")
 
 REPORTLAB22 = _reportlab_version >= (2, 2)
-# print "***", reportlab.Version, REPORTLAB22, reportlab.__file__
+# print("***", reportlab.Version, REPORTLAB22, reportlab.__file__)
 
 log = logging.getLogger("xhtml2pdf")
-
-try:
-    import cStringIO as io
-except:
-    try:
-        import StringIO as io
-    except ImportError:
-        import io
 
 try:
     import PyPDF2
@@ -102,7 +87,7 @@ class memoized(object):
     def __call__(self, *args, **kwargs):
         # Make sure the following line is not actually slower than what you're
         # trying to memoize
-        args_plus = tuple(kwargs.iteritems())
+        args_plus = tuple(kwargs.items())
         key = (args, args_plus)
         try:
             if key not in self.cache:
@@ -126,12 +111,12 @@ def ErrorMsg():
     list = traceback.format_tb(tb, limit) + \
         traceback.format_exception_only(type, value)
     return "Traceback (innermost last):\n" + "%-20s %s" % (
-        string.join(list[: - 1], ""),
+        ''.join(list[: - 1]),
         list[- 1])
 
 
 def toList(value):
-    if type(value) not in (types.ListType, types.TupleType):
+    if not isinstance(value, (tuple, list)):
         return [value]
     return list(value)
 
@@ -223,11 +208,11 @@ def getSize(value, relative=0, base=None, default=0.0):
         original = value
         if value is None:
             return relative
-        elif type(value) is types.FloatType:
+        elif isinstance(value, float):
             return value
         elif isinstance(value, int):
             return float(value)
-        elif type(value) in (types.TupleType, types.ListType):
+        elif isinstance(value, (list, tuple)):
             value = "".join(value)
         value = str(value).strip().lower().replace(",", ".")
         if value[-2:] == 'cm':
@@ -290,7 +275,7 @@ def getCoords(x, y, w, h, pagesize):
     corner of the document as the 0,0 coords therefore
     we need to do some fancy calculations
     """
-    #~ print pagesize
+    #~ print(pagesize)
     ax, ay = pagesize
     if x < 0:
         x = ax + x
@@ -401,11 +386,11 @@ GAE = "google.appengine" in sys.modules
 
 if GAE:
     STRATEGIES = (
-        io.StringIO,
-        io.StringIO)
+        BytesIO,
+        BytesIO)
 else:
     STRATEGIES = (
-        io.StringIO,
+        BytesIO,
         tempfile.NamedTemporaryFile)
 
 
@@ -479,20 +464,22 @@ class pisaTempFile(object):
 
     def getvalue(self):
         """
-        Get value of file. Work around for second strategy
+        Get value of file. Work around for second strategy.
+        Always returns bytes.
         """
-
         if self.strategy == 0:
             return self._delegate.getvalue()
         self._delegate.flush()
         self._delegate.seek(0)
-        return self._delegate.read()
+        value = self._delegate.read()
+        if not isinstance(value, binary_type):
+            value = value.encode('utf-8')
+        return value
 
     def write(self, value):
         """
         If capacity != -1 and length of file > capacity it is time to switch
         """
-
         if self.capacity > 0 and self.strategy == 0:
             len_value = len(value)
             if len_value >= self.capacity:
@@ -503,6 +490,8 @@ class pisaTempFile(object):
                     (self.tell() + len_value) >= self.capacity
             if needs_new_strategy:
                 self.makeTempFile()
+        if not isinstance(value, binary_type):
+            value = value.encode('utf-8')
         self._delegate.write(value)
 
     def __getattr__(self, name):
@@ -538,6 +527,8 @@ class pisaFileObject:
         log.debug("FileObject %r, Basepath: %r", uri, basepath)
 
         # Data URI
+        if isinstance(uri, binary_type):
+            uri = uri.decode('utf-8')
         if uri.startswith("data:"):
             m = _rx_datauri.match(uri)
             self.mimetype = m.group("mime")
@@ -545,17 +536,17 @@ class pisaFileObject:
 
         else:
             # Check if we have an external scheme
-            if basepath and not urlparse.urlparse(uri).scheme:
-                urlParts = urlparse.urlparse(basepath)
+            if basepath and not urlparse(uri).scheme:
+                urlParts = urlparse(basepath)
             else:
-                urlParts = urlparse.urlparse(uri)
+                urlParts = urlparse(uri)
 
             log.debug("URLParts: %r", urlParts)
 
             if urlParts.scheme == 'file':
                 if basepath and uri.startswith('/'):
-                    uri = urlparse.urljoin(basepath, uri[1:])
-                urlResponse = urllib2.urlopen(uri)
+                    uri = urljoin(basepath, uri[1:])
+                urlResponse = urlopen(uri)
                 self.mimetype = urlResponse.info().get(
                     "Content-Type", '').split(";")[0]
                 self.uri = urlResponse.geturl()
@@ -567,17 +558,18 @@ class pisaFileObject:
 
                 # External data
                 if basepath:
-                    uri = urlparse.urljoin(basepath, uri)
+                    uri = urljoin(basepath, uri)
 
-                #path = urlparse.urlsplit(url)[2]
+                #path = urlsplit(url)[2]
                 #mimetype = getMimeType(path)
 
                 # Using HTTPLIB
-                server, path = urllib.splithost(uri[uri.find("//"):])
+                parts = urlsplit(uri[uri.find("//"):])
+                server, path = parts.netloc, parts.path
                 if uri.startswith("https://"):
-                    conn = httplib.HTTPSConnection(server)
+                    conn = HTTPSConnection(server)
                 else:
-                    conn = httplib.HTTPConnection(server)
+                    conn = HTTPConnection(server)
                 conn.request("GET", path)
                 r1 = conn.getresponse()
                 # log.debug("HTTP %r %r %r %r", server, path, uri, r1)
@@ -587,22 +579,13 @@ class pisaFileObject:
                     self.uri = uri
                     if r1.getheader("content-encoding") == "gzip":
                         import gzip
-                        try:
-                            import cStringIO as io
-                        except:
-                            try:
-                                import StringIO as io
-                            except ImportError:
-                                import io
-
-                        self.file = gzip.GzipFile(
-                            mode="rb", fileobj=io.StringIO(r1.read()))
+                        self.file = gzip.GzipFile(mode="rb", fileobj=BytesIO(r1.read()))
                     else:
                         self.file = r1
                 else:
                     try:
-                        urlResponse = urllib2.urlopen(uri)
-                    except urllib2.HTTPError:
+                        urlResponse = urlopen(uri)
+                    except HTTPError:
                         return
                     self.mimetype = urlResponse.info().get(
                         "Content-Type", '').split(";")[0]

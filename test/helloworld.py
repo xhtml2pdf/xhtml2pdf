@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import unicode_literals
 
 __version__ = "$Revision: 194 $"
 __author__  = "$Author: holtwick $"
@@ -23,8 +24,8 @@ import ho.pisa as pisa
 def helloWorld():
     filename = __file__ + ".pdf"
     pdf = pisa.CreatePDF(
-        u"Hello <strong>World</strong>",
-        file(filename, "wb")
+        "Hello <strong>World</strong>",
+        open(filename, "wb")
         )
     if not pdf.err:
         pisa.startViewer(filename)

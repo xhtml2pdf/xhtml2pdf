@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import print_function
 
 import sys
 import glob
@@ -40,21 +41,21 @@ class VisualObject:
         self.folder4del = None
 
     def execute(self, *a):
-        print "EXECUTE", " ".join(a)
+        print("EXECUTE", " ".join(a))
         return subprocess.Popen(a, stdout=subprocess.PIPE).communicate()[0]
 
     def getFiles(self, folder, pattern="*.*"):
         pattern = os.path.join(folder, pattern)
         self.files = [x for x in glob.glob(pattern) if not x.startswith(".")]
         self.files.sort()
-        print "FILES", self.files
+        print("FILES", self.files)
         return self.files
 
     def loadFile(self, file, folder=None, delete=True):
         if folder is None:
             folder = self.folder4del = tempfile.mkdtemp(prefix="visualdiff-tmp-")
             delete = True
-        print "FOLDER", folder, "DELETE", delete
+        print("FOLDER", folder, "DELETE", delete)
         source = os.path.abspath(file)
         destination = os.path.join(folder, "image.png")
         self.execute(CONVERT, source, destination)
@@ -62,12 +63,12 @@ class VisualObject:
         return folder
 
     def compare(self, other, chunk=16 * 1024):
-        if len(self.files) <> len(other.files):
+        if len(self.files) != len(other.files):
             return False
         for i in range(len(self.files)):
             a = open(self.files[i], "rb")
             b = open(other.files[i], "rb")
-            if a.read() <> b.read():
+            if a.read() != b.read():
                 return False
         return True
 
@@ -105,7 +106,7 @@ def main():
 
     options, args = getoptions()
 
-    print args
+    print(args)
 
     a = VisualObject()
     b = VisualObject()
@@ -113,7 +114,7 @@ def main():
     a.loadFile("expected/test-loremipsum.pdf")
     b.files = a.files
 
-    print a.compare(b)
+    print(a.compare(b))
 
 if __name__=="__main__":
     main()

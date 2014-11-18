@@ -17,6 +17,7 @@
 """
 Updates the version infos
 """
+from __future__ import print_function
 
 import time
 import re
@@ -44,7 +45,7 @@ rxversionhtml = re.compile("\<\!--VERSION--\>.*?\<\!--VERSION--\>", re.MULTILINE
 rxhelphtml = re.compile("\<\!--HELP--\>.*?\<\!--HELP--\>", re.MULTILINE | re.IGNORECASE | re.DOTALL)
 
 for fname in FILES:
-    print "Update", fname, "..."
+    print("Update", fname, "...")
     data = open(fname, "rb").read()
     data = rxversion.sub("VERSION{" + VERSION + "}VERSION", data)
     data = rxversionhtml.sub("<!--VERSION-->" + VERSION + "<!--VERSION-->", data)
