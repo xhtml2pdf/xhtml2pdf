@@ -102,7 +102,7 @@ _parser = ParaParser()
 
 
 def _lineClean(L):
-    return ' '.join(filter(truth, split(L.strip())))
+    return SPACE.join(filter(truth, split(L.strip())))
 
 
 def cleanBlockQuotedText(text, joiner=' '):
@@ -120,7 +120,7 @@ def setXPos(tx, dx):
 
 def _leftDrawParaLine(tx, offset, extraspace, words, last=0):
     setXPos(tx, offset)
-    tx._textOut(' '.join(words), 1)
+    tx._textOut(SPACE.join(words), 1)
     setXPos(tx, -offset)
     return offset
 
@@ -128,7 +128,7 @@ def _leftDrawParaLine(tx, offset, extraspace, words, last=0):
 def _centerDrawParaLine(tx, offset, extraspace, words, last=0):
     m = offset + 0.5 * extraspace
     setXPos(tx, m)
-    tx._textOut(' '.join(words), 1)
+    tx._textOut(SPACE.join(words), 1)
     setXPos(tx, -m)
     return m
 
@@ -136,14 +136,14 @@ def _centerDrawParaLine(tx, offset, extraspace, words, last=0):
 def _rightDrawParaLine(tx, offset, extraspace, words, last=0):
     m = offset + extraspace
     setXPos(tx, m)
-    tx._textOut(' '.join(words), 1)
+    tx._textOut(SPACE.join(words), 1)
     setXPos(tx, -m)
     return m
 
 
 def _justifyDrawParaLine(tx, offset, extraspace, words, last=0):
     setXPos(tx, offset)
-    text = ' '.join(words)
+    text = SPACE.join(words)
     if last:
         #last one, left align
         tx._textOut(text, 1)
