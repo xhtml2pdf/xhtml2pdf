@@ -26,8 +26,22 @@ from reportlab.platypus.tableofcontents import TableOfContents
 from reportlab.platypus.tables import Table, TableStyle
 from xhtml2pdf.reportlab_paragraph import Paragraph
 from xhtml2pdf.util import getUID, getBorderStyle
-from types import StringType, TupleType, ListType, IntType
-import StringIO
+
+#support python 3
+#from types import StringType, TupleType, ListType, IntType
+StringType = str 
+TupleType = tuple
+ListType = list
+IntType = int
+
+try:
+    import StringIO
+except Exception:
+    from io import StringIO
+    StringIO_old = StringIO
+    class StringIO(object):
+        StringIO = StringIO_old
+
 import cgi
 import copy
 import logging
