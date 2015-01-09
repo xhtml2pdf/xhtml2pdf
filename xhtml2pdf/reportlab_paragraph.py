@@ -3,7 +3,13 @@
 # see license.txt for license details
 # history http://www.reportlab.co.uk/cgi-bin/viewcvs.cgi/public/reportlab/trunk/reportlab/platypus/paragraph.py
 # Modifications by Dirk Holtwick, 2008
-from string import join, whitespace
+
+try:
+    join = str.join #python 3
+except Exception:
+    from string import join #python 2
+    
+from string import whitespace
 from operator import truth
 from reportlab.pdfbase.pdfmetrics import stringWidth, getAscentDescent
 from reportlab.platypus.paraparser import ParaParser
