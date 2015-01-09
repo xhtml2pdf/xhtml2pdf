@@ -16,7 +16,6 @@ import shutil
 import string
 import sys
 import tempfile
-import types
 import urllib
 try:
     import urllib2
@@ -132,7 +131,7 @@ def ErrorMsg():
 
 
 def toList(value):
-    if type(value) not in (types.ListType, types.TupleType):
+    if type(value) not in (list, tuple):
         return [value]
     return list(value)
 
@@ -224,11 +223,11 @@ def getSize(value, relative=0, base=None, default=0.0):
         original = value
         if value is None:
             return relative
-        elif type(value) is types.FloatType:
+        elif type(value) is float:
             return value
         elif isinstance(value, int):
             return float(value)
-        elif type(value) in (types.TupleType, types.ListType):
+        elif type(value) in (tuple, list):
             value = "".join(value)
         value = str(value).strip().lower().replace(",", ".")
         if value[-2:] == 'cm':
@@ -504,6 +503,11 @@ class pisaTempFile(object):
                     (self.tell() + len_value) >= self.capacity
             if needs_new_strategy:
                 self.makeTempFile()
+        if type(value) is bytes:
+            try:
+                value = value.decode("utf-8")
+            except Exception:
+                value = value.decode("ISO-8859-1")
         self._delegate.write(value)
 
     def __getattr__(self, name):

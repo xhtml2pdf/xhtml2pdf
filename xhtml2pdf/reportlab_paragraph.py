@@ -117,9 +117,15 @@ _wsc_re_split = re.compile('[%s]+' % re.escape(''.join((
 
 def split(text, delim=None):
     if type(text) is str:
-        text = text.decode('utf8')
+        try:
+            text = text.decode('utf8')
+        except Exception:
+            pass
     if type(delim) is str:
-        delim = delim.decode('utf8')
+        try:
+            delim = delim.decode('utf8')
+        except Exception:
+            pass
     elif delim is None and u'\xa0' in text:
         return [uword.encode('utf8') for uword in _wsc_re_split(text)]
     return [uword.encode('utf8') for uword in text.split(delim)]
@@ -127,7 +133,10 @@ def split(text, delim=None):
 
 def strip(text):
     if type(text) is str:
-        text = text.decode('utf8')
+        try:
+            text = text.decode('utf8')
+        except Exception:
+            pass
     return text.strip().encode('utf8')
 
 
@@ -402,7 +411,10 @@ def _putFragLine(cur_x, tx, line):
                     xs.linkColor = xs.textColor
             txtlen = tx._canvas.stringWidth(text, tx._fontname, tx._fontsize)
             cur_x += txtlen
-            nSpaces += text.count(' ')
+            try:
+                nSpaces += text.count(' ')
+            except Exception:
+                nSpaces += text.decode("utf8").count(' ')
     cur_x_s = cur_x + (nSpaces - 1) * ws
 
     # XXX Modified for XHTML2PDF
@@ -1351,7 +1363,14 @@ class Paragraph(Flowable):
                         g.text = nText
                     else:
                         if nText != '' and nText[0] != ' ':
-                            g.text += ' ' + nText
+                            try:
+                                g.text += ' ' + nText
+                            except Exception:
+                                try:
+                                    g.text = g.text.decode("utf8")
+                                except Exception:
+                                    pass
+                                g.text += ' ' + nText.decode("utf8")
 
                     for i in w[2:]:
                         g = i[0].clone()
