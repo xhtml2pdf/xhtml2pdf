@@ -47,6 +47,7 @@ the maintainer should theses names be changed to something more relevant.
 * Andrea Bravetti
 * Stéphane Bisinger
 * Ling Thio
+* Edwar Baron
 
 Special thanks
 ==============

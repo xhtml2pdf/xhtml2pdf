@@ -31,7 +31,6 @@ import sys
 
 #support python 3
 #from types import StringType, TupleType, ListType, IntType
-StringType = str
 TupleType = tuple
 ListType = list
 IntType = int
@@ -152,7 +151,7 @@ class PmlBaseDoc(BaseDocTemplate):
             pt = [pt + '_left', pt + '_right']
 
         '''On endPage change to the page template with name or index pt'''
-        if type(pt) is StringType:
+        if type(pt) is str:
             if hasattr(self, '_nextPageTemplateCycle'):
                 del self._nextPageTemplateCycle
             for t in self.pageTemplates:
