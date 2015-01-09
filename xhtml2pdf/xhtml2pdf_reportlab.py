@@ -28,7 +28,6 @@ from xhtml2pdf.reportlab_paragraph import Paragraph
 from xhtml2pdf.util import getUID, getBorderStyle
 
 import sys
-IntType = int
 
 try:
     import StringIO
@@ -154,7 +153,7 @@ class PmlBaseDoc(BaseDocTemplate):
                     self._nextPageTemplateIndex = self.pageTemplates.index(t)
                     return
             raise ValueError("can't find template('%s')" % pt)
-        elif type(pt) is IntType:
+        elif type(pt) is int:
             if hasattr(self, '_nextPageTemplateCycle'):
                 del self._nextPageTemplateCycle
             self._nextPageTemplateIndex = pt
