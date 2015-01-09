@@ -54,8 +54,16 @@ try:
     set
 except NameError:
     from sets import Set as set
-import cssParser
-import cssSpecial
+
+try:
+    from . import cssParser #python 3
+except Exception:
+    import cssParser #python 2
+
+try:
+    from . import cssSpecial #python 3
+except Exception:
+    import cssSpecial #python 2
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~ Constants / Variables / Etc.
