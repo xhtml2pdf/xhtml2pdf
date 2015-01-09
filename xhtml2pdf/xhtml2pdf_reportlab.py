@@ -28,7 +28,6 @@ from xhtml2pdf.reportlab_paragraph import Paragraph
 from xhtml2pdf.util import getUID, getBorderStyle
 
 import sys
-ListType = list
 IntType = int
 
 try:
@@ -159,7 +158,7 @@ class PmlBaseDoc(BaseDocTemplate):
             if hasattr(self, '_nextPageTemplateCycle'):
                 del self._nextPageTemplateCycle
             self._nextPageTemplateIndex = pt
-        elif type(pt) in (ListType, tuple):
+        elif type(pt) in (list, tuple):
             #used for alternating left/right pages
             #collect the refs to the template objects, complain if any are bad
             c = PTCycle()
