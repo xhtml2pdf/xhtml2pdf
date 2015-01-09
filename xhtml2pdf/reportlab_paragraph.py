@@ -8,7 +8,63 @@ try:
     join = str.join #python 3
 except Exception:
     from string import join #python 2
-    
+
+
+#validate version sys.version[0] == 2 -> is python 2
+#validate version sys.version[0] == 3 -> is python 3
+import sys
+"""
+Tests on functionality join
+in both versions of python
+
+Results python 3...
+>>>var1 = "hola"
+>>> var2 = "adios"
+>>> join(var1,var2)
+'aholadholaiholaoholas'
+>>> "hola".join("adios")
+'aholadholaiholaoholas'
+
+>>> join(" ","cdd")
+'c d d'
+
+
+Results python 2...
+>>> var1 = "hola"
+>>> var2 = "adios"
+>>> join(var1,var2)
+'hadiosoadiosladiosa'
+>>> "hola".join("adios")
+'aholadholaiholaoholas'
+
+>>> join("cdd")
+'c d d'
+"""
+
+###############################################################
+###############################################################
+###############################################################
+#if not python 2, the internal behavior of the join is changed
+if sys.version[0] != '2':
+    join_old = join
+    def join(var1 = None, var2 = None):
+        if var2 is None:
+            var2 = var1
+            var1 = " "
+        else:
+            aux = var1
+            var1 = var2
+            var2 = aux
+        return join_old(var1, var2)
+###############################################################
+###############################################################
+###############################################################
+
+try:
+    unicode = str #python 3
+except Exception:
+    pass #python 2
+
 from string import whitespace
 from operator import truth
 from reportlab.pdfbase.pdfmetrics import stringWidth, getAscentDescent
@@ -104,7 +160,8 @@ _parser = ParaParser()
 
 
 def _lineClean(L):
-    return join(filter(truth, split(strip(L))))
+    return join( filter(truth, split(strip(L))) )
+
 
 
 def cleanBlockQuotedText(text, joiner=' '):
@@ -113,7 +170,6 @@ def cleanBlockQuotedText(text, joiner=' '):
     (hopefully) the paragraph the user intended originally."""
     L = filter(truth, map(_lineClean, split(text, '\n')))
     return join(L, joiner)
-
 
 def setXPos(tx, dx):
     if dx > 1e-6 or dx < -1e-6:
@@ -1708,7 +1764,6 @@ if __name__ == '__main__':    # NORUNTESTS
 
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.lib.units import cm
-    import sys
 
     TESTS = sys.argv[1:]
     if TESTS == []:
