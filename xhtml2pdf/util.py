@@ -75,7 +75,6 @@ try:
 except:
     renderSVG = None
 
-
 #=========================================================================
 # Memoize decorator
 #=========================================================================
@@ -102,7 +101,10 @@ class memoized(object):
     def __call__(self, *args, **kwargs):
         # Make sure the following line is not actually slower than what you're
         # trying to memoize
-        args_plus = tuple(kwargs.iteritems())
+        if sys.version[0] == '2':
+            args_plus = tuple(kwargs.iteritems())
+        else:
+            args_plus = tuple(iter(kwargs.items()))
         key = (args, args_plus)
         try:
             if key not in self.cache:
@@ -119,7 +121,6 @@ def ErrorMsg():
     Helper to get a nice traceback as string
     """
     import traceback
-    import sys
 
     type = value = tb = limit = None
     type, value, tb = sys.exc_info()

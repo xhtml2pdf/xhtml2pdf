@@ -27,9 +27,11 @@ from reportlab.platypus.tables import Table, TableStyle
 from xhtml2pdf.reportlab_paragraph import Paragraph
 from xhtml2pdf.util import getUID, getBorderStyle
 
+import sys
+
 #support python 3
 #from types import StringType, TupleType, ListType, IntType
-StringType = str 
+StringType = str
 TupleType = tuple
 ListType = list
 IntType = int
@@ -46,8 +48,6 @@ import cgi
 import copy
 import logging
 import reportlab.pdfbase.pdfform as pdfform
-import sys
-
 
 try:
     import PIL.Image as PILImage
