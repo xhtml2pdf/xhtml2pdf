@@ -6,7 +6,7 @@ from django.shortcuts import render_to_response
 from django.template.loader import get_template
 from django.template import Context
 import xhtml2pdf.pisa as pisa
-import cStringIO as StringIO
+from io import StringIO
 import cgi
 
 def index(request):
@@ -27,16 +27,16 @@ def index(request):
 
 def download(request):
     if request.POST:
-        result = StringIO.StringIO()
+        result = StringIO()
         pdf = pisa.CreatePDF(
-            StringIO.StringIO(request.POST["data"]),
+            StringIO(request.POST["data"]),
             result
             )
 
         if not pdf.err:
             return http.HttpResponse(
                 result.getvalue(),
-                mimetype='application/pdf')
+                content_type='application/pdf')
 
     return http.HttpResponse('We had some errors')
 
@@ -44,10 +44,10 @@ def render_to_pdf(template_src, context_dict):
     template = get_template(template_src)
     context = Context(context_dict)
     html  = template.render(context)
-    result = StringIO.StringIO()
-    pdf = pisa.pisaDocument(StringIO.StringIO(html.encode("ISO-8859-1")), result)
+    result = StringIO()
+    pdf = pisa.pisaDocument(StringIO( "{0}".format(html) ), result)
     if not pdf.err:
-        return http.HttpResponse(result.getvalue(), mimetype='application/pdf')
+        return http.HttpResponse(result.getvalue(), content_type='application/pdf')
     return http.HttpResponse('We had some errors<pre>%s</pre>' % cgi.escape(html))
 
 def ezpdf_sample(request):
