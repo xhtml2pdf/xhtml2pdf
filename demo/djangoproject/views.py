@@ -33,6 +33,7 @@ def download(request):
             result
             )
 
+        #Django < 1.7 is content_type is mimetype
         if not pdf.err:
             return http.HttpResponse(
                 result.getvalue(),
@@ -47,6 +48,7 @@ def render_to_pdf(template_src, context_dict):
     result = StringIO()
     pdf = pisa.pisaDocument(StringIO( "{0}".format(html) ), result)
     if not pdf.err:
+        #Django < 1.7 is content_type is mimetype
         return http.HttpResponse(result.getvalue(), content_type='application/pdf')
     return http.HttpResponse('We had some errors<pre>%s</pre>' % cgi.escape(html))
 
