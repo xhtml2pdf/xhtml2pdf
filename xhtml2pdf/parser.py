@@ -476,7 +476,9 @@ def pisaLoop(node, context, path=None, **kw):
 
         pageBreakAfter = False
         frameBreakAfter = False
-        display = context.cssAttr.get("display", "inline").lower()
+        display = context.cssAttr.get("display", "inline")
+        if hasattr(display, 'lower'):
+            display = display.lower()
         # print indent, node.tagName, display, context.cssAttr.get("background-color", None), attr
         isBlock = (display == "block")
 
