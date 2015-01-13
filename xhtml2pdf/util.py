@@ -16,7 +16,6 @@ import shutil
 import string
 import sys
 import tempfile
-import types
 import urllib
 try:
     import urllib2
@@ -75,7 +74,6 @@ try:
 except:
     renderSVG = None
 
-
 #=========================================================================
 # Memoize decorator
 #=========================================================================
@@ -102,7 +100,10 @@ class memoized(object):
     def __call__(self, *args, **kwargs):
         # Make sure the following line is not actually slower than what you're
         # trying to memoize
-        args_plus = tuple(kwargs.iteritems())
+        if sys.version[0] == '2':
+            args_plus = tuple(kwargs.iteritems())
+        else:
+            args_plus = tuple(iter(kwargs.items()))
         key = (args, args_plus)
         try:
             if key not in self.cache:
@@ -119,7 +120,6 @@ def ErrorMsg():
     Helper to get a nice traceback as string
     """
     import traceback
-    import sys
 
     type = value = tb = limit = None
     type, value, tb = sys.exc_info()
@@ -131,7 +131,7 @@ def ErrorMsg():
 
 
 def toList(value):
-    if type(value) not in (types.ListType, types.TupleType):
+    if type(value) not in (list, tuple):
         return [value]
     return list(value)
 
@@ -223,11 +223,11 @@ def getSize(value, relative=0, base=None, default=0.0):
         original = value
         if value is None:
             return relative
-        elif type(value) is types.FloatType:
+        elif type(value) is float:
             return value
         elif isinstance(value, int):
             return float(value)
-        elif type(value) in (types.TupleType, types.ListType):
+        elif type(value) in (tuple, list):
             value = "".join(value)
         value = str(value).strip().lower().replace(",", ".")
         if value[-2:] == 'cm':
@@ -503,6 +503,11 @@ class pisaTempFile(object):
                     (self.tell() + len_value) >= self.capacity
             if needs_new_strategy:
                 self.makeTempFile()
+        if type(value) is bytes:
+            try:
+                value = value.decode("utf-8")
+            except Exception:
+                value = value.decode("ISO-8859-1")
         self._delegate.write(value)
 
     def __getattr__(self, name):
@@ -534,7 +539,8 @@ class pisaFileObject:
         self.local = None
         self.tmp_file = None
         uri = uri or str()
-        uri = uri.encode('utf-8')
+        if type(uri) != str:
+            uri = uri.decode("utf-8")
         log.debug("FileObject %r, Basepath: %r", uri, basepath)
 
         # Data URI

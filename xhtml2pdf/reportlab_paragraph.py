@@ -3,7 +3,69 @@
 # see license.txt for license details
 # history http://www.reportlab.co.uk/cgi-bin/viewcvs.cgi/public/reportlab/trunk/reportlab/platypus/paragraph.py
 # Modifications by Dirk Holtwick, 2008
-from string import join, whitespace
+
+try:
+    join = str.join #python 3
+except Exception:
+    from string import join #python 2
+
+
+#validate version sys.version[0] == 2 -> is python 2
+#validate version sys.version[0] == 3 -> is python 3
+import sys
+"""
+Tests on functionality join
+in both versions of python
+
+Results python 3...
+>>>var1 = "hola"
+>>> var2 = "adios"
+>>> join(var1,var2)
+'aholadholaiholaoholas'
+>>> "hola".join("adios")
+'aholadholaiholaoholas'
+
+>>> join(" ","cdd")
+'c d d'
+
+
+Results python 2...
+>>> var1 = "hola"
+>>> var2 = "adios"
+>>> join(var1,var2)
+'hadiosoadiosladiosa'
+>>> "hola".join("adios")
+'aholadholaiholaoholas'
+
+>>> join("cdd")
+'c d d'
+"""
+
+###############################################################
+###############################################################
+###############################################################
+#if not python 2, the internal behavior of the join is changed
+if sys.version[0] != '2':
+    join_old = join
+    def join(var1 = None, var2 = None):
+        if var2 is None:
+            var2 = var1
+            var1 = " "
+        else:
+            aux = var1
+            var1 = var2
+            var2 = aux
+        return join_old(var1, var2)
+###############################################################
+###############################################################
+###############################################################
+
+try:
+    unicode = str #python 3
+except Exception:
+    pass #python 2
+
+from string import whitespace
 from operator import truth
 from reportlab.pdfbase.pdfmetrics import stringWidth, getAscentDescent
 from reportlab.platypus.paraparser import ParaParser
@@ -55,9 +117,15 @@ _wsc_re_split = re.compile('[%s]+' % re.escape(''.join((
 
 def split(text, delim=None):
     if type(text) is str:
-        text = text.decode('utf8')
+        try:
+            text = text.decode('utf8')
+        except Exception:
+            pass
     if type(delim) is str:
-        delim = delim.decode('utf8')
+        try:
+            delim = delim.decode('utf8')
+        except Exception:
+            pass
     elif delim is None and u'\xa0' in text:
         return [uword.encode('utf8') for uword in _wsc_re_split(text)]
     return [uword.encode('utf8') for uword in text.split(delim)]
@@ -65,7 +133,10 @@ def split(text, delim=None):
 
 def strip(text):
     if type(text) is str:
-        text = text.decode('utf8')
+        try:
+            text = text.decode('utf8')
+        except Exception:
+            pass
     return text.strip().encode('utf8')
 
 
@@ -98,7 +169,8 @@ _parser = ParaParser()
 
 
 def _lineClean(L):
-    return join(filter(truth, split(strip(L))))
+    return join( filter(truth, split(strip(L))) )
+
 
 
 def cleanBlockQuotedText(text, joiner=' '):
@@ -107,7 +179,6 @@ def cleanBlockQuotedText(text, joiner=' '):
     (hopefully) the paragraph the user intended originally."""
     L = filter(truth, map(_lineClean, split(text, '\n')))
     return join(L, joiner)
-
 
 def setXPos(tx, dx):
     if dx > 1e-6 or dx < -1e-6:
@@ -340,7 +411,10 @@ def _putFragLine(cur_x, tx, line):
                     xs.linkColor = xs.textColor
             txtlen = tx._canvas.stringWidth(text, tx._fontname, tx._fontsize)
             cur_x += txtlen
-            nSpaces += text.count(' ')
+            try:
+                nSpaces += text.count(' ')
+            except Exception:
+                nSpaces += text.decode("utf8").count(' ')
     cur_x_s = cur_x + (nSpaces - 1) * ws
 
     # XXX Modified for XHTML2PDF
@@ -1289,7 +1363,14 @@ class Paragraph(Flowable):
                         g.text = nText
                     else:
                         if nText != '' and nText[0] != ' ':
-                            g.text += ' ' + nText
+                            try:
+                                g.text += ' ' + nText
+                            except Exception:
+                                try:
+                                    g.text = g.text.decode("utf8")
+                                except Exception:
+                                    pass
+                                g.text += ' ' + nText.decode("utf8")
 
                     for i in w[2:]:
                         g = i[0].clone()
@@ -1702,7 +1783,6 @@ if __name__ == '__main__':    # NORUNTESTS
 
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.lib.units import cm
-    import sys
 
     TESTS = sys.argv[1:]
     if TESTS == []:

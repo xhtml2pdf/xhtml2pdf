@@ -33,7 +33,11 @@ Dependencies:
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 import re
-import cssSpecial
+
+try:
+    from . import cssSpecial #python 3
+except Exception:
+    import cssSpecial #python 2
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~ Definitions
@@ -1170,7 +1174,10 @@ class CSSParser(object):
         if result:
             strres = filter(None, result.groups())
             if strres:
-                strres = strres[0]
+                try:
+                    strres = strres[0]
+                except Exception:
+                    strres = result.groups()[0]
             else:
                 strres = ''
             return strres, src[result.end():]

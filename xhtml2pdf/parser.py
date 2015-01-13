@@ -30,7 +30,15 @@ import copy
 import html5lib
 import logging
 import re
-import types
+
+import sys
+#support python 3
+#import types
+if sys.version[0] == '2':
+    StringTypes = (str,unicode)
+else:
+    StringTypes = (str,)
+
 import xhtml2pdf.w3c.cssDOMElementInterface as cssDOMElementInterface
 import xml.dom.minidom
 
@@ -66,11 +74,16 @@ def pisaGetAttributes(c, tag, attributes):
         block, adef = TAGS[tag]
         adef["id"] = STRING
         # print block, adef
-        for k, v in adef.iteritems():
+        try:
+            iteritems = adef.iteritems()
+        except Exception:
+            iteritems = iter(adef.items())
+        
+        for k, v in iteritems:
             nattrs[k] = None
             # print k, v
             # defaults, wenn vorhanden
-            if type(v) == types.TupleType:
+            if type(v) == tuple:
                 if v[1] == MUST:
                     if k not in attrs:
                         log.warn(c.warning("Attribute '%s' must be set!", k))
@@ -84,7 +97,7 @@ def pisaGetAttributes(c, tag, attributes):
                 dfl = None
 
             if nv is not None:
-                if type(v) == types.ListType:
+                if type(v) == list:
                     nv = nv.strip().lower()
                     if nv not in v:
                         #~ raise PML_EXCEPTION, "attribute '%s' of wrong value, allowed is one of: %s" % (k, repr(v))
@@ -647,8 +660,8 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
     else:
         parser = html5lib.HTMLParser(tree=treebuilders.getTreeBuilder("dom"))
 
-    if type(src) in types.StringTypes:
-        if type(src) is types.UnicodeType:
+    if type(src) in StringTypes:
+        if type(src) is UnicodeType:
             # If an encoding was provided, do not change it.
             if not encoding:
                 encoding = "utf-8"

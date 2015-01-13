@@ -26,14 +26,21 @@ from reportlab.platypus.tableofcontents import TableOfContents
 from reportlab.platypus.tables import Table, TableStyle
 from xhtml2pdf.reportlab_paragraph import Paragraph
 from xhtml2pdf.util import getUID, getBorderStyle
-from types import StringType, TupleType, ListType, IntType
-import StringIO
+
+import sys
+
+try:
+    import StringIO
+except Exception:
+    from io import StringIO
+    StringIO_old = StringIO
+    class StringIO(object):
+        StringIO = StringIO_old
+
 import cgi
 import copy
 import logging
 import reportlab.pdfbase.pdfform as pdfform
-import sys
-
 
 try:
     import PIL.Image as PILImage
@@ -138,7 +145,7 @@ class PmlBaseDoc(BaseDocTemplate):
             pt = [pt + '_left', pt + '_right']
 
         '''On endPage change to the page template with name or index pt'''
-        if type(pt) is StringType:
+        if type(pt) is str:
             if hasattr(self, '_nextPageTemplateCycle'):
                 del self._nextPageTemplateCycle
             for t in self.pageTemplates:
@@ -146,11 +153,11 @@ class PmlBaseDoc(BaseDocTemplate):
                     self._nextPageTemplateIndex = self.pageTemplates.index(t)
                     return
             raise ValueError("can't find template('%s')" % pt)
-        elif type(pt) is IntType:
+        elif type(pt) is int:
             if hasattr(self, '_nextPageTemplateCycle'):
                 del self._nextPageTemplateCycle
             self._nextPageTemplateIndex = pt
-        elif type(pt) in (ListType, TupleType):
+        elif type(pt) in (list, tuple):
             #used for alternating left/right pages
             #collect the refs to the template objects, complain if any are bad
             c = PTCycle()
@@ -359,7 +366,7 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
                 if hasattr(ev, 'args'):
                     a = str(ev.args[- 1]) + (' fileName=%r' % fileName)
                     ev.args = ev.args[: - 1] + (a,)
-                    raise et, ev, tb
+                    raise RuntimeError("{0} {1} {2}".format(et, ev, tb))
                 else:
                     raise
 

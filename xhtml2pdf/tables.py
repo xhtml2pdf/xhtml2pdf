@@ -172,7 +172,12 @@ class pisaTagTABLE(pisaTag):
         for i, row in enumerate(data):
             data[i] += [''] * (maxcols - len(row))
 
-        cols_with_no_width = len(filter(lambda col: col is None, tdata.colw))
+        filter_len = filter(lambda col: col is None, tdata.colw)
+        try:
+            filter_len = len(filter_len)
+        except Exception:
+            filter_len = sum(1 for _ in filter_len)
+        cols_with_no_width = filter_len
         if cols_with_no_width:  # any col width not defined
             bad_cols = filter(lambda tup: tup[1] is None, enumerate(tdata.colw))
             fair_division = str(100 / float(cols_with_no_width)) + '%' # get fair %
