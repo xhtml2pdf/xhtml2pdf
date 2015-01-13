@@ -6,7 +6,11 @@ from django.shortcuts import render_to_response
 from django.template.loader import get_template
 from django.template import Context
 import xhtml2pdf.pisa as pisa
-from io import StringIO
+try:
+    import StringIO
+    StringIO = StringIO.StringIO
+except Exception:
+    from io import StringIO
 import cgi
 
 def index(request):
@@ -32,8 +36,9 @@ def download(request):
             StringIO(request.POST["data"]),
             result
             )
-
+        #==============README===================
         #Django < 1.7 is content_type is mimetype
+        #========================================
         if not pdf.err:
             return http.HttpResponse(
                 result.getvalue(),
@@ -48,7 +53,9 @@ def render_to_pdf(template_src, context_dict):
     result = StringIO()
     pdf = pisa.pisaDocument(StringIO( "{0}".format(html) ), result)
     if not pdf.err:
+        #==============README===================
         #Django < 1.7 is content_type is mimetype
+        #========================================
         return http.HttpResponse(result.getvalue(), content_type='application/pdf')
     return http.HttpResponse('We had some errors<pre>%s</pre>' % cgi.escape(html))
 
