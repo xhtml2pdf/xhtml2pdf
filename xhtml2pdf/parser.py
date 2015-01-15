@@ -278,6 +278,12 @@ def CSSCollect(node, c):
 
     return node.cssAttrs
 
+def lower(sequence):
+    if sequence in types.StringTypes:
+        return sequence.lower()
+    else:
+        return sequence[0].lower()
+
 def CSS2Frag(c, kw, isBlock):
     # COLORS
     if "color" in c.cssAttr:
@@ -302,7 +308,7 @@ def CSS2Frag(c, kw, isBlock):
         c.frag.leadingSpace = getSize("".join(c.cssAttr["-pdf-line-spacing"]))
         # print "line-spacing", c.cssAttr["-pdf-line-spacing"], c.frag.leading
     if "font-weight" in c.cssAttr:
-        value = c.cssAttr["font-weight"].lower()
+        value = lower(c.cssAttr["font-weight"])
         if value in ("bold", "bolder", "500", "600", "700", "800", "900"):
             c.frag.bold = 1
         else:
@@ -316,7 +322,7 @@ def CSS2Frag(c, kw, isBlock):
             c.frag.underline = 0
             c.frag.strike = 0
     if "font-style" in c.cssAttr:
-        value = c.cssAttr["font-style"].lower()
+        value = lower(c.cssAttr["font-style"])
         if value in ("italic", "oblique"):
             c.frag.italic = 1
         else:
@@ -489,7 +495,7 @@ def pisaLoop(node, context, path=None, **kw):
 
         pageBreakAfter = False
         frameBreakAfter = False
-        display = context.cssAttr.get("display", "inline").lower()
+        display = lower(context.cssAttr.get("display", "inline"))
         # print indent, node.tagName, display, context.cssAttr.get("background-color", None), attr
         isBlock = (display == "block")
 
