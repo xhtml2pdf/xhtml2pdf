@@ -279,7 +279,7 @@ def CSSCollect(node, c):
     return node.cssAttrs
 
 def lower(sequence):
-    if sequence in types.StringTypes:
+    if sequence in StringTypes:
         return sequence.lower()
     else:
         return sequence[0].lower()
