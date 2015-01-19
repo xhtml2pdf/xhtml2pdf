@@ -32,8 +32,9 @@ import logging
 import re
 
 import sys
+import types
+
 #support python 3
-#import types
 if sys.version[0] == '2':
     StringTypes = (str,unicode)
 else:
