@@ -337,11 +337,18 @@ def CSS2Frag(c, kw, isBlock):
         c.frag.vAlign = c.cssAttr["vertical-align"]
         # HEIGHT & WIDTH
     if "height" in c.cssAttr:
-        c.frag.height = "".join(toList(c.cssAttr["height"]))  # XXX Relative is not correct!
+        try:
+            c.frag.height = "".join(toList(c.cssAttr["height"]))  # XXX Relative is not correct!
+        except TypeError:
+            # sequence item 0: expected string, tuple found
+            c.frag.height = "".join(toList(c.cssAttr["height"][0]))
         if c.frag.height in ("auto",):
             c.frag.height = None
     if "width" in c.cssAttr:
-        c.frag.width = "".join(toList(c.cssAttr["width"]))  # XXX Relative is not correct!
+        try:
+            c.frag.width = "".join(toList(c.cssAttr["width"]))  # XXX Relative is not correct!
+        except TypeError:
+            c.frag.width = "".join(toList(c.cssAttr["width"][0]))
         if c.frag.width in ("auto",):
             c.frag.width = None
         # ZOOM
