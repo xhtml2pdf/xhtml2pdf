@@ -78,7 +78,7 @@ def pisaGetAttributes(c, tag, attributes):
             iteritems = adef.iteritems()
         except Exception:
             iteritems = iter(adef.items())
-        
+
         for k, v in iteritems:
             nattrs[k] = None
             # print k, v
@@ -667,7 +667,7 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
         parser = html5lib.HTMLParser(tree=treebuilders.getTreeBuilder("dom"))
 
     if type(src) in StringTypes:
-        if type(src) is UnicodeType:
+        if type(src) is unicode:
             # If an encoding was provided, do not change it.
             if not encoding:
                 encoding = "utf-8"
