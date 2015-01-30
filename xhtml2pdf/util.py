@@ -508,7 +508,10 @@ class pisaTempFile(object):
                 value = value.decode("utf-8")
             except Exception:
                 value = value.decode("ISO-8859-1")
-        self._delegate.write(value)
+        try:
+            self._delegate.write(value)
+        except UnicodeEncodeError:
+            self._delegate.write(value.encode('ascii'), 'ignore')
 
     def __getattr__(self, name):
         try:
