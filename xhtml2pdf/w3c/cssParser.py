@@ -535,7 +535,7 @@ class CSSParser(object):
             if src.startswith('@'):
                 # @media, @page, @font-face
                 src, atResults = self._parseAtKeyword(src)
-                if atResults is not None:
+                if atResults is not None and atResults != NotImplemented:
                     stylesheetElements.extend(atResults)
             else:
                 # ruleset
