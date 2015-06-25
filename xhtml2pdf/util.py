@@ -506,8 +506,8 @@ class pisaTempFile(object):
         if type(value) is bytes:
             try:
                 value = value.decode("utf-8")
-            except Exception:
-                value = value.decode("ISO-8859-1")
+            except UnicodeDecodeError:
+                pass
         self._delegate.write(value)
 
     def __getattr__(self, name):
