@@ -116,12 +116,12 @@ _wsc_re_split = re.compile('[%s]+' % re.escape(''.join((
 
 
 def split(text, delim=None):
-    if type(text) is str:
+    if type(text) != unicode:
         try:
             text = text.decode('utf8')
         except Exception:
             pass
-    if type(delim) is str:
+    if type(delim) != unicode:
         try:
             delim = delim.decode('utf8')
         except Exception:
@@ -132,7 +132,7 @@ def split(text, delim=None):
 
 
 def strip(text):
-    if type(text) is str:
+    if type(text) is unicode:
         try:
             text = text.decode('utf8')
         except Exception:
@@ -496,7 +496,10 @@ def _getFragWords(frags):
     n = 0
     hangingStrip = False
     for f in frags:
-        text = f.text
+        if type(f.text) != unicode:
+            text = f.text.decode()
+        else:
+            text = f.text
         # of paragraphs
         if text != '':
             if hangingStrip:
@@ -582,7 +585,10 @@ def _split_blParaHard(blPara, start, stop):
                 if not g.text:
                     g.text = ' '
                 elif g.text[-1] != ' ':
-                    g.text += ' '
+                    if type(g.text) != unicode:
+                        g.text += ' '.encode()
+                    else:
+                        g.text += ' '
     return f
 
 
