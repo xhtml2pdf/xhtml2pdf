@@ -28,3 +28,6 @@ matrix:
         - env: TOXENV=py33-r31
         - env: TOXENV=py34-r30
         - env: TOXENV=py34-r31
+
+notifications:
+  irc: "chat.freenode.net#xhtml2pdf"
