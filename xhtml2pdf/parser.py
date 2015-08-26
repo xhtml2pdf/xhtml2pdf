@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from __future__ import print_function, unicode_literals
 from html5lib import treebuilders, inputstream
 from xhtml2pdf.default import TAGS, STRING, INT, BOOL, SIZE, COLOR, FILE
 from xhtml2pdf.default import BOX, POS, MUST, FONT
@@ -41,7 +41,7 @@ else:
 
 import xhtml2pdf.w3c.cssDOMElementInterface as cssDOMElementInterface
 import xml.dom.minidom
-
+from six import text_type
 
 CSSAttrCache = {}
 
@@ -673,12 +673,11 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
     else:
         parser = html5lib.HTMLParser(tree=treebuilders.getTreeBuilder("dom"))
 
-    if type(src) in StringTypes:
-        if type(src) is unicode:
-            # If an encoding was provided, do not change it.
-            if not encoding:
-                encoding = "utf-8"
-            src = src.encode(encoding)
+    if isinstance(src, text_type):
+        # If an encoding was provided, do not change it.
+        if not encoding:
+            encoding = "utf-8"
+        src = src.encode(encoding)
         src = pisaTempFile(src, capacity=context.capacity)
 
     # Test for the restrictions of html5lib
