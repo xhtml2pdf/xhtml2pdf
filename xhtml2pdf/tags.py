@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function, unicode_literals
 from reportlab.graphics.barcode import createBarcodeDrawing
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import inch, mm
@@ -14,6 +15,8 @@ import logging
 import re
 import warnings
 import string
+
+from six import text_type
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -62,7 +65,7 @@ class pisaTagBODY(pisaTag):
 
     def start(self, c):
         c.baseFontSize = c.frag.fontSize
-        # print "base font size", c.baseFontSize
+        # print("base font size", c.baseFontSize)
 
 
 class pisaTagTITLE(pisaTag):
@@ -180,12 +183,23 @@ class pisaTagH6(pisaTagP):
 
 def listDecimal(c):
     c.listCounter += 1
-    return unicode("%d." % c.listCounter)
+    return text_type("%d." % c.listCounter)
 
 
-roman_numeral_map = zip(
-    (1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1),
-    ('M', 'CM', 'D', 'CD', 'C', 'XC', 'L', 'XL', 'X', 'IX', 'V', 'IV', 'I')
+roman_numeral_map = (
+    (1000, 'M'),
+    (900, 'CM'),
+    (500, 'D'),
+    (400, 'CD'),
+    (100, 'C'),
+    (90, 'XC'),
+    (50, 'L'),
+    (40, 'XL'),
+    (10, 'X'),
+    (9, 'IX'),
+    (5, 'V'),
+    (4, 'IV'),
+    (1, 'I'),
 )
 
 

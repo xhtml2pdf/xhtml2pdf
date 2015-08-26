@@ -16,6 +16,8 @@ import shutil
 import string
 import sys
 import tempfile
+from six import binary_type, BytesIO
+
 import urllib
 try:
     import urllib2
@@ -401,11 +403,11 @@ GAE = "google.appengine" in sys.modules
 
 if GAE:
     STRATEGIES = (
-        io.StringIO,
-        io.StringIO)
+        BytesIO,
+        BytesIO)
 else:
     STRATEGIES = (
-        io.StringIO,
+        BytesIO,
         tempfile.NamedTemporaryFile)
 
 
@@ -479,14 +481,18 @@ class pisaTempFile(object):
 
     def getvalue(self):
         """
-        Get value of file. Work around for second strategy
+        Get value of file. Work around for second strategy.
+        Always returns bytes
         """
 
         if self.strategy == 0:
             return self._delegate.getvalue()
         self._delegate.flush()
         self._delegate.seek(0)
-        return self._delegate.read()
+        value = self._delegate.read()
+        if not isinstance(value, binary_type):
+            value = value.encode('utf-8')
+        return value
 
     def write(self, value):
         """
@@ -503,11 +509,8 @@ class pisaTempFile(object):
                     (self.tell() + len_value) >= self.capacity
             if needs_new_strategy:
                 self.makeTempFile()
-        if type(value) is bytes:
-            try:
-                value = value.decode("utf-8")
-            except UnicodeDecodeError:
-                pass
+        if not isinstance(value, binary_type):
+            value = value.encode('utf-8')
         self._delegate.write(value)
 
     def __getattr__(self, name):
