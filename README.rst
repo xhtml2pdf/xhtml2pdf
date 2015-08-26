@@ -31,9 +31,6 @@ All requirements are listed in ``requirements.txt`` file.
 Development environment
 =======================
 
-Python, virtualenv and dependencies
------------------------------------
-
 #. Install Python 2.6.x or 2.7.x. Installation steps depends on your operating system.
 
 #. Install Pip, the python package installer::
