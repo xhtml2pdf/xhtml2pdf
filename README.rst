@@ -2,20 +2,11 @@
 xhtml2pdf
 *********
 
-THIS PROJECT WAS INHERITED BY NECESSITY - PLEASE DO NOT CONTACT ME DIRECTLY
-FOR HELP BUT USE THE MAILING LIST INSTEAD.
+.. image:: https://travis-ci.org/xhtml2pdf/xhtml2pdf.svg
+    :target: https://travis-ci.org/xhtml2pdf/xhtml2pdf
 
-I picked up the code because I needed to patch it, and nobody was around to 
-merge my pull requests in. So now 
-I can merge pull requests in, but I did not write the code.
-
-If you think you can do a better job maintaing this project, feel free to let me know
-and I'll give you commit rights (or ownership, or whatever).
-
-Thanks!
-
-
-HTML/CSS to PDF converter based on Python
+This project is community-lead! To strengthen it, please hang out on IRC #xhtml2pdf (Freenode)
+or join `our maling list <http://groups.google.com/group/xhtml2pdf>`__.
 
 About
 =====
@@ -35,7 +26,7 @@ Requirements
 #. `html5lib 0.11.1+ <http://code.google.com/p/html5lib/>`_
 #. `PyPDF2 1.19+ (optional) <https://pypi.python.org/pypi/PyPDF2>`_
 
-   All requirements are listed in ``requirements.txt`` file.
+All requirements are listed in ``requirements.txt`` file.
 
 Development environment
 =======================
@@ -91,15 +82,6 @@ Python integration
 Some simple demos of how to integrate xhtml2pdf into
 a Python program may be found here: test/simple.py
 
-Contributing
-============
-
-Development for this software happend on github, and the main fork is
-currently at https://github.com/chrisglass/xhtml2pdf
-
-Contributions are welcome in any format, but using github's pull request
-system is very highly preferred since it makes review and integration
-much easier.
 
 Running tests
 =============
@@ -122,7 +104,11 @@ Contact
 * Mailing list: xhtml2pdf@googlegroups.com
 * Google group: http://groups.google.com/group/xhtml2pdf
 
-Maintainer: Chris Glass <tribaal@gmail.com>
+Maintainer:
+
+* 2010-2012 Dirk Holtwick
+* 2012-2015 Chris Glass <tribaal@gmail.com>
+* 2015- Benjamin Bach (@benjaoming)
 
 License
 =======
