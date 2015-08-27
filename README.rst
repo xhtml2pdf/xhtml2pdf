@@ -104,7 +104,7 @@ Contact
 Maintainer:
 
 * 2010-2012 Dirk Holtwick
-* 2012-2015 Chris Glass <tribaal@gmail.com>
+* 2012-2015 Chris Glass (@chrisglass)
 * 2015- Benjamin Bach (@benjaoming)
 
 License
