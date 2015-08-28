@@ -101,11 +101,18 @@ Contact
 * Mailing list: xhtml2pdf@googlegroups.com
 * Google group: http://groups.google.com/group/xhtml2pdf
 
-Maintainer:
+History
+=======
 
-* 2010-2012 Dirk Holtwick
+This are the major milestones and the maintainers of the project:
+
+* 2000-2007, commercial project, spirito.de, written by Dirk Holtwich
+* 2007-2010 Dirk Holtwich (project named "Pisa", project released as GPL)
+* 2010-2012 Dirk Holtwick (project named "xhtml2pdf", changed license to Apache)
 * 2012-2015 Chris Glass (@chrisglass)
 * 2015- Benjamin Bach (@benjaoming)
+
+For more history, see the CHANGELOG.
 
 License
 =======
