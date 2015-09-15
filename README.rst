@@ -5,7 +5,7 @@ xhtml2pdf
 .. image:: https://travis-ci.org/xhtml2pdf/xhtml2pdf.svg
     :target: https://travis-ci.org/xhtml2pdf/xhtml2pdf
 
-This project is community-lead! To strengthen it, please hang out on IRC #xhtml2pdf (Freenode)
+This project is community-led! To strengthen it, please hang out on IRC #xhtml2pdf (Freenode)
 or join `our maling list <http://groups.google.com/group/xhtml2pdf>`__.
 
 About
