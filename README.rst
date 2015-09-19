@@ -23,7 +23,7 @@ Requirements
 ============
 
 #. `Reportlab Toolkit 2.2+ <http://www.reportlab.org/>`_
-#. `html5lib 0.11.1+ <http://code.google.com/p/html5lib/>`_
+#. `html5lib 0.90+ <https://github.com/html5lib/html5lib-python>`_
 #. `PyPDF2 1.19+ (optional) <https://pypi.python.org/pypi/PyPDF2>`_
 
 All requirements are listed in ``requirements.txt`` file.
