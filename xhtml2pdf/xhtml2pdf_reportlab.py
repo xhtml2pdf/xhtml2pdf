@@ -79,8 +79,10 @@ class PmlMaxHeightMixIn:
                 self.availHeightValue = self.canv.maxAvailHeightValue = max(
                     availHeight,
                     self.canv.maxAvailHeightValue)
+        # TODO: Useless condition
         else:
             self.availHeightValue = availHeight
+        # TODO: availHeightValue is set above
         if not hasattr(self, "availHeightValue"):
             self.availHeightValue = 0
         return self.availHeightValue
