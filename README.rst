@@ -5,6 +5,10 @@ xhtml2pdf
 .. image:: https://travis-ci.org/xhtml2pdf/xhtml2pdf.svg
     :target: https://travis-ci.org/xhtml2pdf/xhtml2pdf
 
+.. image:: https://coveralls.io/repos/xhtml2pdf/xhtml2pdf/badge.svg?branch=master&service=github
+        :target: https://coveralls.io/github/xhtml2pdf/xhtml2pdf?branch=master
+        :alt: Coveralls
+
 This project is community-led! To strengthen it, please hang out on IRC #xhtml2pdf (Freenode)
 or join `our maling list <http://groups.google.com/group/xhtml2pdf>`__.
 
