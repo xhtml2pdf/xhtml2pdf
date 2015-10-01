@@ -106,22 +106,17 @@ class PmlBaseDoc(BaseDocTemplate):
         '''
         # Convert to ASCII because there is a Bug in Reportlab not
         # supporting other than ASCII. Send to list on 23.1.2007
-
         author = toString(self.pml_data.get("author", "")).encode("ascii","ignore")
         subject = toString(self.pml_data.get("subject", "")).encode("ascii","ignore")
         title = toString(self.pml_data.get("title", "")).encode("ascii","ignore")
         # print repr((author,title,subject))
-
         self.canv.setAuthor(author)
         self.canv.setSubject(subject)
         self.canv.setTitle(title)
-
         if self.pml_data.get("fullscreen", 0):
             self.canv.showFullScreen0()
-
         if self.pml_data.get("showoutline", 0):
             self.canv.showOutline()
-
         if self.pml_data.get("duration", None) is not None:
             self.canv.setPageDuration(self.pml_data["duration"])
         '''
@@ -199,6 +194,7 @@ class PmlPageTemplate(PageTemplate):
         self.pisaBackground = None
         PageTemplate.__init__(self, **kw)
         self._page_count = 0
+        self._try_render_background = False
         self._first_flow = True
 
     def isFirstFlow(self, canvas):
@@ -221,8 +217,10 @@ class PmlPageTemplate(PageTemplate):
         try:
 
             # Background
-            pisaBackground = None # self.isFirstFlow(canvas)
-            if (hasattr(self, "pisaBackground") and self.pisaBackground
+            pisaBackground = None
+            if not self.isFirstFlow(canvas):
+                self._try_render_background = True
+            if (self._try_render_background and hasattr(self, "pisaBackground") and self.pisaBackground
                 and (not self.pisaBackground.notFound())):
 
                 # Is image not PDF
