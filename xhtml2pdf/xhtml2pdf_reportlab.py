@@ -221,10 +221,8 @@ class PmlPageTemplate(PageTemplate):
         try:
 
             # Background
-            pisaBackground = None
-            if (self.isFirstFlow(canvas)
-                and hasattr(self, "pisaBackground")
-                and self.pisaBackground
+            pisaBackground = None # self.isFirstFlow(canvas)
+            if (hasattr(self, "pisaBackground") and self.pisaBackground
                 and (not self.pisaBackground.notFound())):
 
                 # Is image not PDF
