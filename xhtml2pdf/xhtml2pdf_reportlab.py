@@ -194,8 +194,13 @@ class PmlPageTemplate(PageTemplate):
         self.pisaBackground = None
         PageTemplate.__init__(self, **kw)
         self._page_count = 0
-        self._try_render_background = False
         self._first_flow = True
+
+        ### Background Image ###
+        self.img = None
+        self.ph = 0
+        self.h = 0
+        self.w = 0
 
     def isFirstFlow(self, canvas):
         if self._first_flow:
@@ -218,34 +223,32 @@ class PmlPageTemplate(PageTemplate):
 
             # Background
             pisaBackground = None
-            if not self.isFirstFlow(canvas):
-                self._try_render_background = True
-            if (self._try_render_background and hasattr(self, "pisaBackground") and self.pisaBackground
+            if (self.isFirstFlow(canvas)
+                and hasattr(self, "pisaBackground")
+                and self.pisaBackground
                 and (not self.pisaBackground.notFound())):
 
                 # Is image not PDF
                 if self.pisaBackground.mimetype.startswith("image/"):
 
                     try:
-                        img = PmlImageReader(StringIO.StringIO(self.pisaBackground.getData()))
-                        iw, ih = img.getSize()
-                        pw, ph = canvas._pagesize
+                        self.img = PmlImageReader(StringIO.StringIO(self.pisaBackground.getData()))
+                        iw, ih = self.img.getSize()
+                        pw, self.ph = canvas._pagesize
 
                         width = pw  # min(iw, pw) # max
                         wfactor = float(width) / iw
-                        height = ph  # min(ih, ph) # max
+                        height = self.ph  # min(ih, ph) # max
                         hfactor = float(height) / ih
                         factor_min = min(wfactor, hfactor)
 
                         if self.isPortrait():
-                            w = iw * factor_min
-                            h = ih * factor_min
-                            canvas.drawImage(img, 0, ph - h, w, h)
+                            self.w = iw * factor_min
+                            self.h = ih * factor_min
                         elif self.isLandscape():
                             factor_max = max(wfactor, hfactor)
-                            h = ih * factor_max
-                            w = iw * factor_min
-                            canvas.drawImage(img, 0, 0, w, h)
+                            self.h = ih * factor_max
+                            self.w = iw * factor_min
                     except:
                         log.exception("Draw background")
 
@@ -255,6 +258,11 @@ class PmlPageTemplate(PageTemplate):
 
             if pisaBackground:
                 self.pisaBackgroundList.append(pisaBackground)
+            else:
+                if self.isPortrait():
+                    canvas.drawImage(self.img, 0, self.ph - self.h, self.w, self.h)
+                elif self.isLandscape():
+                    canvas.drawImage(self.img, 0, 0, self.w, self.h)
 
             def pageNumbering(objList):
                 for obj in flatten(objList):
