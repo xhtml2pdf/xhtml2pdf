@@ -569,6 +569,9 @@ def pisaLoop(node, context, path=None, **kw):
             value = str(context.cssAttr["-pdf-keep-in-frame-mode"]).strip().lower()
             if value in ("shrink", "error", "overflow", "truncate"):
                 keepInFrameMode = value
+            else:
+                keepInFrameMode = "shrink"
+            # Added because we need a default value.
         if "-pdf-keep-in-frame-max-width" in context.cssAttr:
             keepInFrameMaxWidth = getSize("".join(context.cssAttr["-pdf-keep-in-frame-max-width"]))
         if "-pdf-keep-in-frame-max-height" in context.cssAttr:
@@ -632,7 +635,9 @@ def pisaLoop(node, context, path=None, **kw):
                 KeepInFrame(
                     content=substory,
                     maxWidth=keepInFrameMaxWidth,
-                    maxHeight=keepInFrameMaxHeight))
+                    maxHeight=keepInFrameMaxHeight,
+                    mode=keepInFrameMode))
+            # mode wasn't being used; it is necessary for tables or images at end of page.
             context.keepInFrameIndex = None
 
         # Static block, END
