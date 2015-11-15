@@ -1,33 +1,34 @@
 language: python
-install:
-    - pip install tox 
-script:
-    - tox
+sudo: false
+python:
+  - "2.7"
+  - "3.3"
+  - "3.4"
+  - "3.5"
+  - "pypy"
+
 env:
-    - TOXENV=py26-r24
-    - TOXENV=py26-r25
-    - TOXENV=py26-r26
-    - TOXENV=py26-r27
-
-    - TOXENV=py27-r24
-    - TOXENV=py27-r25
-    - TOXENV=py27-r26
-    - TOXENV=py27-r27
-    - TOXENV=py27-r30
-    - TOXENV=py27-r31
-
-    - TOXENV=py33-r30
-    - TOXENV=py33-r31
-
-    - TOXENV=py34-r30
-    - TOXENV=py34-r31
+  - RL=24
+  - RL=25
+  - RL=26
+  - RL=27
+  - RL=30
+  - RL=31
+  - RL=32
 
 matrix:
-    allow_failures:
-        - env: TOXENV=py33-r30
-        - env: TOXENV=py33-r31
-        - env: TOXENV=py34-r30
-        - env: TOXENV=py34-r31
+  fast_finish: true
+  allow_failures:
+    - python: "3.3"
+    - python: "3.4"
+    - python: "3.5"
+
+install:
+  - TOX_ENV=py${TRAVIS_PYTHON_VERSION}-rl${RL}
+  - pip install tox 
+
+script:
+  - tox -e $TOX_ENV
 
 notifications:
   irc: "chat.freenode.net#xhtml2pdf"
