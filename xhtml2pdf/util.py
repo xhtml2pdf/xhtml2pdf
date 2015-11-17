@@ -504,7 +504,8 @@ class pisaTempFile(object):
             if needs_new_strategy:
                 self.makeTempFile()
 
-        if not isinstance(value, TextType):
+        if not isinstance(value, TextType) and not isinstance(self._delegate, tempfile._TemporaryFileWrapper):
+            # tempfile.NamedTemporaryFile needs bytes, I think we should change all this to io.BytesIO
             try:
                 # reportlab encodes in latin1
                 value = value.decode("latin1")
