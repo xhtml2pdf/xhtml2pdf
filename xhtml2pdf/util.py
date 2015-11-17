@@ -17,6 +17,12 @@ import string
 import sys
 import tempfile
 import urllib
+
+if sys.version[0] == '2':
+    TextType = unicode
+else:
+    TextType = str
+
 try:
     import urllib2
 except ImportError:
@@ -51,13 +57,7 @@ REPORTLAB22 = _reportlab_version >= (2, 2)
 
 log = logging.getLogger("xhtml2pdf")
 
-try:
-    import cStringIO as io
-except:
-    try:
-        import StringIO as io
-    except ImportError:
-        import io
+import io
 
 try:
     import PyPDF2
@@ -503,11 +503,14 @@ class pisaTempFile(object):
                     (self.tell() + len_value) >= self.capacity
             if needs_new_strategy:
                 self.makeTempFile()
-        if type(value) is bytes:
+
+        if not isinstance(value, TextType):
             try:
-                value = value.decode("utf-8")
+                # reportlab encodes in latin1
+                value = value.decode("latin1")
             except UnicodeDecodeError:
                 pass
+
         self._delegate.write(value)
 
     def __getattr__(self, name):
@@ -547,7 +550,7 @@ class pisaFileObject:
         if uri.startswith("data:"):
             m = _rx_datauri.match(uri)
             self.mimetype = m.group("mime")
-            self.data = base64.decodestring(m.group("data"))
+            self.data = base64.decodebytes(m.group("data").encode("utf-8"))
 
         else:
             # Check if we have an external scheme
