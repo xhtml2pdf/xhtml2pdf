@@ -1,1 +1,1 @@
-from runtests import buildTestSuite
+from .runtests import buildTestSuite
