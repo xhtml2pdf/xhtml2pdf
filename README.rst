@@ -12,6 +12,13 @@ xhtml2pdf
 This project is community-led! To strengthen it, please hang out on IRC #xhtml2pdf (Freenode)
 or join `our maling list <http://groups.google.com/group/xhtml2pdf>`__.
 
+Call for testing
+================
+
+This project is heavily dependent on getting its test coverage up! Currently, Python 3 support is being worked on and many refactors and suggestions are potentially coming in. Furthermore, parts of the codebase could do well with cleanups and refactoring.
+
+If you benefit from xhtml2pdf, perhaps `look at the test coverage <https://coveralls.io/github/xhtml2pdf/xhtml2pdf?branch=master>`__ and identify parts that are yet untouched?
+
 About
 =====
 
