@@ -325,10 +325,12 @@ class pisaTagTD(pisaTag):
         # Keep in frame if needed since Reportlab does no split inside of cells
         if not c.frag.insideStaticFrame:
             # tdata.keepinframe["content"] = cell
+            mode = c.cssAttr.get("-pdf-keep-in-frame-mode", "shrink")
+            # keepInFrame mode is passed to Platypus for rendering
             cell = PmlKeepInFrame(
                 maxWidth=0,
                 maxHeight=0,
-                mode='shrink',
+                mode=mode,
                 content=cell)
 
         c.swapStory(self.story)
