@@ -36,7 +36,9 @@ import sys
 #import types
 if sys.version[0] == '2':
     StringTypes = (str,unicode)
+    TextType = unicode
 else:
+    TextType = str
     StringTypes = (str,)
 
 import xhtml2pdf.w3c.cssDOMElementInterface as cssDOMElementInterface
@@ -674,7 +676,7 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
         parser = html5lib.HTMLParser(tree=treebuilders.getTreeBuilder("dom"))
 
     if type(src) in StringTypes:
-        if type(src) is unicode:
+        if type(src) is TextType:
             # If an encoding was provided, do not change it.
             if not encoding:
                 encoding = "utf-8"

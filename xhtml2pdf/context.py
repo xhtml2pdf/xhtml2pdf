@@ -166,7 +166,7 @@ class pisaCSSBuilder(css.CSSBuilder):
         Embed fonts
         """
         result = self.ruleset([self.selector('*')], declarations)
-        data = result[0].values()[0]
+        data = list(result[0].values())[0]
         if "src" not in data:
             # invalid - source is required, ignore this specification
             return {}, {}

@@ -18,17 +18,13 @@ env:
 
 matrix:
   fast_finish: true
-  allow_failures:
-    - python: "3.3"
-    - python: "3.4"
-    - python: "3.5"
 
 install:
   - TOX_ENV=py${TRAVIS_PYTHON_VERSION}-rl${RL}
-  - pip install tox 
+  - pip install tox coveralls
 
-script:
-  - tox -e $TOX_ENV
+script: tox -e $TOX_ENV
+after_success: coveralls $COVERALLS_OPTION
 
 notifications:
   irc: "chat.freenode.net#xhtml2pdf"
