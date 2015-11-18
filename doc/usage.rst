@@ -422,6 +422,8 @@ that converts relative URLs to absolute system paths.
             path = os.path.join(mRoot, uri.replace(mUrl, ""))
         elif uri.startswith(sUrl):
             path = os.path.join(sRoot, uri.replace(sUrl, ""))
+        else:
+            return uri # handle absolute uri (ie: http://some.tld/foo.png)
 
         # make sure that file exists
         if not os.path.isfile(path):
