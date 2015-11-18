@@ -1,5 +1,7 @@
 *.pyc
+.eggs/
 pisa.egg-info
+*.egg
 .project
 .pydevproject
 .pydevproject.bak
