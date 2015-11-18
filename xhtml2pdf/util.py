@@ -46,7 +46,7 @@ except ImportError:
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-rgb_re = re.compile("^.*?rgb[(]([0-9]+).*?([0-9]+).*?([0-9]+)[)].*?[ ]*$")
+rgb_re = re.compile("^.*?rgb[a]?[(]([0-9]+).*?([0-9]+).*?([0-9]+)(?:.*?(?:[01]\.(?:[0-9]+)))?[)].*?[ ]*$")
 
 _reportlab_version = tuple(map(int, reportlab.Version.split('.')))
 if _reportlab_version < (2, 1):
@@ -671,10 +671,13 @@ class pisaFileObject:
 
 
 def getFile(*a, **kw):
-    file = pisaFileObject(*a, **kw)
-    if file.notFound():
+    try:
+        file = pisaFileObject(*a, **kw)
+        if file.notFound():
+            return None
+        return file
+    except:
         return None
-    return file
 
 
 COLOR_BY_NAME = {

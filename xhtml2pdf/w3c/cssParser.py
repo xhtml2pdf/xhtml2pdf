@@ -343,6 +343,10 @@ class CSSParser(object):
         # Caution: treats all characters above 0x7f as legal for an identifier.
         i_unicodeid = r'([^\u0000-\u007f]+)'
         re_unicodeid = re.compile(i_unicodeid, _reflags)
+        i_unicodestr1 = ur'(\'[^\u0000-\u007f]+\')'
+        i_unicodestr2 = ur'(\"[^\u0000-\u007f]+\")'
+        i_unicodestr = _orRule(i_unicodestr1, i_unicodestr2)
+        re_unicodestr = re.compile(i_unicodestr, _reflags)
         i_element_name = '((?:%s)|\*)' % (i_ident[1:-1],)
         re_element_name = re.compile(i_element_name, _reflags)
         i_namespace_selector = '((?:%s)|\*|)\|(?!=)' % (i_ident[1:-1],)
@@ -1156,6 +1160,11 @@ class CSSParser(object):
         result, src = self._getMatchResult(self.re_unicodeid, src)
         if result is not None:
             term = self.cssBuilder.termIdent(result)
+            return src.lstrip(), term
+
+        result, src = self._getMatchResult(self.re_unicodestr, src)
+        if result is not None:
+            term = self.cssBuilder.termString(result)
             return src.lstrip(), term
 
         return self.cssBuilder.termUnknown(src)
