@@ -72,16 +72,22 @@ def pisaStory(src, path=None, link_callback=None, debug=0, default_css=None,
 
 def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                  default_css=None, xhtml=False, encoding=None, xml_output=None,
-                 raise_exception=True, capacity=100 * 1024, **kw):
-    log.debug("pisaDocument options:\n  src = %r\n  dest = %r\n  path = %r\n  link_callback = %r\n  xhtml = %r",
+                 raise_exception=True, capacity=100 * 1024, context_meta=None,
+                 **kw):
+    log.debug("pisaDocument options:\n  src = %r\n  dest = %r\n  path = %r\n  link_callback = %r\n  xhtml = %r\n  context_meta = %r",
               src,
               dest,
               path,
               link_callback,
-              xhtml)
+              xhtml,
+              context_meta)
 
     # Prepare simple context
     context = pisaContext(path, debug=debug, capacity=capacity)
+
+    if context_meta is not None:
+        context.meta.update(context_meta)
+
     context.pathCallback = link_callback
 
     # Build story
