@@ -2,13 +2,16 @@
 AUTHORS
 =======
 
+..note: This document is outdated, please look at https://github.com/xhtml2pdf/xhtml2pdf/graphs/contributors
+
 The following people contributed to xhtml2pdf in some fashion
 
 Main developers
 ===============
 
 * Dirk Holtwick (Main developer, no longer active)
-* Christopher Glass <tribaal@gmail.com> (Current maintainer)
+* Christopher Glass (no longer active)
+* Benjamin Bach (maintainer since '15)
 
 Contributors
 ============
