@@ -4,6 +4,7 @@ import io
 import tempfile
 
 from nose import tools
+from unittest import skipIf as skip_if
 
 from PyPDF2 import PdfFileReader
 
@@ -33,6 +34,13 @@ METADATA = {
     "keywords": "pdf, documents",
 }
 
+try:
+    import __pypy__
+except ImportError:
+    IN_PYPY = False
+else:
+    IN_PYPY = True
+
 
 def _compare_pdf_metadata(pdf_file, assertion):
 
@@ -54,6 +62,7 @@ def _compare_pdf_metadata(pdf_file, assertion):
         assertion(actual_value, expected_value)
 
 
+@skip_if(IN_PYPY, "This doesn't work in pypy")
 def test_document_creation_without_metadata():
     with tempfile.TemporaryFile() as pdf_file:
         pisaDocument(
@@ -63,6 +72,7 @@ def test_document_creation_without_metadata():
         _compare_pdf_metadata(pdf_file, tools.assert_not_equal)
 
 
+@skip_if(IN_PYPY, "This doesn't work in pypy")
 def test_document_creation_with_metadata():
     with tempfile.TemporaryFile() as pdf_file:
         pisaDocument(
