@@ -40,7 +40,7 @@ def convert_to_png(infile, output_dir, options):
     outname = '%s.page%%0d.png' % filename
     globname = '%s.page*.png' % filename
     outfile = os.path.join(output_dir, outname)
-    exec_cmd(options, options.convert_cmd, '-density', '150', infile, outfile)
+    exec_cmd(options, options.convert_cmd, '-density', '150', '-flatten', infile, outfile)
     outfiles = glob.glob(os.path.join(output_dir, globname))
     outfiles.sort()
     return outfiles
@@ -53,7 +53,8 @@ def create_diff_image(srcfile1, srcfile2, output_dir, options):
     outname = '%s.diff%s' % os.path.splitext(srcfile1)
     outfile = os.path.join(output_dir, outname)
     _, result = exec_cmd(options, options.compare_cmd, '-metric', 'ae', srcfile1, srcfile2, '-lowlight-color', 'white', outfile)
-    diff_value = int(result.strip())
+
+    diff_value = float(result.strip())
     if diff_value > 0:
         if not options.quiet:
             print('Image %s differs from reference, value is %i' % (srcfile1, diff_value))

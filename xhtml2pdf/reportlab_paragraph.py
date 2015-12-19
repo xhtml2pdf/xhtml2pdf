@@ -46,6 +46,7 @@ Results python 2...
 ###############################################################
 #if not python 2, the internal behavior of the join is changed
 if sys.version[0] != '2':
+    basestring = str
     join_old = join
     def join(var1 = None, var2 = None):
         if var2 is None:
@@ -1356,6 +1357,7 @@ class Paragraph(Flowable):
                                         wi.text += ' '
                                     break
                             else:
+                                g.text = str(g.text)
                                 if not g.text.endswith(' '):
                                     g.text += ' '
                         g = f.clone()
