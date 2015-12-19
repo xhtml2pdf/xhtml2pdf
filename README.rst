@@ -33,6 +33,7 @@ technologies.
 Requirements
 ============
 
+#. Python 2.7+ (2.6 is supported in releases prior to 0.0.6). Python 3 support is experimental in current master branch, and not yet released.
 #. `Reportlab Toolkit 2.2+ <http://www.reportlab.org/>`_
 #. `html5lib 0.90+ <https://github.com/html5lib/html5lib-python>`_
 #. `PyPDF2 1.19+ (optional) <https://pypi.python.org/pypi/PyPDF2>`_
@@ -42,7 +43,7 @@ All requirements are listed in ``requirements.txt`` file.
 Development environment
 =======================
 
-#. Install Python 2.6.x or 2.7.x. Installation steps depends on your operating system.
+#. Install Python 2.7+ Installation steps depends on your operating system.
 
 #. Install Pip, the python package installer::
 
