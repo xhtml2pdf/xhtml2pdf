@@ -74,16 +74,22 @@ def pisaStory(src, path=None, link_callback=None, debug=0, default_css=None,
 
 def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                  default_css=None, xhtml=False, encoding=None, xml_output=None,
-                 raise_exception=True, capacity=100 * 1024, **kw):
-    log.debug("pisaDocument options:\n  src = %r\n  dest = %r\n  path = %r\n  link_callback = %r\n  xhtml = %r",
+                 raise_exception=True, capacity=100 * 1024, context_meta=None,
+                 **kw):
+    log.debug("pisaDocument options:\n  src = %r\n  dest = %r\n  path = %r\n  link_callback = %r\n  xhtml = %r\n  context_meta = %r",
               src,
               dest,
               path,
               link_callback,
-              xhtml)
+              xhtml,
+              context_meta)
 
     # Prepare simple context
     context = pisaContext(path, debug=debug, capacity=capacity)
+
+    if context_meta is not None:
+        context.meta.update(context_meta)
+
     context.pathCallback = link_callback
 
     # Build story
@@ -91,7 +97,7 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                         encoding, context=context, xml_output=xml_output)
 
     # Buffer PDF into memory
-    out = pisaTempFile(capacity=context.capacity)
+    out = io.BytesIO()
 
     doc = PmlBaseDoc(
         out,
@@ -167,14 +173,14 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
 
     if dest is None:
         # No output file was passed - Let's use a pisaTempFile
-        dest = pisaTempFile(capacity=context.capacity)
+        dest = io.BytesIO()
     context.dest = dest
 
-    data = out.getvalue()  # TODO: That load all the tempfile in RAM - Why bother with a swapping tempfile then?
+    data = out.getvalue()
+
     if isinstance(dest, io.BytesIO):
-        # external libs can use io.BytesIO as the destination, which I think should be OK
-        # TODO: I think we should be using BytesIO in pisaTempFile
         data = data.encode("utf-8")
+
     context.dest.write(data)  # TODO: context.dest is a tempfile as well...
 
     return context
