@@ -42,7 +42,9 @@ def convert_to_png(infile, output_dir, options):
     outname = '%s.page%%0d.png' % filename
     globname = '%s.page*.png' % filename
     outfile = os.path.join(output_dir, outname)
-    exec_cmd(options, options.convert_cmd, '-density', '150', infile, outfile)
+    #exec_cmd(options, options.convert_cmd, '-density', '150', '-opaque','white', infile, outfile)
+    exec_cmd(options, options.convert_cmd,  '-density', '150','-flatten', infile, outfile)
+    
     outfiles = glob.glob(os.path.join(output_dir, globname))
     outfiles.sort()
     return outfiles
