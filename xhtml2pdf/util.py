@@ -627,8 +627,12 @@ class pisaFileObject:
                 if os.path.isfile(uri):
                     self.uri = uri
                     self.local = uri
+                
                     self.setMimeTypeByName(uri)
-                    self.file = open(uri, "rb")
+                    if self.mimetype.startswith('text'):
+                        self.file = open(uri, "r") #removed bytes... lets hope it goes ok :/
+                    else:
+                        self.file = open(uri, "rb") #removed bytes... lets hope it goes ok :/
 
     def getFile(self):
         if self.file is not None:

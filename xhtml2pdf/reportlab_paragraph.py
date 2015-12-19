@@ -45,26 +45,28 @@ Results python 2...
 ###############################################################
 ###############################################################
 #if not python 2, the internal behavior of the join is changed
+is_python2 = True
 if sys.version[0] != '2':
-    basestring = str
-    join_old = join
+    is_python2 = False
+    class byte(bytes):
+        def __init__(self,stream):
+            super().__init__(stream,'utf-8')
+    basestring = byte
+    unicode = byte #python 3
+    str = byte
+
     def join(var1 = None, var2 = None):
         if var2 is None:
             var2 = var1
-            var1 = " "
+            var1 = b" "
         else:
             aux = var1
             var1 = var2
             var2 = aux
-        return join_old(var1, var2)
+        return var1.join(var2)
 ###############################################################
 ###############################################################
 ###############################################################
-
-try:
-    unicode = str #python 3
-except Exception:
-    pass #python 2
 
 from string import whitespace
 from operator import truth
@@ -716,7 +718,7 @@ _scheme_re = re.compile('^[a-zA-Z][-+a-zA-Z0-9]+$')
 
 
 def _doLink(tx, link, rect):
-    if isinstance(link, unicode):
+    if isinstance(link, unicode) and is_python2:
         link = link.encode('utf8')
     parts = link.split(':', 1)
     scheme = len(parts) == 2 and parts[0].lower() or ''
@@ -1357,7 +1359,6 @@ class Paragraph(Flowable):
                                         wi.text += ' '
                                     break
                             else:
-                                g.text = str(g.text)
                                 if not g.text.endswith(' '):
                                     g.text += ' '
                         g = f.clone()

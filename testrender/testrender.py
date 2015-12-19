@@ -9,7 +9,9 @@ from optparse import OptionParser
 from subprocess import Popen, PIPE
 
 from xhtml2pdf import pisa
-
+do_bytes = 'b'
+if sys.version[0] != '2':
+    do_bytes = ''
 
 def render_pdf(filename, output_dir, options):
     if options.debug:
@@ -40,7 +42,7 @@ def convert_to_png(infile, output_dir, options):
     outname = '%s.page%%0d.png' % filename
     globname = '%s.page*.png' % filename
     outfile = os.path.join(output_dir, outname)
-    exec_cmd(options, options.convert_cmd, '-density', '150', '-flatten', infile, outfile)
+    exec_cmd(options, options.convert_cmd, '-density', '150', infile, outfile)
     outfiles = glob.glob(os.path.join(output_dir, globname))
     outfiles.sort()
     return outfiles
@@ -177,12 +179,12 @@ def create_html_file(results, template_file, output_dir, options):
 
     now = datetime.datetime.now()
     title = 'xhtml2pdf Test Rendering Results, %s' % now.strftime('%c')
-    template = open(template_file, 'rb').read()
+    template = open(template_file, 'r'+do_bytes).read()
     template = template.replace('%%TITLE%%', title)
     template = template.replace('%%RESULTS%%', '\n'.join(html))
 
     htmlfile = os.path.join(output_dir, 'index.html')
-    outfile = open(htmlfile, 'wb')
+    outfile = open(htmlfile, 'w'+do_bytes)
     outfile.write(template)
     outfile.close()
     return htmlfile
