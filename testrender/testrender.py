@@ -42,11 +42,16 @@ def convert_to_png(infile, output_dir, options):
     outname = '%s.page%%0d.png' % filename
     globname = '%s.page*.png' % filename
     outfile = os.path.join(output_dir, outname)
-    #exec_cmd(options, options.convert_cmd, '-density', '150', '-opaque','white', infile, outfile)
-    exec_cmd(options, options.convert_cmd,  '-density', '150','-flatten', infile, outfile)
+    exec_cmd(options, options.convert_cmd, '-density', '150', infile, outfile)
+    
+    #exec_cmd(options, options.convert_cmd,  '-density', '150','-alpha', 'remove', infile, outfile)
     
     outfiles = glob.glob(os.path.join(output_dir, globname))
     outfiles.sort()
+    for outfile in outfiles:
+        # convert transparencies to white background
+        # Done after PDF to PNG conversion, as during that conversion this will remove most background colors.
+        exec_cmd(options, options.convert_cmd, '-background', 'white', '-alpha', 'remove', outfile, outfile)
     return outfiles
 
 
@@ -125,13 +130,16 @@ def exec_cmd(options, *args):
 
 def create_html_file(results, template_file, output_dir, options):
     html = []
-    for pdf, pages, diff_count in results:
+    for origin_html, pdf, pages, diff_count in results:
         if options.only_errors and not diff_count:
             continue
         pdfname = os.path.basename(pdf)
+        htmlname = os.path.basename(origin_html)
+        
         html.append('<div class="result">\n'
                     '<h2><a href="%(pdf)s" class="pdf-file">%(pdf)s</a></h2>\n'
-                    % {'pdf': pdfname})
+                    '<h2>Generated from <a href="../%(src)s/%(html)s" class="">%(html)s</a></h2>\n'
+                    % {'pdf': pdfname, 'html':htmlname, 'src': options.source_dir})
         for i, page in enumerate(pages):
             vars = dict(((k, os.path.basename(v)) for k,v in page.items()
                          if k != 'diff_value'))
@@ -217,7 +225,7 @@ def main():
     for filename in files:
         pdf, pages, diff = render_file(filename, output_dir, ref_dir, options)
         diff_count += diff
-        results.append((pdf, pages, diff))
+        results.append((filename, pdf, pages, diff))
 
     num = len(results)
 

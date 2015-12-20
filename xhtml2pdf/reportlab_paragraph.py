@@ -4,47 +4,15 @@
 # history http://www.reportlab.co.uk/cgi-bin/viewcvs.cgi/public/reportlab/trunk/reportlab/platypus/paragraph.py
 # Modifications by Dirk Holtwick, 2008
 
-try:
-    join = str.join #python 3
-except Exception:
-    from string import join #python 2
-
 
 #validate version sys.version[0] == 2 -> is python 2
 #validate version sys.version[0] == 3 -> is python 3
 import sys
-"""
-Tests on functionality join
-in both versions of python
-
-Results python 3...
->>>var1 = "hola"
->>> var2 = "adios"
->>> join(var1,var2)
-'aholadholaiholaoholas'
->>> "hola".join("adios")
-'aholadholaiholaoholas'
-
->>> join(" ","cdd")
-'c d d'
-
-
-Results python 2...
->>> var1 = "hola"
->>> var2 = "adios"
->>> join(var1,var2)
-'hadiosoadiosladiosa'
->>> "hola".join("adios")
-'aholadholaiholaoholas'
-
->>> join("cdd")
-'c d d'
-"""
 
 ###############################################################
 ###############################################################
 ###############################################################
-#if not python 2, the internal behavior of the join is changed
+#if not python 2, the internal behavior of strings is changed
 is_python2 = True
 if sys.version[0] != '2':
     is_python2 = False
@@ -55,15 +23,6 @@ if sys.version[0] != '2':
     unicode = byte #python 3
     str = byte
 
-    def join(var1 = None, var2 = None):
-        if var2 is None:
-            var2 = var1
-            var1 = b" "
-        else:
-            aux = var1
-            var1 = var2
-            var2 = aux
-        return var1.join(var2)
 ###############################################################
 ###############################################################
 ###############################################################
@@ -172,7 +131,7 @@ _parser = ParaParser()
 
 
 def _lineClean(L):
-    return join( filter(truth, split(strip(L))) )
+    return " ".join( filter(truth, split(strip(L))) )
 
 
 
@@ -181,7 +140,7 @@ def cleanBlockQuotedText(text, joiner=' '):
     quoted text form within the document and returns
     (hopefully) the paragraph the user intended originally."""
     L = filter(truth, map(_lineClean, split(text, '\n')))
-    return join(L, joiner)
+    return joiner.join(L)
 
 def setXPos(tx, dx):
     if dx > 1e-6 or dx < -1e-6:
@@ -190,7 +149,7 @@ def setXPos(tx, dx):
 
 def _leftDrawParaLine(tx, offset, extraspace, words, last=0):
     setXPos(tx, offset)
-    tx._textOut(join(words), 1)
+    tx._textOut(" ".join(words), 1)
     setXPos(tx, -offset)
     return offset
 
@@ -198,7 +157,7 @@ def _leftDrawParaLine(tx, offset, extraspace, words, last=0):
 def _centerDrawParaLine(tx, offset, extraspace, words, last=0):
     m = offset + 0.5 * extraspace
     setXPos(tx, m)
-    tx._textOut(join(words), 1)
+    tx._textOut(" ".join(words), 1)
     setXPos(tx, -m)
     return m
 
@@ -206,14 +165,14 @@ def _centerDrawParaLine(tx, offset, extraspace, words, last=0):
 def _rightDrawParaLine(tx, offset, extraspace, words, last=0):
     m = offset + extraspace
     setXPos(tx, m)
-    tx._textOut(join(words), 1)
+    tx._textOut(" ".join(words), 1)
     setXPos(tx, -m)
     return m
 
 
 def _justifyDrawParaLine(tx, offset, extraspace, words, last=0):
     setXPos(tx, offset)
-    text = join(words)
+    text = " ".join(words)
     if last:
         #last one, left align
         tx._textOut(text, 1)
@@ -710,7 +669,7 @@ def splitLines0(frags, widths):
 
 def _do_under_line(i, t_off, ws, tx, lm=-0.125):
     y = tx.XtraState.cur_y - i * tx.XtraState.style.leading + lm * tx.XtraState.f.fontSize
-    textlen = tx._canvas.stringWidth(join(tx.XtraState.lines[i][1]), tx._fontname, tx._fontsize)
+    textlen = tx._canvas.stringWidth(" ".join(tx.XtraState.lines[i][1]), tx._fontname, tx._fontsize)
     tx._canvas.line(t_off, y, t_off + textlen + ws, y)
 
 
@@ -737,7 +696,7 @@ def _do_link_line(i, t_off, ws, tx):
     xs = tx.XtraState
     leading = xs.style.leading
     y = xs.cur_y - i * leading - xs.f.fontSize / 8.0 # 8.0 factor copied from para.py
-    text = join(xs.lines[i][1])
+    text = " ".join(xs.lines[i][1])
     textlen = tx._canvas.stringWidth(text, tx._fontname, tx._fontsize)
     _doLink(tx, xs.link, (t_off, y, t_off + textlen + ws, y + leading))
 
@@ -1723,7 +1682,7 @@ class Paragraph(Flowable):
             for frag in frags:
                 if hasattr(frag, 'text'):
                     plains.append(frag.text)
-            return join(plains, '')
+            return ''.join(plains)
         elif identify:
             text = getattr(self, 'text', None)
             if text is None: text = repr(self)
