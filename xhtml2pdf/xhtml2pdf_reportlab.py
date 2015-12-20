@@ -436,7 +436,6 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
         return self._data
 
     def getImageData(self):
-        #Is this function ever actually called?
         width, height = self.getSize()
         return width, height, self.getRGBData()
 
