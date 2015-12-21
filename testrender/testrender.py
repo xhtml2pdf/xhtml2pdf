@@ -188,7 +188,7 @@ def create_html_file(results, template_file, output_dir, options):
         html.append('</div>\n\n')
 
     now = datetime.datetime.now()
-    title = 'xhtml2pdf Test Rendering Results, %s' % now.strftime('%c')
+    title = 'xhtml2pdf Test Rendering Results, (Python %s) %s' % (sys.version,now.strftime('%c'))
     template = open(template_file, 'r'+do_bytes).read()
     template = template.replace('%%TITLE%%', title)
     template = template.replace('%%RESULTS%%', '\n'.join(html))
