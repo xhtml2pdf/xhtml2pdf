@@ -131,7 +131,7 @@ _parser = ParaParser()
 
 
 def _lineClean(L):
-    return " ".join( filter(truth, split(strip(L))) )
+    return byte(" ").join( filter(truth, split(strip(L))) )
 
 
 
@@ -149,7 +149,7 @@ def setXPos(tx, dx):
 
 def _leftDrawParaLine(tx, offset, extraspace, words, last=0):
     setXPos(tx, offset)
-    tx._textOut(" ".join(words), 1)
+    tx._textOut(byte(" ").join(words), 1)
     setXPos(tx, -offset)
     return offset
 
@@ -157,7 +157,7 @@ def _leftDrawParaLine(tx, offset, extraspace, words, last=0):
 def _centerDrawParaLine(tx, offset, extraspace, words, last=0):
     m = offset + 0.5 * extraspace
     setXPos(tx, m)
-    tx._textOut(" ".join(words), 1)
+    tx._textOut(byte(" ").join(words), 1)
     setXPos(tx, -m)
     return m
 
@@ -165,14 +165,14 @@ def _centerDrawParaLine(tx, offset, extraspace, words, last=0):
 def _rightDrawParaLine(tx, offset, extraspace, words, last=0):
     m = offset + extraspace
     setXPos(tx, m)
-    tx._textOut(" ".join(words), 1)
+    tx._textOut(byte(" ").join(words), 1)
     setXPos(tx, -m)
     return m
 
 
 def _justifyDrawParaLine(tx, offset, extraspace, words, last=0):
     setXPos(tx, offset)
-    text = " ".join(words)
+    text = byte(" ").join(words)
     if last:
         #last one, left align
         tx._textOut(text, 1)
@@ -669,7 +669,7 @@ def splitLines0(frags, widths):
 
 def _do_under_line(i, t_off, ws, tx, lm=-0.125):
     y = tx.XtraState.cur_y - i * tx.XtraState.style.leading + lm * tx.XtraState.f.fontSize
-    textlen = tx._canvas.stringWidth(" ".join(tx.XtraState.lines[i][1]), tx._fontname, tx._fontsize)
+    textlen = tx._canvas.stringWidth(byte(" ").join(tx.XtraState.lines[i][1]), tx._fontname, tx._fontsize)
     tx._canvas.line(t_off, y, t_off + textlen + ws, y)
 
 
@@ -696,7 +696,7 @@ def _do_link_line(i, t_off, ws, tx):
     xs = tx.XtraState
     leading = xs.style.leading
     y = xs.cur_y - i * leading - xs.f.fontSize / 8.0 # 8.0 factor copied from para.py
-    text = " ".join(xs.lines[i][1])
+    text = byte(" ").join(xs.lines[i][1])
     textlen = tx._canvas.stringWidth(text, tx._fontname, tx._fontsize)
     _doLink(tx, xs.link, (t_off, y, t_off + textlen + ws, y + leading))
 
