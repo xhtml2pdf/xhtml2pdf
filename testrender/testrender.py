@@ -5,11 +5,14 @@ import os
 import shutil
 import sys
 import glob
+import decimal
 from optparse import OptionParser
 from subprocess import Popen, PIPE
 
 from xhtml2pdf import pisa
-
+do_bytes = 'b'
+if sys.version[0] != '2':
+    do_bytes = ''
 
 def render_pdf(filename, output_dir, options):
     if options.debug:
@@ -41,8 +44,15 @@ def convert_to_png(infile, output_dir, options):
     globname = '%s.page*.png' % filename
     outfile = os.path.join(output_dir, outname)
     exec_cmd(options, options.convert_cmd, '-density', '150', infile, outfile)
+    
+    #exec_cmd(options, options.convert_cmd,  '-density', '150','-alpha', 'remove', infile, outfile)
+    
     outfiles = glob.glob(os.path.join(output_dir, globname))
     outfiles.sort()
+    for outfile in outfiles:
+        # convert transparencies to white background
+        # Done after PDF to PNG conversion, as during that conversion this will remove most background colors.
+        exec_cmd(options, options.convert_cmd, '-background', 'white', '-alpha', 'remove', outfile, outfile)
     return outfiles
 
 
@@ -53,7 +63,7 @@ def create_diff_image(srcfile1, srcfile2, output_dir, options):
     outname = '%s.diff%s' % os.path.splitext(srcfile1)
     outfile = os.path.join(output_dir, outname)
     _, result = exec_cmd(options, options.compare_cmd, '-metric', 'ae', srcfile1, srcfile2, '-lowlight-color', 'white', outfile)
-    diff_value = int(result.strip())
+    diff_value = int(decimal.Decimal(result.strip()))
     if diff_value > 0:
         if not options.quiet:
             print('Image %s differs from reference, value is %i' % (srcfile1, diff_value))
@@ -120,13 +130,16 @@ def exec_cmd(options, *args):
 
 def create_html_file(results, template_file, output_dir, options):
     html = []
-    for pdf, pages, diff_count in results:
+    for origin_html, pdf, pages, diff_count in results:
         if options.only_errors and not diff_count:
             continue
         pdfname = os.path.basename(pdf)
+        htmlname = os.path.basename(origin_html)
+        
         html.append('<div class="result">\n'
                     '<h2><a href="%(pdf)s" class="pdf-file">%(pdf)s</a></h2>\n'
-                    % {'pdf': pdfname})
+                    '<h2>Generated from <a href="../%(src)s/%(html)s" class="">%(html)s</a></h2>\n'
+                    % {'pdf': pdfname, 'html':htmlname, 'src': options.source_dir})
         for i, page in enumerate(pages):
             vars = dict(((k, os.path.basename(v)) for k,v in page.items()
                          if k != 'diff_value'))
@@ -175,13 +188,13 @@ def create_html_file(results, template_file, output_dir, options):
         html.append('</div>\n\n')
 
     now = datetime.datetime.now()
-    title = 'xhtml2pdf Test Rendering Results, %s' % now.strftime('%c')
-    template = open(template_file, 'rb').read()
+    title = 'xhtml2pdf Test Rendering Results, (Python %s) %s' % (sys.version,now.strftime('%c'))
+    template = open(template_file, 'r'+do_bytes).read()
     template = template.replace('%%TITLE%%', title)
     template = template.replace('%%RESULTS%%', '\n'.join(html))
 
     htmlfile = os.path.join(output_dir, 'index.html')
-    outfile = open(htmlfile, 'wb')
+    outfile = open(htmlfile, 'w'+do_bytes)
     outfile.write(template)
     outfile.close()
     return htmlfile
@@ -212,7 +225,7 @@ def main():
     for filename in files:
         pdf, pages, diff = render_file(filename, output_dir, ref_dir, options)
         diff_count += diff
-        results.append((pdf, pages, diff))
+        results.append((filename, pdf, pages, diff))
 
     num = len(results)
 

@@ -32,10 +32,9 @@ import sys
 try:
     import StringIO
 except Exception:
-    from io import StringIO
-    StringIO_old = StringIO
+    from io import BytesIO
     class StringIO(object):
-        StringIO = StringIO_old
+        StringIO = BytesIO
 
 import cgi
 import copy
