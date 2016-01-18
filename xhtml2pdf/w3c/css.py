@@ -8,6 +8,7 @@
 ##
 ##  Modified by Dirk Holtwick <holtwick@web.de>, 2007-2008
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+from __future__ import absolute_import
 
 """CSS-2.1 engine
 
@@ -34,37 +35,21 @@ Dependencies:
 
 import os
 import sys
+import copy
+import six
+
+
+from . import cssParser
+from . import cssSpecial
+
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~ To replace any for with list comprehension
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
 def stopIter(value):
     raise StopIteration(*value)
 
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#~ Imports
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-import copy
-
-
-try:
-    set
-except NameError:
-    from sets import Set as set
-
-try:
-    from . import cssParser #python 3
-except Exception:
-    import cssParser #python 2
-
-try:
-    from . import cssSpecial #python 3
-except Exception:
-    import cssSpecial #python 2
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~ Constants / Variables / Etc.

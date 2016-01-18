@@ -8,6 +8,8 @@
 ##
 ##  Modified by Dirk Holtwick <holtwick@web.de>, 2007-2008
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+from __future__ import absolute_import
+
 
 """CSS-2.1 parser.
 
@@ -28,16 +30,10 @@ Dependencies:
     re
 """
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#~ Imports
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 import re
 
-try:
-    from . import cssSpecial #python 3
-except Exception:
-    import cssSpecial #python 2
+from . import cssSpecial
+
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~ Definitions
