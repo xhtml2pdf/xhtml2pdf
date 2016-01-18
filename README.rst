@@ -2,20 +2,15 @@
 xhtml2pdf
 *********
 
-THIS PROJECT WAS INHERITED BY NECESSITY - PLEASE DO NOT CONTACT ME DIRECTLY
-FOR HELP BUT USE THE MAILING LIST INSTEAD.
+.. image:: https://travis-ci.org/xhtml2pdf/xhtml2pdf.svg
+    :target: https://travis-ci.org/xhtml2pdf/xhtml2pdf
 
-I picked up the code because I needed to patch it, and nobody was around to 
-merge my pull requests in. So now 
-I can merge pull requests in, but I did not write the code.
+.. image:: https://coveralls.io/repos/xhtml2pdf/xhtml2pdf/badge.svg?branch=master&service=github
+        :target: https://coveralls.io/github/xhtml2pdf/xhtml2pdf?branch=master
+        :alt: Coveralls
 
-If you think you can do a better job maintaing this project, feel free to let me know
-and I'll give you commit rights (or ownership, or whatever).
-
-Thanks!
-
-
-HTML/CSS to PDF converter based on Python
+This project is community-led! To strengthen it, please hang out on IRC #xhtml2pdf (Freenode)
+or join `our maling list <http://groups.google.com/group/xhtml2pdf>`__.
 
 About
 =====
@@ -28,24 +23,33 @@ The main benefit of this tool that a user with Web skills like HTML and CSS
 is able to generate PDF templates very quickly without learning new
 technologies.
 
+
+Installation
+============
+
+This is a typical Python library and is installed using pip::
+
+    pip install xhtml2pdf
+
+To obtain the latest experimental version that has **Python 3 support**, please
+use a prerelease::
+
+    pip install --pre xhtml2pdf
+
+
+
 Requirements
 ============
 
-#. `Reportlab Toolkit 2.2+ <http://www.reportlab.org/>`_
-#. `html5lib 0.11.1+ <http://code.google.com/p/html5lib/>`_
-#. `PyPDF2 1.19+ (optional) <https://pypi.python.org/pypi/PyPDF2>`_
+Python 2.7+. Only Python 3.4+ is tested and guaranteed to work.
 
-   All requirements are listed in ``requirements.txt`` file.
+All additional requirements are listed in ``requirements.txt`` file and are
+installed automatically using the ``pip install xhtml2pdf`` method.
 
 Development environment
 =======================
 
-Python, virtualenv and dependencies
------------------------------------
-
-#. Install Python 2.6.x or 2.7.x. Installation steps depends on your operating system.
-
-#. Install Pip, the python package installer::
+#. If you don't have it, install ``pip``, the python package installer::
 
     sudo easy_install pip
 
@@ -85,21 +89,13 @@ Python, virtualenv and dependencies
 
     OK
 
+
 Python integration
 ==================
 
 Some simple demos of how to integrate xhtml2pdf into
 a Python program may be found here: test/simple.py
 
-Contributing
-============
-
-Development for this software happend on github, and the main fork is
-currently at https://github.com/chrisglass/xhtml2pdf
-
-Contributions are welcome in any format, but using github's pull request
-system is very highly preferred since it makes review and integration
-much easier.
 
 Running tests
 =============
@@ -115,6 +111,7 @@ Two different test suites are available to assert xhtml2pdf works reliably:
 #. Functional tests. Thanks to mawe42's super cool work, a full functional
    test suite lives in testrender/.
 
+
 Contact
 =======
 
@@ -122,7 +119,19 @@ Contact
 * Mailing list: xhtml2pdf@googlegroups.com
 * Google group: http://groups.google.com/group/xhtml2pdf
 
-Maintainer: Chris Glass <tribaal@gmail.com>
+
+History
+=======
+
+This are the major milestones and the maintainers of the project:
+
+* 2000-2007, commercial project, spirito.de, written by Dirk Holtwich
+* 2007-2010 Dirk Holtwich (project named "Pisa", project released as GPL)
+* 2010-2012 Dirk Holtwick (project named "xhtml2pdf", changed license to Apache)
+* 2012-2015 Chris Glass (@chrisglass)
+* 2015- Benjamin Bach (@benjaoming)
+
+For more history, see the CHANGELOG.
 
 License
 =======
