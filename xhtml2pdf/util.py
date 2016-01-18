@@ -19,6 +19,12 @@ import sys
 import tempfile
 
 import urllib
+
+if sys.version[0] == '2':
+    TextType = unicode
+else:
+    TextType = str
+
 try:
     import urllib2
 except ImportError:
@@ -42,7 +48,7 @@ except ImportError:
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-rgb_re = re.compile("^.*?rgb[(]([0-9]+).*?([0-9]+).*?([0-9]+)[)].*?[ ]*$")
+rgb_re = re.compile("^.*?rgb[a]?[(]([0-9]+).*?([0-9]+).*?([0-9]+)(?:.*?(?:[01]\.(?:[0-9]+)))?[)].*?[ ]*$")
 
 _reportlab_version = tuple(map(int, reportlab.Version.split('.')))
 if _reportlab_version < (2, 1):
@@ -501,8 +507,14 @@ class pisaTempFile(object):
                     (self.tell() + len_value) >= self.capacity
             if needs_new_strategy:
                 self.makeTempFile()
-        if not isinstance(value, six.binary_type):
-            value = value.encode('utf-8')
+        if not isinstance(value, six.binary_type) and not isinstance(self._delegate, tempfile._TemporaryFileWrapper):
+            # tempfile.NamedTemporaryFile needs bytes, I think we should change all this to io.BytesIO
+            try:
+                # reportlab encodes in latin1
+                value = value.decode("latin1")
+            except UnicodeDecodeError:
+                pass
+
         self._delegate.write(value)
 
     def __getattr__(self, name):
@@ -542,7 +554,7 @@ class pisaFileObject:
         if uri.startswith("data:"):
             m = _rx_datauri.match(uri)
             self.mimetype = m.group("mime")
-            self.data = base64.decodestring(m.group("data"))
+            self.data = base64.decodebytes(m.group("data").encode("utf-8"))
 
         else:
             # Check if we have an external scheme
@@ -659,10 +671,13 @@ class pisaFileObject:
 
 
 def getFile(*a, **kw):
-    file = pisaFileObject(*a, **kw)
-    if file.notFound():
+    try:
+        file = pisaFileObject(*a, **kw)
+        if file.notFound():
+            return None
+        return file
+    except:
         return None
-    return file
 
 
 COLOR_BY_NAME = {

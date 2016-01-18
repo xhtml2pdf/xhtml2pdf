@@ -1,10 +1,30 @@
 language: python
-    
-install:
-    - pip install tox 
-script:
-    - tox
+sudo: false
+python:
+  - "2.7"
+  - "3.3"
+  - "3.4"
+  - "3.5"
+  - "pypy"
+
 env:
-    - TOXENV=py27
-    - TOXENV=py34
-    - TOXENV=py35
+  - RL=24
+  - RL=25
+  - RL=26
+  - RL=27
+  - RL=30
+  - RL=31
+  - RL=32
+
+matrix:
+  fast_finish: true
+
+install:
+  - TOX_ENV=py${TRAVIS_PYTHON_VERSION}-rl${RL}
+  - pip install tox coveralls
+
+script: tox -e $TOX_ENV
+after_success: coveralls $COVERALLS_OPTION
+
+notifications:
+  irc: "chat.freenode.net#xhtml2pdf"

@@ -162,7 +162,7 @@ class pisaCSSBuilder(css.CSSBuilder):
         Embed fonts
         """
         result = self.ruleset([self.selector('*')], declarations)
-        data = result[0].values()[0]
+        data = list(result[0].values())[0]
         if "src" not in data:
             # invalid - source is required, ignore this specification
             return {}, {}
@@ -177,7 +177,16 @@ class pisaCSSBuilder(css.CSSBuilder):
         # Font style
         italic = str(data.get("font-style", "")).lower() in ("italic", "oblique")
 
-        src = self.c.getFile(data["src"], relative=self.c.cssParser.rootPath)
+        # The "src" attribute can be a CSS group but in that case
+        # ignore everything except the font URI
+        uri = data['src']
+        if not isinstance(data['src'], str):
+            for part in uri:
+                if isinstance(part, str):
+                    uri = part
+                    break
+
+        src = self.c.getFile(uri, relative=self.c.cssParser.rootPath)
         self.c.loadFont(
             names,
             src,
