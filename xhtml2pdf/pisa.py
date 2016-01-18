@@ -7,6 +7,7 @@ import getopt
 import glob
 import logging
 import os
+import six
 import sys
 import tempfile
 try:
@@ -122,7 +123,7 @@ class pisaLinkLoader:
                 suffix = new_suffix
         path = tempfile.mktemp(prefix="pisa-", suffix=suffix)
         ufile = urllib2.urlopen(url)
-        tfile = file(path, "wb")
+        tfile = open(path, "wb")
         while True:
             data = ufile.read(1024)
             if not data:
@@ -252,7 +253,7 @@ def execute():
 
         if o in ("-c", "--css"):
             # CSS
-            css = file(a, "r").read()
+            css = open(a, "r").read()
 
         if o in ("--css-dump",):
             # CSS dump
@@ -321,7 +322,7 @@ def execute():
             if dest_part.lower().endswith(".html") or dest_part.lower().endswith(".htm"):
                 dest_part = ".".join(src.split(".")[:-1])
             dest = dest_part + "." + format.lower()
-            for i in xrange(10):
+            for i in six.range(10):
                 try:
                     open(dest, "wb").close()
                     break
@@ -353,7 +354,7 @@ def execute():
         if not quiet:
             print ("Converting %s to %s...") % (src, dest)
 
-        pdf = pisaDocument(
+        pisaDocument(
             fsrc,
             fdest,
             debug=debug,

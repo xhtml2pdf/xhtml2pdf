@@ -14,9 +14,8 @@ import copy
 import logging
 import re
 import warnings
+import six
 import string
-
-from six import text_type
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -183,7 +182,7 @@ class pisaTagH6(pisaTagP):
 
 def listDecimal(c):
     c.listCounter += 1
-    return text_type("%d." % c.listCounter)
+    return six.text_type("%d." % c.listCounter)
 
 
 roman_numeral_map = (
@@ -215,7 +214,7 @@ def int_to_roman(i):
 def listUpperRoman(c):
     c.listCounter += 1
     roman = int_to_roman(c.listCounter)
-    return unicode("%s." % roman)
+    return six.text_type("%s." % roman)
 
 
 def listLowerRoman(c):
@@ -232,7 +231,7 @@ def listUpperAlpha(c):
         # this will probably fail for anything past the 2nd time
         alpha = string.ascii_uppercase[index - 26]
         alpha *= 2
-    return unicode("%s." % alpha)
+    return six.text_type("%s." % alpha)
 
 
 def listLowerAlpha(c):

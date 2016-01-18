@@ -30,18 +30,10 @@ import copy
 import html5lib
 import logging
 import re
-
-import sys
-#support python 3
-#import types
-if sys.version[0] == '2':
-    StringTypes = (str,unicode)
-else:
-    StringTypes = (str,)
+import six
 
 import xhtml2pdf.w3c.cssDOMElementInterface as cssDOMElementInterface
 import xml.dom.minidom
-from six import text_type
 
 CSSAttrCache = {}
 
@@ -279,7 +271,7 @@ def CSSCollect(node, c):
     return node.cssAttrs
 
 def lower(sequence):
-    if type(sequence) in StringTypes:
+    if type(sequence) in six.string_types:
         return sequence.lower()
     else:
         return sequence[0].lower()
@@ -673,7 +665,7 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
     else:
         parser = html5lib.HTMLParser(tree=treebuilders.getTreeBuilder("dom"))
 
-    if isinstance(src, text_type):
+    if isinstance(src, six.text_type):
         # If an encoding was provided, do not change it.
         if not encoding:
             encoding = "utf-8"

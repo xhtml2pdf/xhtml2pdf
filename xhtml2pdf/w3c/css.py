@@ -8,6 +8,7 @@
 ##
 ##  Modified by Dirk Holtwick <holtwick@web.de>, 2007-2008
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+from __future__ import absolute_import
 
 """CSS-2.1 engine
 
@@ -32,38 +33,23 @@ Dependencies:
     sets, cssParser, re (via cssParser)
 """
 
+import os
 import sys
+import copy
+import six
+
+
+from . import cssParser
+from . import cssSpecial
+
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~ To replace any for with list comprehension
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
 def stopIter(value):
     raise StopIteration(*value)
 
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#~ Imports
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-import copy
-
-
-try:
-    set
-except NameError:
-    from sets import Set as set
-
-try:
-    from . import cssParser #python 3
-except Exception:
-    import cssParser #python 2
-
-try:
-    from . import cssSpecial #python 3
-except Exception:
-    import cssSpecial #python 2
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~ Constants / Variables / Etc.
@@ -309,15 +295,31 @@ class CSSSelectorBase(object):
     def __str__(self):
         return self.asString()
 
+    def __eq__(self, other):
+        """Python 3"""
+        return (
+            self.specificity() == other.specificity() and
+            self.fullName == other.fullName and
+            self.qualifiers == other.qualifiers
+        )
+
+    def __lt__(self, other):
+        """Python 3"""
+        return not self.__eq__(other) and (
+            self.specificity() < other.specificity() or
+            self.fullName < other.fullName or
+            self.qualifiers < other.qualifiers
+        )
 
     def __cmp__(self, other):
-        result = cmp(self.specificity(), other.specificity())
+        """Python 2"""
+        result = cmp(self.specificity(), other.specificity())  # silence pyflakes
         if result != 0:
             return result
-        result = cmp(self.fullName, other.fullName)
+        result = cmp(self.fullName, other.fullName)  # silence pyflakes
         if result != 0:
             return result
-        result = cmp(self.qualifiers, other.qualifiers)
+        result = cmp(self.qualifiers, other.qualifiers)  # silence pyflakes
         return result
 
 
@@ -1016,7 +1018,7 @@ class CSSParser(cssParser.CSSParser):
 
     def parseExternal(self, cssResourceName):
         if os.path.isfile(cssResourceName):
-            cssFile = file(cssResourceName, 'r')
+            cssFile = open(cssResourceName, 'r')
             return self.parseFile(cssFile, True)
         raise RuntimeError("Cannot resolve external CSS file: \"%s\"" % cssResourceName)
 

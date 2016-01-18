@@ -27,14 +27,8 @@ from reportlab.platypus.tables import Table, TableStyle
 from xhtml2pdf.reportlab_paragraph import Paragraph
 from xhtml2pdf.util import getUID, getBorderStyle
 
+import six
 import sys
-
-try:
-    import StringIO
-except Exception:
-    from io import BytesIO
-    class StringIO(object):
-        StringIO = BytesIO
 
 import cgi
 import copy
@@ -230,7 +224,7 @@ class PmlPageTemplate(PageTemplate):
                 if self.pisaBackground.mimetype.startswith("image/"):
 
                     try:
-                        img = PmlImageReader(StringIO(self.pisaBackground.getData()))
+                        img = PmlImageReader(six.StringIO(self.pisaBackground.getData()))
                         iw, ih = img.getSize()
                         pw, ph = canvas._pagesize
 
@@ -322,7 +316,7 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
         else:
             try:
                 self.fp = open_for_read(fileName, 'b')
-                if isinstance(self.fp, StringIO().__class__):
+                if isinstance(self.fp, six.StringIO().__class__):
                     imageReaderFlags = 0  # avoid messing with already internal files
                 if imageReaderFlags > 0:  # interning
                     data = self.fp.read()
@@ -338,7 +332,7 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
 
                         data = self._cache.setdefault(md5(data).digest(), data)
                     self.fp = getStringIO(data)
-                elif imageReaderFlags == - 1 and isinstance(fileName, (str, unicode)):
+                elif imageReaderFlags == - 1 and isinstance(fileName, six.text_type):
                     #try Ralf Schmitt's re-opening technique of avoiding too many open files
                     self.fp.close()
                     del self.fp  # will become a property in the next statement
@@ -504,7 +498,7 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         return self.dWidth, self.dHeight
 
     def getImage(self):
-        img = PmlImageReader(StringIO(self._imgdata))
+        img = PmlImageReader(six.StringIO(self._imgdata))
         return img
 
     def draw(self):
