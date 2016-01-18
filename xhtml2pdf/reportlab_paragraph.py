@@ -7,6 +7,8 @@
 
 #validate version sys.version[0] == 2 -> is python 2
 #validate version sys.version[0] == 3 -> is python 3
+import re
+import six
 import sys
 
 ###############################################################
@@ -37,7 +39,6 @@ from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER, TA_JUSTIFY
 from reportlab.lib.textsplit import ALL_CANNOT_START
 from copy import deepcopy
 from reportlab.lib.abag import ABag
-import re
 
 
 PARAGRAPH_DEBUG = False
@@ -616,12 +617,12 @@ def splitLines0(frags, widths):
     """
 
     #initialise the algorithm
-    lines = []
     lineNum = 0
     maxW = widths[lineNum]
     i = -1
     l = len(frags)
     lim = start = 0
+    text = frags[0]
     while 1:
         #find a non whitespace character
         while i < l:
@@ -1449,7 +1450,6 @@ class Paragraph(Flowable):
             #preserving splitting algorithm
             return f.clone(kind=0, lines=self.blPara.lines)
         lines = []
-        lineno = 0
 
         self.height = 0
 
@@ -1597,7 +1597,7 @@ class Paragraph(Flowable):
                     if link: _do_link_line(0, dx, ws, tx)
 
                     #now the middle of the paragraph, aligned with the left margin which is our origin.
-                    for i in xrange(1, nLines):
+                    for i in six.range(1, nLines):
                         ws = lines[i][0]
                         t_off = dpl(tx, _offsets[i], ws, lines[i][1], noJustifyLast and i == lim)
                         if dpl != _justifyDrawParaLine: ws = 0
@@ -1605,7 +1605,7 @@ class Paragraph(Flowable):
                         if strike: _do_under_line(i, t_off + leftIndent, ws, tx, lm=0.125)
                         if link: _do_link_line(i, t_off + leftIndent, ws, tx)
                 else:
-                    for i in xrange(1, nLines):
+                    for i in six.range(1, nLines):
                         dpl(tx, _offsets[i], lines[i][0], lines[i][1], noJustifyLast and i == lim)
             else:
                 f = lines[0]
@@ -1613,7 +1613,6 @@ class Paragraph(Flowable):
                 # default?
                 dpl = _leftDrawParaLineX
                 if bulletText:
-                    oo = offset
                     offset = _drawBullet(canvas, offset, cur_y, bulletText, style)
                 if alignment == TA_LEFT:
                     dpl = _leftDrawParaLineX
@@ -1662,7 +1661,7 @@ class Paragraph(Flowable):
                 _do_post_text(tx)
 
                 #now the middle of the paragraph, aligned with the left margin which is our origin.
-                for i in xrange(1, nLines):
+                for i in six.range(1, nLines):
                     f = lines[i]
                     dpl(tx, _offsets[i], f, noJustifyLast and i == lim)
                     _do_post_text(tx)
@@ -1718,7 +1717,7 @@ if __name__ == '__main__':    # NORUNTESTS
                 words = line[1]
             nwords = len(words)
             print ('line%d: %d(%s)\n  ') % (l, nwords, str(getattr(line, 'wordCount', 'Unknown'))),
-            for w in xrange(nwords):
+            for w in six.range(nwords):
                 print ("%d:'%s'") % (w, getattr(words[w], 'text', words[w])),
             print()
 
@@ -1733,7 +1732,7 @@ if __name__ == '__main__':    # NORUNTESTS
         print ('dumpParagraphFrags(<Paragraph @ %d>) minWidth() = %.2f') % (id(P), P.minWidth())
         frags = P.frags
         n = len(frags)
-        for l in xrange(n):
+        for l in six.range(n):
             print ("frag%d: '%s' %s") % (
             l, frags[l].text, ' '.join(['%s=%s' % (k, getattr(frags[l], k)) for k in frags[l].__dict__ if k != text]))
 

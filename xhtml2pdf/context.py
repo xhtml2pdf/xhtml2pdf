@@ -17,13 +17,9 @@ import logging
 import os
 import re
 import reportlab
-import sys
-#support python 3
-#from types import StringTypes, TupleType, ListType
-if sys.version[0] == '2':
-    StringTypes = (str,unicode)
-else:
-    StringTypes = (str,)
+import six
+
+
 TupleType = tuple
 ListType = list
 try:
@@ -586,7 +582,7 @@ class pisaContext(object):
 
     def addTOC(self):
         styles = []
-        for i in xrange(20):
+        for i in six.range(20):
             self.node.attributes["class"] = "pdftoclevel%d" % i
             self.cssAttr = xhtml2pdf.parser.CSSCollect(self.node, self)
             xhtml2pdf.parser.CSS2Frag(self, {
@@ -847,11 +843,11 @@ class pisaContext(object):
         """
         # print names, self.fontList
         if type(names) is not ListType:
-            if type(names) not in StringTypes:
+            if type(names) not in six.string_types:
                 names = str(names)
             names = names.strip().split(",")
         for name in names:
-            if type(name) not in StringTypes:
+            if type(name) not in six.string_types:
                 name = str(name)
             font = self.fontList.get(name.strip().lower(), None)
             if font is not None:
@@ -861,7 +857,7 @@ class pisaContext(object):
     def registerFont(self, fontname, alias=[]):
         self.fontList[str(fontname).lower()] = str(fontname)
         for a in alias:
-            if type(fontname) not in StringTypes:
+            if type(fontname) not in six.string_types:
                 fontname = str(fontname)
             self.fontList[str(a)] = fontname
 

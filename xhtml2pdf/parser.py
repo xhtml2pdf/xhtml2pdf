@@ -15,7 +15,7 @@
 # limitations under the License.
 from __future__ import print_function, unicode_literals
 from html5lib import treebuilders, inputstream
-from xhtml2pdf.default import TAGS, STRING, INT, BOOL, SIZE, COLOR, FILE
+from xhtml2pdf.default import STRING, INT, BOOL, SIZE, COLOR, FILE
 from xhtml2pdf.default import BOX, POS, MUST, FONT
 from xhtml2pdf.util import getSize, getBool, toList, getColor, getAlign
 from xhtml2pdf.util import getBox, getPos, pisaTempFile
@@ -30,18 +30,10 @@ import copy
 import html5lib
 import logging
 import re
-
-import sys
-#support python 3
-#import types
-if sys.version[0] == '2':
-    StringTypes = (str,unicode)
-else:
-    StringTypes = (str,)
+import six
 
 import xhtml2pdf.w3c.cssDOMElementInterface as cssDOMElementInterface
 import xml.dom.minidom
-from six import text_type
 
 CSSAttrCache = {}
 
@@ -279,7 +271,7 @@ def CSSCollect(node, c):
     return node.cssAttrs
 
 def lower(sequence):
-    if type(sequence) in StringTypes:
+    if type(sequence) in six.string_types:
         return sequence.lower()
     else:
         return sequence[0].lower()
@@ -673,7 +665,7 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
     else:
         parser = html5lib.HTMLParser(tree=treebuilders.getTreeBuilder("dom"))
 
-    if isinstance(src, text_type):
+    if isinstance(src, six.text_type):
         # If an encoding was provided, do not change it.
         if not encoding:
             encoding = "utf-8"

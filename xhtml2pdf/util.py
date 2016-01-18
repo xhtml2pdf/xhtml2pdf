@@ -13,10 +13,10 @@ import os.path
 import re
 import reportlab
 import shutil
+import six
 import string
 import sys
 import tempfile
-from six import binary_type, BytesIO
 
 import urllib
 try:
@@ -52,14 +52,6 @@ REPORTLAB22 = _reportlab_version >= (2, 2)
 # print "***", reportlab.Version, REPORTLAB22, reportlab.__file__
 
 log = logging.getLogger("xhtml2pdf")
-
-try:
-    import cStringIO as io
-except:
-    try:
-        import StringIO as io
-    except ImportError:
-        import io
 
 try:
     import PyPDF2
@@ -403,11 +395,11 @@ GAE = "google.appengine" in sys.modules
 
 if GAE:
     STRATEGIES = (
-        BytesIO,
-        BytesIO)
+        six.BytesIO,
+        six.BytesIO)
 else:
     STRATEGIES = (
-        BytesIO,
+        six.BytesIO,
         tempfile.NamedTemporaryFile)
 
 
@@ -490,7 +482,7 @@ class pisaTempFile(object):
         self._delegate.flush()
         self._delegate.seek(0)
         value = self._delegate.read()
-        if not isinstance(value, binary_type):
+        if not isinstance(value, six.binary_type):
             value = value.encode('utf-8')
         return value
 
@@ -509,7 +501,7 @@ class pisaTempFile(object):
                     (self.tell() + len_value) >= self.capacity
             if needs_new_strategy:
                 self.makeTempFile()
-        if not isinstance(value, binary_type):
+        if not isinstance(value, six.binary_type):
             value = value.encode('utf-8')
         self._delegate.write(value)
 
@@ -596,16 +588,9 @@ class pisaFileObject:
                     self.uri = uri
                     if r1.getheader("content-encoding") == "gzip":
                         import gzip
-                        try:
-                            import cStringIO as io
-                        except:
-                            try:
-                                import StringIO as io
-                            except ImportError:
-                                import io
 
                         self.file = gzip.GzipFile(
-                            mode="rb", fileobj=io.StringIO(r1.read()))
+                            mode="rb", fileobj=six.StringIO(r1.read()))
                     else:
                         self.file = r1
                 else:

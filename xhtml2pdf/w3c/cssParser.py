@@ -571,7 +571,7 @@ class CSSParser(object):
             charset, src = self._getString(src)
             src = src.lstrip()
             if src[:1] != ';':
-                raise self.ParseError('@charset expected a terminating \';\'', src, ctxsrc)
+                raise self.ParseError('@charset expected a terminating \';\'', src, self.ctxsrc)
             src = src[1:].lstrip()
 
             self.cssBuilder.atCharset(charset)
@@ -774,7 +774,6 @@ class CSSParser(object):
         """
         XXX Proprietary for PDF
         """
-        ctxsrc = src
         src = src[len('@frame '):].lstrip()
         box, src = self._getIdent(src)
         src, properties = self._parseDeclarationGroup(src.lstrip())
@@ -783,7 +782,6 @@ class CSSParser(object):
 
 
     def _parseAtFontFace(self, src):
-        ctxsrc = src
         src = src[len('@font-face '):].lstrip()
         src, properties = self._parseDeclarationGroup(src)
         result = [self.cssBuilder.atFontFace(properties)]
