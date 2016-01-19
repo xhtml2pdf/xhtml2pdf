@@ -1,8 +1,24 @@
 # -*- coding: utf-8 -*-
+"""
+Copyright 2010 Dirk Holtwick, holtwick.it
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 from xhtml2pdf.default import DEFAULT_CSS
 from xhtml2pdf.document import pisaDocument
 from xhtml2pdf.util import getFile
-from xhtml2pdf.version import VERSION, VERSION_STR
+from xhtml2pdf import __version__
 import getopt
 import glob
 import logging
@@ -18,28 +34,13 @@ try:
     import urlparse
 except ImportError:
     import urllib.parse as urlparse
-# Copyright 2010 Dirk Holtwick, holtwick.it
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 log = logging.getLogger("xhtml2pdf")
-
-__version__ = VERSION
 
 # Backward compatibility
 CreatePDF = pisaDocument
 
-USAGE = (VERSION_STR + """
+USAGE = ("""
 
 USAGE: pisa [options] SRC [DEST]
 
@@ -86,7 +87,7 @@ DEST
     Force parsing in HTML Mode (default)
 """).strip()
 
-COPYRIGHT = VERSION_STR
+COPYRIGHT = __doc__
 
 LOG_FORMAT = "%(levelname)s [%(name)s] %(message)s"
 LOG_FORMAT_DEBUG = "%(levelname)s [%(name)s] %(pathname)s line %(lineno)d: %(message)s"
