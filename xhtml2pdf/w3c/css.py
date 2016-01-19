@@ -36,7 +36,6 @@ Dependencies:
 import os
 import sys
 import copy
-import six
 
 
 from . import cssParser

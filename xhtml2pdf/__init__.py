@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import logging
-
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
 # Licensed under the Apache License, Version 2.0 (the "License");

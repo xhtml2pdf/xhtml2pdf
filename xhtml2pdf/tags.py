@@ -8,7 +8,7 @@ from reportlab.platypus.flowables import Spacer, HRFlowable, PageBreak, Flowable
 from reportlab.platypus.frames import Frame
 from reportlab.platypus.paraparser import tt2ps, ABag
 from xhtml2pdf import xhtml2pdf_reportlab
-from xhtml2pdf.util import getColor, getSize, getAlign, dpi96, TextType
+from xhtml2pdf.util import getColor, getSize, getAlign, dpi96
 from xhtml2pdf.xhtml2pdf_reportlab import PmlImage, PmlPageTemplate
 import copy
 import logging

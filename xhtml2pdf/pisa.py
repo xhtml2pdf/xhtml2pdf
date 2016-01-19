@@ -224,7 +224,11 @@ def execute():
             if a:
                 log_level = int(a)
 
-        if o in ("--copyright", "--version"):
+        if o in("--version",):
+            print(__version__)
+            sys.exit(0)
+
+        if o in ("--copyright"):
             print (COPYRIGHT)
             sys.exit(0)
 
