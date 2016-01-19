@@ -26,7 +26,7 @@ lint:
 	pep8 xhtml2pdf
 
 test:
-	nose.core --with-xunit --with-coverage --cover-package=xhtml2pdf
+	python setup.py nosetests
 
 test-all:
 	tox
