@@ -25,14 +25,16 @@ except ImportError:
 
 README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 
+import xhtml2pdf
+
 setup(
     name="xhtml2pdf",
-    version="0.0.6",
+    version=xhtml2pdf.__version__,
     description="PDF generator using HTML and CSS",
     license="Apache License 2.0",
     author="Dirk Holtwick",
-    maintainer="Daryl Yu",
-    maintainer_email="hello+pleaseleavemealone@darylyu.com",
+    maintainer="Benjamin Bach",
+    maintainer_email="use-github@doit.com",
     url="http://www.xhtml2pdf.com",
     keywords="PDF, HTML, XHTML, XML, CSS",
     install_requires=["html5lib", "httplib2", "pyPdf2", "Pillow", "reportlab>=3.0", "six"],
@@ -61,6 +63,7 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
         'Topic :: Documentation',
         'Topic :: Multimedia',
         'Topic :: Office/Business',
