@@ -1597,7 +1597,7 @@ class Paragraph(Flowable):
                     if link: _do_link_line(0, dx, ws, tx)
 
                     #now the middle of the paragraph, aligned with the left margin which is our origin.
-                    for i in six.range(1, nLines):
+                    for i in six.moves.range(1, nLines):
                         ws = lines[i][0]
                         t_off = dpl(tx, _offsets[i], ws, lines[i][1], noJustifyLast and i == lim)
                         if dpl != _justifyDrawParaLine: ws = 0
@@ -1605,7 +1605,7 @@ class Paragraph(Flowable):
                         if strike: _do_under_line(i, t_off + leftIndent, ws, tx, lm=0.125)
                         if link: _do_link_line(i, t_off + leftIndent, ws, tx)
                 else:
-                    for i in six.range(1, nLines):
+                    for i in six.moves.range(1, nLines):
                         dpl(tx, _offsets[i], lines[i][0], lines[i][1], noJustifyLast and i == lim)
             else:
                 f = lines[0]
@@ -1661,7 +1661,7 @@ class Paragraph(Flowable):
                 _do_post_text(tx)
 
                 #now the middle of the paragraph, aligned with the left margin which is our origin.
-                for i in six.range(1, nLines):
+                for i in six.moves.range(1, nLines):
                     f = lines[i]
                     dpl(tx, _offsets[i], f, noJustifyLast and i == lim)
                     _do_post_text(tx)
@@ -1717,7 +1717,7 @@ if __name__ == '__main__':    # NORUNTESTS
                 words = line[1]
             nwords = len(words)
             print ('line%d: %d(%s)\n  ') % (l, nwords, str(getattr(line, 'wordCount', 'Unknown'))),
-            for w in six.range(nwords):
+            for w in six.moves.range(nwords):
                 print ("%d:'%s'") % (w, getattr(words[w], 'text', words[w])),
             print()
 
@@ -1732,7 +1732,7 @@ if __name__ == '__main__':    # NORUNTESTS
         print ('dumpParagraphFrags(<Paragraph @ %d>) minWidth() = %.2f') % (id(P), P.minWidth())
         frags = P.frags
         n = len(frags)
-        for l in six.range(n):
+        for l in six.moves.range(n):
             print ("frag%d: '%s' %s") % (
             l, frags[l].text, ' '.join(['%s=%s' % (k, getattr(frags[l], k)) for k in frags[l].__dict__ if k != text]))
 

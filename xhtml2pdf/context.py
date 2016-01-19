@@ -591,7 +591,7 @@ class pisaContext(object):
 
     def addTOC(self):
         styles = []
-        for i in six.range(20):
+        for i in six.moves.range(20):
             self.node.attributes["class"] = "pdftoclevel%d" % i
             self.cssAttr = xhtml2pdf.parser.CSSCollect(self.node, self)
             xhtml2pdf.parser.CSS2Frag(self, {

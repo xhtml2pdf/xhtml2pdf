@@ -322,7 +322,7 @@ def execute():
             if dest_part.lower().endswith(".html") or dest_part.lower().endswith(".htm"):
                 dest_part = ".".join(src.split(".")[:-1])
             dest = dest_part + "." + format.lower()
-            for i in six.range(10):
+            for i in six.moves.range(10):
                 try:
                     open(dest, "wb").close()
                     break

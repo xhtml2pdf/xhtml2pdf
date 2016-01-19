@@ -36,6 +36,7 @@ setup(
     url="http://www.xhtml2pdf.com",
     keywords="PDF, HTML, XHTML, XML, CSS",
     install_requires=["html5lib", "httplib2", "pyPdf2", "Pillow", "reportlab>=3.0", "six"],
+    setup_requires=["nose>=1.0"],
     include_package_data=True,
     packages=find_packages(exclude=["tests", "tests.*"]),
     #    test_suite = "tests", They're not even working yet
