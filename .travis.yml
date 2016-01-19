@@ -2,15 +2,15 @@ language: python
 sudo: false
 python:
   - "2.7"
-  - "3.3"
+#  - "3.3"
   - "3.4"
   - "3.5"
   - "pypy"
 
 env:
-  - RL=24
-  - RL=25
-  - RL=26
+#  - RL=24
+#  - RL=25
+#  - RL=26
   - RL=27
   - RL=30
   - RL=31
