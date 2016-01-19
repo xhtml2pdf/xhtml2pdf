@@ -54,9 +54,6 @@ _reportlab_version = tuple(map(int, reportlab.Version.split('.')))
 if _reportlab_version < (2, 1):
     raise ImportError("Reportlab Version 2.1+ is needed!")
 
-REPORTLAB22 = _reportlab_version >= (2, 2)
-# print "***", reportlab.Version, REPORTLAB22, reportlab.__file__
-
 log = logging.getLogger("xhtml2pdf")
 
 try:
