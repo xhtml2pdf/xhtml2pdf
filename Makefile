@@ -38,10 +38,10 @@ docs:
 	sphinx-build -b html ./docs _build/
 
 release: clean
-	python setup.py sdist upload
+	python setup.py sdist bdist_wheel
+	twine upload -s dist/*
 	python setup.py bdist_wheel upload
 
 sdist: clean
 	python setup.py sdist
-	python setup.py bdist_wheel upload
 	ls -l dist
