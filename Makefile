@@ -40,7 +40,6 @@ docs:
 release: clean
 	python setup.py sdist bdist_wheel
 	twine upload -s dist/*
-	python setup.py bdist_wheel upload
 
 sdist: clean
 	python setup.py sdist

@@ -35,7 +35,7 @@ setup(
     author="Dirk Holtwick",
     maintainer="Benjamin Bach",
     maintainer_email="use-github@doit.com",
-    url="http://www.xhtml2pdf.com",
+    url="http://github.com/xhtml2pdf/xhtml2pdf",
     keywords="PDF, HTML, XHTML, XML, CSS",
     install_requires=["html5lib", "httplib2", "pyPdf2", "Pillow", "reportlab>=3.0", "six"],
     setup_requires=["nose>=1.0"],
