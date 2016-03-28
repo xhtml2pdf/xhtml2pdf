@@ -19,11 +19,15 @@ class TestCase(unittest.TestCase):
         c = pisaContext(".")
         r = pisaParser(_data, c)
         self.assertEqual(c, r)
+        self.assertEqual(r.err, 0)
+        self.assertEqual(r.warn, 0)
 
     def test_getFile(self):
         c = pisaContext(".")
         r = pisaParser(_data, c)
         self.assertEqual(c.getFile(None), None)
+        self.assertEqual(r.err, 0)
+        self.assertEqual(r.warn, 0)
 
     def test_height_as_list(self):
         """Asserts attributes like 'height: 10px !important" are parsed"""
@@ -31,6 +35,14 @@ class TestCase(unittest.TestCase):
         data = b"<p style='height: 10px !important;width: 10px !important'>test</p>"
         r = pisaParser(data, c)
         self.assertEqual(c, r)
+        self.assertEqual(r.err, 0)
+        self.assertEqual(r.warn, 0)
+
+    def test_image_base64(self):
+        c = pisaContext(".")
+        data = b'<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=">'
+        r = pisaParser(data, c)
+        self.assertEqual(r.warn, 0)
 
 
 def buildTestSuite():
