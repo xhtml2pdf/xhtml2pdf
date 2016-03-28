@@ -81,3 +81,13 @@ def test_document_creation_with_metadata():
             context_meta=METADATA
         )
         _compare_pdf_metadata(pdf_file, tools.assert_equal)
+
+
+def test_in_memory_document():
+    with io.BytesIO() as in_memory_file:
+        pisaDocument(HTML_CONTENT, dest=in_memory_file)
+        tools.assert_greater(in_memory_file.getbuffer().nbytes, 0)
+
+    with io.BytesIO() as in_memory_file:
+        pisaDocument(io.StringIO(HTML_CONTENT), dest=in_memory_file)
+        tools.assert_greater(in_memory_file.getbuffer().nbytes, 0)
