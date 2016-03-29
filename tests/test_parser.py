@@ -1,3 +1,4 @@
+import os
 import unittest
 from xhtml2pdf.parser import pisaParser
 from xhtml2pdf.context import pisaContext
@@ -33,6 +34,16 @@ class TestCase(unittest.TestCase):
         """Asserts attributes like 'height: 10px !important" are parsed"""
         c = pisaContext(".")
         data = b"<p style='height: 10px !important;width: 10px !important'>test</p>"
+        r = pisaParser(data, c)
+        self.assertEqual(c, r)
+        self.assertEqual(r.err, 0)
+        self.assertEqual(r.warn, 0)
+
+    def test_image_os_path(self):
+        c = pisaContext(".")
+        tests_folder = os.path.dirname(os.path.realpath(__file__))
+        img_path = os.path.join(tests_folder, 'samples', 'img', 'denker.png')
+        data = '<img src="{0}">'.format(img_path).encode('utf-8')
         r = pisaParser(data, c)
         self.assertEqual(c, r)
         self.assertEqual(r.err, 0)
