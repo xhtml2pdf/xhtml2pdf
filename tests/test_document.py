@@ -48,7 +48,7 @@ def _compare_pdf_metadata(pdf_file, assertion):
     tools.assert_not_equal(pdf_file.tell(), 0)
 
     # Rewind to the start of the file to read the pdf and get the
-    # docuemnt's metadata
+    # document's metadata
     pdf_file.seek(0)
     pdf_reader = PdfFileReader(pdf_file)
     pdf_info = pdf_reader.documentInfo
@@ -83,11 +83,16 @@ def test_document_creation_with_metadata():
         _compare_pdf_metadata(pdf_file, tools.assert_equal)
 
 
+def test_destination_is_none():
+    context = pisaDocument(HTML_CONTENT)
+    tools.assert_greater(len(context.dest.getvalue()), 0)
+
+
 def test_in_memory_document():
     with io.BytesIO() as in_memory_file:
         pisaDocument(HTML_CONTENT, dest=in_memory_file)
-        tools.assert_greater(in_memory_file.getbuffer().nbytes, 0)
+        tools.assert_greater(len(in_memory_file.getvalue()), 0)
 
     with io.BytesIO() as in_memory_file:
         pisaDocument(io.StringIO(HTML_CONTENT), dest=in_memory_file)
-        tools.assert_greater(in_memory_file.getbuffer().nbytes, 0)
+        tools.assert_greater(len(in_memory_file.getvalue()), 0)
