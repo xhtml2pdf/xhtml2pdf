@@ -10,7 +10,6 @@ from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlPageTemplate
 from xhtml2pdf.util import pisaTempFile, getBox, PyPDF2
 import cgi
 import logging
-import six
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -150,8 +149,10 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                 # see bgouter at line 137
                 for bg in context.pisaBackgroundList:
                     page = input1.getPage(ctr)
-                    if (bg and not bg.notFound()
-                        and (bg.mimetype == "application/pdf")):
+                    if (
+                            bg and not bg.notFound() and
+                            (bg.mimetype == "application/pdf")
+                    ):
                         bginput = PyPDF2.PdfFileReader(bg.getFile())
                         pagebg = bginput.getPage(0)
                         pagebg.mergePage(page)
