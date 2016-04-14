@@ -10,6 +10,7 @@ from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlPageTemplate
 from xhtml2pdf.util import pisaTempFile, getBox, PyPDF2
 import cgi
 import logging
+import six
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -177,9 +178,6 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
     context.dest = dest
 
     data = out.getvalue()
-
-    if isinstance(dest, io.BytesIO):
-        data = data.encode("utf-8")
 
     context.dest.write(data)  # TODO: context.dest is a tempfile as well...
 
