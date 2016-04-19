@@ -1021,6 +1021,7 @@ class CSSParser(object):
                 continue
 
             if property is None:
+                src = src[1:].lstrip()
                 break
             properties.append(property)
             if src.startswith(';'):
