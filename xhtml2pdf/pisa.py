@@ -357,7 +357,7 @@ def execute():
             fdestclose = 1
 
         if not quiet:
-            print ("Converting %s to %s...") % (src, dest)
+            print ("Converting {} to {}...".format(src, dest))
 
         pisaDocument(
             fsrc,
