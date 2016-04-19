@@ -12,12 +12,14 @@ xhtml2pdf
 This project is community-led! To strengthen it, please hang out on IRC #xhtml2pdf (Freenode)
 or join `our maling list <http://groups.google.com/group/xhtml2pdf>`__.
 
+
 Call for testing
 ================
 
 This project is heavily dependent on getting its test coverage up! Currently, Python 3 support is being worked on and many refactors and suggestions are potentially coming in. Furthermore, parts of the codebase could do well with cleanups and refactoring.
 
 If you benefit from xhtml2pdf, perhaps `look at the test coverage <https://coveralls.io/github/xhtml2pdf/xhtml2pdf?branch=master>`__ and identify parts that are yet untouched?
+
 
 About
 =====
@@ -30,22 +32,34 @@ The main benefit of this tool that a user with Web skills like HTML and CSS
 is able to generate PDF templates very quickly without learning new
 technologies.
 
+
+Installation
+============
+
+This is a typical Python library and is installed using pip::
+
+    pip install xhtml2pdf
+
+To obtain the latest experimental version that has **Python 3 support**, please
+use a prerelease::
+
+    pip install --pre xhtml2pdf
+
+
+
 Requirements
 ============
 
-#. Python 2.7+ (2.6 is supported in releases prior to 0.0.6). Python 3 support is experimental in current master branch, and not yet released.
-#. `Reportlab Toolkit 2.2+ <http://www.reportlab.org/>`_
-#. `html5lib 0.90+ <https://github.com/html5lib/html5lib-python>`_
-#. `PyPDF2 1.19+ (optional) <https://pypi.python.org/pypi/PyPDF2>`_
+Python 2.7+. Only Python 3.4+ is tested and guaranteed to work.
 
-All requirements are listed in ``requirements.txt`` file.
+All additional requirements are listed in ``requirements.txt`` file and are
+installed automatically using the ``pip install xhtml2pdf`` method.
+
 
 Development environment
 =======================
 
-#. Install Python 2.7+ Installation steps depends on your operating system.
-
-#. Install Pip, the python package installer::
+#. If you don't have it, install ``pip``, the python package installer::
 
     sudo easy_install pip
 
@@ -85,6 +99,7 @@ Development environment
 
     OK
 
+
 Python integration
 ==================
 
@@ -106,12 +121,14 @@ Two different test suites are available to assert xhtml2pdf works reliably:
 #. Functional tests. Thanks to mawe42's super cool work, a full functional
    test suite lives in testrender/.
 
+
 Contact
 =======
 
 * IRC: #xhtml2pdf on freenode
 * Mailing list: xhtml2pdf@googlegroups.com
 * Google group: http://groups.google.com/group/xhtml2pdf
+
 
 History
 =======
