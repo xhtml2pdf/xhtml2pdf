@@ -2,6 +2,12 @@
 CHANGELOG
 =========
 
+Version 0.1alpha2
+-----------------
+
+* Fixed: AttributeError: 'bytes' object has no attribute 'encode' #265
+* Improved tests, added code coverage 
+
 Version 0.1alpha1
 -----------------
 
