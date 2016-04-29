@@ -16,7 +16,7 @@
 
 from turbogears.decorator import weak_signature_decorator
 import xhtml2pdf.pisa as pisa
-import StringIO
+from six import StringIO
 import cherrypy
 
 

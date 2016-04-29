@@ -38,7 +38,7 @@ from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.platypus.flowables import Flowable
 from reportlab.lib.colors import Color
-
+import six
 
 class Style(dict):
     """
@@ -444,7 +444,7 @@ class Paragraph(Flowable):
         self.splitted = splitted
 
         # More attributes
-        for k, v in kwDict.iteritems():
+        for k, v in six.iteritems(kwDict):
             setattr(self, k, v)
 
         # set later...

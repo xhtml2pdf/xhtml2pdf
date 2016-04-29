@@ -65,13 +65,8 @@ def pisaGetAttributes(c, tag, attributes):
     if tag in TAGS:
         block, adef = TAGS[tag]
         adef["id"] = STRING
-        # print block, adef
-        try:
-            iteritems = adef.iteritems()
-        except Exception:
-            iteritems = iter(adef.items())
 
-        for k, v in iteritems:
+        for k, v in six.iteritems(adef):
             nattrs[k] = None
             # print k, v
             # defaults, wenn vorhanden
