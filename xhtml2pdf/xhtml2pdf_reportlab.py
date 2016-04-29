@@ -870,13 +870,14 @@ class PmlLeftPageBreak(CondPageBreak):
 
 
 class PmlInput(Flowable):
-    def __init__(self, name, type="text", width=10, height=10, default="", options=[]):
+    def __init__(self, name, type="text", width=10, height=10, default="",
+                 options=None):
         self.width = width
         self.height = height
         self.type = type
         self.name = name
         self.default = default
-        self.options = options
+        self.options = options if options is not None else []
 
     def wrap(self, *args):
         return self.width, self.height

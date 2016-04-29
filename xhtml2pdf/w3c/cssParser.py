@@ -465,13 +465,13 @@ class CSSParser(object):
             self.cssBuilder.endInline()
         return result
 
-
-    def parseAttributes(self, attributes={}, **kwAttributes):
+    def parseAttributes(self, attributes=None, **kwAttributes):
         """Parses CSS attribute source strings, and return as an inline stylesheet.
         Use to parse a tag's highly CSS-based attributes like 'font'.
 
         See also: parseSingleAttr
         """
+        attributes = attributes if attributes is not None else {}
         if attributes:
             kwAttributes.update(attributes)
 

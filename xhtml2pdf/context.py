@@ -528,7 +528,8 @@ class pisaContext(object):
     def addStory(self, data):
         self.story.append(data)
 
-    def swapStory(self, story=[]):
+    def swapStory(self, story=None):
+        story = story if story is not None else []
         self.story, story = copy.copy(story), copy.copy(self.story)
         return story
 
@@ -863,7 +864,8 @@ class pisaContext(object):
                 return font
         return self.fontList.get(default, None)
 
-    def registerFont(self, fontname, alias=[]):
+    def registerFont(self, fontname, alias=None):
+        alias = alias if alias is not None else []
         self.fontList[str(fontname).lower()] = str(fontname)
         for a in alias:
             if type(fontname) not in six.string_types:
