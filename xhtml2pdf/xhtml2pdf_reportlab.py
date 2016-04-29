@@ -322,8 +322,9 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
         else:
             try:
                 self.fp = open_for_read(fileName, 'b')
-                if isinstance(self.fp, six.StringIO().__class__):
-                    imageReaderFlags = 0  # avoid messing with already internal files
+                if isinstance(self.fp, six.BytesIO().__class__):
+                    # avoid messing with already internal files
+                    imageReaderFlags = 0
                 if imageReaderFlags > 0:  # interning
                     data = self.fp.read()
                     if imageReaderFlags & 2:  # autoclose
@@ -504,7 +505,7 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         return self.dWidth, self.dHeight
 
     def getImage(self):
-        img = PmlImageReader(six.StringIO(self._imgdata))
+        img = PmlImageReader(six.BytesIO(self._imgdata))
         return img
 
     def draw(self):
