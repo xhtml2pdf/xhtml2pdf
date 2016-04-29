@@ -659,7 +659,7 @@ class Paragraph(Flowable):
                     _scheme_re = re.compile('^[a-zA-Z][-+a-zA-Z0-9]+$')
                     x, y, w, h = frag["x"], dy - y, frag["width"], frag["fontSize"]
                     rect = (x, y, w, h)
-                    if isinstance(link, unicode):
+                    if isinstance(link, six.text_type):
                         link = link.encode('utf8')
                     parts = link.split(':', 1)
                     scheme = len(parts) == 2 and parts[0].lower() or ''

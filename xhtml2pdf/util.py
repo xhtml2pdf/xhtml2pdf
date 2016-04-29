@@ -20,11 +20,6 @@ import tempfile
 
 import urllib
 
-if sys.version[0] == '2':
-    TextType = unicode
-else:
-    TextType = str
-
 try:
     import urllib2
 except ImportError:
