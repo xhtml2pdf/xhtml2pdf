@@ -539,7 +539,7 @@ class pisaFileObject:
         if uri.startswith("data:"):
             m = _rx_datauri.match(uri)
             self.mimetype = m.group("mime")
-            self.data = base64.decodebytes(m.group("data").encode("utf-8"))
+            self.data = base64.b64decode(m.group("data").encode("utf-8"))
 
         else:
             # Check if we have an external scheme
