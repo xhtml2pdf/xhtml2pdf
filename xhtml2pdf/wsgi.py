@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import xhtml2pdf.pisa as pisa
-import StringIO
+from six import StringIO
 
 import logging
 

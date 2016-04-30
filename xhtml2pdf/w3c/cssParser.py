@@ -35,6 +35,7 @@ Dependencies:
 """
 
 import re
+import six
 
 from . import cssSpecial
 
@@ -479,7 +480,7 @@ class CSSParser(object):
         try:
             properties = []
             try:
-                for propertyName, src in kwAttributes.iteritems():
+                for propertyName, src in six.iteritems(kwAttributes):
                     src, property = self._parseDeclarationProperty(src.strip(), propertyName)
                     properties.append(property)
 

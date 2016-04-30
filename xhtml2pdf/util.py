@@ -20,11 +20,6 @@ import tempfile
 
 import urllib
 
-if sys.version[0] == '2':
-    TextType = unicode
-else:
-    TextType = str
-
 try:
     import urllib2
 except ImportError:
@@ -97,10 +92,7 @@ class memoized(object):
     def __call__(self, *args, **kwargs):
         # Make sure the following line is not actually slower than what you're
         # trying to memoize
-        if sys.version[0] == '2':
-            args_plus = tuple(kwargs.iteritems())
-        else:
-            args_plus = tuple(iter(kwargs.items()))
+        args_plus = tuple(six.iteritems(kwargs))
         key = (args, args_plus)
         try:
             if key not in self.cache:

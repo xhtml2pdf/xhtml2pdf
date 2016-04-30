@@ -36,6 +36,7 @@ Dependencies:
 import os
 import sys
 import copy
+import six
 
 
 from . import cssParser
@@ -164,12 +165,8 @@ class CSSCascadeStrategy(object):
         implement these semantics.
         """
         rules = self.findCSSRulesForEach(element, attrNames)
-        if sys.version[0] == '2':
-            iteritems = rules.iteritems()
-        else:
-            iteritems = iter(rules.items())
         return [(attrName, self._extractStyleForRule(rule, attrName, default))
-                for attrName, rule in iteritems]
+                for attrName, rule in six.iteritems(rules)]
 
 
     def findCSSRulesFor(self, element, attrName):
@@ -208,14 +205,10 @@ class CSSCascadeStrategy(object):
 
         inline = element.getInlineStyle()
         for ruleset in self.iterCSSRulesets(inline):
-            if sys.version[0] == '2':
-                iteritems = rules.iteritems()
-            else:
-                iteritems = iter(rules.items())    
-            for attrName, attrRules in iteritems:
+            for attrName, attrRules in six.iteritems(rules):
                 attrRules += ruleset.findCSSRuleFor(element, attrName)
 
-        for attrRules in rules.itervalues():
+        for attrRules in six.itervalues(rules):
             attrRules.sort()
         return rules
 
@@ -682,11 +675,7 @@ class CSSDeclarations(dict):
 
 class CSSRuleset(dict):
     def findCSSRulesFor(self, element, attrName):
-        if sys.version[0] == '2':
-            iteritems = self.iteritems()
-        else:
-            iteritems = iter(self.items())
-        ruleResults = [(nodeFilter, declarations) for nodeFilter, declarations in iteritems if
+        ruleResults = [(nodeFilter, declarations) for nodeFilter, declarations in six.iteritems(self) if
                        (attrName in declarations) and (nodeFilter.matches(element))]
         ruleResults.sort()
         return ruleResults
@@ -700,11 +689,7 @@ class CSSRuleset(dict):
 
     def mergeStyles(self, styles):
         " XXX Bugfix for use in PISA "
-        if sys.version[0] == '2':
-            iteritems = styles.iteritems()
-        else:
-            iteritems = iter(styles.items())
-        for k, v in iteritems:
+        for k, v in six.iteritems(styles):
             if k in self and self[k]:
                 self[k] = copy.copy(self[k])
                 self[k].update(v)
