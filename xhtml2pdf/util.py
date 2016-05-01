@@ -18,16 +18,15 @@ import string
 import sys
 import tempfile
 
-import urllib
+try:
+    import urllib.request as urllib2
+except ImportError:
+    import urllib2
 
 try:
-    import urllib2
-except ImportError:
-    import urllib.request as urllib2
-try:
-    import urlparse
-except ImportError:
     import urllib.parse as urlparse
+except ImportError:
+    import urlparse
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -53,17 +52,17 @@ log = logging.getLogger("xhtml2pdf")
 
 try:
     import PyPDF2
-except:
+except ImportError:
     PyPDF2 = None
 
 try:
     from reportlab.graphics import renderPM
-except:
+except ImportError:
     renderPM = None
 
 try:
     from reportlab.graphics import renderSVG
-except:
+except ImportError:
     renderSVG = None
 
 #=========================================================================
@@ -263,7 +262,7 @@ def getSize(value, relative=0, base=None, default=0.0):
                 return max(MIN_FONT_SIZE, relative * float(value))
         try:
             value = float(value)
-        except:
+        except ValueError:
             log.warn("getSize: Not a float %r", value)
             return default  # value = 0
         return max(0, value)
@@ -427,7 +426,7 @@ class pisaTempFile(object):
         self.strategy = int(len(buffer) > self.capacity)
         try:
             self._delegate = self.STRATEGIES[self.strategy]()
-        except:
+        except IndexError:
             # Fallback for Google AppEnginge etc.
             self._delegate = self.STRATEGIES[0]()
         self.write(buffer)
@@ -548,7 +547,7 @@ class pisaFileObject:
             else:
                 urlParts = urlparse.urlparse(uri)
 
-            log.debug("URLParts: %r", urlParts)
+            log.debug("URLParts: {}".format((urlParts, urlParts.scheme)))
 
             if urlParts.scheme == 'file':
                 if basepath and uri.startswith('/'):
@@ -563,15 +562,19 @@ class pisaFileObject:
             # for things like http:
             elif urlParts.scheme in ('http', 'https'):
 
+                log.debug("Sending request for {} with httplib".format(uri))
+
                 # External data
                 if basepath:
                     uri = urlparse.urljoin(basepath, uri)
+
+                log.debug("Uri parsed: {}".format(uri))
 
                 #path = urlparse.urlsplit(url)[2]
                 #mimetype = getMimeType(path)
 
                 # Using HTTPLIB
-                server, path = urllib.splithost(uri[uri.find("//"):])
+                server, path = urlparse.splithost(uri[uri.find("//"):])
                 if uri.startswith("https://"):
                     conn = httplib.HTTPSConnection(server)
                 else:
@@ -583,6 +586,7 @@ class pisaFileObject:
                     self.mimetype = r1.getheader(
                         "Content-Type", '').split(";")[0]
                     self.uri = uri
+                    log.debug("here")
                     if r1.getheader("content-encoding") == "gzip":
                         import gzip
 
@@ -591,9 +595,11 @@ class pisaFileObject:
                     else:
                         self.file = r1
                 else:
+                    log.debug("Received non-200 status: {}".format((r1.status, r1.reason)))
                     try:
                         urlResponse = urllib2.urlopen(uri)
-                    except urllib2.HTTPError:
+                    except urllib2.HTTPError as e:
+                        log.error("Could not process uri: {}".format(e))
                         return
                     self.mimetype = urlResponse.info().get(
                         "Content-Type", '').split(";")[0]
@@ -601,6 +607,8 @@ class pisaFileObject:
                     self.file = urlResponse
 
             else:
+
+                log.debug("Unrecognized scheme, assuming local file path")
 
                 # Local data
                 if basepath:
@@ -656,13 +664,10 @@ class pisaFileObject:
 
 
 def getFile(*a, **kw):
-    try:
-        file = pisaFileObject(*a, **kw)
-        if file.notFound():
-            return None
-        return file
-    except:
+    file = pisaFileObject(*a, **kw)
+    if file.notFound():
         return None
+    return file
 
 
 COLOR_BY_NAME = {

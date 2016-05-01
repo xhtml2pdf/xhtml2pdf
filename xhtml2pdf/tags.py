@@ -327,6 +327,8 @@ class pisaTagBR(pisaTag):
 class pisaTagIMG(pisaTag):
     def start(self, c):
         attr = self.attr
+        log.debug("Parsing img tag, src: {}".format(attr.src))
+        log.debug("Attrs: {}".format(attr))
         if attr.src and (not attr.src.notFound()):
 
             try:
