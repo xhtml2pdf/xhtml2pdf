@@ -263,7 +263,7 @@ class pisaCSSBuilder(css.CSSBuilder):
                 elif valueStr in xhtml2pdf.default.PML_PAGESIZES:
                     c.pageSize = xhtml2pdf.default.PML_PAGESIZES[valueStr]
                 else:
-                    log.warn(c.warning("Unknown size value for @page"))
+                    raise RuntimeError("Unknown size value for @page")
 
             if len(sizeList) == 2:
                 c.pageSize = tuple(sizeList)
