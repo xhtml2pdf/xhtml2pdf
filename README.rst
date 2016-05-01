@@ -9,6 +9,9 @@ xhtml2pdf
         :target: https://coveralls.io/github/xhtml2pdf/xhtml2pdf?branch=master
         :alt: Coveralls
 
+.. image:: https://badge.fury.io/py/xhtml2pdf.svg
+   :target: https://pypi.python.org/pypi/xhtml2pdf
+
 This project is community-led! To strengthen it, please hang out on IRC #xhtml2pdf (Freenode)
 or join `our maling list <http://groups.google.com/group/xhtml2pdf>`__.
 

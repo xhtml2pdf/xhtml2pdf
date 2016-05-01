@@ -35,6 +35,7 @@ Dependencies:
 """
 
 import re
+import six
 
 from . import cssSpecial
 
@@ -465,13 +466,13 @@ class CSSParser(object):
             self.cssBuilder.endInline()
         return result
 
-
-    def parseAttributes(self, attributes={}, **kwAttributes):
+    def parseAttributes(self, attributes=None, **kwAttributes):
         """Parses CSS attribute source strings, and return as an inline stylesheet.
         Use to parse a tag's highly CSS-based attributes like 'font'.
 
         See also: parseSingleAttr
         """
+        attributes = attributes if attributes is not None else {}
         if attributes:
             kwAttributes.update(attributes)
 
@@ -479,7 +480,7 @@ class CSSParser(object):
         try:
             properties = []
             try:
-                for propertyName, src in kwAttributes.iteritems():
+                for propertyName, src in six.iteritems(kwAttributes):
                     src, property = self._parseDeclarationProperty(src.strip(), propertyName)
                     properties.append(property)
 
@@ -1021,6 +1022,7 @@ class CSSParser(object):
                 continue
 
             if property is None:
+                src = src[1:].lstrip()
                 break
             properties.append(property)
             if src.startswith(';'):

@@ -149,8 +149,10 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                 # see bgouter at line 137
                 for bg in context.pisaBackgroundList:
                     page = input1.getPage(ctr)
-                    if (bg and not bg.notFound()
-                        and (bg.mimetype == "application/pdf")):
+                    if (
+                            bg and not bg.notFound() and
+                            (bg.mimetype == "application/pdf")
+                    ):
                         bginput = PyPDF2.PdfFileReader(bg.getFile())
                         pagebg = bginput.getPage(0)
                         pagebg.mergePage(page)
@@ -177,9 +179,6 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
     context.dest = dest
 
     data = out.getvalue()
-
-    if isinstance(dest, io.BytesIO):
-        data = data.encode("utf-8")
 
     context.dest.write(data)  # TODO: context.dest is a tempfile as well...
 
