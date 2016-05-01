@@ -64,10 +64,7 @@ class TableData:
     def get_data(self):
         data = self.data
         for x, y in self.span:
-            try:
-                data[y].insert(x, '')
-            except:
-                pass
+            data[y].insert(x, '')
         return data
 
     def add_cell_styles(self, c, begin, end, mode="td"):
@@ -75,7 +72,7 @@ class TableData:
             return a
 
         self.mode = mode.upper()
-        if c.frag.backColor and mode != "tr": # XXX Stimmt das so?
+        if c.frag.backColor and mode != "tr":  # XXX Stimmt das so?
             self.add_style(('BACKGROUND', begin, end, c.frag.backColor))
 
         if 0:
@@ -173,44 +170,40 @@ class pisaTagTABLE(pisaTag):
         for i, row in enumerate(data):
             data[i] += [''] * (maxcols - len(row))
 
-        filter_len = filter(lambda col: col is None, tdata.colw)
-        try:
-            filter_len = len(filter_len)
-        except Exception:
-            filter_len = sum(1 for _ in filter_len)
-        cols_with_no_width = filter_len
+        cols_with_no_width = [tup for tup in enumerate(tdata.colw) if tup[1] is None or tup[1] == 0.0]
+
         if cols_with_no_width:  # any col width not defined
-            bad_cols = filter(lambda tup: tup[1] is None, enumerate(tdata.colw))
-            fair_division = str(100 / float(cols_with_no_width)) + '%' # get fair %
-            for i, _ in bad_cols:
-                tdata.colw[i] = fair_division   # fix empty with fair %
+            log.debug(list(enumerate(tdata.colw)))
+            fair_division = str(100 / float(len(cols_with_no_width))) + '%'
+            log.debug("Fair division: {}".format(fair_division))
+            for i, _ in cols_with_no_width:
+                log.debug("Setting {} to {}".format(i, fair_division))
+                tdata.colw[i] = fair_division
 
-        try:
-            if tdata.data:
-                # log.debug("Table styles %r", tdata.styles)
-                t = PmlTable(
-                    data,
-                    colWidths=tdata.colw,
-                    rowHeights=tdata.rowh,
-                    # totalWidth = tdata.width,
-                    splitByRow=1,
-                    # repeatCols = 1,
-                    repeatRows=tdata.repeat,
-                    hAlign=tdata.align,
-                    vAlign='TOP',
-                    style=TableStyle(tdata.styles))
-                t.totalWidth = _width(tdata.width)
-                t.spaceBefore = c.frag.spaceBefore
-                t.spaceAfter = c.frag.spaceAfter
+        log.debug("Col widths: {}".format(list(tdata.colw)))
+        if tdata.data:
+            # log.debug("Table styles %r", tdata.styles)
+            t = PmlTable(
+                data,
+                colWidths=tdata.colw,
+                rowHeights=tdata.rowh,
+                # totalWidth = tdata.width,
+                splitByRow=1,
+                # repeatCols = 1,
+                repeatRows=tdata.repeat,
+                hAlign=tdata.align,
+                vAlign='TOP',
+                style=TableStyle(tdata.styles))
+            t.totalWidth = _width(tdata.width)
+            t.spaceBefore = c.frag.spaceBefore
+            t.spaceAfter = c.frag.spaceAfter
 
-                # XXX Maybe we need to copy some more properties?
-                t.keepWithNext = c.frag.keepWithNext
-                # t.hAlign = tdata.align
-                c.addStory(t)
-            else:
-                log.warn(c.warning("<table> is empty"))
-        except:
-            log.warn(c.warning("<table>"), exc_info=1)
+            # XXX Maybe we need to copy some more properties?
+            t.keepWithNext = c.frag.keepWithNext
+            # t.hAlign = tdata.align
+            c.addStory(t)
+        else:
+            log.warn(c.warning("<table> is empty"))
 
         # Cleanup and re-swap table data
         c.clearFrag()
@@ -266,7 +259,6 @@ class pisaTagTD(pisaTag):
         if rspan:
             end = (end[0], end[1] + rspan - 1)
         if begin != end:
-            #~ print begin, end
             tdata.add_style(('SPAN', begin, end))
             for x in six.moves.range(begin[0], end[0] + 1):
                 for y in six.moves.range(begin[1], end[1] + 1):
@@ -280,20 +272,27 @@ class pisaTagTD(pisaTag):
         # Add empty placeholders for new columns
         if (col + 1) > len(tdata.colw):
             tdata.colw = tdata.colw + ((col + 1 - len(tdata.colw)) * [_width()])
-            # Get value of with, if no spanning
+
+        # Get value of with, if no spanning
         if not cspan:
             width = c.frag.width or self.attr.width
             # If is value, the set it in the right place in the arry
             if width is not None:
                 tdata.colw[col] = _width(width)
+                log.debug("Col {} has width {}".format(col, width))
             else:
-               # If there are no child nodes, nothing within the column can change the
-               # width.  Set the column width to the sum of the right and left padding
-               # rather than letting it default.
-               if len(self.node.childNodes) == 0:
-                   width = c.frag.paddingLeft + c.frag.paddingRight
-                   tdata.colw[col] = _width(width)
-
+                # If there are no child nodes, nothing within the column can change the
+                # width.  Set the column width to the sum of the right and left padding
+                # rather than letting it default.
+                log.debug(width)
+                if len(self.node.childNodes) == 0:
+                    width = c.frag.paddingLeft + c.frag.paddingRight
+                    log.debug("Col {} has width {}".format(col, width))
+                    tdata.colw[col] = _width(width)
+                else:
+                    # Child nodes are present, we cannot do anything about the
+                    # width except set it externally.
+                    pass
 
         # Calculate heights
         if row + 1 > len(tdata.rowh):
