@@ -689,6 +689,14 @@ class CSSTerminalOperator(tuple):
 class CSSDeclarations(dict):
     pass
 
+    def __eq__(self, other):
+        """Python 3"""
+        return False
+
+    def __lt__(self, other):
+        """Python 3"""
+        return False
+
 
 class CSSRuleset(dict):
     def findCSSRulesFor(self, element, attrName):
