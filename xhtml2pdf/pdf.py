@@ -39,7 +39,8 @@ class pisaPDF:
     def addFromFile(self, f):
         if hasattr(f, "read"):
             self.files.append(f)
-        self.addFromURI(f)
+        else:
+            self.addFromURI(f)
 
     def addFromString(self, data):
         self.files.append(pisaTempFile(data, capacity=self.capacity))
