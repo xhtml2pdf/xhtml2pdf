@@ -738,7 +738,7 @@ class CSSParser(object):
         ;
         """
         ctxsrc = src
-        src = src[len('@page '):].lstrip()
+        src = src[len('@page'):].lstrip()
         page, src = self._getIdent(src)
         if src[:1] == ':':
             pseudopage, src = self._getIdent(src[1:])
