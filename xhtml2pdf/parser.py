@@ -266,10 +266,10 @@ def CSSCollect(node, c):
     return node.cssAttrs
 
 def lower(sequence):
-    if type(sequence) in six.string_types:
-        return sequence.lower()
-    else:
+    if type(sequence) in [list, tuple]:
         return sequence[0].lower()
+    else:
+        return sequence.lower()
 
 def CSS2Frag(c, kw, isBlock):
     # COLORS
