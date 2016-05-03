@@ -266,7 +266,7 @@ def CSSCollect(node, c):
     return node.cssAttrs
 
 def lower(sequence):
-    if type(sequence) in six.string_types:
+    if isinstance(sequence, six.string_types):
         return sequence.lower()
     else:
         return sequence[0].lower()
