@@ -70,9 +70,6 @@ class TableData:
         return data
 
     def add_cell_styles(self, c, begin, end, mode="td"):
-        def getColor(a, b):
-            return a
-
         self.mode = mode.upper()
         if c.frag.backColor and mode != "tr": # XXX Stimmt das so?
             self.add_style(('BACKGROUND', begin, end, c.frag.backColor))
