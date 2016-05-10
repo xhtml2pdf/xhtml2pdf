@@ -1,6 +1,9 @@
 import unittest
+from xml.dom import minidom
+
 from xhtml2pdf import tables
 from xhtml2pdf.context import pisaContext
+from xhtml2pdf.parser import AttrContainer
 
 
 class TablesWidthTestCase(unittest.TestCase):
@@ -282,6 +285,58 @@ class TableDataTestCase(unittest.TestCase):
         self.assertEqual(instance.styles[1], ('LINEBEFORE', (0, 1), (0, 5), '3px', 'black', 'squared'))
         self.assertEqual(instance.styles[2], ('LINEAFTER', (3, 1), (3, 5), '3px', 'black', 'squared'))
         self.assertEqual(instance.styles[3], ('LINEBELOW', (0, 5), (3, 5), '3px', 'black', 'squared'))
+
+
+class PisaTagTableTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.element = self._getElement("rootElement")
+        self.attrs = AttrContainer({"border": "", "bordercolor": "", "cellpadding": "", "align": "", "repeat": "", "width": ""})
+
+    def _getElement(self, tagName, body="filler"):
+        dom = minidom.parseString("<{}>{}</{}>".format(tagName, body, tagName))
+        return dom.getElementsByTagName(tagName)[0]
+
+    def test_will_set_attrs_on_tabledata(self):
+        self.attrs.cellpadding = 4
+        self.attrs.align = "left"
+        self.attrs.repeat = True
+        self.attrs.width = 100
+        tag = tables.pisaTagTABLE(self.element, self.attrs)
+        context = pisaContext([])
+        tag.start(context)
+        self.assertEqual(context.tableData.padding, 4)
+        self.assertEqual(context.tableData.styles[0], ('LEFTPADDING', (0, 0), (-1, -1), 4))
+        self.assertEqual(context.tableData.styles[1], ('RIGHTPADDING', (0, 0), (-1, -1), 4))
+        self.assertEqual(context.tableData.styles[2], ('TOPPADDING', (0, 0), (-1, -1), 4))
+        self.assertEqual(context.tableData.styles[3], ('BOTTOMPADDING', (0, 0), (-1, -1), 4))
+        self.assertEqual(context.tableData.align, "LEFT")
+        self.assertEqual(context.tableData.col, 0)
+        self.assertEqual(context.tableData.row, 0)
+        self.assertEqual(context.tableData.colw, [])
+        self.assertEqual(context.tableData.rowh, [])
+        self.assertEqual(context.tableData.repeat, True)
+        self.assertEqual(context.tableData.width, 100.0)
+
+    def test_start_will_add_borders_if_border_and_border_color_set_in_attrs(self):
+        self.attrs.border = 2
+        self.attrs.bordercolor = "green"
+        tag = tables.pisaTagTABLE(self.element, self.attrs)
+        context = pisaContext([])
+        tag.start(context)
+        self.assertEqual(context.frag.borderLeftWidth, 2)
+        self.assertEqual(context.frag.borderRightWidth, 2)
+        self.assertEqual(context.frag.borderTopWidth, 2)
+        self.assertEqual(context.frag.borderBottomWidth, 2)
+        self.assertEqual(context.frag.borderLeftColor, "green")
+        self.assertEqual(context.frag.borderRightColor, "green")
+        self.assertEqual(context.frag.borderTopColor, "green")
+        self.assertEqual(context.frag.borderBottomColor, "green")
+        self.assertEqual(context.frag.borderLeftStyle, "solid")
+        self.assertEqual(context.frag.borderRightStyle, "solid")
+        self.assertEqual(context.frag.borderTopStyle, "solid")
+        self.assertEqual(context.frag.borderBottomStyle, "solid")
+
 
 if __name__ == "__main__":
     unittest.main()

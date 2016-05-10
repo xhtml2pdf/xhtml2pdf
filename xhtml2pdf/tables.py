@@ -120,29 +120,31 @@ class TableData:
 
 
 class pisaTagTABLE(pisaTag):
+
+    def set_borders(self, frag, attrs):
+        frag.borderLeftWidth = attrs.border
+        frag.borderLeftColor = attrs.bordercolor
+        frag.borderLeftStyle = "solid"
+        frag.borderRightWidth = attrs.border
+        frag.borderRightColor = attrs.bordercolor
+        frag.borderRightStyle = "solid"
+        frag.borderTopWidth = attrs.border
+        frag.borderTopColor = attrs.bordercolor
+        frag.borderTopStyle = "solid"
+        frag.borderBottomWidth = attrs.border
+        frag.borderBottomColor = attrs.bordercolor
+        frag.borderBottomStyle = "solid"
+
     def start(self, c):
         c.addPara()
 
         attrs = self.attr
 
-        # Swap table data
         c.tableData, self.tableData = TableData(), c.tableData
         tdata = c.tableData
 
         if attrs.border and attrs.bordercolor:
-            frag = c.frag
-            frag.borderLeftWidth = attrs.border
-            frag.borderLeftColor = attrs.bordercolor
-            frag.borderLeftStyle = "solid"
-            frag.borderRightWidth = attrs.border
-            frag.borderRightColor = attrs.bordercolor
-            frag.borderRightStyle = "solid"
-            frag.borderTopWidth = attrs.border
-            frag.borderTopColor = attrs.bordercolor
-            frag.borderTopStyle = "solid"
-            frag.borderBottomWidth = attrs.border
-            frag.borderBottomColor = attrs.bordercolor
-            frag.borderBottomStyle = "solid"
+            self.set_borders(c.frag, attrs)
 
         tdata.padding = attrs.cellpadding
         tdata.add_cell_styles(c, (0, 0), (-1, - 1), "table")
