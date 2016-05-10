@@ -71,7 +71,7 @@ class TableData:
 
     def add_cell_styles(self, c, begin, end, mode="td"):
         self.mode = mode.upper()
-        if c.frag.backColor and mode != "tr": # XXX Stimmt das so?
+        if c.frag.backColor and mode != "tr":
             self.add_style(('BACKGROUND', begin, end, c.frag.backColor))
 
         if 0:
@@ -91,6 +91,7 @@ class TableData:
                 c.frag.borderRightStyle,
                 c.frag.borderRightColor,
             ))
+
         if getBorderStyle(c.frag.borderTopStyle) and c.frag.borderTopWidth and c.frag.borderTopColor is not None:
             self.add_style(('LINEABOVE', begin, (end[0], begin[1]),
                             c.frag.borderTopWidth,
