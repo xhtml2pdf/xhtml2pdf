@@ -89,7 +89,7 @@ def split(text, delim=None):
             delim = delim.decode('utf-8')
         except Exception:
             pass
-    elif delim is None and '\xa0' in text:
+    elif delim is None and u'\xa0' in text:
         return [uword.encode('utf-8') for uword in _wsc_re_split(text)]
     return [uword.encode('utf-8') for uword in text.split(delim)]
 
