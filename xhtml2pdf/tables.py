@@ -64,7 +64,11 @@ class TableData:
     def get_data(self):
         data = self.data
         for x, y in self.span:
-            data[y].insert(x, '')
+            # Loop through all the spans that are inside the boundaries of our
+            # tables. If the y-coordinate is valid, we insert an empty cell.
+            # As for the x coordinate, we somehow don't care.
+            if y < len(data):
+                data[y].insert(x, '')
         return data
 
     def add_cell_styles(self, c, begin, end, mode="td"):
