@@ -79,28 +79,28 @@ _wsc_re_split = re.compile('[%s]+' % re.escape(''.join((
 
 
 def split(text, delim=None):
-    if type(text) is str:
+    if type(text) is bytes:
         try:
-            text = text.decode('utf8')
+            text = text.decode('utf-8')
         except Exception:
             pass
-    if type(delim) is str:
+    if type(delim) is bytes:
         try:
-            delim = delim.decode('utf8')
+            delim = delim.decode('utf-8')
         except Exception:
             pass
-    elif delim is None and u'\xa0' in text:
-        return [uword.encode('utf8') for uword in _wsc_re_split(text)]
-    return [uword.encode('utf8') for uword in text.split(delim)]
+    elif delim is None and '\xa0' in text:
+        return [uword.encode('utf-8') for uword in _wsc_re_split(text)]
+    return [uword.encode('utf-8') for uword in text.split(delim)]
 
 
 def strip(text):
-    if type(text) is str:
+    if type(text) is bytes:
         try:
-            text = text.decode('utf8')
+            text = text.decode('utf-8')
         except Exception:
             pass
-    return text.strip().encode('utf8')
+    return text.strip().encode('utf-8')
 
 
 class ParaLines(ABag):
@@ -460,6 +460,11 @@ def _getFragWords(frags):
     hangingStrip = False
     for f in frags:
         text = f.text
+        if type(text) is bytes:
+            try:
+                text = text.decode('utf-8')
+            except Exception:
+                text = '???'
         # of paragraphs
         if text != '':
             if hangingStrip:
@@ -544,8 +549,14 @@ def _split_blParaHard(blPara, start, stop):
                 g = f[i]
                 if not g.text:
                     g.text = ' '
-                elif g.text[-1] != ' ':
-                    g.text += ' '
+                else:
+                    if type(g.text) is bytes:
+                        try:
+                            g.text = g.text.decode('utf-8')
+                        except Exception:
+                            g.text = '???'
+                    if g.text[-1] != ' ':
+                        g.text += ' '
     return f
 
 
