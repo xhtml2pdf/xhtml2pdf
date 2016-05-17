@@ -153,7 +153,6 @@ def getColor(value, default=None):
 
 
 def getBorderStyle(value, default=None):
-    # log.debug(value)
     if value and (str(value).lower() not in ("none", "hidden")):
         return value
     return default
