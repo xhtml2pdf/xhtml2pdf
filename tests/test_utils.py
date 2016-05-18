@@ -2,7 +2,7 @@
 from reportlab.lib.colors import Color
 from unittest import TestCase
 from xhtml2pdf.util import getCoords, getColor, getSize, getFrameDimensions, \
-    getPos, getBox, pisaTempFile
+    getPos, getBox, pisaTempFile, getBorderStyle
 from xhtml2pdf.tags import int_to_roman
 
 class UtilsCoordTestCase(TestCase):
@@ -258,3 +258,18 @@ class TempFileTestCase(TestCase):
             src.write(value)
         except UnicodeDecodeError as error:
             self.fail(error)
+
+
+class GetBorderStyleTestCase(TestCase):
+
+    def test_will_return_value_if_passed_value_is_not_none_or_hidden(self):
+        style = getBorderStyle("foo", default="blah")
+        self.assertEqual(style, "foo")
+
+    def test_will_return_default_if_passed_value_is_non_case_sensitive_none(self):
+        style = getBorderStyle("None", default="blah")
+        self.assertEqual(style, "blah")
+
+    def test_will_return_default_if_passed_value_is_non_case_sensitive_hidden(self):
+        style = getBorderStyle("hidDen", default="defaultPassedArg")
+        self.assertEqual(style, "defaultPassedArg")
