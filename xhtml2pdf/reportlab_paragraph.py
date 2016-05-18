@@ -80,27 +80,18 @@ _wsc_re_split = re.compile('[%s]+' % re.escape(''.join((
 
 def split(text, delim=None):
     if type(text) is bytes:
-        try:
-            text = text.decode('utf-8')
-        except Exception:
-            pass
+        text = text.decode('utf8')
     if type(delim) is bytes:
-        try:
-            delim = delim.decode('utf-8')
-        except Exception:
-            pass
+        delim = delim.decode('utf8')
     elif delim is None and u'\xa0' in text:
-        return [uword.encode('utf-8') for uword in _wsc_re_split(text)]
-    return [uword.encode('utf-8') for uword in text.split(delim)]
+        return [uword.encode('utf8') for uword in _wsc_re_split(text)]
+    return [uword.encode('utf8') for uword in text.split(delim)]
 
 
 def strip(text):
     if type(text) is bytes:
-        try:
-            text = text.decode('utf-8')
-        except Exception:
-            pass
-    return text.strip().encode('utf-8')
+        text = text.decode('utf8')
+    return text.strip().encode('utf8')
 
 
 class ParaLines(ABag):
@@ -461,10 +452,7 @@ def _getFragWords(frags):
     for f in frags:
         text = f.text
         if type(text) is bytes:
-            try:
-                text = text.decode('utf-8')
-            except Exception:
-                text = '???'
+            text = text.decode('utf8')
         # of paragraphs
         if text != '':
             if hangingStrip:
@@ -551,10 +539,7 @@ def _split_blParaHard(blPara, start, stop):
                     g.text = ' '
                 else:
                     if type(g.text) is bytes:
-                        try:
-                            g.text = g.text.decode('utf-8')
-                        except Exception:
-                            g.text = '???'
+                        g.text = g.text.decode('utf8')
                     if g.text[-1] != ' ':
                         g.text += ' '
     return f
@@ -1340,15 +1325,12 @@ class Paragraph(Flowable):
                         words.append(g)
                         g.text = nText
                     else:
+                        if type(g.text) is bytes:
+                            g.text = g.text.decode("utf8")
+                        if type(nText) is bytes:
+                            nText = nText.decode("utf8")
                         if nText != '' and nText[0] != ' ':
-                            try:
-                                g.text += ' ' + nText
-                            except Exception:
-                                try:
-                                    g.text = g.text.decode("utf8")
-                                except Exception:
-                                    pass
-                                g.text += ' ' + nText.decode("utf8")
+                            g.text += ' ' + nText
 
                     for i in w[2:]:
                         g = i[0].clone()
