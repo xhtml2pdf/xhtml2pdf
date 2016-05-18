@@ -5,8 +5,8 @@ xhtml2pdf
 .. image:: https://travis-ci.org/xhtml2pdf/xhtml2pdf.svg
     :target: https://travis-ci.org/xhtml2pdf/xhtml2pdf
 
-.. image:: https://coveralls.io/repos/xhtml2pdf/xhtml2pdf/badge.svg?branch=master&service=github
-        :target: https://coveralls.io/github/xhtml2pdf/xhtml2pdf?branch=master
+.. image:: https://coveralls.io/repos/xhtml2pdf/xhtml2pdf/badge.svg?branch=develop&service=github
+        :target: https://coveralls.io/github/xhtml2pdf/xhtml2pdf?branch=develop
         :alt: Coveralls
 
 .. image:: https://badge.fury.io/py/xhtml2pdf.svg
