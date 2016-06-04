@@ -14,8 +14,8 @@ Test background image generation on the `portrait` and `landscape`
 page.
 """
 
-from cookbook import HTML2PDF
+from cookbook import html2pdf
 
 if __name__ == "__main__":
     xhtml = open('test-background-img.html')
-    HTML2PDF(xhtml.read(), "testBackground.pdf")
+    html2pdf(xhtml.read(), "testBackground.pdf")

@@ -21,16 +21,18 @@ __date__    = "$Date: 2008-03-15 00:11:47 +0100 (Sa, 15 Mrz 2008) $"
 """
 HTML/CSS to PDF converter
 
-Most people know how to write a page with HTML and CSS. Why not using these skills to dynamically generate PDF documents using it? The "pisa" project http://www.htmltopdf.org enables you to to this quite simple.
+Most people know how to write a page with HTML and CSS. Why not using these skills to dynamically generate PDF
+documents using it? The "pisa" project http://www.htmltopdf.org enables you to to this quite simple.
 """
+import six
 
 from xhtml2pdf import pisa
-import io
 
 # Shortcut for dumping all logs to the screen
 pisa.showLogging()
 
-def HTML2PDF(data, filename, open=False):
+
+def html2pdf(data, filename, open_file=False):
 
     """
     Simple test showing how to create a PDF file from
@@ -39,15 +41,15 @@ def HTML2PDF(data, filename, open=False):
     """
 
     pdf = pisa.CreatePDF(
-        io.StringIO(data),
+        six.StringIO(data),
         file(filename, "wb"))
 
-    if open and (not pdf.err):
+    if open_file and (not pdf.err):
         pisa.startViewer(filename)
 
     return not pdf.err
 
-if __name__=="__main__":
+if __name__ == "__main__":
     HTMLTEST = """
     <html><body>
     <p>Hello <strong style="color: #f00;">World</strong>
@@ -71,4 +73,4 @@ if __name__=="__main__":
     </body></html>
     """
 
-    HTML2PDF(HTMLTEST, "test.pdf", open=False)
+    html2pdf(HTMLTEST, "test.pdf", open_file=False)

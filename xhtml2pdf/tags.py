@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function, unicode_literals
 from reportlab.graphics.barcode import createBarcodeDrawing
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import inch, mm
@@ -7,12 +8,13 @@ from reportlab.platypus.flowables import Spacer, HRFlowable, PageBreak, Flowable
 from reportlab.platypus.frames import Frame
 from reportlab.platypus.paraparser import tt2ps, ABag
 from xhtml2pdf import xhtml2pdf_reportlab
-from xhtml2pdf.util import getColor, getSize, getAlign, dpi96, TextType
+from xhtml2pdf.util import getColor, getSize, getAlign, dpi96
 from xhtml2pdf.xhtml2pdf_reportlab import PmlImage, PmlPageTemplate
 import copy
 import logging
 import re
 import warnings
+import six
 import string
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
@@ -62,7 +64,7 @@ class pisaTagBODY(pisaTag):
 
     def start(self, c):
         c.baseFontSize = c.frag.fontSize
-        # print "base font size", c.baseFontSize
+        # print("base font size", c.baseFontSize)
 
 
 class pisaTagTITLE(pisaTag):
@@ -180,13 +182,24 @@ class pisaTagH6(pisaTagP):
 
 def listDecimal(c):
     c.listCounter += 1
-    return TextType("%d." % c.listCounter)
+    return six.text_type("%d." % c.listCounter)
 
 
-roman_numeral_map = tuple(zip(
-    (1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1),
-    ('M', 'CM', 'D', 'CD', 'C', 'XC', 'L', 'XL', 'X', 'IX', 'V', 'IV', 'I')
-))
+roman_numeral_map = (
+    (1000, 'M'),
+    (900, 'CM'),
+    (500, 'D'),
+    (400, 'CD'),
+    (100, 'C'),
+    (90, 'XC'),
+    (50, 'L'),
+    (40, 'XL'),
+    (10, 'X'),
+    (9, 'IX'),
+    (5, 'V'),
+    (4, 'IV'),
+    (1, 'I'),
+)
 
 
 def int_to_roman(i):
@@ -201,7 +214,7 @@ def int_to_roman(i):
 def listUpperRoman(c):
     c.listCounter += 1
     roman = int_to_roman(c.listCounter)
-    return TextType("%s." % roman)
+    return six.text_type("%s." % roman)
 
 
 def listLowerRoman(c):
@@ -218,7 +231,7 @@ def listUpperAlpha(c):
         # this will probably fail for anything past the 2nd time
         alpha = string.ascii_uppercase[index - 26]
         alpha *= 2
-    return TextType("%s." % alpha)
+    return six.text_type("%s." % alpha)
 
 
 def listLowerAlpha(c):
@@ -314,6 +327,8 @@ class pisaTagBR(pisaTag):
 class pisaTagIMG(pisaTag):
     def start(self, c):
         attr = self.attr
+        log.debug("Parsing img tag, src: {}".format(attr.src))
+        log.debug("Attrs: {}".format(attr))
         if attr.src and (not attr.src.notFound()):
 
             try:

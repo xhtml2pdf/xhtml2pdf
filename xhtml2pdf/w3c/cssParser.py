@@ -9,6 +9,8 @@
 ##
 ##  Modified by Dirk Holtwick <holtwick@web.de>, 2007-2008
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+from __future__ import absolute_import
+
 
 # Added by benjaoming to fix python3 tests
 from __future__ import unicode_literals
@@ -32,16 +34,11 @@ Dependencies:
     re
 """
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#~ Imports
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 import re
+import six
 
-try:
-    from . import cssSpecial #python 3
-except Exception:
-    import cssSpecial #python 2
+from . import cssSpecial
+
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~ Definitions
@@ -469,13 +466,13 @@ class CSSParser(object):
             self.cssBuilder.endInline()
         return result
 
-
-    def parseAttributes(self, attributes={}, **kwAttributes):
+    def parseAttributes(self, attributes=None, **kwAttributes):
         """Parses CSS attribute source strings, and return as an inline stylesheet.
         Use to parse a tag's highly CSS-based attributes like 'font'.
 
         See also: parseSingleAttr
         """
+        attributes = attributes if attributes is not None else {}
         if attributes:
             kwAttributes.update(attributes)
 
@@ -483,7 +480,7 @@ class CSSParser(object):
         try:
             properties = []
             try:
-                for propertyName, src in kwAttributes.iteritems():
+                for propertyName, src in six.iteritems(kwAttributes):
                     src, property = self._parseDeclarationProperty(src.strip(), propertyName)
                     properties.append(property)
 
@@ -579,7 +576,7 @@ class CSSParser(object):
             charset, src = self._getString(src)
             src = src.lstrip()
             if src[:1] != ';':
-                raise self.ParseError('@charset expected a terminating \';\'', src, ctxsrc)
+                raise self.ParseError('@charset expected a terminating \';\'', src, self.ctxsrc)
             src = src[1:].lstrip()
 
             self.cssBuilder.atCharset(charset)
@@ -741,7 +738,7 @@ class CSSParser(object):
         ;
         """
         ctxsrc = src
-        src = src[len('@page '):].lstrip()
+        src = src[len('@page'):].lstrip()
         page, src = self._getIdent(src)
         if src[:1] == ':':
             pseudopage, src = self._getIdent(src[1:])
@@ -782,7 +779,6 @@ class CSSParser(object):
         """
         XXX Proprietary for PDF
         """
-        ctxsrc = src
         src = src[len('@frame '):].lstrip()
         box, src = self._getIdent(src)
         src, properties = self._parseDeclarationGroup(src.lstrip())
@@ -791,7 +787,6 @@ class CSSParser(object):
 
 
     def _parseAtFontFace(self, src):
-        ctxsrc = src
         src = src[len('@font-face '):].lstrip()
         src, properties = self._parseDeclarationGroup(src)
         result = [self.cssBuilder.atFontFace(properties)]
@@ -1027,6 +1022,7 @@ class CSSParser(object):
                 continue
 
             if property is None:
+                src = src[1:].lstrip()
                 break
             properties.append(property)
             if src.startswith(';'):

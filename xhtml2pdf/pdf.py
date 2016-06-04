@@ -14,9 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from xhtml2pdf.util import pisaTempFile, getFile, PyPDF2
-
+import six
 import logging
+
+
+from xhtml2pdf.util import pisaTempFile, getFile, PyPDF2
 
 
 log = logging.getLogger("xhtml2pdf")
@@ -37,7 +39,8 @@ class pisaPDF:
     def addFromFile(self, f):
         if hasattr(f, "read"):
             self.files.append(f)
-        self.addFromURI(f)
+        else:
+            self.addFromURI(f)
 
     def addFromString(self, data):
         self.files.append(pisaTempFile(data, capacity=self.capacity))
@@ -50,7 +53,7 @@ class pisaPDF:
         output = PyPDF2.PdfFileWriter()
         for pdffile in self.files:
             input = PyPDF2.PdfFileReader(pdffile)
-            for pageNumber in xrange(input.getNumPages()):
+            for pageNumber in six.moves.range(input.getNumPages()):
                 output.addPage(input.getPage(pageNumber))
 
         if file is not None:
