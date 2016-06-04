@@ -1,15 +1,16 @@
-*********
-xhtml2pdf
-*********
+*************
+Notice to all
+*************
 
+--------------------------------------------------------------------------------
 
-NOTICE TO ALL
-=============
+Use `WeasyPrint <http://weasyprint.org/>`__
 
+--------------------------------------------------------------------------------
 
-
-This project is not the optimal solution. As per 2016-06-05, I've decided to
-give it up because a better project exists. Please read
+As per 2016-06-05, this project is officially abandonded by the only maintainer
+and effectively dead.
+Please read
 `the notice of 2016-05-02 <https://groups.google.com/forum/#!topic/xhtml2pdf/PtG8J28Dwyk>`__.
 
 You are welcome to disagree, but in doing so, you should also apply for
@@ -17,11 +18,15 @@ maintership ;)
 
 The final release of xhtml2pdf is xhtml2pdf **0.1b1** which is a beta that has
 Python 3 support. However, it's doubtful that it's suitable for production.
-We did our best, and we managed to get really close.
+We did our best, and we managed to get really close. And **big thanks** to all
+that made an effort during the past months trying to create continuation.
 
 To get an overview of how close xhtml2pdf 0.1 came to being usable, please refer
 to any unclosed tickets on Github.
 
+*- Benjamin Bach, June 5th 2016*
+
+--------------------------------------------------------------------------------
 
 What to use instead?
 ====================
@@ -31,8 +36,11 @@ does exactly what xhtml2pdf was supposed to do, just better.
 
 `WeasyPrint <http://weasyprint.org/>`__
 
-This is also an encouragement! Python needs a good PDF generator, but it's
-better that we all join efforts.
+This is also a positive and optimistic encouragement! Python needs a good PDF
+generator, and it's better that we all join efforts.
+WeasyPrint is what you need, not xhtml2pdf which has had its deserved fame and
+popularity in the past. xhtml2pdf exists by name, it no longer has any
+relevance.
 
 
 Documentation?
@@ -42,6 +50,7 @@ xhtml2pdf 0.1 was supposed to have had documentation. But didn't really. You may
 refer to ``doc/usage.rst``.
 
 
+--------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 
