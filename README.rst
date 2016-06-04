@@ -2,6 +2,49 @@
 xhtml2pdf
 *********
 
+
+NOTICE TO ALL
+=============
+
+
+
+This project is not the optimal solution. As per 2016-06-05, I've decided to
+give it up because a better project exists. Please read
+`the notice of 2016-05-02 <https://groups.google.com/forum/#!topic/xhtml2pdf/PtG8J28Dwyk>`__.
+
+You are welcome to disagree, but in doing so, you should also apply for
+maintership ;)
+
+The final release of xhtml2pdf is xhtml2pdf **0.1b1** which is a beta that has
+Python 3 support. However, it's doubtful that it's suitable for production.
+We did our best, and we managed to get really close.
+
+To get an overview of how close xhtml2pdf 0.1 came to being usable, please refer
+to any unclosed tickets on Github.
+
+
+What to use instead?
+====================
+
+Go use WeasyPrint, the codebase is pretty, it has a lot more features, and it
+does exactly what xhtml2pdf was supposed to do, just better.
+
+`WeasyPrint <http://weasyprint.org/>`__
+
+This is also an encouragement! Python needs a good PDF generator, but it's
+better that we all join efforts.
+
+
+Documentation?
+==============
+
+xhtml2pdf 0.1 was supposed to have had documentation. But didn't really. You may
+refer to ``doc/usage.rst``.
+
+
+--------------------------------------------------------------------------------
+
+
 .. image:: https://travis-ci.org/xhtml2pdf/xhtml2pdf.svg
     :target: https://travis-ci.org/xhtml2pdf/xhtml2pdf
 
@@ -142,7 +185,7 @@ This are the major milestones and the maintainers of the project:
 * 2007-2010 Dirk Holtwich (project named "Pisa", project released as GPL)
 * 2010-2012 Dirk Holtwick (project named "xhtml2pdf", changed license to Apache)
 * 2012-2015 Chris Glass (@chrisglass)
-* 2015- Benjamin Bach (@benjaoming)
+* 2015-2016 Benjamin Bach (@benjaoming)
 
 For more history, see the CHANGELOG.
 
