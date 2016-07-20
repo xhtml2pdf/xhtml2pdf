@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from __future__ import print_function, unicode_literals
 from html5lib import treebuilders, inputstream
 from xhtml2pdf.default import TAGS, STRING, INT, BOOL, SIZE, COLOR, FILE
 from xhtml2pdf.default import BOX, POS, MUST, FONT
@@ -30,20 +30,10 @@ import copy
 import html5lib
 import logging
 import re
-
-import sys
-#support python 3
-#import types
-if sys.version[0] == '2':
-    StringTypes = (str,unicode)
-    TextType = unicode
-else:
-    TextType = str
-    StringTypes = (str,)
+import six
 
 import xhtml2pdf.w3c.cssDOMElementInterface as cssDOMElementInterface
 import xml.dom.minidom
-
 
 CSSAttrCache = {}
 
@@ -75,13 +65,8 @@ def pisaGetAttributes(c, tag, attributes):
     if tag in TAGS:
         block, adef = TAGS[tag]
         adef["id"] = STRING
-        # print block, adef
-        try:
-            iteritems = adef.iteritems()
-        except Exception:
-            iteritems = iter(adef.items())
 
-        for k, v in iteritems:
+        for k, v in six.iteritems(adef):
             nattrs[k] = None
             # print k, v
             # defaults, wenn vorhanden
@@ -281,7 +266,7 @@ def CSSCollect(node, c):
     return node.cssAttrs
 
 def lower(sequence):
-    if type(sequence) in StringTypes:
+    if isinstance(sequence, six.string_types):
         return sequence.lower()
     else:
         return sequence[0].lower()
@@ -680,12 +665,11 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
     else:
         parser = html5lib.HTMLParser(tree=treebuilders.getTreeBuilder("dom"))
 
-    if type(src) in StringTypes:
-        if type(src) is TextType:
-            # If an encoding was provided, do not change it.
-            if not encoding:
-                encoding = "utf-8"
-            src = src.encode(encoding)
+    if isinstance(src, six.text_type):
+        # If an encoding was provided, do not change it.
+        if not encoding:
+            encoding = "utf-8"
+        src = src.encode(encoding)
         src = pisaTempFile(src, capacity=context.capacity)
 
     # Test for the restrictions of html5lib

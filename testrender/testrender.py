@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import datetime
 import os
 import shutil
@@ -9,11 +10,13 @@ from optparse import OptionParser
 from subprocess import Popen, PIPE
 
 from xhtml2pdf import pisa
-
+do_bytes = 'b'
+if sys.version[0] != '2':
+    do_bytes = ''
 
 def render_pdf(filename, output_dir, options):
     if options.debug:
-        print 'Rendering %s' % filename
+        print('Rendering %s' % filename)
     basename = os.path.basename(filename)
     outname = '%s.pdf' % os.path.splitext(basename)[0]
     outfile = os.path.join(output_dir, outname)
@@ -27,42 +30,49 @@ def render_pdf(filename, output_dir, options):
     output.close()
 
     if result.err:
-        print 'Error rendering %s: %s' % (filename, result.err)
+        print('Error rendering %s: %s' % (filename, result.err))
         sys.exit(1)
     return outfile
 
 
 def convert_to_png(infile, output_dir, options):
     if options.debug:
-        print 'Converting %s to PNG' % infile
+        print('Converting %s to PNG' % infile)
     basename = os.path.basename(infile)
     filename = os.path.splitext(basename)[0]
     outname = '%s.page%%0d.png' % filename
     globname = '%s.page*.png' % filename
     outfile = os.path.join(output_dir, outname)
     exec_cmd(options, options.convert_cmd, '-density', '150', infile, outfile)
+    
+    #exec_cmd(options, options.convert_cmd,  '-density', '150','-alpha', 'remove', infile, outfile)
+    
     outfiles = glob.glob(os.path.join(output_dir, globname))
     outfiles.sort()
+    for outfile in outfiles:
+        # convert transparencies to white background
+        # Done after PDF to PNG conversion, as during that conversion this will remove most background colors.
+        exec_cmd(options, options.convert_cmd, '-background', 'white', '-alpha', 'remove', outfile, outfile)
     return outfiles
 
 
 def create_diff_image(srcfile1, srcfile2, output_dir, options):
     if options.debug:
-        print 'Creating difference image for %s and %s' % (srcfile1, srcfile2)
+        print('Creating difference image for %s and %s' % (srcfile1, srcfile2))
 
     outname = '%s.diff%s' % os.path.splitext(srcfile1)
     outfile = os.path.join(output_dir, outname)
     _, result = exec_cmd(options, options.compare_cmd, '-metric', 'ae', srcfile1, srcfile2, '-lowlight-color', 'white', outfile)
-    diff_value = int(decimal.Decimal(result.strip()))
+    diff_value = int(float(result.strip()))
     if diff_value > 0:
         if not options.quiet:
-            print 'Image %s differs from reference, value is %i' % (srcfile1, diff_value)
+            print('Image %s differs from reference, value is %i' % (srcfile1, diff_value))
     return outfile, diff_value
 
 
 def copy_ref_image(srcname, output_dir, options):
     if options.debug:
-        print 'Copying reference image %s ' % srcname
+        print('Copying reference image %s ' % srcname)
     dstname = os.path.basename(srcname)
     dstfile = os.path.join(output_dir, '%s.ref%s' % os.path.splitext(dstname))
     shutil.copyfile(srcname, dstfile)
@@ -72,14 +82,14 @@ def copy_ref_image(srcname, output_dir, options):
 def create_thumbnail(filename, options):
     thumbfile = '%s.thumb%s' % os.path.splitext(filename)
     if options.debug:
-        print 'Creating thumbnail of %s' % filename
+        print('Creating thumbnail of %s' % filename)
     exec_cmd(options, options.convert_cmd, '-resize', '20%', filename, thumbfile)
     return thumbfile
 
 
 def render_file(filename, output_dir, ref_dir, options):
     if not options.quiet:
-        print 'Rendering %s' % filename
+        print('Rendering %s' % filename)
     pdf = render_pdf(filename, output_dir, options)
     pngs = convert_to_png(pdf, output_dir, options)
     if options.create_reference:
@@ -92,7 +102,7 @@ def render_file(filename, output_dir, ref_dir, options):
         for page in pages:
             refsrc = os.path.join(ref_dir, os.path.basename(page['png']))
             if not os.path.isfile(refsrc):
-                print 'Reference image for %s not found!' % page['png']
+                print('Reference image for %s not found!' % page['png'])
                 continue
             page['ref'] = copy_ref_image(refsrc, output_dir, options)
             page['ref_thumb'] = create_thumbnail(page['ref'], options)
@@ -107,26 +117,29 @@ def render_file(filename, output_dir, ref_dir, options):
 
 def exec_cmd(options, *args):
     if options.debug:
-        print 'Executing %s' % ' '.join(args)
+        print('Executing %s' % ' '.join(args))
     proc = Popen(args, stdout=PIPE, stderr=PIPE)
     result = proc.communicate()
     if options.debug:
-        print result[0], result[1]
+        print(result[0], result[1])
     if proc.returncode:
-        print 'exec error (%i): %s' % (proc.returncode, result[1])
+        print('exec error (%i): %s' % (proc.returncode, result[1]))
         sys.exit(1)
     return result[0], result[1]
 
 
 def create_html_file(results, template_file, output_dir, options):
     html = []
-    for pdf, pages, diff_count in results:
+    for origin_html, pdf, pages, diff_count in results:
         if options.only_errors and not diff_count:
             continue
         pdfname = os.path.basename(pdf)
+        htmlname = os.path.basename(origin_html)
+        
         html.append('<div class="result">\n'
                     '<h2><a href="%(pdf)s" class="pdf-file">%(pdf)s</a></h2>\n'
-                    % {'pdf': pdfname})
+                    '<h2>Generated from <a href="../%(src)s/%(html)s" class="">%(html)s</a></h2>\n'
+                    % {'pdf': pdfname, 'html':htmlname, 'src': options.source_dir})
         for i, page in enumerate(pages):
             vars = dict(((k, os.path.basename(v)) for k,v in page.items()
                          if k != 'diff_value'))
@@ -175,13 +188,13 @@ def create_html_file(results, template_file, output_dir, options):
         html.append('</div>\n\n')
 
     now = datetime.datetime.now()
-    title = 'xhtml2pdf Test Rendering Results, %s' % now.strftime('%c')
-    template = open(template_file, 'rb').read()
+    title = 'xhtml2pdf Test Rendering Results, (Python %s) %s' % (sys.version,now.strftime('%c'))
+    template = open(template_file, 'r'+do_bytes).read()
     template = template.replace('%%TITLE%%', title)
     template = template.replace('%%RESULTS%%', '\n'.join(html))
 
     htmlfile = os.path.join(output_dir, 'index.html')
-    outfile = open(htmlfile, 'wb')
+    outfile = open(htmlfile, 'w'+do_bytes)
     outfile.write(template)
     outfile.close()
     return htmlfile
@@ -212,20 +225,20 @@ def main():
     for filename in files:
         pdf, pages, diff = render_file(filename, output_dir, ref_dir, options)
         diff_count += diff
-        results.append((pdf, pages, diff))
+        results.append((filename, pdf, pages, diff))
 
     num = len(results)
 
     if options.create_reference is not None:
-        print 'Created reference for %i file%s' % (num, '' if num == 1 else 's')
+        print('Created reference for %i file%s' % (num, '' if num == 1 else 's'))
     else:
         htmlfile = create_html_file(results, template_file, output_dir, options)
         if not options.quiet:
-            print 'Rendered %i file%s' % (num, '' if num == 1 else 's')
-            print '%i file%s differ%s from reference' % \
+            print('Rendered %i file%s' % (num, '' if num == 1 else 's'))
+            print('%i file%s differ%s from reference' % \
                     (diff_count, diff_count != 1 and 's' or '',
-                     diff_count == 1 and 's' or '')
-            print 'Check %s for results' % htmlfile
+                     diff_count == 1 and 's' or ''))
+            print('Check %s for results' % htmlfile)
         if diff_count:
             sys.exit(1)
 

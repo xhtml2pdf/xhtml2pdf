@@ -1,8 +1,49 @@
- CHANGELOG
+=========
+CHANGELOG
 =========
 
-Version Next
-------------
+Version 0.1alpha4
+-----------------
+
+* Removed PyPy support
+* Avoid exceptions likely to occur systematic to how narrow a text column is #309 - thanks ***jkDesignDE***
+* Improved tests for tables #305 - thanks ***taddeimania***
+* Fix broken empty PDFs in Python2 #301 - thanks ***citizen-stig***
+* Unknown page sizes now raise an exception #71 - thanks ***benjaoming***
+* Unorderable types caused by duplicate CSS selectors / rules #69 - thanks ***benjaoming***
+* Allow empty page definition with no space after @page - #88 - thanks ***benjaoming***
+* Error when in addFromFile using file-like object #245 - thanks ***benjaoming***
+* Python 3: Bad table formatting with empty columns #279 - thanks ***citizen-stig and benjaoming***
+* Removed paragraph2.py, unused ghost file since the beginning of the project #289 - thanks ***citizen-stig***
+* Catch-all exceptions removed in a lot of places, not quite done #290 - thanks ***benjaoming***
+
+
+Version 0.1alpha3
+-----------------
+
+* Improved six usage, simplifies codebase #288 - thanks ***citizen-stig***
+* Removed mutable types as default args #287 - thanks ***citizen-stig***
+* Fix "hangs forever on simple input" #209
+* Base64 inline <img> works now #281 
+
+Version 0.1alpha2
+-----------------
+
+* Fixed: AttributeError: 'bytes' object has no attribute 'encode' #265
+* Improved tests, added code coverage 
+
+Version 0.1alpha1
+-----------------
+
+This major version bump signals that we have added Python 3 support. Other than
+that, the project remains largely unchanged.
+
+* Python 3 support
+* Cleaning up codebase
+* Github and documentation modernizations
+
+Version 0.0.6
+-------------
 
 * get css backgrounds and fonts relative to the css file path
 * fix CSS parser breaking on "@media screen and ..." (issue 132)

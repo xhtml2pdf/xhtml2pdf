@@ -21,7 +21,7 @@ Basic Python module usage
     from xhtml2pdf import pisa             # import python module
     
     # Define your data
-    sourceHtml = "<html><body><p>To PDF or not to PDF<p></body></html>"
+    sourceHtml = "<html><body><p>To PDF or not to PDF</p></body></html>"
     outputFilename = "test.pdf"
 
     # Utility function
@@ -41,7 +41,7 @@ Basic Python module usage
         return pisaStatus.err
 
     # Main program
-    if __name__=="__main__":
+    if __name__ == "__main__":
         pisa.showLogging()
         convertHtmlToPdf(sourceHtml, outputFilename)
 
