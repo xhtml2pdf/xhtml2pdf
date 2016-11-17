@@ -1,0 +1,41 @@
+build: false
+
+environment:
+  CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\appveyor\\run_with_env.cmd"
+
+  matrix:
+      - PYTHON_HOME: "C:/Python27"
+        PYTHON_VERSION: 2.7.12
+        RL: 30
+      - PYTHON_HOME: "C:/Python27"
+        PYTHON_VERSION: 2.7.12
+        RL: 31
+      - PYTHON_HOME: "C:/Python27"
+        PYTHON_VERSION: 2.7.12
+        RL: 32
+
+      - PYTHON_HOME: "C:/Python35"
+        PYTHON_VERSION: 3.5.2
+        RL: 30
+      - PYTHON_HOME: "C:/Python35"
+        PYTHON_VERSION: 3.5.2
+        RL: 31
+      - PYTHON_HOME: "C:/Python35"
+        PYTHON_VERSION: 3.5.2
+        RL: 32
+
+install:
+  - cmd: |
+        set TOX_ENV=py%PYTHON_VERSION%-rl%RL%
+        echo %TOX_ENV%
+        "%PYTHON_HOME%/python.exe" -m pip install --upgrade pip
+        "%PYTHON_HOME%/Scripts/pip.exe" install tox coveralls
+
+before_test:
+    - cmd: |
+        "%PYTHON_HOME%/Scripts/pip.exe" list
+
+# command to run tests
+test_script:
+  - cmd: |
+        "%CMD_IN_ENV% tox -e $TOX_ENV"
