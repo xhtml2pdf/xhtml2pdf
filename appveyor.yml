@@ -1,8 +1,6 @@
 build: false
 
 environment:
-  CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\appveyor\\run_with_env.cmd"
-
   matrix:
       - PYTHON_HOME: "C:/Python27"
         PYTHON_VERSION: 2.7.12
@@ -38,4 +36,4 @@ before_test:
 # command to run tests
 test_script:
   - cmd: |
-        "%CMD_IN_ENV% tox -e $TOX_ENV"
+        "%PYTHON_HOME%\Scripts\tox -e $TOX_ENV"
