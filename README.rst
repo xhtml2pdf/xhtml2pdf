@@ -1,53 +1,29 @@
-*************
-Notice to all
-*************
+*********
+XHTML2PDF
+*********
+
+The current release of xhtml2pdf is xhtml2pdf **0.1b1** which is a beta that has
+Python 3 support. As with all open-source software, its use in production depends
+on many factors, so be aware that you may find issues in some cases.
+**Big thanks** to everyone
+who has worked on this project so far and to those who help maintain it.
 
 --------------------------------------------------------------------------------
 
-Use `WeasyPrint <http://weasyprint.org/>`__
+What else can you use instead?
+==============================
 
---------------------------------------------------------------------------------
-
-As per 2016-06-05, this project is officially abandonded by the only maintainer
-and effectively dead.
-Please read
-`the notice of 2016-05-02 <https://groups.google.com/forum/#!topic/xhtml2pdf/PtG8J28Dwyk>`__.
-
-You are welcome to disagree, but in doing so, you should also apply for
-maintership ;)
-
-The final release of xhtml2pdf is xhtml2pdf **0.1b1** which is a beta that has
-Python 3 support. However, it's doubtful that it's suitable for production.
-We did our best, and we managed to get really close. And **big thanks** to all
-that made an effort during the past months trying to create continuation.
-
-To get an overview of how close xhtml2pdf 0.1 came to being usable, please refer
-to any unclosed tickets on Github.
-
-*- Benjamin Bach, June 5th 2016*
-
---------------------------------------------------------------------------------
-
-What to use instead?
-====================
-
-Go use WeasyPrint, the codebase is pretty, it has a lot more features, and it
-does exactly what xhtml2pdf was supposed to do, just better.
+Go use WeasyPrint, the codebase is pretty, it has a different features, and it
+does a lot of what xhtml2pdf does and it is easier to use in many circumstances.
 
 `WeasyPrint <http://weasyprint.org/>`__
-
-This is also a positive and optimistic encouragement! Python needs a good PDF
-generator, and it's better that we all join efforts.
-WeasyPrint is what you need, not xhtml2pdf which has had its deserved fame and
-popularity in the past. xhtml2pdf exists by name, it no longer has any
-relevance.
 
 
 Documentation?
 ==============
 
-xhtml2pdf 0.1 was supposed to have had documentation. But didn't really. You may
-refer to ``doc/usage.rst``.
+xhtml2pdf has some documentation, and we could use your help improving it.
+A good place to start is ``doc/usage.rst``.
 
 
 --------------------------------------------------------------------------------
@@ -56,6 +32,9 @@ refer to ``doc/usage.rst``.
 
 .. image:: https://travis-ci.org/xhtml2pdf/xhtml2pdf.svg
     :target: https://travis-ci.org/xhtml2pdf/xhtml2pdf
+
+.. image:: https://ci.appveyor.com/api/projects/status/y2mj843lpptwars9/branch/master?svg=true
+    :target: https://ci.appveyor.com/project/LegoStormtroopr/xhtml2pdf/branch/master
 
 .. image:: https://coveralls.io/repos/xhtml2pdf/xhtml2pdf/badge.svg?branch=develop&service=github
         :target: https://coveralls.io/github/xhtml2pdf/xhtml2pdf?branch=develop
@@ -71,9 +50,11 @@ or join `our maling list <http://groups.google.com/group/xhtml2pdf>`__.
 Call for testing
 ================
 
-This project is heavily dependent on getting its test coverage up! Currently, Python 3 support is being worked on and many refactors and suggestions are potentially coming in. Furthermore, parts of the codebase could do well with cleanups and refactoring.
+This project is heavily dependent on getting its test coverage up!
+Currently, Python 3 support is being worked on and many refactors and suggestions are potentially coming in.
+Furthermore, parts of the codebase could do well with cleanups and refactoring.
 
-If you benefit from xhtml2pdf, perhaps `look at the test coverage <https://coveralls.io/github/xhtml2pdf/xhtml2pdf?branch=master>`__ and identify parts that are yet untouched?
+If you benefit from xhtml2pdf, perhaps `look at the test coverage <https://coveralls.io/github/xhtml2pdf/xhtml2pdf?branch=master>`__ and identify parts that are yet untouched.
 
 
 About
@@ -195,6 +176,7 @@ This are the major milestones and the maintainers of the project:
 * 2010-2012 Dirk Holtwick (project named "xhtml2pdf", changed license to Apache)
 * 2012-2015 Chris Glass (@chrisglass)
 * 2015-2016 Benjamin Bach (@benjaoming)
+* 2016-Current Sam Spencer (@LegoStormtroopr)
 
 For more history, see the CHANGELOG.
 
