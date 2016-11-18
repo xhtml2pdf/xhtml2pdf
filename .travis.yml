@@ -30,4 +30,4 @@ notifications:
   irc: "chat.freenode.net#xhtml2pdf"
 
 before_script:
-  - cd docs ; sphinx-build -nW -b html -d _build/doctrees . _build/html ; cd ..
+  - cd doc/source ; sphinx-build -nW -b html -d _build/doctrees . _build/html ; cd ../..
