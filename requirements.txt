@@ -7,3 +7,5 @@ pyPdf2==1.19
 reportlab>=3.0
 six
 Sphinx==1.4.8
+sphinx-rtd-theme==0.1.9
+
