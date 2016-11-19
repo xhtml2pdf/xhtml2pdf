@@ -21,10 +21,13 @@ matrix:
 
 install:
   - TOX_ENV=py${TRAVIS_PYTHON_VERSION}-rl${RL}
-  - pip install tox coveralls
+  - pip install tox coveralls Sphinx sphinx-rtd-theme
 
 script: tox -e $TOX_ENV
 after_success: coveralls $COVERALLS_OPTION
 
 notifications:
   irc: "chat.freenode.net#xhtml2pdf"
+
+before_script:
+  - cd doc/source ; sphinx-build -nW -b html -d _build/doctrees . _build/html ; cd ../..
