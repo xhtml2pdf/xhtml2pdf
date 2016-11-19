@@ -2,6 +2,24 @@
 XHTML2PDF
 *********
 
+
+.. image:: https://travis-ci.org/xhtml2pdf/xhtml2pdf.svg
+    :target: https://travis-ci.org/xhtml2pdf/xhtml2pdf
+
+.. image:: https://ci.appveyor.com/api/projects/status/y2mj843lpptwars9/branch/master?svg=true
+    :target: https://ci.appveyor.com/project/LegoStormtroopr/xhtml2pdf/branch/master
+
+.. image:: https://coveralls.io/repos/xhtml2pdf/xhtml2pdf/badge.svg?branch=develop&service=github
+        :target: https://coveralls.io/github/xhtml2pdf/xhtml2pdf?branch=develop
+        :alt: Coveralls
+
+.. image:: https://badge.fury.io/py/xhtml2pdf.svg
+   :target: https://pypi.python.org/pypi/xhtml2pdf
+
+.. image:: https://readthedocs.org/projects/xhtml2pdf/badge/?version=latest
+   :target: http://xhtml2pdf.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation Status
+
 The current release of xhtml2pdf is xhtml2pdf **0.1b1** which is a beta that has
 Python 3 support. As with all open-source software, its use in production depends
 on many factors, so be aware that you may find issues in some cases.
@@ -29,19 +47,6 @@ A good place to start is ``doc/usage.rst``.
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-
-.. image:: https://travis-ci.org/xhtml2pdf/xhtml2pdf.svg
-    :target: https://travis-ci.org/xhtml2pdf/xhtml2pdf
-
-.. image:: https://ci.appveyor.com/api/projects/status/y2mj843lpptwars9/branch/master?svg=true
-    :target: https://ci.appveyor.com/project/LegoStormtroopr/xhtml2pdf/branch/master
-
-.. image:: https://coveralls.io/repos/xhtml2pdf/xhtml2pdf/badge.svg?branch=develop&service=github
-        :target: https://coveralls.io/github/xhtml2pdf/xhtml2pdf?branch=develop
-        :alt: Coveralls
-
-.. image:: https://badge.fury.io/py/xhtml2pdf.svg
-   :target: https://pypi.python.org/pypi/xhtml2pdf
 
 This project is community-led! To strengthen it, please hang out on IRC #xhtml2pdf (Freenode)
 or join `our maling list <http://groups.google.com/group/xhtml2pdf>`__.
