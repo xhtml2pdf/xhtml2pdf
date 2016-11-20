@@ -1,0 +1,48 @@
+/* A4   29.7 x 21.0  cm */
+
+
+{% if example_number == '1'%}
+	@frame content_frame {
+	    left: 1cm; width: 19cm; top: 1cm; height: 25.7cm;
+	    {% if border %}	    -pdf-frame-border: 1;  {% endif %}   /* for debugging the layout */
+	}
+{% elif example_number == '2'%}
+
+	@frame header_frame {           /* Static frame */
+	    -pdf-frame-content: header_content;
+	    left: 1cm; width: 19cm; top: 0.5cm; height: 2cm;
+	    {% if border %}	    -pdf-frame-border: 1;  {% endif %}   /* for debugging the layout */ 
+	}
+	@frame content_frame {          /* Content Frame */
+	    left: 1cm; width: 19cm; top: 3cm; height: 22.2cm;
+	    {% if border %}	    -pdf-frame-border: 1;  {% endif %}   /* for debugging the layout */
+	}
+	@frame footer_frame {           /* Static frame */
+	    -pdf-frame-content: footer_content;
+	    left: 1cm; width: 19cm; top: 25.7cm; height: 2cm;
+	    {% if border %}	    -pdf-frame-border: 1;  {% endif %}   /* for debugging the layout */
+	}
+
+{% elif example_number == '3' %}
+	/* A4   29.7 x 21.0  cm */
+    @frame header_frame {           /* Static frame */
+        -pdf-frame-content: header_content;
+        left: 1cm; width: 19cm; top: 1cm; height: 1cm;
+        {% if border %}	    -pdf-frame-border: 1;  {% endif %}   /* for debugging the layout */
+    }
+    @frame col1_frame {             /* Content frame 1 */
+        left: 1cm; width: 9cm; top: 2.5cm; height: 22.2cm;
+        {% if border %}	    -pdf-frame-border: 1;  {% endif %}   /* for debugging the layout */
+    }
+    @frame col2_frame {             /* Content frame 2 */
+        left: 11cm; width: 9cm; top: 2.5cm; height: 22.2cm;
+        {% if border %}	    -pdf-frame-border: 1;  {% endif %}   /* for debugging the layout */
+    }
+    @frame footer_frame {           /* Static frame */
+        -pdf-frame-content: footer_content;
+	    left: 1cm; width: 19cm; top: 25.7cm; height: 2cm;
+        {% if border %}	    -pdf-frame-border: 1;  {% endif %}   /* for debugging the layout */
+    }
+{% endif %}
+
+

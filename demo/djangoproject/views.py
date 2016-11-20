@@ -1,73 +1,55 @@
-#! /usr/bin/python
-# -*- encoding: utf-8 -*-
+# coding: utf-8
 
-from django import http
-from django.shortcuts import render_to_response
-from django.template.loader import get_template
-from django.template import Context
-import xhtml2pdf.pisa as pisa
-try:
-    import StringIO
-    StringIO = StringIO.StringIO
-except Exception:
-    from io import StringIO
-import cgi
+import datetime
+
+from django.http import HttpResponse
+from django.shortcuts import render
+from django.template import Context, Template
+from django.template.loader import get_template, render_to_string
+from xhtml2pdf import pisa
+
 
 def index(request):
-    return http.HttpResponse("""
-        <html><body>
-            <h1>Example 1</h1>
-            Please enter some HTML code:
-            <form action="/download/" method="post" enctype="multipart/form-data">
-            <textarea name="data">Hello <strong>World</strong></textarea>
-            <br />
-            <input type="submit" value="Convert HTML to PDF" />
-            </form>
-            <hr>
-            <h1>Example 2</h1>
-            <p><a href="ezpdf_sample">Example with template</a>
-        </body></html>
-        """)
+    return render(request, 'index.html')
 
-def download(request):
-    if request.POST:
-        result = StringIO()
-        pdf = pisa.CreatePDF(
-            StringIO(request.POST["data"]),
-            result
-            )
-        #==============README===================
-        #Django < 1.7 is content_type is mimetype
-        #========================================
-        if not pdf.err:
-            return http.HttpResponse(
-                result.getvalue(),
-                content_type='application/pdf')
 
-    return http.HttpResponse('We had some errors')
+def extract_request_variables(request):
 
-def render_to_pdf(template_src, context_dict):
-    template = get_template(template_src)
-    context = Context(context_dict)
-    html  = template.render(context)
-    result = StringIO()
-    pdf = pisa.pisaDocument(StringIO( "{0}".format(html) ), result)
-    if not pdf.err:
-        #==============README===================
-        #Django < 1.7 is content_type is mimetype
-        #========================================
-        return http.HttpResponse(result.getvalue(), content_type='application/pdf')
-    return http.HttpResponse('We had some errors<pre>%s</pre>' % cgi.escape(html))
+    page_size = request.POST.get('page_size', 'letter')
+    page_orientation = request.POST.get('page_orientation', 'portrait')
 
-def ezpdf_sample(request):
-    blog_entries = []
-    for i in range(1,10):
-        blog_entries.append({
-            'id': i,
-            'title':'Playing with pisa 3.0.16 and dJango Template Engine',
-            'body':'This is a simple example..'
-            })
-    return render_to_pdf('entries.html',{
-        'pagesize':'A4',
-        'title':'My amazing blog',
-        'blog_entries':blog_entries})
+    pagesize = "%s %s" % (
+        page_size, page_orientation
+    )
+
+    template = Template(request.POST.get('data', ''))
+    data = template.render(Context({}))
+    return {
+        'pagesize': pagesize,
+        'data': data,
+        'page_orientation': page_orientation,
+        'page_size': page_size,
+        'example_number': request.POST.get("example_number", '1'),
+        'border': request.POST.get('border', '')
+    }
+
+
+def render_pdf(request):
+
+    template_path = 'user_printer.html'
+    context = extract_request_variables(request)
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="report.pdf"'
+
+    template = get_template(template_path)
+    html = template.render(Context(context))
+    if request.POST.get('show_html', ''):
+        response.content_type = 'application/text'
+        response['Content-Disposition'] = 'attachment; filename="report.txt"'
+        response.write(html)
+    else:
+        pisaStatus = pisa.CreatePDF(html, dest=response)
+        if pisaStatus.err:
+            return HttpResponse('We had some errors <pre>' + html + '</pre>')
+    return response

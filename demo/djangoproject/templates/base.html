@@ -6,37 +6,17 @@
 {%endblock%}
 </title>
 <style type="text/css">
-{% block style %}
-	@page {
-		size: {{pagesize}};
-		margin: 1cm;
-		@frame footer {
-    		-pdf-frame-content: footerContent;
-    		bottom: 1cm;
-    		margin-left: 1cm;
-    		margin-right: 1cm;
-    		height: 1cm;
-		}
-	}
-{%endblock%}	
+@page {
+    size: {{pagesize}};
+{% if page_orientation == 'landscape' %} {% include 'landscape.css' %} {% endif %}
+{%if page_orientation == 'portrait' %} {% include 'portrait.css' %} {% endif %}
+}
 </style>
 </head>
 <body>
-<div>
-{%block page_header%}
-   <div>
-   		<h1>pisa html<span style="color: #FC0000;">to</span>pdf</h1>
-   		<h2>Python module for HTML/CSS to PDF conversion - Ezpdf example</h2>
-   </div>
-	<hr />
-{%endblock%}
+
 {%block content%}
 {%endblock%}
-</div>
-<div id="footerContent">
-{%block page_foot%}
-		<pdf:pagenumber>
-{%endblock%}
-</div>
+
 </body>
 </html>
