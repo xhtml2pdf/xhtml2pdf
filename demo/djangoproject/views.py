@@ -59,12 +59,13 @@ def render_pdf(request):
     template = get_template(template_path)
     html = template.render(Context(context))
     if request.POST.get('show_html', ''):
-        response.content_type = 'application/text'
+        response['Content-Type'] = 'application/text'
         response['Content-Disposition'] = 'attachment; filename="report.txt"'
         response.write(html)
     else:
         pisaStatus = pisa.CreatePDF(
             html, dest=response, link_callback=link_callback)
         if pisaStatus.err:
-            return HttpResponse('We had some errors <pre>' + html + '</pre>')
+            return HttpResponse('We had some errors with code %s <pre>%s</pre>' % (pisaStatus.err,
+                                                                                   html))
     return response
