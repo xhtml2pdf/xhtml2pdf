@@ -1,9 +1,9 @@
 Pillow>=2.0.0
-coverage==3.5
-html5lib==1.0b8
+coverage
+html5lib==1.0b10
 httplib2==0.7.6
 nose==1.3.3
-pyPdf2==1.19
+pyPdf2==1.26
 reportlab>=3.0
 six
 Sphinx==1.4.8

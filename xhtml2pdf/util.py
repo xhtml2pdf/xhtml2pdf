@@ -648,7 +648,14 @@ class pisaFileObject:
         if self.data is not None:
             return self.data
         if self.file is not None:
-            self.data = self.file.read()
+            try:
+                self.data = self.file.read()
+            except:
+                if self.mimetype.startswith('text'):
+                    self.file = open(self.file.name, "rb") #removed bytes... lets hope it goes ok :/
+                    self.data = self.file.read().decode('utf-8')
+                else:
+                    raise
             return self.data
         return None
 
