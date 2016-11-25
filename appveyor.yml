@@ -30,4 +30,4 @@ before_test:
 # command to run tests
 test_script:
   - cmd: |
-        %PYTHON_HOME%\Scripts\tox -e %TOX_ENV%
+        %PYTHON_HOME%\Scripts\tox -e %TOX_ENV% -c tox.appveyor.ini
