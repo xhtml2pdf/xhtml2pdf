@@ -44,15 +44,14 @@ def convert_to_png(infile, output_dir, options):
     globname = '%s.page*.png' % filename
     outfile = os.path.join(output_dir, outname)
     exec_cmd(options, options.convert_cmd, '-density', '150', infile, outfile)
-    
-    #exec_cmd(options, options.convert_cmd,  '-density', '150','-alpha', 'remove', infile, outfile)
-    
+
     outfiles = glob.glob(os.path.join(output_dir, globname))
     outfiles.sort()
-    for outfile in outfiles:
-        # convert transparencies to white background
-        # Done after PDF to PNG conversion, as during that conversion this will remove most background colors.
-        exec_cmd(options, options.convert_cmd, '-background', 'white', '-alpha', 'remove', outfile, outfile)
+    if options.remove_transparencies:
+        for outfile in outfiles:
+            # convert transparencies to white background
+            # Done after PDF to PNG conversion, as during that conversion this will remove most background colors.
+            exec_cmd(options, options.convert_cmd, '-background', 'white', '-alpha', 'remove', outfile, outfile)
     return outfiles
 
 
@@ -240,7 +239,11 @@ def main():
                      diff_count == 1 and 's' or ''))
             print('Check %s for results' % htmlfile)
         if diff_count:
-            sys.exit(1)
+            if options.nofail:
+                print("Differences were found but the error code is suppressed.")
+                sys.exit(0)
+            else:
+                sys.exit(1)
 
 
 parser = OptionParser(
@@ -263,6 +266,15 @@ parser.add_option('-e', '--only-errors', dest='only_errors', action='store_true'
                   'differ from reference')
 parser.add_option('-q', '--quiet', dest='quiet', action='store_true',
                   default=False, help='Try to be quiet')
+parser.add_option('-F', '--nofail', dest='nofail', action='store_true',
+                  default=False, help="Doesn't return an error on failure "
+                  "this useful when calling it in scripts"
+                  )
+parser.add_option('-X', '--remove_transparencies', dest='remove_transparencies', action='store_false',
+                  default=True, help="Don't try to remove transparent backgrounds "
+                  "Needed for Travis-CI"
+                  )
+
 parser.add_option('--no-compare', dest='no_compare', action='store_true',
                   default=False, help='Do not compare with reference image, '
                   'only render to png')

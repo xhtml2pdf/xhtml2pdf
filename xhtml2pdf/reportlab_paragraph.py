@@ -123,11 +123,11 @@ _parser = ParaParser()
 
 
 def _lineClean(L):
-    return " ".join( filter(truth, split(strip(L))) )
+    return b" ".join( filter(truth, split(strip(L))) )
 
 
 
-def cleanBlockQuotedText(text, joiner=' '):
+def cleanBlockQuotedText(text, joiner=b' '):
     """This is an internal utility which takes triple-
     quoted text form within the document and returns
     (hopefully) the paragraph the user intended originally."""
@@ -157,7 +157,7 @@ def _centerDrawParaLine(tx, offset, extraspace, words, last=0):
 def _rightDrawParaLine(tx, offset, extraspace, words, last=0):
     m = offset + extraspace
     setXPos(tx, m)
-    tx._textOut(" ".join(words), 1)
+    tx._textOut(b" ".join(words), 1)
     setXPos(tx, -m)
     return m
 
