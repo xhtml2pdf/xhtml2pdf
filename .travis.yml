@@ -15,7 +15,8 @@ matrix:
   fast_finish: true
 
 install:
-  - sudo apt-get install -y imagemagick libmagickcore-dev # to compile some module on travis
+  - sudo apt-get update # Needed for imagemagick
+  - sudo apt-get install -y imagemagick libmagickcore-dev # Needed for imagemagick
   - TOX_ENV=py${TRAVIS_PYTHON_VERSION}-rl${RL}
   - pip install tox coveralls Sphinx sphinx-rtd-theme
 
