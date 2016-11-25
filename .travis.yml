@@ -14,6 +14,9 @@ env:
 matrix:
   fast_finish: true
 
+before_script:
+  - pecl install imagick
+
 install:
   - TOX_ENV=py${TRAVIS_PYTHON_VERSION}-rl${RL}
   - pip install tox coveralls Sphinx sphinx-rtd-theme
