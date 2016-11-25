@@ -1,5 +1,5 @@
 language: python
-sudo: false
+sudo: true # Needed for imagemagick
 python:
   - "2.7"
   - "3.4"
@@ -15,7 +15,7 @@ matrix:
   fast_finish: true
 
 before_script:
-  - pecl install imagick
+  - sudo apt-get install -y imagemagick libmagickcore-dev # to compile some module on travis
 
 install:
   - TOX_ENV=py${TRAVIS_PYTHON_VERSION}-rl${RL}
