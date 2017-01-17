@@ -135,7 +135,7 @@ class pisaLinkLoader:
         self.tfileList.append(path)
 
         if not self.quiet:
-            print ("  Loading", url, "to", path)
+            print ("  Loading %s to %s" % (url, path))
 
         return path
 
@@ -237,12 +237,12 @@ def execute():
             print ()
             print ("SYSTEM INFORMATIONS")
             print ("--------------------------------------------")
-            print ("OS:                ", sys.platform)
-            print ("Python:            ", sys.version)
-            print ("html5lib:          ", "?")
+            print ("OS:                %s" % sys.platform)
+            print ("Python:            %s" % sys.version)
+            print ("html5lib:          ?")
             import reportlab
 
-            print ("Reportlab:         ", reportlab.Version)
+            print ("Reportlab:         %s" % reportlab.Version)
             sys.exit(0)
 
         if o in ("-t", "--format"):
@@ -351,7 +351,7 @@ def execute():
             try:
                 open(dest, "wb").close()
             except:
-                print ("File '%s' seems to be in use of another application.") % dest
+                print ("File '%s' seems to be in use of another application." % dest)
                 sys.exit(2)
             fdest = open(dest, "wb")
             fdestclose = 1
@@ -382,7 +382,7 @@ def execute():
 
         if (not errors) and startviewer:
             if not quiet:
-                print ("Open viewer for file %s") % dest
+                print ("Open viewer for file %s" % dest)
             startViewer(dest)
 
 
