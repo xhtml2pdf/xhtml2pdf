@@ -73,7 +73,7 @@ def pisaGetAttributes(c, tag, attributes):
             if type(v) == tuple:
                 if v[1] == MUST:
                     if k not in attrs:
-                        log.warn(c.warning("Attribute '%s' must be set!", k))
+                        log.warning(c.warning("Attribute '%s' must be set!", k))
                         nattrs[k] = None
                         continue
                 nv = attrs.get(k, v[1])
@@ -88,7 +88,7 @@ def pisaGetAttributes(c, tag, attributes):
                     nv = nv.strip().lower()
                     if nv not in v:
                         #~ raise PML_EXCEPTION, "attribute '%s' of wrong value, allowed is one of: %s" % (k, repr(v))
-                        log.warn(c.warning("Attribute '%s' of wrong value, allowed is one of: %s", k, repr(v)))
+                        log.warning(c.warning("Attribute '%s' of wrong value, allowed is one of: %s", k, repr(v)))
                         nv = dfl
 
                 elif v == BOOL:
@@ -99,7 +99,7 @@ def pisaGetAttributes(c, tag, attributes):
                     try:
                         nv = getSize(nv)
                     except:
-                        log.warn(c.warning("Attribute '%s' expects a size value", k))
+                        log.warning(c.warning("Attribute '%s' expects a size value", k))
 
                 elif v == BOX:
                     nv = getBox(nv, c.pageSize)
