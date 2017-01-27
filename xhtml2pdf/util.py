@@ -162,7 +162,7 @@ def copy_attrs(obj1, obj2, attrs):
     """
     for attr in attrs:
         value = getattr(obj2, attr) if hasattr(obj2, attr) else None
-        if value is None and attr in obj2:
+        if value is None and isinstance(obj2, dict) and attr in obj2:
             value = obj2[attr]
         if value:
             setattr(obj1, attr, value)
