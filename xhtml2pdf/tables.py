@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
-from reportlab.platypus.tables import TableStyle
-from xhtml2pdf.util import getSize, getBorderStyle, getAlign
-from xhtml2pdf.tags import pisaTag
-from xhtml2pdf.xhtml2pdf_reportlab import PmlTable, PmlKeepInFrame
 import copy
 import logging
+
+from reportlab.platypus.tables import TableStyle
 import six
+
+from xhtml2pdf.tags import pisaTag
+from xhtml2pdf.util import getSize, getBorderStyle, getAlign, set_value
+from xhtml2pdf.xhtml2pdf_reportlab import PmlTable, PmlKeepInFrame
+
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -20,7 +23,6 @@ import six
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 log = logging.getLogger("xhtml2pdf")
 
 
@@ -43,6 +45,7 @@ def _height(value=None):
 
 
 class TableData:
+
     def __init__(self):
         self.data = []
         self.styles = []
@@ -115,27 +118,33 @@ class TableData:
                             c.frag.borderBottomWidth,
                             c.frag.borderBottomColor,
                             "squared"))
-        self.add_style(('LEFTPADDING', begin, end, c.frag.paddingLeft or self.padding))
-        self.add_style(('RIGHTPADDING', begin, end, c.frag.paddingRight or self.padding))
-        self.add_style(('TOPPADDING', begin, end, c.frag.paddingTop or self.padding))
-        self.add_style(('BOTTOMPADDING', begin, end, c.frag.paddingBottom or self.padding))
+        self.add_style(
+            ('LEFTPADDING', begin, end, c.frag.paddingLeft or self.padding))
+        self.add_style(
+            ('RIGHTPADDING', begin, end, c.frag.paddingRight or self.padding))
+        self.add_style(
+            ('TOPPADDING', begin, end, c.frag.paddingTop or self.padding))
+        self.add_style(
+            ('BOTTOMPADDING', begin, end, c.frag.paddingBottom or self.padding))
 
 
 class pisaTagTABLE(pisaTag):
 
     def set_borders(self, frag, attrs):
-        frag.borderLeftWidth = attrs.border
-        frag.borderLeftColor = attrs.bordercolor
-        frag.borderLeftStyle = "solid"
-        frag.borderRightWidth = attrs.border
-        frag.borderRightColor = attrs.bordercolor
-        frag.borderRightStyle = "solid"
-        frag.borderTopWidth = attrs.border
-        frag.borderTopColor = attrs.bordercolor
-        frag.borderTopStyle = "solid"
-        frag.borderBottomWidth = attrs.border
-        frag.borderBottomColor = attrs.bordercolor
-        frag.borderBottomStyle = "solid"
+
+        set_value(frag,
+                  ('borderLeftColor', 'borderRightColor', 'borderTopColor',
+                   'borderBottomColor'), attrs.bordercolor)
+
+        set_value(frag,
+                  ('borderLeftWidth', 'borderRightWidth', 'borderTopWidth',
+                   'borderBottomWidth'),
+                  attrs.border)
+        set_value(frag,
+                  ('borderBottomStyle', 'borderLeftStyle', 'borderTopStyle',
+                   'borderRightStyle'),
+                  "solid"
+                  )
 
     def start(self, c):
         c.addPara()
@@ -174,7 +183,8 @@ class pisaTagTABLE(pisaTag):
         for i, row in enumerate(data):
             data[i] += [''] * (maxcols - len(row))
 
-        cols_with_no_width = [tup for tup in enumerate(tdata.colw) if tup[1] is None or tup[1] == 0.0]
+        cols_with_no_width = [
+            tup for tup in enumerate(tdata.colw) if tup[1] is None or tup[1] == 0.0]
 
         if cols_with_no_width:  # any col width not defined
             log.debug(list(enumerate(tdata.colw)))
@@ -215,6 +225,7 @@ class pisaTagTABLE(pisaTag):
 
 
 class pisaTagTR(pisaTag):
+
     def start(self, c):
         tdata = c.tableData
         row = tdata.row
@@ -232,6 +243,7 @@ class pisaTagTR(pisaTag):
 
 
 class pisaTagTD(pisaTag):
+
     def start(self, c):
 
         if self.attr.align is not None:
@@ -275,7 +287,8 @@ class pisaTagTD(pisaTag):
         # Calculate widths
         # Add empty placeholders for new columns
         if (col + 1) > len(tdata.colw):
-            tdata.colw = tdata.colw + ((col + 1 - len(tdata.colw)) * [_width()])
+            tdata.colw = tdata.colw + \
+                ((col + 1 - len(tdata.colw)) * [_width()])
 
         # Get value of with, if no spanning
         if not cspan:
@@ -300,7 +313,8 @@ class pisaTagTD(pisaTag):
 
         # Calculate heights
         if row + 1 > len(tdata.rowh):
-            tdata.rowh = tdata.rowh + ((row + 1 - len(tdata.rowh)) * [_width()])
+            tdata.rowh = tdata.rowh + \
+                ((row + 1 - len(tdata.rowh)) * [_width()])
         if not rspan:
             height = c.frag.height or self.attr.get('height', None)
             if height is not None:
@@ -315,18 +329,18 @@ class pisaTagTD(pisaTag):
 
         # Reset border, otherwise the paragraph block will have borders too
         frag = c.frag
-        frag.borderLeftWidth = 0
-        frag.borderLeftColor = None
-        frag.borderLeftStyle = None
-        frag.borderRightWidth = 0
-        frag.borderRightColor = None
-        frag.borderRightStyle = None
-        frag.borderTopWidth = 0
-        frag.borderTopColor = None
-        frag.borderTopStyle = None
-        frag.borderBottomWidth = 0
-        frag.borderBottomColor = None
-        frag.borderBottomStyle = None
+
+        set_value(frag,
+                  ('borderLeftWidth', 'borderRightWidth',
+                   'borderTopWidth', 'borderBottomWidth'),
+                  0)
+
+        set_value(frag,
+                  ('borderLeftColor', 'borderLeftStyle', 'borderRightColor',
+                   'borderRightStyle', 'borderTopColor', 'borderTopStyle',
+                   'borderBottomColor', 'borderBottomStyle'),
+                  None
+                  )
 
     def end(self, c):
         tdata = c.tableData

@@ -14,26 +14,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from __future__ import print_function, unicode_literals
-from html5lib import treebuilders #, inputstream
-from xhtml2pdf.default import TAGS, STRING, INT, BOOL, SIZE, COLOR, FILE
-from xhtml2pdf.default import BOX, POS, MUST, FONT
-from xhtml2pdf.util import getSize, getBool, toList, getColor, getAlign
-from xhtml2pdf.util import getBox, getPos, pisaTempFile
-from reportlab.platypus.doctemplate import NextPageTemplate, FrameBreak
-from reportlab.platypus.flowables import PageBreak, KeepInFrame
-from xhtml2pdf.xhtml2pdf_reportlab import PmlRightPageBreak, PmlLeftPageBreak
-from xhtml2pdf.tags import * # TODO: Kill wild import!
-from xhtml2pdf.tables import * # TODO: Kill wild import!
-from xhtml2pdf.util import * # TODO: Kill wild import!
-from xml.dom import Node
+
 import copy
-import html5lib
 import logging
 import re
+from xml.dom import Node
+import xml.dom.minidom
+
+from html5lib import treebuilders  # , inputstream
+import html5lib
+from reportlab.platypus.doctemplate import NextPageTemplate, FrameBreak
+from reportlab.platypus.flowables import PageBreak, KeepInFrame
 import six
 
+from xhtml2pdf.default import BOX, POS, MUST, FONT
+from xhtml2pdf.default import TAGS, STRING, INT, BOOL, SIZE, COLOR, FILE
+from xhtml2pdf.tables import *  # TODO: Kill wild import!
+from xhtml2pdf.tags import *  # TODO: Kill wild import!
+from xhtml2pdf.util import *  # TODO: Kill wild import!
+from xhtml2pdf.util import getBox, getPos, pisaTempFile, transform_attrs
+from xhtml2pdf.util import getSize, getBool, toList, getColor, getAlign
 import xhtml2pdf.w3c.cssDOMElementInterface as cssDOMElementInterface
-import xml.dom.minidom
+from xhtml2pdf.xhtml2pdf_reportlab import PmlRightPageBreak, PmlLeftPageBreak
+
 
 CSSAttrCache = {}
 
@@ -43,6 +46,7 @@ rxhttpstrip = re.compile("https?://[^/]+(.*)", re.M | re.I)
 
 
 class AttrContainer(dict):
+
     def __getattr__(self, name):
         try:
             return dict.__getattr__(self, name)
@@ -57,7 +61,8 @@ def pisaGetAttributes(c, tag, attributes):
     if attributes:
         for k, v in attributes.items():
             try:
-                attrs[str(k)] = str(v)  # XXX no Unicode! Reportlab fails with template names
+                # XXX no Unicode! Reportlab fails with template names
+                attrs[str(k)] = str(v)
             except:
                 attrs[k] = v
 
@@ -73,7 +78,8 @@ def pisaGetAttributes(c, tag, attributes):
             if type(v) == tuple:
                 if v[1] == MUST:
                     if k not in attrs:
-                        log.warning(c.warning("Attribute '%s' must be set!", k))
+                        log.warning(
+                            c.warning("Attribute '%s' must be set!", k))
                         nattrs[k] = None
                         continue
                 nv = attrs.get(k, v[1])
@@ -88,7 +94,8 @@ def pisaGetAttributes(c, tag, attributes):
                     nv = nv.strip().lower()
                     if nv not in v:
                         #~ raise PML_EXCEPTION, "attribute '%s' of wrong value, allowed is one of: %s" % (k, repr(v))
-                        log.warning(c.warning("Attribute '%s' of wrong value, allowed is one of: %s", k, repr(v)))
+                        log.warning(
+                            c.warning("Attribute '%s' of wrong value, allowed is one of: %s", k, repr(v)))
                         nv = dfl
 
                 elif v == BOOL:
@@ -99,7 +106,8 @@ def pisaGetAttributes(c, tag, attributes):
                     try:
                         nv = getSize(nv)
                     except:
-                        log.warning(c.warning("Attribute '%s' expects a size value", k))
+                        log.warning(
+                            c.warning("Attribute '%s' expects a size value", k))
 
                 elif v == BOX:
                     nv = getBox(nv, c.pageSize)
@@ -192,7 +200,8 @@ def getCSSAttr(self, cssCascade, attrName, default=NotImplemented):
     try:
         style = self.cssStyle
     except:
-        style = self.cssStyle = cssCascade.parser.parseInline(self.cssElement.getStyleAttr() or '')[0]
+        style = self.cssStyle = cssCascade.parser.parseInline(
+            self.cssElement.getStyleAttr() or '')[0]
     if attrName in style:
         result = style[attrName]
 
@@ -201,14 +210,15 @@ def getCSSAttr(self, cssCascade, attrName, default=NotImplemented):
             result = self.parentNode.getCSSAttr(cssCascade, attrName, default)
         elif default is not NotImplemented:
             return default
-        raise LookupError("Could not find inherited CSS attribute value for '%s'" % (attrName,))
+        raise LookupError(
+            "Could not find inherited CSS attribute value for '%s'" % (attrName,))
 
     if result is not None:
         self.cssAttrs[attrName] = result
     return result
 
 
-#TODO: Monkeypatching standard lib should go away.
+# TODO: Monkeypatching standard lib should go away.
 xml.dom.minidom.Element.getCSSAttr = getCSSAttr
 
 # Create an aliasing system.  Many sources use non-standard tags, because browsers allow
@@ -217,11 +227,13 @@ nonStandardAttrNames = {
     'bgcolor': 'background-color',
 }
 
+
 def mapNonStandardAttrs(c, n, attrList):
     for attr in nonStandardAttrNames:
         if attr in attrList and nonStandardAttrNames[attr] not in c:
             c[nonStandardAttrNames[attr]] = attrList[attr]
     return c
+
 
 def getCSSAttrCacheKey(node):
     _cl = _id = _st = ''
@@ -234,9 +246,10 @@ def getCSSAttrCacheKey(node):
             _st = v
     return "%s#%s#%s#%s#%s" % (id(node.parentNode), node.tagName.lower(), _cl, _id, _st)
 
+
 def CSSCollect(node, c):
     #node.cssAttrs = {}
-    #return node.cssAttrs
+    # return node.cssAttrs
 
     if c.css:
 
@@ -255,21 +268,24 @@ def CSSCollect(node, c):
         cssAttrMap = {}
         for cssAttrName in attrNames:
             try:
-                cssAttrMap[cssAttrName] = node.getCSSAttr(c.cssCascade, cssAttrName)
-            #except LookupError:
+                cssAttrMap[cssAttrName] = node.getCSSAttr(
+                    c.cssCascade, cssAttrName)
+            # except LookupError:
             #    pass
-            except Exception: # TODO: Kill this catch-all!
+            except Exception:  # TODO: Kill this catch-all!
                 log.debug("CSS error '%s'", cssAttrName, exc_info=1)
 
         CSSAttrCache[_key] = node.cssAttrs
 
     return node.cssAttrs
 
+
 def lower(sequence):
     if isinstance(sequence, six.string_types):
         return sequence.lower()
     else:
         return sequence[0].lower()
+
 
 def CSS2Frag(c, kw, isBlock):
     # COLORS
@@ -282,7 +298,8 @@ def CSS2Frag(c, kw, isBlock):
         c.frag.fontName = c.getFontName(c.cssAttr["font-family"])
     if "font-size" in c.cssAttr:
         # XXX inherit
-        c.frag.fontSize = max(getSize("".join(c.cssAttr["font-size"]), c.frag.fontSize, c.baseFontSize), 1.0)
+        c.frag.fontSize = max(
+            getSize("".join(c.cssAttr["font-size"]), c.frag.fontSize, c.baseFontSize), 1.0)
     if "line-height" in c.cssAttr:
         leading = "".join(c.cssAttr["line-height"])
         c.frag.leading = getSize(leading, c.frag.fontSize)
@@ -325,7 +342,8 @@ def CSS2Frag(c, kw, isBlock):
         # HEIGHT & WIDTH
     if "height" in c.cssAttr:
         try:
-            c.frag.height = "".join(toList(c.cssAttr["height"]))  # XXX Relative is not correct!
+            # XXX Relative is not correct!
+            c.frag.height = "".join(toList(c.cssAttr["height"]))
         except TypeError:
             # sequence item 0: expected string, tuple found
             c.frag.height = "".join(toList(c.cssAttr["height"][0]))
@@ -333,72 +351,91 @@ def CSS2Frag(c, kw, isBlock):
             c.frag.height = None
     if "width" in c.cssAttr:
         try:
-            c.frag.width = "".join(toList(c.cssAttr["width"]))  # XXX Relative is not correct!
+            # XXX Relative is not correct!
+            c.frag.width = "".join(toList(c.cssAttr["width"]))
         except TypeError:
             c.frag.width = "".join(toList(c.cssAttr["width"][0]))
         if c.frag.width in ("auto",):
             c.frag.width = None
         # ZOOM
     if "zoom" in c.cssAttr:
-        zoom = "".join(toList(c.cssAttr["zoom"]))  # XXX Relative is not correct!
+        # XXX Relative is not correct!
+        zoom = "".join(toList(c.cssAttr["zoom"]))
         if zoom.endswith("%"):
             zoom = float(zoom[: - 1]) / 100.0
         c.frag.zoom = float(zoom)
         # MARGINS & LIST INDENT, STYLE
     if isBlock:
-        if "margin-top" in c.cssAttr:
-            c.frag.spaceBefore = getSize(c.cssAttr["margin-top"], c.frag.fontSize)
-        if "margin-bottom" in c.cssAttr:
-            c.frag.spaceAfter = getSize(c.cssAttr["margin-bottom"], c.frag.fontSize)
+        transform_attrs(c.frag,
+                        (("spaceBefore", "margin-top"),
+                         ("spaceAfter", "margin-bottom"),
+                         ("firstLineIndent", "text-indent"),
+                         ),
+                        c.cssAttr,
+                        getSize,
+                        extras=c.frag.fontSize
+                        )
+
         if "margin-left" in c.cssAttr:
             c.frag.bulletIndent = kw["margin-left"]  # For lists
-            kw["margin-left"] += getSize(c.cssAttr["margin-left"], c.frag.fontSize)
+            kw["margin-left"] += getSize(c.cssAttr["margin-left"],
+                                         c.frag.fontSize)
             c.frag.leftIndent = kw["margin-left"]
         if "margin-right" in c.cssAttr:
-            kw["margin-right"] += getSize(c.cssAttr["margin-right"], c.frag.fontSize)
+            kw["margin-right"] += getSize(
+                c.cssAttr["margin-right"], c.frag.fontSize)
             c.frag.rightIndent = kw["margin-right"]
-        if "text-indent" in c.cssAttr:
-            c.frag.firstLineIndent = getSize(c.cssAttr["text-indent"], c.frag.fontSize)
+
         if "list-style-type" in c.cssAttr:
             c.frag.listStyleType = str(c.cssAttr["list-style-type"]).lower()
         if "list-style-image" in c.cssAttr:
             c.frag.listStyleImage = c.getFile(c.cssAttr["list-style-image"])
         # PADDINGS
     if isBlock:
-        if "padding-top" in c.cssAttr:
-            c.frag.paddingTop = getSize(c.cssAttr["padding-top"], c.frag.fontSize)
-        if "padding-bottom" in c.cssAttr:
-            c.frag.paddingBottom = getSize(c.cssAttr["padding-bottom"], c.frag.fontSize)
-        if "padding-left" in c.cssAttr:
-            c.frag.paddingLeft = getSize(c.cssAttr["padding-left"], c.frag.fontSize)
-        if "padding-right" in c.cssAttr:
-            c.frag.paddingRight = getSize(c.cssAttr["padding-right"], c.frag.fontSize)
+        transform_attrs(c.frag,
+                        (("paddingTop", "padding-top"),
+                         ("paddingBottom", "padding-bottom"),
+                         ("paddingLeft", "padding-left"),
+                         ("paddingRight", "padding-right"),
+                         ),
+                        c.cssAttr,
+                        getSize,
+                        extras=c.frag.fontSize
+                        )
+
         # BORDERS
     if isBlock:
-        if "border-top-width" in c.cssAttr:
-            c.frag.borderTopWidth = getSize(c.cssAttr["border-top-width"], c.frag.fontSize)
-        if "border-bottom-width" in c.cssAttr:
-            c.frag.borderBottomWidth = getSize(c.cssAttr["border-bottom-width"], c.frag.fontSize)
-        if "border-left-width" in c.cssAttr:
-            c.frag.borderLeftWidth = getSize(c.cssAttr["border-left-width"], c.frag.fontSize)
-        if "border-right-width" in c.cssAttr:
-            c.frag.borderRightWidth = getSize(c.cssAttr["border-right-width"], c.frag.fontSize)
-        if "border-top-style" in c.cssAttr:
-            c.frag.borderTopStyle = c.cssAttr["border-top-style"]
-        if "border-bottom-style" in c.cssAttr:
-            c.frag.borderBottomStyle = c.cssAttr["border-bottom-style"]
-        if "border-left-style" in c.cssAttr:
-            c.frag.borderLeftStyle = c.cssAttr["border-left-style"]
-        if "border-right-style" in c.cssAttr:
-            c.frag.borderRightStyle = c.cssAttr["border-right-style"]
-        if "border-top-color" in c.cssAttr:
-            c.frag.borderTopColor = getColor(c.cssAttr["border-top-color"])
-        if "border-bottom-color" in c.cssAttr:
-            c.frag.borderBottomColor = getColor(c.cssAttr["border-bottom-color"])
-        if "border-left-color" in c.cssAttr:
-            c.frag.borderLeftColor = getColor(c.cssAttr["border-left-color"])
-        if "border-right-color" in c.cssAttr:
-            c.frag.borderRightColor = getColor(c.cssAttr["border-right-color"])
+        transform_attrs(c.frag,
+                        (("borderTopWidth", "border-top-width"),
+                         ("borderBottomWidth", "border-bottom-width"),
+                         ("borderLeftWidth", "border-left-width"),
+                         ("borderRightWidth", "border-right-width"),
+                         ),
+                        c.cssAttr,
+                        getSize,
+                        extras=c.frag.fontSize
+                        )
+        transform_attrs(c.frag,
+                        (
+                            ("borderTopStyle", "border-top-style"),
+                            ("borderBottomStyle", "border-bottom-style"),
+                            ("borderLeftStyle", "border-left-style"),
+                            ("borderRightStyle", "border-right-style")
+                        ),
+                        c.cssAttr,
+                        lambda x: x
+                        )
+
+        transform_attrs(c.frag,
+                        (
+                            ("borderTopColor", "border-top-color"),
+                            ("borderBottomColor", "border-bottom-color"),
+                            ("borderLeftColor", "border-left-color"),
+                            ("borderRightColor",  "border-right-color")
+                        ),
+                        c.cssAttr,
+                        getColor
+                        )
 
 
 def pisaPreLoop(node, context, collect=False):
@@ -415,7 +452,8 @@ def pisaPreLoop(node, context, collect=False):
 
         if name in ("style", "link"):
             attr = pisaGetAttributes(context, name, node.attributes)
-            media = [x.strip() for x in attr.media.lower().split(",") if x.strip()]
+            media = [x.strip()
+                     for x in attr.media.lower().split(",") if x.strip()]
 
             if attr.get("type", "").lower() in ("", "text/css") and \
                     (not media or "all" in media or "print" in media or "pdf" in media):
@@ -428,7 +466,8 @@ def pisaPreLoop(node, context, collect=False):
 
                 if name == "link" and attr.href and attr.rel.lower() == "stylesheet":
                     # print "CSS LINK", attr
-                    context.addCSS('\n@import "%s" %s;' % (attr.href, ",".join(media)))
+                    context.addCSS('\n@import "%s" %s;' %
+                                   (attr.href, ",".join(media)))
 
     for node in node.childNodes:
         result = pisaPreLoop(node, context, collect=collect)
@@ -454,7 +493,7 @@ def pisaLoop(node, context, path=None, **kw):
     else:
         kw = copy.copy(kw)
 
-    #indent = len(path) * "  " # only used for debug print statements
+    # indent = len(path) * "  " # only used for debug print statements
 
     # TEXT
     if node.nodeType == Node.TEXT_NODE:
@@ -475,7 +514,8 @@ def pisaLoop(node, context, path=None, **kw):
 
         # Prepare attributes
         attr = pisaGetAttributes(context, node.tagName, node.attributes)
-        #log.debug(indent + "<%s %s>" % (node.tagName, attr) + repr(node.attributes.items())) #, path
+        # log.debug(indent + "<%s %s>" % (node.tagName, attr) +
+        # repr(node.attributes.items())) #, path
 
         # Calculate styles
         context.cssAttr = CSSCollect(node, context)
@@ -490,7 +530,8 @@ def pisaLoop(node, context, path=None, **kw):
         pageBreakAfter = False
         frameBreakAfter = False
         display = lower(context.cssAttr.get("display", "inline"))
-        # print indent, node.tagName, display, context.cssAttr.get("background-color", None), attr
+        # print indent, node.tagName, display,
+        # context.cssAttr.get("background-color", None), attr
         isBlock = (display == "block")
 
         if isBlock:
@@ -498,7 +539,8 @@ def pisaLoop(node, context, path=None, **kw):
 
             # Page break by CSS
             if "-pdf-next-page" in context.cssAttr:
-                context.addStory(NextPageTemplate(str(context.cssAttr["-pdf-next-page"])))
+                context.addStory(
+                    NextPageTemplate(str(context.cssAttr["-pdf-next-page"])))
             if "-pdf-page-break" in context.cssAttr:
                 if str(context.cssAttr["-pdf-page-break"]).lower() == "before":
                     context.addStory(PageBreak())
@@ -537,14 +579,20 @@ def pisaLoop(node, context, path=None, **kw):
         CSS2Frag(context, kw, isBlock)
 
         # EXTRAS
-        if "-pdf-keep-with-next" in context.cssAttr:
-            context.frag.keepWithNext = getBool(context.cssAttr["-pdf-keep-with-next"])
-        if "-pdf-outline" in context.cssAttr:
-            context.frag.outline = getBool(context.cssAttr["-pdf-outline"])
+        transform_attrs(context.frag,
+                        (
+                            ("keepWithNext", "-pdf-keep-with-next"),
+                            ("outline", "-pdf-outline"),
+                            ("borderLeftColor", "-pdf-outline-open"),
+                        ),
+                        context.cssAttr,
+                        getBool
+                        )
+
         if "-pdf-outline-level" in context.cssAttr:
-            context.frag.outlineLevel = int(context.cssAttr["-pdf-outline-level"])
-        if "-pdf-outline-open" in context.cssAttr:
-            context.frag.outlineOpen = getBool(context.cssAttr["-pdf-outline-open"])
+            context.frag.outlineLevel = int(
+                context.cssAttr["-pdf-outline-level"])
+
         if "-pdf-word-wrap" in context.cssAttr:
             context.frag.wordWrap = context.cssAttr["-pdf-word-wrap"]
 
@@ -553,16 +601,20 @@ def pisaLoop(node, context, path=None, **kw):
         keepInFrameMaxWidth = 0
         keepInFrameMaxHeight = 0
         if "-pdf-keep-in-frame-mode" in context.cssAttr:
-            value = str(context.cssAttr["-pdf-keep-in-frame-mode"]).strip().lower()
+            value = str(
+                context.cssAttr["-pdf-keep-in-frame-mode"]).strip().lower()
             if value in ("shrink", "error", "overflow", "truncate"):
                 keepInFrameMode = value
             else:
                 keepInFrameMode = "shrink"
             # Added because we need a default value.
+
         if "-pdf-keep-in-frame-max-width" in context.cssAttr:
-            keepInFrameMaxWidth = getSize("".join(context.cssAttr["-pdf-keep-in-frame-max-width"]))
+            keepInFrameMaxWidth = getSize(
+                "".join(context.cssAttr["-pdf-keep-in-frame-max-width"]))
         if "-pdf-keep-in-frame-max-height" in context.cssAttr:
-            keepInFrameMaxHeight = getSize("".join(context.cssAttr["-pdf-keep-in-frame-max-height"]))
+            keepInFrameMaxHeight = getSize(
+                "".join(context.cssAttr["-pdf-keep-in-frame-max-height"]))
 
         # ignore nested keep-in-frames, tables have their own KIF handling
         keepInFrame = keepInFrameMode is not None and context.keepInFrameIndex is None
@@ -572,7 +624,8 @@ def pisaLoop(node, context, path=None, **kw):
             context.keepInFrameIndex = len(context.story)
 
         # BEGIN tag
-        klass = globals().get("pisaTag%s" % node.tagName.replace(":", "").upper(), None)
+        klass = globals().get("pisaTag%s" %
+                              node.tagName.replace(":", "").upper(), None)
         obj = None
 
         # Static block
@@ -624,7 +677,8 @@ def pisaLoop(node, context, path=None, **kw):
                     maxWidth=keepInFrameMaxWidth,
                     maxHeight=keepInFrameMaxHeight,
                     mode=keepInFrameMode))
-            # mode wasn't being used; it is necessary for tables or images at end of page.
+            # mode wasn't being used; it is necessary for tables or images at
+            # end of page.
             context.keepInFrameIndex = None
 
         # Static block, END
@@ -660,7 +714,7 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
     CSSAttrCache = {}
 
     if xhtml:
-        #TODO: XHTMLParser doesn't see to exist...
+        # TODO: XHTMLParser doesn't see to exist...
         parser = html5lib.XHTMLParser(tree=treebuilders.getTreeBuilder("dom"))
     else:
         parser = html5lib.HTMLParser(tree=treebuilders.getTreeBuilder("dom"))
@@ -685,7 +739,7 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
     #             log.error("%r is not a valid encoding", encoding)
     document = parser.parse(
         src,
-        )#encoding=encoding)
+    )  # encoding=encoding)
 
     if xml_output:
         if encoding:
@@ -693,14 +747,13 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
         else:
             xml_output.write(document.toprettyxml(encoding="utf8"))
 
-
     if default_css:
         context.addDefaultCSS(default_css)
 
     pisaPreLoop(document, context)
-    #try:
+    # try:
     context.parseCSS()
-    #except:
+    # except:
     #    context.cssText = DEFAULT_CSS
     #    context.parseCSS()
     # context.debug(9, pprint.pformat(context.css))

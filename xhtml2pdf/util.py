@@ -1,22 +1,23 @@
 # -*- coding: utf-8 -*-
-from reportlab.lib.colors import Color, toColor
-from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
-from reportlab.lib.units import inch, cm
 import base64
-try:
-    import httplib
-except ImportError:
-    import http.client as httplib
 import logging
 import mimetypes
 import os.path
 import re
-import reportlab
 import shutil
-import six
 import string
 import sys
 import tempfile
+
+import reportlab
+from reportlab.lib.colors import Color, toColor
+from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
+from reportlab.lib.units import inch, cm
+import six
+try:
+    import httplib
+except ImportError:
+    import http.client as httplib
 
 try:
     import urllib.request as urllib2
@@ -42,7 +43,8 @@ except ImportError:
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-rgb_re = re.compile("^.*?rgb[a]?[(]([0-9]+).*?([0-9]+).*?([0-9]+)(?:.*?(?:[01]\.(?:[0-9]+)))?[)].*?[ ]*$")
+rgb_re = re.compile(
+    "^.*?rgb[a]?[(]([0-9]+).*?([0-9]+).*?([0-9]+)(?:.*?(?:[01]\.(?:[0-9]+)))?[)].*?[ ]*$")
 
 _reportlab_version = tuple(map(int, reportlab.Version.split('.')))
 if _reportlab_version < (2, 1):
@@ -68,6 +70,8 @@ except ImportError:
 #=========================================================================
 # Memoize decorator
 #=========================================================================
+
+
 class memoized(object):
 
     """
@@ -109,19 +113,56 @@ def ErrorMsg():
     """
     import traceback
 
-    type = value = tb = limit = None
-    type, value, tb = sys.exc_info()
-    list = traceback.format_tb(tb, limit) + \
-        traceback.format_exception_only(type, value)
+    limit = None
+    _type, value, tb = sys.exc_info()
+    _list = traceback.format_tb(tb, limit) + \
+        traceback.format_exception_only(_type, value)
     return "Traceback (innermost last):\n" + "%-20s %s" % (
-        string.join(list[: - 1], ""),
-        list[- 1])
+        " ".join(_list[:-1]),
+        _list[-1])
 
 
 def toList(value):
     if type(value) not in (list, tuple):
         return [value]
     return list(value)
+
+
+def transform_attrs(obj, keys, container, func, extras=None):
+    """
+    obj = frag
+    keys = [(reportlab, css), ... ]
+    container = cssAttr
+    """
+    cpextras = extras
+    print (repr(extras))
+
+    for reportlab, css in keys:
+        extras = cpextras
+        if extras is None:
+            extras = []
+        elif not isinstance(extras, list):
+            extras = [extras]
+        if css in container:
+            extras.insert(0, container[css])
+            setattr(obj,
+                    reportlab,
+                    func(*extras)
+                    )
+
+
+def copy_attrs(obj1, obj2, attrs):
+    for attr in attrs:
+        value = getattr(obj2, attr) if hasattr(obj2, attr) else None
+        if value is None and attr in obj2:
+            value = obj2[attr]
+        if value:
+            setattr(obj1, attr, value)
+
+
+def set_value(obj, attrs, value):
+    for attr in attrs:
+        setattr(obj, attr, value)
 
 
 @memoized
@@ -594,7 +635,8 @@ class pisaFileObject:
                     else:
                         self.file = r1
                 else:
-                    log.debug("Received non-200 status: {}".format((r1.status, r1.reason)))
+                    log.debug(
+                        "Received non-200 status: {}".format((r1.status, r1.reason)))
                     try:
                         urlResponse = urllib2.urlopen(uri)
                     except urllib2.HTTPError as e:
@@ -616,12 +658,14 @@ class pisaFileObject:
                 if os.path.isfile(uri):
                     self.uri = uri
                     self.local = uri
-                
+
                     self.setMimeTypeByName(uri)
                     if self.mimetype.startswith('text'):
-                        self.file = open(uri, "r") #removed bytes... lets hope it goes ok :/
+                        # removed bytes... lets hope it goes ok :/
+                        self.file = open(uri, "r")
                     else:
-                        self.file = open(uri, "rb") #removed bytes... lets hope it goes ok :/
+                        # removed bytes... lets hope it goes ok :/
+                        self.file = open(uri, "rb")
 
     def getFile(self):
         if self.file is not None:
@@ -652,7 +696,8 @@ class pisaFileObject:
                 self.data = self.file.read()
             except:
                 if self.mimetype.startswith('text'):
-                    self.file = open(self.file.name, "rb") #removed bytes... lets hope it goes ok :/
+                    # removed bytes... lets hope it goes ok :/
+                    self.file = open(self.file.name, "rb")
                     self.data = self.file.read().decode('utf-8')
                 else:
                     raise
