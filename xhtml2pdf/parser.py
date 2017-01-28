@@ -478,7 +478,6 @@ def pisaPreLoop(node, context, collect=False):
 
 
 def pisaLoop(node, context, path=None, **kw):
-
     if path is None:
         path = []
 

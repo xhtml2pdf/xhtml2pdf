@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import base64
+from copy import copy
 import logging
 import mimetypes
 import os.path
@@ -14,6 +15,8 @@ from reportlab.lib.colors import Color, toColor
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
 from reportlab.lib.units import inch, cm
 import six
+
+
 try:
     import httplib
 except ImportError:
@@ -168,11 +171,13 @@ def copy_attrs(obj1, obj2, attrs):
             setattr(obj1, attr, value)
 
 
-def set_value(obj, attrs, value):
+def set_value(obj, attrs, value, _copy=False):
     """
     Allows set the same value to a list of attributes 
     """
     for attr in attrs:
+        if _copy:
+            value = copy(value)
         setattr(obj, attr, value)
 
 
