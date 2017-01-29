@@ -31,7 +31,6 @@ from xhtml2pdf.default import BOX, POS, MUST, FONT
 from xhtml2pdf.default import TAGS, STRING, INT, BOOL, SIZE, COLOR, FILE
 from xhtml2pdf.tables import *  # TODO: Kill wild import!
 from xhtml2pdf.tags import *  # TODO: Kill wild import!
-from xhtml2pdf.util import *  # TODO: Kill wild import!
 from xhtml2pdf.util import getBox, getPos, pisaTempFile, transform_attrs
 from xhtml2pdf.util import getSize, getBool, toList, getColor, getAlign
 import xhtml2pdf.w3c.cssDOMElementInterface as cssDOMElementInterface
