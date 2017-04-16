@@ -140,6 +140,7 @@ TAGS = {
 
     "pdfpagenumber": (0, {
         "example": (STRING, "0"),
+        "offset": (INT, 0)
     }),
 
     "pdfpagecount": (0, {

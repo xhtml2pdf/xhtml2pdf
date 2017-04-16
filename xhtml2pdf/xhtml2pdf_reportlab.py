@@ -264,7 +264,7 @@ class PmlPageTemplate(PageTemplate):
                     if isinstance(obj, PmlParagraph):
                         for frag in obj.frags:
                             if frag.pageNumber:
-                                frag.text = str(pagenumber)
+                                frag.text = str(pagenumber + frag.pageOffset)
                             elif frag.pageCount:
                                 frag.text = str(canvas._doctemplate._page_count)
 
