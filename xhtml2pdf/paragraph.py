@@ -33,12 +33,18 @@ TODO
 - Sub and super
 
 """
+import copy
+import logging
+import re
 
+import six
+from reportlab.lib.colors import Color
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.platypus.flowables import Flowable
-from reportlab.lib.colors import Color
-import six
+
+logger = logging.getLogger("xhtml2pdf")
+
 
 class Style(dict):
     """
@@ -110,7 +116,6 @@ class Box(dict):
                 # If no color for border is given, the text color is used (like defined by W3C)
                 if color is None:
                     color = self.get("textColor", Color(0, 0, 0))
-                    # print "Border", bstyle, width, color
                 if color is not None:
                     canvas.setStrokeColor(color)
                     canvas.setLineWidth(width)
@@ -257,7 +262,6 @@ class Line(list):
         # Boxes
         for frag in self:
             x = frag["x"] + frag["width"]
-            # print "***", x, frag["x"]
             if isinstance(frag, BoxBegin):
                 self.boxStack.append(frag)
             elif isinstance(frag, BoxEnd):
@@ -267,7 +271,6 @@ class Line(list):
 
         # Handle the rest
         for frag in self.boxStack:
-            # print "***", x, frag["x"]
             frag["length"] = x - frag["x"]
 
     def doLayout(self, width):
@@ -277,10 +280,12 @@ class Line(list):
 
         # Calculate dimensions
         self.width = width
-        self.height = self.lineHeight = max(frag.get("fontSize", 0) * self.LINEHEIGHT for frag in self)
+
+        font_sizes = [0] + [frag.get("fontSize", 0) for frag in self]
+        self.fontSize = max(font_sizes)
+        self.height = self.lineHeight = max(frag * self.LINEHEIGHT for frag in font_sizes)
 
         # Apply line height
-        self.fontSize = max(frag.get("fontSize", 0) for frag in self)
         y = (self.lineHeight - self.fontSize) # / 2
         for frag in self:
             frag["y"] = y
@@ -288,10 +293,10 @@ class Line(list):
         return self.height
 
     def dumpFragments(self):
-        print ("Line", 40 * "-")
+        logger.debug("Line")
+        logger.debug(40 * "-")
         for frag in self:
-            print ("%s") % frag.get("text", frag.name.upper()),
-        print()
+            logger.debug("%s", frag.get("text", frag.name.upper()))
 
 
 class Text(list):
@@ -387,7 +392,6 @@ class Text(list):
 
             # Remove trailing white spaces
             while line and line[-1].name in ("space", "br"):
-                # print "Pop",
                 line.pop()
 
             # Add line to list
@@ -415,8 +419,8 @@ class Text(list):
         For debugging dump all line and their content
         """
         for i, line in enumerate(self.lines):
-            print ("Line %d:") % i,
-            line.dumpFragments()
+            logger.debug("Line %d:", i)
+            logger.debug(line.dumpFragments())
 
 
 class Paragraph(Flowable):
@@ -460,12 +464,10 @@ class Paragraph(Flowable):
         self.avWidth = availWidth
         self.avHeight = availHeight
 
-        if self.debug:
-            print ("*** wrap (%f, %f)") % (availWidth, availHeight)
+        logger.debug("*** wrap (%f, %f)", availWidth, availHeight)
 
         if not self.text:
-            if self.debug:
-                print ("*** wrap (%f, %f) needed") % (0, 0)
+            logger.debug("*** wrap (%f, %f) needed", 0, 0)
             return 0, 0
 
         # Split lines
@@ -474,18 +476,16 @@ class Paragraph(Flowable):
 
         self.width, self.height = availWidth, self.text.height
 
-        if self.debug:
-            print ("*** wrap (%f, %f) needed, splitIndex %r") % (self.width, self.height, self.splitIndex)
+        logger.debug("*** wrap (%f, %f) needed, splitIndex %r", self.width, self.height, self.splitIndex)
 
         return self.width, self.height
 
     def split(self, availWidth, availHeight):
         """
-        Split ourself in two paragraphs.
+        Split ourselves in two paragraphs.
         """
 
-        if self.debug:
-            print ("*** split (%f, %f)") % (availWidth, availHeight)
+        logger.debug("*** split (%f, %f)", availWidth, availHeight)
 
         splitted = []
         if self.splitIndex:
@@ -495,11 +495,9 @@ class Paragraph(Flowable):
             p2 = Paragraph(Text(text2), self.style, debug=self.debug, splitted=True)
             splitted = [p1, p2]
 
-            if self.debug:
-                print ("*** text1 %s / text %s") % (len(text1), len(text2))
+            logger.debug("*** text1 %s / text %s", len(text1), len(text2))
 
-        if self.debug:
-            print ('*** return %s') % self.splitted
+        logger.debug('*** return %s', self.splitted)
 
         return splitted
 
@@ -508,8 +506,7 @@ class Paragraph(Flowable):
         Render the content of the paragraph.
         """
 
-        if self.debug:
-            print ("*** draw")
+        logger.debug("*** draw")
 
         if not self.text:
             return
@@ -574,245 +571,3 @@ class Paragraph(Flowable):
                         canvas.linkRect("", scheme != 'document' and link or parts[1], rect, relative=1)
 
         canvas.restoreState()
-
-
-if __name__ == "__main__":
-    # TODO: This should be a test, not a main!
-    from reportlab.platypus import SimpleDocTemplate
-    from reportlab.lib.styles import *
-    from reportlab.rl_config import *
-    from reportlab.lib.units import *
-
-    import os
-    import copy
-    import re
-
-    styles = getSampleStyleSheet()
-
-    ALIGNMENTS = (TA_LEFT, TA_RIGHT, TA_CENTER, TA_JUSTIFY)
-
-    TEXT = """
-    Lörem ipsum dolor sit amet, consectetur adipisicing elit,
-    sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-    Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi
-    ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit
-    in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-    Excepteur sint occaecat cupidatat non proident, sunt in culpa qui
-    officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet,
-    consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore
-    et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation
-    ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
-    dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
-    nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt
-    in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum
-    dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
-    incididunt ut labore et dolore magna aliqua.
-    """.strip()
-
-    def textGenerator(data, fn, fs):
-        i = 1
-        for word in re.split('\s+', data):
-            if word:
-                yield Word(
-                    text="[%d|%s]" % (i, word),
-                    fontName=fn,
-                    fontSize=fs
-                )
-                yield Space(
-                    fontName=fn,
-                    fontSize=fs
-                )
-
-    def createText(data, fn, fs):
-        text = Text(list(textGenerator(data, fn, fs)))
-        return text
-
-    def makeBorder(width, style="solid", color=Color(1, 0, 0)):
-        return dict(
-            borderLeftColor=color,
-            borderLeftWidth=width,
-            borderLeftStyle=style,
-            borderRightColor=color,
-            borderRightWidth=width,
-            borderRightStyle=style,
-            borderTopColor=color,
-            borderTopWidth=width,
-            borderTopStyle=style,
-            borderBottomColor=color,
-            borderBottomWidth=width,
-            borderBottomStyle=style
-        )
-
-    def test():
-        doc = SimpleDocTemplate("test.pdf")
-        story = []
-
-        style = Style(fontName="Helvetica", textIndent=24.0)
-        fn = style["fontName"]
-        fs = style["fontSize"]
-        sampleText1 = createText(TEXT[:100], fn, fs)
-        sampleText2 = createText(TEXT[100:], fn, fs)
-
-        text = Text(sampleText1 + [
-            Space(
-                fontName=fn,
-                fontSize=fs),
-            Word(
-                text="TrennbarTrennbar",
-                pairs=[("Trenn-", "barTrennbar")],
-                fontName=fn,
-                fontSize=fs),
-            Space(
-                fontName=fn,
-                fontSize=fs),
-            Word(
-                text="Normal",
-                color=Color(1, 0, 0),
-                fontName=fn,
-                fontSize=fs),
-            Space(
-                fontName=fn,
-                fontSize=fs),
-            Word(
-                text="gGrößer",
-                fontName=fn,
-                fontSize=fs * 1.5),
-            Space(
-                fontName=fn,
-                fontSize=fs),
-            Word(
-                text="Bold",
-                fontName="Times-Bold",
-                fontSize=fs),
-            Space(
-                fontName=fn,
-                fontSize=fs),
-            Word(
-                text="jItalic",
-                fontName="Times-Italic",
-                fontSize=fs),
-            Space(
-                fontName=fn,
-                fontSize=fs),
-
-            # <span style="border: 1px solid red;">ipsum <span style="border: 1px solid green; padding: 4px; padding-left: 20px; background: yellow; margin-bottom: 8px; margin-left: 10px;">
-            # Lo<font size="12pt">re</font>m</span> <span style="background:blue; height: 30px;">ipsum</span> Lorem</span>
-
-            BoxBegin(
-                fontName=fn,
-                fontSize=fs,
-                **makeBorder(0.5, "solid", Color(0, 1, 0))),
-            Word(
-                text="Lorem",
-                fontName="Times-Bold",
-                fontSize=fs),
-            Word(
-                text="Lorem",
-                fontName=fn,
-                fontSize=fs),
-            Word(
-                text="Lorem",
-                fontName=fn,
-                fontSize=fs),
-            Word(
-                text="Lorem",
-                fontName=fn,
-                fontSize=fs),
-            Word(
-                text="Lorem",
-                fontName=fn,
-                fontSize=fs),
-            Word(
-                text="Lorem",
-                fontName=fn,
-                fontSize=fs),
-            Word(
-                text="Lorem",
-                fontName=fn,
-                fontSize=fs),
-            Word(
-                text="Lorem",
-                fontName=fn,
-                fontSize=fs),
-            Word(
-                text="Lorem",
-                fontName=fn,
-                fontSize=fs),
-            Word(
-                text="Lorem",
-                fontName="Times-Bold",
-                fontSize=fs),
-            Space(
-                fontName=fn,
-                fontSize=fs),
-            Word(
-                text="Lorem",
-                fontName=fn,
-                fontSize=fs),
-            Space(
-                fontName=fn,
-                fontSize=fs),
-            Word(
-                text="Lorem",
-                fontName=fn,
-                fontSize=fs),
-            Space(
-                fontName=fn,
-                fontSize=fs),
-            Word(
-                text="Lorem",
-                fontName=fn,
-                fontSize=fs),
-            Space(
-                fontName=fn,
-                fontSize=fs),
-            BoxBegin(
-                fontName=fn,
-                fontSize=fs,
-                backgroundColor=Color(1, 1, 0),
-                **makeBorder(1, "solid", Color(1, 0, 0))),
-            Word(
-                text="Lorem",
-                fontName=fn,
-                fontSize=fs),
-            BoxEnd(),
-            Space(
-                fontName=fn,
-                fontSize=fs),
-            Word(
-                text="Lorem",
-                fontName=fn,
-                fontSize=fs),
-            Space(
-                fontName=fn,
-                fontSize=fs),
-            BoxEnd(),
-
-            LineBreak(
-                fontName=fn,
-                fontSize=fs),
-            LineBreak(
-                fontName=fn,
-                fontSize=fs),
-        ] + sampleText2)
-
-        story.append(Paragraph(
-            copy.copy(text),
-            style,
-            debug=0))
-
-        for i in range(10):
-            style = copy.deepcopy(style)
-            style["textAlign"] = ALIGNMENTS[i % 4]
-            text = createText(("(%d) " % i) + TEXT, fn, fs)
-            story.append(Paragraph(
-                copy.copy(text),
-                style,
-                debug=0))
-        doc.build(story)
-
-    test()
-    os.system("start test.pdf")
-
-    # FIXME: Useless line?
-    # createText(TEXT, styles["Normal"].fontName, styles["Normal"].fontSize)
