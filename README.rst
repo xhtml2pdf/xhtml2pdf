@@ -2,6 +2,7 @@
 XHTML2PDF
 *********
 
+coverage test
 
 .. image:: https://travis-ci.org/xhtml2pdf/xhtml2pdf.svg
     :target: https://travis-ci.org/xhtml2pdf/xhtml2pdf
