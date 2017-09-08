@@ -17,7 +17,7 @@ matrix:
 
 install:
   - TOX_ENV=py${TRAVIS_PYTHON_VERSION}-rl${RL}
-  - pip install tox coveralls Sphinx sphinx-rtd-theme
+  - pip install tox==2.7.0 coveralls Sphinx sphinx-rtd-theme
 
 script: tox -e $TOX_ENV
 after_success: coveralls $COVERALLS_OPTION
