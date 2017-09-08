@@ -1186,7 +1186,10 @@ class CSSParser(object):
                 try:
                     strres = strres[0]
                 except Exception:
-                    strres = result.groups()[0]
+                    try:
+                        strres = list(strres)[0] # python 3, as filter returns object
+                    except Exception:
+                        strres = result.groups()[0]
             else:
                 strres = ''
             return strres, src[result.end():]
