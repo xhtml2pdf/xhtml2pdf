@@ -123,7 +123,8 @@ def exec_cmd(options, *args):
         print(result[0], result[1])
     if proc.returncode:
         print('exec error (%i): %s' % (proc.returncode, result[1]))
-        sys.exit(1)
+        if not options.nofail:
+            sys.exit(1)
     return result[0], result[1]
 
 
