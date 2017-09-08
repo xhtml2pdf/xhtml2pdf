@@ -95,7 +95,7 @@ class PmlBaseDoc(BaseDocTemplate):
     def beforePage(self):
 
         # Tricky way to set producer, because of not real privateness in Python
-        info = "pisa HTML to PDF <http://www.htmltopdf.org>"
+        info = "xhtml2pdf <https://github.com/xhtml2pdf/xhtml2pdf/>"
         self.canv._doc.info.producer = info
 
         '''
