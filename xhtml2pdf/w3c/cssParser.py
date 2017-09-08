@@ -15,6 +15,11 @@ from __future__ import absolute_import
 # Added by benjaoming to fix python3 tests
 from __future__ import unicode_literals
 
+try:
+    from future_builtins import filter
+except ImportError:
+    pass
+
 """CSS-2.1 parser.
 
 The CSS 2.1 Specification this parser was derived from can be found at http://www.w3.org/TR/CSS21/
@@ -1181,7 +1186,7 @@ class CSSParser(object):
             rexpression = self.re_string
         result = rexpression.match(src)
         if result:
-            strres = filter(None, result.groups())
+            strres = tuple(filter(None, result.groups()))
             if strres:
                 try:
                     strres = strres[0]

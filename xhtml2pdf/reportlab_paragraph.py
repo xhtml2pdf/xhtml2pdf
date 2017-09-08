@@ -22,7 +22,7 @@ if sys.version[0] != '2':
         def __init__(self,stream):
             super().__init__(stream,'utf-8')
     basestring = byte
-    unicode = byte #python 3
+    unicode = str #python 3
     str = byte
 
 ###############################################################
