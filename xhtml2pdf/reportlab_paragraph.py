@@ -15,15 +15,10 @@ import sys
 ###############################################################
 ###############################################################
 #if not python 2, the internal behavior of strings is changed
-is_python2 = True
-if sys.version[0] != '2':
-    is_python2 = False
-    class byte(bytes):
-        def __init__(self,stream):
-            super().__init__(stream,'utf-8')
-    basestring = byte
-    unicode = str #python 3
-    str = byte
+
+basestring = six.binary_type
+unicode = six.text_type
+str = six.binary_type
 
 ###############################################################
 ###############################################################
@@ -674,8 +669,10 @@ _scheme_re = re.compile('^[a-zA-Z][-+a-zA-Z0-9]+$')
 
 
 def _doLink(tx, link, rect):
-    if isinstance(link, unicode) and is_python2:
+    try:
         link = link.encode('utf8')
+    except:
+        pass
     parts = link.split(':', 1)
     scheme = len(parts) == 2 and parts[0].lower() or ''
     if _scheme_re.match(scheme) and scheme != 'document':
