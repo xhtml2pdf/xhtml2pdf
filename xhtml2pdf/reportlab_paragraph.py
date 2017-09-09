@@ -4,27 +4,15 @@
 # history http://www.reportlab.co.uk/cgi-bin/viewcvs.cgi/public/reportlab/trunk/reportlab/platypus/paragraph.py
 # Modifications by Dirk Holtwick, 2008
 
-
-#validate version sys.version[0] == 2 -> is python 2
-#validate version sys.version[0] == 3 -> is python 3
+from __future__ import unicode_literals
 import re
 import six
 import sys
 
-###############################################################
-###############################################################
-###############################################################
-#if not python 2, the internal behavior of strings is changed
-is_python2 = True
-if sys.version[0] != '2':
-    is_python2 = False
-    class byte(bytes):
-        def __init__(self,stream):
-            super().__init__(stream,'utf-8')
-    basestring = byte
-    unicode = byte #python 3
-    str = byte
 
+basestring = six.text_type
+unicode = six.text_type #python 3
+str = six.text_type
 ###############################################################
 ###############################################################
 ###############################################################
@@ -674,8 +662,8 @@ _scheme_re = re.compile('^[a-zA-Z][-+a-zA-Z0-9]+$')
 
 
 def _doLink(tx, link, rect):
-    if isinstance(link, unicode) and is_python2:
-        link = link.encode('utf8')
+    if six.PY2:
+        link = six.text_type(link, 'utf8') 
     parts = link.split(':', 1)
     scheme = len(parts) == 2 and parts[0].lower() or ''
     if _scheme_re.match(scheme) and scheme != 'document':
@@ -1282,7 +1270,11 @@ class Paragraph(Flowable):
                 endLine = (newWidth > maxWidth and n > 0) or lineBreak
                 if not endLine:
                     if lineBreak: continue      #throw it away
-                    nText = w[1][1]
+                    if type(w[1][1]) != six.text_type:
+                        nText = six.text_type(w[1][1], 'utf-8')
+                    else:
+                        nText = w[1][1]
+                        
                     if nText: n += 1
                     fontSize = f.fontSize
                     if calcBounds:
