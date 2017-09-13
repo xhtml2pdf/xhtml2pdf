@@ -1,73 +1,71 @@
-#! /usr/bin/python
-# -*- encoding: utf-8 -*-
+# coding: utf-8
 
-from django import http
-from django.shortcuts import render_to_response
-from django.template.loader import get_template
+import os
+
+from django.conf import settings
+from django.http import HttpResponse
+from django.shortcuts import render
 from django.template import Context
-import xhtml2pdf.pisa as pisa
-try:
-    import StringIO
-    StringIO = StringIO.StringIO
-except Exception:
-    from io import StringIO
-import cgi
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+
+
+try:  # python2 and python3
+    from .utils import extract_request_variables
+except:
+    from utils import extract_request_variables
+
 
 def index(request):
-    return http.HttpResponse("""
-        <html><body>
-            <h1>Example 1</h1>
-            Please enter some HTML code:
-            <form action="/download/" method="post" enctype="multipart/form-data">
-            <textarea name="data">Hello <strong>World</strong></textarea>
-            <br />
-            <input type="submit" value="Convert HTML to PDF" />
-            </form>
-            <hr>
-            <h1>Example 2</h1>
-            <p><a href="ezpdf_sample">Example with template</a>
-        </body></html>
-        """)
+    return render(request, 'index.html')
 
-def download(request):
-    if request.POST:
-        result = StringIO()
-        pdf = pisa.CreatePDF(
-            StringIO(request.POST["data"]),
-            result
-            )
-        #==============README===================
-        #Django < 1.7 is content_type is mimetype
-        #========================================
-        if not pdf.err:
-            return http.HttpResponse(
-                result.getvalue(),
-                content_type='application/pdf')
 
-    return http.HttpResponse('We had some errors')
+def link_callback(uri, rel):
+    """
+    Convert HTML URIs to absolute system paths so xhtml2pdf can access those
+    resources
+    """
+    # use short variable names
+    sUrl = settings.STATIC_URL      # Typically /static/
+    sRoot = settings.STATIC_ROOT    # Typically /home/userX/project_static/
+    mUrl = settings.MEDIA_URL       # Typically /static/media/
+    # Typically /home/userX/project_static/media/
+    mRoot = settings.MEDIA_ROOT
 
-def render_to_pdf(template_src, context_dict):
-    template = get_template(template_src)
-    context = Context(context_dict)
-    html  = template.render(context)
-    result = StringIO()
-    pdf = pisa.pisaDocument(StringIO( "{0}".format(html) ), result)
-    if not pdf.err:
-        #==============README===================
-        #Django < 1.7 is content_type is mimetype
-        #========================================
-        return http.HttpResponse(result.getvalue(), content_type='application/pdf')
-    return http.HttpResponse('We had some errors<pre>%s</pre>' % cgi.escape(html))
+    # convert URIs to absolute system paths
+    if uri.startswith(mUrl):
+        path = os.path.join(mRoot, uri.replace(mUrl, ""))
+    elif uri.startswith(sUrl):
+        path = os.path.join(sRoot, uri.replace(sUrl, ""))
+    else:
+        return uri  # handle absolute uri (ie: http://some.tld/foo.png)
 
-def ezpdf_sample(request):
-    blog_entries = []
-    for i in range(1,10):
-        blog_entries.append({
-            'id': i,
-            'title':'Playing with pisa 3.0.16 and dJango Template Engine',
-            'body':'This is a simple example..'
-            })
-    return render_to_pdf('entries.html',{
-        'pagesize':'A4',
-        'title':'My amazing blog',
-        'blog_entries':blog_entries})
+    # make sure that file exists
+    if not os.path.isfile(path):
+        raise Exception(
+            'media URI must start with %s or %s' % (sUrl, mUrl)
+        )
+    return path
+
+
+def render_pdf(request):
+
+    template_path = 'user_printer.html'
+    context = extract_request_variables(request)
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="report.pdf"'
+
+    template = get_template(template_path)
+    html = template.render(Context(context))
+    if request.POST.get('show_html', ''):
+        response['Content-Type'] = 'application/text'
+        response['Content-Disposition'] = 'attachment; filename="report.txt"'
+        response.write(html)
+    else:
+        pisaStatus = pisa.CreatePDF(
+            html, dest=response, link_callback=link_callback)
+        if pisaStatus.err:
+            return HttpResponse('We had some errors with code %s <pre>%s</pre>' % (pisaStatus.err,
+                                                                                   html))
+    return response

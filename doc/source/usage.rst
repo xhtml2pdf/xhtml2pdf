@@ -48,16 +48,12 @@ that converts relative URLs to absolute system paths.
 
 .. code:: python
     
-    import datetime
     import os
-    
     from django.conf import settings
     from django.http import HttpResponse
     from django.template import Context
     from django.template.loader import get_template
-    
     from xhtml2pdf import pisa
-    
     
     def link_callback(uri, rel):
         """
@@ -84,31 +80,28 @@ that converts relative URLs to absolute system paths.
                     'media URI must start with %s or %s' % (sUrl, mUrl)
                 )
         return path
-    
-    def generate_pdf(request):
-        """
-        A typical Django view
-        """
-        # Prepare context
-        data = {}
-        data['today'] = datetime.date.today()
-        data['farmer'] = 'Old MacDonald'
-        data['animals'] = [('Cow', 'Moo'), ('Goat', 'Baa'), ('Pig', 'Oink')]
-    
-        # Render html content through html template with context
-        template = get_template('lyrics/oldmacdonald.html')
-        html = template.render(Context(data))
-    
-        # Write PDF to file
-        f = open(os.path.join(settings.MEDIA_ROOT, 'test.pdf'), "w+b")
-        pisaStatus = pisa.CreatePDF(html, dest=f, link_callback=link_callback)
-    
-        # Return PDF document through a Django HTTP response
-        file.seek(0)
-        pdf = file.read()
-        file.close()            # Don't forget to close the file handle
-        return HttpResponse(pdf, mimetype='application/pdf')
 
+.. code:: python
+
+    def render_pdf_view(request):
+        template_path = 'user_printer.html'
+        context = {'myvar': 'this is your template context'}
+        # Create a Django response object, and specify content_type as pdf
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="report.pdf"'
+        # find the template and render it.
+        template = get_template(template_path)
+        html = template.render(Context(context))
+
+        # create a pdf
+        pisaStatus = pisa.CreatePDF(
+           html, dest=response, link_callback=link_callback)
+        # if error then show some funy view
+        if pisaStatus.err:
+           return HttpResponse('We had some errors <pre>' + html + '</pre>')
+        return response
+
+You can see in action in ``demo/djangoproject`` folder 
 
 Using in Command line 
 ----------------------
