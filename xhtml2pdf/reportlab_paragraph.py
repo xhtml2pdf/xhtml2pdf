@@ -137,7 +137,7 @@ def _leftDrawParaLine(tx, offset, extraspace, words, last=0):
 def _centerDrawParaLine(tx, offset, extraspace, words, last=0):
     m = offset + 0.5 * extraspace
     setXPos(tx, m)
-    tx._textOut(" ".join(words), 1)
+    tx._textOut(b" ".join(words), 1)
     setXPos(tx, -m)
     return m
 
