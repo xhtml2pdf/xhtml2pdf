@@ -676,9 +676,8 @@ class pisaFileObject:
                     self.local = uri
 
                     self.setMimeTypeByName(uri)
-                    if self.mimetype.startswith('text'):
-                        # removed bytes... lets hope it goes ok :/
-                        self.file = open(uri, "r")
+                    if self.mimetype and self.mimetype.startswith('text'):
+                        self.file = open(uri, "r") #removed bytes... lets hope it goes ok :/
                     else:
                         # removed bytes... lets hope it goes ok :/
                         self.file = open(uri, "rb")
@@ -711,9 +710,8 @@ class pisaFileObject:
             try:
                 self.data = self.file.read()
             except:
-                if self.mimetype.startswith('text'):
-                    # removed bytes... lets hope it goes ok :/
-                    self.file = open(self.file.name, "rb")
+                if self.mimetype and self.mimetype.startswith('text'):
+                    self.file = open(self.file.name, "rb") #removed bytes... lets hope it goes ok :/
                     self.data = self.file.read().decode('utf-8')
                 else:
                     raise

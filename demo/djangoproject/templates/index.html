@@ -1,0 +1,103 @@
+<html>
+	<head>
+<style>
+	pre {
+	    border-radius: 15px;
+	    font-family: monospace;
+	    white-space: pre;
+	    padding: 10px;
+	    margin: 5px;
+	    background-color: grey;
+	    color: white;
+	    font-weight: bold;
+	}
+	.col{
+		display: table-cell;
+	}
+	.col-1{
+		width: 60%;
+		padding-left: 10px;
+	}
+	.col-2{
+	    padding-left: 21px;
+	    width: 35%;
+	    border-left: 2px solid grey;
+	}
+	h1{
+		font-size: 16px;
+		color: blue;
+		margin-bottom: 4%;
+		text-align: center;
+	}
+</style>
+	</head>
+	<body>
+<div class="col col-1">
+    <h1>PDF creator from html </h1>
+    Please enter some HTML code:
+    <form action="/download" method="post" enctype="multipart/form-data">
+    <textarea name="data"  cols="80" rows="20">Hello <strong>World</strong></textarea>
+    <br />
+
+	<h1 > Build settings </h1>
+	
+
+     Page size: <select name="page_size">
+  					<option value="letter" selected>Letter A4</option>
+				</select> <br>
+				
+	 Page orientation:	<select name="page_orientation">
+  					<option value="landscape" > Landscape</option>
+  					<option value="portrait" selected > Portrait</option>
+		</select> <br>
+	 
+    
+    Example: <select name="example_number">
+  				<option value="1" selected> Frames </option>
+  				<option value="2"  > Example with 2 Static Frames and 1 Content Frame</option>
+				<option value="3">Example page template with a header, two columns, and a footer</option>
+		</select> <br>
+	Show Frame border <input type="checkbox" name="border" checked="1"/><br>
+    Show generated html  <input type="checkbox" name="show_html" /><br><br>
+    <input type="submit" value="Convert HTML to PDF" />
+    
+    </form>
+</div>
+<div class="col col-2">
+<div id="1" class="box">
+	<h1> Example with  <br> One Frame </h1>
+<pre>
+Just put html there 
+or &#123;% lorem 3 p %&#125; 
+or an image with
+
+&#123;% load static %&#125; 
+&lt;img src="&#123;% static 'xhtml2pdf.png' %&#125;" &gt;
+</pre>	
+</div>
+<div id="2" class="box">
+	<h1> Example with 2 Static Frames <br>and 1 Content Frame </h1>
+<pre>
+&lt;div id=&quot;header_content&quot;&gt; header text here &lt;/div&gt;
+&lt;div id=&quot;content&quot; &gt; &#123;% lorem 3 p %&#125;   &lt;/div&gt;
+&lt;div id=&quot;footer_content&quot;&gt; 
+&lt;pdf:pagenumber/&gt;  
+of  &lt;pdf:pagecount/&gt;&lt;/div&gt;
+
+</pre>
+</div>
+
+<div id="3" class="box">
+	<h1> Example page template with a header, <br>two columns, and a footer </h1>
+<pre>
+&lt;div id=&quot;header_content&quot;&gt;Lyrics-R-Us&lt;/div&gt;
+&lt;div id=&quot;footer_content&quot;&gt;(c) - page &lt;pdf:pagenumber&gt;
+    of &lt;pdf:pagecount&gt;
+&lt;/div&gt;
+&#123;% lorem 30 p %&#125;	
+
+</pre>
+</div>
+</div>
+
+</body></html>
