@@ -19,6 +19,8 @@ from xhtml2pdf.default import DEFAULT_CSS
 from xhtml2pdf.document import pisaDocument
 from xhtml2pdf.util import getFile
 from xhtml2pdf import __version__
+from xhtml2pdf.config.httpconfig import httpConfig
+
 import getopt
 import glob
 import logging
@@ -85,6 +87,18 @@ DEST
     (automatically used if file ends with ".xml")
   --html:
     Force parsing in HTML Mode (default)
+    
+[HTTP Connection options]
+
+  --http_nosslcheck:
+    No check ssl certificate.
+    
+See http.client.HTTPSConnection documentation for this parameters 
+
+  --http_key_file
+  --http_cert_file
+  --http_source_address
+  --http_timeout
 """).strip()
 
 COPYRIGHT = __doc__
@@ -177,6 +191,11 @@ def execute():
             "encoding=",
             "system",
             "profile",
+            "http_nosslcheck",
+            "http_key_file",
+            "http_cert_file",
+            "http_source_address",
+            "http_timeout"
         ])
     except getopt.GetoptError:
         usage()
@@ -198,41 +217,20 @@ def execute():
     log_format = LOG_FORMAT
 
     for o, a in opts:
-
         if o in ("-h", "--help"):
             # Hilfe anzeigen
             usage()
             sys.exit()
 
-        if o in ("-s", "--start-viewer", "--start"):
-            # Anzeigeprogramm starten
-            startviewer = 1
-
-        if o in ("-q", "--quiet"):
-            # Output unterdr�cken
-            quiet = 1
-
-        if o in ("-w", "--warn"):
-            # Warnings
-            log_level = min(log_level, logging.WARN)  # If also -d ignore -w
-
-        if o in ("-d", "--debug"):
-            # Debug
-            log_level = logging.DEBUG
-            log_format = LOG_FORMAT_DEBUG
-
-            if a:
-                log_level = int(a)
-
-        if o in("--version",):
+        elif o in("--version",):
             print(__version__)
             sys.exit(0)
 
-        if o in ("--copyright"):
+        elif o in ("--copyright"):
             print (COPYRIGHT)
             sys.exit(0)
 
-        if o in ("--system",):
+        elif o in ("--system",):
             print (COPYRIGHT)
             print ()
             print ("SYSTEM INFORMATIONS")
@@ -245,33 +243,57 @@ def execute():
             print ("Reportlab:         %s" % reportlab.Version)
             sys.exit(0)
 
-        if o in ("-t", "--format"):
+        elif o in ("-s", "--start-viewer", "--start"):
+            # Anzeigeprogramm starten
+            startviewer = 1
+
+        elif o in ("-q", "--quiet"):
+            # Output unterdr�cken
+            quiet = 1
+
+        elif o in ("-w", "--warn"):
+            # Warnings
+            log_level = min(log_level, logging.WARN)  # If also -d ignore -w
+
+        elif o in ("-d", "--debug"):
+            # Debug
+            log_level = logging.DEBUG
+            log_format = LOG_FORMAT_DEBUG
+
+            if a:
+                log_level = int(a)
+
+        elif o in ("-t", "--format"):
             # Format XXX ???
             format = a
 
-        if o in ("-b", "--base"):
+        elif o in ("-b", "--base"):
             base_dir = a
 
-        if o in ("--encoding",) and a:
+        elif o in ("--encoding",) and a:
             # Encoding
             encoding = a
 
-        if o in ("-c", "--css"):
+        elif o in ("-c", "--css"):
             # CSS
             css = open(a, "r").read()
 
-        if o in ("--css-dump",):
+        elif o in ("--css-dump",):
             # CSS dump
             print (DEFAULT_CSS)
             return
 
-        if o in ("--xml-dump",):
+        elif o in ("--xml-dump",):
             xml_output = sys.stdout
 
-        if o in ("-x", "--xml", "--xhtml"):
+        elif o in ("-x", "--xml", "--xhtml"):
             xhtml = True
+        
         elif o in ("--html",):
             xhtml = False
+
+        elif httpConfig.is_http_config(o, a):
+            continue
 
     if not quiet:
         try:
@@ -371,7 +393,7 @@ def execute():
             default_css=css,
             xhtml=xhtml,
             encoding=encoding,
-            xml_output=xml_output,
+            xml_output=xml_output
         )
 
         if xml_output:

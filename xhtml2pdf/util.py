@@ -70,6 +70,7 @@ try:
 except ImportError:
     renderSVG = None
 
+from xhtml2pdf.config.httpconfig import httpConfig
 #=========================================================================
 # Memoize decorator
 #=========================================================================
@@ -165,7 +166,6 @@ def copy_attrs(obj1, obj2, attrs):
     """
     for attr in attrs:
         value = getattr(obj2, attr) if hasattr(obj2, attr) else None
-        print(value)
         if value is None and isinstance(obj2, dict) and attr in obj2:
             value = obj2[attr]
         setattr(obj1, attr, value)
@@ -632,7 +632,7 @@ class pisaFileObject:
                 # Using HTTPLIB
                 server, path = urllib2.splithost(uri[uri.find("//"):])
                 if uri.startswith("https://"):
-                    conn = httplib.HTTPSConnection(server)
+                    conn = httplib.HTTPSConnection(server,  **httpConfig)
                 else:
                     conn = httplib.HTTPConnection(server)
                 conn.request("GET", path)

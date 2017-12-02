@@ -257,6 +257,8 @@ class CSSParseError(Exception):
 
     def setFullCSSSource(self, fullsrc, inline=False):
         self.fullsrc = fullsrc
+        if type(self.fullsrc) == six.binary_type:
+            self.fullsrc = six.text_type(self.fullsrc, 'utf-8')
         if inline:
             self.inline = inline
         if self.fullsrc:
@@ -524,6 +526,9 @@ class CSSParser(object):
             [ [ ruleset | media | page | font_face ] [S|CDO|CDC]* ]*
         ;
         """
+        # FIXME: BYTES to STR 
+        if type(src) == six.binary_type:
+            src=six.text_type(src)
         # Get rid of the comments
         src = self.re_comment.sub('', src)
 
