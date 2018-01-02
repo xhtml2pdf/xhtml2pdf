@@ -1189,7 +1189,7 @@ class CSSParser(object):
             strres = tuple(filter(None, result.groups()))
             if strres:
                 try:
-                    strres = strres[0]
+                    strres = list(strres)[0]
                 except Exception:
                     strres = result.groups()[0]
             else:
