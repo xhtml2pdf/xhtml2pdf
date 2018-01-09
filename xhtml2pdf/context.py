@@ -389,7 +389,7 @@ class pisaCSSBuilder(css.CSSBuilder):
 class pisaCSSParser(css.CSSParser):
 
     def parseExternal(self, cssResourceName):
-
+        result=None
         oldRootPath = self.rootPath
         cssFile = self.c.getFile(cssResourceName, relative=self.rootPath)
         if not cssFile:
@@ -398,9 +398,11 @@ class pisaCSSParser(css.CSSParser):
             self.rootPath = urlparse.urljoin(self.rootPath, cssResourceName)
         else:
             self.rootPath = getDirName(cssFile.uri)
-
-        result = self.parse(cssFile.getData())
-        self.rootPath = oldRootPath
+        try:
+            result = self.parse(cssFile.getData())
+            self.rootPath = oldRootPath
+        except Exception as e:
+            print(e)
         return result
 
 
