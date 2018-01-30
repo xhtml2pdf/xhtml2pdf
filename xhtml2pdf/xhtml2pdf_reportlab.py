@@ -454,7 +454,7 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
             # 8-bit PNGs could give an empty string as transparency value, so
             # we have to be careful here.
             try:
-                return map(ord, palette[transparency:transparency + 3])
+                return list(six.iterbytes(palette[transparency:transparency + 3]))
             except:
                 return None
         else:
