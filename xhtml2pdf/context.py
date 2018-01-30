@@ -588,12 +588,7 @@ class pisaContext(object):
         self.force = False
 
         # Cleanup the trail
-        try:
-            rfragList = reversed(self.fragList)
-        except:
-            # For Python 2.3 compatibility
-            rfragList = copy.copy(self.fragList)
-            rfragList.reverse()
+        rfragList = reversed(self.fragList)
 
         # Find maximum lead
         maxLeading = 0

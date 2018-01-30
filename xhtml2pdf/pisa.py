@@ -296,13 +296,9 @@ def execute():
             continue
 
     if not quiet:
-        try:
-            logging.basicConfig(
-                level=log_level,
-                format=log_format)
-        except:
-            # XXX Logging doesn't work for Python 2.3
-            logging.basicConfig()
+        logging.basicConfig(
+            level=log_level,
+            format=log_format)
 
     if len(args) not in (1, 2):
         usage()
