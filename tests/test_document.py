@@ -107,6 +107,31 @@ def test_document_with_transparent_image():
         tools.assert_equal(len(denker_transparant), 1)
 
 
+def test_document_background_image():
+    """
+    Test that a transparent PNG image is rendered properly.
+    """
+    tests_folder = os.path.dirname(os.path.realpath(__file__))
+    image_path = os.path.join(tests_folder, 'samples', 'img', 'denker-transparent.png')
+
+    css_background = "<style>@page {{background-image: url({background_location});}} </style>".format(background_location=image_path)
+
+    with tempfile.TemporaryFile() as pdf_file:
+        pisaDocument(
+            src=io.StringIO(HTML_CONTENT.format(head=css_background, extra_html="")),
+            dest=pdf_file
+        )
+        pdf_file.seek(0)
+        pdf_reader = PdfFileReader(pdf_file)
+
+        xobjects = pdf_reader.getPage(0)['/Resources']['/XObject'].getObject()
+        objects = [xobjects[key] for key in xobjects.keys()]
+
+        # Identity the 'denker_transparent.png' image by its height and width, and make sure it's there.
+        denker_transparant = [obj for obj in objects if obj['/Height'] == 137 and obj['/Width'] == 70]
+        tools.assert_equal(len(denker_transparant), 1)
+
+
 @skip_if(IN_PYPY, "This doesn't work in pypy")
 def test_document_creation_without_metadata():
     with tempfile.TemporaryFile() as pdf_file:

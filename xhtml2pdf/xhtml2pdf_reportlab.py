@@ -225,7 +225,7 @@ class PmlPageTemplate(PageTemplate):
                 if self.pisaBackground.mimetype.startswith("image/"):
 
                     try:
-                        self.img = PmlImageReader(six.StringIO(self.pisaBackground.getData()))
+                        self.img = PmlImageReader(six.BytesIO(self.pisaBackground.getData()))
                         iw, ih = self.img.getSize()
                         pw, self.ph = canvas._pagesize
 
