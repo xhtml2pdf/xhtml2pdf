@@ -1,3 +1,4 @@
+
 *********
 XHTML2PDF
 *********
@@ -20,8 +21,9 @@ XHTML2PDF
    :target: http://xhtml2pdf.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
 
-The current release of xhtml2pdf is xhtml2pdf **0.2b1** which is a beta that has
-Python 3 support. As with all open-source software, its use in production depends
+The current release of xhtml2pdf is xhtml2pdf **0.2.1** which is the first stable
+version that has Python 3 support. 
+As with all open-source software, its use in production depends
 on many factors, so be aware that you may find issues in some cases.
 **Big thanks** to everyone
 who has worked on this project so far and to those who help maintain it.
@@ -43,6 +45,7 @@ Documentation?
 xhtml2pdf has some documentation, and we could use your help improving it.
 A good place to start is ``doc/usage.rst``.
 
+Or also see in `Readthedocs <http://xhtml2pdf.readthedocs.io//>`__
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -80,12 +83,6 @@ Installation
 This is a typical Python library and is installed using pip::
 
     pip install xhtml2pdf
-
-To obtain the latest experimental version that has **Python 3 support**, please
-use a prerelease::
-
-    pip install --pre xhtml2pdf
-
 
 
 Requirements
@@ -181,7 +178,8 @@ This are the major milestones and the maintainers of the project:
 * 2010-2012 Dirk Holtwick (project named "xhtml2pdf", changed license to Apache)
 * 2012-2015 Chris Glass (@chrisglass)
 * 2015-2016 Benjamin Bach (@benjaoming)
-* 2016-Current Sam Spencer (@LegoStormtroopr)
+* 2016-2018 Sam Spencer (@LegoStormtroopr)
+* 2018-Current Luis Zarate (@luisza) 
 
 For more history, see the CHANGELOG.
 
