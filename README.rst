@@ -1,7 +1,5 @@
-
-*********
 XHTML2PDF
-*********
+=========
 
 
 .. image:: https://travis-ci.org/xhtml2pdf/xhtml2pdf.svg
