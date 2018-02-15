@@ -2,6 +2,19 @@
 CHANGELOG
 =========
 
+Version 0.2
+-----------------
+
+* Improve python3 support - thanks ***luisza, andreyfedoseev and flupzor ***
+* Include new Httplibs options - thanks ***luisza***
+* Support to background image - thanks ***flupzor***
+* Remove python23 support - thanks ***flupzor***
+* Transparent images work again in Python 3 - thanks ***flupzor***
+* Readthedocs integration - thanks ***luisza***
+* Update Django demo site - thanks ***luisza***
+* PEP8 and cleanup code - thanks ***luisza***
+* Drop the turbogears module   - thanks ***browniebroke*** 
+
 Version 0.1alpha4
 -----------------
 
