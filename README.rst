@@ -26,7 +26,7 @@ on many factors, so be aware that you may find issues in some cases.
 **Big thanks** to everyone
 who has worked on this project so far and to those who help maintain it.
 
---------------------------------------------------------------------------------
+
 
 What else can you use instead?
 ==============================
@@ -44,13 +44,6 @@ xhtml2pdf has some documentation, and we could use your help improving it.
 A good place to start is ``doc/usage.rst``.
 
 Or also see in `Readthedocs <http://xhtml2pdf.readthedocs.io//>`__
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
-
-This project is community-led! To strengthen it, please hang out on IRC #xhtml2pdf (Freenode)
-or join `our maling list <http://groups.google.com/group/xhtml2pdf>`__.
 
 
 Call for testing
@@ -160,6 +153,9 @@ Two different test suites are available to assert xhtml2pdf works reliably:
 
 Contact
 =======
+
+This project is community-led! To strengthen it, please hang out on IRC #xhtml2pdf (Freenode)
+or join `our maling list <http://groups.google.com/group/xhtml2pdf>`__.
 
 * IRC: #xhtml2pdf on freenode
 * Mailing list: xhtml2pdf@googlegroups.com
