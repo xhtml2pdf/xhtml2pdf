@@ -21,9 +21,10 @@ Contents:
    installation
    usage
    format_html
+   https_options
    howto-running-tests
    reference
-   
+
 
 
 Indices and tables
