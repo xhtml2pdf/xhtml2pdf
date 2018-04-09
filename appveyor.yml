@@ -4,6 +4,12 @@ environment:
   matrix:
       - PYTHON_HOME: "C:/Python27"
         PYTHON_VERSION: 2.7
+        RL: 30
+      - PYTHON_HOME: "C:/Python27"
+        PYTHON_VERSION: 2.7
+        RL: 31
+      - PYTHON_HOME: "C:/Python27"
+        PYTHON_VERSION: 2.7
         RL: 32
       - PYTHON_HOME: "C:/Python27"
         PYTHON_VERSION: 2.7
@@ -11,9 +17,28 @@ environment:
 
       - PYTHON_HOME: "C:/Python35"
         PYTHON_VERSION: 3.5
+        RL: 30
+      - PYTHON_HOME: "C:/Python35"
+        PYTHON_VERSION: 3.5
+        RL: 31
+      - PYTHON_HOME: "C:/Python35"
+        PYTHON_VERSION: 3.5
         RL: 32
       - PYTHON_HOME: "C:/Python35"
         PYTHON_VERSION: 3.5
+        RL: 33
+
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.6
+        RL: 30
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.6
+        RL: 31
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.6
+        RL: 32
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.6
         RL: 33
 
 install:
