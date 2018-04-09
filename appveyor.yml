@@ -8,6 +8,9 @@ environment:
       - PYTHON_HOME: "C:/Python27"
         PYTHON_VERSION: 2.7
         RL: 33
+      - PYTHON_HOME: "C:/Python27"
+        PYTHON_VERSION: 2.7
+        RL: 34
 
       - PYTHON_HOME: "C:/Python35"
         PYTHON_VERSION: 3.5
@@ -15,6 +18,9 @@ environment:
       - PYTHON_HOME: "C:/Python35"
         PYTHON_VERSION: 3.5
         RL: 33
+      - PYTHON_HOME: "C:/Python35"
+        PYTHON_VERSION: 3.5
+        RL: 34
 
       - PYTHON_HOME: "C:/Python36"
         PYTHON_VERSION: 3.6
@@ -22,6 +28,9 @@ environment:
       - PYTHON_HOME: "C:/Python36"
         PYTHON_VERSION: 3.6
         RL: 33
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.6
+        RL: 34
 
 install:
   - cmd: |
