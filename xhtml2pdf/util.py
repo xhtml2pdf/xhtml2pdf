@@ -649,7 +649,7 @@ class pisaFileObject:
                         self.file = gzip.GzipFile(
                             mode="rb", fileobj=six.StringIO(r1.read()))
                     else:
-                        self.file = r1
+                        self.file = pisaTempFile(r1.read())
                 else:
                     log.debug(
                         "Received non-200 status: {}".format((r1.status, r1.reason)))
