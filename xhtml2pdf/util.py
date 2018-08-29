@@ -32,6 +32,11 @@ try:
 except ImportError:
     import urlparse
 
+try:
+    from urllib.parse import unquote as urllib_unquote
+except ImportError:
+    from urllib import unquote as urllib_unquote
+
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -594,7 +599,8 @@ class pisaFileObject:
         if uri.startswith("data:"):
             m = _rx_datauri.match(uri)
             self.mimetype = m.group("mime")
-            self.data = base64.b64decode(m.group("data").encode("utf-8"))
+            b64 = urllib_unquote(m.group("data")).encode("utf-8")
+            self.data = base64.b64decode(b64)
 
         else:
             # Check if we have an external scheme
