@@ -642,12 +642,7 @@ class CSSSelectorCombinationQualifier(CSSSelectorQualifierBase):
         if self.op == ' ':
             if element is not None:
                 if element.matchesNode(self.selector.fullName):
-                    try:
-                        for parent in element.iterXMLParents():
-                            [None for qualifier in self.selector.qualifiers if
-                             qualifier.matches(parent) and stopIter((None,))]
-                    except StopIteration:
-                        return True
+                    return any(self.selector.matches(parent) for parent in element.iterXMLParents())
             return False
         elif self.op == '>':
             if element is not None:
