@@ -287,32 +287,22 @@ class CSSSelectorBase(object):
     def __str__(self):
         return self.asString()
 
+
+    def _as_comparison_key(self):
+        return (self.specificity(), self.fullName, self.qualifiers)
+
+
     def __eq__(self, other):
         """Python 3"""
-        return (
-            self.specificity() == other.specificity() and
-            self.fullName == other.fullName and
-            self.qualifiers == other.qualifiers
-        )
+        return self._as_comparison_key() == other._as_comparison_key()
 
     def __lt__(self, other):
         """Python 3"""
-        return not self.__eq__(other) and (
-            self.specificity() < other.specificity() or
-            self.fullName < other.fullName or
-            self.qualifiers < other.qualifiers
-        )
+        return self._as_comparison_key() < other._as_comparison_key()
 
     def __cmp__(self, other):
         """Python 2"""
-        result = cmp(self.specificity(), other.specificity())  # silence pyflakes
-        if result != 0:
-            return result
-        result = cmp(self.fullName, other.fullName)  # silence pyflakes
-        if result != 0:
-            return result
-        result = cmp(self.qualifiers, other.qualifiers)  # silence pyflakes
-        return result
+        return cmp(self._as_comparison_key(), other._as_comparison_key())
 
 
     def specificity(self):
