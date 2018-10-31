@@ -639,24 +639,16 @@ class CSSSelectorCombinationQualifier(CSSSelectorQualifierBase):
         return '%s%s' % (self.selector.asString(), self.op)
 
     def matches(self, element):
-        if self.op == ' ':
-            if element is not None:
-                if element.matchesNode(self.selector.fullName):
-                    try:
-                        for parent in element.iterXMLParents():
-                            [None for qualifier in self.selector.qualifiers if
-                             qualifier.matches(parent) and stopIter((None,))]
-                    except StopIteration:
-                        return True
-            return False
-        elif self.op == '>':
-            if element is not None:
-                if element.matchesNode(self.selector.fullName):
-                    if self.selector.qualifiers[0].matches(element):
-                        return True
-            return False
-        elif self.op == '+':
-            return self.selector.matches(element.getPreviousSibling())
+        op, selector = self.op, self.selector
+        if op == ' ':
+            return any(selector.matches(parent) for parent in element.iterXMLParents())
+        elif op == '>':
+            parent = next(element.iterXMLParents(), None)
+            if parent is None:
+                return False
+            return selector.matches(parent)
+        elif op == '+':
+            return selector.matches(element.getPreviousSibling())
 
 
 
