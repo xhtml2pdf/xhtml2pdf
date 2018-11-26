@@ -305,7 +305,8 @@ class pisaTagTD(pisaTag):
                 if len(self.node.childNodes) == 0:
                     width = c.frag.paddingLeft + c.frag.paddingRight
                     log.debug("Col {} has width {}".format(col, width))
-                    tdata.colw[col] = _width(width)
+                    if width:
+                        tdata.colw[col] = _width(width)
                 else:
                     # Child nodes are present, we cannot do anything about the
                     # width except set it externally.
