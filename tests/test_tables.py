@@ -338,5 +338,33 @@ class PisaTagTableTestCase(unittest.TestCase):
         self.assertEqual(context.frag.borderBottomStyle, "solid")
 
 
+class PisaTagTDTestCase(unittest.TestCase):
+
+    def test_td_tag_doesnt_collapse_when_empty(self):
+        dom = minidom.parseString("<td></td>")
+        element = dom.getElementsByTagName("td")[0]
+        attrs = AttrContainer({
+            'align': None,
+            'colspan': None,
+            'rowspan': None,
+            'width': None,
+            'valign': None,
+        })
+        context = pisaContext([])
+        table_data = tables.TableData()
+        table_data.col = 0
+        table_data.row = 0
+        table_data.colw = []
+        table_data.rowh = []
+        context.tableData = table_data
+        context.frag.paddingLeft = 0
+        context.frag.paddingRight = 0
+
+        instance = tables.pisaTagTD(element, attrs)
+        instance.start(context)
+
+        self.assertEqual(context.tableData.colw, [None])
+
+
 if __name__ == "__main__":
     unittest.main()
