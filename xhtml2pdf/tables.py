@@ -223,7 +223,7 @@ class pisaTagTR(pisaTag):
 
         tdata.add_cell_styles(c, begin, end, "tr")
         c.frag.vAlign = self.attr.valign or c.frag.vAlign
-        if c.frag.backColor:  # XXX Stimmt das so?
+        if c.frag.backColor:
             tdata.add_style(('BACKGROUND', begin, end, c.frag.backColor))
             
         tdata.col = 0
