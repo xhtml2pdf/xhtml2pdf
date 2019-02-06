@@ -363,7 +363,7 @@ class CSSParser(object):
         re_class = re.compile(i_class, _reflags)
         i_hash = '#((?:%s)+)' % i_nmchar
         re_hash = re.compile(i_hash, _reflags)
-        i_rgbcolor = '(#%s{6}|#%s{3})' % (i_hex, i_hex)
+        i_rgbcolor = '(#%s{8}|#%s{6}|#%s{3})' % (i_hex, i_hex, i_hex)
         re_rgbcolor = re.compile(i_rgbcolor, _reflags)
         i_nl = '\n|\r\n|\r|\f'
         i_escape_nl = '\\\\(?:%s)' % i_nl
