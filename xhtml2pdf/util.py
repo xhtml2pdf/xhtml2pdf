@@ -300,7 +300,10 @@ def getSize(value, relative=0, base=None, default=0.0):
         elif value in ("none", "0", "auto"):
             return 0.0
         elif relative:
-            if value[-2:] == 'em':  # XXX
+            if value[-3:] == 'rem':  # XXX
+                # 1em = 1 * fontSize
+                return float(value[:-3].strip()) * relative
+            elif value[-2:] == 'em':  # XXX
                 # 1em = 1 * fontSize
                 return float(value[:-2].strip()) * relative
             elif value[-2:] == 'ex':  # XXX
