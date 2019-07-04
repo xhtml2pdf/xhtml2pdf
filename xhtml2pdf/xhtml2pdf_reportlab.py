@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import absolute_import
 from hashlib import md5
 from reportlab.lib.enums import TA_RIGHT
 from reportlab.lib.styles import ParagraphStyle
@@ -42,6 +43,11 @@ except:
         import Image as PILImage
     except:
         PILImage = None
+
+if not six.PY2:
+    from html import escape as html_escape
+else:
+    from cgi import escape as html_escape
 
 log = logging.getLogger("xhtml2pdf")
 
@@ -119,7 +125,7 @@ class PmlBaseDoc(BaseDocTemplate):
         if getattr(flowable, "outline", False):
             self.notify('TOCEntry', (
                 flowable.outlineLevel,
-                cgi.escape(copy.deepcopy(flowable.text), 1),
+                html_escape(copy.deepcopy(flowable.text), 1),
                 self.page))
 
     def handle_nextPageTemplate(self, pt):
@@ -150,7 +156,7 @@ class PmlBaseDoc(BaseDocTemplate):
             #collect the refs to the template objects, complain if any are bad
             c = PTCycle()
             for ptn in pt:
-            #special case name used to short circuit the iteration
+                #special case name used to short circuit the iteration
                 if ptn == '*':
                     c._restart = len(c)
                     continue
