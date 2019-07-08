@@ -18,8 +18,6 @@
 Updates the version infos
 """
 
-from __future__ import absolute_import
-
 import time
 import re
 import cgi

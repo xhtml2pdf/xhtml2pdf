@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import
 from hashlib import md5
 from reportlab.lib.enums import TA_RIGHT
 from reportlab.lib.styles import ParagraphStyle
