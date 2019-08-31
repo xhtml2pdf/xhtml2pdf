@@ -10,6 +10,12 @@ from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlPageTemplate
 from xhtml2pdf.util import pisaTempFile, getBox, PyPDF2
 import cgi
 import logging
+import six
+
+if not six.PY2:
+    from html import escape as html_escape
+else:
+    from cgi import escape as html_escape
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -33,12 +39,14 @@ def pisaErrorDocument(dest, c):
     out.write("<p style='background-color:red;'><strong>%d error(s) occured:</strong><p>" % c.err)
     for mode, line, msg, _ in c.log:
         if mode == "error":
-            out.write("<pre>%s in line %d: %s</pre>" % (mode, line, cgi.escape(msg)))
+            out.write("<pre>%s in line %d: %s</pre>" %
+                      (mode, line, html_escape(msg)))
 
     out.write("<p><strong>%d warning(s) occured:</strong><p>" % c.warn)
     for mode, line, msg, _ in c.log:
         if mode == "warning":
-            out.write("<p>%s in line %d: %s</p>" % (mode, line, cgi.escape(msg)))
+            out.write("<p>%s in line %d: %s</p>" %
+                      (mode, line, html_escape(msg)))
 
     return pisaDocument(out.getvalue(), dest, raise_exception=False)
 

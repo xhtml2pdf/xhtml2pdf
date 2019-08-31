@@ -43,6 +43,11 @@ except:
     except:
         PILImage = None
 
+if not six.PY2:
+    from html import escape as html_escape
+else:
+    from cgi import escape as html_escape
+
 log = logging.getLogger("xhtml2pdf")
 
 MAX_IMAGE_RATIO = 0.95
@@ -119,7 +124,7 @@ class PmlBaseDoc(BaseDocTemplate):
         if getattr(flowable, "outline", False):
             self.notify('TOCEntry', (
                 flowable.outlineLevel,
-                cgi.escape(copy.deepcopy(flowable.text), 1),
+                html_escape(copy.deepcopy(flowable.text), 1),
                 self.page))
 
     def handle_nextPageTemplate(self, pt):
@@ -150,7 +155,7 @@ class PmlBaseDoc(BaseDocTemplate):
             #collect the refs to the template objects, complain if any are bad
             c = PTCycle()
             for ptn in pt:
-            #special case name used to short circuit the iteration
+                #special case name used to short circuit the iteration
                 if ptn == '*':
                     c._restart = len(c)
                     continue
