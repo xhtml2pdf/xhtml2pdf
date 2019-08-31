@@ -653,7 +653,7 @@ class pisaFileObject:
                         import gzip
 
                         self.file = gzip.GzipFile(
-                            mode="rb", fileobj=six.StringIO(r1.read()))
+                            mode="rb", fileobj=six.BytesIO(r1.read()))
                     else:
                         self.file = pisaTempFile(r1.read())
                 else:
