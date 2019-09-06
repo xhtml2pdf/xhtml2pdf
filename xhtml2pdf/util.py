@@ -603,6 +603,7 @@ class pisaFileObject:
             m = _rx_datauri.match(uri)
             self.mimetype = m.group("mime")
             b64 = urllib_unquote(m.group("data")).encode("utf-8")
+            b64 += b"=" * ((4 - len(b64) % 4) % 4)
             self.data = base64.b64decode(b64)
 
         else:
