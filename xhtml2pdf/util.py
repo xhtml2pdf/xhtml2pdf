@@ -142,7 +142,7 @@ def transform_attrs(obj, keys, container, func, extras=None):
     Allows to apply one function to set of keys cheching if key is in container,
     also trasform ccs key to report lab keys.
 
-    extras = Are extra params for func, it will be call like func(*[param1, param2]) 
+    extras = Are extra params for func, it will be call like func(*[param1, param2])
 
     obj = frag
     keys = [(reportlab, css), ... ]
@@ -167,7 +167,7 @@ def transform_attrs(obj, keys, container, func, extras=None):
 def copy_attrs(obj1, obj2, attrs):
     """
     Allows copy a list of attributes from object2 to object1.
-    Useful for copy ccs attributes to fragment  
+    Useful for copy ccs attributes to fragment
     """
     for attr in attrs:
         value = getattr(obj2, attr) if hasattr(obj2, attr) else None
@@ -178,7 +178,7 @@ def copy_attrs(obj1, obj2, attrs):
 
 def set_value(obj, attrs, value, _copy=False):
     """
-    Allows set the same value to a list of attributes 
+    Allows set the same value to a list of attributes
     """
     for attr in attrs:
         if _copy:
@@ -586,6 +586,7 @@ class pisaFileObject:
     """
 
     def __init__(self, uri, basepath=None):
+
         self.basepath = basepath
         self.mimetype = None
         self.file = None
@@ -602,8 +603,18 @@ class pisaFileObject:
         if uri.startswith("data:"):
             m = _rx_datauri.match(uri)
             self.mimetype = m.group("mime")
-            b64 = urllib_unquote(m.group("data")).encode("utf-8")
+
+            b64 = urllib_unquote(m.group("data"))
+
+            # The data may be incorrectly unescaped... repairs needed
+            b64 = b64.strip("b'").strip("'").encode()
+            b64 = re.sub(b"\\n", b'', b64)
+            b64 = re.sub(b'[^A-Za-z0-9\+\/]+', b'', b64)
+
+            # Add padding as needed, to make length into a multiple of 4
+            #
             b64 += b"=" * ((4 - len(b64) % 4) % 4)
+
             self.data = base64.b64decode(b64)
 
         else:
