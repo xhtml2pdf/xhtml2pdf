@@ -595,7 +595,7 @@ class pisaFileObject:
         self.local = None
         self.tmp_file = None
         uri = uri or str()
-        if type(uri) != str:
+        if not isinstance(uri, str):
             uri = uri.decode("utf-8")
         log.debug("FileObject %r, Basepath: %r", uri, basepath)
 
