@@ -43,7 +43,7 @@ Using xhtml2pdf in Django
 ----------------------------
 
 To allow URL references to be resolved using Django's STATIC_URL and MEDIA_URL settings,
-xhtml2pdf allows users to specify a ``link_callback`` paramter to point to a function
+xhtml2pdf allows users to specify a ``link_callback`` parameter to point to a function
 that converts relative URLs to absolute system paths.
 
 .. code:: python
