@@ -9,29 +9,29 @@ Using with Python standalone
     from xhtml2pdf import pisa             # import python module
     
     # Define your data
-    sourceHtml = "<html><body><p>To PDF or not to PDF</p></body></html>"
-    outputFilename = "test.pdf"
+    source_html = "<html><body><p>To PDF or not to PDF</p></body></html>"
+    output_filename = "test.pdf"
 
     # Utility function
-    def convertHtmlToPdf(sourceHtml, outputFilename):
+    def convert_html_to_pdf(source_html, output_filename):
         # open output file for writing (truncated binary)
-        resultFile = open(outputFilename, "w+b")
+        result_file = open(output_filename, "w+b")
     
         # convert HTML to PDF
-        pisaStatus = pisa.CreatePDF(
-                sourceHtml,                # the HTML to convert
-                dest=resultFile)           # file handle to recieve result
+        pisa_status = pisa.CreatePDF(
+                source_html,                # the HTML to convert
+                dest=result_file)           # file handle to recieve result
     
         # close output file
-        resultFile.close()                 # close output file
+        result_file.close()                 # close output file
 
         # return True on success and False on errors
-        return pisaStatus.err
+        return pisa_status.err
 
     # Main program
     if __name__ == "__main__":
         pisa.showLogging()
-        convertHtmlToPdf(sourceHtml, outputFilename)
+        convert_html_to_pdf(source_html, output_filename)
 
 This basic Python example will generate a test.pdf file with the text
 'To PDF or not to PDF' in the top left of the page.
@@ -51,7 +51,6 @@ that converts relative URLs to absolute system paths.
     import os
     from django.conf import settings
     from django.http import HttpResponse
-    from django.template import Context
     from django.template.loader import get_template
     from xhtml2pdf import pisa
     
@@ -61,23 +60,23 @@ that converts relative URLs to absolute system paths.
         resources
         """
         # use short variable names
-        sUrl = settings.STATIC_URL      # Typically /static/
-        sRoot = settings.STATIC_ROOT    # Typically /home/userX/project_static/
-        mUrl = settings.MEDIA_URL       # Typically /static/media/
-        mRoot = settings.MEDIA_ROOT     # Typically /home/userX/project_static/media/
+        s_url = settings.STATIC_URL      # Typically /static/
+        s_root = settings.STATIC_ROOT    # Typically /home/userX/project_static/
+        m_url = settings.MEDIA_URL       # Typically /static/media/
+        m_root = settings.MEDIA_ROOT     # Typically /home/userX/project_static/media/
     
         # convert URIs to absolute system paths
-        if uri.startswith(mUrl):
-            path = os.path.join(mRoot, uri.replace(mUrl, ""))
-        elif uri.startswith(sUrl):
-            path = os.path.join(sRoot, uri.replace(sUrl, ""))
+        if uri.startswith(m_url):
+            path = os.path.join(m_root, uri.replace(m_url, ""))
+        elif uri.startswith(s_url):
+            path = os.path.join(s_root, uri.replace(s_url, ""))
         else:
             return uri  # handle absolute uri (ie: http://some.tld/foo.png)
     
         # make sure that file exists
         if not os.path.isfile(path):
                 raise Exception(
-                    'media URI must start with %s or %s' % (sUrl, mUrl)
+                    'media URI must start with %s or %s' % (s_url, m_url)
                 )
         return path
 
@@ -91,13 +90,13 @@ that converts relative URLs to absolute system paths.
         response['Content-Disposition'] = 'attachment; filename="report.pdf"'
         # find the template and render it.
         template = get_template(template_path)
-        html = template.render(Context(context))
+        html = template.render(context)
 
         # create a pdf
-        pisaStatus = pisa.CreatePDF(
+        pisa_status = pisa.CreatePDF(
            html, dest=response, link_callback=link_callback)
         # if error then show some funy view
-        if pisaStatus.err:
+        if pisa_status.err:
            return HttpResponse('We had some errors <pre>' + html + '</pre>')
         return response
 
