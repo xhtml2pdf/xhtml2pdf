@@ -19,7 +19,7 @@ XHTML2PDF
    :target: http://xhtml2pdf.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
 
-The current release of xhtml2pdf is xhtml2pdf **0.2.1** which is the first stable
+The current release of xhtml2pdf is xhtml2pdf **0.2.4** which is the first stable
 version that has Python 3 support. 
 As with all open-source software, its use in production depends
 on many factors, so be aware that you may find issues in some cases.
