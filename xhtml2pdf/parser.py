@@ -581,7 +581,7 @@ def pisaLoop(node, context, path=None, **kw):
                         (
                             ("keepWithNext", "-pdf-keep-with-next"),
                             ("outline", "-pdf-outline"),
-                            ("borderLeftColor", "-pdf-outline-open"),
+                            #("borderLeftColor", "-pdf-outline-open"),
                         ),
                         context.cssAttr,
                         getBool
