@@ -736,7 +736,7 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
     #         if inputstream.codecName(encoding) is None:
     #             log.error("%r is not a valid encoding", encoding)
     document = parser.parse(
-        src,
+        src, transport_encoding=encoding
     )  # encoding=encoding)
 
     if xml_output:
