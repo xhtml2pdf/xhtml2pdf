@@ -717,12 +717,16 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
     else:
         parser = html5lib.HTMLParser(tree=treebuilders.getTreeBuilder("dom"))
 
+    parser_kwargs = {}
     if isinstance(src, six.text_type):
         # If an encoding was provided, do not change it.
         if not encoding:
             encoding = "utf-8"
         src = src.encode(encoding)
         src = pisaTempFile(src, capacity=context.capacity)
+        # To pass the encoding used to convert the text_type src to binary_type
+        # on to html5lib's parser to ensure proper decoding
+        parser_kwargs['transport_encoding'] = encoding
 
     # # Test for the restrictions of html5lib
     # if encoding:
@@ -736,7 +740,7 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
     #         if inputstream.codecName(encoding) is None:
     #             log.error("%r is not a valid encoding", encoding)
     document = parser.parse(
-        src, transport_encoding=encoding
+        src, **parser_kwargs
     )  # encoding=encoding)
 
     if xml_output:
