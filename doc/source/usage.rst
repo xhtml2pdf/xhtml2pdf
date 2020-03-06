@@ -62,7 +62,7 @@ that converts relative URLs to absolute system paths.
         # use short variable names
         s_url = settings.STATIC_URL      # Typically /static/
         s_root = settings.STATIC_ROOT    # Typically /home/userX/project_static/
-        m_url = settings.MEDIA_URL       # Typically /static/media/
+        m_url = settings.MEDIA_URL       # Typically /media/
         m_root = settings.MEDIA_ROOT     # Typically /home/userX/project_static/media/
     
         # convert URIs to absolute system paths
