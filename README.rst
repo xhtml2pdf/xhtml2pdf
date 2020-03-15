@@ -155,7 +155,7 @@ Contact
 =======
 
 This project is community-led! To strengthen it, please hang out on IRC #xhtml2pdf (Freenode)
-or join `our mauling list <http://groups.google.com/group/xhtml2pdf>`__.
+or join `our mailing list <http://groups.google.com/group/xhtml2pdf>`__.
 
 * IRC: #xhtml2pdf on freenode
 * Mailing list: xhtml2pdf@googlegroups.com
