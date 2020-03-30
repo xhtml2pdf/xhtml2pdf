@@ -243,10 +243,12 @@ class PmlPageTemplate(PageTemplate):
                         if self.isPortrait():
                             self.w = iw * factor_min
                             self.h = ih * factor_min
+                            canvas.drawImage(self.img, 0, self.ph - self.h, self.w, self.h)
                         elif self.isLandscape():
                             factor_max = max(wfactor, hfactor)
                             self.h = ih * factor_max
                             self.w = iw * factor_min
+                            canvas.drawImage(self.img, 0, 0, self.w, self.h)
                     except:
                         log.exception("Draw background")
 
@@ -255,12 +257,6 @@ class PmlPageTemplate(PageTemplate):
                     pisaBackground = self.pisaBackground
 
             self.pisaBackgroundList.append(pisaBackground)
-
-            if self.img:
-                if self.isPortrait():
-                    canvas.drawImage(self.img, 0, self.ph - self.h, self.w, self.h)
-                elif self.isLandscape():
-                    canvas.drawImage(self.img, 0, 0, self.w, self.h)
 
             def pageNumbering(objList):
                 for obj in flatten(objList):
