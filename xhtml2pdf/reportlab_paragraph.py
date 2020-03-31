@@ -1550,7 +1550,7 @@ class Paragraph(Flowable):
                 tx.setFont(f.fontName, f.fontSize, leading)
                 ws = getattr(tx, '_wordSpace', 0)  
                 t_off = dpl(tx, offset, ws, lines[0][1], noJustifyLast and nLines == 1)
-                if f.underline or f.link or f.strike:
+                if (hasattr(f, 'underline') and f.underline) or f.link or (hasattr(f, 'strike') and f.strike):
                     xs = tx.XtraState = ABag()
                     xs.cur_y = cur_y
                     xs.f = f
