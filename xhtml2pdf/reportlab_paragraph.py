@@ -303,7 +303,8 @@ def _putFragLine(cur_x, tx, line):
                     xs.backgroundFontSize = f.fontSize
 
             # Underline
-            if not xs.underline and f.underline:
+            if not (hasattr(xs, 'underline') and xs.underline) \
+                    and (hasattr(f, 'underline') and f.underline):
                 xs.underline = 1
                 xs.underline_x = cur_x_s
                 xs.underlineColor = f.textColor
@@ -318,7 +319,8 @@ def _putFragLine(cur_x, tx, line):
                     xs.underline_x = cur_x_s
 
             # Strike
-            if not xs.strike and f.strike:
+            if not (hasattr(xs, 'strike') and xs.strike) \
+                    and (hasattr(f, 'strike') and f.strike):
                 xs.strike = 1
                 xs.strike_x = cur_x_s
                 xs.strikeColor = f.textColor
