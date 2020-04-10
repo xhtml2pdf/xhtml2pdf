@@ -43,7 +43,7 @@ Documentation?
 xhtml2pdf has some documentation, and we could use your help improving it.
 A good place to start is ``doc/usage.rst``.
 
-Or also see in `Readthedocs <http://xhtml2pdf.readthedocs.io//>`__
+Or also see in `Readthedocs <http://xhtml2pdf.readthedocs.io/>`__
 
 
 Call for testing
