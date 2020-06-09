@@ -448,7 +448,12 @@ def makeDataURI(data=None, mimetype=None, filename=None):
             mimetype = mimetypes.guess_type(filename)[0].split(";")[0]
         else:
             raise Exception("You need to provide a mimetype or a filename for makeDataURI")
-    return "data:" + mimetype + ";base64," + "".join(base64.encodestring(data).split())
+    # encodestring was deprecated in Python 3 and removed in Python 3.9.
+    if six.PY3:
+        encoded_data = base64.encodebytes(data).split()
+    else:
+        encoded_data = base64.encodestring(data).split()
+    return "data:" + mimetype + ";base64," + "".join(encoded_data)
 
 
 def makeDataURIFromFile(filename):
