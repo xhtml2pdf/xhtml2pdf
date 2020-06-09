@@ -303,7 +303,8 @@ def _putFragLine(cur_x, tx, line):
                     xs.backgroundFontSize = f.fontSize
 
             # Underline
-            if not xs.underline and f.underline:
+            if not (hasattr(xs, 'underline') and xs.underline) \
+                    and (hasattr(f, 'underline') and f.underline):
                 xs.underline = 1
                 xs.underline_x = cur_x_s
                 xs.underlineColor = f.textColor
@@ -318,7 +319,8 @@ def _putFragLine(cur_x, tx, line):
                     xs.underline_x = cur_x_s
 
             # Strike
-            if not xs.strike and f.strike:
+            if not (hasattr(xs, 'strike') and xs.strike) \
+                    and (hasattr(f, 'strike') and f.strike):
                 xs.strike = 1
                 xs.strike_x = cur_x_s
                 xs.strikeColor = f.textColor
@@ -1550,7 +1552,7 @@ class Paragraph(Flowable):
                 tx.setFont(f.fontName, f.fontSize, leading)
                 ws = getattr(tx, '_wordSpace', 0)  
                 t_off = dpl(tx, offset, ws, lines[0][1], noJustifyLast and nLines == 1)
-                if f.underline or f.link or f.strike:
+                if (hasattr(f, 'underline') and f.underline) or f.link or (hasattr(f, 'strike') and f.strike):
                     xs = tx.XtraState = ABag()
                     xs.cur_y = cur_y
                     xs.f = f
