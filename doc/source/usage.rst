@@ -25,7 +25,7 @@ Using with Python standalone
         # close output file
         result_file.close()                 # close output file
 
-        # return True on success and False on errors
+        # return False on success and True on errors
         return pisa_status.err
 
     # Main program
