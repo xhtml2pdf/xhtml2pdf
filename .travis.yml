@@ -5,7 +5,8 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
-  - "3.7-dev"
+  - "3.7"
+  - "3.8"
   - "pypy"
   - "pypy3"
 
@@ -15,11 +16,13 @@ env:
   - RL=32
   - RL=33
   - RL=34
+  - RL=35
+  - RL=36
 
 matrix:
   fast_finish: true
   allow_failures:
-    - python: "3.7-dev"
+    - python: "3.8"
     - python: "pypy3"
 
 install:
