@@ -163,18 +163,22 @@ class pisaCSSBuilder(css.CSSBuilder):
         # The "src" attribute can be a CSS group but in that case
         # ignore everything except the font URI
         uri = data['src']
-        if not isinstance(data['src'], str):
-            for part in uri:
-                if isinstance(part, str):
-                    uri = part
-                    break
+        fonts = []
 
-        src = self.c.getFile(uri, relative=self.c.cssParser.rootPath)
-        self.c.loadFont(
-            names,
-            src,
-            bold=bold,
-            italic=italic)
+        if isinstance(data['src'], list):
+            for part in uri:
+                if isinstance(part, str) or isinstance(part, unicode):
+                    fonts.append(part)
+        else:
+            fonts.append(uri)
+
+        for font in fonts:
+            src = self.c.getFile(font, relative=self.c.cssParser.rootPath)
+            self.c.loadFont(
+                names,
+                src,
+                bold=bold,
+                italic=italic)
         return {}, {}
 
     def _pisaAddFrame(self, name, data, first=False, border=None, size=(0, 0)):
