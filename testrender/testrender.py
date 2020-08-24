@@ -36,6 +36,7 @@ def render_pdf(filename, output_dir, options):
 
 
 def convert_to_png(infile, output_dir, options):
+    print("infile", infile)
     if options.debug:
         print('Converting %s to PNG' % infile)
     basename = os.path.basename(infile)
@@ -43,6 +44,7 @@ def convert_to_png(infile, output_dir, options):
     outname = '%s.page%%0d.png' % filename
     globname = '%s.page*.png' % filename
     outfile = os.path.join(output_dir, outname)
+    print("outfile",outfile)
     exec_cmd(options, options.convert_cmd, '-density', '150', infile, outfile)
 
     outfiles = glob.glob(os.path.join(output_dir, globname))
@@ -189,6 +191,7 @@ def create_html_file(results, template_file, output_dir, options):
 
     now = datetime.datetime.now()
     title = 'xhtml2pdf Test Rendering Results, (Python %s) %s' % (sys.version,now.strftime('%c'))
+    print("ojojojojojo",template_file)
     template = open(template_file, 'r'+do_bytes).read()
     template = template.replace('%%TITLE%%', title)
     template = template.replace('%%RESULTS%%', '\n'.join(html))
@@ -204,14 +207,19 @@ def main():
     options, args = parser.parse_args()
 
     base_dir = os.path.abspath(os.path.join(__file__, os.pardir))
+    print("babababa", base_dir)
     source_dir = os.path.join(base_dir, options.source_dir)
+    print("holaaa", options.source_dir)
     if options.create_reference is not None:
         output_dir = os.path.join(base_dir, options.create_reference)
     else:
         output_dir = os.path.join(base_dir, options.output_dir)
+        print("outdir",output_dir)
     template_file = os.path.join(base_dir, options.html_template)
+    print("base",base_dir)
     ref_dir = os.path.join(base_dir, options.ref_dir)
-
+    print("oppp",options.ref_dir)
+    print("refdir",ref_dir)
     if os.path.isdir(output_dir):
         shutil.rmtree(output_dir)
     os.makedirs(output_dir)
@@ -223,6 +231,7 @@ def main():
     else:
         files = [os.path.join(source_dir, arg) for arg in args]
     for filename in files:
+        print("file name",filename)
         pdf, pages, diff = render_file(filename, output_dir, ref_dir, options)
         diff_count += diff
         results.append((filename, pdf, pages, diff))
@@ -252,16 +261,16 @@ parser = OptionParser(
     description='Renders a single html source file or all files in the data '
     'directory, converts them to PNG format and prepares a result '
     'HTML file for comparing the output with an expected result')
-parser.add_option('-s', '--source-dir', dest='source_dir', default='data/source',
+parser.add_option('-s', '--source-dir', dest='source_dir', default='data\source',
                   help=('Path to directory containing the html source files'))
 parser.add_option('-o', '--output-dir', dest='output_dir', default='output',
                   help='Path to directory for output files. CAREFUL: this '
                   'directory will be deleted and recreated before rendering!')
-parser.add_option('-r', '--ref-dir', dest='ref_dir', default='data/reference',
+parser.add_option('-r', '--ref-dir', dest='ref_dir', default='\\references',
                   help='Path to directory containing the reference images '
                   'to compare the result with')
 parser.add_option('-t', '--template', dest='html_template',
-                  default='data/template.html', help='Name of HTML template file')
+                  default='data\\template.html', help='Name of HTML template file')
 parser.add_option('-e', '--only-errors', dest='only_errors', action='store_true',
                   default=False, help='Only include images in HTML file which '
                   'differ from reference')
@@ -286,7 +295,7 @@ parser.add_option('-c', '--create-reference', dest='create_reference',
                  'will be deleted and recreated before rendering!')
 parser.add_option('--debug', dest='debug', action='store_true',
                   default=False, help='More output for debugging')
-parser.add_option('--convert-cmd', dest='convert_cmd', default='/usr/bin/convert',
+parser.add_option('--convert-cmd', dest='convert_cmd', default='convert',
                   help='Path to ImageMagick "convert" tool')
 parser.add_option('--compare-cmd', dest='compare_cmd', default='/usr/bin/compare',
                   help='Path to ImageMagick "compare" tool')
