@@ -44,7 +44,6 @@ def convert_to_png(infile, output_dir, options):
     outname = '%s.page%%0d.png' % filename
     globname = '%s.page*.png' % filename
     outfile = os.path.join(output_dir, outname)
-    print("outfile",outfile)
     exec_cmd(options, options.convert_cmd, '-density', '150', infile, outfile)
 
     outfiles = glob.glob(os.path.join(output_dir, globname))
@@ -52,7 +51,7 @@ def convert_to_png(infile, output_dir, options):
     if options.remove_transparencies:
         for outfile in outfiles:
             # convert transparencies to white background
-            # Done after PDF to PNG conversion, as during that conversion this will remove most background colors.
+            # Done after PDF to PNG conversion, as during that conversion this will remove most background colors
             exec_cmd(options, options.convert_cmd, '-background', 'white', '-alpha', 'remove', outfile, outfile)
     return outfiles
 
@@ -60,11 +59,10 @@ def convert_to_png(infile, output_dir, options):
 def create_diff_image(srcfile1, srcfile2, output_dir, options):
     if options.debug:
         print('Creating difference image for %s and %s' % (srcfile1, srcfile2))
-
     outname = '%s.diff%s' % os.path.splitext(srcfile1)
     outfile = os.path.join(output_dir, outname)
-    _, result = exec_cmd(options, options.compare_cmd, '-metric', 'ae', srcfile1, srcfile2, '-lowlight-color', 'white', outfile)
-    diff_value = int(float(result.strip()))
+    result = exec_cmd(options, options.compare_cmd, '-metric', 'ae', srcfile1, srcfile2, '-quiet', outfile)
+    diff_value = int(result[1])
     if diff_value > 0:
         if not options.quiet:
             print('Image %s differs from reference, value is %i' % (srcfile1, diff_value))
@@ -126,7 +124,7 @@ def exec_cmd(options, *args):
     if proc.returncode:
         print('exec error (%i): %s' % (proc.returncode, result[1]))
         if not options.nofail:
-            sys.exit(1)
+           sys.exit(1)
     return result[0], result[1]
 
 
@@ -191,7 +189,6 @@ def create_html_file(results, template_file, output_dir, options):
 
     now = datetime.datetime.now()
     title = 'xhtml2pdf Test Rendering Results, (Python %s) %s' % (sys.version,now.strftime('%c'))
-    print("ojojojojojo",template_file)
     template = open(template_file, 'r'+do_bytes).read()
     template = template.replace('%%TITLE%%', title)
     template = template.replace('%%RESULTS%%', '\n'.join(html))
@@ -207,19 +204,13 @@ def main():
     options, args = parser.parse_args()
 
     base_dir = os.path.abspath(os.path.join(__file__, os.pardir))
-    print("babababa", base_dir)
     source_dir = os.path.join(base_dir, options.source_dir)
-    print("holaaa", options.source_dir)
     if options.create_reference is not None:
         output_dir = os.path.join(base_dir, options.create_reference)
     else:
         output_dir = os.path.join(base_dir, options.output_dir)
-        print("outdir",output_dir)
     template_file = os.path.join(base_dir, options.html_template)
-    print("base",base_dir)
     ref_dir = os.path.join(base_dir, options.ref_dir)
-    print("oppp",options.ref_dir)
-    print("refdir",ref_dir)
     if os.path.isdir(output_dir):
         shutil.rmtree(output_dir)
     os.makedirs(output_dir)
@@ -231,7 +222,6 @@ def main():
     else:
         files = [os.path.join(source_dir, arg) for arg in args]
     for filename in files:
-        print("file name",filename)
         pdf, pages, diff = render_file(filename, output_dir, ref_dir, options)
         diff_count += diff
         results.append((filename, pdf, pages, diff))
@@ -266,7 +256,7 @@ parser.add_option('-s', '--source-dir', dest='source_dir', default='data\source'
 parser.add_option('-o', '--output-dir', dest='output_dir', default='output',
                   help='Path to directory for output files. CAREFUL: this '
                   'directory will be deleted and recreated before rendering!')
-parser.add_option('-r', '--ref-dir', dest='ref_dir', default='\\references',
+parser.add_option('-r', '--ref-dir', dest='ref_dir', default='\\reference_p',
                   help='Path to directory containing the reference images '
                   'to compare the result with')
 parser.add_option('-t', '--template', dest='html_template',
@@ -297,7 +287,7 @@ parser.add_option('--debug', dest='debug', action='store_true',
                   default=False, help='More output for debugging')
 parser.add_option('--convert-cmd', dest='convert_cmd', default='convert',
                   help='Path to ImageMagick "convert" tool')
-parser.add_option('--compare-cmd', dest='compare_cmd', default='/usr/bin/compare',
+parser.add_option('--compare-cmd', dest='compare_cmd', default='compare',
                   help='Path to ImageMagick "compare" tool')
 
 if __name__ == '__main__':
