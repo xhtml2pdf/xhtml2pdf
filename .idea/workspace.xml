@@ -19,7 +19,72 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ded327d7-ca63-4fe6-be7f-a5009308de44" name="Default Changelist" comment="" />
+    <list default="true" id="ded327d7-ca63-4fe6-be7f-a5009308de44" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/setup_version.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup_version.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/data/source/test-background.html" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/source/test-background.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/simple-test.page0.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/simple-test.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-align.page0.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-align.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-background.page0.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-background.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-blocks.page0.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-blocks.page1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-blocks.page2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-blocks.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-collapse.page0.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-collapse.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-css-border.page0.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-css-border.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-helloworld.page0.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-helloworld.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-image-align.page0.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-image-align.page1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-image-align.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-image.page0.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-image.page1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-image.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-keep-in-frame.page0.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-keep-in-frame.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-keep-with-next.page0.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-keep-with-next.page1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-keep-with-next.page2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-keep-with-next.page3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-keep-with-next.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-letter.page0.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-letter.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-linespacing.page0.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-linespacing.page1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-linespacing.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-list.page0.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-list.page1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-list.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-loremipsum.page0.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-loremipsum.page1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-loremipsum.page2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-loremipsum.page3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-loremipsum.page4.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-loremipsum.page5.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-loremipsum.page6.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-loremipsum.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-table-css.page0.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-table-css.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-table-of-contents.page0.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-table-of-contents.page1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-table-of-contents.page2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-table-of-contents.page3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-table-of-contents.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-tables.page0.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-tables.page1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-tables.page2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/reference_p/test-tables.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/testrender.py" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/testrender.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/tets.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/xhtml2pdf/context.py" beforeDir="false" afterPath="$PROJECT_DIR$/xhtml2pdf/context.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -35,7 +100,8 @@
   </component>
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../OneDrive/Documentos/CodeZG/learning_reportlab" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RunManager" selected="Python.testrender">
@@ -73,7 +139,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/testrender/testrender.py" />
-      <option name="PARAMETERS" value="" />
+      <option name="PARAMETERS" value="--ref-dir data\reference" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -107,32 +173,33 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="136" y="4" width="1094" height="764" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1598286261663">
+    <state x="136" y="4" width="1094" height="764" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1598375851294">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
-    <state x="136" y="4" width="1094" height="764" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1366.768@0.0.1366.768" timestamp="1598286261663" />
+    <state x="136" y="4" width="1094" height="764" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1366.768@0.0.1366.768" timestamp="1598375851294" />
     <state x="462" y="150" key="FileChooserDialogImpl" timestamp="1598320778302">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
     <state x="462" y="150" key="FileChooserDialogImpl/0.0.1366.768@0.0.1366.768" timestamp="1598320778302" />
-    <state width="1323" height="192" key="GridCell.Tab.0.bottom" timestamp="1598324620756">
+    <state width="1343" height="191" key="GridCell.Tab.0.bottom" timestamp="1598406724624">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
-    <state width="1323" height="192" key="GridCell.Tab.0.bottom/0.0.1366.768@0.0.1366.768" timestamp="1598324620756" />
-    <state width="1323" height="192" key="GridCell.Tab.0.center" timestamp="1598324620756">
+    <state width="1343" height="191" key="GridCell.Tab.0.bottom/0.0.1366.768@0.0.1366.768" timestamp="1598406724624" />
+    <state width="1343" height="191" key="GridCell.Tab.0.center" timestamp="1598406724624">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
-    <state width="1323" height="192" key="GridCell.Tab.0.center/0.0.1366.768@0.0.1366.768" timestamp="1598324620756" />
-    <state width="1323" height="192" key="GridCell.Tab.0.left" timestamp="1598324620755">
+    <state width="1343" height="191" key="GridCell.Tab.0.center/0.0.1366.768@0.0.1366.768" timestamp="1598406724624" />
+    <state width="1343" height="191" key="GridCell.Tab.0.left" timestamp="1598406724623">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
-    <state width="1323" height="192" key="GridCell.Tab.0.left/0.0.1366.768@0.0.1366.768" timestamp="1598324620755" />
-    <state width="1323" height="192" key="GridCell.Tab.0.right" timestamp="1598324620756">
+    <state width="1343" height="191" key="GridCell.Tab.0.left/0.0.1366.768@0.0.1366.768" timestamp="1598406724623" />
+    <state width="1343" height="191" key="GridCell.Tab.0.right" timestamp="1598406724624">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
-    <state width="1323" height="192" key="GridCell.Tab.0.right/0.0.1366.768@0.0.1366.768" timestamp="1598324620756" />
+    <state width="1343" height="191" key="GridCell.Tab.0.right/0.0.1366.768@0.0.1366.768" timestamp="1598406724624" />
     <state width="1345" height="238" key="GridCell.Tab.1.bottom" timestamp="1598324620749">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
@@ -153,5 +220,16 @@
       <screen x="0" y="0" width="1366" height="768" />
     </state>
     <state x="183" y="28" key="SettingsEditor/0.0.1366.768@0.0.1366.768" timestamp="1598286876443" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/xhtml2pdf/util.py</url>
+          <line>1</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

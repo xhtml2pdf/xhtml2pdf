@@ -216,6 +216,7 @@ class pisaCSSBuilder(css.CSSBuilder):
         c = self.c
         data = {}
         name = name or "body"
+        print('nameeeee', name)
         pageBorder = None
 
         if declarations:
@@ -271,6 +272,7 @@ class pisaCSSBuilder(css.CSSBuilder):
 
         for prop in ("margin-top", "margin-left", "margin-right", "margin-bottom",
                      "top", "left", "right", "bottom", "width", "height"):
+            print("dataaa",data)
             if prop in data:
                 c.frameList.append(
                     self._pisaAddFrame(name, data, first=True, border=pageBorder, size=c.pageSize))
@@ -279,7 +281,13 @@ class pisaCSSBuilder(css.CSSBuilder):
         # Frames have to be calculated after we know the pagesize
         frameList = []
         staticList = []
+        print('list',c.frameList)
+        print('pagesizeeee', c.pageSize)
         for fname, static, border, x, y, w, h, fdata in c.frameList:
+            print('fname', fname)
+            print('bordewith',border)
+            print('wwwww', w)
+            print('hhhh', h)
             fpadding_top = self._getFromData(
                 fdata, 'padding-top', padding_top, getSize)
             fpadding_left = self._getFromData(
@@ -292,9 +300,10 @@ class pisaCSSBuilder(css.CSSBuilder):
                                                       'border-left-color', 'border-right-color'), border_color, getColor)
             fborder_width = self._getFromData(fdata, ('border-top-width', 'border-bottom-width',
                                                       'border-left-width', 'border-right-width'), border_width, getSize)
-
+            #why not frame_border = border?
             if border or pageBorder:
-                frame_border = ShowBoundaryValue()
+                frame_border = int(border)
+                print('frame_border',frame_border)
             else:
                 frame_border = ShowBoundaryValue(
                     color=fborder_color, width=fborder_width)
@@ -307,7 +316,7 @@ class pisaCSSBuilder(css.CSSBuilder):
             if w <= 0 or h <= 0:
                 log.warn(
                     self.c.warning("Negative width or height of frame. Check @frame definitions."))
-
+            print("finalborder", frame_border)
             frame = Frame(
                 x, y, w, h,
                 id=fname,
@@ -325,6 +334,7 @@ class pisaCSSBuilder(css.CSSBuilder):
                 frameList.append(frame)
 
         background = data.get("background-image", None)
+        print("backkk", background)
         if background:
             # should be relative to the css file
             background = self.c.getFile(
@@ -342,10 +352,11 @@ class pisaCSSBuilder(css.CSSBuilder):
 
             if border or pageBorder:
                 frame_border = ShowBoundaryValue()
+                print('estoyy2', frame_border)
             else:
                 frame_border = ShowBoundaryValue(
                     color=border_color, width=border_width)
-
+                print('estoyyf',frame_border)
             frameList.append(Frame(
                 x, y, w, h,
                 id=fname,
@@ -353,7 +364,9 @@ class pisaCSSBuilder(css.CSSBuilder):
                 rightPadding=padding_right,
                 bottomPadding=padding_bottom,
                 topPadding=padding_top,
-                showBoundary=frame_border))
+                showBoundary=frame_border
+                ))
+
 
         pt = PmlPageTemplate(
             id=name,
@@ -522,7 +535,7 @@ class pisaContext(object):
             'default%d' % self.UID(), keepWithNext=first.keepWithNext)
 
         copy_attrs(style, first,
-                   ('fontName', 'fontSize', 'letterSpacing', 'backColor',
+                   ('fontName', 'letterSpacing', 'backColor',
                     'spaceBefore', 'spaceAfter', 'leftIndent', 'rightIndent',
                        'firstLineIndent', 'textColor', 'alignment',
                        'bulletIndent', 'wordWrap', 'borderTopStyle',

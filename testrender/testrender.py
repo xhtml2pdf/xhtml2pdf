@@ -34,8 +34,13 @@ def render_pdf(filename, output_dir, options):
         sys.exit(1)
     return outfile
 
+def convert_to_png2(options):
+
+    exec_cmd(options, options.convert_cmd, '-density', '150','-quality', '90','Factura.pdf', 'C:\\Users\pedro\\xhtml2pdf\\testrender\output\\f.png')
+
 
 def convert_to_png(infile, output_dir, options):
+    convert_to_png2(options)
     print("infile", infile)
     if options.debug:
         print('Converting %s to PNG' % infile)
@@ -44,7 +49,8 @@ def convert_to_png(infile, output_dir, options):
     outname = '%s.page%%0d.png' % filename
     globname = '%s.page*.png' % filename
     outfile = os.path.join(output_dir, outname)
-    exec_cmd(options, options.convert_cmd, '-density', '150', infile, outfile)
+    print('salidadaaa',outfile)
+    exec_cmd(options, options.convert_cmd, '-density', '150','-quality', '90',infile, outfile)
 
     outfiles = glob.glob(os.path.join(output_dir, globname))
     outfiles.sort()
@@ -55,18 +61,29 @@ def convert_to_png(infile, output_dir, options):
             exec_cmd(options, options.convert_cmd, '-background', 'white', '-alpha', 'remove', outfile, outfile)
     return outfiles
 
-
 def create_diff_image(srcfile1, srcfile2, output_dir, options):
     if options.debug:
         print('Creating difference image for %s and %s' % (srcfile1, srcfile2))
     outname = '%s.diff%s' % os.path.splitext(srcfile1)
+    outname2 = 'ima.gif'
     outfile = os.path.join(output_dir, outname)
+    outfilegif = os.path.join(output_dir, outname)
     result = exec_cmd(options, options.compare_cmd, '-metric', 'ae', srcfile1, srcfile2, '-quiet', outfile)
-    diff_value = int(result[1])
+    diff_value = int(float(result[1]))
     if diff_value > 0:
         if not options.quiet:
             print('Image %s differs from reference, value is %i' % (srcfile1, diff_value))
     return outfile, diff_value
+
+def create_gif(srcfile1, srcfile2, output_dir, options):
+    if options.debug:
+        print('Creating gif image for %s and %s' % (srcfile1, srcfile2))
+    outname2 = '%s.gif%s' % os.path.splitext(srcfile1)
+    outfilegif = os.path.join(output_dir, outname2)
+    outex = os.path.splitext(outfilegif)[0]
+    exec_cmd(options, options.convert_cmd, '-delay', '50', srcfile1, srcfile2, '-loop','0', outex)
+
+    return outex
 
 
 def copy_ref_image(srcname, output_dir, options):
@@ -75,6 +92,7 @@ def copy_ref_image(srcname, output_dir, options):
     dstname = os.path.basename(srcname)
     dstfile = os.path.join(output_dir, '%s.ref%s' % os.path.splitext(dstname))
     shutil.copyfile(srcname, dstfile)
+    print("direccion",srcname)
     return dstfile
 
 
@@ -99,6 +117,7 @@ def render_file(filename, output_dir, ref_dir, options):
     diff_count = 0
     if not options.no_compare:
         for page in pages:
+            print('refffffff',ref_dir)
             refsrc = os.path.join(ref_dir, os.path.basename(page['png']))
             if not os.path.isfile(refsrc):
                 print('Reference image for %s not found!' % page['png'])
@@ -109,6 +128,7 @@ def render_file(filename, output_dir, ref_dir, options):
                     create_diff_image(page['png'], page['ref'],
                                       output_dir, options)
             page['diff_thumb'] = create_thumbnail(page['diff'], options)
+            page['gif'] = create_gif(page['png'],page['ref'],output_dir,options)
             if page['diff_value']:
                 diff_count += 1
     return pdf, pages, diff_count
@@ -256,7 +276,7 @@ parser.add_option('-s', '--source-dir', dest='source_dir', default='data\source'
 parser.add_option('-o', '--output-dir', dest='output_dir', default='output',
                   help='Path to directory for output files. CAREFUL: this '
                   'directory will be deleted and recreated before rendering!')
-parser.add_option('-r', '--ref-dir', dest='ref_dir', default='\\reference_p',
+parser.add_option('-r', '--ref-dir', dest='ref_dir', default='data\\reference',
                   help='Path to directory containing the reference images '
                   'to compare the result with')
 parser.add_option('-t', '--template', dest='html_template',
@@ -267,7 +287,7 @@ parser.add_option('-e', '--only-errors', dest='only_errors', action='store_true'
 parser.add_option('-q', '--quiet', dest='quiet', action='store_true',
                   default=False, help='Try to be quiet')
 parser.add_option('-F', '--nofail', dest='nofail', action='store_true',
-                  default=False, help="Doesn't return an error on failure "
+                  default=True, help="Doesn't return an error on failure "
                   "this useful when calling it in scripts"
                   )
 parser.add_option('-X', '--remove_transparencies', dest='remove_transparencies', action='store_false',
