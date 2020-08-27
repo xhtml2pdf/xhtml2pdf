@@ -62,6 +62,7 @@ def pisaGetAttributes(c, tag, attributes):
             try:
                 # XXX no Unicode! Reportlab fails with template names
                 attrs[str(k)] = str(v)
+                print('ATTRS',attrs)
             except:
                 attrs[k] = v
 
@@ -72,6 +73,7 @@ def pisaGetAttributes(c, tag, attributes):
 
         for k, v in six.iteritems(adef):
             nattrs[k] = None
+            print('TAGS', nattrs)
             # print k, v
             # defaults, wenn vorhanden
             if type(v) == tuple:
@@ -723,6 +725,7 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
         if not encoding:
             encoding = "utf-8"
         src = src.encode(encoding)
+        print("SCR",src)
         src = pisaTempFile(src, capacity=context.capacity)
         # To pass the encoding used to convert the text_type src to binary_type
         # on to html5lib's parser to ensure proper decoding

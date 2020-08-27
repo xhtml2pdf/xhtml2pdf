@@ -257,7 +257,7 @@ class PmlPageTemplate(PageTemplate):
                     pisaBackground = self.pisaBackground
 
             self.pisaBackgroundList.append(pisaBackground)
-
+            print('BackgorundList', self.pisaBackgroundList)
             def pageNumbering(objList):
                 for obj in flatten(objList):
                     if isinstance(obj, PmlParagraph):
@@ -629,7 +629,9 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
         # support more border styles eventually.
         canvas = self.canv
         style = self.style
+        print('STYLE', self.style)
         bg = style.backColor
+        print('BG',bg)
         leftIndent = style.leftIndent
         bp = 0  # style.borderPadding
 

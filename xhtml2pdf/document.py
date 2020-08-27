@@ -62,7 +62,6 @@ def pisaStory(src, path=None, link_callback=None, debug=0, default_css=None,
     # Use a default set of CSS definitions to get an expected output
     if default_css is None:
         default_css = DEFAULT_CSS
-
     # Parse and fill the story
     pisaParser(src, context, default_css, xhtml, encoding, xml_output)
 
@@ -117,7 +116,6 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
         title=context.meta["title"].strip(),
         showBoundary=0,
         allowSplitting=1)
-
     # Prepare templates and their frames
     if "body" in context.templateList:
         body = context.templateList["body"]

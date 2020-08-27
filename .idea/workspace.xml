@@ -19,7 +19,17 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ded327d7-ca63-4fe6-be7f-a5009308de44" name="Default Changelist" comment="" />
+    <list default="true" id="ded327d7-ca63-4fe6-be7f-a5009308de44" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/data/source/test-align.html" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/source/test-align.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testrender/data/source/test-collapse.html" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/source/test-collapse.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/xhtml2pdf/context.py" beforeDir="false" afterPath="$PROJECT_DIR$/xhtml2pdf/context.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/xhtml2pdf/default.py" beforeDir="false" afterPath="$PROJECT_DIR$/xhtml2pdf/default.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/xhtml2pdf/document.py" beforeDir="false" afterPath="$PROJECT_DIR$/xhtml2pdf/document.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/xhtml2pdf/parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/xhtml2pdf/parser.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/xhtml2pdf/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/xhtml2pdf/util.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/xhtml2pdf/xhtml2pdf_reportlab.py" beforeDir="false" afterPath="$PROJECT_DIR$/xhtml2pdf/xhtml2pdf_reportlab.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -36,7 +46,7 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../OneDrive/Documentos/CodeZG/learning_reportlab" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RunManager" selected="Python.testrender">
@@ -115,26 +125,26 @@
       <screen x="0" y="0" width="1366" height="768" />
     </state>
     <state x="136" y="4" width="1094" height="764" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1366.768@0.0.1366.768" timestamp="1598375851294" />
-    <state x="462" y="150" key="FileChooserDialogImpl" timestamp="1598320778302">
+    <state x="462" y="150" key="FileChooserDialogImpl" timestamp="1598466805396">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
-    <state x="462" y="150" key="FileChooserDialogImpl/0.0.1366.768@0.0.1366.768" timestamp="1598320778302" />
-    <state width="1343" height="191" key="GridCell.Tab.0.bottom" timestamp="1598406953027">
+    <state x="462" y="150" key="FileChooserDialogImpl/0.0.1366.768@0.0.1366.768" timestamp="1598466805396" />
+    <state width="1343" height="191" key="GridCell.Tab.0.bottom" timestamp="1598492456821">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
-    <state width="1343" height="191" key="GridCell.Tab.0.bottom/0.0.1366.768@0.0.1366.768" timestamp="1598406953027" />
-    <state width="1343" height="191" key="GridCell.Tab.0.center" timestamp="1598406953026">
+    <state width="1343" height="191" key="GridCell.Tab.0.bottom/0.0.1366.768@0.0.1366.768" timestamp="1598492456821" />
+    <state width="1343" height="191" key="GridCell.Tab.0.center" timestamp="1598492456821">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
-    <state width="1343" height="191" key="GridCell.Tab.0.center/0.0.1366.768@0.0.1366.768" timestamp="1598406953026" />
-    <state width="1343" height="191" key="GridCell.Tab.0.left" timestamp="1598406953025">
+    <state width="1343" height="191" key="GridCell.Tab.0.center/0.0.1366.768@0.0.1366.768" timestamp="1598492456821" />
+    <state width="1343" height="191" key="GridCell.Tab.0.left" timestamp="1598492456821">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
-    <state width="1343" height="191" key="GridCell.Tab.0.left/0.0.1366.768@0.0.1366.768" timestamp="1598406953025" />
-    <state width="1343" height="191" key="GridCell.Tab.0.right" timestamp="1598406953026">
+    <state width="1343" height="191" key="GridCell.Tab.0.left/0.0.1366.768@0.0.1366.768" timestamp="1598492456821" />
+    <state width="1343" height="191" key="GridCell.Tab.0.right" timestamp="1598492456821">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
-    <state width="1343" height="191" key="GridCell.Tab.0.right/0.0.1366.768@0.0.1366.768" timestamp="1598406953026" />
+    <state width="1343" height="191" key="GridCell.Tab.0.right/0.0.1366.768@0.0.1366.768" timestamp="1598492456821" />
     <state width="1345" height="238" key="GridCell.Tab.1.bottom" timestamp="1598324620749">
       <screen x="0" y="0" width="1366" height="768" />
     </state>

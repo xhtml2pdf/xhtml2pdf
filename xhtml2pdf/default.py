@@ -309,6 +309,7 @@ TAGS = {
 
     "div": (1, {
         "align": ["left", "center", "right", "justify"],
+        "bgcolor": COLOR,
     }),
 
     "p": (1, {

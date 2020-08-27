@@ -183,7 +183,9 @@ def set_value(obj, attrs, value, _copy=False):
     for attr in attrs:
         if _copy:
             value = copy(value)
+
         setattr(obj, attr, value)
+
 
 
 @memoized
@@ -192,7 +194,6 @@ def getColor(value, default=None):
     Convert to color value.
     This returns a Color object instance from a text bit.
     """
-
     if isinstance(value, Color):
         return value
     value = str(value).strip().lower()
@@ -210,7 +211,6 @@ def getColor(value, default=None):
     else:
         # Shrug
         pass
-
     return toColor(value, default)  # Calling the reportlab function
 
 
