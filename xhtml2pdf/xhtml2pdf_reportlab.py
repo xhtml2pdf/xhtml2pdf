@@ -19,6 +19,7 @@ from reportlab.lib.enums import TA_RIGHT
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.utils import flatten, open_for_read, getStringIO, \
     LazyImageReader, haveImages
+
 from reportlab.platypus.doctemplate import BaseDocTemplate, PageTemplate, IndexingFlowable
 from reportlab.platypus.flowables import Flowable, CondPageBreak, \
     KeepInFrame, ParagraphAndImage

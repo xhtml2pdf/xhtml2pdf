@@ -1,0 +1,45 @@
+	"testrender repair" author=Pedro Zuniga Guzman
+
+--***---***---***---***---***---***---**---***---***---***---***---***---***---****---***---***---***---***
+Template
+htm=>test-background.html
+
+Differences
+
+1.test-backgorundpage0.png ("border-frame" more thin than test-backgroundpage0.ref.png's "border-frame",
+				/context.py-line-302, frame_border = ShowBoundaryValue())
+2.test-backgorundpage0.png "could be"(differences in "page-margin-left,page-margin-botom"  after convertion margin cm
+			     to margin px)
+
+Solution
+
+1./context.py-line-302, frame_border = ShowBoundaryValue(width=int(border))
+2."could be"(temporal solution)/test-background.html-line-12-margin-left=>left: 3.999cm; and test-background.html-line-14
+=>margin-bottom=>bottom: 3.999cm;
+
+--***---***---***---***---***---***---**---***---***---***---***---***---***---****---***---***---***---***
+Template
+htm=>test-collapse.html
+
+Differences
+
+1.test-collapsepage0.png (style ="backgorund:colors" not work)
+
+Solution
+
+1./test-collapse.html=> change style ="backgorund:colors" to style ="backgorund-color:colors" update doc
+
+--***---***---***---***---***---***---**---***---***---***---***---***---***---****---***---***---***---***
+Template
+htm=>test-block.html
+
+Differences
+
+1.test-Blockpage2.png (background color of tables'tr not find in test-block.html-<style type="text/css">)
+
+Solution
+
+1.in /test-collapse.html-<style type="text/css"> add tr{background-color:red;}
+
+
+--***---***---***---***---***---***---**---***---***---***---***---***---***---****---***---***---***---***

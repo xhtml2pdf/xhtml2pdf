@@ -309,7 +309,6 @@ TAGS = {
 
     "div": (1, {
         "align": ["left", "center", "right", "justify"],
-        "bgcolor": COLOR,
     }),
 
     "p": (1, {
@@ -599,6 +598,7 @@ DEFAULT_FONT = {
     "courier-bold": "Courier-Bold",
     "courier-boldoblique": "Courier-BoldOblique",
     "courier-oblique": "Courier-Oblique",
+    "helvetica Neue": "HelveticaNeue Medium",
     "helvetica": "Helvetica",
     "helvetica-bold": "Helvetica-Bold",
     "helvetica-boldoblique": "Helvetica-BoldOblique",

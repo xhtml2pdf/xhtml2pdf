@@ -297,9 +297,10 @@ class pisaCSSBuilder(css.CSSBuilder):
                                                       'border-left-color', 'border-right-color'), border_color, getColor)
             fborder_width = self._getFromData(fdata, ('border-top-width', 'border-bottom-width',
                                                       'border-left-width', 'border-right-width'), border_width, getSize)
-            #why not frame_border = border?
+
+            # add width=int(border) to ShowBoundaryValue() as a attr, solution.
             if border or pageBorder:
-                frame_border = int(border)
+                frame_border = ShowBoundaryValue(width=int(border))
                 print('frame_border',frame_border)
             else:
                 frame_border = ShowBoundaryValue(
