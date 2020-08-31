@@ -564,7 +564,7 @@ class pisaContext(object):
         if (style.borderRightColor is None) and style.borderRightWidth:
             style.borderRightColor = first.textColor
 
-        style.fontName = tt2ps(first.fontName, first.bold, first.italic)
+        style.fontName = tt2ps(first.fontName, 0, first.italic)
 
         return style
 
@@ -573,6 +573,7 @@ class pisaContext(object):
         for i in six.moves.range(20):
             self.node.attributes["class"] = "pdftoclevel%d" % i
             self.cssAttr = xhtml2pdf.parser.CSSCollect(self.node, self)
+            print("CSSSCOLECT", self.cssAttr)
             xhtml2pdf.parser.CSS2Frag(self, {
                 "margin-top": 0,
                 "margin-bottom": 0,
@@ -598,7 +599,7 @@ class pisaContext(object):
 
         force = (force or self.force)
         self.force = False
-
+        print("YOOOOOOOO",self)
         # Cleanup the trail
         rfragList = reversed(self.fragList)
 

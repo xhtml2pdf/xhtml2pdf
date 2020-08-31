@@ -43,3 +43,39 @@ Solution
 
 
 --***---***---***---***---***---***---**---***---***---***---***---***---***---****---***---***---***---***
+
+Template
+htm=>test-helloword.html
+
+Differences
+
+1.test-hellorwordpage0.png (in test-helloword.html=>style ="backgorund:colors" not work)
+
+Solution
+
+1./test-helloword.html=> change style ="backgorund:colors" to style ="backgorund-color:colors" update doc
+
+--***---***---***---***---***---***---**---***---***---***---***---***---***---****---***---***---***---***
+
+Script
+
+Padding problem
+
+1.textout the border table
+
+Solution
+"cold be",this solution makes more differences in others template that has tables.
+1./default.py-line 244 "cellpadding": (SIZE, "0") to "cellpadding": (SIZE, "2")
+
+--***---***---***---***---***---***---**---***---***---***---***---***---***---****---***---***---***---***
+
+Template
+htm=>html
+
+Differences
+
+"in test-image-aling.page1.png the last image is mor lower than the image in test-image-aling.page1.ref.png "
+
+Solution
+"cold be" remove attr aling="left", margin-right=20px and margin-bottom=10px , and just insert style="vertical-align:
+text-botom", the image is different from image-ref but text and image are aling whith the bottom text

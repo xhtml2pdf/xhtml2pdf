@@ -237,11 +237,11 @@ TAGS = {
 
     "table": (1, {
         "align": (["left", "center", "right"], "left"),
-        "valign": (["top", "bottom", "middle"], "middle"),
+        "valign": (["top", "bottom", "middle"], "bottom"),
         "border": (SIZE, "0"),
         "bordercolor": (COLOR, "#000000"),
         "bgcolor": COLOR,
-        "cellpadding": (SIZE, "0"),
+        "cellpadding": (SIZE, "8"), #"cellpadding": (SIZE, "0") to "cellpadding": (SIZE, "2")
         "cellspacing": (SIZE, "0"),
         "repeat": (INT, "0"), # XXX Remove this! Set to 0
         "width": STRING,
