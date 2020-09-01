@@ -565,7 +565,6 @@ class pisaContext(object):
             style.borderRightColor = first.textColor
 
         style.fontName = tt2ps(first.fontName, 0, first.italic)
-
         return style
 
     def addTOC(self):
@@ -599,7 +598,6 @@ class pisaContext(object):
 
         force = (force or self.force)
         self.force = False
-        print("YOOOOOOOO",self)
         # Cleanup the trail
         rfragList = reversed(self.fragList)
 
@@ -628,7 +626,6 @@ class pisaContext(object):
 
             bulletText = copy.copy(first.bulletText)
             first.bulletText = None
-
             # Add paragraph to story
             if force or len(self.fragAnchor + self.fragList) > 0:
 
@@ -654,6 +651,7 @@ class pisaContext(object):
                 para.outlineOpen = first.outlineOpen
                 para.keepWithNext = first.keepWithNext
                 para.autoLeading = "max"
+
 
                 if self.image:
                     para = PmlParagraphAndImage(

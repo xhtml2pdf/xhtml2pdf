@@ -34,13 +34,10 @@ def render_pdf(filename, output_dir, options):
         sys.exit(1)
     return outfile
 
-def convert_to_png2(options):
-
-    exec_cmd(options, options.convert_cmd, '-density', '150','-quality', '90','Factura.pdf', 'C:\\Users\pedro\\xhtml2pdf\\testrender\output\\f.png')
 
 
 def convert_to_png(infile, output_dir, options):
-    convert_to_png2(options)
+
     print("infile", infile)
     if options.debug:
         print('Converting %s to PNG' % infile)

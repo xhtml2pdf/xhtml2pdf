@@ -377,6 +377,7 @@ def getFrameDimensions(data, page_width, page_height):
 
     Returns left, top, width and height of the frame in points.
     """
+    print("heeeeee",page_height)
     box = data.get("-pdf-frame-box", [])
     if len(box) == 4:
         return [getSize(x) for x in box]
@@ -386,9 +387,13 @@ def getFrameDimensions(data, page_width, page_height):
     right = getSize(data.get("right", 0))
     if "height" in data:
         height = getSize(data["height"])
+        print("dataheiiii",height)
+        print("befooor",data["height"])
         if "top" in data:
             top = getSize(data["top"])
             bottom = page_height - (top + height)
+            print("PAAAAA", top)
+            print("PALLLLLLLL", bottom)
         elif "bottom" in data:
             bottom = getSize(data["bottom"])
             top = page_height - (bottom + height)
