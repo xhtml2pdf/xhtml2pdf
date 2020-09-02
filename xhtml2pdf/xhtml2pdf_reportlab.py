@@ -832,6 +832,8 @@ class PmlTableOfContents(TableOfContents):
                                            leftIndent=0,
                                            alignment=TA_RIGHT)
             leftPara = Paragraph(text, leftColStyle)
+            style = leftPara.__getattribute__("style")
+            print("sss",style.__getattribute__('fontSize'))
             rightPara = Paragraph(str(pageNum), rightColStyle)
             tableData.append([leftPara, rightPara])
 

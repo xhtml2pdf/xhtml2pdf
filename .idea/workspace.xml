@@ -22,15 +22,8 @@
     <list default="true" id="ded327d7-ca63-4fe6-be7f-a5009308de44" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/testrender/Differences-Solutions" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/Differences-Solutions" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/source/test-blocks.html" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/source/test-blocks.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/source/test-css-border.html" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/source/test-css-border.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/source/test-keep-in-frame.html" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/source/test-keep-in-frame.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/source/test-letter.html" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/source/test-letter.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/source/test-tables.html" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/source/test-tables.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/testrender/testrender.py" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/testrender.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/xhtml2pdf/context.py" beforeDir="false" afterPath="$PROJECT_DIR$/xhtml2pdf/context.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/xhtml2pdf/default.py" beforeDir="false" afterPath="$PROJECT_DIR$/xhtml2pdf/default.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/xhtml2pdf/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/xhtml2pdf/util.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/xhtml2pdf/xhtml2pdf_reportlab.py" beforeDir="false" afterPath="$PROJECT_DIR$/xhtml2pdf/xhtml2pdf_reportlab.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,11 +45,11 @@
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="C:\Users\pedro\xhtml2pdf\venv\Lib\site-packages\reportlab\fonts" />
-    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\pedro\xhtml2pdf\testrender" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\pedro\xhtml2pdf\venv\Lib\site-packages\reportlab\fonts" />
     </key>
   </component>
   <component name="RunManager" selected="Python.testrender">
@@ -143,22 +136,22 @@
       <screen x="0" y="0" width="1366" height="768" />
     </state>
     <state x="462" y="150" key="FileChooserDialogImpl/0.0.1366.768@0.0.1366.768" timestamp="1598466805396" />
-    <state width="1343" height="191" key="GridCell.Tab.0.bottom" timestamp="1599000460597">
+    <state width="1326" height="190" key="GridCell.Tab.0.bottom" timestamp="1599078159944">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
-    <state width="1343" height="191" key="GridCell.Tab.0.bottom/0.0.1366.768@0.0.1366.768" timestamp="1599000460597" />
-    <state width="1343" height="191" key="GridCell.Tab.0.center" timestamp="1599000460597">
+    <state width="1326" height="190" key="GridCell.Tab.0.bottom/0.0.1366.768@0.0.1366.768" timestamp="1599078159944" />
+    <state width="1326" height="190" key="GridCell.Tab.0.center" timestamp="1599078159944">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
-    <state width="1343" height="191" key="GridCell.Tab.0.center/0.0.1366.768@0.0.1366.768" timestamp="1599000460597" />
-    <state width="1343" height="191" key="GridCell.Tab.0.left" timestamp="1599000460597">
+    <state width="1326" height="190" key="GridCell.Tab.0.center/0.0.1366.768@0.0.1366.768" timestamp="1599078159944" />
+    <state width="1326" height="190" key="GridCell.Tab.0.left" timestamp="1599078159944">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
-    <state width="1343" height="191" key="GridCell.Tab.0.left/0.0.1366.768@0.0.1366.768" timestamp="1599000460597" />
-    <state width="1343" height="191" key="GridCell.Tab.0.right" timestamp="1599000460597">
+    <state width="1326" height="190" key="GridCell.Tab.0.left/0.0.1366.768@0.0.1366.768" timestamp="1599078159944" />
+    <state width="1326" height="190" key="GridCell.Tab.0.right" timestamp="1599078159944">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
-    <state width="1343" height="191" key="GridCell.Tab.0.right/0.0.1366.768@0.0.1366.768" timestamp="1599000460597" />
+    <state width="1326" height="190" key="GridCell.Tab.0.right/0.0.1366.768@0.0.1366.768" timestamp="1599078159944" />
     <state width="1345" height="238" key="GridCell.Tab.1.bottom" timestamp="1598324620749">
       <screen x="0" y="0" width="1366" height="768" />
     </state>

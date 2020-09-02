@@ -47,7 +47,7 @@ def convert_to_png(infile, output_dir, options):
     globname = '%s.page*.png' % filename
     outfile = os.path.join(output_dir, outname)
     print('salidadaaa',outfile)
-    exec_cmd(options, options.convert_cmd, '-density', '150','-quality', '90',infile, outfile)
+    exec_cmd(options, options.convert_cmd, '-density', '150','-antialias',' -gamma', '-auto-level',' -channel',infile, outfile)
 
     outfiles = glob.glob(os.path.join(output_dir, globname))
     outfiles.sort()
