@@ -47,7 +47,7 @@ def convert_to_png(infile, output_dir, options):
     globname = '%s.page*.png' % filename
     outfile = os.path.join(output_dir, outname)
     print('salidadaaa',outfile)
-    exec_cmd(options, options.convert_cmd, '-density', '150','-antialias',' -gamma', '-auto-level',' -channel',infile, outfile)
+    exec_cmd(options, options.convert_cmd, '-density', '150',infile, outfile)
 
     outfiles = glob.glob(os.path.join(output_dir, globname))
     outfiles.sort()
@@ -125,7 +125,7 @@ def render_file(filename, output_dir, ref_dir, options):
                     create_diff_image(page['png'], page['ref'],
                                       output_dir, options)
             page['diff_thumb'] = create_thumbnail(page['diff'], options)
-            page['gif'] = create_gif(page['png'],page['ref'],output_dir,options)
+            #page['gif'] = create_gif(page['png'],page['ref'],output_dir,options)
             if page['diff_value']:
                 diff_count += 1
     return pdf, pages, diff_count
