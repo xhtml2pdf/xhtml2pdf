@@ -21,7 +21,6 @@
   <component name="ChangeListManager">
     <list default="true" id="ded327d7-ca63-4fe6-be7f-a5009308de44" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/testrender.py" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/testrender.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,11 +42,11 @@
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="C:\Users\pedro\xhtml2pdf\testrender" />
-    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\pedro\xhtml2pdf\venv\Lib\site-packages\reportlab\fonts" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\pedro\xhtml2pdf\testrender" />
     </key>
   </component>
   <component name="RunManager" selected="Python.testrender">
@@ -126,10 +125,10 @@
       <screen x="0" y="0" width="1366" height="768" />
     </state>
     <state x="136" y="4" width="1094" height="764" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1366.768@0.0.1366.768" timestamp="1598375851294" />
-    <state x="410" y="185" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1599143176214">
+    <state x="410" y="185" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1599144340667">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
-    <state x="410" y="185" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1366.768@0.0.1366.768" timestamp="1599143176214" />
+    <state x="410" y="185" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1366.768@0.0.1366.768" timestamp="1599144340667" />
     <state x="462" y="150" key="FileChooserDialogImpl" timestamp="1598466805396">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
