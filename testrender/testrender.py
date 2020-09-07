@@ -61,8 +61,8 @@ def create_diff_image(srcfile1, srcfile2, output_dir, options):
 
     outname = '%s.diff%s' % os.path.splitext(srcfile1)
     outfile = os.path.join(output_dir, outname)
-    _, result = exec_cmd(options, options.compare_cmd, '-metric', 'ae', srcfile1, srcfile2, '-lowlight-color', 'white', outfile)
-    diff_value = int(float(result.strip()))
+    _, result = exec_cmd(options, options.compare_cmd, '-metric', 'ae', srcfile1, srcfile2,'-quiet', outfile)
+    diff_value = int(result[0])
     if diff_value > 0:
         if not options.quiet:
             print('Image %s differs from reference, value is %i' % (srcfile1, diff_value))
@@ -117,13 +117,14 @@ def render_file(filename, output_dir, ref_dir, options):
 def exec_cmd(options, *args):
     if options.debug:
         print('Executing %s' % ' '.join(args))
-    proc = Popen(args, stdout=PIPE, stderr=PIPE)
+    print(args)
+    proc = Popen(args, stdout=PIPE, stderr=PIPE,shell=True)
     result = proc.communicate()
     if options.debug:
         print(result[0], result[1])
     if proc.returncode:
         print('exec error (%i): %s' % (proc.returncode, result[1]))
-        if not options.nofail:
+        if options.nofail:
             sys.exit(1)
     return result[0], result[1]
 
@@ -285,10 +286,10 @@ parser.add_option('-c', '--create-reference', dest='create_reference',
                   'specified directory for reference. CAREFUL: this directory '
                  'will be deleted and recreated before rendering!')
 parser.add_option('--debug', dest='debug', action='store_true',
-                  default=False, help='More output for debugging')
-parser.add_option('--convert-cmd', dest='convert_cmd', default='/usr/bin/convert',
+                  default=True, help='More output for debugging')
+parser.add_option('--convert-cmd', dest='convert_cmd', default='convert',
                   help='Path to ImageMagick "convert" tool')
-parser.add_option('--compare-cmd', dest='compare_cmd', default='/usr/bin/compare',
+parser.add_option('--compare-cmd', dest='compare_cmd', default='compare',
                   help='Path to ImageMagick "compare" tool')
 
 if __name__ == '__main__':

@@ -1,0 +1,215 @@
+
+	"testrender repair" Pedro Zuniga Guzman
+
+--***---***---***---***---***---***---**---***---***---***---***---***---***---****---***---***---***---***
+Template
+htm=>simple-test.html
+
+Differences
+
+the system renders fonts in differents ways
+
+soluction
+
+select a standar-font
+
+--***---***---***---***---***---***---**---***---***---***---***---***---***---****---***---***---***---***
+Template
+htm=>test-keep-with-next.html
+
+Differences
+
+the system renders fonts in differents ways
+
+soluction
+
+select a standar-font
+
+--***---***---***---***---***---***---**---***---***---***---***---***---***---****---***---***---***---***
+Template
+htm=>test-list.html
+
+Differences
+
+the system renders fonts in differents ways
+
+soluction
+
+select a standar-font
+
+--***---***---***---***---***---***---**---***---***---***---***---***---***---****---***---***---***---***
+Template
+htm=>test-table-of-contents.html
+
+Differences
+
+the system renders fonts in differents ways, or the leading and font size
+
+soluction
+
+-----
+
+--***---***---***---***---***---***---**---***---***---***---***---***---***---****---***---***---***---***
+Template
+htm=>simple-css-border.html
+
+Differences
+
+some differences on green border color
+
+soluction
+-----
+
+
+--***---***---***---***---***---***---**---***---***---***---***---***---***---****---***---***---***---***
+Template
+htm=>test-align.html
+
+Differences
+
+the system renders fonts in differents ways
+
+soluction
+
+select a standar-font
+
+--***---***---***---***---***---***---**---***---***---***---***---***---***---****---***---***---***---***
+Template
+htm=>test-image.html
+
+Differences
+
+"cold be the resolution and the 1000 of width" /page-0 Big image with width="1000"> in test-image.html-1 have 3
+ slim-lines of pixes different than the image-ref
+
+"cold be the resolution and the 2000 of width"/page-1 solid colors like shadow parts of the image are the same but pixel
+parts are different
+
+soluction
+
+------
+
+--***---***---***---***---***---***---**---***---***---***---***---***---***---****---***---***---***---***
+Template
+htm=>test-background.html
+
+Differences
+
+1.test-backgorundpage0.png ("border-frame" more thin than test-backgroundpage0.ref.png's "border-frame",
+				/context.py-line-302, frame_border = ShowBoundaryValue())
+
+2.test-backgorundpage0.png "could be"(differences in "page-margin-left,page-margin-botom"  after convertion margin  cm
+			     to margin px)
+
+Solution
+
+1./context.py-line-302, frame_border = ShowBoundaryValue(width=int(border))
+
+2."could be"(temporal solution)/test-background.html-line-12-margin-left=>left: 3.999cm; and test-background.html-line-14
+=>margin-bottom=>bottom: 3.999cm;
+
+--***---***---***---***---***---***---**---***---***---***---***---***---***---****---***---***---***---***
+Template
+htm=>test-collapse.html
+
+Differences
+
+1.test-collapsepage0.png (style ="backgorund:colors" not work)
+
+Solution
+
+1./test-collapse.html=> change style ="backgorund:colors" to style ="backgorund-color:colors" update doc
+
+--***---***---***---***---***---***---**---***---***---***---***---***---***---****---***---***---***---***
+Template
+htm=>test-block.html
+
+Differences
+
+1.test-Blockpage2.png (background color of tr-table not find in test-block.html-<style type="text/css">)
+
+Solution
+
+1.in /test-collapse.html-<style type="text/css"> add tr{background-color:red;}
+
+
+--***---***---***---***---***---***---**---***---***---***---***---***---***---****---***---***---***---***
+
+Template
+htm=>test-helloword.html
+
+Differences
+
+1.test-hellorwordpage0.png (in test-helloword.html=>style ="backgorund:colors" not work)
+
+Solution
+
+1./test-helloword.html=> change style ="backgorund:colors" to style ="backgorund-color:colors" update doc
+
+--***---***---***---***---***---***---**---***---***---***---***---***---***---****---***---***---***---***
+
+Script
+
+Padding problem
+
+1.textout the border table
+
+Solution
+"cold be",this solution makes more differences in others template with tables.
+1./default.py-line 244 "cellpadding": (SIZE, "0") to "cellpadding": (SIZE, "2")
+
+--***---***---***---***---***---***---**---***---***---***---***---***---***---****---***---***---***---***
+
+Template
+htm=>test-image-aling.html
+
+Differences
+
+"in test-image-aling.page1.png the last image is more lower than the image in test-image-aling.page1.ref.png "
+
+Solution
+
+"cold be" remove attr aling="left", margin-right=20px and margin-bottom=10px , and just insert style="vertical-align:
+text-botom", the image is different from image-ref but text and image are aling whith the bottom text
+
+
+--***---***---***---***---***---***---**---***---***---***---***---***---***---****---***---***---***---***
+
+Template
+htm=>test-keep-in-frame.html
+
+Differences
+
+"leading and font size are different from the image ref "
+
+Solution
+---
+
+--***---***---***---***---***---***---**---***---***---***---***---***---***---****---***---***---***---***
+
+Template
+htm=>test-tables-.html
+
+Differences
+
+in line 63 and 69 from test-tables-.html style problems style="background: #eee;"
+
+Solution
+
+in line 63 and 69 from test-tables-.html change style from  style="background: #eee;" to  style="background-color: #eee;"
+
+--***---***---***---***---***---***---**---***---***---***---***---***---***---****---***---***---***---***
+
+Template
+htm=>test-letter-.html
+
+Differences
+
+logo-image in left-top is more small than the  image-ref; and some differences on fonts renders "
+
+Solution
+
+the method to convert cm to px work fine, temporal(solution)change  test-letter-.html-line-16-height: 1.5cm; to
+test-letter-.html-line-16-height: 1.6cm;" and   test-letter-.html-line-73-zoom: 60%; to  test-letter-.html-line-73
+42.3%
+
