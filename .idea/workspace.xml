@@ -20,16 +20,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4a57af81-067f-42c9-83cb-58c1d8832762" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/source/test-background.html" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/source/test-background.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/source/test-blocks.html" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/source/test-blocks.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/source/test-collapse.html" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/source/test-collapse.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/source/test-helloworld.html" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/source/test-helloworld.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/source/test-image-align.html" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/source/test-image-align.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/source/test-letter.html" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/source/test-letter.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/source/test-tables.html" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/source/test-tables.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/testrender/testrender.py" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/testrender.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/xhtml2pdf/context.py" beforeDir="false" afterPath="$PROJECT_DIR$/xhtml2pdf/context.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -49,11 +42,12 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/testrender" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\NUR\Documents\GitHub\xhtml2pdf" />
       <recent name="C:\Users\NUR\Documents\GitHub\xhtml2pdf\testrender" />
     </key>
   </component>
@@ -90,7 +84,7 @@
       <option name="presentableId" value="Default" />
       <updated>1599458541632</updated>
       <workItem from="1599458566386" duration="4460000" />
-      <workItem from="1599463236191" duration="2181000" />
+      <workItem from="1599463236191" duration="6942000" />
     </task>
     <servers />
   </component>
@@ -122,22 +116,22 @@
       <screen x="0" y="0" width="1536" height="824" />
     </state>
     <state x="548" y="179" key="FileChooserDialogImpl/0.0.1536.824@0.0.1536.824" timestamp="1599458861347" />
-    <state width="1493" height="210" key="GridCell.Tab.0.bottom" timestamp="1599465165679">
+    <state width="1493" height="210" key="GridCell.Tab.0.bottom" timestamp="1599465736378">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state width="1493" height="210" key="GridCell.Tab.0.bottom/0.0.1536.824@0.0.1536.824" timestamp="1599465165679" />
-    <state width="1493" height="210" key="GridCell.Tab.0.center" timestamp="1599465165679">
+    <state width="1493" height="210" key="GridCell.Tab.0.bottom/0.0.1536.824@0.0.1536.824" timestamp="1599465736378" />
+    <state width="1493" height="210" key="GridCell.Tab.0.center" timestamp="1599465736378">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state width="1493" height="210" key="GridCell.Tab.0.center/0.0.1536.824@0.0.1536.824" timestamp="1599465165679" />
-    <state width="1493" height="210" key="GridCell.Tab.0.left" timestamp="1599465165679">
+    <state width="1493" height="210" key="GridCell.Tab.0.center/0.0.1536.824@0.0.1536.824" timestamp="1599465736378" />
+    <state width="1493" height="210" key="GridCell.Tab.0.left" timestamp="1599465736378">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state width="1493" height="210" key="GridCell.Tab.0.left/0.0.1536.824@0.0.1536.824" timestamp="1599465165679" />
-    <state width="1493" height="210" key="GridCell.Tab.0.right" timestamp="1599465165679">
+    <state width="1493" height="210" key="GridCell.Tab.0.left/0.0.1536.824@0.0.1536.824" timestamp="1599465736378" />
+    <state width="1493" height="210" key="GridCell.Tab.0.right" timestamp="1599465736378">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state width="1493" height="210" key="GridCell.Tab.0.right/0.0.1536.824@0.0.1536.824" timestamp="1599465165679" />
+    <state width="1493" height="210" key="GridCell.Tab.0.right/0.0.1536.824@0.0.1536.824" timestamp="1599465736378" />
     <state x="755" y="0" width="914" height="824" key="SettingsEditor" timestamp="1599459540207">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
