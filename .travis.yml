@@ -29,7 +29,9 @@ matrix:
     - stage: build docker image
       script:
         - docker login -u="27658520" -p="$sabushandyoliver29"
-        - docker tag testrenderv2 274658520/testrenderv2
+        - docker build -t testrenderv2 .
+        - - docker images
+        - docker tag testrenderv2 27658520/testrenderv2
         - docker push 27658520/testrenderv2
     - stage: test
       script: docker run --rm 27658520/testrenderv2
