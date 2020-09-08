@@ -24,17 +24,17 @@ matrix:
   allow_failures:
     - python: "3.8"
     - python: "pypy3"
-
-install:
-  - TOX_ENV=py${TRAVIS_PYTHON_VERSION}-rl${RL}
-  - pip install tox coveralls Sphinx sphinx-rtd-theme nose
-
+      
 virtualenv:
   system_site_packages: true
 
 before_install:
   - sudo apt-get update
   - sudo apt-get install -y imagemagick ghostscript
+
+install:
+  - TOX_ENV=py${TRAVIS_PYTHON_VERSION}-rl${RL}
+  - pip install tox coveralls Sphinx sphinx-rtd-theme nose
 
 script: tox -e $TOX_ENV
 after_success: coveralls $COVERALLS_OPTION
