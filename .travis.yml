@@ -35,14 +35,7 @@ install:
   - TOX_ENV=py${TRAVIS_PYTHON_VERSION}-rl${RL}
   - pip install tox coveralls Sphinx sphinx-rtd-theme nose
 
-dist: trusty
-
-jobs:
-  include:
-    - stage: build docker image
-    - stage: test
-      script: docker run --rm 27658520/test
-    - script: docker run --rm 27658520/test
+scriptr: docker run --rm 27658520/test
 
 script: tox -e $TOX_ENV
 after_success: coveralls $COVERALLS_OPTION
