@@ -61,8 +61,8 @@ def create_diff_image(srcfile1, srcfile2, output_dir, options):
 
     outname = '%s.diff%s' % os.path.splitext(srcfile1)
     outfile = os.path.join(output_dir, outname)
-    result = exec_cmd(options, options.compare_cmd, '-metric', 'ae', srcfile1, srcfile2,'-quiet', outfile)
-    diff_value = int(float(result[1]))
+    _,result = exec_cmd(options, options.compare_cmd, '-metric', 'ae', srcfile1, srcfile2,'-quiet', outfile)
+    diff_value = int(float(result.strip()))
     if diff_value > 0:
         if not options.quiet:
             print('Image %s differs from reference, value is %i' % (srcfile1, diff_value))
@@ -117,7 +117,6 @@ def render_file(filename, output_dir, ref_dir, options):
 def exec_cmd(options, *args):
     if options.debug:
         print('Executing %s' % ' '.join(args))
-    print(args)
     proc = Popen(args, stdout=PIPE, stderr=PIPE)
     result = proc.communicate()
     if options.debug:
@@ -269,7 +268,7 @@ parser.add_option('-e', '--only-errors', dest='only_errors', action='store_true'
 parser.add_option('-q', '--quiet', dest='quiet', action='store_true',
                   default=False, help='Try to be quiet')
 parser.add_option('-F', '--nofail', dest='nofail', action='store_true',
-                  default=True, help="Doesn't return an error on failure "
+                  default=False, help="Doesn't return an error on failure "
                   "this useful when calling it in scripts"
                   )
 parser.add_option('-X', '--remove_transparencies', dest='remove_transparencies', action='store_false',
@@ -286,7 +285,7 @@ parser.add_option('-c', '--create-reference', dest='create_reference',
                   'specified directory for reference. CAREFUL: this directory '
                  'will be deleted and recreated before rendering!')
 parser.add_option('--debug', dest='debug', action='store_true',
-                  default=True, help='More output for debugging')
+                  default=False, help='More output for debugging')
 parser.add_option('--convert-cmd', dest='convert_cmd', default='/usr/bin/convert',
                   help='Path to ImageMagick "convert" tool')
 parser.add_option('--compare-cmd', dest='compare_cmd', default='/usr/bin/compare',

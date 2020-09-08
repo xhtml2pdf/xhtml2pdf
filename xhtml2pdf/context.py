@@ -289,7 +289,9 @@ class pisaCSSBuilder(css.CSSBuilder):
                                                       'border-left-width', 'border-right-width'), border_width, getSize)
 
             if border or pageBorder:
-                frame_border = ShowBoundaryValue(width=int(border))
+
+                frame_border = ShowBoundaryValue(width=int(border))   #frame_border = ShowBoundaryValue() to
+                                                                      #frame_border = ShowBoundaryValue(width=int(border))
             else:
                 frame_border = ShowBoundaryValue(
                     color=fborder_color, width=fborder_width)
