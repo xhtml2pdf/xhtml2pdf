@@ -21,290 +21,7 @@
   <component name="ChangeListManager">
     <list default="true" id="4a57af81-067f-42c9-83cb-58c1d8832762" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/simple-test.page0.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/simple-test.page0.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/simple-test.page0.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/simple-test.page0.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/simple-test.page0.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/simple-test.page0.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/simple-test.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-align.page0.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-align.page0.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-align.page0.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-align.page0.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-align.page0.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-align.page0.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-align.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-background.page0.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-background.page0.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-background.page0.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-background.page0.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-background.page0.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-background.page0.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-background.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-blocks.page0.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-blocks.page0.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-blocks.page0.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-blocks.page0.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-blocks.page0.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-blocks.page0.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-blocks.page1.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-blocks.page1.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-blocks.page1.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-blocks.page1.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-blocks.page1.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-blocks.page1.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-blocks.page2.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-blocks.page2.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-blocks.page2.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-blocks.page2.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-blocks.page2.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-blocks.page2.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-blocks.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-collapse.page0.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-collapse.page0.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-collapse.page0.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-collapse.page0.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-collapse.page0.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-collapse.page0.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-collapse.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-css-border.page0.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-css-border.page0.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-css-border.page0.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-css-border.page0.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-css-border.page0.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-css-border.page0.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-css-border.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-helloworld.page0.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-helloworld.page0.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-helloworld.page0.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-helloworld.page0.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-helloworld.page0.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-helloworld.page0.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-helloworld.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-image-align.page0.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-image-align.page0.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-image-align.page0.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-image-align.page0.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-image-align.page0.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-image-align.page0.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-image-align.page1.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-image-align.page1.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-image-align.page1.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-image-align.page1.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-image-align.page1.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-image-align.page1.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-image-align.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-image.page0.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-image.page0.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-image.page0.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-image.page0.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-image.page0.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-image.page0.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-image.page1.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-image.page1.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-image.page1.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-image.page1.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-image.page1.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-image.page1.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-image.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-in-frame.page0.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-in-frame.page0.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-in-frame.page0.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-in-frame.page0.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-in-frame.page0.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-in-frame.page0.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-in-frame.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-with-next.page0.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-with-next.page0.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-with-next.page0.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-with-next.page0.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-with-next.page0.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-with-next.page0.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-with-next.page1.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-with-next.page1.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-with-next.page1.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-with-next.page1.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-with-next.page1.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-with-next.page1.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-with-next.page2.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-with-next.page2.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-with-next.page2.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-with-next.page2.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-with-next.page2.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-with-next.page2.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-with-next.page3.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-with-next.page3.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-with-next.page3.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-with-next.page3.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-with-next.page3.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-with-next.page3.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-keep-with-next.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-letter.page0.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-letter.page0.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-letter.page0.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-letter.page0.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-letter.page0.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-letter.page0.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-letter.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-linespacing.page0.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-linespacing.page0.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-linespacing.page0.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-linespacing.page0.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-linespacing.page0.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-linespacing.page0.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-linespacing.page1.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-linespacing.page1.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-linespacing.page1.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-linespacing.page1.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-linespacing.page1.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-linespacing.page1.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-linespacing.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-list.page0.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-list.page0.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-list.page0.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-list.page0.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-list.page0.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-list.page0.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-list.page1.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-list.page1.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-list.page1.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-list.page1.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-list.page1.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-list.page1.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-list.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page0.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page0.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page0.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page0.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page0.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page0.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page1.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page1.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page1.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page1.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page1.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page1.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page2.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page2.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page2.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page2.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page2.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page2.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page3.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page3.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page3.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page3.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page3.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page3.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page4.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page4.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page4.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page4.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page4.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page4.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page5.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page5.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page5.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page5.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page5.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page5.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page6.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page6.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page6.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page6.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page6.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.page6.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-loremipsum.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-css.page0.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-css.page0.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-css.page0.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-css.page0.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-css.page0.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-css.page0.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-css.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-of-contents.page0.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-of-contents.page0.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-of-contents.page0.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-of-contents.page0.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-of-contents.page0.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-of-contents.page0.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-of-contents.page1.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-of-contents.page1.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-of-contents.page1.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-of-contents.page1.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-of-contents.page1.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-of-contents.page1.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-of-contents.page2.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-of-contents.page2.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-of-contents.page2.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-of-contents.page2.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-of-contents.page2.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-of-contents.page2.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-of-contents.page3.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-of-contents.page3.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-of-contents.page3.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-of-contents.page3.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-of-contents.page3.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-of-contents.page3.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-table-of-contents.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-tables.page0.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-tables.page0.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-tables.page0.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-tables.page0.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-tables.page0.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-tables.page0.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-tables.page1.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-tables.page1.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-tables.page1.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-tables.page1.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-tables.page1.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-tables.page1.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-tables.page2.diff.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-tables.page2.diff.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-tables.page2.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-tables.page2.ref.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-tables.page2.ref.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-tables.page2.thumb.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output/test-tables.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/simple-test.page0.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/simple-test.page0.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-align.page0.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-align.page0.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-background.page0.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-background.page0.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-blocks.page0.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-blocks.page0.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-blocks.page1.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-blocks.page1.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-blocks.page2.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-blocks.page2.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-collapse.page0.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-collapse.page0.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-css-border.page0.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-css-border.page0.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-entities.page0.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-entities.page1.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-entities.page2.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-entities.page3.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-entities.page4.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-entities.page5.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-entities.page6.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-entities.page7.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-helloworld.page0.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-helloworld.page0.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-image-align.page0.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-image-align.page0.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-image-align.page1.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-image-align.page1.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-image.page0.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-image.page0.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-image.page1.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-image.page1.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-keep-in-frame.page0.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-keep-in-frame.page0.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-keep-with-next.page0.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-keep-with-next.page0.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-keep-with-next.page1.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-keep-with-next.page1.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-keep-with-next.page2.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-keep-with-next.page2.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-keep-with-next.page3.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-keep-with-next.page3.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-letter.page0.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-letter.page0.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-linespacing.page0.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-linespacing.page0.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-linespacing.page1.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-linespacing.page1.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-list.page0.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-list.page0.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-list.page1.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-list.page1.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-table-of-contents.page0.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-table-of-contents.page0.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-table-of-contents.page1.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-table-of-contents.page1.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-table-of-contents.page2.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-table-of-contents.page2.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-table-of-contents.page3.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-table-of-contents.page3.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-tables.page0.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-tables.page0.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-tables.page1.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-tables.page1.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testrender/data/reference/test-tables.page2.png" beforeDir="false" afterPath="$PROJECT_DIR$/testrender/data/reference/test-tables.page2.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/xhtml2pdf.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/xhtml2pdf.iml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -325,7 +42,7 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PythonContentEntriesConfigurable" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -371,7 +88,7 @@
       <workItem from="1599458566386" duration="4460000" />
       <workItem from="1599463236191" duration="7242000" />
       <workItem from="1599497104742" duration="25599000" />
-      <workItem from="1599570288828" duration="395000" />
+      <workItem from="1599570288828" duration="4071000" />
     </task>
     <servers />
   </component>
@@ -419,10 +136,10 @@
       <screen x="0" y="0" width="1536" height="824" />
     </state>
     <state width="1493" height="210" key="GridCell.Tab.0.right/0.0.1536.824@0.0.1536.824" timestamp="1599545492932" />
-    <state x="755" y="0" width="914" height="824" key="SettingsEditor" timestamp="1599459540207">
+    <state x="622" y="0" width="914" height="824" key="SettingsEditor" timestamp="1599576541201">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state x="755" y="0" width="914" height="824" key="SettingsEditor/0.0.1536.824@0.0.1536.824" timestamp="1599459540207" />
+    <state x="622" y="0" width="914" height="824" key="SettingsEditor/0.0.1536.824@0.0.1536.824" timestamp="1599576541201" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/xhtml2pdf$testrender.coverage" NAME="testrender Coverage Results" MODIFIED="1599544111093" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/testrender" />

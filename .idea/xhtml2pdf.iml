@@ -4,6 +4,7 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/xhtml2pdf" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/demo/djangoproject" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/.idea" />
       <excludeFolder url="file://$MODULE_DIR$/venv" />
     </content>
     <orderEntry type="inheritedJdk" />
