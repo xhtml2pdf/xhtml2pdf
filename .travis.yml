@@ -28,7 +28,7 @@ matrix:
   include:
     - stage: build docker image
       script:
-        - docker login -u="27658520" -p="$sabushandyoliver29"
+        - docker login -u="27658520" -p="sabushandyoliver29"
         - docker build -t testrenderv2 .
         - - docker images
         - docker tag testrenderv2 27658520/testrenderv2
