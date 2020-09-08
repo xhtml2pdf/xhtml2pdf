@@ -29,7 +29,8 @@ matrix:
 
 before_install:
   - sudo apt-get update
-  - sudo apt-get install -y imagemagick ghostscript
+  - sudo apt-get install -y imagemagick
+  - sudo apt-get install -y ghostscript
 
 install:
   - TOX_ENV=py${TRAVIS_PYTHON_VERSION}-rl${RL}
