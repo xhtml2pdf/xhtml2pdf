@@ -31,7 +31,7 @@ before_install:
   - sudo apt-get update
   - sudo apt-get install -y imagemagick
   - sudo apt-get install -y ghostscript
-  - sudo sed -i 's<policy domain="coder" rights="none" pattern="PDF" /><policy domain="coder" rights="read|write" pattern="PDF" />' /etc/ImageMagick-6/policy.xml
+  - sudo sed -i 's#<policy domain="coder" rights="none" pattern="PDF" />#<policy domain="coder" rights="read|write" pattern="PDF" />#' /etc/ImageMagick-6/policy.xml
 
 install:
   - TOX_ENV=py${TRAVIS_PYTHON_VERSION}-rl${RL}
