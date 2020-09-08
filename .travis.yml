@@ -1,5 +1,5 @@
 language: python
-sudo: false
+sudo: true
 python:
   - "2.7"
   - "3.4"
@@ -26,10 +26,10 @@ matrix:
     - python: "pypy3"
 
 before_install:
-  - apt-get update
-  - apt-get install -y imagemagick
-  - apt-get install -y ghostscript
-  - sed -i 's#<policy domain="coder" rights="none" pattern="PDF" />#<policy domain="coder" rights="read|write" pattern="PDF" />#' /etc/ImageMagick-6/policy.xml
+  - sudo apt-get update
+  - sudo apt-get install -y imagemagick
+  - sudo apt-get install -y ghostscript
+  - sudo sed -i 's#<policy domain="coder" rights="none" pattern="PDF" />#<policy domain="coder" rights="read|write" pattern="PDF" />#' /etc/ImageMagick-6/policy.xml
 
 install:
   - TOX_ENV=py${TRAVIS_PYTHON_VERSION}-rl${RL}
