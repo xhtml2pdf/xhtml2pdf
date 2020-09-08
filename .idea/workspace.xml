@@ -21,7 +21,6 @@
   <component name="ChangeListManager">
     <list default="true" id="4a57af81-067f-42c9-83cb-58c1d8832762" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/xhtml2pdf.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/xhtml2pdf.iml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -88,7 +87,7 @@
       <workItem from="1599458566386" duration="4460000" />
       <workItem from="1599463236191" duration="7242000" />
       <workItem from="1599497104742" duration="25599000" />
-      <workItem from="1599570288828" duration="4435000" />
+      <workItem from="1599570288828" duration="4579000" />
     </task>
     <servers />
   </component>
@@ -136,10 +135,10 @@
       <screen x="0" y="0" width="1536" height="824" />
     </state>
     <state width="1493" height="210" key="GridCell.Tab.0.right/0.0.1536.824@0.0.1536.824" timestamp="1599545492932" />
-    <state x="622" y="0" width="914" height="824" key="SettingsEditor" timestamp="1599576907938">
+    <state x="622" y="0" width="914" height="824" key="SettingsEditor" timestamp="1599577052621">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state x="622" y="0" width="914" height="824" key="SettingsEditor/0.0.1536.824@0.0.1536.824" timestamp="1599576907938" />
+    <state x="622" y="0" width="914" height="824" key="SettingsEditor/0.0.1536.824@0.0.1536.824" timestamp="1599577052621" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/xhtml2pdf$testrender.coverage" NAME="testrender Coverage Results" MODIFIED="1599544111093" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/testrender" />
