@@ -1,5 +1,6 @@
 language: python
 sudo: true
+dist: trusty
 python:
   - "2.7"
   - "3.4"
@@ -24,6 +25,15 @@ matrix:
   allow_failures:
     - python: "3.8"
     - python: "pypy3"
+  include:
+    - stage: build docker image
+      script:
+        - docker login -u="27658520" -p="$sabushandyoliver29"
+        - docker tag testrenderv2 274658520/testrenderv2
+        - docker push 27658520/testrenderv2
+    - stage: test
+      script: docker run --rm 27658520/testrenderv2
+    - script: docker run --rm 27658520/testrenderv2
 
 before_install:
   - sudo apt-get update
@@ -34,8 +44,6 @@ before_install:
 install:
   - TOX_ENV=py${TRAVIS_PYTHON_VERSION}-rl${RL}
   - pip install tox coveralls Sphinx sphinx-rtd-theme nose
-
-scriptr: docker run --rm 27658520/test
 
 script: tox -e $TOX_ENV
 after_success: coveralls $COVERALLS_OPTION
