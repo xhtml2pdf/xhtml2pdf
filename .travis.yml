@@ -9,8 +9,6 @@ python:
   - "3.8"
   - "pypy"
   - "pypy3"
-virtualenv:
-  system_site_packages: true
 
 env:
   - RL=30
