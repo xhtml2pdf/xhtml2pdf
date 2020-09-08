@@ -9,6 +9,8 @@ python:
   - "3.8"
   - "pypy"
   - "pypy3"
+virtualenv:
+  system_site_packages: true
 
 env:
   - RL=30
@@ -24,9 +26,6 @@ matrix:
   allow_failures:
     - python: "3.8"
     - python: "pypy3"
-      
-virtualenv:
-  system_site_packages: true
 
 before_install:
   - sudo apt-get update
