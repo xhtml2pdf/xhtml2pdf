@@ -7,7 +7,7 @@ http://www.htmltopdf.org/doc/pisa-en.html for reference
 <style>
 /* Page layout using CSS and the -pdf-frame-content special attribute*/
 @page {
-    @frame {
+    @frame content_frame {
         -pdf-frame-content: company_logo;
         /*-pdf-frame-border: 1;*/
         right: 3cm;
@@ -15,7 +15,7 @@ http://www.htmltopdf.org/doc/pisa-en.html for reference
         top: 1cm;
         height: 1.5cm;
     }
-    @frame {
+    @frame content_frame {
         -pdf-frame-content: address_sender;
         /*-pdf-frame-border: 1;*/
         right: 3cm;
@@ -23,7 +23,7 @@ http://www.htmltopdf.org/doc/pisa-en.html for reference
         top: 5cm;
         height: 3cm;
     }
-    @frame {
+    @frame content_frame {
         -pdf-frame-content: address_receiver;
         /*-pdf-frame-border: 1;*/
         left: 3cm;
@@ -31,14 +31,14 @@ http://www.htmltopdf.org/doc/pisa-en.html for reference
         top: 5cm;
         height: 3cm;
     }
-    @frame {
+    @frame content_frame {
         -pdf-frame-content: main_text;
         /*-pdf-frame-border: 1;*/
         right: 2cm;
         left: 2cm;
         top: 9cm;
     }
-    @frame {
+    @frame content_frame {
         -pdf-frame-content: barcode;
         /*-pdf-frame-border: 1;*/
         left: 2cm;
@@ -46,7 +46,7 @@ http://www.htmltopdf.org/doc/pisa-en.html for reference
         top: 1cm;
         height: 3cm;
     }
-    @frame {
+    @frame content_frame {
         -pdf-frame-content: signature;
         /*-pdf-frame-border: 1;*/
         left: 2cm;
@@ -54,7 +54,7 @@ http://www.htmltopdf.org/doc/pisa-en.html for reference
         bottom: 3cm;
         height: 3cm;
     }
-    @frame {
+    @frame content_frame {
         -pdf-frame-content: footer;
         /*-pdf-frame-border: 1;*/
         left: 2cm;
