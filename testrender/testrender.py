@@ -272,7 +272,7 @@ parser.add_option('-F', '--nofail', dest='nofail', action='store_true',
                   "this useful when calling it in scripts"
                   )
 parser.add_option('-X', '--remove_transparencies', dest='remove_transparencies', action='store_false',
-                  default=True, help="Don't try to remove transparent backgrounds "
+                  default=False, help="Don't try to remove transparent backgrounds "
                   "Needed for Travis-CI"
                   )
 
@@ -285,7 +285,7 @@ parser.add_option('-c', '--create-reference', dest='create_reference',
                   'specified directory for reference. CAREFUL: this directory '
                  'will be deleted and recreated before rendering!')
 parser.add_option('--debug', dest='debug', action='store_true',
-                  default=False, help='More output for debugging')
+                  default=True, help='More output for debugging')
 parser.add_option('--convert-cmd', dest='convert_cmd', default='/usr/bin/convert',
                   help='Path to ImageMagick "convert" tool')
 parser.add_option('--compare-cmd', dest='compare_cmd', default='/usr/bin/compare',
