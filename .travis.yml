@@ -24,6 +24,11 @@ matrix:
   allow_failures:
     - python: "3.8"
     - python: "pypy3"
+    - env: RL=30
+    - env: RL=31
+    - env: RL=32
+    - env: RL=33
+    - env: RL=34
 
 before_install:
   - sudo apt-get update
