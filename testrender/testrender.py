@@ -47,7 +47,7 @@ def convert_to_png(infile, output_dir, options):
 
     outfiles = glob.glob(os.path.join(output_dir, globname))
     outfiles.sort()
-    if options.remove_transparencies:
+    if not options.remove_transparencies:
         for outfile in outfiles:
             # convert transparencies to white background
             # Done after PDF to PNG conversion, as during that conversion this will remove most background colors.
