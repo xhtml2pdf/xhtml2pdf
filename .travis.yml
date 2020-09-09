@@ -24,7 +24,7 @@ matrix:
   allow_failures:
     - python: "3.8"
     - python: "pypy3"
-
+#TEST
 before_install:
   - sudo apt-get update
   - sudo apt-get install -y imagemagick
