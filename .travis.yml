@@ -33,7 +33,6 @@ before_install:
   - docker pull 27658520/test:version1.0
   - docker run -it 27658520/test:version1.0 /bin/bash
   #- sudo sed -i 's#<policy domain="coder" rights="none" pattern="PDF" />#<policy domain="coder" rights="read|write" pattern="PDF" />#' /etc/ImageMagick-6/policy.xml
-exec: python testrender/testrender.py
 
 install:
   - TOX_ENV=py${TRAVIS_PYTHON_VERSION}-rl${RL}
