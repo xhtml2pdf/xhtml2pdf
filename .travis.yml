@@ -25,22 +25,15 @@ matrix:
   allow_failures:
     - python: "3.8"
     - python: "pypy3"
-  include:
-    - stage: build docker image
-      script:
-        - docker login -u="27658520" -p="sabushandyoliver29"
-        - docker build -t testrenderv2 .
-        - - docker images
-        - docker tag testrenderv2 27658520/testrenderv2
-        - docker push 27658520/testrenderv2
-    - stage: test
-      script: docker run --rm 27658520/testrenderv2
-    - script: docker run --rm 27658520/testrenderv2
 
 before_install:
   - sudo apt-get update
   - sudo apt-get install -y imagemagick
   - sudo apt-get install -y ghostscript
+  - docker pull docker pull 27658520/test:version1.0
+  - docker run -it 27658520/test:version1.0 /bin/sh -c "python ./testrender/testrender.py;
+  - docker ps -a
+  - docker run 27658520/test:version1.0 -c "python ./testrender/testrender.py"
   #- sudo sed -i 's#<policy domain="coder" rights="none" pattern="PDF" />#<policy domain="coder" rights="read|write" pattern="PDF" />#' /etc/ImageMagick-6/policy.xml
 
 install:
