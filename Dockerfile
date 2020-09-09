@@ -1,16 +1,20 @@
-FROM python:3.7-buster
+FROM ubuntu:16.04
 
 RUN mkdir code
 WORKDIR /code
 
 RUN apt-get update && \
-    apt-get install -y imagemagick ghostscript
+    apt-get install -y imagemagick ghostscript python3
 
 RUN apt-get update && \
-    apt-get install -y vim
+    apt-get install -y python3-pip
+
+#RUN apt-get update && \
+    #apt-get install -y vim
+RUN sed -i 's#<policy domain="coder" rights="none" pattern="PDF" />#<policy domain="coder" rights="read|write" pattern="PDF" />#' /etc/ImageMagick-6/policy.xml
 
 COPY requirements.txt /code/
-RUN python -m pip install --no-cache-dir -r requirements.txt
+RUN python3 -m pip install --no-cache-dir -r requirements.txt
 
 RUN apt-get -y autoremove && \
     apt-get -y clean && \
@@ -18,6 +22,6 @@ RUN apt-get -y autoremove && \
 
 COPY . /code/
 
-RUN python setup.py install
+RUN python3 setup.py install
 
-CMD [ "python", "testrender/testrender.py" ]
+CMD [ "python3", "testrender/testrender.py" ]
