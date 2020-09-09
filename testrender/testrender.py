@@ -273,7 +273,7 @@ parser.add_option('-F', '--nofail', dest='nofail', action='store_true',
                   "this useful when calling it in scripts"
                   )
 parser.add_option('-X', '--remove_transparencies', dest='remove_transparencies', action='store_false',
-                  default=False, help="Don't try to remove transparent backgrounds "
+                  default=True, help="Don't try to remove transparent backgrounds "
                   "Needed for Travis-CI"
                   )
 
