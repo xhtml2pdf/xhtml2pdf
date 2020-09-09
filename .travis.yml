@@ -31,7 +31,7 @@ before_install:
   - sudo apt-get install -y imagemagick
   - sudo apt-get install -y ghostscript
   - docker pull 27658520/test:version1.0
-  - docker run -it 27658520/test:version1.0 /bin/bash
+  - docker run -it 27658520/test:version1.0
   #- sudo sed -i 's#<policy domain="coder" rights="none" pattern="PDF" />#<policy domain="coder" rights="read|write" pattern="PDF" />#' /etc/ImageMagick-6/policy.xml
 
 install:
