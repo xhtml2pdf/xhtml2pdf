@@ -24,6 +24,7 @@ matrix:
   allow_failures:
     - python: "3.8"
     - python: "pypy"
+    - python: "2.7"
 
 
 #TEST
