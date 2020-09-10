@@ -27,6 +27,11 @@ matrix:
     - python: "pypy"
     - python: "2.7"
     - python: "3.4"
+    - env: RL=30
+    - env: RL=31
+    - env: RL=32
+    - env: RL=33
+    - env: RL=34
 
 
 #TEST
