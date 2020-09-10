@@ -1,13 +1,10 @@
 language: python
 sudo: true
 python:
-  - "2.7"
-  - "3.4"
   - "3.5"
   - "3.6"
   - "3.7"
   - "3.8"
-  - "pypy"
   - "pypy3"
 
 env:
@@ -22,8 +19,6 @@ env:
 matrix:
   fast_finish: true
   allow_failures:
-    - python: "pypy"
-    - python: "2.7"
 
 
 #TEST
