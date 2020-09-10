@@ -45,3 +45,10 @@ notifications:
 
 before_script:
   - cd doc/source ; sphinx-build -nW -b html -d _build/doctrees . _build/html ; cd ../..
+
+deploy:
+  provider: boxfuse
+  user: "e932c4327cec4b16a5c32677aa714cba"
+  secret: "b3CusKqQD74E0OVS5VC4ZhXplr4qKFxCX5onUPKzmwIneFeZild6hfR24a1DCQ48"
+  payload: "zip file"
+  env: "test"
