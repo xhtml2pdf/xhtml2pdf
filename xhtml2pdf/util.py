@@ -11,10 +11,18 @@ import sys
 import tempfile
 
 import reportlab
+from bidi.algorithm import get_display
 from reportlab.lib.colors import Color, toColor
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
 from reportlab.lib.units import inch, cm
 import six
+import reportlab.pdfbase._cidfontdata
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.cidfonts import UnicodeCIDFont
+from textblob import TextBlob
+import arabic_reshaper
+
+
 
 
 try:
@@ -938,3 +946,50 @@ COLOR_BY_NAME = {
     'yellow': Color(1, 1, 0),
     'yellowgreen': Color(.603922, .803922, .196078)
 }
+
+def get_default_asian_font():
+    try:
+        lower_font_list = []
+        upper_font_list = []
+
+        list = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodings)
+        list = list.keys()
+
+        for font in list:
+            upper_font_list.append(font)
+            lower_font_list.append(font.lower())
+        default_asian_font = {lower_font_list[i]: upper_font_list[i] for i in range(len(lower_font_list))}
+
+        return default_asian_font
+
+    except:
+        pass
+
+
+def set_asian_fonts(fontname):
+    try:
+        list = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodings)
+        list = list.keys()
+        if fontname in list:
+            pdfmetrics.registerFont(UnicodeCIDFont(fontname))
+        get_default_asian_font()
+    except:
+        print('Fail to set asian font ')
+
+def detect_language(text):
+    try:
+        text = TextBlob(text)
+        language = text.detect_language()
+        return language
+    except Exception as e:
+        pass
+       #print("Fail to find language")
+
+def arabic_formar(text):
+    if detect_language(text) == "ar":
+        ar = arabic_reshaper.reshape(text)
+        ar = get_display(ar)
+        text = ar
+        return text
+    else:
+        return None
