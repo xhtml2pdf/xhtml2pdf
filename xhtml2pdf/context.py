@@ -13,8 +13,9 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus.frames import Frame, ShowBoundaryValue
 from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
-import six
 
+import six
+from xhtml2pdf import  util
 import xhtml2pdf.default
 import xhtml2pdf.parser
 from xhtml2pdf.util import getSize, getCoords, getFile, pisaFileObject, \
@@ -416,6 +417,7 @@ class pisaContext(object):
 
     def __init__(self, path, debug=0, capacity=-1):
         self.fontList = copy.copy(xhtml2pdf.default.DEFAULT_FONT)
+        self.asianFontList = copy.copy(xhtml2pdf.default.DEFAULT_ASIAN_FONT)
         set_value(self,
                   ('path', 'story', 'text', 'log', 'frameStaticList',
                    'pisaBackgroundList', 'frameList', 'anchorFrag',
@@ -831,7 +833,12 @@ class pisaContext(object):
         for name in names:
             if type(name) not in six.string_types:
                 name = str(name)
-            font = self.fontList.get(name.strip().lower(), None)
+            font = name.strip().lower()
+            if font in self.asianFontList:
+                font = self.asianFontList.get(font, None)
+                util.set_asian_fonts(font)
+            else:
+                font = self.fontList.get(font,None)
             if font is not None:
                 return font
         return self.fontList.get(default, None)
