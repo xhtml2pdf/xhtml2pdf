@@ -8,9 +8,12 @@ from reportlab.platypus.flowables import Spacer
 from reportlab.platypus.frames import Frame
 from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlPageTemplate
 from xhtml2pdf.util import pisaTempFile, getBox, PyPDF2
+import arabic_reshaper
+from bidi.algorithm import get_display
 import cgi
 import logging
 import six
+from xhtml2pdf import util
 
 if not six.PY2:
     from html import escape as html_escape
@@ -104,6 +107,8 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
     context = pisaStory(src, path, link_callback, debug, default_css, xhtml,
                         encoding, context=context, xml_output=xml_output)
 
+    frag_text_language_check(context)
+
     # Buffer PDF into memory
     out = io.BytesIO()
 
@@ -187,7 +192,22 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
     context.dest = dest
 
     data = out.getvalue()
-
     context.dest.write(data)  # TODO: context.dest is a tempfile as well...
 
     return context
+
+def frag_text_language_check(context):
+    for x in context.story:
+        if hasattr(x,'frags'):
+            for y in x.frags:
+                if hasattr(y,'text'):
+                    if y.text != None:
+                        detect_language_result = util.arabic_formar(y.text)
+                        if detect_language_result != None:
+                            y.text = detect_language_result
+                        else:
+                            pass
+                    else:
+                        pass
+        else:
+            pass
