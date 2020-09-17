@@ -2,6 +2,8 @@
 from reportlab.lib.pagesizes import (A0, A1, A2, A3, A4, A5, A6, B0, B1, B2, B3,
                                      B4, B5, B6, LETTER, LEGAL, ELEVENSEVENTEEN)
 
+from xhtml2pdf import  util
+
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -592,6 +594,8 @@ noscript {
     display: none;
 }
 """
+
+DEFAULT_ASIAN_FONT = util.get_default_asian_font()
 
 DEFAULT_FONT = {
     "courier": "Courier",
