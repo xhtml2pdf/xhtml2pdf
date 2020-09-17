@@ -21,6 +21,7 @@ matrix:
   allow_failures:
     - env: RL=30
     - env: RL=31
+    - python: "pypy3"
 
 
 #TEST
