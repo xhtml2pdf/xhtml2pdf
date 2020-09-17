@@ -27,6 +27,7 @@ from reportlab.platypus.tables import Table, TableStyle
 from xhtml2pdf.reportlab_paragraph import Paragraph
 from xhtml2pdf.util import getUID, getBorderStyle
 
+
 import six
 import sys
 
