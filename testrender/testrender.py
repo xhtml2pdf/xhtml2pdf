@@ -61,7 +61,7 @@ def create_diff_image(srcfile1, srcfile2, output_dir, options):
 
     outname = '%s.diff%s' % os.path.splitext(srcfile1)
     outfile = os.path.join(output_dir, outname)
-    _, result = exec_cmd(options, options.compare_cmd, '-metric', 'ae', srcfile1, srcfile2, '-lowlight-color', 'white', outfile)
+    _,result = exec_cmd(options, options.compare_cmd, '-metric', 'ae', srcfile1, srcfile2,'-lowlight-color','white', outfile)
     diff_value = int(float(result.strip()))
     if diff_value > 0:
         if not options.quiet:

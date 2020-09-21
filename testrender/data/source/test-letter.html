@@ -107,7 +107,8 @@ h1, h2, h3, h4 { /* Don't add an outline to the document */
     <p>Datum:________________________ Unterschrift:__________________________</p>
 </div>
 <div id="barcode">
-    <h1><pdf:barcode value="Beispiel-Barcode" type="code126" humanreadable="1" align="baseline" /></h1>
+    <!-- change type=126 to type="128" which is available on file default.py -->
+    <h1><pdf:barcode value="Beispiel-Barcode" type="code128" humanreadable="1" align="baseline" /></h1>
 </div>
 <div id="footer">
     Lorem ipsum dolor sit amet, consectetur adipiscing elit.

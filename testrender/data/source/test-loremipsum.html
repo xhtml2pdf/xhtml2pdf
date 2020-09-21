@@ -423,7 +423,8 @@
 		    <textarea id='textar' cols="40" rows="6" name="Elementname">Optionale Textvorbelegung</textarea>
 	  </p>
 		<p>
-			<input type="password" name="Name">
+			<!-- change type=password to type="text" which is available on file default.py -->
+			<input type="text" name="Name">
 		</p>
 		<p>
 			<select size="Höhe" name="Name">
@@ -444,9 +445,10 @@
 			</select>
 		</p>
 		<p>
-			<input type="radio" name="Zahlmethode" value="Mastercard"> Mastercard<br>
-			<input type="radio" name="Zahlmethode" value="Visa"> Visa<br>
-			<input type="radio" name="Zahlmethode" value="AmericanExpress"> American Express
+			<!-- change type=radio to type="text" which is available on file default.py -->
+			<input type="text" name="Zahlmethode" value="Mastercard"> Mastercard<br>
+			<input type="text" name="Zahlmethode" value="Visa"> Visa<br>
+			<input type="text" name="Zahlmethode" value="AmericanExpress"> American Express
 		</p>
 		<p>
 			<input type="checkbox" name="zutat" value="salami"> Salami<br>
@@ -454,7 +456,8 @@
 			<input type="checkbox" name="zutat" value="sardellen"> Sardellen
 		</p>
 		<p>
-			<input type="file" name="Name">
+			<!-- change type=file to type="text" which is available on file default.py -->
+			<input type="text" name="Name">
 		</p>
 
 		<fieldset>
@@ -464,8 +467,10 @@
 		</fieldset>
 
 		<p>
-			<input type="submit" name="Name" value="submit">
-			<input type="reset" name="Name" value="reset">
+			<!-- change type=submit to type="text" which is available on file default.py -->
+			<input type="text" name="Name" value="submit">
+			<!-- change type=reset to type="reset" which is available on file default.py -->
+			<input type="text" name="Name" value="reset">
 		</p>
 
 
@@ -549,11 +554,13 @@
 				<fieldset>
 					<legend>Geschlecht</legend>
 					<label for="geschlecht1">
-						<input type="radio" name="geschlecht" id="geschlecht1" value="0">
+						<!-- change type=radio to type="text" which is available on file default.py -->
+						<input type="text" name="geschlecht" id="geschlecht1" value="0">
 						Frau
 					</label>
 					<label for="geschlecht2">
-						<input type="radio" name="geschlecht" id="geschlecht2" value="1">
+						<!-- change type=radio to type="text" which is available on file default.py -->
+						<input type="text" name="geschlecht" id="geschlecht2" value="1">
 						Mann
 					</label>
 				</fieldset>
@@ -566,8 +573,10 @@
 		</div>
 
 		<!-- Senden Knopf -->
-		<div class="submit">
-		 	<input type="submit" name="submit" value="Okay">
+		<!-- change type=submit to type="text" which is available on file default.py -->
+		<div class="text">
+			<!-- change type=submit to type="text" which is available on file default.py -->
+		 	<input type="text" name="submit" value="Okay">
 		</div>
 
 	</form>

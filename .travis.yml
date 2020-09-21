@@ -1,13 +1,10 @@
 language: python
-sudo: false
+sudo: true
 python:
-  - "2.7"
-  - "3.4"
   - "3.5"
   - "3.6"
   - "3.7"
   - "3.8"
-  - "pypy"
   - "pypy3"
 
 env:
@@ -22,8 +19,16 @@ env:
 matrix:
   fast_finish: true
   allow_failures:
-    - python: "3.8"
-    - python: "pypy3"
+    - env: RL=30
+    - env: RL=31
+
+
+#TEST
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install -y imagemagick
+  - sudo apt-get install -y ghostscript
+  - sudo sed -i 's#<policy domain="coder" rights="none" pattern="PDF" />#<policy domain="coder" rights="read|write" pattern="PDF" />#' /etc/ImageMagick-6/policy.xml
 
 install:
   - TOX_ENV=py${TRAVIS_PYTHON_VERSION}-rl${RL}
@@ -37,3 +42,5 @@ notifications:
 
 before_script:
   - cd doc/source ; sphinx-build -nW -b html -d _build/doctrees . _build/html ; cd ../..
+
+
