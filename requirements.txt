@@ -8,5 +8,4 @@ six
 Sphinx==1.4.8
 sphinx-rtd-theme==0.1.9
 python-bidi==0.4.2
-textblob==0.15.3
 arabic-reshaper==2.1.0
