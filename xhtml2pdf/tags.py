@@ -642,12 +642,19 @@ class pisaTagPDFTEMPLATE(pisaTag):
         c.frameList = []
         c.frameStaticList = []
 
+class pisaTagPDFLANGUAGE(pisaTag):
+    """
+    <pdf:language name=""/>
+    """
+    def start(self, c):
+        deprecation("pdf:language")
+        c.__setattr__('language',self.attr.name)
+
 
 class pisaTagPDFFONT(pisaTag):
     """
     <pdf:fontembed name="" src="" />
     """
-
     def start(self, c):
         deprecation("pdf:font")
         c.loadFont(self.attr.name, self.attr.src, self.attr.encoding)
