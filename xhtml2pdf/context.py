@@ -432,7 +432,6 @@ class pisaContext(object):
         set_value(self, ('text', 'cssText', 'cssDefaultText'), "")
         set_value(self, ('templateList', 'frameStatic', 'imageData'),
                   {}, _copy=True)
-
         self.capacity = capacity
         self.toc = PmlTableOfContents()
         self.multiBuild = False
