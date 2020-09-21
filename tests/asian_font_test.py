@@ -2,8 +2,8 @@ import os
 import sys
 from xhtml2pdf import pisa
 
-filename = '/code/tests/samples/adobe_asian_lenguage_pack.html'
-output_dir = '/code/tests/samples'
+filename = '/home/travis/build/pedroszg/xhtml2pdf/tests/samples/adobe_asian_lenguage_pack.html'
+output_dir = '/home/travis/build/pedroszg/xhtml2pdf/tests/samples'
 
 def render_pdf(filename, output_dir):
     basename = os.path.basename(filename)
