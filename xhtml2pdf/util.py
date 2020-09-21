@@ -9,7 +9,7 @@ import shutil
 import string
 import sys
 import tempfile
-
+import xhtml2pdf.default
 import reportlab
 from bidi.algorithm import get_display
 from reportlab.lib.colors import Color, toColor
@@ -19,7 +19,6 @@ import six
 import reportlab.pdfbase._cidfontdata
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
-from textblob import TextBlob
 import arabic_reshaper
 
 
@@ -976,17 +975,17 @@ def set_asian_fonts(fontname):
     except:
         print('Fail to set asian font ')
 
-def detect_language(text):
+def detect_language(name):
+    asian_language_list = copy(xhtml2pdf.default.DEFAULT_LANGUAGE_LIST)
     try:
-        text = TextBlob(text)
-        language = text.detect_language()
-        return language
+        if name in asian_language_list:
+            return name
     except Exception as e:
         pass
-       #print("Fail to find language")
+       #print(e)
 
-def arabic_formar(text):
-    if detect_language(text) == "ar":
+def arabic_format(text,language):
+    if detect_language(language) == 'arabic':
         ar = arabic_reshaper.reshape(text)
         ar = get_display(ar)
         text = ar
