@@ -174,8 +174,8 @@ Asian Fonts Support
 Now some Asian fonts are available for PDF. Find below
 the list(the names are not case sensitive):
 
--  **HeiseiMin-W3'** (for Japanese and Chinese text)
--  **HYSMyeongJo-Medium'**: (for Korean text)
+-  **HeiseiMin-W3** (for Japanese and Chinese text)
+-  **HYSMyeongJo-Medium**: (for Korean text)
 
 If you are using arabic text you need to specify the language name
 using "Custom Tags" such as:
