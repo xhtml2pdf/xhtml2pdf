@@ -947,7 +947,7 @@ COLOR_BY_NAME = {
 }
 
 def get_default_asian_font():
-    try:
+
         lower_font_list = []
         upper_font_list = []
 
@@ -961,28 +961,19 @@ def get_default_asian_font():
 
         return default_asian_font
 
-    except:
-        pass
-
 
 def set_asian_fonts(fontname):
-    try:
+
         list = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodings)
         list = list.keys()
         if fontname in list:
             pdfmetrics.registerFont(UnicodeCIDFont(fontname))
         get_default_asian_font()
-    except:
-        print('Fail to set asian font ')
 
 def detect_language(name):
-    asian_language_list = copy(xhtml2pdf.default.DEFAULT_LANGUAGE_LIST)
-    try:
-        if name in asian_language_list:
-            return name
-    except Exception as e:
-        pass
-       #print(e)
+    asian_language_list = xhtml2pdf.default.DEFAULT_LANGUAGE_LIST
+    if name in asian_language_list:
+        return name
 
 def arabic_format(text,language):
     if detect_language(language) == 'arabic':
