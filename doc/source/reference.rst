@@ -167,6 +167,28 @@ knows by default (the names are not case sensitive):
 -  **ZapfDingbats**
 -  **Symbol**
 
+
+Asian Fonts Support
+-------------------
+
+Now some Asian fonts are available for PDF. Find below
+the list(the names are not case sensitive):
+
+-  **HeiseiMin-W3'** (for Japanese and Chinese text)
+-  **HYSMyeongJo-Medium'**: (for Korean text)
+
+If you are using arabic text you need to specify the language name
+using "Custom Tags" such as:
+
+
+::
+
+    <div>
+        <pdf:language name="arabic"/>
+        <span>'arabic text..'</span>
+    </div>
+
+
 But you may also embed new font faces by using the ``@font-face``
 keyword in CSS like this:
 
@@ -429,5 +451,16 @@ pdf:toc
 ~~~~~~~
 
 Creates a Table of Contents.
+
+pdf:language
+~~~~~~~~~~~~
+
+Defines the language to be used on pdf text. The name of the language
+is passed via the ``name`` property and refers to
+``DEFAULT_LANGUAGE_LIST = {".."}``, style definition:
+
+::
+
+    <pdf:language name="languegeName">
 
 
