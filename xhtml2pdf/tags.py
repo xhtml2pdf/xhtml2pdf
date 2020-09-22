@@ -648,8 +648,7 @@ class pisaTagPDFLANGUAGE(pisaTag):
     """
     def start(self, c):
         deprecation("pdf:language")
-        c.__setattr__('language',self.attr.name)
-
+        setattr(c,'language',self.attr.name)
 
 class pisaTagPDFFONT(pisaTag):
     """

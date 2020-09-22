@@ -3,7 +3,7 @@ import copy
 import logging
 import os
 import re
-
+from pathlib import Path, PurePosixPath
 import reportlab
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.fonts import addMapping
@@ -164,6 +164,7 @@ class pisaCSSBuilder(css.CSSBuilder):
         # The "src" attribute can be a CSS group but in that case
         # ignore everything except the font URI
         uri = data['src']
+        uri = str(Path(uri).resolve())
         if not isinstance(data['src'], str):
             for part in uri:
                 if isinstance(part, str):

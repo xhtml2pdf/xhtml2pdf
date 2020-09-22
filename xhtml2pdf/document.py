@@ -203,9 +203,3 @@ def frag_text_language_check(context):
                             detect_language_result = util.arabic_format(y.text,language)
                             if detect_language_result != None:
                                 y.text = detect_language_result
-                            else:
-                                pass
-                        else:
-                            pass
-            else:
-                pass
