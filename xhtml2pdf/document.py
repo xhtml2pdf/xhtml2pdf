@@ -7,10 +7,10 @@ from xhtml2pdf.parser import pisaParser
 from reportlab.platypus.flowables import Spacer
 from reportlab.platypus.frames import Frame
 from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlPageTemplate
-from xhtml2pdf.util import pisaTempFile, getBox, PyPDF2
+from xhtml2pdf.util import pisaTempFile, getBox, PyPDF2, arabic_format
 import logging
 import six
-from xhtml2pdf import util
+
 
 if not six.PY2:
     from html import escape as html_escape
@@ -199,7 +199,8 @@ def frag_text_language_check(context):
             if hasattr(x,'frags'):
                 for y in x.frags:
                     if hasattr(y,'text'):
-                        if y.text != None:
-                            detect_language_result = util.arabic_format(y.text,language)
+                        text = y.text.strip()
+                        if text:
+                            detect_language_result = arabic_format(y.text,language)
                             if detect_language_result != None:
                                 y.text = detect_language_result
