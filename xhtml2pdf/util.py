@@ -9,12 +9,19 @@ import shutil
 import string
 import sys
 import tempfile
-
+import xhtml2pdf.default
 import reportlab
+from bidi.algorithm import get_display
 from reportlab.lib.colors import Color, toColor
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
 from reportlab.lib.units import inch, cm
 import six
+import reportlab.pdfbase._cidfontdata
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.cidfonts import UnicodeCIDFont
+import arabic_reshaper
+
+
 
 
 try:
@@ -938,3 +945,41 @@ COLOR_BY_NAME = {
     'yellow': Color(1, 1, 0),
     'yellowgreen': Color(.603922, .803922, .196078)
 }
+
+def get_default_asian_font():
+
+        lower_font_list = []
+        upper_font_list = []
+
+        list = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodings)
+        list = list.keys()
+
+        for font in list:
+            upper_font_list.append(font)
+            lower_font_list.append(font.lower())
+        default_asian_font = {lower_font_list[i]: upper_font_list[i] for i in range(len(lower_font_list))}
+
+        return default_asian_font
+
+
+def set_asian_fonts(fontname):
+
+        list = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodings)
+        list = list.keys()
+        if fontname in list:
+            pdfmetrics.registerFont(UnicodeCIDFont(fontname))
+        get_default_asian_font()
+
+def detect_language(name):
+    asian_language_list = xhtml2pdf.default.DEFAULT_LANGUAGE_LIST
+    if name in asian_language_list:
+        return name
+
+def arabic_format(text,language):
+    if detect_language(language) == 'arabic':
+        ar = arabic_reshaper.reshape(text)
+        ar = get_display(ar)
+        text = ar
+        return text
+    else:
+        return None

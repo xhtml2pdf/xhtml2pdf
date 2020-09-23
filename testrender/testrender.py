@@ -20,7 +20,6 @@ def render_pdf(filename, output_dir, options):
     basename = os.path.basename(filename)
     outname = '%s.pdf' % os.path.splitext(basename)[0]
     outfile = os.path.join(output_dir, outname)
-
     input = open(filename, 'rb')
     output = open(outfile, 'wb')
 

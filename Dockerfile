@@ -11,6 +11,7 @@ RUN apt-get update && \
 
 #RUN apt-get update && \
     #apt-get install -y vim
+
 RUN sed -i 's#<policy domain="coder" rights="none" pattern="PDF" />#<policy domain="coder" rights="read|write" pattern="PDF" />#' /etc/ImageMagick-6/policy.xml
 
 COPY requirements.txt /code/

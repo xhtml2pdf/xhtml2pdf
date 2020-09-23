@@ -19,7 +19,8 @@ from reportlab.platypus.frames import Frame, ShowBoundaryValue
 from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
 from xhtml2pdf.util import (copy_attrs, getColor, getCoords, getFile,
                             getFrameDimensions, getSize, pisaFileObject,
-                            set_value)
+                            set_value, set_asian_fonts)
+
 from xhtml2pdf.w3c import css
 from xhtml2pdf.xhtml2pdf_reportlab import (PmlPageCount, PmlPageTemplate,
                                            PmlParagraph, PmlParagraphAndImage,
@@ -421,6 +422,7 @@ class pisaContext(object):
 
     def __init__(self, path, debug=0, capacity=-1):
         self.fontList = copy.copy(xhtml2pdf.default.DEFAULT_FONT)
+        self.asianFontList = copy.copy(xhtml2pdf.default.DEFAULT_ASIAN_FONT)
         set_value(self,
                   ('path', 'story', 'text', 'log', 'frameStaticList',
                    'pisaBackgroundList', 'frameList', 'anchorFrag',
@@ -435,7 +437,6 @@ class pisaContext(object):
         set_value(self, ('text', 'cssText', 'cssDefaultText'), "")
         set_value(self, ('templateList', 'frameStatic', 'imageData'),
                   {}, _copy=True)
-
         self.capacity = capacity
         self.toc = PmlTableOfContents()
         self.multiBuild = False
@@ -836,7 +837,12 @@ class pisaContext(object):
         for name in names:
             if type(name) not in six.string_types:
                 name = str(name)
-            font = self.fontList.get(name.strip().lower(), None)
+            font = name.strip().lower()
+            if font in self.asianFontList:
+                font = self.asianFontList.get(font, None)
+                set_asian_fonts(font)
+            else:
+                font = self.fontList.get(font,None)
             if font is not None:
                 return font
         return self.fontList.get(default, None)

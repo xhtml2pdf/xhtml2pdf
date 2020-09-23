@@ -37,6 +37,7 @@ import xhtml2pdf.w3c.cssDOMElementInterface as cssDOMElementInterface
 from xhtml2pdf.xhtml2pdf_reportlab import PmlRightPageBreak, PmlLeftPageBreak
 
 
+
 CSSAttrCache = {}
 
 log = logging.getLogger("xhtml2pdf")
@@ -275,7 +276,6 @@ def CSSCollect(node, c):
                 log.debug("CSS error '%s'", cssAttrName, exc_info=1)
 
         CSSAttrCache[_key] = node.cssAttrs
-
     return node.cssAttrs
 
 
@@ -497,7 +497,6 @@ def pisaLoop(node, context, path=None, **kw):
     if node.nodeType == Node.TEXT_NODE:
         # print indent, "#", repr(node.data) #, context.frag
         context.addFrag(node.data)
-
         # context.text.append(node.value)
 
     # ELEMENT
@@ -716,7 +715,6 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
         parser = html5lib.XHTMLParser(tree=treebuilders.getTreeBuilder("dom"))
     else:
         parser = html5lib.HTMLParser(tree=treebuilders.getTreeBuilder("dom"))
-
     parser_kwargs = {}
     if isinstance(src, six.text_type):
         # If an encoding was provided, do not change it.
