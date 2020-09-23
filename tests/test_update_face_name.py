@@ -11,7 +11,7 @@ from xhtml2pdf.document import pisaDocument
 from xhtml2pdf.w3c.cssDOMElementInterface import CSSDOMElementInterface
 
 __doc__ = """
-        TTFWithSameFaceName provides us auxiliary functions to check 
+        TTFWithSameFaceName provides us auxiliary functions to check
         the correct way to choose the font style when we use a ttf file with the same face name.
         it always takes the last one @font-face font-family for all the text so to avoid this issue
         we have to add a "#" in the begin of the font-family value
@@ -40,17 +40,17 @@ class TTFWithSameFaceName(TestCase):
                         <title></title>
                         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
                         <style type="text/css">
-                
+
                         {ff_R}
                         {ff_B}
                         {ff_I}
                         {ff_BI}
-                        
+
                         {css_R}
                         {css_B}
                         {css_I}
                         {css_BI}
-                
+
                         </style>
                         </head>
 

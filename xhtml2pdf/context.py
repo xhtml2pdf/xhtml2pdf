@@ -29,6 +29,9 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus.frames import Frame, ShowBoundaryValue
 from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
+from xhtml2pdf.util import (copy_attrs, getColor, getCoords, getFile,
+                            getFrameDimensions, getSize, pisaFileObject,
+                            set_value, set_asian_fonts, arabic_format, frag_text_language_check)
 
 import xhtml2pdf.default
 import xhtml2pdf.parser

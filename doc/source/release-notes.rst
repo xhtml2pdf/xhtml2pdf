@@ -99,210 +99,6 @@ Versions >= 0.2
 0.2.5
 ====================
 
-Released: 2020-10-08
-
-**🎉 New**
-
-* Added Asian fonts support (Simplified Chinese, Traditional Chinese, Japanese & Korean) :issue:`353`
-* Added support for right-to-left writings like Arabic, Hebrew, Persian, Pashto, Urdu and Sindhi. Simply include for example ``<pdf:language name="arabic"/>`` :issue:`494`
-
-**💪🏼 Improvements**
-
-* CSS property ``letter-spacing`` now supports float values and relative & absolute units like ``cm``, ``in``, ``em``, ``%`` etc. :issue:`490`
-* Added unit tests for Asian and right-to-left fonts. :pr:`520`
-
-**🐛 Bug-Fixes**
-
-* ``@frame`` properties like ``width``, ``right``, ``bottom`` etc. are now correctly calculated depending on the page orientation and size :issue:`499`
-* Fixed support for multiple fonts and unicode :issue:`492`
-* Fixed an encoding issue with html5lib :issue:`468`
-* Fixed a problem with the ``border`` property in ``h1`` to ``h6`` heading tags :issue:`466` :issue:`495`
-* Fixed compability with ReportLab 3.5.X :issue:`404` :issue:`463`
-* Removed default background-image when no background-image is defined :issue:`484`
-* Fixed an issue with different font type that have the same name :issue:`381`
-* Fixed a bug that prevented support for Python 3.X :issue:`513`
-* testrender test: fixed transparences and included new reference files, (now all tests pass in Travis CI without --failed parameter)  :pr:`502`
-* ``0.0`` as value for a CSS property now acts the same way as ``0`` and ``None`` :pr:`516`
-
-**⚠️ Deprecation**
-
-* Removed ``i`` and ``inch`` as unofficial synonyms for the ``in`` unit  :pr:`516`
-
-**📘 Documentation**
-
-* Added new section about Asian font support :pr:`505` :pr:`520`
-* Added new section about support for right-to-left writings :pr:`520`
-* Readme.rst file was updated  :pr:`507` :pr:`512`
-* Added missing changelog entries for earlier releases :issue:`478`
-
-**🧹 Cleanup**
-
-* Replaced deprecated ``base64.encodestring`` with ``base64.encodebytes`` :issue:`472`
-* Replaced deprecated ``log.warn()`` with ``log.warning()`` :pr:`509`
-* Dropped dependency of nose (outdated & unmaintained) in favor of unittest, which is included in the Python standard library :pr:`520`
-* Removed the old nose tests and replaced them with unittest :pr:`520`
-* Removed unlicensed .tff font files in our tests folder and replaced them with open source fonts :pr:`520`
-* Travis CI and AppVeyor are now testing both against the same ReportLab versions (3.3 to 3.5.X) :pr:`520`
-
-| Thanks to the following people on GitHub for contributing to this release:
-| *ezawadzki*, *fbernhart*, *KirilNN*, *luisza*, *Mark-Hetherington*, *parthjoshi2007*, *pedroszg*, *silvio-dp*, *sj175*, *tirkarthi* and *z4c*
-
---------------------------------------------
-
-0.2.4
-====================
-
-Released: 2020-01-18
-
-**🎉 New**
-
-* Add ``em`` unit support
-
-**💪🏼 Improvements**
-
-* Added testing for Python 3.7 and 3.8
-* Added support for urllib in Python 2 and Python 3
-
-**🐛 Bug-Fixes**
-
-* Fixed cgi escape util on setup version
-* Fixed width assignation on fragments
-* Repaired base64 unscaped string
-* Fixed urlparse when urls has parameters
-* Fixed i_rgbcolor support
-
-**📘 Documentation**
-
-* Updated ``link_callback`` documentation
-* Stylized code lines in documentation
-
---------------------------------------------
-
-0.2.3
-====================
-
-Released: 2018-09-14
-
-Changes were not documented
-
---------------------------------------------
-
-0.2.2
-====================
-
-Released: 2018-04-16
-
-Changes were not documented
-
---------------------------------------------
-
-0.2.1
-====================
-
-Released: 2018-02-16
-
-**🎉 New**
-
-* Added support for Python 3.8
-
-**💪🏼 Improvements**
-
-* Improved table tests
-
-**🐛 Bug-Fixes**
-
-* Forced html5lib to 1.0.1 (old versions of html5lib are not in pip)
-* Allow for URI-escaped strings in base64 data
-
-**🧹 Cleanup**
-
-* Removed the dependency on httplib2
-
---------------------------------------------
-
-0.2
-====================
-
-Released: 2018-02-15
-
-**🎉 New**
-
-* Support for a new ``@page`` property: ``background-image``
-
-**💪🏼 Improvements**
-
-* Improved Python 3 support
-* Included new ``httplib`` options
-
-**🐛 Bug-Fixes**
-
-* Fix for transparent images in Python 3
-
-**⚠️ Deprecation**
-
-* Removed support for Python 2.3
-
-**📘 Documentation**
-
-* Readthedocs integration
-* Updated Django demo site
-
-**🧹 Cleanup**
-
-* PEP8 improvements and code cleanups
-* Dropped the ``turbogears`` module
-
-| Thanks to the following people on GitHub for contributing to this release:
-| *andreyfedoseev*, *browniebroke*, *flupzor* and *luisza*
-
---------------------------------------------
-
-0.2beta1
-====================
-
-Released: 2016-11-30
-
-Changes were not documented
-
---------------------------------------------
-
-
-**********************
-Versions >= 0.1, < 0.2
-**********************
-
-0.1beta3
-====================
-
-Released: 2016-08-16
-
-Changes were not documented
-
---------------------------------------------
-
-0.1beta2
-====================
-
-Released: 2016-08-01
-
-Changes were not documented
-
---------------------------------------------
-
-0.1beta1
-====================
-
-Released: 2016-06-05
-
-Changes were not documented
-
---------------------------------------------
-
-0.1alpha4
-====================
-
-Released: 2016-05-18
-
 * Removed PyPy support
 * Avoid exceptions likely to occur systematic to how narrow a text column is #309 - thanks *jkDesignDE*
 * Improved tests for tables #305 - thanks *taddeimania*
@@ -326,7 +122,7 @@ Released: 2016-05-01
 * Improved six usage, simplifies codebase #288 - thanks *citizen-stig*
 * Removed mutable types as default args #287 - thanks *citizen-stig*
 * Fix "hangs forever on simple input" #209
-* Base64 inline <img> works now #281 
+* Base64 inline <img> works now #281
 
 --------------------------------------------
 
@@ -336,7 +132,7 @@ Released: 2016-05-01
 Released: 2016-04-14
 
 * Fixed: AttributeError: 'bytes' object has no attribute 'encode' #265
-* Improved tests, added code coverage 
+* Improved tests, added code coverage
 
 --------------------------------------------
 
@@ -451,7 +247,7 @@ Version 3.0.32, 2009-05-08
 
 - NEW: New command line option '--base' to specify base path if input comes via STDIN
 - FIX: The 'keep in frame' feature for tables did not work inside of static frames (Arun Shanker Prasad)
-- FIX: Small typos 
+- FIX: Small typos
 
 Version 3.0.31, 2009-05-04
 
@@ -473,7 +269,7 @@ Version 3.0.30, 2009-03-27
 - FIX: Small bug fix for show_error_as_pdf
 - FIX: Demos used os.startfile which is not supported on non Windows OSes
 - FIX: Table available height threw exceptions
-- FIX: Switched from urllib2 to httplib for loading external sources 
+- FIX: Switched from urllib2 to httplib for loading external sources
 - FIX: Correct homepage and download page in setup.py
 - FIX: Paragraphs in lists repeated the bullet
 - FIX: Tables now support -pdf-keep-with-next
