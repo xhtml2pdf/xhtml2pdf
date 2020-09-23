@@ -239,6 +239,24 @@ To define other shapes you may do like this:
        font-style: italic;
     }
 
+
+Using TFF files with the same face-name
+---------------------------------------
+
+In specific situations we have to used ttf files with the same face name,
+but working with these kind of files make us deal with some issues, to
+avoid it you have to add ``#`` at the beginning of the ``font-family name``.
+Please check the following example:
+
+::
+
+    /* put in quotes and add # at the beginning */
+    @font-face {
+        font-family: '#MY';
+        src: url('font/Microsoft YaHei.ttf')
+    }
+
+
 Outlines/ Bookmarks
 ------------------------
 

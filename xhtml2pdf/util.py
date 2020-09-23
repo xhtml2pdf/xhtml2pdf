@@ -968,7 +968,6 @@ def set_asian_fonts(fontname):
         list = list.keys()
         if fontname in list:
             pdfmetrics.registerFont(UnicodeCIDFont(fontname))
-        get_default_asian_font()
 
 def detect_language(name):
     asian_language_list = xhtml2pdf.default.DEFAULT_LANGUAGE_LIST
@@ -983,3 +982,10 @@ def arabic_format(text,language):
         return text
     else:
         return None
+
+def frag_text_language_check(context,frag_text):
+    if hasattr(context, 'language'):
+        language = context.__getattribute__('language')
+        detect_language_result = arabic_format(frag_text, language)
+        if detect_language_result:
+            return detect_language_result

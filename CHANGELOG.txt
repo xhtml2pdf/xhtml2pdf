@@ -2,6 +2,41 @@
 CHANGELOG
 =========
 
+Version 0.2.5
+-----------------
+
+* Improve Readme
+* Fixed testrender test, fixed transparences and include new reference files, (now all test pass in travis without --failed parameter).
+* Add support for multiple fonts and unicode Fixed #492 
+* Update documentation (multiple typos were fixed)
+* Include Asian fonts support 
+* Allow Custom Font Name for ttf files.
+
+
+Version 0.2.4
+-----------------
+
+* Update link_callback documentation.
+* Stylize code lines in documentation.
+* Fixed cgi escape util on setup version.
+* Add test to python 3.7 and 3.8.
+* Fixed width assignation on fragments.
+* Support urllib in python 3 and python 2.
+* Add em unit support.
+* Repair base64 unscaped string.
+* Fixed urlparse when urls has parameters.
+* Fixed i_rgbcolor support.
+
+Version 0.2.1
+-----------------
+
+* Force html5lib to 1.0.1 (old versions of html5lib are not in pip).
+* Remove the dependency on httplib2
+* Allow for URI-escaped strings in base64 data 
+* Improve table tests.
+* Support python 3.8
+
+
 Version 0.2
 -----------------
 

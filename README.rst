@@ -19,31 +19,25 @@ XHTML2PDF
    :target: http://xhtml2pdf.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
 
-The current release of xhtml2pdf is xhtml2pdf **0.2.4** which is the first stable
+The current release of xhtml2pdf is xhtml2pdf **0.2.4**, which is the first stable
 version that has Python 3 support. 
-As with all open-source software, its use in production depends
-on many factors, so be aware that you may find issues in some cases.
-**Big thanks** to everyone
-who has worked on this project so far and to those who help maintain it.
-
+As with all open-source software, its use in production depends on many factors,
+so be aware that you may find issues in some cases.
+**Big thanks** to everyone who has worked on this project so far and to those who help maintain it.
 
 
 What else can you use instead?
 ==============================
 
-Go use WeasyPrint, the codebase is pretty, it has a different features, and it
+You can try `WeasyPrint <http://weasyprint.org/>`__. The codebase is pretty, it has different features, it
 does a lot of what xhtml2pdf does and it is easier to use in many circumstances.
-
-`WeasyPrint <http://weasyprint.org/>`__
 
 
 Documentation?
 ==============
 
-xhtml2pdf has some documentation, and we could use your help improving it.
-A good place to start is ``doc/usage.rst``.
-
-Or also see in `Readthedocs <http://xhtml2pdf.readthedocs.io/>`__
+The documentation of xhtml2pdf is available at `Readthedocs <http://xhtml2pdf.readthedocs.io/>`__.
+And we could use your help improving it! A good place to start is ``doc/usage.rst``.
 
 
 Call for testing
@@ -53,17 +47,17 @@ This project is heavily dependent on getting its test coverage up!
 Currently, Python 3 support is being worked on and many refactors and suggestions are potentially coming in.
 Furthermore, parts of the codebase could do well with cleanups and refactoring.
 
-If you benefit from xhtml2pdf, perhaps `look at the test coverage <https://coveralls.io/github/xhtml2pdf/xhtml2pdf?branch=master>`__ and identify parts that are yet untouched.
+If you benefit from xhtml2pdf, perhaps look at the `test coverage <https://coveralls.io/github/xhtml2pdf/xhtml2pdf?branch=master>`__ and identify parts that are yet untouched.
 
 
 About
 =====
 
-``xhtml2pdf`` is a html2pdf converter using the ReportLab Toolkit,
-the HTML5lib and pyPdf. It supports HTML 5 and CSS 2.1 (and some of CSS 3).
-It is completely written in pure Python so it is platform independent.
+xhtml2pdf is a HTML to PDF converter using the ReportLab Toolkit,
+html5lib and pyPdf2. It supports HTML 5 and CSS 2.1 (and some of CSS 3).
+It is completely written in pure Python, so it is platform independent.
 
-The main benefit of this tool that a user with Web skills like HTML and CSS
+The main benefit of this tool is that a user with web skills like HTML and CSS
 is able to generate PDF templates very quickly without learning new
 technologies.
 
@@ -71,7 +65,7 @@ technologies.
 Installation
 ============
 
-This is a typical Python library and is installed using pip::
+This is a typical Python library and can be installed using pip::
 
     pip install xhtml2pdf
 
@@ -81,7 +75,7 @@ Requirements
 
 Python 2.7+. Only Python 3.4+ is tested and guaranteed to work.
 
-All additional requirements are listed in ``requirements.txt`` file and are
+All additional requirements are listed in the ``requirements.txt`` file and are
 installed automatically using the ``pip install xhtml2pdf`` method.
 
 
@@ -94,14 +88,14 @@ Development environment
 
    For more information about ``pip`` refer to http://www.pip-installer.org/.
 
-#. I will recommend using ``virtualenv`` for development. This is great to have separate environment for
+#. We will recommend using ``virtualenv`` for development. It's great to have a separate environment for
    each project, keeping the dependencies for multiple projects separated::
 
     sudo pip install virtualenv
 
    For more information about ``virtualenv`` refer to http://www.virtualenv.org/
 
-#. Create virtualenv for the project. This can be inside the project directory, but cannot be under
+#. Create a virtualenv for the project. This can be inside the project directory, but cannot be under
    version control::
 
     virtualenv --distribute xhtml2pdfenv --python=python2
@@ -114,7 +108,7 @@ Development environment
 
     deactivate
 
-#. Next step will be to install/upgrade dependencies from ``requirements.txt`` file::
+#. The next step will be to install/upgrade dependencies from the ``requirements.txt`` file::
 
     pip install -r requirements.txt
 
@@ -122,7 +116,7 @@ Development environment
 
     nosetests --with-coverage
 
-   You should have a log with success status::
+   You should have a log with the following success status::
 
     Ran 36 tests in 0.322s
 
@@ -133,13 +127,13 @@ Python integration
 ==================
 
 Some simple demos of how to integrate xhtml2pdf into
-a Python program may be found here: test/simple.py
+a Python program may be found here: ``test/simple.py``
 
 
 Running tests
 =============
 
-Two different test suites are available to assert xhtml2pdf works reliably:
+Two different test suites are available to assert that xhtml2pdf works reliably:
 
 #. Unit tests. The unit testing framework is currently minimal, but is being
    improved on a daily basis (contributions welcome). They should run in the
@@ -148,7 +142,7 @@ Two different test suites are available to assert xhtml2pdf works reliably:
         nosetests --with-coverage (or your personal favorite)
 
 #. Functional tests. Thanks to mawe42's super cool work, a full functional
-   test suite lives in testrender/.
+   test suite is available at ``testrender/``.
 
 
 Contact
@@ -175,7 +169,7 @@ This are the major milestones and the maintainers of the project:
 * 2016-2018 Sam Spencer (@LegoStormtroopr)
 * 2018-Current Luis Zarate (@luisza) 
 
-For more history, see the CHANGELOG.
+For more history, see the ``CHANGELOG.txt`` file.
 
 License
 =======

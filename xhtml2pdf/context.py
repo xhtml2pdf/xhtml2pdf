@@ -3,26 +3,28 @@ import copy
 import logging
 import os
 import re
+
+import six
+
 import reportlab
+import xhtml2pdf.default
+import xhtml2pdf.parser
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.fonts import addMapping
-from reportlab.lib.pagesizes import landscape, A4
+from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus.frames import Frame, ShowBoundaryValue
 from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
+from xhtml2pdf.util import (copy_attrs, getColor, getCoords, getFile,
+                            getFrameDimensions, getSize, pisaFileObject,
+                            set_value, set_asian_fonts, arabic_format, frag_text_language_check)
 
-import six
-from xhtml2pdf import  util
-import xhtml2pdf.default
-import xhtml2pdf.parser
-from xhtml2pdf.util import getSize, getCoords, getFile, pisaFileObject, \
-    getFrameDimensions, getColor, set_value, copy_attrs
 from xhtml2pdf.w3c import css
-from xhtml2pdf.xhtml2pdf_reportlab import PmlPageTemplate, PmlTableOfContents, \
-    PmlParagraph, PmlParagraphAndImage, PmlPageCount
-
+from xhtml2pdf.xhtml2pdf_reportlab import (PmlPageCount, PmlPageTemplate,
+                                           PmlParagraph, PmlParagraphAndImage,
+                                           PmlTableOfContents)
 
 TupleType = tuple
 ListType = list
@@ -163,18 +165,22 @@ class pisaCSSBuilder(css.CSSBuilder):
         # The "src" attribute can be a CSS group but in that case
         # ignore everything except the font URI
         uri = data['src']
-        if not isinstance(data['src'], str):
-            for part in uri:
-                if isinstance(part, str):
-                    uri = part
-                    break
+        fonts = []
 
-        src = self.c.getFile(uri, relative=self.c.cssParser.rootPath)
-        self.c.loadFont(
-            names,
-            src,
-            bold=bold,
-            italic=italic)
+        if isinstance(data['src'], list):
+            for part in uri:
+                if isinstance(part, basestring):
+                    fonts.append(part)
+        else:
+            fonts.append(uri)
+
+        for font in fonts:
+            src = self.c.getFile(font, relative=self.c.cssParser.rootPath)
+            self.c.loadFont(
+                names,
+                src,
+                bold=bold,
+                italic=italic)
         return {}, {}
 
     def _pisaAddFrame(self, name, data, first=False, border=None, size=(0, 0)):
@@ -195,7 +201,7 @@ class pisaCSSBuilder(css.CSSBuilder):
 
     def _getFromData(self, data, attr, default=None, func=None):
         if not func:
-            func = lambda x: x
+            def func(x): return x
 
         if type(attr) in (list, tuple):
             for a in attr:
@@ -391,7 +397,7 @@ class pisaCSSBuilder(css.CSSBuilder):
 class pisaCSSParser(css.CSSParser):
 
     def parseExternal(self, cssResourceName):
-        result=None
+        result = None
         oldRootPath = self.rootPath
         cssFile = self.c.getFile(cssResourceName, relative=self.rootPath)
         if not cssFile:
@@ -631,6 +637,11 @@ class pisaContext(object):
                     self.fragList.append(blank)
 
                 self.dumpPara(self.fragAnchor + self.fragList, style)
+                if hasattr(self, 'language'):
+                    language = self.__getattribute__('language')
+                    detect_language_result = arabic_format(self.text, language)
+                    if detect_language_result != None:
+                        self.text = detect_language_result
                 para = PmlParagraph(
                     self.text,
                     style,
@@ -741,6 +752,9 @@ class pisaContext(object):
                     self._appendFrag(frag)
                 else:
                     frag.text = " ".join(("x" + text + "x").split())[1: - 1]
+                    language_check = frag_text_language_check(self, frag.text)
+                    if language_check:
+                        frag.text = language_check
                     if self.fragStrip:
                         frag.text = frag.text.lstrip()
                         if frag.text:
@@ -834,7 +848,7 @@ class pisaContext(object):
             font = name.strip().lower()
             if font in self.asianFontList:
                 font = self.asianFontList.get(font, None)
-                util.set_asian_fonts(font)
+                set_asian_fonts(font)
             else:
                 font = self.fontList.get(font,None)
             if font is not None:
@@ -858,7 +872,8 @@ class pisaContext(object):
             src = file.uri
 
             log.debug("Load font %r", src)
-
+            if names.startswith("#"):
+                names = names.strip('#')
             if type(names) is ListType:
                 fontAlias = names
             else:
@@ -867,6 +882,7 @@ class pisaContext(object):
             # XXX Problems with unicode here
             fontAlias = [str(x) for x in fontAlias]
 
+            ffname = names
             fontName = fontAlias[0]
             parts = src.split(".")
             baseName, suffix = ".".join(parts[: - 1]), parts[- 1]
@@ -885,7 +901,8 @@ class pisaContext(object):
 
                     # Register TTF font and special name
                     filename = file.getNamedFile()
-                    pdfmetrics.registerFont(TTFont(fullFontName, filename))
+                    file = TTFont(fullFontName, filename)
+                    pdfmetrics.registerFont(file)
 
                     # Add or replace missing styles
                     for bold in (0, 1):
