@@ -3,7 +3,12 @@ import copy
 import logging
 import os
 import re
+
+import six
+
 import reportlab
+import xhtml2pdf.default
+import xhtml2pdf.parser
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.fonts import addMapping
 from reportlab.lib.pagesizes import landscape, A4
@@ -12,17 +17,13 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus.frames import Frame, ShowBoundaryValue
 from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
-
-import six
-from xhtml2pdf import  util
-import xhtml2pdf.default
-import xhtml2pdf.parser
-from xhtml2pdf.util import getSize, getCoords, getFile, pisaFileObject, \
-    getFrameDimensions, getColor, set_value, copy_attrs
+from xhtml2pdf.util import (copy_attrs, getColor, getCoords, getFile,
+                            getFrameDimensions, getSize, pisaFileObject,
+                            set_value, set_asian_fonts)
 from xhtml2pdf.w3c import css
-from xhtml2pdf.xhtml2pdf_reportlab import PmlPageTemplate, PmlTableOfContents, \
-    PmlParagraph, PmlParagraphAndImage, PmlPageCount
-
+from xhtml2pdf.xhtml2pdf_reportlab import (PmlPageCount, PmlPageTemplate,
+                                           PmlParagraph, PmlParagraphAndImage,
+                                           PmlTableOfContents)
 
 TupleType = tuple
 ListType = list
@@ -834,7 +835,7 @@ class pisaContext(object):
             font = name.strip().lower()
             if font in self.asianFontList:
                 font = self.asianFontList.get(font, None)
-                util.set_asian_fonts(font)
+                set_asian_fonts(font)
             else:
                 font = self.fontList.get(font,None)
             if font is not None:
