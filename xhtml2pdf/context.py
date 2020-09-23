@@ -11,7 +11,7 @@ import xhtml2pdf.default
 import xhtml2pdf.parser
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.fonts import addMapping
-from reportlab.lib.pagesizes import landscape, A4
+from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -20,6 +20,7 @@ from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
 from xhtml2pdf.util import (copy_attrs, getColor, getCoords, getFile,
                             getFrameDimensions, getSize, pisaFileObject,
                             set_value, set_asian_fonts)
+
 from xhtml2pdf.w3c import css
 from xhtml2pdf.xhtml2pdf_reportlab import (PmlPageCount, PmlPageTemplate,
                                            PmlParagraph, PmlParagraphAndImage,
@@ -164,18 +165,22 @@ class pisaCSSBuilder(css.CSSBuilder):
         # The "src" attribute can be a CSS group but in that case
         # ignore everything except the font URI
         uri = data['src']
-        if not isinstance(data['src'], str):
-            for part in uri:
-                if isinstance(part, str):
-                    uri = part
-                    break
+        fonts = []
 
-        src = self.c.getFile(uri, relative=self.c.cssParser.rootPath)
-        self.c.loadFont(
-            names,
-            src,
-            bold=bold,
-            italic=italic)
+        if isinstance(data['src'], list):
+            for part in uri:
+                if isinstance(part, basestring):
+                    fonts.append(part)
+        else:
+            fonts.append(uri)
+
+        for font in fonts:
+            src = self.c.getFile(font, relative=self.c.cssParser.rootPath)
+            self.c.loadFont(
+                names,
+                src,
+                bold=bold,
+                italic=italic)
         return {}, {}
 
     def _pisaAddFrame(self, name, data, first=False, border=None, size=(0, 0)):
@@ -196,7 +201,7 @@ class pisaCSSBuilder(css.CSSBuilder):
 
     def _getFromData(self, data, attr, default=None, func=None):
         if not func:
-            func = lambda x: x
+            def func(x): return x
 
         if type(attr) in (list, tuple):
             for a in attr:
@@ -392,7 +397,7 @@ class pisaCSSBuilder(css.CSSBuilder):
 class pisaCSSParser(css.CSSParser):
 
     def parseExternal(self, cssResourceName):
-        result=None
+        result = None
         oldRootPath = self.rootPath
         cssFile = self.c.getFile(cssResourceName, relative=self.rootPath)
         if not cssFile:
