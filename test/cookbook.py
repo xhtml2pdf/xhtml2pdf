@@ -15,8 +15,8 @@
 # limitations under the License.
 
 __version__ = "$Revision: 176 $"
-__author__  = "$Author: holtwick $"
-__date__    = "$Date: 2008-03-15 00:11:47 +0100 (Sa, 15 Mrz 2008) $"
+__author__ = "$Author: holtwick $"
+__date__ = "$Date: 2008-03-15 00:11:47 +0100 (Sa, 15 Mrz 2008) $"
 
 """
 HTML/CSS to PDF converter
@@ -33,7 +33,6 @@ pisa.showLogging()
 
 
 def html2pdf(data, filename, open_file=False):
-
     """
     Simple test showing how to create a PDF file from
     PML Source String. Also shows errors and tries to start
@@ -48,6 +47,7 @@ def html2pdf(data, filename, open_file=False):
         pisa.startViewer(filename)
 
     return not pdf.err
+
 
 if __name__ == "__main__":
     HTMLTEST = """

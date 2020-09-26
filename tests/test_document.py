@@ -114,7 +114,8 @@ def test_document_background_image():
     tests_folder = os.path.dirname(os.path.realpath(__file__))
     image_path = os.path.join(tests_folder, 'samples', 'img', 'denker-transparent.png')
 
-    css_background = "<style>@page {{background-image: url({background_location});}} </style>".format(background_location=image_path)
+    css_background = "<style>@page {{background-image: url({background_location});}} " \
+                     "</style>".format(background_location=image_path)
 
     with tempfile.TemporaryFile() as pdf_file:
         pisaDocument(

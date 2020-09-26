@@ -50,6 +50,7 @@ def link_callback(uri, rel):
         )
     return path
 
+
 def render_pdf(request):
 
     template_path = 'user_printer.html'

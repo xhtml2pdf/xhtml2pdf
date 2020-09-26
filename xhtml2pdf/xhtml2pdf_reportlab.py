@@ -129,9 +129,9 @@ class PmlBaseDoc(BaseDocTemplate):
                 self.page))
 
     def handle_nextPageTemplate(self, pt):
-        '''
+        """
         if pt has also templates for even and odd page convert it to list
-        '''
+        """
         has_left_template = self._has_template_for_name(pt + '_left')
         has_right_template = self._has_template_for_name(pt + '_right')
 
@@ -152,11 +152,11 @@ class PmlBaseDoc(BaseDocTemplate):
                 del self._nextPageTemplateCycle
             self._nextPageTemplateIndex = pt
         elif isinstance(pt, (list, tuple)):
-            #used for alternating left/right pages
-            #collect the refs to the template objects, complain if any are bad
+            # used for alternating left/right pages
+            # collect the refs to the template objects, complain if any are bad
             c = PTCycle()
             for ptn in pt:
-                #special case name used to short circuit the iteration
+                # special case name used to short circuit the iteration
                 if ptn == '*':
                     c._restart = len(c)
                     continue
@@ -169,7 +169,7 @@ class PmlBaseDoc(BaseDocTemplate):
             elif c._restart > len(c):
                 raise ValueError("Invalid cycle restart position")
 
-            #ensure we start on the first one$
+            # ensure we start on the first one
             self._nextPageTemplateCycle = c.cyclicIterator()
         else:
             raise TypeError("Argument pt should be string or integer or list")
@@ -195,7 +195,7 @@ class PmlPageTemplate(PageTemplate):
         self._page_count = 0
         self._first_flow = True
 
-        ### Background Image ###
+        # Background Image
         self.img = None
         self.ph = 0
         self.h = 0
@@ -223,9 +223,9 @@ class PmlPageTemplate(PageTemplate):
             # Background
             pisaBackground = None
             if (self.isFirstFlow(canvas)
-                and hasattr(self, "pisaBackground")
-                and self.pisaBackground
-                and (not self.pisaBackground.notFound())):
+                    and hasattr(self, "pisaBackground")
+                    and self.pisaBackground
+                    and (not self.pisaBackground.notFound())):
 
                 # Is image not PDF
                 if self.pisaBackground.mimetype.startswith("image/"):
@@ -303,8 +303,7 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
         if isinstance(fileName, PmlImageReader):
             self.__dict__ = fileName.__dict__   # borgize
             return
-            #start wih lots of null private fields, to be populated by
-        #the relevant engine.
+            # start wih lots of null private fields, to be populated by the relevant engine
         self.fileName = fileName
         self._image = None
         self._width = None
@@ -340,12 +339,12 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
                         data = self._cache.setdefault(md5(data).digest(), data)
                     self.fp = getStringIO(data)
                 elif imageReaderFlags == - 1 and isinstance(fileName, six.text_type):
-                    #try Ralf Schmitt's re-opening technique of avoiding too many open files
+                    # try Ralf Schmitt's re-opening technique of avoiding too many open files
                     self.fp.close()
                     del self.fp  # will become a property in the next statement
                     self.__class__ = LazyImageReader
                 if haveImages:
-                    #detect which library we are using and open the image
+                    # detect which library we are using and open the image
                     if not self._image:
                         self._image = self._read_image(self.fp)
                     if getattr(self._image, 'format', None) == 'JPEG':
@@ -397,7 +396,7 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
         return self._width, self._height
 
     def getRGBData(self):
-        "Return byte array of RGB data as string"
+        """ Return byte array of RGB data as string """
         if self._data is None:
             self._dataA = None
             if sys.platform[0:4] == 'java':
@@ -491,7 +490,7 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         self.drawHeight = height or self.imageHeight
 
     def wrap(self, availWidth, availHeight):
-        " This can be called more than once! Do not overwrite important data like drawWidth "
+        """ This can be called more than once! Do not overwrite important data like drawWidth """
         availHeight = self.setMaxHeight(availHeight)
         # print "image wrap", id(self), availWidth, availHeight, self.drawWidth, self.drawHeight
         width = min(self.drawWidth, availWidth)
@@ -572,8 +571,8 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
         # call the base class to do wrapping and calculate the size
         Paragraph.wrap(self, availWidth, availHeight)
 
-        #self.height = max(1, self.height)
-        #self.width = max(1, self.width)
+        # self.height = max(1, self.height)
+        # self.width = max(1, self.width)
 
         # increase the calculated size by the padding
         self.width = self.width + self.deltaWidth
@@ -586,7 +585,7 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
         if len(self.frags) <= 0:
             return []
 
-        #the split information is all inside self.blPara
+        # the split information is all inside self.blPara
         if not hasattr(self, 'deltaWidth'):
             self.wrap(availWidth, availHeight)
 
@@ -711,7 +710,7 @@ class PmlTable(Table, PmlMaxHeightMixIn):
         """
         Helper for calculating percentages
         """
-        if type(w) == type(""):
+        if isinstance(w, str):
             w = ((maxw / 100.0) * float(w[: - 1]))
         elif (w is None) or (w == "*"):
             w = maxw
@@ -824,7 +823,7 @@ class PmlTableOfContents(TableOfContents):
                     max(lastMargin, leftColStyle.spaceBefore)))
                 # print leftColStyle.leftIndent
             lastMargin = leftColStyle.spaceAfter
-            #right col style is right aligned
+            # right col style is right aligned
             rightColStyle = ParagraphStyle(name='leftColLevel%d' % level,
                                            parent=leftColStyle,
                                            leftIndent=0,

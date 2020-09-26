@@ -30,17 +30,17 @@
 
 
 __version__ = "$Revision: 103 $"
-__author__  = "$Author: holtwick $"
-__date__    = "$Date: 2007-10-31 17:08:54 +0100 (Mi, 31 Okt 2007) $"
-__svnid__   = "$Id: pisa.py 103 2007-10-31 16:08:54Z holtwick $"
+__author__ = "$Author: holtwick $"
+__date__ = "$Date: 2007-10-31 17:08:54 +0100 (Mi, 31 Okt 2007) $"
+__svnid__ = "$Id: pisa.py 103 2007-10-31 16:08:54Z holtwick $"
 
 from wsgiref.simple_server import make_server
 import logging
 
 from xhtml2pdf import wsgi
 
-def SimpleApp(environ, start_response):
 
+def SimpleApp(environ, start_response):
     # That's the magic!
     #
     # Set the environment variable "pisa.topdf" to the filename
@@ -50,12 +50,12 @@ def SimpleApp(environ, start_response):
     # Simple Hello World example
     start_response(
         '200 OK', [
-        ('content-type', "text/html"),
+            ('content-type', "text/html"),
         ])
     return ["Hello <strong>World</strong>"]
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     HOST = ''
     PORT = 8080
     logging.basicConfig(level=logging.DEBUG)
@@ -66,5 +66,5 @@ if __name__ == '__main__':
     app = wsgi.PisaMiddleware(app)
 
     httpd = make_server(HOST, PORT, app)
-    print "Serving HTTP on port %d..." % PORT
+    print("Serving HTTP on port %d..." % PORT)
     httpd.serve_forever()

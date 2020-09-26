@@ -3,19 +3,21 @@
 
 import os
 import sys
+import turbogears
+import cherrypy
 
 from os.path import dirname, exists, join
 
 import pkg_resources
-pkg_resources.require("TurboGears")
 
-import turbogears
-import cherrypy
+pkg_resources.require("TurboGears")
 
 cherrypy.lowercase_api = True
 
+
 class ConfigurationError(Exception):
     pass
+
 
 def start():
     """Start the CherryPy application server."""
@@ -39,13 +41,13 @@ def start():
     else:
         try:
             configfile = pkg_resources.resource_filename(
-              pkg_resources.Requirement.parse("tgpisa"),
+                pkg_resources.Requirement.parse("tgpisa"),
                 "config/default.cfg")
         except pkg_resources.DistributionNotFound:
             raise ConfigurationError("Could not find default configuration.")
 
     turbogears.update_config(configfile=configfile,
-        modulename="tgpisa.config")
+                             modulename="tgpisa.config")
 
     from tgpisa.controllers import Root
 

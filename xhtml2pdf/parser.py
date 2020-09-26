@@ -15,17 +15,13 @@
 # limitations under the License.
 from __future__ import print_function, unicode_literals
 
-import copy
-import logging
-import re
 from xml.dom import Node
 import xml.dom.minidom
 
-from html5lib import treebuilders  # , inputstream
+from html5lib import treebuilders
 import html5lib
-from reportlab.platypus.doctemplate import NextPageTemplate, FrameBreak
-from reportlab.platypus.flowables import PageBreak, KeepInFrame
-import six
+from reportlab.platypus.flowables import KeepInFrame
+
 
 from xhtml2pdf.default import BOX, POS, MUST, FONT
 from xhtml2pdf.default import TAGS, STRING, INT, BOOL, SIZE, COLOR, FILE
@@ -35,7 +31,6 @@ from xhtml2pdf.util import getBox, getPos, pisaTempFile, transform_attrs
 from xhtml2pdf.util import getSize, getBool, toList, getColor, getAlign
 import xhtml2pdf.w3c.cssDOMElementInterface as cssDOMElementInterface
 from xhtml2pdf.xhtml2pdf_reportlab import PmlRightPageBreak, PmlLeftPageBreak
-
 
 
 CSSAttrCache = {}
@@ -74,7 +69,7 @@ def pisaGetAttributes(c, tag, attributes):
         for k, v in six.iteritems(adef):
             nattrs[k] = None
             # print k, v
-            # defaults, wenn vorhanden
+            # defaults, if available
             if type(v) == tuple:
                 if v[1] == MUST:
                     if k not in attrs:
@@ -93,7 +88,7 @@ def pisaGetAttributes(c, tag, attributes):
                 if type(v) == list:
                     nv = nv.strip().lower()
                     if nv not in v:
-                        #~ raise PML_EXCEPTION, "attribute '%s' of wrong value, allowed is one of: %s" % (k, repr(v))
+                        # ~ raise PML_EXCEPTION, "attribute '%s' of wrong value, allowed is one of: %s" % (k, repr(v))
                         log.warning(
                             c.warning("Attribute '%s' of wrong value, allowed is one of: %s", k, repr(v)))
                         nv = dfl
@@ -221,8 +216,8 @@ def getCSSAttr(self, cssCascade, attrName, default=NotImplemented):
 # TODO: Monkeypatching standard lib should go away.
 xml.dom.minidom.Element.getCSSAttr = getCSSAttr
 
-# Create an aliasing system.  Many sources use non-standard tags, because browsers allow
-# them to.  This allows us to map a nonstandard name to the standard one.
+# Create an aliasing system. Many sources use non-standard tags, because browsers allow
+# them to. This allows us to map a nonstandard name to the standard one.
 nonStandardAttrNames = {
     'bgcolor': 'background-color',
 }
@@ -248,7 +243,7 @@ def getCSSAttrCacheKey(node):
 
 
 def CSSCollect(node, c):
-    #node.cssAttrs = {}
+    # node.cssAttrs = {}
     # return node.cssAttrs
 
     if c.css:
@@ -438,9 +433,7 @@ def CSS2Frag(c, kw, isBlock):
 
 
 def pisaPreLoop(node, context, collect=False):
-    """
-    Collect all CSS definitions
-    """
+    """ Collect all CSS definitions """
 
     data = u""
     if node.nodeType == Node.TEXT_NODE and collect:
@@ -580,7 +573,7 @@ def pisaLoop(node, context, path=None, **kw):
                         (
                             ("keepWithNext", "-pdf-keep-with-next"),
                             ("outline", "-pdf-outline"),
-                            #("borderLeftColor", "-pdf-outline-open"),
+                            # ("borderLeftColor", "-pdf-outline-open"),
                         ),
                         context.cssAttr,
                         getBool
@@ -711,7 +704,7 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
     CSSAttrCache = {}
 
     if xhtml:
-        # TODO: XHTMLParser doesn't see to exist...
+        # TODO: XHTMLParser doesn't seem to exist...
         parser = html5lib.XHTMLParser(tree=treebuilders.getTreeBuilder("dom"))
     else:
         parser = html5lib.HTMLParser(tree=treebuilders.getTreeBuilder("dom"))

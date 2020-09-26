@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-#############################################
-## (C)opyright by Dirk Holtwick            ##
-## All rights reserved                     ##
-#############################################
+############################################
+#  (C)opyright by Dirk Holtwick            #
+#  All rights reserved                     #
+############################################
 
 __version__ = "$Revision: 176 $"
 __author__ = "$Author: kgrodzicki $"

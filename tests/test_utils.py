@@ -1,17 +1,16 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 from unittest import TestCase
 
 from reportlab.lib.colors import Color
 
 from xhtml2pdf.tags import int_to_roman
-from xhtml2pdf.util import getCoords, getColor, getSize, getFrameDimensions, \
-    getPos, getBox, pisaTempFile, getBorderStyle, set_value, copy_attrs, transform_attrs
+from xhtml2pdf.util import getCoords, getColor, getSize, getFrameDimensions, getBox, pisaTempFile, getBorderStyle,\
+    set_value, copy_attrs, transform_attrs
 
 
 class UtilsCoordTestCase(TestCase):
 
     def test_getCoords_simple(self):
-
         res = getCoords(1, 1, 10, 10, (10, 10))
         self.assertEqual(res, (1, -1, 10, 10))
 
@@ -143,7 +142,7 @@ class UtilsGetSizeTestCase(TestCase):
 class PisaDimensionTestCase(TestCase):
 
     def test_FrameDimensions_left_top_width_height(self):
-        #builder = pisaCSSBuilder(mediumSet=['all'])
+        # builder = pisaCSSBuilder(mediumSet=['all'])
         dims = {
             'left': '10pt',
             'top': '20pt',
@@ -217,7 +216,7 @@ class PisaDimensionTestCase(TestCase):
     def test_trame_dimentions_for_height_without_top_or_bottom(self):
         dims = {
             'left': '10pt',
-            #'top': '20pt',
+            # 'top': '20pt',
             'width': '30pt',
             'height': '40pt',
         }
@@ -227,7 +226,7 @@ class PisaDimensionTestCase(TestCase):
 
     def test_trame_dimentions_for_width_without_left_or_right(self):
         dims = {
-            #'left': '10pt',
+            # 'left': '10pt',
             'top': '20pt',
             'width': '30pt',
             'height': '40pt',
@@ -289,7 +288,6 @@ class GetBorderStyleTestCase(TestCase):
 
 
 class CopyUtils(TestCase):
-
     class A:
         attr = 2
         attr1 = 10
@@ -308,7 +306,6 @@ class CopyUtils(TestCase):
         param2 = 1
 
     def test_set_value(self):
-
         a = self.A()
         b = self.B(20, 30)
         c = self.C()

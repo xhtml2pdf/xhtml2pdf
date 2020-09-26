@@ -1,8 +1,8 @@
-'''
+"""
 Created on 1 dic. 2017
 
 @author: luisza
-'''
+"""
 
 import ssl
 
@@ -21,32 +21,31 @@ class HttpConfig(dict):
     - http_cert_file
     - http_source_address
     - http_timeout
-    
     """
-      
+
     def save_keys(self, name, value):
-        if name=='nosslcheck':
-            self['context']=ssl._create_unverified_context()
+        if name == 'nosslcheck':
+            self['context'] = ssl._create_unverified_context()
         else:
-            self[name]=value
-    
+            self[name] = value
+
     def is_http_config(self, name, value):
         if name.startswith('--'):
-            name=name[2:]
+            name = name[2:]
         elif name.startswith('-'):
-            name=name[1:]
-            
+            name = name[1:]
+
         if 'http_' in name:
-            name=name.replace("http_", '')
+            name = name.replace("http_", '')
             self.save_keys(name, value)
             return True
         return False
-    
+
     def __repr__(self):
-        dev=''
+        dev = ''
         for key, value in self.items():
-            dev+="%r = %r, "%(key, value)
+            dev += "%r = %r, " % (key, value)
         return dev
-    
-    
-httpConfig=HttpConfig()
+
+
+httpConfig = HttpConfig()

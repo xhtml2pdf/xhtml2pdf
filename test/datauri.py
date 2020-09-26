@@ -15,13 +15,17 @@
 # limitations under the License.
 
 __version__ = "$Revision: 194 $"
-__author__  = "$Author: holtwick $"
-__date__    = "$Date: 2008-04-18 18:59:53 +0200 (Fr, 18 Apr 2008) $"
+__author__ = "$Author: holtwick $"
+__date__ = "$Date: 2008-04-18 18:59:53 +0200 (Fr, 18 Apr 2008) $"
+
+import logging
+import os
+import os.path
 
 import ho.pisa as pisa
-import os, os.path
-import logging
+
 log = logging.getLogger(__file__)
+
 
 def helloWorld():
     filename = __file__ + ".pdf"
@@ -50,11 +54,12 @@ def helloWorld():
     pdf = pisa.pisaDocument(
         html,
         file(filename, "wb"),
-        path = __file__
-        )
+        path=__file__
+    )
     if not pdf.err:
         pisa.startViewer(filename)
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     pisa.showLogging()
     helloWorld()

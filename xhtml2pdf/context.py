@@ -290,14 +290,15 @@ class pisaCSSBuilder(css.CSSBuilder):
             fpadding_bottom = self._getFromData(
                 fdata, 'padding-bottom', padding_bottom, getSize)
             fborder_color = self._getFromData(fdata, ('border-top-color', 'border-bottom-color',
-                                                      'border-left-color', 'border-right-color'), border_color, getColor)
+                                                      'border-left-color', 'border-right-color'),
+                                              border_color, getColor)
             fborder_width = self._getFromData(fdata, ('border-top-width', 'border-bottom-width',
                                                       'border-left-width', 'border-right-width'), border_width, getSize)
 
             if border or pageBorder:
+                # frame_border = ShowBoundaryValue() to frame_border = ShowBoundaryValue(width=int(border))
+                frame_border = ShowBoundaryValue(width=int(border))
 
-                frame_border = ShowBoundaryValue(width=int(border))   #frame_border = ShowBoundaryValue() to
-                                                                      #frame_border = ShowBoundaryValue(width=int(border))
             else:
                 frame_border = ShowBoundaryValue(
                     color=fborder_color, width=fborder_width)
@@ -495,13 +496,13 @@ class pisaContext(object):
         import weakref
 
         self.cssBuilder = pisaCSSBuilder(mediumSet=["all", "print", "pdf"])
-        #self.cssBuilder.c = self
+        # self.cssBuilder.c = self
         self.cssBuilder._c = weakref.ref(self)
         pisaCSSBuilder.c = property(lambda self: self._c())
 
         self.cssParser = pisaCSSParser(self.cssBuilder)
         self.cssParser.rootPath = self.pathDirectory
-        #self.cssParser.c = self
+        # self.cssParser.c = self
         self.cssParser._c = weakref.ref(self)
         pisaCSSParser.c = property(lambda self: self._c())
 
@@ -600,7 +601,7 @@ class pisaContext(object):
 
         # Find maximum lead
         maxLeading = 0
-        #fontSize = 0
+        # fontSize = 0
         for frag in self.fragList:
             leading = getSize(
                 frag.leadingSource, frag.fontSize) + frag.leadingSpace
@@ -704,7 +705,7 @@ class pisaContext(object):
             frag.rise = frag.fontSize * superFraction
             frag.fontSize = max(frag.fontSize - sizeDelta, 3)
 
-       # bold, italic, and underline
+        # bold, italic, and underline
         frag.fontName = frag.bulletFontName = tt2ps(
             frag.fontName, frag.bold, frag.italic)
 
@@ -818,17 +819,13 @@ class pisaContext(object):
                 self.warning("getFile %r %r %r", name, relative, path), exc_info=1)
 
     def getFile(self, name, relative=None):
-        """
-        Returns a file name or None
-        """
+        """ Returns a file name or None """
         if self.pathCallback is not None:
             return getFile(self._getFileDeprecated(name, relative))
         return getFile(name, relative or self.pathDirectory)
 
     def getFontName(self, names, default="helvetica"):
-        """
-        Name of a font
-        """
+        """ Name of a font """
         # print names, self.fontList
         if type(names) is not ListType:
             if type(names) not in six.string_types:
@@ -842,7 +839,7 @@ class pisaContext(object):
                 font = self.asianFontList.get(font, None)
                 set_asian_fonts(font)
             else:
-                font = self.fontList.get(font,None)
+                font = self.fontList.get(font, None)
             if font is not None:
                 return font
         return self.fontList.get(default, None)

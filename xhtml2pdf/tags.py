@@ -77,7 +77,6 @@ class pisaTagSTYLE(pisaTag):
     def start(self, c):
         c.addPara()
 
-
     def end(self, c):
         c.clearFrag()
 
@@ -101,7 +100,6 @@ class pisaTagSUB(pisaTag):
 
 class pisaTagA(pisaTag):
     rxLink = re.compile("^(#|[a-z]+\:).*")
-
 
     def start(self, c):
         attr = self.attr
@@ -301,7 +299,7 @@ class pisaTagLI(pisaTag):
                 frag.image = img
                 self.offset = max(0, img.drawHeight - c.frag.fontSize)
         else:
-            if type(lst) == type(u""):
+            if isinstance(lst, str):
                 frag.text = lst
             else:
                 # XXX This should be the recent font, but it throws errors in Reportlab!
@@ -404,10 +402,10 @@ class pisaTagIMG(pisaTag):
 
                     afrag = c.frag.clone()
                     afrag.text = ""
-                    afrag.fontName = "Helvetica" # Fix for a nasty bug!!!
+                    afrag.fontName = "Helvetica"  # Fix for a nasty bug!!!
                     afrag.cbDefn = ABag(
                         kind="img",
-                        image=img, # .getImage(), # XXX Inline?
+                        image=img,  # .getImage(), # XXX Inline?
                         valign=valign,
                         fontName="Helvetica",
                         fontSize=img.drawHeight,
@@ -452,7 +450,7 @@ if 0:
                                                     default=attr.value,
                                                     width=width,
                                                     height=height,
-            ))
+                                                    ))
 
         def end(self, c):
             c.addPara()
@@ -615,7 +613,7 @@ class pisaTagPDFTEMPLATE(pisaTag):
     def start(self, c):
         deprecation("pdf:template")
         attrs = self.attr
-        #print attrs
+        # print attrs
         name = attrs["name"]
         c.frameList = []
         c.frameStaticList = []
@@ -642,18 +640,16 @@ class pisaTagPDFTEMPLATE(pisaTag):
         c.frameList = []
         c.frameStaticList = []
 
+
 class pisaTagPDFLANGUAGE(pisaTag):
-    """
-    <pdf:language name=""/>
-    """
+    """ <pdf:language name=""/> """
     def start(self, c):
         deprecation("pdf:language")
-        setattr(c,'language',self.attr.name)
+        setattr(c, 'language', self.attr.name)
+
 
 class pisaTagPDFFONT(pisaTag):
-    """
-    <pdf:fontembed name="" src="" />
-    """
+    """ <pdf:fontembed name="" src="" /> """
     def start(self, c):
         deprecation("pdf:font")
         c.loadFont(self.attr.name, self.attr.src, self.attr.encoding)

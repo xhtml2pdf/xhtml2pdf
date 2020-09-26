@@ -108,7 +108,7 @@ LOG_FORMAT_DEBUG = "%(levelname)s [%(name)s] %(pathname)s line %(lineno)d: %(mes
 
 
 def usage():
-    print (USAGE)
+    print(USAGE)
 
 
 class pisaLinkLoader:
@@ -149,14 +149,14 @@ class pisaLinkLoader:
         self.tfileList.append(path)
 
         if not self.quiet:
-            print ("  Loading %s to %s" % (url, path))
+            print("  Loading %s to %s" % (url, path))
 
         return path
 
 
 def command():
     if "--profile" in sys.argv:
-        print ("*** PROFILING ENABLED")
+        print("*** PROFILING ENABLED")
         import cProfile as profile
         import pstats
 
@@ -222,25 +222,25 @@ def execute():
             usage()
             sys.exit()
 
-        elif o in("--version",):
+        elif o in ("--version",):
             print(__version__)
             sys.exit(0)
 
         elif o in ("--copyright"):
-            print (COPYRIGHT)
+            print(COPYRIGHT)
             sys.exit(0)
 
         elif o in ("--system",):
-            print (COPYRIGHT)
-            print ()
-            print ("SYSTEM INFORMATIONS")
-            print ("--------------------------------------------")
-            print ("OS:                %s" % sys.platform)
-            print ("Python:            %s" % sys.version)
-            print ("html5lib:          ?")
+            print(COPYRIGHT)
+            print()
+            print("SYSTEM INFORMATIONS")
+            print("--------------------------------------------")
+            print("OS:                %s" % sys.platform)
+            print("Python:            %s" % sys.version)
+            print("html5lib:          ?")
             import reportlab
 
-            print ("Reportlab:         %s" % reportlab.Version)
+            print("Reportlab:         %s" % reportlab.Version)
             sys.exit(0)
 
         elif o in ("-s", "--start-viewer", "--start"):
@@ -280,7 +280,7 @@ def execute():
 
         elif o in ("--css-dump",):
             # CSS dump
-            print (DEFAULT_CSS)
+            print(DEFAULT_CSS)
             return
 
         elif o in ("--xml-dump",):
@@ -369,13 +369,13 @@ def execute():
             try:
                 open(dest, "wb").close()
             except:
-                print ("File '%s' seems to be in use of another application." % dest)
+                print("File '%s' seems to be in use of another application." % dest)
                 sys.exit(2)
             fdest = open(dest, "wb")
             fdestclose = 1
 
         if not quiet:
-            print ("Converting {} to {}...".format(src, dest))
+            print("Converting {} to {}...".format(src, dest))
 
         pisaDocument(
             fsrc,
@@ -400,7 +400,7 @@ def execute():
 
         if (not errors) and startviewer:
             if not quiet:
-                print ("Open viewer for file %s" % dest)
+                print("Open viewer for file %s" % dest)
             startViewer(dest)
 
 
@@ -443,7 +443,6 @@ def makeDataURI(data=None, mimetype=None, filename=None):
     if not mimetype:
         if filename:
             import mimetypes
-
 
             mimetype = mimetypes.guess_type(filename)[0].split(";")[0]
         else:

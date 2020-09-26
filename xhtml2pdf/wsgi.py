@@ -57,7 +57,7 @@ class Filter(object):
         return [body]
 
     def should_filter(self, status, headers):
-        print (headers)
+        print(headers)
 
     def filter(self, status, headers, body):
         raise NotImplementedError

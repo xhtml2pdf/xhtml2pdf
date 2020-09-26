@@ -6,7 +6,6 @@ import mimetypes
 import os.path
 import re
 import shutil
-import string
 import sys
 import tempfile
 import xhtml2pdf.default
@@ -20,9 +19,6 @@ import reportlab.pdfbase._cidfontdata
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 import arabic_reshaper
-
-
-
 
 try:
     import httplib
@@ -43,6 +39,23 @@ try:
     from urllib.parse import unquote as urllib_unquote
 except ImportError:
     from urllib import unquote as urllib_unquote
+
+try:
+    import PyPDF2
+except ImportError:
+    PyPDF2 = None
+
+try:
+    from reportlab.graphics import renderPM
+except ImportError:
+    renderPM = None
+
+try:
+    from reportlab.graphics import renderSVG
+except ImportError:
+    renderSVG = None
+
+from xhtml2pdf.config.httpconfig import httpConfig
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -67,29 +80,13 @@ if _reportlab_version < (2, 1):
 
 log = logging.getLogger("xhtml2pdf")
 
-try:
-    import PyPDF2
-except ImportError:
-    PyPDF2 = None
 
-try:
-    from reportlab.graphics import renderPM
-except ImportError:
-    renderPM = None
-
-try:
-    from reportlab.graphics import renderSVG
-except ImportError:
-    renderSVG = None
-
-from xhtml2pdf.config.httpconfig import httpConfig
-#=========================================================================
+# =========================================================================
 # Memoize decorator
-#=========================================================================
+# =========================================================================
 
 
 class memoized(object):
-
     """
     A kwargs-aware memoizer, better than the one in python :)
 
@@ -124,9 +121,7 @@ class memoized(object):
 
 
 def ErrorMsg():
-    """
-    Helper to get a nice traceback as string
-    """
+    """ Helper to get a nice traceback as string """
     import traceback
 
     limit = None
@@ -155,6 +150,7 @@ def transform_attrs(obj, keys, container, func, extras=None):
     keys = [(reportlab, css), ... ]
     container = cssAttr
     """
+
     cpextras = extras
 
     for reportlab, css in keys:
@@ -176,6 +172,7 @@ def copy_attrs(obj1, obj2, attrs):
     Allows copy a list of attributes from object2 to object1.
     Useful for copy ccs attributes to fragment
     """
+
     for attr in attrs:
         value = getattr(obj2, attr) if hasattr(obj2, attr) else None
         if value is None and isinstance(obj2, dict) and attr in obj2:
@@ -184,9 +181,7 @@ def copy_attrs(obj1, obj2, attrs):
 
 
 def set_value(obj, attrs, value, _copy=False):
-    """
-    Allows set the same value to a list of attributes
-    """
+    """ Allows set the same value to a list of attributes """
     for attr in attrs:
         if _copy:
             value = copy(value)
@@ -275,6 +270,7 @@ def getSize(value, relative=0, base=None, default=0.0):
     >>> getSize('1cm')
     28.346456692913385
     """
+
     try:
         original = value
         if value is None:
@@ -349,7 +345,8 @@ def getCoords(x, y, w, h, pagesize):
     corner of the document as the 0,0 coords therefore
     we need to do some fancy calculations
     """
-    #~ print pagesize
+
+    # ~ print pagesize
     ax, ay = pagesize
     if x < 0:
         x = ax + x
@@ -369,7 +366,7 @@ def getBox(box, pagesize):
     """
     Parse sizes by corners in the form:
     <X-Left> <Y-Upper> <Width> <Height>
-    The last to values with negative values are interpreted as offsets form
+    The last to values with negative values are interpreted as offsets from
     the right and lower border.
     """
     box = str(box).split()
@@ -381,9 +378,9 @@ def getBox(box, pagesize):
 
 def getFrameDimensions(data, page_width, page_height):
     """Calculate dimensions of a frame
-
     Returns left, top, width and height of the frame in points.
     """
+
     box = data.get("-pdf-frame-box", [])
     if len(box) == 4:
         return [getSize(x) for x in box]
@@ -419,9 +416,7 @@ def getFrameDimensions(data, page_width, page_height):
 
 @memoized
 def getPos(position, pagesize):
-    """
-    Pair of coordinates
-    """
+    """ Pair of coordinates """
     position = str(position).split()
     if len(position) != 2:
         raise Exception("position not defined right way")
@@ -430,7 +425,7 @@ def getPos(position, pagesize):
 
 
 def getBool(s):
-    " Is it a boolean? "
+    """ Is it a boolean? """
     return str(s).lower() in ("y", "yes", "1", "true")
 
 
@@ -438,7 +433,7 @@ _uid = 0
 
 
 def getUID():
-    " Unique ID "
+    """ Unique ID """
     global _uid
     _uid += 1
     return str(_uid)
@@ -456,6 +451,7 @@ _alignments = {
 def getAlign(value, default=TA_LEFT):
     return _alignments.get(str(value).lower(), default)
 
+
 GAE = "google.appengine" in sys.modules
 
 if GAE:
@@ -469,7 +465,6 @@ else:
 
 
 class pisaTempFile(object):
-
     """
     A temporary file implementation that uses memory unless
     either capacity is breached or fileno is requested, at which
@@ -533,6 +528,7 @@ class pisaTempFile(object):
         Forces this buffer to use a temporary file as the underlying.
         object and returns the fileno associated with it.
         """
+
         self.makeTempFile()
         return self._delegate.fileno()
 
@@ -587,7 +583,6 @@ _rx_datauri = re.compile(
 
 
 class pisaFileObject:
-
     """
     XXX
     """
@@ -619,7 +614,6 @@ class pisaFileObject:
             b64 = re.sub(b'[^A-Za-z0-9\+\/]+', b'', b64)
 
             # Add padding as needed, to make length into a multiple of 4
-            #
             b64 += b"=" * ((4 - len(b64) % 4) % 4)
 
             self.data = base64.b64decode(b64)
@@ -654,8 +648,8 @@ class pisaFileObject:
 
                 log.debug("Uri parsed: {}".format(uri))
 
-                #path = urlparse.urlsplit(url)[2]
-                #mimetype = getMimeType(path)
+                # path = urlparse.urlsplit(url)[2]
+                # mimetype = getMimeType(path)
 
                 # Using HTTPLIB
                 url_splitted = urlparse.urlsplit(uri)
@@ -710,7 +704,7 @@ class pisaFileObject:
 
                     self.setMimeTypeByName(uri)
                     if self.mimetype and self.mimetype.startswith('text'):
-                        self.file = open(uri, "r") #removed bytes... lets hope it goes ok :/
+                        self.file = open(uri, "r")  # removed bytes... lets hope it goes ok :/
                     else:
                         # removed bytes... lets hope it goes ok :/
                         self.file = open(uri, "rb")
@@ -744,7 +738,7 @@ class pisaFileObject:
                 self.data = self.file.read()
             except:
                 if self.mimetype and self.mimetype.startswith('text'):
-                    self.file = open(self.file.name, "rb") #removed bytes... lets hope it goes ok :/
+                    self.file = open(self.file.name, "rb")  # removed bytes... lets hope it goes ok :/
                     self.data = self.file.read().decode('utf-8')
                 else:
                     raise
@@ -755,7 +749,7 @@ class pisaFileObject:
         return (self.file is None) and (self.data is None)
 
     def setMimeTypeByName(self, name):
-        " Guess the mime type "
+        """ Guess the mime type """
         mimetype = mimetypes.guess_type(name)[0]
         if mimetype is not None:
             self.mimetype = mimetypes.guess_type(name)[0].split(";")[0]
@@ -946,36 +940,39 @@ COLOR_BY_NAME = {
     'yellowgreen': Color(.603922, .803922, .196078)
 }
 
+
 def get_default_asian_font():
 
-        lower_font_list = []
-        upper_font_list = []
+    lower_font_list = []
+    upper_font_list = []
 
-        list = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodings)
-        list = list.keys()
+    list = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodings)
+    list = list.keys()
 
-        for font in list:
-            upper_font_list.append(font)
-            lower_font_list.append(font.lower())
-        default_asian_font = {lower_font_list[i]: upper_font_list[i] for i in range(len(lower_font_list))}
+    for font in list:
+        upper_font_list.append(font)
+        lower_font_list.append(font.lower())
+    default_asian_font = {lower_font_list[i]: upper_font_list[i] for i in range(len(lower_font_list))}
 
-        return default_asian_font
+    return default_asian_font
 
 
 def set_asian_fonts(fontname):
 
-        list = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodings)
-        list = list.keys()
-        if fontname in list:
-            pdfmetrics.registerFont(UnicodeCIDFont(fontname))
-        get_default_asian_font()
+    list = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodings)
+    list = list.keys()
+    if fontname in list:
+        pdfmetrics.registerFont(UnicodeCIDFont(fontname))
+    get_default_asian_font()
+
 
 def detect_language(name):
     asian_language_list = xhtml2pdf.default.DEFAULT_LANGUAGE_LIST
     if name in asian_language_list:
         return name
 
-def arabic_format(text,language):
+
+def arabic_format(text, language):
     if detect_language(language) == 'arabic':
         ar = arabic_reshaper.reshape(text)
         ar = get_display(ar)

@@ -84,13 +84,9 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                  default_css=None, xhtml=False, encoding=None, xml_output=None,
                  raise_exception=True, capacity=100 * 1024, context_meta=None,
                  **kw):
-    log.debug("pisaDocument options:\n  src = %r\n  dest = %r\n  path = %r\n  link_callback = %r\n  xhtml = %r\n  context_meta = %r",
-              src,
-              dest,
-              path,
-              link_callback,
-              xhtml,
-              context_meta)
+    log.debug("pisaDocument options:\n  src = %r\n  dest = %r\n  path = %r\n  link_callback = %r\n  xhtml = %r\n  "
+              "context_meta = %r",
+              src, dest, path, link_callback, xhtml, context_meta)
 
     # Prepare simple context
     context = pisaContext(path, debug=debug, capacity=capacity)
@@ -192,15 +188,16 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
 
     return context
 
+
 def frag_text_language_check(context):
-    if hasattr(context,'language'):
+    if hasattr(context, 'language'):
         language = context.__getattribute__('language')
         for x in context.story:
-            if hasattr(x,'frags'):
+            if hasattr(x, 'frags'):
                 for y in x.frags:
-                    if hasattr(y,'text'):
+                    if hasattr(y, 'text'):
                         text = y.text.strip()
                         if text:
-                            detect_language_result = arabic_format(y.text,language)
+                            detect_language_result = arabic_format(y.text, language)
                             if detect_language_result != None:
                                 y.text = detect_language_result

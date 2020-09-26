@@ -27,6 +27,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 
 __reversion__ = "$Revision: 20 $"
 __author__ = "$Author: holtwick $"
@@ -37,13 +38,10 @@ Helper for complex CSS definitons like font, margin, padding and border
 Optimized for use with PISA
 """
 
-#support python 3
-#import types
+# support python 3
+# import types
 TupleType = tuple
 ListType = list
-
-import logging
-
 
 log = logging.getLogger("ho.css")
 
@@ -67,10 +65,10 @@ _variantTable = {
 
 _weightTable = {
     "light": 300,
-    "lighter": 300, # fake relativness for now
+    "lighter": 300,  # fake relativness for now
     "normal": 400,
     "bold": 700,
-    "bolder": 700, # fake relativness for now
+    "bolder": 700,  # fake relativness for now
 
     "100": 100,
     "200": 200,
@@ -82,12 +80,12 @@ _weightTable = {
     "800": 800,
     "900": 900,
 
-    #wx.LIGHT: 300,
-    #wx.NORMAL: 400,
-    #wx.BOLD: 700,
+    # wx.LIGHT: 300,
+    # wx.NORMAL: 400,
+    # wx.BOLD: 700,
 }
 
-#_absSizeTable = {
+# _absSizeTable = {
 #    "xx-small" : 3./5.,
 #    "x-small": 3./4.,
 #    "small": 8./9.,
@@ -209,7 +207,8 @@ def parseSpecialRules(declarations, debug=0):
 
         # FONT
         if name == "font":
-            # [ [ <'font-style'> || <'font-variant'> || <'font-weight'> ]? <'font-size'> [ / <'line-height'> ]? <'font-family'> ] | inherit
+            # [ [ <'font-style'> || <'font-variant'> || <'font-weight'> ]? <'font-size'> [ / <'line-height'> ]?
+            # <'font-family'> ] | inherit
             part = getNextPart(parts)
             # Style
             if part and part in _styleTable:
@@ -236,7 +235,8 @@ def parseSpecialRules(declarations, debug=0):
 
         # BACKGROUND
         elif name == "background":
-            # [<'background-color'> || <'background-image'> || <'background-repeat'> || <'background-attachment'> || <'background-position'>] | inherit
+            # [<'background-color'> || <'background-image'> || <'background-repeat'> || <'background-attachment'> ||
+            # <'background-position'>] | inherit
 
             # XXX We do not receive url() and parts list, so we go for a dirty work arround
             part = getNextPart(parts) or oparts
@@ -249,7 +249,7 @@ def parseSpecialRules(declarations, debug=0):
 
             if 0:
                 part = getNextPart(parts) or oparts
-                print ("~", part, parts, oparts, declarations)
+                print("~", part, parts, oparts, declarations)
                 # Color
                 if part and (not part.startswith("url")):
                     dd.append(("background-color", part, last))
@@ -412,15 +412,15 @@ def parseSpecialRules(declarations, debug=0):
     if debug and dd:
         log.debug("CSS special OUT:\n%s", "\n".join([repr(d) for d in dd]))
 
-    if 0: #declarations!=dd:
-        print ("###", declarations)
-        print ("#->", dd)
+    if 0:  # declarations!=dd:
+        print("###", declarations)
+        print("#->", dd)
         # CSS MODIFY! END
     return dd
 
 
-#import re
-#_rxhttp = re.compile(r"url\([\'\"]?http\:\/\/[^\/]", re.IGNORECASE|re.DOTALL)
+# import re
+# _rxhttp = re.compile(r"url\([\'\"]?http\:\/\/[^\/]", re.IGNORECASE|re.DOTALL)
 
 def cleanupCSS(src):
     # src = _rxhttp.sub('url(', src)

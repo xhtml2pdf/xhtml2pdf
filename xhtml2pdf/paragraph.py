@@ -48,7 +48,6 @@ logger = logging.getLogger("xhtml2pdf")
 class Style(dict):
     """
     Style.
-
     Single place for style definitions: Paragraphs and Fragments. The
     naming follows the convention of CSS written in camelCase letters.
     """
@@ -78,7 +77,6 @@ class Style(dict):
 class Box(dict):
     """
     Box.
-
     Handles the following styles:
 
         backgroundColor, backgroundImage
@@ -90,10 +88,8 @@ class Box(dict):
         borderBottomColor, borderBottomWidth, borderBottomStyle
 
     Not used in inline Elements:
-
         paddingTop, paddingBottom
         marginTop, marginBottom
-
     """
 
     name = "box"
@@ -156,30 +152,23 @@ class Fragment(Box):
     isText = False
     isLF = False
 
-
     def calc(self):
         self["width"] = 0
 
 
 class Word(Fragment):
-    """
-    A single word.
-    """
+    """ A single word. """
 
     name = "word"
     isText = True
 
     def calc(self):
-        """
-        XXX Cache stringWith if not accelerated?!
-        """
+        """ XXX Cache stringWith if not accelerated?! """
         self["width"] = stringWidth(self["text"], self["fontName"], self["fontSize"])
 
 
 class Space(Fragment):
-    """
-    A space between fragments that is the usual place for line breaking.
-    """
+    """ A space between fragments that is the usual place for line breaking. """
 
     name = "space"
     isSoft = True
@@ -189,9 +178,7 @@ class Space(Fragment):
 
 
 class LineBreak(Fragment):
-    """
-    Line break.
-    """
+    """ Line break. """
 
     name = "br"
     isSoft = True
@@ -204,7 +191,7 @@ class BoxBegin(Fragment):
     name = "begin"
 
     def calc(self):
-        self["width"] = self.get("marginLeft", 0) + self.get("paddingLeft", 0) # + border if border
+        self["width"] = self.get("marginLeft", 0) + self.get("paddingLeft", 0)  # + border if border
 
     def draw(self, canvas, y):
         # if not self["length"]:
@@ -218,7 +205,7 @@ class BoxEnd(Fragment):
     name = "end"
 
     def calc(self):
-        self["width"] = self.get("marginRight", 0) + self.get("paddingRight", 0) # + border
+        self["width"] = self.get("marginRight", 0) + self.get("paddingRight", 0)  # + border
 
 
 class Image(Fragment):
@@ -228,9 +215,7 @@ class Image(Fragment):
 
 
 class Line(list):
-    """
-    Container for line fragments.
-    """
+    """ Container for line fragments. """
 
     LINEHEIGHT = 1.0
 
@@ -253,7 +238,7 @@ class Line(list):
             elif alignment == TA_CENTER:
                 for frag in self:
                     frag["x"] += emptySpace / 2.0
-            elif alignment == TA_JUSTIFY and not self.isLast: # XXX last line before split
+            elif alignment == TA_JUSTIFY and not self.isLast:  # XXX last line before split
                 delta = emptySpace / (len(self) - 1)
                 for i, frag in enumerate(self):
                     frag["x"] += i * delta
@@ -273,9 +258,7 @@ class Line(list):
             frag["length"] = x - frag["x"]
 
     def doLayout(self, width):
-        """
-        Align words in previous line.
-        """
+        """ Align words in previous line. """
 
         # Calculate dimensions
         self.width = width
@@ -285,7 +268,7 @@ class Line(list):
         self.height = self.lineHeight = max(frag * self.LINEHEIGHT for frag in font_sizes)
 
         # Apply line height
-        y = (self.lineHeight - self.fontSize) # / 2
+        y = (self.lineHeight - self.fontSize)  # / 2
         for frag in self:
             frag["y"] = y
 
@@ -320,9 +303,8 @@ class Text(list):
         list.__init__(self, data)
 
     def calc(self):
-        """
-        Calculate sizes of fragments.
-        """
+        """ Calculate sizes of fragments. """
+
         for word in self:
             word.calc()
 
@@ -331,6 +313,7 @@ class Text(list):
         Split text into lines and calculate X positions. If we need more
         space in height than available we return the rest of the text
         """
+
         self.lines = []
         self.height = 0
         self.maxWidth = self.width = maxWidth
@@ -414,9 +397,8 @@ class Text(list):
         return None
 
     def dumpLines(self):
-        """
-        For debugging dump all line and their content
-        """
+        """ For debugging dump all line and their content. """
+
         for i, line in enumerate(self.lines):
             logger.debug("Line %d:", i)
             logger.debug(line.dumpFragments())
@@ -425,15 +407,14 @@ class Text(list):
 class Paragraph(Flowable):
     """
     A simple Paragraph class respecting alignment.
-
     Does text without tags.
 
     Respects only the following global style attributes:
     fontName, fontSize, leading, firstLineIndent, leftIndent,
     rightIndent, textColor, alignment.
     (spaceBefore, spaceAfter are handled by the Platypus framework.)
-
     """
+
     def __init__(self, text, style, debug=False, splitted=False, **kwDict):
 
         Flowable.__init__(self)
@@ -480,9 +461,7 @@ class Paragraph(Flowable):
         return self.width, self.height
 
     def split(self, availWidth, availHeight):
-        """
-        Split ourselves in two paragraphs.
-        """
+        """ Split ourselves in two paragraphs. """
 
         logger.debug("*** split (%f, %f)", availWidth, availHeight)
 
@@ -501,9 +480,7 @@ class Paragraph(Flowable):
         return splitted
 
     def draw(self):
-        """
-        Render the content of the paragraph.
-        """
+        """ Render the content of the paragraph. """
 
         logger.debug("*** draw")
 

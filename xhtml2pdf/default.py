@@ -23,7 +23,7 @@ PML_ERROR = "error"
 PML_EXCEPTION = "PML Exception"
 PML_PREFIX = "pdf:"
 
-#CLASS   = 1
+# CLASS   = 1
 BOOL = 2
 FONT = 3
 COLOR = 4
@@ -33,7 +33,7 @@ INT = 7
 STRING = 8
 BOX = 9
 POS = 10
-#STYLE   = 11
+# STYLE   = 11
 MUST = 23
 
 """
@@ -44,7 +44,7 @@ TAGS = {
 
     # FORMAT
 
-    #"document": (1, {
+    # "document": (1, {
     #    "format":               (["a0", "a1", "a2", "a3", "a4", "a5", "a6",
     #                              "b0", "b1", "b2", "b3", "b4", "b5", "b6",
     #                              "letter", "legal", "elevenseventeen"], "a4"),
@@ -74,7 +74,7 @@ TAGS = {
         "static": (BOOL, "0"),
     }),
 
-    #"static": (1, {
+    # "static": (1, {
     #    "name":                 STRING,
     #    "box":                  (BOX, MUST),
     #    "border":               (BOOL, "0"),
@@ -203,7 +203,7 @@ TAGS = {
                   "code128",
                   "ean13", "ean8",
                   "qr",
-                 ], "code128"),
+                  ], "code128"),
         "humanreadable": (STRING, "0"),
         "vertical": (STRING, "0"),
         "checksum": (STRING, "1"),
@@ -220,7 +220,7 @@ TAGS = {
         "rel": (STRING, ""),
         "type": (STRING, ""),
         "media": (STRING, "all"),
-        "charset": (STRING, "latin1"), # XXX Must be something else...
+        "charset": (STRING, "latin1"),  # XXX Must be something else...
     }),
 
     "meta": (0, {
@@ -249,12 +249,12 @@ TAGS = {
         "bgcolor": COLOR,
         "cellpadding": (SIZE, "0"),
         "cellspacing": (SIZE, "0"),
-        "repeat": (INT, "0"), # XXX Remove this! Set to 0
+        "repeat": (INT, "0"),  # XXX Remove this! Set to 0
         "width": STRING,
-        #"keepmaxwidth":         SIZE,
-        #"keepmaxheight":        SIZE,
-        #"keepmergespace":       (INT, 1),
-        #"keepmode":             (["error", "overflow", "shrink", "truncate"], "shrink"),
+        # "keepmaxwidth":         SIZE,
+        # "keepmaxheight":        SIZE,
+        # "keepmergespace":       (INT, 1),
+        # "keepmode":             (["error", "overflow", "shrink", "truncate"], "shrink"),
     }),
 
     "tr": (1, {

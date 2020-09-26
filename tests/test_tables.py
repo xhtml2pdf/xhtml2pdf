@@ -291,7 +291,8 @@ class PisaTagTableTestCase(unittest.TestCase):
 
     def setUp(self):
         self.element = self._getElement("rootElement")
-        self.attrs = AttrContainer({"border": "", "bordercolor": "", "cellpadding": "", "align": "", "repeat": "", "width": ""})
+        self.attrs = AttrContainer({"border": "", "bordercolor": "", "cellpadding": "", "align": "",
+                                    "repeat": "", "width": ""})
 
     def _getElement(self, tagName, body="filler"):
         dom = minidom.parseString("<{}>{}</{}>".format(tagName, body, tagName))

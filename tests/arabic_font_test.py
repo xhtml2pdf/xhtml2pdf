@@ -23,5 +23,5 @@ def render_pdf(filename, output_dir):
         sys.exit(1)
     return outfile
 
-render_pdf(filename,output_dir)
 
+render_pdf(filename, output_dir)

@@ -4,26 +4,27 @@ from setuptools import setup, find_packages
 from turbogears.finddata import find_package_data
 
 import os
+
 execfile(os.path.join("tgpisa", "release.py"))
 
-packages=find_packages()
+packages = find_packages()
 package_data = find_package_data(where='tgpisa',
-    package='tgpisa')
+                                 package='tgpisa')
 if os.path.isdir('locales'):
     packages.append('locales')
     package_data.update(find_package_data(where='locales',
-        exclude=('*.po',), only_in_packages=False))
+                                          exclude=('*.po',), only_in_packages=False))
 
 setup(
     name="tgpisa",
     version=version,
     # uncomment the following lines if you fill them out in release.py
-    #description=description,
-    #author=author,
-    #author_email=email,
-    #url=url,
-    #download_url=download_url,
-    #license=license,
+    # description=description,
+    # author=author,
+    # author_email=email,
+    # url=url,
+    # download_url=download_url,
+    # license=license,
 
     install_requires=[
         "TurboGears >= 1.0.4.3",
@@ -66,12 +67,12 @@ setup(
         # 'Framework :: TurboGears :: Widgets',
     ],
     test_suite='nose.collector',
-    entry_points = {
+    entry_points={
         'console_scripts': [
             'start-tgpisa = tgpisa.commands:start',
         ],
     },
     # Uncomment next line and create a default.cfg file in your project dir
     # if you want to package a default configuration in your egg.
-    #data_files = [('config', ['default.cfg'])],
-    )
+    # data_files = [('config', ['default.cfg'])],
+)
