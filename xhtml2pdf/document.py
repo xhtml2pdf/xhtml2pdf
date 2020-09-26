@@ -199,5 +199,5 @@ def frag_text_language_check(context):
                         text = y.text.strip()
                         if text:
                             detect_language_result = arabic_format(y.text, language)
-                            if detect_language_result != None:
+                            if detect_language_result is not None:
                                 y.text = detect_language_result
