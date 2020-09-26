@@ -177,7 +177,7 @@ class pisaTagTABLE(pisaTag):
         try:
             maxcols = max([len(row) for row in data] or [0])
         except ValueError:
-            log.warn(c.warning("<table> rows seem to be inconsistent"))
+            log.warning(c.warning("<table> rows seem to be inconsistent"))
             maxcols = [0]
 
         for i, row in enumerate(data):
@@ -206,7 +206,7 @@ class pisaTagTABLE(pisaTag):
             # t.hAlign = tdata.align
             c.addStory(t)
         else:
-            log.warn(c.warning("<table> is empty"))
+            log.warning(c.warning("<table> is empty"))
 
         # Cleanup and re-swap table data
         c.clearFrag()

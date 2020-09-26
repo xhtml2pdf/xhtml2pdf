@@ -155,7 +155,7 @@ class pisaCSSBuilder(css.CSSBuilder):
         fweight = str(data.get("font-weight", "normal")).lower()
         bold = fweight in ("bold", "bolder", "500", "600", "700", "800", "900")
         if not bold and fweight != "normal":
-            log.warn(
+            log.warning(
                 self.c.warning("@fontface, unknown value font-weight '%s'", fweight))
 
         # Font style
@@ -230,7 +230,7 @@ class pisaCSSBuilder(css.CSSBuilder):
                 pageBorder = data.get("-pdf-frame-border", None)
 
         if name in c.templateList:
-            log.warn(
+            log.warning(
                 self.c.warning("template '%s' has already been defined", name))
 
         if "-pdf-page-size" in data:
@@ -308,7 +308,7 @@ class pisaCSSBuilder(css.CSSBuilder):
                     fdata, c.pageSize[0], c.pageSize[1])
             x, y, w, h = getCoords(x, y, w, h, c.pageSize)
             if w <= 0 or h <= 0:
-                log.warn(
+                log.warning(
                     self.c.warning("Negative width or height of frame. Check @frame definitions."))
 
             frame = Frame(
@@ -334,13 +334,13 @@ class pisaCSSBuilder(css.CSSBuilder):
                 background, relative=self.c.cssParser.rootPath)
 
         if not frameList:
-            log.warn(
+            log.warning(
                 c.warning("missing explicit frame definition for content or just static frames"))
             fname, static, border, x, y, w, h, data = self._pisaAddFrame(name, data, first=True, border=pageBorder,
                                                                          size=c.pageSize)
             x, y, w, h = getCoords(x, y, w, h, c.pageSize)
             if w <= 0 or h <= 0:
-                log.warn(
+                log.warning(
                     c.warning("Negative width or height of frame. Check @page definitions."))
 
             if border or pageBorder:
@@ -804,17 +804,17 @@ class pisaContext(object):
                 nv = self.pathCallback(name, relative)
             else:
                 if path is None:
-                    log.warn(
+                    log.warning(
                         "Could not find main directory for getting filename. Use CWD")
                     path = os.getcwd()
                 nv = os.path.normpath(os.path.join(path, name))
                 if not (nv and os.path.isfile(nv)):
                     nv = None
             if nv is None:
-                log.warn(self.warning("File '%s' does not exist", name))
+                log.warning(self.warning("File '%s' does not exist", name))
             return nv
         except:
-            log.warn(
+            log.warning(
                 self.warning("getFile %r %r %r", name, relative, path), exc_info=1)
 
     def getFile(self, name, relative=None):
@@ -886,7 +886,7 @@ class pisaContext(object):
 
                 # check if font has already been registered
                 if fullFontName in self.fontList:
-                    log.warn(
+                    log.warning(
                         self.warning("Repeated font embed for %s, skip new embed ", fullFontName))
                 else:
 
@@ -926,7 +926,7 @@ class pisaContext(object):
 
                 # check if font has already been registered
                 if fullFontName in self.fontList:
-                    log.warn(
+                    log.warning(
                         self.warning("Repeated font embed for %s, skip new embed", fontName))
                 else:
 

@@ -334,11 +334,11 @@ def getSize(value, relative=0, base=None, default=0.0):
         try:
             value = float(value)
         except ValueError:
-            log.warn("getSize: Not a float %r", value)
+            log.warning("getSize: Not a float %r", value)
             return default  # value = 0
         return max(0, value)
     except Exception:
-        log.warn("getSize %r %r", original, relative, exc_info=1)
+        log.warning("getSize %r %r", original, relative, exc_info=1)
         return default
 
 
@@ -516,7 +516,7 @@ class pisaTempFile(object):
                 new_delegate.write(self.getvalue())
                 self._delegate = new_delegate
                 self.strategy = 1
-                log.warn("Created temporary file %s", self.name)
+                log.warning("Created temporary file %s", self.name)
             except:
                 self.capacity = - 1
 
