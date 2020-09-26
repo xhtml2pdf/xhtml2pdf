@@ -5,6 +5,7 @@ from xhtml2pdf import pisa
 filename = ('../tests/samples/ttf_file_metadata_same_name.html')
 output_dir = ('../tests/samples')
 
+
 def render_pdf(filename, output_dir):
     basename = os.path.basename(filename)
     outname = '%s.pdf' % os.path.splitext(basename)[0]
@@ -22,4 +23,5 @@ def render_pdf(filename, output_dir):
         sys.exit(1)
     return out_path
 
-render_pdf(filename,output_dir)
+
+render_pdf(filename, output_dir)
