@@ -52,9 +52,9 @@ class pisaPDF:
     def join(self, file=None):
         output = PyPDF2.PdfFileWriter()
         for pdffile in self.files:
-            input = PyPDF2.PdfFileReader(pdffile)
-            for pageNumber in six.moves.range(input.getNumPages()):
-                output.addPage(input.getPage(pageNumber))
+            input_file = PyPDF2.PdfFileReader(pdffile)
+            for pageNumber in six.moves.range(input_file.getNumPages()):
+                output.addPage(input_file.getPage(pageNumber))
 
         if file is not None:
             output.write(file)

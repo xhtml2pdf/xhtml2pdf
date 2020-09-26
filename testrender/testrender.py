@@ -20,19 +20,19 @@ def render_pdf(filename, output_dir, options):
         print('Rendering %s' % filename)
     basename = os.path.basename(filename)
     outname = '%s.pdf' % os.path.splitext(basename)[0]
-    outfile = os.path.join(output_dir, outname)
-    input = open(filename, 'rb')
-    output = open(outfile, 'wb')
+    out_path = os.path.join(output_dir, outname)
+    input_file = open(filename, 'rb')
+    output_file = open(out_path, 'wb')
 
-    result = pisa.pisaDocument(input, output, path=filename)
+    result = pisa.pisaDocument(input_file, output_file, path=filename)
 
-    input.close()
-    output.close()
+    input_file.close()
+    output_file.close()
 
     if result.err:
         print('Error rendering %s: %s' % (filename, result.err))
         sys.exit(1)
-    return outfile
+    return out_path
 
 
 def convert_to_png(infile, output_dir, options):
@@ -142,17 +142,17 @@ def create_html_file(results, template_file, output_dir, options):
                     '<h2>Generated from <a href="../%(src)s/%(html)s" class="">%(html)s</a></h2>\n'
                     % {'pdf': pdfname, 'html': htmlname, 'src': options.source_dir})
         for i, page in enumerate(pages):
-            vars = dict(((k, os.path.basename(v)) for k, v in page.items()
-                         if k != 'diff_value'))
-            vars['page'] = i + 1
+            var_dict = dict(((k, os.path.basename(v)) for k, v in page.items()
+                             if k != 'diff_value'))
+            var_dict['page'] = i + 1
             if 'diff' in page:
-                vars['diff_value'] = page['diff_value']
-                if vars['diff_value']:
-                    vars['class'] = 'result-page-diff error'
+                var_dict['diff_value'] = page['diff_value']
+                if var_dict['diff_value']:
+                    var_dict['class'] = 'result-page-diff error'
                 else:
                     if options.only_errors:
                         continue
-                    vars['class'] = 'result-page-diff'
+                    var_dict['class'] = 'result-page-diff'
                 html.append('<div class="%(class)s">\n'
                             '<h3>Page %(page)i</h3>\n'
 
@@ -175,7 +175,7 @@ def create_html_file(results, template_file, output_dir, options):
                             '<img src="%(ref_thumb)s"/></a>\n'
                             '</div>\n'
 
-                            '</div>\n' % vars)
+                            '</div>\n' % var_dict)
             else:
                 html.append('<div class="result-page">\n'
                             '<h3>Page %(page)i</h3>\n'
@@ -185,7 +185,7 @@ def create_html_file(results, template_file, output_dir, options):
                             '<img src="%(png_thumb)s"/></a>\n'
                             '</div>\n'
 
-                            '</div>\n' % vars)
+                            '</div>\n' % var_dict)
         html.append('</div>\n\n')
 
     now = datetime.datetime.now()

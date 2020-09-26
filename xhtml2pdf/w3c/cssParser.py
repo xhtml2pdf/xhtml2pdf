@@ -449,8 +449,8 @@ class CSSParser(object):
             properties = []
             try:
                 for propertyName, src in six.iteritems(kwAttributes):
-                    src, property = self._parseDeclarationProperty(src.strip(), propertyName)
-                    properties.append(property)
+                    src, property_var = self._parseDeclarationProperty(src.strip(), propertyName)
+                    properties.append(property_var)
 
             except self.ParseError as err:
                 err.setFullCSSSource(src, inline=True)
@@ -967,17 +967,17 @@ class CSSParser(object):
         properties = []
         src = src.lstrip()
         while src[:1] not in ('', ',', '{', '}', '[', ']', '(', ')', '@'):  # XXX @?
-            src, property = self._parseDeclaration(src)
+            src, property_var = self._parseDeclaration(src)
 
             # XXX Workaround for styles like "*font: smaller"
             if src.startswith("*"):
                 src = "-nothing-" + src[1:]
                 continue
 
-            if property is None:
+            if property_var is None:
                 src = src[1:].lstrip()
                 break
-            properties.append(property)
+            properties.append(property_var)
             if src.startswith(';'):
                 src = src[1:].lstrip()
             else:
@@ -1008,11 +1008,11 @@ class CSSParser(object):
                 # suppor a null transition, as well as an "=" transition
                 src = src[1:].lstrip()
 
-            src, property = self._parseDeclarationProperty(src, propertyName)
+            src, property_var = self._parseDeclarationProperty(src, propertyName)
         else:
-            property = None
+            property_var = None
 
-        return src, property
+        return src, property_var
 
     def _parseDeclarationProperty(self, src, propertyName):
         # expr
@@ -1022,8 +1022,8 @@ class CSSParser(object):
         important, src = self._getMatchResult(self.re_important, src)
         src = src.lstrip()
 
-        property = self.cssBuilder.property(propertyName, expr, important)
-        return src, property
+        property_var = self.cssBuilder.property(propertyName, expr, important)
+        return src, property_var
 
     def _parseExpression(self, src, returnList=False):
         """

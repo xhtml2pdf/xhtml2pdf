@@ -946,10 +946,10 @@ def get_default_asian_font():
     lower_font_list = []
     upper_font_list = []
 
-    list = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodings)
-    list = list.keys()
+    font_list = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodings)
+    font_list = font_list.keys()
 
-    for font in list:
+    for font in font_list:
         upper_font_list.append(font)
         lower_font_list.append(font.lower())
     default_asian_font = {lower_font_list[i]: upper_font_list[i] for i in range(len(lower_font_list))}
@@ -959,9 +959,9 @@ def get_default_asian_font():
 
 def set_asian_fonts(fontname):
 
-    list = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodings)
-    list = list.keys()
-    if fontname in list:
+    font_list = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodings)
+    font_list = font_list.keys()
+    if fontname in font_list:
         pdfmetrics.registerFont(UnicodeCIDFont(fontname))
     get_default_asian_font()
 

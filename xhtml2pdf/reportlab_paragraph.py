@@ -21,7 +21,7 @@ from reportlab.lib.abag import ABag
 
 basestring = six.text_type
 unicode = six.text_type  # python 3
-str = six.text_type
+str_1 = six.text_type
 ###############################################################
 ###############################################################
 ###############################################################
@@ -1731,7 +1731,7 @@ if __name__ == '__main__':  # NORUNTESTS
             else:
                 words = line[1]
             nwords = len(words)
-            print('line%d: %d(%s)\n  ') % (l, nwords, str(getattr(line, 'wordCount', 'Unknown'))),
+            print('line%d: %d(%s)\n  ') % (l, nwords, str_1(getattr(line, 'wordCount', 'Unknown'))),
             for w in six.moves.range(nwords):
                 print("%d:'%s'") % (w, getattr(words[w], 'text', words[w])),
             print()
@@ -1774,7 +1774,7 @@ if __name__ == '__main__':  # NORUNTESTS
 
 
     def flagged(i, TESTS=TESTS):
-        return 'all' in TESTS or '*' in TESTS or str(i) in TESTS
+        return 'all' in TESTS or '*' in TESTS or str_1(i) in TESTS
 
 
     styleSheet = getSampleStyleSheet()

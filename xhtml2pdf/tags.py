@@ -446,7 +446,7 @@ if 0:
                 width = 100
                 height = 12
             c.addStory(xhtml2pdf_reportlab.PmlInput(attr.name,
-                                                    type=attr.type,
+                                                    type_1=attr.type,
                                                     default=attr.value,
                                                     width=width,
                                                     height=height,
@@ -474,7 +474,7 @@ if 0:
 
         def _render(self, c, attr):
             c.addStory(xhtml2pdf_reportlab.PmlInput(attr.name,
-                                                    type="select",
+                                                    type_1="select",
                                                     default=c.select_options[0],
                                                     options=c.select_options,
                                                     width=100,
