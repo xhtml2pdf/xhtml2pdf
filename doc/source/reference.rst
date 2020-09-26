@@ -239,6 +239,24 @@ To define other shapes you may do like this:
        font-style: italic;
     }
 
+
+Using font-family name as TTF face-name
+---------------------------------------
+
+In specific situations you may need to update the ``face-name`` of a ttf file,
+you can do it by adding ``#`` at the beginning of the ``font-family name`` to select
+the new ``face-name``.
+In order to select the new ``face-name``, check the following example:
+
+::
+
+    /* put in quotes and add # at the beginning */
+    @font-face {
+        font-family: '#MY';
+        src: url('font/Microsoft YaHei.ttf')
+    }
+
+
 Outlines/ Bookmarks
 ------------------------
 

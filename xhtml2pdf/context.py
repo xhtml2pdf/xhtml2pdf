@@ -870,6 +870,7 @@ class pisaContext(object):
             # XXX Problems with unicode here
             fontAlias = [str(x) for x in fontAlias]
 
+            ffname = names
             fontName = fontAlias[0]
             parts = src.split(".")
             baseName, suffix = ".".join(parts[: - 1]), parts[- 1]
@@ -888,7 +889,13 @@ class pisaContext(object):
 
                     # Register TTF font and special name
                     filename = file.getNamedFile()
-                    pdfmetrics.registerFont(TTFont(fullFontName, filename))
+                    file = TTFont(fullFontName, filename)
+                    if not fontName.startswith('#'):
+                        pdfmetrics.registerFont(file)
+                    else:
+                        ffname = ffname.strip('#')
+                        file.face.name = ffname.encode()
+                        pdfmetrics.registerFont(file)
 
                     # Add or replace missing styles
                     for bold in (0, 1):
