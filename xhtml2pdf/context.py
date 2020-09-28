@@ -11,7 +11,7 @@ import xhtml2pdf.default
 import xhtml2pdf.parser
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.fonts import addMapping
-from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -213,53 +213,13 @@ class pisaCSSBuilder(css.CSSBuilder):
                 return func(data[attr])
             return default
 
-    def atPage(self, name, pseudopage, declarations):
+    def atPage(self, name, pseudopage, data, isLandscape, pageBorder):
         c = self.c
-        data = {}
         name = name or "body"
-        pageBorder = None
-
-        if declarations:
-            result = self.ruleset([self.selector('*')], declarations)
-
-            if declarations:
-                try:
-                    data = result[0].values()[0]
-                except Exception:
-                    data = result[0].popitem()[1]
-                pageBorder = data.get("-pdf-frame-border", None)
 
         if name in c.templateList:
             log.warn(
                 self.c.warning("template '%s' has already been defined", name))
-
-        if "-pdf-page-size" in data:
-            c.pageSize = xhtml2pdf.default.PML_PAGESIZES.get(
-                str(data["-pdf-page-size"]).lower(), c.pageSize)
-
-        isLandscape = False
-        if "size" in data:
-            size = data["size"]
-            if type(size) is not ListType:
-                size = [size]
-            sizeList = []
-            for value in size:
-                valueStr = str(value).lower()
-                if type(value) is TupleType:
-                    sizeList.append(getSize(value))
-                elif valueStr == "landscape":
-                    isLandscape = True
-                elif valueStr == "portrait":
-                    isLandscape = False
-                elif valueStr in xhtml2pdf.default.PML_PAGESIZES:
-                    c.pageSize = xhtml2pdf.default.PML_PAGESIZES[valueStr]
-                else:
-                    raise RuntimeError("Unknown size value for @page")
-
-            if len(sizeList) == 2:
-                c.pageSize = tuple(sizeList)
-            if isLandscape:
-                c.pageSize = landscape(c.pageSize)
 
         padding_top = self._getFromData(data, 'padding-top', 0, getSize)
         padding_left = self._getFromData(data, 'padding-left', 0, getSize)
