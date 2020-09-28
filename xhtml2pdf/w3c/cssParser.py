@@ -17,7 +17,7 @@ from __future__ import unicode_literals
 
 import xhtml2pdf.default
 from xhtml2pdf.util import getSize
-from reportlab.lib.pagesizes import landscape, portrait
+from reportlab.lib.pagesizes import landscape
 
 try:
     from future_builtins import filter
