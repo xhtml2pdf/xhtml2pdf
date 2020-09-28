@@ -17,7 +17,7 @@ from __future__ import unicode_literals
 
 import xhtml2pdf.default
 from xhtml2pdf.util import getSize
-from reportlab.lib.pagesizes import landscape, portrait
+from reportlab.lib.pagesizes import landscape
 
 try:
     from future_builtins import filter
@@ -751,6 +751,11 @@ class CSSParser(object):
             '{' S* declaration [ ';' S* declaration ]* '}' S*
         ;
         """
+
+        data = {}
+        pageBorder = None
+        isLandscape = False
+
         ctxsrc = src
         src = src[len('@page'):].lstrip()
         page, src = self._getIdent(src)
