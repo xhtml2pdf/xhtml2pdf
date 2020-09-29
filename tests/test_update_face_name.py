@@ -1,3 +1,4 @@
+
 from io import BytesIO
 import html5lib
 import unittest
@@ -73,6 +74,8 @@ class ttf_with_same_face_name(unittest.TestCase):
 
         font_family = rules[0][1].get('font-family').strip('#')
         font_pdf = pdf.fontList.get('my').upper()
+        if hasattr(font_pdf,'upper'):
+            font_pdf.upper()
         self.assertEqual(font_family,font_pdf)
 
 
