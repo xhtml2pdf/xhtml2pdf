@@ -8,6 +8,7 @@ from xhtml2pdf.document import pisaDocument
 from reportlab.pdfbase import pdfmetrics,_cidfontdata
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 
+
 __doc__ = """
         asian_font_support_tests provides us auxiliary functions to check 
         the correct operation of Asian fonts included in Report Lab.
@@ -21,7 +22,6 @@ __doc__ = """
     """
 
 class asian_font_support_tests(unittest.TestCase):
-
 
     HTML_CONTENT = """
     <html>
@@ -92,7 +92,7 @@ class asian_font_support_tests(unittest.TestCase):
         html = self.HTML_CONTENT
         real_asian_font = {}
         result = BytesIO()
-        pdf = pisaDocument(BytesIO(html.encode('UTF-8')), result)
+        pdf = pisaDocument(BytesIO(html.encode('utf-8')), result)
 
         for font in ASIAN_FONT_LIST_USED:
             font_value = ASIAN_FONT_LIST_USED.get(font)

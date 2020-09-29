@@ -4,6 +4,7 @@ import html5lib
 import unittest
 from xhtml2pdf.document import pisaDocument
 from xhtml2pdf.w3c.cssDOMElementInterface import CSSDOMElementInterface
+import os
 
 
 __doc__ = """
@@ -16,6 +17,10 @@ __doc__ = """
 
 class ttf_with_same_face_name(unittest.TestCase):
 
+    tests_folder = os.path.dirname(os.path.realpath(__file__))
+    fontBold = os.path.join(tests_folder, 'samples', 'font', 'Microsoft YaHei Bold.ttf')
+    fontRegular = os.path.join(tests_folder, 'samples', 'font', 'Microsoft YaHei.ttf')
+
     HTML_CONTENT = """
     
     <html>
@@ -26,12 +31,12 @@ class ttf_with_same_face_name(unittest.TestCase):
 
     @font-face {
         font-family: MYB;
-        src: url('../samples/font/Microsoft YaHei Bold.ttf')
+        src: url('../../tests/samples/font/Microsoft YaHei Bold.ttf')
     }
 
     @font-face {
         font-family: '#MY';
-        src: url('../samples/font/Microsoft YaHei.ttf')
+        src: url('../../tests/samples/font/Microsoft YaHei.ttf')
     }
 
     .regular{
