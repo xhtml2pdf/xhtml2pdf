@@ -1,3 +1,5 @@
+#-*- coding: utf-8 -*-
+import os
 from io import BytesIO
 
 import html5lib
@@ -11,42 +13,39 @@ __doc__="""
 
 class arabic_font_support_tests(unittest.TestCase):
 
-    HTML_CONTENT = """
+    tests_folder = os.path.dirname(os.path.realpath(__file__))
+    ttf_pathD = os.path.join(tests_folder, 'samples', 'font', 'DejaVuSans.ttf')
+
+    ffD = "@font-face {{font-family: DejaVuSans;src: url(\'{ttf}\');}}".format(ttf=ttf_pathD)
+    bod = ".body{font-family:DejaVuSans;background-color: red;"
+    pExtra = "p.extra {background-color: yellow;line-height: 200%;}"
+    div = "div {background-color: orange;}"
+    tab = "table {border: 2px solid black;}"
+    h1 = "h1 {page-break-before: always;}"
+    tr ="tr {background-color:red;}"
+
+    HTML_CONTENT = u"""
     <html>
     <head>
     <title></title>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
     <style type="text/css">
 
-	    @font-face {
-            font-family: DejaVuSans;
-            src: url('../samples/font/DejaVuSans.ttf')
-            }
+	    {ffd}
 
-        body {
-    	    font-family: DejaVuSans;
-		    background-color: red;
-	    }
-	    p.extra {
-		    background-color: yellow;
-		    line-height: 200%;
-	    }
-	    div {
-		    background-color: orange;
-	    }
-	    table {
-		    border: 2px solid black;
-	    }
-	    h1 {
-		    page-break-before: always;
-	    }
-
-	    tr {
-	    background-color:red;
-	    }
-
-
+        {bod}
+        
+	    {pEx}
+	    
+	    {div}
+	    
+	    {tab}
+	    
+        {h1}
+        
+        {tr}
+	    
     </style>
     </head>
 
@@ -116,7 +115,7 @@ class arabic_font_support_tests(unittest.TestCase):
     </body>
     </html>
     """
-
+    html = HTML_CONTENT.format(ffd=ffD,bod=bod,pEx=pExtra,div=div,tab=tab,h1=h1,tr=tr)
 
     def test_arabic_check_pdf_language_tag(self):
         """
@@ -139,8 +138,8 @@ class arabic_font_support_tests(unittest.TestCase):
         html = self.HTML_CONTENT
         res = False
         result = BytesIO()
-
         pdf = pisaDocument(BytesIO(html.encode('utf-8')), result)
+
         if hasattr(pdf,'language'):
             res = True
         self.assertTrue(res)

@@ -1,3 +1,4 @@
+#-*- coding: utf-8 -*-
 from io import BytesIO
 from copy import copy
 import unittest
@@ -5,6 +6,7 @@ import reportlab
 from xhtml2pdf.document import pisaDocument
 from reportlab.pdfbase import pdfmetrics,_cidfontdata
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
+
 
 __doc__ = """
         asian_font_support_tests provides us auxiliary functions to check 
@@ -20,12 +22,11 @@ __doc__ = """
 
 class asian_font_support_tests(unittest.TestCase):
 
-
-    HTML_CONTENT = """
+    HTML_CONTENT = u"""
     <html>
     <head>
     <title></title>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <style type="text/css">
 
     .jap{
@@ -65,13 +66,11 @@ class asian_font_support_tests(unittest.TestCase):
 
         return default_asian_font
 
-
     def set_asian_fonts(self,fontname):
         list = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodings)
         list = list.keys()
         if fontname in list:
             pdfmetrics.registerFont(UnicodeCIDFont(fontname))
-
 
     def test_asian_font_int_pdf(self):
 
