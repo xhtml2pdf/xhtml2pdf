@@ -1,65 +1,50 @@
 XHTML2PDF
 =========
 
-
-.. image:: https://travis-ci.org/xhtml2pdf/xhtml2pdf.svg
-    :target: https://travis-ci.org/xhtml2pdf/xhtml2pdf
-
-.. image:: https://ci.appveyor.com/api/projects/status/y2mj843lpptwars9/branch/master?svg=true
-    :target: https://ci.appveyor.com/project/LegoStormtroopr/xhtml2pdf/branch/master
-
-.. image:: https://coveralls.io/repos/xhtml2pdf/xhtml2pdf/badge.svg?branch=develop&service=github
-        :target: https://coveralls.io/github/xhtml2pdf/xhtml2pdf?branch=develop
-        :alt: Coveralls
-
-.. image:: https://badge.fury.io/py/xhtml2pdf.svg
+.. image:: https://img.shields.io/pypi/v/xhtml2pdf?label=PyPI&logo=PyPI&logoColor=white&color=blue
    :target: https://pypi.python.org/pypi/xhtml2pdf
+    :alt: PyPI version
 
-.. image:: https://readthedocs.org/projects/xhtml2pdf/badge/?version=latest
+.. image:: https://img.shields.io/pypi/pyversions/xhtml2pdf?label=Python&logo=Python&logoColor=white
+   :target: https://www.python.org/downloads
+    :alt: Python versions
+
+.. image:: https://img.shields.io/travis/xhtml2pdf/xhtml2pdf/master.svg?label=Travis%20CI&logo=Travis&logoColor=white
+    :target: https://travis-ci.org/xhtml2pdf/xhtml2pdf
+    :alt: Travis CI
+
+.. image:: https://img.shields.io/appveyor/build/LegoStormtroopr/xhtml2pdf?label=AppVeyor&logo=appveyor&logoColor=white
+    :target: https://ci.appveyor.com/project/LegoStormtroopr/xhtml2pdf/branch/master
+    :alt: AppVeyor
+
+.. image:: https://img.shields.io/coveralls/github/xhtml2pdf/xhtml2pdf?label=Coveralls&logo=Coveralls&logoColor=white
+    :target: https://coveralls.io/github/xhtml2pdf/xhtml2pdf
+    :alt: Coveralls
+
+.. image:: https://img.shields.io/readthedocs/xhtml2pdf?label=Read%20the%20Docs&logo=read%20the%20docs&logoColor=white
    :target: http://xhtml2pdf.readthedocs.io/en/latest/?badge=latest
-   :alt: Documentation Status
+   :alt: Read the Docs
 
-The current release of xhtml2pdf is xhtml2pdf **0.2.4**, which is the first stable
-version that has Python 3 support. 
-As with all open-source software, its use in production depends on many factors,
-so be aware that you may find issues in some cases.
+|
+
+The current release of xhtml2pdf is **xhtml2pdf 0.2.4**. As with all open-source software, its use in production depends on many factors, so be aware that you may find issues in some cases.
+
 **Big thanks** to everyone who has worked on this project so far and to those who help maintain it.
-
-
-What else can you use instead?
-==============================
-
-You can try `WeasyPrint <http://weasyprint.org/>`__. The codebase is pretty, it has different features, it
-does a lot of what xhtml2pdf does and it is easier to use in many circumstances.
-
-
-Documentation?
-==============
-
-The documentation of xhtml2pdf is available at `Readthedocs <http://xhtml2pdf.readthedocs.io/>`__.
-And we could use your help improving it! A good place to start is ``doc/usage.rst``.
-
-
-Call for testing
-================
-
-This project is heavily dependent on getting its test coverage up!
-Currently, Python 3 support is being worked on and many refactors and suggestions are potentially coming in.
-Furthermore, parts of the codebase could do well with cleanups and refactoring.
-
-If you benefit from xhtml2pdf, perhaps look at the `test coverage <https://coveralls.io/github/xhtml2pdf/xhtml2pdf?branch=master>`__ and identify parts that are yet untouched.
-
 
 About
 =====
 
-xhtml2pdf is a HTML to PDF converter using the ReportLab Toolkit,
-html5lib and pyPdf2. It supports HTML 5 and CSS 2.1 (and some of CSS 3).
-It is completely written in pure Python, so it is platform independent.
+xhtml2pdf is a HTML to PDF converter using Python, the ReportLab Toolkit, html5lib and PyPDF2. It supports HTML5 and CSS 2.1 (and some of CSS 3). It is completely written in pure Python, so it is platform independent.
 
-The main benefit of this tool is that a user with web skills like HTML and CSS
-is able to generate PDF templates very quickly without learning new
-technologies.
+The main benefit of this tool is that a user with web skills like HTML and CSS is able to generate PDF templates very quickly without learning new technologies.
+
+
+Documentation
+==============
+
+The documentation of xhtml2pdf is available at `Read the Docs <http://xhtml2pdf.readthedocs.io>`__.
+
+And we could use your help improving it! A good place to start is ``doc/source/usage.rst``.
 
 
 Installation
@@ -75,8 +60,21 @@ Requirements
 
 Python 2.7+. Only Python 3.4+ is tested and guaranteed to work.
 
-All additional requirements are listed in the ``requirements.txt`` file and are
-installed automatically using the ``pip install xhtml2pdf`` method.
+All additional requirements are listed in the ``requirements.txt`` file and are installed automatically using the ``pip install xhtml2pdf`` method.
+
+
+Alternatives
+==============================
+
+You can try `WeasyPrint <http://weasyprint.org>`__. The codebase is pretty, it has different features and it does a lot of what xhtml2pdf does.
+
+
+Call for testing
+================
+
+This project is heavily dependent on getting its test coverage up! Furthermore, parts of the codebase could do well with cleanups and refactoring.
+
+If you benefit from xhtml2pdf, perhaps look at the `test coverage <https://coveralls.io/github/xhtml2pdf/xhtml2pdf>`__ and identify parts that are yet untouched.
 
 
 Development environment
@@ -86,17 +84,15 @@ Development environment
 
     sudo easy_install pip
 
-   For more information about ``pip`` refer to http://www.pip-installer.org/.
+   For more information about ``pip`` refer to http://www.pip-installer.org
 
-#. We will recommend using ``virtualenv`` for development. It's great to have a separate environment for
-   each project, keeping the dependencies for multiple projects separated::
+#. We will recommend using ``virtualenv`` for development. It's great to have a separate environment for each project, keeping the dependencies for multiple projects separated::
 
     sudo pip install virtualenv
 
-   For more information about ``virtualenv`` refer to http://www.virtualenv.org/
+   For more information about ``virtualenv`` refer to http://www.virtualenv.org
 
-#. Create a virtualenv for the project. This can be inside the project directory, but cannot be under
-   version control::
+#. Create a virtualenv for the project. This can be inside the project directory, but cannot be under version control::
 
     virtualenv --distribute xhtml2pdfenv --python=python2
 
@@ -104,7 +100,7 @@ Development environment
 
     source xhtml2pdfenv/bin/activate
 
-   Later to deactivate use::
+   Later to deactivate it use::
 
     deactivate
 
@@ -126,8 +122,7 @@ Development environment
 Python integration
 ==================
 
-Some simple demos of how to integrate xhtml2pdf into
-a Python program may be found here: ``test/simple.py``
+Some simple demos of how to integrate xhtml2pdf into a Python program may be found here: ``test/simple.py``
 
 
 Running tests
@@ -136,7 +131,7 @@ Running tests
 Two different test suites are available to assert that xhtml2pdf works reliably:
 
 #. Unit tests. The unit testing framework is currently minimal, but is being
-   improved on a daily basis (contributions welcome). They should run in the
+   improved on a regular basis (contributions welcome). They should run in the
    expected way for Python's unittest module, i.e.::
 
         nosetests --with-coverage (or your personal favorite)
@@ -148,18 +143,13 @@ Two different test suites are available to assert that xhtml2pdf works reliably:
 Contact
 =======
 
-This project is community-led! To strengthen it, please hang out on IRC #xhtml2pdf (Freenode)
-or join `our maling list <http://groups.google.com/group/xhtml2pdf>`__.
-
-* IRC: #xhtml2pdf on freenode
-* Mailing list: xhtml2pdf@googlegroups.com
-* Google group: http://groups.google.com/group/xhtml2pdf
+This project is community-led! Feel free to open up issues on GitHub about new ideas to improve xhtml2pdf.
 
 
 History
 =======
 
-This are the major milestones and the maintainers of the project:
+These are the major milestones and the maintainers of the project:
 
 * 2000-2007, commercial project, spirito.de, written by Dirk Holtwich
 * 2007-2010 Dirk Holtwich (project named "Pisa", project released as GPL)
@@ -178,9 +168,7 @@ Copyright 2010 Dirk Holtwick, holtwick.it
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
+You may obtain a copy of the License at: http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
