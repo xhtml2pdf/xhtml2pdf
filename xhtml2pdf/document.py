@@ -167,7 +167,7 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                         pagebg.mergePage(page)
                         page = pagebg
                     else:
-                        log.warn(context.warning(
+                        log.warning(context.warning(
                             "Background PDF %s doesn't exist.", bg))
                     output.addPage(page)
                     ctr += 1
@@ -177,7 +177,7 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                 # Found a background? So leave loop after first occurence
                 break
     else:
-        log.warn(context.warning("PyPDF2 not installed!"))
+        log.warning(context.warning("PyPDF2 not installed!"))
 
     # Get the resulting PDF and write it to the file object
     # passed from the caller

@@ -173,7 +173,7 @@ def splitBorder(parts):
     width = style = color = None
 
     if len(parts) > 3:
-        log.warn("To many elements for border style %r", parts)
+        log.warning("To many elements for border style %r", parts)
 
     for part in parts:
         # Width
