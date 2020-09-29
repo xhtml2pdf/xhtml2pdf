@@ -70,7 +70,7 @@ installed automatically using the ``pip install xhtml2pdf`` method.
 Alternatives
 ==============================
 
-You can try `WeasyPrint <http://weasyprint.org>`__. The codebase is pretty, it has different features, it does a lot
+You can try `WeasyPrint <http://weasyprint.org>`__. The codebase is pretty, it has different features and it does a lot
 of what xhtml2pdf does.
 
 
