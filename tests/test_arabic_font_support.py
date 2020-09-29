@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# coding=utf-8
+#-*- coding: utf-8 -*-
 from io import BytesIO
 
 import html5lib
@@ -142,7 +141,7 @@ class arabic_font_support_tests(unittest.TestCase):
         res = False
         result = BytesIO()
 
-        pdf = pisaDocument(BytesIO(html.encode('utf-8')), result)
+        pdf = pisaDocument(BytesIO(html), result)
         if hasattr(pdf,'language'):
             res = True
         self.assertTrue(res)
