@@ -2,11 +2,11 @@ XHTML2PDF
 =========
 
 .. image:: https://img.shields.io/pypi/v/xhtml2pdf?label=PyPI&logo=PyPI&logoColor=white&color=blue
-   :target: https://pypi.python.org/pypi/xhtml2pdf
+    :target: https://pypi.python.org/pypi/xhtml2pdf
     :alt: PyPI version
 
 .. image:: https://img.shields.io/pypi/pyversions/xhtml2pdf?label=Python&logo=Python&logoColor=white
-   :target: https://www.python.org/downloads
+    :target: https://www.python.org/downloads
     :alt: Python versions
 
 .. image:: https://img.shields.io/travis/xhtml2pdf/xhtml2pdf/master.svg?label=Travis%20CI&logo=Travis&logoColor=white
