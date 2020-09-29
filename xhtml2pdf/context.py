@@ -19,7 +19,7 @@ from reportlab.platypus.frames import Frame, ShowBoundaryValue
 from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
 from xhtml2pdf.util import (copy_attrs, getColor, getCoords, getFile,
                             getFrameDimensions, getSize, pisaFileObject,
-                            set_value, set_asian_fonts)
+                            set_value, set_asian_fonts, arabic_format, frag_text_language_check)
 
 from xhtml2pdf.w3c import css
 from xhtml2pdf.xhtml2pdf_reportlab import (PmlPageCount, PmlPageTemplate,
@@ -637,6 +637,11 @@ class pisaContext(object):
                     self.fragList.append(blank)
 
                 self.dumpPara(self.fragAnchor + self.fragList, style)
+                if hasattr(self, 'language'):
+                    language = self.__getattribute__('language')
+                    detect_language_result = arabic_format(self.text, language)
+                    if detect_language_result != None:
+                        self.text = detect_language_result
                 para = PmlParagraph(
                     self.text,
                     style,
@@ -747,6 +752,9 @@ class pisaContext(object):
                     self._appendFrag(frag)
                 else:
                     frag.text = " ".join(("x" + text + "x").split())[1: - 1]
+                    language_check = frag_text_language_check(self, frag.text)
+                    if language_check:
+                        frag.text = language_check
                     if self.fragStrip:
                         frag.text = frag.text.lstrip()
                         if frag.text:
@@ -864,7 +872,8 @@ class pisaContext(object):
             src = file.uri
 
             log.debug("Load font %r", src)
-
+            if names.startswith("#"):
+                names = names.strip('#')
             if type(names) is ListType:
                 fontAlias = names
             else:
@@ -893,12 +902,7 @@ class pisaContext(object):
                     # Register TTF font and special name
                     filename = file.getNamedFile()
                     file = TTFont(fullFontName, filename)
-                    if not fontName.startswith('#'):
-                        pdfmetrics.registerFont(file)
-                    else:
-                        ffname = ffname.strip('#')
-                        file.face.name = ffname.encode()
-                        pdfmetrics.registerFont(file)
+                    pdfmetrics.registerFont(file)
 
                     # Add or replace missing styles
                     for bold in (0, 1):

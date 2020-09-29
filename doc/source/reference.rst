@@ -17,21 +17,21 @@ Valid size syntax and values:
 ::
 
     Syntax: @page { size: <type> <orientation>; }
-    
+
     Where <type> is one of:
     a0 .. a6
     b0 .. b6
     elevenseventeen
     legal
     letter
-    
+
     And <orientation> is one of:
     landscape
     portrait
-    
+
     Defaults to:
     size: a4 portrait;
-    
+
 
 Supported @frame properties:
 -----------------------------
@@ -240,13 +240,13 @@ To define other shapes you may do like this:
     }
 
 
-Using font-family name as TTF face-name
+Using TFF files with the same face-name
 ---------------------------------------
 
-In specific situations you may need to update the ``face-name`` of a ttf file,
-you can do it by adding ``#`` at the beginning of the ``font-family name`` to select
-the new ``face-name``.
-In order to select the new ``face-name``, check the following example:
+In specific situations we have to used ttf files with the same face name,
+but working with these kind of files make us deal with some issues, to
+avoid it you have to add ``#`` at the beginning of the ``font-family name``.
+Please check the following example:
 
 ::
 
@@ -311,7 +311,7 @@ simple example for a nice looking CSS:
     pdftoc.pdftoclevel2 {
         margin-left: 2em;
         font-style: italic;
-    } 
+    }
 
 Tables
 --------
@@ -376,7 +376,7 @@ the PDF as in the browser. To adjust this you may want to use the
 
 ::
 
-    img { zoom: 80%; }  
+    img { zoom: 80%; }
 
 Position/ floating
 ------------------
@@ -391,9 +391,9 @@ Barcodes
 You can embed barcodes automatically in a document. Various barcode
 formats are supported through the ``type`` property. If you want the
 original barcode text to be appeared on the document, simply add
-``humanreadable="1"``, otherwise simply omit this property. Some barcode 
+``humanreadable="1"``, otherwise simply omit this property. Some barcode
 formats have a checksum as an option and it will be on by default, set
-``checksum="0"`` to override. 
+``checksum="0"`` to override.
 Alignment
 is achieved through ``align`` property and available values are any of
 ``"baseline", "top", "middle", "bottom"`` whereas default is
@@ -480,5 +480,3 @@ is passed via the ``name`` property and refers to
 ::
 
     <pdf:language name="languegeName">
-
-
