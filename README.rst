@@ -1,6 +1,14 @@
 XHTML2PDF
 =========
 
+.. image:: https://img.shields.io/pypi/v/xhtml2pdf?label=PyPI&logo=PyPI&logoColor=white&color=blue
+   :target: https://pypi.python.org/pypi/xhtml2pdf
+    :alt: PyPI version
+
+.. image:: https://img.shields.io/pypi/pyversions/xhtml2pdf?label=Python&logo=Python&logoColor=white
+   :target: https://www.python.org/downloads
+    :alt: Python versions
+
 .. image:: https://img.shields.io/travis/xhtml2pdf/xhtml2pdf/master.svg?label=Travis%20CI&logo=Travis&logoColor=white
     :target: https://travis-ci.org/xhtml2pdf/xhtml2pdf
     :alt: Travis CI
@@ -12,14 +20,6 @@ XHTML2PDF
 .. image:: https://img.shields.io/coveralls/github/xhtml2pdf/xhtml2pdf?label=Coveralls&logo=Coveralls&logoColor=white
     :target: https://coveralls.io/github/xhtml2pdf/xhtml2pdf
     :alt: Coveralls
-
-.. image:: https://img.shields.io/pypi/v/xhtml2pdf?label=PyPI&logo=PyPI&logoColor=white&color=blue
-   :target: https://pypi.python.org/pypi/xhtml2pdf
-    :alt: PyPI version
-
-.. image:: https://img.shields.io/pypi/pyversions/xhtml2pdf?label=Python&logo=Python&logoColor=white
-   :target: https://www.python.org/downloads
-    :alt: Python versions
 
 .. image:: https://img.shields.io/readthedocs/xhtml2pdf?label=Read%20the%20Docs&logo=read%20the%20docs&logoColor=white
    :target: http://xhtml2pdf.readthedocs.io/en/latest/?badge=latest
