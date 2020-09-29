@@ -27,7 +27,7 @@ class asian_font_support_tests(unittest.TestCase):
     <html>
     <head>
     <title></title>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <style type="text/css">
 
     .jap{
@@ -92,7 +92,7 @@ class asian_font_support_tests(unittest.TestCase):
         html = self.HTML_CONTENT
         real_asian_font = {}
         result = BytesIO()
-        pdf = pisaDocument(BytesIO(html.encode('utf-8')), result)
+        pdf = pisaDocument(BytesIO(html.encode('UTF-8')), result)
 
         for font in ASIAN_FONT_LIST_USED:
             font_value = ASIAN_FONT_LIST_USED.get(font)

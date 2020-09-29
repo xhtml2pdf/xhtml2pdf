@@ -16,7 +16,7 @@ class arabic_font_support_tests(unittest.TestCase):
     <html>
     <head>
     <title></title>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
     <style type="text/css">
 

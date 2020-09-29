@@ -76,7 +76,7 @@ class ttf_with_same_face_name(unittest.TestCase):
         font_pdf = pdf.fontList.get('my').upper()
         if hasattr(font_pdf,'upper'):
             font_pdf.upper()
-            
+
         self.assertEqual(font_family,font_pdf)
 
 
