@@ -22,7 +22,7 @@ __doc__ = """
 
 class asian_font_support_tests(unittest.TestCase):
 
-    HTML_CONTENT = """
+    HTML_CONTENT = u"""
     <html>
     <head>
     <title></title>

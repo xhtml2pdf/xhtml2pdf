@@ -12,7 +12,7 @@ __doc__="""
 
 class arabic_font_support_tests(unittest.TestCase):
 
-    HTML_CONTENT = """
+    HTML_CONTENT = u"""
     <html>
     <head>
     <title></title>
@@ -141,7 +141,7 @@ class arabic_font_support_tests(unittest.TestCase):
         res = False
         result = BytesIO()
         pdf = pisaDocument(BytesIO(html.encode('utf-8')), result)
-        
+
         if hasattr(pdf,'language'):
             res = True
         self.assertTrue(res)
