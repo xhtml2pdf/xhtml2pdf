@@ -31,12 +31,12 @@ class ttf_with_same_face_name(unittest.TestCase):
 
     @font-face {
         font-family: MYB;
-        src: url('./samples/font/Microsoft YaHei Bold.ttf')
+        src: url('samples/font/Microsoft YaHei Bold.ttf')
     }
 
     @font-face {
         font-family: '#MY';
-        src: url('./samples/font/Microsoft YaHei.ttf')
+        src: url('samples/font/Microsoft YaHei.ttf')
     }
 
     .regular{

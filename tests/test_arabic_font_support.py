@@ -140,8 +140,6 @@ class arabic_font_support_tests(unittest.TestCase):
         html = self.HTML_CONTENT
         res = False
         result = BytesIO()
-        
-
         pdf = pisaDocument(BytesIO(html), result)
         if hasattr(pdf,'language'):
             res = True
