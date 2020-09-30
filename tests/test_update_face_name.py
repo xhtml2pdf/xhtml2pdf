@@ -75,10 +75,9 @@ class ttf_with_same_face_name(unittest.TestCase):
         rules = pdf.cssCascade.findCSSRulesFor(spanElement, attr_name)
 
         font_family = rules[0][1].get('font-family').strip('#')
-        font_pdf = pdf.fontList.get('my').upper()
-        if hasattr(font_pdf,'upper'):
-            font_pdf.upper()
-
+        font_pdf = pdf.fontList.get('my')
+        if isinstance(font_pdf, str):
+            font_pdf = font_pdf.upper()
         self.assertEqual(font_family,font_pdf)
 
 
