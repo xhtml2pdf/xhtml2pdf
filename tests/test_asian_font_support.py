@@ -91,7 +91,7 @@ class asian_font_support_tests(unittest.TestCase):
         html = self.HTML_CONTENT
         real_asian_font = {}
         result = BytesIO()
-        pdf = pisaDocument(BytesIO(html), result)
+        pdf = pisaDocument(BytesIO(html.encode('utf-8')), result)
 
         for font in ASIAN_FONT_LIST_USED:
             font_value = ASIAN_FONT_LIST_USED.get(font)

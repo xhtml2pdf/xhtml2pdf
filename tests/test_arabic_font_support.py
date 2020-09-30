@@ -128,7 +128,7 @@ class arabic_font_support_tests(unittest.TestCase):
         html = self.HTML_CONTENT
 
         parser = html5lib.HTMLParser(tree=html5lib.treebuilders.getTreeBuilder("dom"))
-        document = parser.parse(html)
+        document = parser.parse(html.encode('utf-8'))
         tag_element = document.getElementsByTagName("pdf:language")
         self.assertNotEqual(tag_element,[])
 
