@@ -28,6 +28,7 @@ from xhtml2pdf.xhtml2pdf_reportlab import (PmlPageCount, PmlPageTemplate,
 
 TupleType = tuple
 ListType = list
+basestring = six.text_type
 try:
     import urlparse
 except ImportError:
