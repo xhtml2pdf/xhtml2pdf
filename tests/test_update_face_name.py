@@ -18,10 +18,6 @@ __doc__ = """
 
 class ttf_with_same_face_name(unittest.TestCase):
 
-    tests_folder = os.path.dirname(os.path.realpath(__file__))
-    fontBold = os.path.join(tests_folder, 'samples', 'font', 'Microsoft YaHei Bold.ttf')
-    fontRegular = os.path.join(tests_folder, 'samples', 'font', 'Microsoft YaHei.ttf')
-
     HTML_CONTENT = u"""
     
     <html>
