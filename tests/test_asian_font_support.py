@@ -187,8 +187,7 @@ class asian_font_support_tests(unittest.TestCase):
                 lower_font_list.append(font.lower())
             default_asian_font = {lower_font_list[i]: upper_font_list[i] for i in range(len(lower_font_list))}
             return  default_asian_font
-        except
-            
+        except:
             default_asian_font = {}
             return default_asian_font
         self.assertEqual(default_asian_font,{})
