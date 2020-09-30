@@ -1,4 +1,4 @@
-
+#-*- coding: utf-8 -*-
 from io import BytesIO
 import html5lib
 import unittest
@@ -21,7 +21,7 @@ class ttf_with_same_face_name(unittest.TestCase):
     fontBold = os.path.join(tests_folder, 'samples', 'font', 'Microsoft YaHei Bold.ttf')
     fontRegular = os.path.join(tests_folder, 'samples', 'font', 'Microsoft YaHei.ttf')
 
-    HTML_CONTENT = """
+    HTML_CONTENT = u"""
     
     <html>
     <head>
