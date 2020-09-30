@@ -66,13 +66,11 @@ class asian_font_support_tests(unittest.TestCase):
 
         return default_asian_font
 
-
     def set_asian_fonts(self,fontname):
         list = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodings)
         list = list.keys()
         if fontname in list:
             pdfmetrics.registerFont(UnicodeCIDFont(fontname))
-
 
     def test_asian_font_int_pdf(self):
 
