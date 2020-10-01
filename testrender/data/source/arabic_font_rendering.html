@@ -1,0 +1,104 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title></title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<style type="text/css">
+
+	@font-face {
+        font-family: DejaVuSans;
+        src: url('../../../tests/samples/font/DejaVuSans.ttf')
+        }
+
+    body {
+    	font-family: DejaVuSans;
+		background-color: red;
+	}
+	p.extra {
+		background-color: yellow;
+		line-height: 200%;
+	}
+	div {
+		background-color: orange;
+	}
+	table {
+		border: 2px solid black;
+	}
+	h1 {
+		page-break-before: always;
+	}
+
+	tr {
+	background-color:red;
+	}
+
+
+</style>
+</head>
+
+<body>
+<div>
+    <pdf:language name="arabic"/>
+    <span>رقم الغرفة:</span>
+</div>
+
+Test
+<p>
+Block 1
+<br>
+Neue Zeile
+<br><br>
+  Und noch eine!
+<p class="extra">
+Block 2
+
+<div style="page-break-after: always;">
+	DIV 1 BEGIN
+
+	<div class="extra">
+		INNERDIV A
+
+		<p style="background-color: blue;">
+		INNERP
+
+	</div>
+
+	DIV 1 END
+</div>
+
+(NEW PAGE?) AFTERDIV
+
+<h1>Heading 1(NEW PAGE?)</h1>
+
+AFTERH1
+
+<table>
+	<tr>
+		<td>رقم الغرفة:</td>
+		<td>Oben rechts</td>
+	</tr>
+	<tr>
+		<td>Unten links</td>
+		<td>
+
+<table>
+	<tr>
+		<td>xxx links</td>
+		<td>yyy rechts</td>
+	</tr>
+	<tr>
+		<td>xxx links</td>
+		<td>yyy rechts</td>
+	</tr>
+</table>
+
+		</td>
+	</tr>
+</table>
+
+<p>
+ENDE
+</p>
+</body>
+</html>
