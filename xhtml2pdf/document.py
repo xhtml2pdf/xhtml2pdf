@@ -7,7 +7,7 @@ from xhtml2pdf.parser import pisaParser
 from reportlab.platypus.flowables import Spacer
 from reportlab.platypus.frames import Frame
 from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlPageTemplate
-from xhtml2pdf.util import pisaTempFile, getBox, PyPDF2, arabic_format
+from xhtml2pdf.util import pisaTempFile, getBox, arabic_format
 import logging
 import six
 
@@ -144,40 +144,40 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
     else:
         doc.build(context.story)
 
-    # Add watermarks
-    if PyPDF2:
-        for bgouter in context.pisaBackgroundList:
-            # If we have at least one background, then lets do it
-            if bgouter:
-                istream = out
-
-                output = PyPDF2.PdfFileWriter()
-                input1 = PyPDF2.PdfFileReader(istream)
-                ctr = 0
-                # TODO: Why do we loop over the same list again?
-                # see bgouter at line 137
-                for bg in context.pisaBackgroundList:
-                    page = input1.getPage(ctr)
-                    if (
-                            bg and not bg.notFound() and
-                            (bg.mimetype == "application/pdf")
-                    ):
-                        bginput = PyPDF2.PdfFileReader(bg.getFile())
-                        pagebg = bginput.getPage(0)
-                        pagebg.mergePage(page)
-                        page = pagebg
-                    else:
-                        log.warning(context.warning(
-                            "Background PDF %s doesn't exist.", bg))
-                    output.addPage(page)
-                    ctr += 1
-                out = pisaTempFile(capacity=context.capacity)
-                output.write(out)
-                # data = sout.getvalue()
-                # Found a background? So leave loop after first occurence
-                break
-    else:
-        log.warning(context.warning("PyPDF2 not installed!"))
+    # # Add watermarks
+    # if PyPDF2:
+    #     for bgouter in context.pisaBackgroundList:
+    #         # If we have at least one background, then lets do it
+    #         if bgouter:
+    #             istream = out
+    #
+    #             output = PyPDF2.PdfFileWriter()
+    #             input1 = PyPDF2.PdfFileReader(istream)
+    #             ctr = 0
+    #             # TODO: Why do we loop over the same list again?
+    #             # see bgouter at line 137
+    #             for bg in context.pisaBackgroundList:
+    #                 page = input1.getPage(ctr)
+    #                 if (
+    #                         bg and not bg.notFound() and
+    #                         (bg.mimetype == "application/pdf")
+    #                 ):
+    #                     bginput = PyPDF2.PdfFileReader(bg.getFile())
+    #                     pagebg = bginput.getPage(0)
+    #                     pagebg.mergePage(page)
+    #                     page = pagebg
+    #                 else:
+    #                     log.warning(context.warning(
+    #                         "Background PDF %s doesn't exist.", bg))
+    #                 output.addPage(page)
+    #                 ctr += 1
+    #             out = pisaTempFile(capacity=context.capacity)
+    #             output.write(out)
+    #             # data = sout.getvalue()
+    #             # Found a background? So leave loop after first occurence
+    #             break
+    # else:
+    #     log.warning(context.warning("PyPDF2 not installed!"))
 
     # Get the resulting PDF and write it to the file object
     # passed from the caller

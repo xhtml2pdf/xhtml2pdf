@@ -7,7 +7,7 @@ import tempfile
 from nose import tools
 from unittest import skipIf as skip_if
 
-from PyPDF2 import PdfFileReader
+import pikepdf
 
 from xhtml2pdf.document import pisaDocument
 
@@ -71,13 +71,13 @@ def _compare_pdf_metadata(pdf_file, assertion):
     # Rewind to the start of the file to read the pdf and get the
     # document's metadata
     pdf_file.seek(0)
-    pdf_reader = PdfFileReader(pdf_file)
-    pdf_info = pdf_reader.documentInfo
+    pdf_reader = pikepdf.open(pdf_file)
+    pdf_info = pdf_reader.docinfo
 
     # Check the received metadata matches the expected metadata
     for original_key in METADATA:
         actual_key = "/{}".format(original_key.capitalize())
-        actual_value = pdf_info[actual_key]
+        actual_value = str(pdf_info[actual_key])
         expected_value = METADATA[original_key]
 
         assertion(actual_value, expected_value)
@@ -94,17 +94,17 @@ def test_document_with_transparent_image():
     with tempfile.TemporaryFile() as pdf_file:
         pisaDocument(
             src=io.StringIO(HTML_CONTENT.format(head="", extra_html=extra_html)),
-            dest=pdf_file
-        )
+            dest=pdf_file)
         pdf_file.seek(0)
-        pdf_reader = PdfFileReader(pdf_file)
+        pdf_reader = pikepdf.open(pdf_file)
 
-        xobjects = pdf_reader.getPage(0)['/Resources']['/XObject'].getObject()
+        xobjects = pdf_reader.pages[0]['/Resources']['/XObject']
         objects = [xobjects[key] for key in xobjects.keys()]
 
         # Identity the 'denker_transparent.png' image by its height and width, and make sure it's there.
         denker_transparant = [obj for obj in objects if obj['/Height'] == 137 and obj['/Width'] == 70]
         tools.assert_equal(len(denker_transparant), 1)
+
 
 
 def test_document_background_image():
@@ -122,9 +122,9 @@ def test_document_background_image():
             dest=pdf_file
         )
         pdf_file.seek(0)
-        pdf_reader = PdfFileReader(pdf_file)
+        pdf_reader = pikepdf.open(pdf_file)
 
-        xobjects = pdf_reader.getPage(0)['/Resources']['/XObject'].getObject()
+        xobjects = pdf_reader.pages[0]['/Resources']['/XObject']
         objects = [xobjects[key] for key in xobjects.keys()]
 
         # Identity the 'denker_transparent.png' image by its height and width, and make sure it's there.
@@ -150,9 +150,9 @@ def test_document_background_image_not_on_all_pages():
             dest=pdf_file
         )
         pdf_file.seek(0)
-        pdf_reader = PdfFileReader(pdf_file)
+        pdf_reader = pikepdf.open(pdf_file)
 
-        tools.assert_equal(pdf_reader.getNumPages(), 2)
+        tools.assert_equal(len(pdf_reader.pages), 2)
 
 
 @skip_if(IN_PYPY, "This doesn't work in pypy")
