@@ -115,10 +115,6 @@ class UtilsGetSizeTestCase(TestCase):
         res = getSize("1mm")
         self.assertEqual(res, 2.8346456692913385)
 
-    def test_get_size_for_i(self):
-        res = getSize("1i")
-        self.assertEqual(res, 72.00)
-
     def test_get_size_for_in(self):
         res = getSize("1in")
         self.assertEqual(res, 72.00)
