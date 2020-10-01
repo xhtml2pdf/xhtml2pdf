@@ -11,6 +11,7 @@ Version 0.2.5
 * Update documentation (multiple typos were fixed)
 * Include Asian fonts support 
 * Allow Custom Font Name for ttf files.
+* Changed from PyPDF2 to pikepdf for testing, as PyPDF2 isn't maintained anymore since 2016
 
 
 Version 0.2.4

@@ -68,11 +68,6 @@ if _reportlab_version < (2, 1):
 log = logging.getLogger("xhtml2pdf")
 
 try:
-    import PyPDF2
-except ImportError:
-    PyPDF2 = None
-
-try:
     from reportlab.graphics import renderPM
 except ImportError:
     renderPM = None
