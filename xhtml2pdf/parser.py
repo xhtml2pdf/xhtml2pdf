@@ -77,7 +77,7 @@ from xhtml2pdf.tags import *
                             # pisaTagTEXTAREA,
                             # pisaTagSELECT,
                             # pisaTagOPTION,
-                            )
+                            # )
 
 from xhtml2pdf.util import getAlign, getBool, getBox, getColor, getPos, getSize, pisaTempFile, toList, transform_attrs
 from xhtml2pdf.w3c import cssDOMElementInterface
