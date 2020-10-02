@@ -31,21 +31,16 @@ from reportlab.platypus.flowables import KeepInFrame, PageBreak
 from xhtml2pdf.default import BOOL, BOX, COLOR, FILE, FONT, INT, MUST, POS, SIZE, STRING, TAGS
 
 # TODO: Why do we need to import these Tags here? They aren't uses in this file or any other file,
-#  but if we don't import them, Travis & AppVeyor fail. Very strange
-# from xhtml2pdf.tags import *
-
-
+#  but if we don't import them, Travis & AppVeyor fail. Very strange (fbernhart)
 from xhtml2pdf.tables import (TableData,
                               pisaTagTABLE,
                               pisaTagTD,
                               pisaTagTR,
                               pisaTagTH)
 
-
 from xhtml2pdf.tags import (pisaTagIMG,
                             pisaTagPDFLANGUAGE,
                             pisaTagPDFNEXTPAGE,
-
                             pisaTag,
                             pisaTagA,
                             pisaTagBODY,
