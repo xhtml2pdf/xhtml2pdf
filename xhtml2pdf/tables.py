@@ -1,14 +1,4 @@
 # -*- coding: utf-8 -*-
-import copy
-import logging
-
-from reportlab.platypus.tables import TableStyle
-import six
-
-from xhtml2pdf.tags import pisaTag
-from xhtml2pdf.util import getSize, getBorderStyle, getAlign, set_value
-from xhtml2pdf.xhtml2pdf_reportlab import PmlTable, PmlKeepInFrame
-
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -23,6 +13,17 @@ from xhtml2pdf.xhtml2pdf_reportlab import PmlTable, PmlKeepInFrame
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import copy
+import logging
+
+import six
+from reportlab.platypus.tables import TableStyle
+
+from xhtml2pdf.tags import pisaTag
+from xhtml2pdf.util import getAlign, getBorderStyle, getSize, set_value
+from xhtml2pdf.xhtml2pdf_reportlab import PmlKeepInFrame, PmlTable
+
 log = logging.getLogger("xhtml2pdf")
 
 

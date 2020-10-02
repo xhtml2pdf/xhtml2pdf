@@ -1,12 +1,13 @@
 #-*- coding: utf-8 -*-
-from io import BytesIO
-from copy import copy
 import unittest
+from copy import copy
+from io import BytesIO
+
 import reportlab
-from xhtml2pdf.document import pisaDocument
-from reportlab.pdfbase import pdfmetrics,_cidfontdata
+from reportlab.pdfbase import _cidfontdata, pdfmetrics
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 
+from xhtml2pdf.document import pisaDocument
 
 __doc__ = """
         asian_font_support_tests provides us auxiliary functions to check 

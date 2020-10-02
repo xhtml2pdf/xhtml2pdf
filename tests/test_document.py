@@ -3,14 +3,12 @@ from __future__ import unicode_literals
 import io
 import os
 import tempfile
-
-from nose import tools
 from unittest import skipIf as skip_if
 
 from PyPDF2 import PdfFileReader
+from nose import tools
 
 from xhtml2pdf.document import pisaDocument
-
 
 HTML_CONTENT = """<!DOCTYPE html>
 <html>

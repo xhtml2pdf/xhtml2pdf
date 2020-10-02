@@ -1,11 +1,14 @@
 #-*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from io import BytesIO
-import html5lib
+
+import os
 import unittest
+from io import BytesIO
+
+import html5lib
+
 from xhtml2pdf.document import pisaDocument
 from xhtml2pdf.w3c.cssDOMElementInterface import CSSDOMElementInterface
-import os
 
 __doc__ = """
         ttf_with_same_face_name provides us auxiliary functions to check 

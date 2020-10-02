@@ -1,21 +1,4 @@
 # -*- coding: utf-8 -*-
-import io
-
-from xhtml2pdf.context import pisaContext
-from xhtml2pdf.default import DEFAULT_CSS
-from xhtml2pdf.parser import pisaParser
-from reportlab.platypus.flowables import Spacer
-from reportlab.platypus.frames import Frame
-from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlPageTemplate
-from xhtml2pdf.util import pisaTempFile, getBox, PyPDF2
-import logging
-import six
-
-
-if not six.PY2:
-    from html import escape as html_escape
-else:
-    from cgi import escape as html_escape
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -30,6 +13,24 @@ else:
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import io
+import logging
+
+import six
+from reportlab.platypus.flowables import Spacer
+from reportlab.platypus.frames import Frame
+
+from xhtml2pdf.context import pisaContext
+from xhtml2pdf.default import DEFAULT_CSS
+from xhtml2pdf.parser import pisaParser
+from xhtml2pdf.util import PyPDF2, getBox, pisaTempFile
+from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlPageTemplate
+
+if not six.PY2:
+    from html import escape as html_escape
+else:
+    from cgi import escape as html_escape
 
 log = logging.getLogger("xhtml2pdf")
 

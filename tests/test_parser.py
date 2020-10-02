@@ -1,7 +1,8 @@
 import os
 import unittest
-from xhtml2pdf.parser import pisaParser
+
 from xhtml2pdf.context import pisaContext
+from xhtml2pdf.parser import pisaParser
 
 _data = b"""
 <!doctype html>

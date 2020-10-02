@@ -6,7 +6,6 @@ from nose import tools
 from xhtml2pdf.document import pisaDocument
 from xhtml2pdf.w3c.cssDOMElementInterface import CSSDOMElementInterface
 
-
 HTML_CONTENT = """
 <html>
 <head>

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -16,6 +15,10 @@ import os
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
+import xhtml2pdf
+
 try:
     from setuptools import setup, find_packages
 except ImportError:
@@ -25,7 +28,6 @@ except ImportError:
 
 README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 
-import xhtml2pdf
 
 setup(
     name="xhtml2pdf",

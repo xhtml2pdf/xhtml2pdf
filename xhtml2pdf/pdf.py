@@ -14,12 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import six
 import logging
 
+import six
 
-from xhtml2pdf.util import pisaTempFile, getFile, PyPDF2
-
+from xhtml2pdf.util import PyPDF2, getFile, pisaTempFile
 
 log = logging.getLogger("xhtml2pdf")
 

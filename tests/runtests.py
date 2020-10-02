@@ -1,6 +1,6 @@
-import sys
-import os
 import glob
+import os
+import sys
 import unittest
 
 #Allow us to import the parent module

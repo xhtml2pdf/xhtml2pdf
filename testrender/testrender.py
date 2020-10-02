@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 from __future__ import print_function
+
 import datetime
+import glob
 import os
 import shutil
 import sys
-import glob
-import decimal
 from optparse import OptionParser
-from subprocess import Popen, PIPE
+from subprocess import PIPE, Popen
 
 from xhtml2pdf import pisa
+
 do_bytes = 'b'
 if sys.version[0] != '2':
     do_bytes = ''
