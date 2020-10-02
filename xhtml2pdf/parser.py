@@ -32,9 +32,13 @@ from xhtml2pdf.default import BOOL, BOX, COLOR, FILE, FONT, INT, MUST, POS, SIZE
 
 # TODO: Why do we need to import these three Tags here? They aren't uses in this file or any other file,
 #  but if we don't import them, nosetests fails. Very strange
-from xhtml2pdf.tags import (pisaTagIMG,
-                            pisaTagPDFLANGUAGE,
-                            pisaTagPDFNEXTPAGE,
+
+from xhtml2pdf.tables import *
+from xhtml2pdf.tags import *
+
+# from xhtml2pdf.tags import (pisaTagIMG,
+#                             pisaTagPDFLANGUAGE,
+#                             pisaTagPDFNEXTPAGE,
 
 
                             # pisaTag,
