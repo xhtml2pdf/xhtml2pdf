@@ -29,8 +29,53 @@ from reportlab.platypus.doctemplate import FrameBreak, NextPageTemplate
 from reportlab.platypus.flowables import KeepInFrame, PageBreak
 
 from xhtml2pdf.default import BOOL, BOX, COLOR, FILE, FONT, INT, MUST, POS, SIZE, STRING, TAGS
-from xhtml2pdf.util import getAlign, getBool, getColor, getSize, toList
-from xhtml2pdf.util import getBox, getPos, pisaTempFile, transform_attrs
+
+# TODO: Why do we need to import these three Tags here? They aren't uses in this file or any other file,
+#  but if we don't import them, nosetests fails. Very strange
+from xhtml2pdf.tags import (pisaTagIMG,
+                            pisaTagPDFLANGUAGE,
+                            pisaTagPDFNEXTPAGE,
+
+
+                            # pisaTag,
+                            # pisaTagA,
+                            # pisaTagBODY,
+                            # pisaTagBR,
+                            # pisaTagDIV,
+                            # pisaTagFONT,
+                            # pisaTagH1,
+                            # pisaTagH2,
+                            # pisaTagH3,
+                            # pisaTagH4,
+                            # pisaTagH5,
+                            # pisaTagH6,
+                            # pisaTagHR,
+                            # pisaTagLI,
+                            # pisaTagMETA,
+                            # pisaTagOL,
+                            # pisaTagP,
+                            # pisaTagPDFBARCODE,
+                            # pisaTagPDFFONT,
+                            # pisaTagPDFFRAME,
+                            # pisaTagPDFNEXTFRAME,
+                            # pisaTagPDFNEXTTEMPLATE,
+                            # pisaTagPDFPAGECOUNT,
+                            # pisaTagPDFPAGENUMBER,
+                            # pisaTagPDFSPACER,
+                            # pisaTagPDFTEMPLATE,
+                            # pisaTagPDFTOC,
+                            # pisaTagSTYLE,
+                            # pisaTagSUB,
+                            # pisaTagSUP,
+                            # pisaTagTITLE,
+                            # pisaTagUL,
+                            # pisaTagINPUT,
+                            # pisaTagTEXTAREA,
+                            # pisaTagSELECT,
+                            # pisaTagOPTION,
+                            )
+
+from xhtml2pdf.util import getAlign, getBool, getBox, getColor, getPos, getSize, pisaTempFile, toList, transform_attrs
 from xhtml2pdf.w3c import cssDOMElementInterface
 from xhtml2pdf.xhtml2pdf_reportlab import PmlLeftPageBreak, PmlRightPageBreak
 

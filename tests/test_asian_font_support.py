@@ -3,7 +3,6 @@ import unittest
 from copy import copy
 from io import BytesIO
 
-import reportlab
 from reportlab.pdfbase import _cidfontdata, pdfmetrics
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 
@@ -57,7 +56,7 @@ class asian_font_support_tests(unittest.TestCase):
         lower_font_list = []
         upper_font_list = []
 
-        list = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodings)
+        list = copy(_cidfontdata.defaultUnicodeEncodings)
         list = list.keys()
 
         for font in list:
@@ -68,7 +67,7 @@ class asian_font_support_tests(unittest.TestCase):
         return default_asian_font
 
     def set_asian_fonts(self,fontname):
-        list = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodings)
+        list = copy(_cidfontdata.defaultUnicodeEncodings)
         list = list.keys()
         if fontname in list:
             pdfmetrics.registerFont(UnicodeCIDFont(fontname))
@@ -136,7 +135,7 @@ class asian_font_support_tests(unittest.TestCase):
         result = "OK"
         font = "HeiseiMin-W3"
         try:
-            list = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodings)
+            list = copy(_cidfontdata.defaultUnicodeEncodings)
             list = list.keys()
             if font in list:
                 pdfmetrics.registerFont(UnicodeCIDFont(font))
@@ -148,7 +147,7 @@ class asian_font_support_tests(unittest.TestCase):
         result = "OK"
         font = "HeiseiMin-W3"
         try:
-            list = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncoding)
+            list = copy(_cidfontdata.defaultUnicodeEncoding)
             list = list.keys()
             if font in list:
                 pdfmetrics.registerFont(UnicodeCIDFont(font))
@@ -161,7 +160,7 @@ class asian_font_support_tests(unittest.TestCase):
         lower_font_list = []
         upper_font_list = []
         try:
-            list = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodings)
+            list = copy(_cidfontdata.defaultUnicodeEncodings)
             list = list.keys()
 
             for font in list:
@@ -178,7 +177,7 @@ class asian_font_support_tests(unittest.TestCase):
         lower_font_list = []
         upper_font_list = []
         try:
-            list = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodin)
+            list = copy(_cidfontdata.defaultUnicodeEncodin)
             list = list.keys()
 
             for font in list:
