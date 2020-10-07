@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-from io import BytesIO
+import io
 
 import html5lib
 from unittest import TestCase
@@ -150,9 +150,9 @@ class ArabicFontSupportTests(TestCase):
             is located in the pdf result.
         """
 
-        source = BytesIO(self.html.encode('utf-8'))
-        destination = BytesIO()
-        pdf = pisaDocument(source, destination)
+        with io.BytesIO() as pdf_file:
+            pisa_doc = pisaDocument(src=self.html,
+                                    dest=pdf_file)
 
-        self.assertTrue(hasattr(pdf, 'language'), '<pdf:language> not found in the resulting PDF!')
-        self.assertEqual(pdf.language, 'arabic', 'language "arabic" not detected in <pdf:language>!')
+            self.assertTrue(hasattr(pisa_doc, 'language'), '<pdf:language> not found in the resulting PDF!')
+            self.assertEqual(pisa_doc.language, 'arabic', 'language "arabic" not detected in <pdf:language>!')
