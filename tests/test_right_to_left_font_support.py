@@ -58,8 +58,8 @@ class RightToLeftFontSupportTests(TestCase):
         <pdf:language name="right-to-left"/>
         <p>The following lines are in Hebrew, Arabic, Farsi/Persian, Urdu, Pashto and Sindhi.<br>
         All of them are written from right to left.<br>
-        There an English sentence (from left to right) to show the difference.<br>
-        If every thing works as expected, the numbers 33 and 99 should change position in the right-to-left writings.
+        There is an English sentence (from left to right) to show the difference.<br>
+        If everything works as expected, the numbers 33 and 99 should change position in the right-to-left writings.
         </p>
         
         <div>                
