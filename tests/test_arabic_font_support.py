@@ -1,28 +1,28 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import os
 from io import BytesIO
 
 import html5lib
-import unittest
+from unittest import TestCase
 from xhtml2pdf.document import pisaDocument
 
-__doc__="""
-        arabic_font_support_tests provides us auxiliary functions to check 
+__doc__ = """
+        ArabicFontSupportTests provides us auxiliary functions to check 
         the correct operation of arabic fonts.
         """
 
-class arabic_font_support_tests(unittest.TestCase):
 
+class ArabicFontSupportTests(TestCase):
     tests_folder = os.path.dirname(os.path.realpath(__file__))
     ttf_pathD = os.path.join(tests_folder, 'samples', 'font', 'DejaVuSans.ttf')
 
     ffD = "@font-face {{font-family: DejaVuSans;src: url(\'{ttf}\');}}".format(ttf=ttf_pathD)
-    bod = ".body{font-family:DejaVuSans;background-color: red;"
+    bod = ".body{font-family:DejaVuSans;background-color: red;}"
     pExtra = "p.extra {background-color: yellow;line-height: 200%;}"
     div = "div {background-color: orange;}"
     tab = "table {border: 2px solid black;}"
     h1 = "h1 {page-break-before: always;}"
-    tr ="tr {background-color:red;}"
+    tr = "tr {background-color:red;}"
 
     HTML_CONTENT = u"""
     <html>
@@ -31,21 +31,13 @@ class arabic_font_support_tests(unittest.TestCase):
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
     <style type="text/css">
-
-	    {ffd}
-
+        {ffd}
         {bod}
-        
-	    {pEx}
-	    
-	    {div}
-	    
-	    {tab}
-	    
+        {pEx}
+        {div}
+        {tab}
         {h1}
-        
-        {tr}
-	    
+        {tr} 
     </style>
     </head>
 
@@ -59,9 +51,9 @@ class arabic_font_support_tests(unittest.TestCase):
     <p>
     Block 1
     <br>
-    Neue Zeile
+    New Line
     <br><br>
-      Und noch eine!
+      And another one!
     <p class="extra">
     Block 2
     
@@ -88,20 +80,20 @@ class arabic_font_support_tests(unittest.TestCase):
     <table>
         <tr>
             <td>رقم الغرفة:</td>
-            <td>Oben rechts</td>
+            <td>Upper right</td>
         </tr>
         <tr>
-            <td>Unten links</td>
+            <td>Lower left</td>
             <td>
     
     <table>
         <tr>
-            <td>xxx links</td>
-            <td>yyy rechts</td>
+            <td>xxx left</td>
+            <td>yyy right</td>
         </tr>
         <tr>
-            <td>xxx links</td>
-            <td>yyy rechts</td>
+            <td>xxx left</td>
+            <td>yyy right</td>
         </tr>
     </table>
     
@@ -110,12 +102,13 @@ class arabic_font_support_tests(unittest.TestCase):
     </table>
     
     <p>
-    ENDE
+    END
     </p>
     </body>
     </html>
     """
-    html = HTML_CONTENT.format(ffd=ffD,bod=bod,pEx=pExtra,div=div,tab=tab,h1=h1,tr=tr)
+
+    html = HTML_CONTENT.format(ffd=ffD, bod=bod, pEx=pExtra, div=div, tab=tab, h1=h1, tr=tr)
 
     def test_arabic_check_pdf_language_tag(self):
         """
@@ -123,24 +116,20 @@ class arabic_font_support_tests(unittest.TestCase):
             is located in the document through asssertNotEqual()
         """
 
-        html = self.HTML_CONTENT
-
         parser = html5lib.HTMLParser(tree=html5lib.treebuilders.getTreeBuilder("dom"))
-        document = parser.parse(html)
+        document = parser.parse(self.html)
         tag_element = document.getElementsByTagName("pdf:language")
-        self.assertNotEqual(tag_element,[])
+        self.assertNotEqual(tag_element, [])
 
     def test_arabic_check_language_in_pdf(self):
         """
             this function is used to check if the "attr language" is
             is located in the pdf result.
         """
-        html = self.HTML_CONTENT
-        res = False
-        result = BytesIO()
-        pdf = pisaDocument(BytesIO(html.encode('utf-8')), result)
 
-        if hasattr(pdf,'language'):
-            res = True
-        self.assertTrue(res)
+        source = BytesIO(self.html.encode('utf-8'))
+        destination = BytesIO()
+        pdf = pisaDocument(source, destination)
 
+        self.assertTrue(hasattr(pdf, 'language'), '<pdf:language> not found in the resulting PDF!')
+        self.assertEqual(pdf.language, 'arabic', 'language "arabic" not detected in <pdf:language>!')
