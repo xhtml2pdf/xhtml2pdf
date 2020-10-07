@@ -59,50 +59,49 @@ class RightToLeftFontSupportTests(TestCase):
         <p>The following lines are in Hebrew, Arabic, Farsi/Persian, Urdu, Pashto and Sindhi.<br>
         All of them are written from right to left.<br>
         There is an English sentence (from left to right) to show the difference.<br>
-        If everything works as expected, the numbers 33 and 99 should change position in the right-to-left writings.
+        If everything works as expected, the numbers 3 and 10 should change position in the right-to-left writings.
         </p>
         
         <div>                
             <span class="Arabic_R">
-            Hello. I have 33 children and 99 cats.
-            That's awesome!
+            Hello. I have 3 children and 10 cats. That's awesome!
             <br>
             <!-- Hebrew-->
-            שלום. יש לי 33 ילדים ו -99 חתולים. זה מגניב!
+            שלום. יש לי 3 ילדים ו -10 חתולים. זה מגניב!
             <br>
              <!-- Arabic -->
-            مرحبا. لدي 33 طفلاً و 99 قطة. هذا رائع!
+            مرحبا. لدي 3 طفلاً و 10 قطة. هذا رائع!
             <br>
              <!-- Farsi/Persian -->
-            سلام. من 33 فرزند و 99 گربه دارم. عالی است!
+            سلام. من 3 فرزند و 10 گربه دارم. عالی است!
             <br>
              <!-- Urdu -->
-            ہیلو. میرے 33 بچے اور 99 بلیاں ہیں۔ یہ تو زبردست ہے!
+            ہیلو. میرے 3 بچے اور 10 بلیاں ہیں۔ یہ تو زبردست ہے!
             <br>
             <!-- Pashto -->
-            سلام. زه 33 ماشومان او 99 پیشوګانې لرم. دا په زړه پوری دی!
+            سلام. زه 3 ماشومان او 10 پیشوګانې لرم. دا په زړه پوری دی!
             <br>
             <!-- Sindhi -->
-            سلام. مون وٽ 33 ٻار ۽ 99 ٻچا آهن. اهو خوفناڪ آهي!
+            سلام. مون وٽ 3 ٻار ۽ 10 ٻچا آهن. اهو خوفناڪ آهي!
             <br>
             </span>
         </div><br><br>
         <p>This is to test different font-weights on Arabic writing.
         Regular, Medium, Bold, SemiBold and Variable.</p>
         <span class="Arabic_R">
-        مرحبا. لدي 33 طفلاً و 99 قطة. هذا رائع!
+        مرحبا. لدي 3 طفلاً و 10 قطة. هذا رائع!
         </span><br>
         <span class="Arabic_M">
-        مرحبا. لدي 33 طفلاً و 99 قطة. هذا رائع!
+        مرحبا. لدي 3 طفلاً و 10 قطة. هذا رائع!
         </span><br>
         <span class="Arabic_B">
-        مرحبا. لدي 33 طفلاً و 99 قطة. هذا رائع!
+        مرحبا. لدي 3 طفلاً و 10 قطة. هذا رائع!
         </span><br>
         <span class="Arabic_SB">
-        مرحبا. لدي 33 طفلاً و 99 قطة. هذا رائع!
+        مرحبا. لدي 3 طفلاً و 10 قطة. هذا رائع!
         </span><br>
         <span class="Arabic_V">
-        مرحبا. لدي 33 طفلاً و 99 قطة. هذا رائع!
+        مرحبا. لدي 3 طفلاً و 10 قطة. هذا رائع!
         </span></body>
         </html>
     """
