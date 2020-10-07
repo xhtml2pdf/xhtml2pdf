@@ -32,7 +32,7 @@ before_install:
 
 install:
   - TOX_ENV=py${TRAVIS_PYTHON_VERSION}-rl${RL}
-  - pip install tox coveralls Sphinx sphinx-rtd-theme nose
+  - pip install tox coveralls Sphinx sphinx-rtd-theme
 
 script: tox -e $TOX_ENV
 after_success: coveralls $COVERALLS_OPTION
