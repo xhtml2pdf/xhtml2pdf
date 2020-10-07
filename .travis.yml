@@ -17,6 +17,9 @@ env:
 
 matrix:
   fast_finish: true
+  allow_failures:
+    - env: RL=330
+    - env: RL=340
 
 #TEST
 before_install:
