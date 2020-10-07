@@ -151,7 +151,7 @@ class ArabicFontSupportTests(TestCase):
         """
 
         with io.BytesIO() as pdf_file:
-            pisa_doc = pisaDocument(src=self.html,
+            pisa_doc = pisaDocument(src=io.StringIO(self.html.encode('utf-8')),
                                     dest=pdf_file)
 
             self.assertTrue(hasattr(pisa_doc, 'language'), '<pdf:language> not found in the resulting PDF!')
