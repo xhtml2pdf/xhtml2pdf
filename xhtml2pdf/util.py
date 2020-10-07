@@ -977,7 +977,7 @@ def detect_language(name):
 
 
 def arabic_format(text, language):
-    if detect_language(language) == 'arabic':
+    if detect_language(language) == 'right-to-left':
         ar = arabic_reshaper.reshape(text)
         ar = get_display(ar)
         text = ar
