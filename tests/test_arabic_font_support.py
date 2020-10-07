@@ -14,10 +14,23 @@ __doc__ = """
 
 class ArabicFontSupportTests(TestCase):
     tests_folder = os.path.dirname(os.path.realpath(__file__))
-    ttf_pathD = os.path.join(tests_folder, 'samples', 'font', 'DejaVuSans.ttf')
+    ttf_pathR = os.path.join(tests_folder, 'samples', 'font', 'Arabic_font', 'MarkaziText-Regular.ttf')
+    ttf_pathM = os.path.join(tests_folder, 'samples', 'font', 'Arabic_font', 'MarkaziText-Medium.ttf')
+    ttf_pathB = os.path.join(tests_folder, 'samples', 'font', 'Arabic_font', 'MarkaziText-Bold.ttf')
+    ttf_pathSB = os.path.join(tests_folder, 'samples', 'font', 'Arabic_font', 'MarkaziText-SemiBold.ttf')
+    ttf_pathV = os.path.join(tests_folder, 'samples', 'font', 'Arabic_font', 'MarkaziText-VariableFont_wght.ttf')
 
-    ffD = "@font-face {{font-family: DejaVuSans;src: url(\'{ttf}\');}}".format(ttf=ttf_pathD)
-    bod = ".body{font-family:DejaVuSans;background-color: red;}"
+    ff_R = "@font-face {{font-family: Arabic_R; src: url(\'{ttf}\');}}".format(ttf=ttf_pathR)
+    ff_M = "@font-face {{font-family: Arabic_M; src: url(\'{ttf}\');}}".format(ttf=ttf_pathM)
+    ff_B = "@font-face {{font-family: Arabic_B; src: url(\'{ttf}\');}}".format(ttf=ttf_pathB)
+    ff_SB = "@font-face {{font-family: Arabic_SB; src: url(\'{ttf}\');}}".format(ttf=ttf_pathSB)
+    ff_V = "@font-face {{font-family: Arabic_V; src: url(\'{ttf}\');}}".format(ttf=ttf_pathV)
+
+    css_R = ".Arabic_R { font-family: Arabic_R }"
+    css_M = ".Arabic_M { font-family: Arabic_M }"
+    css_B = ".Arabic_B { font-family: Arabic_B }"
+    css_SB = ".Arabic_SB { font-family: Arabic_SB }"
+    css_V = ".Arabic_V { font-family: Arabic_V }"
     pExtra = "p.extra {background-color: yellow;line-height: 200%;}"
     div = "div {background-color: orange;}"
     tab = "table {border: 2px solid black;}"
@@ -25,90 +38,100 @@ class ArabicFontSupportTests(TestCase):
     tr = "tr {background-color:red;}"
 
     HTML_CONTENT = u"""
-    <html>
-    <head>
-    <title></title>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-
-    <style type="text/css">
-        {ffd}
-        {bod}
-        {pEx}
-        {div}
-        {tab}
-        {h1}
-        {tr} 
-    </style>
-    </head>
-
-    <body>
-    <div>
-        <pdf:language name="arabic"/>
-        <span>رقم الغرفة:</span>
-    </div>
-
-    Test
-    <p>
-    Block 1
-    <br>
-    New Line
-    <br><br>
-      And another one!
-    <p class="extra">
-    Block 2
-    
-    <div style="page-break-after: always;">
-        DIV 1 BEGIN
-    
-        <div class="extra">
-            INNERDIV A
-    
-            <p style="background-color: blue;">
-            INNERP
-    
-        </div>
-    
-        DIV 1 END
-    </div>
-    
-    (NEW PAGE?) AFTERDIV
-    
-    <h1>Heading 1(NEW PAGE?)</h1>
-    
-    AFTERH1
-    
-    <table>
-        <tr>
-            <td>رقم الغرفة:</td>
-            <td>Upper right</td>
-        </tr>
-        <tr>
-            <td>Lower left</td>
-            <td>
-    
-    <table>
-        <tr>
-            <td>xxx left</td>
-            <td>yyy right</td>
-        </tr>
-        <tr>
-            <td>xxx left</td>
-            <td>yyy right</td>
-        </tr>
-    </table>
-    
-            </td>
-        </tr>
-    </table>
-    
-    <p>
-    END
-    </p>
-    </body>
-    </html>
+                    <html>
+                    <head>
+                    <title></title>
+                    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+                    
+                    <style type="text/css">
+                        {ff_R}
+                        {ff_M}
+                        {ff_B}
+                        {ff_SB}
+                        {ff_V}
+                        
+                        {css_R}
+                        {css_M}
+                        {css_B}
+                        {css_SB}
+                        {css_V}
+                         
+                        {pEx}
+                        {div}
+                        {tab}
+                        {h1}
+                        {tr} 
+                    </style>
+                    </head>
+                    
+                    <body>
+                    <pdf:language name="arabic"/>
+                    <div>
+                        <span class="Arabic_R">رقم الغرفة:</span>
+                        <span class="Arabic_M">رقم الغرفة:</span>
+                        <span class="Arabic_B">رقم الغرفة:</span>
+                    </div>
+                    
+                    Test
+                    <p>Block 1</p>
+                    <br>
+                    New Line
+                    <br><br>
+                    And another one!
+                    <p class="extra">Block 2</p>
+                    
+                    <div style="page-break-after: always;">
+                        DIV 1 BEGIN
+                    
+                        <div class="extra">
+                            INNERDIV A
+                        <p style="background-color: blue;">INNERP</p>
+                        </div>
+                    
+                        DIV 1 END
+                    </div>
+                    
+                    (NEW PAGE?) AFTERDIV
+                    
+                    <h1>Heading 1(NEW PAGE?)</h1>
+                    
+                    AFTERH1
+                    
+                    <table>
+                        <tr>
+                            <td class="Arabic_SB">رقم الغرفة:</td>
+                            <td class="Arabic_V">رقم الغرفة:</td>
+                            <td>Upper right</td>
+                        </tr>
+                        <tr>
+                            <td>Lower left</td>
+                            <td>Test</td>
+                            <td>Test</td>
+                        </tr>
+                    </table>
+                    <table>
+                        <tr>
+                            <td>xxx left</td>
+                            <td>yyy right</td>
+                            <td>yyy right</td>
+                        </tr>
+                        <tr>
+                            <td>xxx left</td>
+                            <td>yyy right</td>
+                            <td>yyy right</td>
+                        </tr>
+                    </table>
+                    
+                    <p>
+                    END
+                    </p>
+                    </body>
+                    </html>
     """
 
-    html = HTML_CONTENT.format(ffd=ffD, bod=bod, pEx=pExtra, div=div, tab=tab, h1=h1, tr=tr)
+    html = HTML_CONTENT.format(ff_R=ff_R, ff_M=ff_M, ff_B=ff_B, ff_SB=ff_SB, ff_V=ff_V,
+                               css_R=css_R, css_M=css_M, css_B=css_B, css_SB=css_SB, css_V=css_V,
+                               pEx=pExtra, div=div, tab=tab, h1=h1, tr=tr)
 
     def test_arabic_check_pdf_language_tag(self):
         """

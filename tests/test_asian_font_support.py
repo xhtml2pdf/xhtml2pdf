@@ -14,9 +14,9 @@ __doc__ = """
 
         Adobe asian language pack in Report Lab:
         
-        Simplified Chinese= ['STSong-Light']
+        Simplified Chinese = ['STSong-Light']
         Tradicional Chinese = ['MSung-Light']
-        Japanese= ['HeiseiMin-W3', 'HeiseiKakuGo-W5']
+        Japanese = ['HeiseiMin-W3', 'HeiseiKakuGo-W5']
         Korean = ['HYSMyeongJo-Medium','HYGothic-Medium']
     """
 
