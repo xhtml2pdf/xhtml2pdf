@@ -292,8 +292,6 @@ def getSize(value, relative=0, base=None, default=0.0):
             return float(value[:-2].strip()) * mm  # 1mm = 0.1cm
         elif value[-2:] == 'in':
             return float(value[:-2].strip()) * inch  # 1pt == 1/72inch
-        elif value[-2:] == 'inch':
-            return float(value[:-4].strip()) * inch  # 1pt == 1/72inch
         elif value[-2:] == 'pt':
             return float(value[:-2].strip())
         elif value[-2:] == 'pc':
@@ -302,9 +300,7 @@ def getSize(value, relative=0, base=None, default=0.0):
             # XXX W3C says, use 96pdi
             # http://www.w3.org/TR/CSS21/syndata.html#length-units
             return float(value[:-2].strip()) * dpi96
-        elif value[-1:] == 'i':  # 1pt == 1/72inch
-            return float(value[:-1].strip()) * inch
-        elif value in ("none", "0", "auto"):
+        elif value in ("none", "0", '0.0', "auto"):
             return 0.0
         elif relative:
             if value[-3:] == 'rem':  # XXX

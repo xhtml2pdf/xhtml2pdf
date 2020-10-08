@@ -27,6 +27,7 @@ from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER, TA_JUSTIFY
 from reportlab.lib.textsplit import ALL_CANNOT_START
 from copy import deepcopy
 from reportlab.lib.abag import ABag
+from xhtml2pdf.util import getSize
 
 
 PARAGRAPH_DEBUG = False
@@ -229,7 +230,8 @@ def _putFragLine(cur_x, tx, line):
 
     # Letter spacing
     if xs.style.letterSpacing != 'normal':
-        tx.setCharSpace(int(xs.style.letterSpacing))
+        letter_spacing = getSize("".join(xs.style.letterSpacing), line.fontSize)
+        tx.setCharSpace(letter_spacing)
 
     ws = getattr(tx, '_wordSpace', 0)
     nSpaces = 0
