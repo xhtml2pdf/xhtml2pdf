@@ -127,7 +127,7 @@ class RightToLeftFontSupportTests(TestCase):
 
         with io.BytesIO() as pdf_file:
             pisa_doc = pisaDocument(src=io.StringIO(html),
-                                    dest=open(self.tests_folder + '\\arabic.pdf', 'w+b'))
+                                    dest=pdf_file)
 
             self.assertEqual(pisa_doc.language, 'arabic', '"arabic" not detected in <pdf:language>!')
 
@@ -143,7 +143,7 @@ class RightToLeftFontSupportTests(TestCase):
 
         with io.BytesIO() as pdf_file:
             pisa_doc = pisaDocument(src=io.StringIO(html),
-                                    dest=open(self.tests_folder + '\\hebrew.pdf', 'w+b'))
+                                    dest=pdf_file)
 
             self.assertEqual(pisa_doc.language, 'hebrew', '"hebrew" not detected in <pdf:language>!')
 
@@ -159,7 +159,7 @@ class RightToLeftFontSupportTests(TestCase):
 
         with io.BytesIO() as pdf_file:
             pisa_doc = pisaDocument(src=io.StringIO(html),
-                                    dest=open(self.tests_folder + '\\persian.pdf', 'w+b'))
+                                    dest=pdf_file)
 
             self.assertEqual(pisa_doc.language, 'persian', '"persian" not detected in <pdf:language>!')
 
@@ -175,7 +175,7 @@ class RightToLeftFontSupportTests(TestCase):
 
         with io.BytesIO() as pdf_file:
             pisa_doc = pisaDocument(src=io.StringIO(html),
-                                    dest=open(self.tests_folder + '\\urdu.pdf', 'w+b'))
+                                    dest=pdf_file)
 
             self.assertEqual(pisa_doc.language, 'urdu', '"urdu" not detected in <pdf:language>!')
 
@@ -191,7 +191,7 @@ class RightToLeftFontSupportTests(TestCase):
 
         with io.BytesIO() as pdf_file:
             pisa_doc = pisaDocument(src=io.StringIO(html),
-                                    dest=open(self.tests_folder + '\\pashto.pdf', 'w+b'))
+                                    dest=pdf_file)
 
             self.assertEqual(pisa_doc.language, 'pashto', '"pashto" not detected in <pdf:language>!')
 
@@ -207,6 +207,6 @@ class RightToLeftFontSupportTests(TestCase):
 
         with io.BytesIO() as pdf_file:
             pisa_doc = pisaDocument(src=io.StringIO(html),
-                                    dest=open(self.tests_folder + '\\sindhi.pdf', 'w+b'))
+                                    dest=pdf_file)
 
             self.assertEqual(pisa_doc.language, 'sindhi', '"sindhi" not detected in <pdf:language>!')
