@@ -26,7 +26,7 @@ class RightToLeftFontSupportTests(TestCase):
     ff_SB = "@font-face {{font-family: SemiBold; src: url(\'{ttf}\');}}".format(ttf=ttf_pathSB)
     ff_V = "@font-face {{font-family: Variable; src: url(\'{ttf}\');}}".format(ttf=ttf_pathV)
 
-    HTML_CONTENT = u"""
+    HTML_CONTENT = """
         <html>
         <head>
         <title></title>
