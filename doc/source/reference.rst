@@ -171,7 +171,7 @@ knows by default (the names are not case sensitive):
 Asian Fonts Support
 -------------------
 
-Now some Asian fonts are available for PDF. The names are not case sensitive.
+Now some Asian fonts are available by default for PDF. The names are not case sensitive.
 
 Simplified Chinese:
 
@@ -200,26 +200,36 @@ Just use them in the ``font-family`` property in your CSS definition.
     p { font-family: STSong-Light }
     </style>
 
+If you need another font, you may have a look at the "Using Custom Fonts" section.
 
-Right-to-left Fonts Support
----------------------------
 
-If you are using a language with right-to-left writing like Arabic, Hebrew etc. you need to specify ``"right-to-left"`` in the  ``<pdf:language name=""/>`` Custom Tag. This is necessary to ensure the correct direction (right to left).
+Arabic / Hebrew / Persian etc. Fonts Support
+--------------------------------------------
 
+If you are using a language with right-to-left writing you need to specify the language name in the ``<pdf:language name=""/>`` custom tag. This is necessary to ensure the correct direction (right to left).
+
+The following attributes for right-to-left languages are supported and tested:
+
+- ``name="arabic"``
+- ``name="hebrew"``
+- ``name="persian"``
+- ``name="urdu"``
+- ``name="pashto"``
+- ``name="sindhi"``
+
+Usage example:
 
 ::
 
-    <pdf:language name="right-to-left"/>
+    <pdf:language name="arabic"/>
 
-    <p>Some Arabic/Hebrew/... text here</p>
+    <p>Some Arabic text here</p>
     <p>Some English text here</p>
 
-The Arabic/Hebrew letters will render from right to left, while all other Latin letters will keep their left-to-right direction.
-
-This is tested and works with Hebrew, Arabic, Farsi/Persian, Urdu, Pashto and Sindhi. Other right-to-left writings might work as well or might not.
+The Arabic letters will render from right to left, while all other Latin letters will keep their left-to-right direction.
 
 .. warning::
-    Right now it seems like right-to-left letters aren't working with using a default font-family like ``p { font-family: Times-Roman }``. We're working on fixing this. However, it works by using the ``@font-face`` tag in the CSS definition and defining a custom font. Therefore you need the specified font file. "MarkaziText" for example seems to work. It can be downloaded here: https://fonts.google.com/specimen/Markazi+Text Other fonts might work as well but haven't been tested.
+    Right now it seems like right-to-left support isn't working while using a default font-family like ``p { font-family: Times-Roman }``. We're working on fixing this. However, it works by using the ``@font-face`` tag in the CSS definition and defining a custom font. Therefore you need the specified font file. "MarkaziText" for example seems to work. It can be downloaded for free here: https://fonts.google.com/specimen/Markazi+Text Other fonts might work as well but haven't been tested.
 
     ::
 
@@ -516,8 +526,8 @@ Creates a Table of Contents.
 pdf:language
 ~~~~~~~~~~~~
 
-Used for languages with right-to-left writing like Arabic, Hebrew, Faris/Persion etc. Right-to-left writing can be defined by passing ``right-to-left``via the ``name`` property.
+Used for languages with right-to-left writing like Arabic, Hebrew, Persion etc. Right-to-left writing can be defined by passing the name via the ``name=""`` property.
 
 ::
 
-    <pdf:language name="right-to-left"/>
+    <pdf:language name="arabic"/>

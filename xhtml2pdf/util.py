@@ -977,11 +977,12 @@ def detect_language(name):
 
 
 def arabic_format(text, language):
-    if detect_language(language) == 'right-to-left':
+    # Note: right now all of the languages are treated the same way.
+    # But maybe in the future we have to for example implement something
+    # for "hebrew" that isn't used in "arabic"
+    if detect_language(language) in ('arabic', 'hebrew', 'persian', 'urdu', 'pashto', 'sindhi'):
         ar = arabic_reshaper.reshape(text)
-        ar = get_display(ar)
-        text = ar
-        return text
+        return get_display(ar)
     else:
         return None
 

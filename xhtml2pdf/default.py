@@ -99,7 +99,7 @@ TAGS = {
     }),
 
     "pdflanguage": (0, {
-        "name": (STRING, "right-to-left"),
+        "name": (STRING, ""),
     }),
 
     "pdfdrawline": (0, {
@@ -600,7 +600,12 @@ noscript {
 """
 
 DEFAULT_LANGUAGE_LIST = {
-    "right-to-left": "right-to-left"
+    "arabic": "arabic",
+    "hebrew": "hebrew",
+    "persian": "persian",
+    "urdu": "urdu",
+    "pashto": "pashto",
+    "sindhi": "sindhi"
 }
 
 DEFAULT_ASIAN_FONT = util.get_default_asian_font()
