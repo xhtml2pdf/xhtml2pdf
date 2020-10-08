@@ -1,4 +1,4 @@
-import unittest
+from unittest import TestCase
 from xml.dom import minidom
 
 from xhtml2pdf import tables
@@ -6,7 +6,7 @@ from xhtml2pdf.context import pisaContext
 from xhtml2pdf.parser import AttrContainer
 
 
-class TablesWidthTestCase(unittest.TestCase):
+class TablesWidthTestCase(TestCase):
 
     def test_width_returns_none_if_value_passed_is_none(self):
         result = tables._width(None)
@@ -25,7 +25,7 @@ class TablesWidthTestCase(unittest.TestCase):
         self.assertEqual(result, 130.0)
 
 
-class TablesHeightTestCase(unittest.TestCase):
+class TablesHeightTestCase(TestCase):
 
     def test_width_returns_none_if_value_passed_is_none(self):
         result = tables._height(None)
@@ -44,7 +44,7 @@ class TablesHeightTestCase(unittest.TestCase):
         self.assertEqual(result, 100.0)
 
 
-class TableDataTestCase(unittest.TestCase):
+class TableDataTestCase(TestCase):
 
     def setUp(self):
         self.sut = tables.TableData
@@ -287,7 +287,7 @@ class TableDataTestCase(unittest.TestCase):
         self.assertEqual(instance.styles[3], ('LINEBELOW', (0, 5), (3, 5), '3px', 'black', 'squared'))
 
 
-class PisaTagTableTestCase(unittest.TestCase):
+class PisaTagTableTestCase(TestCase):
 
     def setUp(self):
         self.element = self._getElement("rootElement")
@@ -338,7 +338,7 @@ class PisaTagTableTestCase(unittest.TestCase):
         self.assertEqual(context.frag.borderBottomStyle, "solid")
 
 
-class PisaTagTDTestCase(unittest.TestCase):
+class PisaTagTDTestCase(TestCase):
 
     def test_td_tag_doesnt_collapse_when_empty(self):
         dom = minidom.parseString("<td></td>")
@@ -364,7 +364,3 @@ class PisaTagTDTestCase(unittest.TestCase):
         instance.start(context)
 
         self.assertEqual(context.tableData.colw, [None])
-
-
-if __name__ == "__main__":
-    unittest.main()

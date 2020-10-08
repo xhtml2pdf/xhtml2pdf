@@ -1,5 +1,5 @@
 import os
-import unittest
+from unittest import TestCase
 from xhtml2pdf.parser import pisaParser
 from xhtml2pdf.context import pisaContext
 
@@ -14,7 +14,7 @@ BODY
 """
 
 
-class TestCase(unittest.TestCase):
+class TestCase(TestCase):
 
     def testParser(self):
         c = pisaContext(".")
@@ -54,15 +54,3 @@ class TestCase(unittest.TestCase):
         data = b'<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=">'
         r = pisaParser(data, c)
         self.assertEqual(r.warn, 0)
-
-
-def buildTestSuite():
-    return unittest.defaultTestLoader.loadTestsFromName(__name__)
-
-
-def main():
-    buildTestSuite()
-    unittest.main()
-
-if __name__ == "__main__":
-    main()
