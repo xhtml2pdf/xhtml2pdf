@@ -8,20 +8,18 @@ python:
   - "pypy3"
 
 env:
-  - RL=30
-  - RL=31
-  - RL=32
-  - RL=33
-  - RL=34
-  - RL=35
-  - RL=36
+  - RL=330
+  - RL=340
+  - RL=350
+  - RL=3510
+  - RL=3530
+  - RL=3550
 
 matrix:
   fast_finish: true
   allow_failures:
-    - env: RL=30
-    - env: RL=31
-
+    - env: RL=330
+    - env: RL=340
 
 #TEST
 before_install:
@@ -32,7 +30,7 @@ before_install:
 
 install:
   - TOX_ENV=py${TRAVIS_PYTHON_VERSION}-rl${RL}
-  - pip install tox coveralls Sphinx sphinx-rtd-theme nose
+  - pip install tox coveralls Sphinx sphinx-rtd-theme
 
 script: tox -e $TOX_ENV
 after_success: coveralls $COVERALLS_OPTION

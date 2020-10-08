@@ -14,6 +14,10 @@ from __future__ import absolute_import
 # Added by benjaoming to fix python3 tests
 from __future__ import unicode_literals
 
+import xhtml2pdf.default
+from xhtml2pdf.util import getSize
+from reportlab.lib.pagesizes import landscape
+
 try:
     from future_builtins import filter
 except ImportError:
@@ -746,6 +750,11 @@ class CSSParser(object):
             '{' S* declaration [ ';' S* declaration ]* '}' S*
         ;
         """
+
+        data = {}
+        pageBorder = None
+        isLandscape = False
+
         ctxsrc = src
         src = src[len('@page'):].lstrip()
         page, src = self._getIdent(src)
@@ -777,9 +786,51 @@ class CSSParser(object):
             else:
                 src, nproperties = self._parseDeclarationGroup(src.lstrip(), braces=False)
                 properties += nproperties
+
+                # Set pagesize, orientation (landscape, portrait)
+                data = {}
+                pageBorder = None
+
+                if properties:
+                    result = self.cssBuilder.ruleset([self.cssBuilder.selector('*')], properties)
+                    try:
+                        data = result[0].values()[0]
+                    except Exception:
+                        data = result[0].popitem()[1]
+                    pageBorder = data.get("-pdf-frame-border", None)
+
+                if "-pdf-page-size" in data:
+                    self.c.pageSize = xhtml2pdf.default.PML_PAGESIZES.get(
+                        str(data["-pdf-page-size"]).lower(), self.c.pageSize)
+
+                isLandscape = False
+                if "size" in data:
+                    size = data["size"]
+                    if not isinstance(size, list):
+                        size = [size]
+                    sizeList = []
+                    for value in size:
+                        valueStr = str(value).lower()
+                        if isinstance(value, tuple):
+                            sizeList.append(getSize(value))
+                        elif valueStr == "landscape":
+                            isLandscape = True
+                        elif valueStr == "portrait":
+                            isLandscape = False
+                        elif valueStr in xhtml2pdf.default.PML_PAGESIZES:
+                            self.c.pageSize = xhtml2pdf.default.PML_PAGESIZES[valueStr]
+                        else:
+                            raise RuntimeError("Unknown size value for @page")
+
+                    if len(sizeList) == 2:
+                        self.c.pageSize = tuple(sizeList)
+
+                    if isLandscape:
+                        self.c.pageSize = landscape(self.c.pageSize)
+
             src = src.lstrip()
 
-        result = [self.cssBuilder.atPage(page, pseudopage, properties)]
+        result = [self.cssBuilder.atPage(page, pseudopage, data, isLandscape, pageBorder)]
 
         return src[1:].lstrip(), result
 

@@ -11,6 +11,11 @@ Version 0.2.5
 * Update documentation (multiple typos were fixed)
 * Include Asian fonts support 
 * Allow Custom Font Name for ttf files.
+* @frame properties like width, right, bottom etc. are now correctly calculated depending on the page orientation (Fixes #499)
+* Fixed letter-spacing CSS property. #490
+  "letter-spacing" now supports float values and relative and absolute units like "cm, in, em, %" etc.
+* Removed "i" and "inch" as unofficial synonyms for the "in" unit
+* "0.0" as value for a CSS property now acts the same way as "0" and "None"
 
 
 Version 0.2.4
