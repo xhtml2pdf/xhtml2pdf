@@ -110,7 +110,7 @@ class RightToLeftFontSupportTests(TestCase):
                                         ff_SB=self.ff_SB, ff_V=self.ff_V, text=text, language_tag=language_tag)
 
         with io.BytesIO() as pdf_file:
-            pisa_doc = pisaDocument(src=io.StringIO(html),
+            pisa_doc = pisaDocument(src=html,
                                     dest=pdf_file)
 
             self.assertTrue(hasattr(pisa_doc, 'language'), '<pdf:language> not found in the resulting PDF!')
@@ -126,7 +126,7 @@ class RightToLeftFontSupportTests(TestCase):
                                         ff_SB=self.ff_SB, ff_V=self.ff_V, text=text, language_tag=language_tag)
 
         with io.BytesIO() as pdf_file:
-            pisa_doc = pisaDocument(src=io.StringIO(html),
+            pisa_doc = pisaDocument(src=html,
                                     dest=pdf_file)
 
             self.assertEqual(pisa_doc.language, 'arabic', '"arabic" not detected in <pdf:language>!')
@@ -142,7 +142,7 @@ class RightToLeftFontSupportTests(TestCase):
                                         ff_SB=self.ff_SB, ff_V=self.ff_V, text=text, language_tag=language_tag)
 
         with io.BytesIO() as pdf_file:
-            pisa_doc = pisaDocument(src=io.StringIO(html),
+            pisa_doc = pisaDocument(src=html,
                                     dest=pdf_file)
 
             self.assertEqual(pisa_doc.language, 'hebrew', '"hebrew" not detected in <pdf:language>!')
@@ -158,7 +158,7 @@ class RightToLeftFontSupportTests(TestCase):
                                         ff_SB=self.ff_SB, ff_V=self.ff_V, text=text, language_tag=language_tag)
 
         with io.BytesIO() as pdf_file:
-            pisa_doc = pisaDocument(src=io.StringIO(html),
+            pisa_doc = pisaDocument(src=html,
                                     dest=pdf_file)
 
             self.assertEqual(pisa_doc.language, 'persian', '"persian" not detected in <pdf:language>!')
@@ -174,7 +174,7 @@ class RightToLeftFontSupportTests(TestCase):
                                         ff_SB=self.ff_SB, ff_V=self.ff_V, text=text, language_tag=language_tag)
 
         with io.BytesIO() as pdf_file:
-            pisa_doc = pisaDocument(src=io.StringIO(html),
+            pisa_doc = pisaDocument(src=html,
                                     dest=pdf_file)
 
             self.assertEqual(pisa_doc.language, 'urdu', '"urdu" not detected in <pdf:language>!')
@@ -190,7 +190,7 @@ class RightToLeftFontSupportTests(TestCase):
                                         ff_SB=self.ff_SB, ff_V=self.ff_V, text=text, language_tag=language_tag)
 
         with io.BytesIO() as pdf_file:
-            pisa_doc = pisaDocument(src=io.StringIO(html),
+            pisa_doc = pisaDocument(src=html,
                                     dest=pdf_file)
 
             self.assertEqual(pisa_doc.language, 'pashto', '"pashto" not detected in <pdf:language>!')
@@ -206,7 +206,7 @@ class RightToLeftFontSupportTests(TestCase):
                                         ff_SB=self.ff_SB, ff_V=self.ff_V, text=text, language_tag=language_tag)
 
         with io.BytesIO() as pdf_file:
-            pisa_doc = pisaDocument(src=io.StringIO(html),
+            pisa_doc = pisaDocument(src=html,
                                     dest=pdf_file)
 
             self.assertEqual(pisa_doc.language, 'sindhi', '"sindhi" not detected in <pdf:language>!')
