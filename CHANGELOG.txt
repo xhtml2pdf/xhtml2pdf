@@ -11,7 +11,7 @@ Version 0.2.5
 * Update documentation (multiple typos were fixed)
 * Include Asian fonts support 
 * Allow Custom Font Name for ttf files.
-
+* @frame properties like width, right, bottom etc. are now correctly calculated depending on the page orientation (Fixes #499)
 
 Version 0.2.4
 -----------------
