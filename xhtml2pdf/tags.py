@@ -494,7 +494,6 @@ class pisaTagPDFNEXTPAGE(pisaTag):
     """
 
     def start(self, c):
-        # deprecation("pdf:nextpage")
         c.addPara()
         if self.attr.name:
             c.addStory(NextPageTemplate(self.attr.name))
@@ -507,7 +506,6 @@ class pisaTagPDFNEXTTEMPLATE(pisaTag):
     """
 
     def start(self, c):
-        # deprecation("pdf:frame")
         c.addStory(NextPageTemplate(self.attr["name"]))
 
 
@@ -615,7 +613,6 @@ class pisaTagPDFTEMPLATE(pisaTag):
     def start(self, c):
         deprecation("pdf:template")
         attrs = self.attr
-        #print attrs
         name = attrs["name"]
         c.frameList = []
         c.frameStaticList = []
@@ -647,7 +644,6 @@ class pisaTagPDFLANGUAGE(pisaTag):
     <pdf:language name=""/>
     """
     def start(self, c):
-        deprecation("pdf:language")
         setattr(c,'language',self.attr.name)
 
 class pisaTagPDFFONT(pisaTag):

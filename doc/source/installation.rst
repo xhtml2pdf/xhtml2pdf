@@ -8,17 +8,10 @@ This is a typical Python library and is installed using pip
 
     pip install xhtml2pdf
 
-To obtain the latest experimental version that has **Python 3 support**, please
-use a prerelease
-
-.. code:: bash
-
-    pip install --pre xhtml2pdf
-
 Requirements
 --------------
 
-Python 2.7+. Only Python 3.4+ is tested and guaranteed to work.
+Tested are Python 2.7, 3.5, 3.6, 3.7 aand 3.8 at the moment. But support for Python < 3.6 will be dropped in the next release! Support for Python 3.9 is being worked on.
 
 All additional requirements are listed in ``requirements.txt`` file and are
 installed automatically using the ``pip install xhtml2pdf`` method.
@@ -74,11 +67,11 @@ Development environment
 
     .. code:: bash
 
-        nosetests --with-coverage
+        -m unittest discover
 
     You should have a log with success status::
 
-        Ran 36 tests in 0.322s
+        Ran 108 tests in 1.372s
 
         OK
 
