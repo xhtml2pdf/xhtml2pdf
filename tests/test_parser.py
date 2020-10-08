@@ -15,7 +15,7 @@ BODY
 """
 
 
-class TestCase(TestCase):
+class ParserTest(TestCase):
 
     def testParser(self):
         c = pisaContext(".")

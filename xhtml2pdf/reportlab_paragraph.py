@@ -7,7 +7,6 @@
 from __future__ import unicode_literals
 
 import re
-import six
 import sys
 from copy import deepcopy
 from operator import truth
@@ -22,7 +21,6 @@ from reportlab.pdfbase.pdfmetrics import getAscentDescent, stringWidth
 from reportlab.platypus.flowables import Flowable
 from reportlab.platypus.paraparser import ParaParser
 from reportlab.rl_settings import _FUZZ
-from xhtml2pdf.util import getSize
 
 basestring = six.text_type
 unicode = six.text_type  # python 3
@@ -856,8 +854,6 @@ def cjkFragSplit(frags, maxWidths, calcBounds, encoding='utf8'):
     """
     This attempts to be wordSplit for frags using the dumb algorithm
     """
-
-    from reportlab.rl_config import _FUZZ
 
     U = []  # get a list of single glyphs with their widths etc etc
     for f in frags:

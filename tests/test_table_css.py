@@ -1,5 +1,6 @@
 from io import BytesIO
 from unittest import TestCase
+
 import html5lib
 
 from xhtml2pdf.document import pisaDocument

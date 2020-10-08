@@ -9,14 +9,13 @@
 # Modified by Dirk Holtwick <holtwick@web.de>, 2007-2008
 
 from __future__ import absolute_import
-
-
 # Added by benjaoming to fix python3 tests
 from __future__ import unicode_literals
 
+from reportlab.lib.pagesizes import landscape
+
 import xhtml2pdf.default
 from xhtml2pdf.util import getSize
-from reportlab.lib.pagesizes import landscape
 
 try:
     from future_builtins import filter
