@@ -24,13 +24,4 @@ Contents:
    https_options
    howto-running-tests
    reference
-
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+   changelog
