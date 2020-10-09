@@ -100,7 +100,7 @@ class pisaTagSUB(pisaTag):
 
 
 class pisaTagA(pisaTag):
-    rxLink = re.compile("^(#|[a-z]+\:).*")
+    rxLink = re.compile(r"^(#|[a-z]+\:).*")
 
 
     def start(self, c):

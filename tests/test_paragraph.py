@@ -38,7 +38,7 @@ class LegacyParagraphTests(TestCase):
 
         def textGenerator(data, fn, fs):
             i = 1
-            for word in re.split('\s+', data):
+            for word in re.split(r'\s+', data):
                 if word:
                     yield Word(
                         text="[%d|%s]" % (i, word),
