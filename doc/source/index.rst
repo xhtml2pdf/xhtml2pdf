@@ -17,11 +17,10 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-
    installation
    usage
    format_html
    https_options
    howto-running-tests
    reference
-   changelog
+   release-notes
