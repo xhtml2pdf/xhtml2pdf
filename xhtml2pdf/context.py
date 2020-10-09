@@ -833,7 +833,7 @@ class pisaContext(object):
             src = file.uri
 
             log.debug("Load font %r", src)
-            if names.startswith("#"):
+            if isinstance(names, str) and names.startswith("#"):
                 names = names.strip('#')
             if type(names) is ListType:
                 fontAlias = names
