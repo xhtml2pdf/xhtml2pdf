@@ -9,19 +9,19 @@ Unit tests
 ==========
 
 Running unit tests should be pretty intuitive to most python developers.
-xhtml2pdf uses the standard library's unittest library to write tests.
+xhtml2pdf uses the standard library's unittest to write tests.
 As such, the following command should "just work"::
 
-    nosetests
+    python -m unittest discover tests
 
 A few extra bells and whistles are available. Specifically, a .coveragerc file
 is included with this project, therefore running coverage reports should give
 you immediately useful information::
 
     pip install coverage
-    nosetests --with-coverage
-    coverage html
-    x-www-browser htmlcov/index.html
+    coverage run -m unittest discover tests
+    coverage run -a testrender/testrender.py
+    coverage report
 
 The coverage percentage is currently pretty low - feel free to add extra tests!
 
@@ -35,15 +35,12 @@ To see it in action, run the following commands from the xhtml2pdf directory::
     python testrender/testrender.py
     x-www-browser testrender/output/index.html
 
-The suite renders a set of templates to pdf, then uses imagemagic (available on
+The suite renders a set of templates to pdf, then uses imagemagick (available on
 most unix-like systems) to convert the pdfs to png images, and finally creates
 a image of differences between the generated image and a reference image.
 
 Image sets with a "difference score" of more than 0 are highlighted in red -
 this means the rendering library produced a bad result.
-
-Caveats
--------
 
 Font rendering is a very tricky business. As such, the functional suite often
 creates "ghost differences" for some font renderings (the images look perfect

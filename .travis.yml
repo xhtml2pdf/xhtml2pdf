@@ -35,10 +35,7 @@ install:
 script: tox -e $TOX_ENV
 after_success: coveralls $COVERALLS_OPTION
 
-notifications:
-  irc: "chat.freenode.net#xhtml2pdf"
-
 before_script:
-  - cd doc/source ; sphinx-build -nW -b html -d _build/doctrees . _build/html ; cd ../..
+  - cd doc/source ; sphinx-build -n -W -b html -d _build/doctrees . _build/html ; cd ../..
 
 
