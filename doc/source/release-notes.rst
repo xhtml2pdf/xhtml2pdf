@@ -30,7 +30,7 @@ Versions >= 0.2
     * Note: Please reference GitHub issues with :issue:´999´ and pull requests with :pr:´999´
     *
 
-    **⚠️ Depreciation**
+    **⚠️ Deprecation**
 
     * Note: For any dropped Python versions, ReportLab versions, xhtml2pdf arguments etc.
     *
@@ -75,7 +75,7 @@ Versions >= 0.2
     *
     *
 
-    **⚠️ Depreciation**
+    **⚠️ Deprecation**
 
     *
     *
@@ -124,7 +124,7 @@ Released: 2020-10-08
 * testrender test: fixed transparences and included new reference files, (now all tests pass in Travis CI without --failed parameter)  :pr:`502`
 * ``0.0`` as value for a CSS property now acts the same way as ``0`` and ``None`` :pr:`516`
 
-**⚠️ Depreciation**
+**⚠️ Deprecation**
 
 * Removed ``i`` and ``inch`` as unofficial synonyms for the ``in`` unit  :pr:`516`
 
@@ -137,8 +137,8 @@ Released: 2020-10-08
 
 **🧹 Cleanup**
 
-* Replaced depreciated ``base64.encodestring`` with ``base64.encodebytes`` :issue:`472`
-* Replaced depreciated ``log.warn()`` with ``log.warning()`` :pr:`509`
+* Replaced deprecated ``base64.encodestring`` with ``base64.encodebytes`` :issue:`472`
+* Replaced deprecated ``log.warn()`` with ``log.warning()`` :pr:`509`
 * Dropped dependency of nose (outdated & unmaintained) in favor of unittest, which is included in the Python standard library :pr:`520`
 * Removed the old nose tests and replaced them with unittest :pr:`520`
 * Removed unlicensed .tff font files in our tests folder and replaced them with open source fonts :pr:`520`
@@ -238,7 +238,7 @@ Released: 2018-02-15
 
 * Fix for transparent images in Python 3
 
-**⚠️ Depreciation**
+**⚠️ Deprecation**
 
 * Removed support for Python 2.3
 
@@ -527,7 +527,7 @@ Version 3.0.27, 2008-10-04
 
 - INF: License changed from Qt to GPLv2
 - INF: Not yet completely combatible with Reportlab 2.2 (&nbsp; errors and borders)
-- NEW: Command line tool called "xhtml" ("pisa" still available but will be deprecatedwith pisa 3.1)
+- NEW: Command line tool called "xhtml" ("pisa" still available but will be deprecated with pisa 3.1)
 - NEW: EGG for Python 2.6
 - NEW: Basic support for Data URI
 - NEW: New style -pdf-keep-with-next (does not work with pdf:toc for now)
