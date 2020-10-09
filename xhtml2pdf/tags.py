@@ -100,7 +100,7 @@ class pisaTagSUB(pisaTag):
 
 
 class pisaTagA(pisaTag):
-    rxLink = re.compile(r"^(#|[a-z]+\:).*")
+    rxLink = r"^(#|[a-z]+\:).*"
 
 
     def start(self, c):
@@ -120,7 +120,7 @@ class pisaTagA(pisaTag):
                 label="anchor")
             c.fragAnchor.append(afrag)
             c.anchorName.append(attr.name)
-        if attr.href and self.rxLink.match(attr.href):
+        if attr.href and re.match(self.rxLink, attr.href):
             c.frag.link = attr.href
 
     def end(self, c):
