@@ -6,7 +6,7 @@ from xhtml2pdf.w3c.cssSpecial import splitBorder
 
 class FontTest(TestCase):
     """
-    Tests if the CSS font property gets split up properly in font-size, font-weight, etc.
+    Tests if the CSS font property gets split up properly into font-size, font-weight, etc.
     """
 
     def test_font_size_family(self):
@@ -53,6 +53,11 @@ class FontTest(TestCase):
 
 
 class BackgroundTest(TestCase):
+    """
+    Tests if the CSS background property gets split up
+    properly into background-image and background-color
+    """
+
     def test_background_image(self):
         func_in = [('background', 'image.jpg', None)]
         func_out = parseSpecialRules(func_in)
@@ -67,6 +72,11 @@ class BackgroundTest(TestCase):
 
 
 class MarginTest(TestCase):
+    """
+    Tests if the CSS margin property gets split up properly into left, right, top, bottom -
+    depending on the amount of given values (1 to 4)
+    """
+
     def test_one_margin_value(self):
         func_in = [('margin', ('11', 'px'), None)]
         func_out = parseSpecialRules(func_in)
@@ -105,21 +115,10 @@ class MarginTest(TestCase):
 
 
 class PaddingTest(TestCase):
-    def test_html(self):
-        txt = """
-        <html>
-        <head>
-            <style>
-                p { padding: 23px 50px }
-            </style>
-        </head>
-        <body>
-        </body>
-        </html>
-        """
-        from xhtml2pdf.document import pisaDocument
-        import io
-        pdf = pisaDocument(txt, io.BytesIO())
+    """
+    Tests if the CSS padding property gets split up properly into left, right, top, bottom -
+    depending on the amount of given values (1 to 4)
+    """
 
     def test_one_padding_value(self):
         func_in = [('padding', ('11', 'px'), None)]
@@ -159,6 +158,11 @@ class PaddingTest(TestCase):
 
 
 class BorderWidthTest(TestCase):
+    """
+    Tests if the CSS border-width property gets split up properly into left, right, top, bottom -
+    depending on the amount of given values (1 to 4)
+    """
+
     def test_one_border_width_value(self):
         func_in = [('border-width', ('11', 'px'), None)]
         func_out = parseSpecialRules(func_in)
@@ -235,6 +239,11 @@ class BorderColorTest(TestCase):
 
 
 class BorderStyleTest(TestCase):
+    """
+    Tests if the CSS border-style property gets split up properly into left, right, top, bottom -
+    depending on the amount of given values (1 to 4)
+    """
+
     def test_one_border_style_value(self):
         func_in = [('border-style', ['dotted'], None)]
         func_out = parseSpecialRules(func_in)
@@ -273,6 +282,10 @@ class BorderStyleTest(TestCase):
 
 
 class BorderSplitTest(TestCase):
+    """
+    Tests the functionality of splitBorder(), that should output (width, style color)
+    """
+
     def test_split_border_empty(self):
         func_in = []
         func_out = splitBorder(func_in)
@@ -305,6 +318,11 @@ class BorderSplitTest(TestCase):
 
 
 class BorderTest(TestCase):
+    """
+    Tests if the CSS border property gets split up properly into width, style and color -
+    depending on the amount of given values (1 to 3)
+    """
+
     def test_border_style(self):
         func_in = [('border', 'dotted', None)]
         func_out = parseSpecialRules(func_in)
@@ -359,6 +377,11 @@ class BorderTest(TestCase):
 
 
 class BorderTop(TestCase):
+    """
+    Tests if the CSS border-top property gets split up properly into width, style, color -
+    depending on the amount of given values (1 to 3)
+    """
+
     def test_border_top_style(self):
         func_in = [('border-top', 'dotted', None)]
         func_out = parseSpecialRules(func_in)
@@ -389,6 +412,11 @@ class BorderTop(TestCase):
 
 
 class BorderBottom(TestCase):
+    """
+    Tests if the CSS border-bottom property gets split up properly into width, style, color -
+    No need to test for different combinations, as it's the same as in BorderTop()
+    """
+
     def test_border_top_width_style_color(self):
         func_in = [('border-bottom', [('99', 'px'), 'dotted', 'red'], None)]
         func_out = parseSpecialRules(func_in)
@@ -399,6 +427,11 @@ class BorderBottom(TestCase):
 
 
 class BorderLeft(TestCase):
+    """
+    Tests if the CSS border-left property gets split up properly into width, style, color -
+    No need to test for different combinations, as it's the same as in BorderTop()
+    """
+
     def test_border_top_width_style_color(self):
         func_in = [('border-left', [('99', 'px'), 'dotted', 'red'], None)]
         func_out = parseSpecialRules(func_in)
@@ -409,6 +442,11 @@ class BorderLeft(TestCase):
 
 
 class BorderRight(TestCase):
+    """
+    Tests if the CSS border-right property gets split up properly into width, style, color -
+    No need to test for different combinations, as it's the same as in BorderTop()
+    """
+
     def test_border_top_width_style_color(self):
         func_in = [('border-right', [('99', 'px'), 'dotted', 'red'], None)]
         func_out = parseSpecialRules(func_in)
