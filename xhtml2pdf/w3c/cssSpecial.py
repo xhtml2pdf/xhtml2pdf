@@ -41,6 +41,7 @@ Optimized for use with PISA
 #import types
 TupleType = tuple
 ListType = list
+import six
 
 import logging
 
@@ -242,7 +243,7 @@ def parseSpecialRules(declarations, debug=0):
             part = getNextPart(parts) or oparts
             if part:
 
-                if hasattr(part, '__iter__') and (("." in part) or ("data:" in part)):
+                if isinstance(part, six.text_type) and (("." in part) or ("data:" in part)):
                     dd.append(("background-image", part, last))
                 else:
                     dd.append(("background-color", part, last))

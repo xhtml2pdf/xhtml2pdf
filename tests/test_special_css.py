@@ -52,6 +52,11 @@ class FontTest(TestCase):
         self.assertEqual(func_out, expected)
 
 
+from xhtml2pdf.parser import pisaParser
+from xhtml2pdf.context import pisaContext
+from io import BytesIO
+
+
 class BackgroundTest(TestCase):
     """
     Tests if the CSS background property gets split up
