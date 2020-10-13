@@ -3,7 +3,7 @@ from __future__ import unicode_literals, absolute_import
 
 import copy
 import re
-import unittest
+from unittest import TestCase
 
 from reportlab.lib.colors import Color
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
@@ -12,7 +12,7 @@ from reportlab.platypus import SimpleDocTemplate
 from xhtml2pdf.paragraph import Style, Word, Space, Text, BoxBegin, BoxEnd, LineBreak, Paragraph
 
 
-class LegacyParagraphTests(unittest.TestCase):
+class LegacyParagraphTests(TestCase):
 
     def test_legacy(self):
         """Test function coming from paragraph.__main__"""

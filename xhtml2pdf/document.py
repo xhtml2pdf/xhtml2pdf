@@ -165,9 +165,20 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                         pagebg = bginput.getPage(0)
                         pagebg.mergePage(page)
                         page = pagebg
-                    else:
-                        log.warn(context.warning(
-                            "Background PDF %s doesn't exist.", bg))
+                    # Todo: the else-statement doesn't make a lot of sense to me; it's just throwing warnings
+                    #  on unittesting \tests. Probably we have to rewrite the whole "background-image" stuff
+                    #  to deal with cases like:
+                    #  Page1 .jpg background
+                    #  Page1 .pdf background
+                    #  Page1 .jpg background, Page2 no background
+                    #  Page1 .pdf background, Page2 no background
+                    #  Page1 .jpg background, Page2 .pdf background
+                    #  Page1 .pdf background, Page2 .jpg background
+                    #  etc.
+                    #  Right now it's kind of confusing. (fbernhart)
+                    # else:
+                    #     log.warning(context.warning(
+                    #         "Background PDF %s doesn't exist.", bg))
                     output.addPage(page)
                     ctr += 1
                 out = pisaTempFile(capacity=context.capacity)
@@ -176,7 +187,7 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                 # Found a background? So leave loop after first occurence
                 break
     else:
-        log.warn(context.warning("PyPDF2 not installed!"))
+        log.warning(context.warning("PyPDF2 not installed!"))
 
     # Get the resulting PDF and write it to the file object
     # passed from the caller

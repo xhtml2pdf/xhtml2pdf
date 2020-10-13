@@ -418,9 +418,9 @@ class pisaTagIMG(pisaTag):
                     c.fontSize = img.drawHeight
 
             except Exception:  # TODO: Kill catch-all
-                log.warn(c.warning("Error in handling image"), exc_info=1)
+                log.warning(c.warning("Error in handling image"), exc_info=1)
         else:
-            log.warn(c.warning("Need a valid file name!"))
+            log.warning(c.warning("Need a valid file name!"))
 
 
 class pisaTagHR(pisaTag):
@@ -494,7 +494,6 @@ class pisaTagPDFNEXTPAGE(pisaTag):
     """
 
     def start(self, c):
-        # deprecation("pdf:nextpage")
         c.addPara()
         if self.attr.name:
             c.addStory(NextPageTemplate(self.attr.name))
@@ -507,7 +506,6 @@ class pisaTagPDFNEXTTEMPLATE(pisaTag):
     """
 
     def start(self, c):
-        # deprecation("pdf:frame")
         c.addStory(NextPageTemplate(self.attr["name"]))
 
 
@@ -615,18 +613,17 @@ class pisaTagPDFTEMPLATE(pisaTag):
     def start(self, c):
         deprecation("pdf:template")
         attrs = self.attr
-        #print attrs
         name = attrs["name"]
         c.frameList = []
         c.frameStaticList = []
         if name in c.templateList:
-            log.warn(c.warning("template '%s' has already been defined", name))
+            log.warning(c.warning("template '%s' has already been defined", name))
 
     def end(self, c):
         attrs = self.attr
         name = attrs["name"]
         if len(c.frameList) <= 0:
-            log.warn(c.warning("missing frame definitions for template"))
+            log.warning(c.warning("missing frame definitions for template"))
 
         pt = PmlPageTemplate(
             id=name,
@@ -647,7 +644,6 @@ class pisaTagPDFLANGUAGE(pisaTag):
     <pdf:language name=""/>
     """
     def start(self, c):
-        deprecation("pdf:language")
         setattr(c,'language',self.attr.name)
 
 class pisaTagPDFFONT(pisaTag):

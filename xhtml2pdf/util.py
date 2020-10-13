@@ -292,8 +292,6 @@ def getSize(value, relative=0, base=None, default=0.0):
             return float(value[:-2].strip()) * mm  # 1mm = 0.1cm
         elif value[-2:] == 'in':
             return float(value[:-2].strip()) * inch  # 1pt == 1/72inch
-        elif value[-2:] == 'inch':
-            return float(value[:-4].strip()) * inch  # 1pt == 1/72inch
         elif value[-2:] == 'pt':
             return float(value[:-2].strip())
         elif value[-2:] == 'pc':
@@ -302,9 +300,7 @@ def getSize(value, relative=0, base=None, default=0.0):
             # XXX W3C says, use 96pdi
             # http://www.w3.org/TR/CSS21/syndata.html#length-units
             return float(value[:-2].strip()) * dpi96
-        elif value[-1:] == 'i':  # 1pt == 1/72inch
-            return float(value[:-1].strip()) * inch
-        elif value in ("none", "0", "auto"):
+        elif value in ("none", "0", '0.0', "auto"):
             return 0.0
         elif relative:
             if value[-3:] == 'rem':  # XXX
@@ -334,11 +330,11 @@ def getSize(value, relative=0, base=None, default=0.0):
         try:
             value = float(value)
         except ValueError:
-            log.warn("getSize: Not a float %r", value)
+            log.warning("getSize: Not a float %r", value)
             return default  # value = 0
         return max(0, value)
     except Exception:
-        log.warn("getSize %r %r", original, relative, exc_info=1)
+        log.warning("getSize %r %r", original, relative, exc_info=1)
         return default
 
 
@@ -516,7 +512,7 @@ class pisaTempFile(object):
                 new_delegate.write(self.getvalue())
                 self._delegate = new_delegate
                 self.strategy = 1
-                log.warn("Created temporary file %s", self.name)
+                log.warning("Created temporary file %s", self.name)
             except:
                 self.capacity = - 1
 
@@ -693,6 +689,7 @@ class pisaFileObject:
                         "Content-Type", '').split(";")[0]
                     self.uri = urlResponse.geturl()
                     self.file = urlResponse
+                conn.close()
 
             else:
 
@@ -946,44 +943,47 @@ COLOR_BY_NAME = {
     'yellowgreen': Color(.603922, .803922, .196078)
 }
 
+
 def get_default_asian_font():
+    lower_font_list = []
+    upper_font_list = []
 
-        lower_font_list = []
-        upper_font_list = []
+    font_dict = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodings)
+    fonts = font_dict.keys()
 
-        list = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodings)
-        list = list.keys()
+    for font in fonts:
+        upper_font_list.append(font)
+        lower_font_list.append(font.lower())
+    default_asian_font = {lower_font_list[i]: upper_font_list[i] for i in range(len(lower_font_list))}
 
-        for font in list:
-            upper_font_list.append(font)
-            lower_font_list.append(font.lower())
-        default_asian_font = {lower_font_list[i]: upper_font_list[i] for i in range(len(lower_font_list))}
-
-        return default_asian_font
+    return default_asian_font
 
 
 def set_asian_fonts(fontname):
+    font_dict = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodings)
+    fonts = font_dict.keys()
+    if fontname in fonts:
+        pdfmetrics.registerFont(UnicodeCIDFont(fontname))
 
-        list = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodings)
-        list = list.keys()
-        if fontname in list:
-            pdfmetrics.registerFont(UnicodeCIDFont(fontname))
 
 def detect_language(name):
     asian_language_list = xhtml2pdf.default.DEFAULT_LANGUAGE_LIST
     if name in asian_language_list:
         return name
 
-def arabic_format(text,language):
-    if detect_language(language) == 'arabic':
+
+def arabic_format(text, language):
+    # Note: right now all of the languages are treated the same way.
+    # But maybe in the future we have to for example implement something
+    # for "hebrew" that isn't used in "arabic"
+    if detect_language(language) in ('arabic', 'hebrew', 'persian', 'urdu', 'pashto', 'sindhi'):
         ar = arabic_reshaper.reshape(text)
-        ar = get_display(ar)
-        text = ar
-        return text
+        return get_display(ar)
     else:
         return None
 
-def frag_text_language_check(context,frag_text):
+
+def frag_text_language_check(context, frag_text):
     if hasattr(context, 'language'):
         language = context.__getattribute__('language')
         detect_language_result = arabic_format(frag_text, language)
