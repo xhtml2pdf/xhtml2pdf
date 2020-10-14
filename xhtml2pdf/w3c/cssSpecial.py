@@ -260,6 +260,9 @@ def parseSpecialRules(declarations, debug=0):
                     dd.append(("background-image", part, last))
                     # XXX Incomplete! Error in url()!
 
+# TODO: We should definitely outsource the "if len() ==" part into a separate function!
+# Because we're repeating the same if-elif-else statement for MARGIN, PADDING,
+# BORDER-WIDTH, BORDER-COLOR and BORDER-STYLE. That's pretty messy. (fbernhart)
         # MARGIN
         elif name == "margin":
             if len(parts) == 1:
