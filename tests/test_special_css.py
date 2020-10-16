@@ -1,7 +1,6 @@
 from unittest import TestCase
 
-from xhtml2pdf.w3c.cssSpecial import parseSpecialRules
-from xhtml2pdf.w3c.cssSpecial import splitBorder
+from xhtml2pdf.w3c.cssSpecial import parseSpecialRules, splitBorder
 
 
 class FontTest(TestCase):
