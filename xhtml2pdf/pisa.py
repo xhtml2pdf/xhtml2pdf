@@ -220,7 +220,7 @@ def execute():
     quiet = 0
     debug = 0
     tempdir = None
-    format = "pdf"
+    file_format = "pdf"
     css = None
     xhtml = None
     encoding = None
@@ -279,7 +279,7 @@ def execute():
 
         elif o in ("-t", "--format"):
             # Format XXX ???
-            format = a
+            file_format = a
 
         elif o in ("-b", "--base"):
             base_dir = a
@@ -358,14 +358,14 @@ def execute():
             dest_part = src
             if dest_part.lower().endswith(".html") or dest_part.lower().endswith(".htm"):
                 dest_part = ".".join(src.split(".")[:-1])
-            dest = dest_part + "." + format.lower()
+            dest = dest_part + "." + file_format.lower()
             for i in six.moves.range(10):
                 try:
                     open(dest, "wb").close()
                     break
                 except:
                     pass
-                dest = dest_part + "-%d.%s" % (i, format.lower())
+                dest = dest_part + "-%d.%s" % (i, file_format.lower())
         else:
             dest = a_dest
 
@@ -398,7 +398,7 @@ def execute():
             path=wpath,
             errout=sys.stdout,
             tempdir=tempdir,
-            format=format,
+            format=file_format,
             link_callback=lc,
             default_css=css,
             xhtml=xhtml,
