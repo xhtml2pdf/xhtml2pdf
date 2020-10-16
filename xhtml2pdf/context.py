@@ -1,38 +1,4 @@
 # -*- coding: utf-8 -*-
-import copy
-import logging
-import os
-import re
-
-import six
-
-import reportlab
-import xhtml2pdf.default
-import xhtml2pdf.parser
-from reportlab.lib.enums import TA_LEFT
-from reportlab.lib.fonts import addMapping
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import ParagraphStyle
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus.frames import Frame, ShowBoundaryValue
-from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
-from xhtml2pdf.util import (copy_attrs, getColor, getCoords, getFile,
-                            getFrameDimensions, getSize, pisaFileObject,
-                            set_value, set_asian_fonts, arabic_format, frag_text_language_check)
-
-from xhtml2pdf.w3c import css
-from xhtml2pdf.xhtml2pdf_reportlab import (PmlPageCount, PmlPageTemplate,
-                                           PmlParagraph, PmlParagraphAndImage,
-                                           PmlTableOfContents)
-
-TupleType = tuple
-ListType = list
-basestring = six.text_type
-try:
-    import urlparse
-except ImportError:
-    import urllib.parse as urlparse
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -48,8 +14,39 @@ except ImportError:
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-reportlab.rl_config.warnOnMissingFontGlyphs = 0
+import copy
+import logging
+import os
+import re
 
+import six
+from reportlab import rl_settings
+from reportlab.lib.enums import TA_LEFT
+from reportlab.lib.fonts import addMapping
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus.frames import Frame, ShowBoundaryValue
+from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
+
+import xhtml2pdf.default
+import xhtml2pdf.parser
+from xhtml2pdf.util import (arabic_format, copy_attrs, frag_text_language_check, getColor, getCoords, getFile,
+                            getFrameDimensions, getSize, pisaFileObject, set_asian_fonts, set_value)
+from xhtml2pdf.w3c import css
+from xhtml2pdf.xhtml2pdf_reportlab import (PmlPageCount, PmlPageTemplate, PmlParagraph,
+                                           PmlParagraphAndImage, PmlTableOfContents)
+
+TupleType = tuple
+ListType = list
+basestring = six.text_type
+try:
+    import urlparse
+except ImportError:
+    import urllib.parse as urlparse
+
+rl_settings.warnOnMissingFontGlyphs = 0
 log = logging.getLogger("xhtml2pdf")
 
 sizeDelta = 2       # amount to reduce font size by for super and sub script

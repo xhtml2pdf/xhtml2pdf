@@ -1,7 +1,8 @@
 import os
 from unittest import TestCase
-from xhtml2pdf.parser import pisaParser
+
 from xhtml2pdf.context import pisaContext
+from xhtml2pdf.parser import pisaParser
 
 _data = b"""
 <!doctype html>
@@ -14,7 +15,7 @@ BODY
 """
 
 
-class TestCase(TestCase):
+class ParserTest(TestCase):
 
     def testParser(self):
         c = pisaContext(".")

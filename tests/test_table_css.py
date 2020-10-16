@@ -1,10 +1,10 @@
 from io import BytesIO
 from unittest import TestCase
+
 import html5lib
 
 from xhtml2pdf.document import pisaDocument
 from xhtml2pdf.w3c.cssDOMElementInterface import CSSDOMElementInterface
-
 
 HTML_CONTENT = """
 <html>

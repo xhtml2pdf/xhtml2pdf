@@ -1,15 +1,15 @@
 # -*- coding: utf-8
-from __future__ import unicode_literals, absolute_import
+from __future__ import absolute_import, unicode_literals
 
 import copy
 import re
 from unittest import TestCase
 
 from reportlab.lib.colors import Color
-from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.platypus import SimpleDocTemplate
 
-from xhtml2pdf.paragraph import Style, Word, Space, Text, BoxBegin, BoxEnd, LineBreak, Paragraph
+from xhtml2pdf.paragraph import BoxBegin, BoxEnd, LineBreak, Paragraph, Space, Style, Text, Word
 
 
 class LegacyParagraphTests(TestCase):

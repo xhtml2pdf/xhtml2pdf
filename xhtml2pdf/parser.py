@@ -13,30 +13,75 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from __future__ import print_function, unicode_literals
 
 import copy
 import logging
 import re
-from xml.dom import Node
 import xml.dom.minidom
+from xml.dom import Node
 
-from html5lib import treebuilders  # , inputstream
 import html5lib
-from reportlab.platypus.doctemplate import NextPageTemplate, FrameBreak
-from reportlab.platypus.flowables import PageBreak, KeepInFrame
 import six
+from html5lib import treebuilders
+from reportlab.platypus.doctemplate import FrameBreak, NextPageTemplate
+from reportlab.platypus.flowables import KeepInFrame, PageBreak
 
-from xhtml2pdf.default import BOX, POS, MUST, FONT
-from xhtml2pdf.default import TAGS, STRING, INT, BOOL, SIZE, COLOR, FILE
-from xhtml2pdf.tables import *  # TODO: Kill wild import!
-from xhtml2pdf.tags import *  # TODO: Kill wild import!
-from xhtml2pdf.util import getBox, getPos, pisaTempFile, transform_attrs
-from xhtml2pdf.util import getSize, getBool, toList, getColor, getAlign
-import xhtml2pdf.w3c.cssDOMElementInterface as cssDOMElementInterface
-from xhtml2pdf.xhtml2pdf_reportlab import PmlRightPageBreak, PmlLeftPageBreak
+from xhtml2pdf.default import BOOL, BOX, COLOR, FILE, FONT, INT, MUST, POS, SIZE, STRING, TAGS
 
+# TODO: Why do we need to import these Tags here? They aren't uses in this file or any other file,
+#  but if we don't import them, Travis & AppVeyor fail. Very strange (fbernhart)
+from xhtml2pdf.tables import (TableData,
+                              pisaTagTABLE,
+                              pisaTagTD,
+                              pisaTagTR,
+                              pisaTagTH)
 
+from xhtml2pdf.tags import (pisaTagIMG,
+                            pisaTagPDFLANGUAGE,
+                            pisaTagPDFNEXTPAGE,
+                            pisaTag,
+                            pisaTagA,
+                            pisaTagBODY,
+                            pisaTagBR,
+                            pisaTagDIV,
+                            pisaTagFONT,
+                            pisaTagH1,
+                            pisaTagH2,
+                            pisaTagH3,
+                            pisaTagH4,
+                            pisaTagH5,
+                            pisaTagH6,
+                            pisaTagHR,
+                            pisaTagLI,
+                            pisaTagMETA,
+                            pisaTagOL,
+                            pisaTagP,
+                            pisaTagPDFBARCODE,
+                            pisaTagPDFFONT,
+                            pisaTagPDFFRAME,
+                            pisaTagPDFNEXTFRAME,
+                            pisaTagPDFNEXTTEMPLATE,
+                            pisaTagPDFPAGECOUNT,
+                            pisaTagPDFPAGENUMBER,
+                            pisaTagPDFSPACER,
+                            pisaTagPDFTEMPLATE,
+                            pisaTagPDFTOC,
+                            pisaTagSTYLE,
+                            pisaTagSUB,
+                            pisaTagSUP,
+                            pisaTagTITLE,
+                            pisaTagUL,
+                            # pisaTagINPUT,
+                            # pisaTagTEXTAREA,
+                            # pisaTagSELECT,
+                            # pisaTagOPTION
+                            )
+
+from xhtml2pdf.util import getAlign, getBool, getBox, getColor, getPos, getSize, pisaTempFile, toList, transform_attrs
+from xhtml2pdf.w3c import cssDOMElementInterface
+from xhtml2pdf.xhtml2pdf_reportlab import PmlLeftPageBreak, PmlRightPageBreak
 
 CSSAttrCache = {}
 
@@ -55,7 +100,6 @@ class AttrContainer(dict):
 
 
 def pisaGetAttributes(c, tag, attributes):
-    global TAGS
 
     attrs = {}
     if attributes:
@@ -711,7 +755,7 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
     CSSAttrCache = {}
 
     if xhtml:
-        # TODO: XHTMLParser doesn't see to exist...
+        # TODO: XHTMLParser doesn't seem to exist...
         parser = html5lib.XHTMLParser(tree=treebuilders.getTreeBuilder("dom"))
     else:
         parser = html5lib.HTMLParser(tree=treebuilders.getTreeBuilder("dom"))

@@ -3,8 +3,7 @@ from __future__ import unicode_literals
 import io
 import os
 import tempfile
-from unittest import TestCase
-from unittest import skipIf
+from unittest import TestCase, skipIf
 
 from PyPDF2 import PdfFileReader
 

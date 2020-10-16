@@ -14,11 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import xhtml2pdf.pisa as pisa
-from six import StringIO
-
 import logging
 
+from six import StringIO
+
+import xhtml2pdf.pisa as pisa
 
 log = logging.getLogger("xhtml2pdf.wsgi")
 

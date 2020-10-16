@@ -1,5 +1,6 @@
-from xhtml2pdf.w3c.css import CSSBuilder, CSSParser
 from unittest import TestCase
+
+from xhtml2pdf.w3c.css import CSSBuilder, CSSParser
 
 
 class SelectorsTest(TestCase):
