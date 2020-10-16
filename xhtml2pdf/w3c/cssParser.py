@@ -335,20 +335,20 @@ class CSSParser(object):
     SelectorCombiners = ['+', '>']
     ExpressionOperators = ('/', '+', ',')
 
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    #~ Regular expressions
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ~ Regular expressions
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    if True: # makes the following code foldable
+    if True:  # makes the following code foldable
         _orRule = lambda *args: '|'.join(args)
         _reflags = re.I | re.M | re.U
         i_hex = '[0-9a-fA-F]'
         i_nonascii = '[\200-\377]'
-        i_unicode = '\\\\(?:%s){1,6}\s?' % i_hex
-        i_escape = _orRule(i_unicode, '\\\\[ -~\200-\377]')
+        i_unicode = r'\\(?:%s){1,6}\s?' % i_hex
+        i_escape = _orRule(i_unicode, r'\\[ -~\200-\377]')
         # i_nmstart = _orRule('[A-Za-z_]', i_nonascii, i_escape)
-        i_nmstart = _orRule('\-[^0-9]|[A-Za-z_]', i_nonascii,
-                            i_escape) # XXX Added hyphen, http://www.w3.org/TR/CSS21/syndata.html#value-def-identifier
+        i_nmstart = _orRule(r'\-[^0-9]|[A-Za-z_]', i_nonascii,
+                            i_escape)  # XXX Added hyphen, http://www.w3.org/TR/CSS21/syndata.html#value-def-identifier
         i_nmchar = _orRule('[-0-9A-Za-z_]', i_nonascii, i_escape)
         i_ident = '((?:%s)(?:%s)*)' % (i_nmstart, i_nmchar)
         re_ident = re.compile(i_ident, _reflags)
@@ -359,58 +359,58 @@ class CSSParser(object):
         i_unicodestr2 = r'(\"[^\u0000-\u007f]+\")'
         i_unicodestr = _orRule(i_unicodestr1, i_unicodestr2)
         re_unicodestr = re.compile(i_unicodestr, _reflags)
-        i_element_name = '((?:%s)|\*)' % (i_ident[1:-1],)
+        i_element_name = r'((?:%s)|\*)' % (i_ident[1:-1],)
         re_element_name = re.compile(i_element_name, _reflags)
-        i_namespace_selector = '((?:%s)|\*|)\|(?!=)' % (i_ident[1:-1],)
+        i_namespace_selector = r'((?:%s)|\*|)\|(?!=)' % (i_ident[1:-1],)
         re_namespace_selector = re.compile(i_namespace_selector, _reflags)
-        i_class = '\\.' + i_ident
+        i_class = r'\.' + i_ident
         re_class = re.compile(i_class, _reflags)
         i_hash = '#((?:%s)+)' % i_nmchar
         re_hash = re.compile(i_hash, _reflags)
         i_rgbcolor = '(#%s{8}|#%s{6}|#%s{3})' % (i_hex, i_hex, i_hex)
         re_rgbcolor = re.compile(i_rgbcolor, _reflags)
         i_nl = '\n|\r\n|\r|\f'
-        i_escape_nl = '\\\\(?:%s)' % i_nl
+        i_escape_nl = r'\\(?:%s)' % i_nl
         i_string_content = _orRule('[\t !#$%&(-~]', i_escape_nl, i_nonascii, i_escape)
         i_string1 = '\"((?:%s|\')*)\"' % i_string_content
         i_string2 = '\'((?:%s|\")*)\'' % i_string_content
         i_string = _orRule(i_string1, i_string2)
         re_string = re.compile(i_string, _reflags)
-        i_uri = ('url\\(\s*(?:(?:%s)|((?:%s)+))\s*\\)'
+        i_uri = (r'url\(\s*(?:(?:%s)|((?:%s)+))\s*\)'
                  % (i_string, _orRule('[!#$%&*-~]', i_nonascii, i_escape)))
         # XXX For now
         # i_uri = '(url\\(.*?\\))'
         re_uri = re.compile(i_uri, _reflags)
-        i_num = '(([-+]?[0-9]+(?:\\.[0-9]+)?)|([-+]?\\.[0-9]+))' # XXX Added out paranthesis, because e.g. .5em was not parsed correctly
+        i_num = r'(([-+]?[0-9]+(?:\.[0-9]+)?)|([-+]?\.[0-9]+))'  # XXX Added out paranthesis, because e.g. .5em was not parsed correctly
         re_num = re.compile(i_num, _reflags)
         i_unit = '(%%|%s)?' % i_ident
         re_unit = re.compile(i_unit, _reflags)
-        i_function = i_ident + '\\('
+        i_function = i_ident + r'\('
         re_function = re.compile(i_function, _reflags)
         i_functionterm = '[-+]?' + i_function
         re_functionterm = re.compile(i_functionterm, _reflags)
-        i_unicoderange1 = "(?:U\\+%s{1,6}-%s{1,6})" % (i_hex, i_hex)
-        i_unicoderange2 = "(?:U\\+\?{1,6}|{h}(\?{0,5}|{h}(\?{0,4}|{h}(\?{0,3}|{h}(\?{0,2}|{h}(\??|{h}))))))"
+        i_unicoderange1 = r"(?:U\+%s{1,6}-%s{1,6})" % (i_hex, i_hex)
+        i_unicoderange2 = r"(?:U\+\?{1,6}|{h}(\?{0,5}|{h}(\?{0,4}|{h}(\?{0,3}|{h}(\?{0,2}|{h}(\??|{h}))))))"
         i_unicoderange = i_unicoderange1 # '(%s|%s)' % (i_unicoderange1, i_unicoderange2)
         re_unicoderange = re.compile(i_unicoderange, _reflags)
 
         # i_comment = '(?:\/\*[^*]*\*+([^/*][^*]*\*+)*\/)|(?://.*)'
         # gabriel: only C convention for comments is allowed in CSS
-        i_comment = '(?:\/\*[^*]*\*+([^/*][^*]*\*+)*\/)'
+        i_comment = r'(?:\/\*[^*]*\*+([^/*][^*]*\*+)*\/)'
         re_comment = re.compile(i_comment, _reflags)
-        i_important = '!\s*(important)'
+        i_important = r'!\s*(important)'
         re_important = re.compile(i_important, _reflags)
         del _orRule
 
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    #~ Public
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ~ Public
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def __init__(self, cssBuilder=None):
         self.setCSSBuilder(cssBuilder)
 
 
-    #~ CSS Builder to delegate to ~~~~~~~~~~~~~~~~~~~~~~~~
+    # ~ CSS Builder to delegate to ~~~~~~~~~~~~~~~~~~~~~~~~
 
     def getCSSBuilder(self):
         """A concrete instance implementing CSSBuilderAbstract"""
@@ -424,9 +424,9 @@ class CSSParser(object):
 
     cssBuilder = property(getCSSBuilder, setCSSBuilder)
 
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    #~ Public CSS Parsing API
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ~ Public CSS Parsing API
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def parseFile(self, srcFile, closeFile=False):
         """Parses CSS file-like objects using the current cssBuilder.
@@ -519,9 +519,9 @@ class CSSParser(object):
             return results[0]['temp']
 
 
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    #~ Internal _parse methods
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ~ Internal _parse methods
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def _parseStylesheet(self, src):
         """stylesheet
@@ -581,7 +581,7 @@ class CSSParser(object):
         return src
 
 
-    #~ CSS @ directives ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ~ CSS @ directives ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def _parseAtCharset(self, src):
         """[ CHARSET_SYM S* STRING S* ';' ]?"""
@@ -718,7 +718,7 @@ class CSSParser(object):
         src = src[1:].lstrip()
 
         stylesheetElements = []
-        #while src and not src.startswith('}'):
+        # while src and not src.startswith('}'):
         #    src, ruleset = self._parseRuleset(src)
         #    stylesheetElements.append(ruleset)
         #    src = src.lstrip()
@@ -765,7 +765,7 @@ class CSSParser(object):
         else:
             pseudopage = None
 
-        #src, properties = self._parseDeclarationGroup(src.lstrip())
+        # src, properties = self._parseDeclarationGroup(src.lstrip())
 
         # Containing @ where not found and parsed
         stylesheetElements = []
@@ -863,7 +863,8 @@ class CSSParser(object):
         src, result = self.cssBuilder.atIdent(atIdent, self, src)
 
         if result is NotImplemented:
-            # An at-rule consists of everything up to and including the next semicolon (;) or the next block, whichever comes first
+            # An at-rule consists of everything up to and including the next semicolon (;)
+            # or the next block, whichever comes first
 
             semiIdx = src.find(';')
             if semiIdx < 0:
@@ -892,7 +893,7 @@ class CSSParser(object):
         return src.lstrip(), result
 
 
-    #~ ruleset - see selector and declaration groups ~~~~
+    # ~ ruleset - see selector and declaration groups ~~~~
 
     def _parseRuleset(self, src):
         """ruleset
@@ -906,7 +907,7 @@ class CSSParser(object):
         return src, result
 
 
-    #~ selector parsing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ~ selector parsing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def _parseSelectorGroup(self, src):
         selectors = []
@@ -1063,7 +1064,7 @@ class CSSParser(object):
         return src, selector
 
 
-    #~ declaration and expression parsing ~~~~~~~~~~~~~~~
+    # ~ declaration and expression parsing ~~~~~~~~~~~~~~~
 
     def _parseDeclarationGroup(self, src, braces=True):
         ctxsrc = src
@@ -1231,7 +1232,7 @@ class CSSParser(object):
         return self.cssBuilder.termUnknown(src)
 
 
-    #~ utility methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ~ utility methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def _getIdent(self, src, default=None):
         return self._getMatchResult(self.re_ident, src, default)

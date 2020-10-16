@@ -59,7 +59,7 @@ except ImportError:
 # limitations under the License.
 
 rgb_re = re.compile(
-    "^.*?rgb[a]?[(]([0-9]+).*?([0-9]+).*?([0-9]+)(?:.*?(?:[01]\.(?:[0-9]+)))?[)].*?[ ]*$")
+    r"^.*?rgb[a]?[(]([0-9]+).*?([0-9]+).*?([0-9]+)(?:.*?(?:[01]\.(?:[0-9]+)))?[)].*?[ ]*$")
 
 _reportlab_version = tuple(map(int, reportlab.Version.split('.')))
 if _reportlab_version < (2, 1):
@@ -612,7 +612,9 @@ class pisaFileObject:
             # The data may be incorrectly unescaped... repairs needed
             b64 = b64.strip("b'").strip("'").encode()
             b64 = re.sub(b"\\n", b'', b64)
-            b64 = re.sub(b'[^A-Za-z0-9\+\/]+', b'', b64)
+            b64 = re.sub(b'[^A-Za-z0-9\\+\\/]+', b'', b64)
+
+
 
             # Add padding as needed, to make length into a multiple of 4
             #
