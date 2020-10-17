@@ -151,15 +151,12 @@ class pisaLinkLoader:
             if new_suffix in (".css", ".gif", ".jpg", ".png"):
                 suffix = new_suffix
         path = tempfile.mktemp(prefix="pisa-", suffix=suffix)
-        ufile = urllib2.urlopen(url)
-        tfile = open(path, "wb")
-        while True:
-            data = ufile.read(1024)
-            if not data:
-                break
-            tfile.write(data)
-        ufile.close()
-        tfile.close()
+        with urllib2.urlopen(url) as ufile, open(path, "wb") as tfile:
+            while True:
+                data = ufile.read(1024)
+                if not data:
+                    break
+                tfile.write(data)
         self.tfileList.append(path)
 
         if not self.quiet:
@@ -290,7 +287,8 @@ def execute():
 
         elif o in ("-c", "--css"):
             # CSS
-            css = open(a, "r").read()
+            with open(a, "r") as file_handler:
+                css = file_handler.read()
 
         elif o in ("--css-dump",):
             # CSS dump
@@ -348,11 +346,12 @@ def execute():
         else:
             if src.startswith("http:") or src.startswith("https:"):
                 wpath = src
-                fsrc = getFile(src).getFile()
+                fsrc = getFile(src).getFileContent()
                 src = "".join(urlparse.urlsplit(src)[1:3]).replace("/", "-")
             else:
                 fsrc = wpath = os.path.abspath(src)
-                fsrc = open(fsrc, "rb")
+                with open(fsrc, "rb") as file_handler:
+                    fsrc = file_handler.read()
 
         if a_dest is None:
             dest_part = src
@@ -471,7 +470,8 @@ def makeDataURI(data=None, mimetype=None, filename=None):
 
 
 def makeDataURIFromFile(filename):
-    data = open(filename, "rb").read()
+    with open(filename, "rb") as file_handler:
+        data = file_handler.read()
     return makeDataURI(data, filename=filename)
 
 

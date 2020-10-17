@@ -426,17 +426,14 @@ class CSSParser(object):
     # ~ Public CSS Parsing API
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def parseFile(self, srcFile, closeFile=False):
+    def parseFile(self, srcFile):
         """Parses CSS file-like objects using the current cssBuilder.
         Use for external stylesheets."""
 
-        try:
-            result = self.parse(srcFile.read())
-        finally:
-            if closeFile:
-                srcFile.close()
-        return result
+        with open(srcFile, "r") as file_handler:
+            file_content = file_handler.read()
 
+        return self.parse(file_content)
 
     def parse(self, src):
         """Parses CSS string source using the current cssBuilder.

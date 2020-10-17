@@ -1005,10 +1005,7 @@ class CSSParser(cssParser.CSSParser):
     def createCSSBuilder(self, **kw):
         return self.CSSBuilderFactory(**kw)
 
-
     def parseExternal(self, cssResourceName):
         if os.path.isfile(cssResourceName):
-            cssFile = open(cssResourceName, 'r')
-            return self.parseFile(cssFile, True)
+            return self.parseFile(cssResourceName)
         raise RuntimeError("Cannot resolve external CSS file: \"%s\"" % cssResourceName)
-

@@ -313,7 +313,7 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
             self._image = fileName
             self.fp = getattr(fileName, 'fp', None)
             try:
-                self.fileName = self._image.fileName
+                self.fileName = fileName
             except AttributeError:
                 self.fileName = 'PILIMAGE_%d' % id(self)
         else:
@@ -346,6 +346,7 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
                         self._image = self._read_image(self.fp)
                     if getattr(self._image, 'format', None) == 'JPEG':
                         self.jpeg_fh = self._jpeg_fh
+                        # BUG: add self.fp.close()
                 else:
                     from reportlab.pdfbase.pdfutils import readJPEGInfo
 
@@ -357,6 +358,7 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
                     self._data = self.fp.read()
                     self._dataA = None
                     self.fp.seek(0)
+                    # BUG: add self.fp.close()
             except:  # TODO: Kill the catch-all
                 et, ev, tb = sys.exc_info()
                 if hasattr(ev, 'args'):
