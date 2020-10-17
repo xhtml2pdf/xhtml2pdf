@@ -722,7 +722,7 @@ class pisaFileObject:
     def getFileContent(self):
         if self.file_content is not None:
             return self.file_content
-        if self.data is not None:  # BUG: Not working right now
+        if self.data is not None:
             return self.data
         return None
 
