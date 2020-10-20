@@ -872,8 +872,20 @@ class pisaContext(object):
             src = file.uri
 
             log.debug("Load font %r", src)
-            if names.startswith("#"):
-                names = names.strip('#')
+            
+            if isinstance(names, str):
+                if names.startswith("#"):
+                    names = names.strip('#')
+            if isinstance(names, list):
+                names_strip = []
+                for name in names:
+                    if name.startswith("#"):
+                        name = name.strip("#")
+                        names_strip.append(name)
+                    else:
+                        names_strip.append(name)
+
+                names = names_strip;
             if type(names) is ListType:
                 fontAlias = names
             else:
