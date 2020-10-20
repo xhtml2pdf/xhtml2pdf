@@ -5,29 +5,26 @@
 # Modifications by Dirk Holtwick, 2008
 
 from __future__ import unicode_literals
-import re
-import six
-import sys
 
+import re
+import sys
+from copy import deepcopy
+from operator import truth
+from string import whitespace
+
+import six
+from reportlab.lib.abag import ABag
+from reportlab.lib.colors import Color
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
+from reportlab.lib.textsplit import ALL_CANNOT_START
+from reportlab.pdfbase.pdfmetrics import getAscentDescent, stringWidth
+from reportlab.platypus.flowables import Flowable
+from reportlab.platypus.paraparser import ParaParser
+from reportlab.rl_settings import _FUZZ
 
 basestring = six.text_type
-unicode = six.text_type #python 3
+unicode = six.text_type  # python 3
 str = six.text_type
-###############################################################
-###############################################################
-###############################################################
-
-from string import whitespace
-from operator import truth
-from reportlab.pdfbase.pdfmetrics import stringWidth, getAscentDescent
-from reportlab.platypus.paraparser import ParaParser
-from reportlab.platypus.flowables import Flowable
-from reportlab.lib.colors import Color
-from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER, TA_JUSTIFY
-from reportlab.lib.textsplit import ALL_CANNOT_START
-from copy import deepcopy
-from reportlab.lib.abag import ABag
-
 
 PARAGRAPH_DEBUG = False
 LEADING_FACTOR = 1.0
@@ -857,8 +854,6 @@ def cjkFragSplit(frags, maxWidths, calcBounds, encoding='utf8'):
     """
     This attempts to be wordSplit for frags using the dumb algorithm
     """
-
-    from reportlab.rl_config import _FUZZ
 
     U = []  # get a list of single glyphs with their widths etc etc
     for f in frags:

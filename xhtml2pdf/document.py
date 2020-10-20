@@ -1,21 +1,4 @@
 # -*- coding: utf-8 -*-
-import io
-
-from xhtml2pdf.context import pisaContext
-from xhtml2pdf.default import DEFAULT_CSS
-from xhtml2pdf.parser import pisaParser
-from reportlab.platypus.flowables import Spacer
-from reportlab.platypus.frames import Frame
-from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlPageTemplate
-from xhtml2pdf.util import pisaTempFile, getBox, PyPDF2
-import logging
-import six
-
-
-if not six.PY2:
-    from html import escape as html_escape
-else:
-    from cgi import escape as html_escape
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -30,6 +13,24 @@ else:
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import io
+import logging
+
+import six
+from reportlab.platypus.flowables import Spacer
+from reportlab.platypus.frames import Frame
+
+from xhtml2pdf.context import pisaContext
+from xhtml2pdf.default import DEFAULT_CSS
+from xhtml2pdf.parser import pisaParser
+from xhtml2pdf.util import PyPDF2, getBox, pisaTempFile
+from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlPageTemplate
+
+if not six.PY2:
+    from html import escape as html_escape
+else:
+    from cgi import escape as html_escape
 
 log = logging.getLogger("xhtml2pdf")
 
@@ -165,9 +166,20 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                         pagebg = bginput.getPage(0)
                         pagebg.mergePage(page)
                         page = pagebg
-                    else:
-                        log.warn(context.warning(
-                            "Background PDF %s doesn't exist.", bg))
+                    # Todo: the else-statement doesn't make a lot of sense to me; it's just throwing warnings
+                    #  on unittesting \tests. Probably we have to rewrite the whole "background-image" stuff
+                    #  to deal with cases like:
+                    #  Page1 .jpg background
+                    #  Page1 .pdf background
+                    #  Page1 .jpg background, Page2 no background
+                    #  Page1 .pdf background, Page2 no background
+                    #  Page1 .jpg background, Page2 .pdf background
+                    #  Page1 .pdf background, Page2 .jpg background
+                    #  etc.
+                    #  Right now it's kind of confusing. (fbernhart)
+                    # else:
+                    #     log.warning(context.warning(
+                    #         "Background PDF %s doesn't exist.", bg))
                     output.addPage(page)
                     ctr += 1
                 out = pisaTempFile(capacity=context.capacity)
@@ -176,7 +188,7 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                 # Found a background? So leave loop after first occurence
                 break
     else:
-        log.warn(context.warning("PyPDF2 not installed!"))
+        log.warning(context.warning("PyPDF2 not installed!"))
 
     # Get the resulting PDF and write it to the file object
     # passed from the caller

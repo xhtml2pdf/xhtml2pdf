@@ -4,33 +4,61 @@ environment:
   matrix:
       - PYTHON_HOME: "C:/Python27"
         PYTHON_VERSION: 2.7
-        RL: 32
+        RL: 330
       - PYTHON_HOME: "C:/Python27"
         PYTHON_VERSION: 2.7
-        RL: 33
+        RL: 340
       - PYTHON_HOME: "C:/Python27"
         PYTHON_VERSION: 2.7
-        RL: 34
+        RL: 350
+      - PYTHON_HOME: "C:/Python27"
+        PYTHON_VERSION: 2.7
+        RL: 3510
+      - PYTHON_HOME: "C:/Python27"
+        PYTHON_VERSION: 2.7
+        RL: 3530
+      - PYTHON_HOME: "C:/Python27"
+        PYTHON_VERSION: 2.7
+        RL: 3550
+
 
       - PYTHON_HOME: "C:/Python35"
         PYTHON_VERSION: 3.5
-        RL: 32
+        RL: 330
       - PYTHON_HOME: "C:/Python35"
         PYTHON_VERSION: 3.5
-        RL: 33
+        RL: 340
       - PYTHON_HOME: "C:/Python35"
         PYTHON_VERSION: 3.5
-        RL: 34
+        RL: 350
+      - PYTHON_HOME: "C:/Python35"
+        PYTHON_VERSION: 3.5
+        RL: 3510
+      - PYTHON_HOME: "C:/Python35"
+        PYTHON_VERSION: 3.5
+        RL: 3530
+      - PYTHON_HOME: "C:/Python35"
+        PYTHON_VERSION: 3.5
+        RL: 3550
 
       - PYTHON_HOME: "C:/Python36"
         PYTHON_VERSION: 3.6
-        RL: 32
+        RL: 330
       - PYTHON_HOME: "C:/Python36"
         PYTHON_VERSION: 3.6
-        RL: 33
+        RL: 340
       - PYTHON_HOME: "C:/Python36"
         PYTHON_VERSION: 3.6
-        RL: 34
+        RL: 350
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.6
+        RL: 3510
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.6
+        RL: 3530
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.6
+        RL: 3550
 
 install:
   - cmd: |

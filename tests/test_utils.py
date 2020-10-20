@@ -1,11 +1,11 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 from unittest import TestCase
 
 from reportlab.lib.colors import Color
 
 from xhtml2pdf.tags import int_to_roman
-from xhtml2pdf.util import getCoords, getColor, getSize, getFrameDimensions, \
-    getPos, getBox, pisaTempFile, getBorderStyle, set_value, copy_attrs, transform_attrs
+from xhtml2pdf.util import (copy_attrs, getBorderStyle, getBox, getColor, getCoords, getFrameDimensions, getSize,
+                            pisaTempFile, set_value, transform_attrs)
 
 
 class UtilsCoordTestCase(TestCase):
@@ -115,10 +115,6 @@ class UtilsGetSizeTestCase(TestCase):
         res = getSize("1mm")
         self.assertEqual(res, 2.8346456692913385)
 
-    def test_get_size_for_i(self):
-        res = getSize("1i")
-        self.assertEqual(res, 72.00)
-
     def test_get_size_for_in(self):
         res = getSize("1in")
         self.assertEqual(res, 72.00)
@@ -143,7 +139,6 @@ class UtilsGetSizeTestCase(TestCase):
 class PisaDimensionTestCase(TestCase):
 
     def test_FrameDimensions_left_top_width_height(self):
-        #builder = pisaCSSBuilder(mediumSet=['all'])
         dims = {
             'left': '10pt',
             'top': '20pt',
@@ -152,7 +147,7 @@ class PisaDimensionTestCase(TestCase):
         }
         expected = (10.0, 20.0, 30.0, 40.0)
         result = getFrameDimensions(dims, 100, 200)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_FrameDimensions_left_top_bottom_right(self):
         dims = {
@@ -163,7 +158,7 @@ class PisaDimensionTestCase(TestCase):
         }
         expected = (10.0, 20.0, 50.0, 150.0)
         result = getFrameDimensions(dims, 100, 200)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_FrameDimensions_bottom_right_width_height(self):
         dims = {
@@ -174,7 +169,7 @@ class PisaDimensionTestCase(TestCase):
         }
         expected = (10.0, 110.0, 70.0, 80.0)
         result = getFrameDimensions(dims, 100, 200)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_FrameDimensions_left_top_width_height_with_margin(self):
         dims = {
@@ -189,7 +184,7 @@ class PisaDimensionTestCase(TestCase):
         }
         expected = (25.0, 30.0, 30.0, 50.0)
         result = getFrameDimensions(dims, 100, 200)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_FrameDimensions_bottom_right_width_height_with_margin(self):
         dims = {
@@ -204,7 +199,7 @@ class PisaDimensionTestCase(TestCase):
         }
         expected = (25.0, 120.0, 30.0, 50.0)
         result = getFrameDimensions(dims, 100, 200)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_frame_dimensions_for_box_len_eq_4(self):
         dims = {
@@ -223,7 +218,7 @@ class PisaDimensionTestCase(TestCase):
         }
         expected = (10.0, 0.0, 30.0, 200.0)
         result = getFrameDimensions(dims, 100, 200)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_trame_dimentions_for_width_without_left_or_right(self):
         dims = {
@@ -234,7 +229,7 @@ class PisaDimensionTestCase(TestCase):
         }
         expected = (0.0, 20.0, 100.0, 40.0)
         result = getFrameDimensions(dims, 100, 200)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
 
 class GetPosTestCase(TestCase):
@@ -335,13 +330,10 @@ class CopyUtils(TestCase):
         container = {'attr': 19, 'attr1': 22}
 
         transform_attrs(obj,
-                        (
-                            ("param1", "attr"),
-                            ("param2", "attr1"),
-                        ),
+                        (("param1", "attr"),
+                         ("param2", "attr1"),),
                         container,
-                        str
-                        )
+                        str)
 
         self.assertEqual(obj.param1, str(19))
         self.assertEqual(obj.param2, str(22))
