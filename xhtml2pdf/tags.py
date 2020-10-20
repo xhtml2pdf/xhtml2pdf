@@ -1,21 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, unicode_literals
-from reportlab.graphics.barcode import createBarcodeDrawing
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.units import inch, mm
-from reportlab.platypus.doctemplate import NextPageTemplate, FrameBreak
-from reportlab.platypus.flowables import Spacer, HRFlowable, PageBreak, Flowable
-from reportlab.platypus.frames import Frame
-from reportlab.platypus.paraparser import tt2ps, ABag
-from xhtml2pdf import xhtml2pdf_reportlab
-from xhtml2pdf.util import getColor, getSize, getAlign, dpi96
-from xhtml2pdf.xhtml2pdf_reportlab import PmlImage, PmlPageTemplate
-import copy
-import logging
-import re
-import warnings
-import six
-import string
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -30,6 +13,27 @@ import string
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+from __future__ import print_function, unicode_literals
+
+import copy
+import logging
+import re
+import string
+import warnings
+
+import six
+from reportlab.graphics.barcode import createBarcodeDrawing
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import inch, mm
+from reportlab.platypus.doctemplate import FrameBreak, NextPageTemplate
+from reportlab.platypus.flowables import Flowable, HRFlowable, PageBreak, Spacer
+from reportlab.platypus.frames import Frame
+from reportlab.platypus.paraparser import ABag, tt2ps
+
+from xhtml2pdf import xhtml2pdf_reportlab
+from xhtml2pdf.util import dpi96, getAlign, getColor, getSize
+from xhtml2pdf.xhtml2pdf_reportlab import PmlImage, PmlPageTemplate
 
 log = logging.getLogger("xhtml2pdf")
 
@@ -100,7 +104,7 @@ class pisaTagSUB(pisaTag):
 
 
 class pisaTagA(pisaTag):
-    rxLink = re.compile("^(#|[a-z]+\:).*")
+    rxLink = r"^(#|[a-z]+\:).*"
 
 
     def start(self, c):
@@ -120,7 +124,7 @@ class pisaTagA(pisaTag):
                 label="anchor")
             c.fragAnchor.append(afrag)
             c.anchorName.append(attr.name)
-        if attr.href and self.rxLink.match(attr.href):
+        if attr.href and re.match(self.rxLink, attr.href):
             c.frag.link = attr.href
 
     def end(self, c):
@@ -418,9 +422,9 @@ class pisaTagIMG(pisaTag):
                     c.fontSize = img.drawHeight
 
             except Exception:  # TODO: Kill catch-all
-                log.warn(c.warning("Error in handling image"), exc_info=1)
+                log.warning(c.warning("Error in handling image"), exc_info=1)
         else:
-            log.warn(c.warning("Need a valid file name!"))
+            log.warning(c.warning("Need a valid file name!"))
 
 
 class pisaTagHR(pisaTag):
@@ -494,7 +498,6 @@ class pisaTagPDFNEXTPAGE(pisaTag):
     """
 
     def start(self, c):
-        # deprecation("pdf:nextpage")
         c.addPara()
         if self.attr.name:
             c.addStory(NextPageTemplate(self.attr.name))
@@ -507,7 +510,6 @@ class pisaTagPDFNEXTTEMPLATE(pisaTag):
     """
 
     def start(self, c):
-        # deprecation("pdf:frame")
         c.addStory(NextPageTemplate(self.attr["name"]))
 
 
@@ -615,18 +617,17 @@ class pisaTagPDFTEMPLATE(pisaTag):
     def start(self, c):
         deprecation("pdf:template")
         attrs = self.attr
-        #print attrs
         name = attrs["name"]
         c.frameList = []
         c.frameStaticList = []
         if name in c.templateList:
-            log.warn(c.warning("template '%s' has already been defined", name))
+            log.warning(c.warning("template '%s' has already been defined", name))
 
     def end(self, c):
         attrs = self.attr
         name = attrs["name"]
         if len(c.frameList) <= 0:
-            log.warn(c.warning("missing frame definitions for template"))
+            log.warning(c.warning("missing frame definitions for template"))
 
         pt = PmlPageTemplate(
             id=name,
@@ -647,7 +648,6 @@ class pisaTagPDFLANGUAGE(pisaTag):
     <pdf:language name=""/>
     """
     def start(self, c):
-        deprecation("pdf:language")
         setattr(c,'language',self.attr.name)
 
 class pisaTagPDFFONT(pisaTag):

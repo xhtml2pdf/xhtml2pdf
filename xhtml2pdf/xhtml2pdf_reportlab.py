@@ -14,27 +14,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from hashlib import md5
-from reportlab.lib.enums import TA_RIGHT
-from reportlab.lib.styles import ParagraphStyle
-from reportlab.lib.utils import flatten, open_for_read, getStringIO, \
-    LazyImageReader, haveImages
-from reportlab.platypus.doctemplate import BaseDocTemplate, PageTemplate, IndexingFlowable
-from reportlab.platypus.flowables import Flowable, CondPageBreak, \
-    KeepInFrame, ParagraphAndImage
-from reportlab.platypus.tableofcontents import TableOfContents
-from reportlab.platypus.tables import Table, TableStyle
-from xhtml2pdf.reportlab_paragraph import Paragraph
-from xhtml2pdf.util import getUID, getBorderStyle
-
-
-import six
-import sys
-
-import cgi
 import copy
 import logging
+import sys
+from hashlib import md5
+
 import reportlab.pdfbase.pdfform as pdfform
+import six
+from reportlab.lib.enums import TA_RIGHT
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.utils import LazyImageReader, flatten, getStringIO, haveImages, open_for_read
+from reportlab.platypus.doctemplate import BaseDocTemplate, IndexingFlowable, PageTemplate
+from reportlab.platypus.flowables import CondPageBreak, Flowable, KeepInFrame, ParagraphAndImage
+from reportlab.platypus.tableofcontents import TableOfContents
+from reportlab.platypus.tables import Table, TableStyle
+from reportlab.rl_config import register_reset
+
+from xhtml2pdf.reportlab_paragraph import Paragraph
+from xhtml2pdf.util import getBorderStyle, getUID
 
 try:
     import PIL.Image as PILImage
@@ -334,7 +331,6 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
                             pass
                     if imageReaderFlags & 4:  # cache the data
                         if not self._cache:
-                            from rl_config import register_reset
                             register_reset(self._cache.clear)
 
                         data = self._cache.setdefault(md5(data).digest(), data)

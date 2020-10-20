@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-from reportlab.lib.pagesizes import (A0, A1, A2, A3, A4, A5, A6, B0, B1, B2, B3,
-                                     B4, B5, B6, LETTER, LEGAL, ELEVENSEVENTEEN)
-
-from xhtml2pdf import util
 
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
@@ -17,6 +13,11 @@ from xhtml2pdf import util
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+from reportlab.lib.pagesizes import (A0, A1, A2, A3, A4, A5, A6, B0, B1, B2, B3, B4, B5, B6, ELEVENSEVENTEEN, LEGAL,
+                                     LETTER)
+
+from xhtml2pdf import util
 
 PML_WARNING = "warning"
 PML_ERROR = "error"
@@ -99,7 +100,7 @@ TAGS = {
     }),
 
     "pdflanguage": (0, {
-        "name": (STRING, "arabic"),
+        "name": (STRING, ""),
     }),
 
     "pdfdrawline": (0, {
@@ -600,7 +601,12 @@ noscript {
 """
 
 DEFAULT_LANGUAGE_LIST = {
-    "arabic": "arabic"
+    "arabic": "arabic",
+    "hebrew": "hebrew",
+    "persian": "persian",
+    "urdu": "urdu",
+    "pashto": "pashto",
+    "sindhi": "sindhi"
 }
 
 DEFAULT_ASIAN_FONT = util.get_default_asian_font()

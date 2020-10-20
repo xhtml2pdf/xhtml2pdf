@@ -13,20 +13,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# Copyright 2010 Dirk Holtwick, holtwick.it
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
+import logging
 
 __reversion__ = "$Revision: 20 $"
 __author__ = "$Author: holtwick $"
@@ -41,9 +29,7 @@ Optimized for use with PISA
 #import types
 TupleType = tuple
 ListType = list
-
-import logging
-
+import six
 
 log = logging.getLogger("ho.css")
 
@@ -173,7 +159,7 @@ def splitBorder(parts):
     width = style = color = None
 
     if len(parts) > 3:
-        log.warn("To many elements for border style %r", parts)
+        log.warning("To many elements for border style %r", parts)
 
     for part in parts:
         # Width
@@ -242,7 +228,7 @@ def parseSpecialRules(declarations, debug=0):
             part = getNextPart(parts) or oparts
             if part:
 
-                if hasattr(part, '__iter__') and (type("." in part) or ("data:" in part)):
+                if isinstance(part, six.string_types) and (("." in part) or ("data:" in part)):
                     dd.append(("background-image", part, last))
                 else:
                     dd.append(("background-color", part, last))
@@ -259,6 +245,9 @@ def parseSpecialRules(declarations, debug=0):
                     dd.append(("background-image", part, last))
                     # XXX Incomplete! Error in url()!
 
+# TODO: We should definitely outsource the "if len() ==" part into a separate function!
+# Because we're repeating the same if-elif-else statement for MARGIN, PADDING,
+# BORDER-WIDTH, BORDER-COLOR and BORDER-STYLE. That's pretty messy. (fbernhart)
         # MARGIN
         elif name == "margin":
             if len(parts) == 1:

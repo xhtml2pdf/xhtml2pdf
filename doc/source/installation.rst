@@ -8,19 +8,12 @@ This is a typical Python library and is installed using pip
 
     pip install xhtml2pdf
 
-To obtain the latest experimental version that has **Python 3 support**, please
-use a prerelease
-
-.. code:: bash
-
-    pip install --pre xhtml2pdf
-
 Requirements
 --------------
 
-Python 2.7+. Only Python 3.4+ is tested and guaranteed to work.
+Tested are Python 2.7, 3.5, 3.6, 3.7 and 3.8 at the moment. But support for Python < 3.6 will be dropped in the next release! Support for Python 3.9 is being worked on.
 
-All additional requirements are listed in ``requirements.txt`` file and are
+All additional requirements are listed in ``setup.py`` file and are
 installed automatically using the ``pip install xhtml2pdf`` method.
 
 
@@ -35,7 +28,7 @@ Development environment
 
     For more information about ``pip`` refer to http://www.pip-installer.org/.
 
-#. I will recommend using ``virtualenv`` for development. This is great to have separate environment for
+#. We recommend using ``virtualenv`` for development. It is great to have a separate environment for
    each project, keeping the dependencies for multiple projects separated
 
     .. code:: bash
@@ -45,7 +38,7 @@ Development environment
 
     For more information about ``virtualenv`` refer to http://www.virtualenv.org/
 
-#. Create virtualenv for the project. This can be inside the project directory, but cannot be under
+#. Create a virtualenv for the project. This can be inside the project directory, but cannot be under
    version control
 
     .. code:: bash
@@ -64,7 +57,7 @@ Development environment
 
         deactivate
 
-#. Next step will be to install/upgrade dependencies from ``requirements.txt`` file
+#. Next step will be to install/upgrade dependencies from the ``requirements.txt`` file
 
     .. code:: bash
 
@@ -74,11 +67,11 @@ Development environment
 
     .. code:: bash
 
-        nosetests --with-coverage
+        python -m unittest discover tests
 
     You should have a log with success status::
 
-        Ran 36 tests in 0.322s
+        Ran 108 tests in 1.372s
 
         OK
 

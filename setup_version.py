@@ -18,9 +18,9 @@
 Updates the version infos
 """
 
-import time
 import re
-import cgi
+import time
+
 import six
 
 if not six.PY2:
