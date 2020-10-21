@@ -831,8 +831,7 @@ class pisaContext(object):
 
             log.debug("Load font %r", src)
             
-            if isinstance(names, str):
-                if names.startswith("#"):
+            if isinstance(names, six.string_types) and names.startswith("#"):
                     names = names.strip('#')
             if isinstance(names, list):
                 names_strip = []
