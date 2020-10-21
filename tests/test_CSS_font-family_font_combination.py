@@ -36,11 +36,11 @@ class FontFamilyCombination(TestCase):
        <style type="text/css">
 
         {FFBold}
-        
+
         {FFRegular}
-        
+
         {fRegular}
-        
+
         {fBold}
 
         </style>
@@ -50,7 +50,7 @@ class FontFamilyCombination(TestCase):
         <span class="fRegular">Regular font type</span>
         <span class="fBold">Bold font type</span>
         </html>
-        
+
        """
 
     def setUp(self):
@@ -95,12 +95,3 @@ class FontFamilyCombination(TestCase):
                 break
         #here we are checking if all objects in fonts list are str, the result have to be True
         self.assertTrue(result)
-
-
-
-
-
-
-
-
-
