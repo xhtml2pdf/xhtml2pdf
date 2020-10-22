@@ -24,7 +24,6 @@ from reportlab.rl_settings import _FUZZ
 
 basestring = six.text_type
 unicode = six.text_type  # python 3
-str = six.text_type
 
 PARAGRAPH_DEBUG = False
 LEADING_FACTOR = 1.0
