@@ -146,6 +146,7 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
 
     # Add watermarks
     if PyPDF2:
+        file_handler = None
         for bgouter in context.pisaBackgroundList:
             # If we have at least one background, then lets do it
             if bgouter:
@@ -162,10 +163,12 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                             bg and not bg.notFound() and
                             (bg.mimetype == "application/pdf")
                     ):
-                        bginput = PyPDF2.PdfFileReader(bg.getFile())
+                        file_handler = open(bg.uri, 'rb')
+                        bginput = PyPDF2.PdfFileReader(file_handler)
                         pagebg = bginput.getPage(0)
                         pagebg.mergePage(page)
                         page = pagebg
+
                     # Todo: the else-statement doesn't make a lot of sense to me; it's just throwing warnings
                     #  on unittesting \tests. Probably we have to rewrite the whole "background-image" stuff
                     #  to deal with cases like:
@@ -180,10 +183,14 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                     # else:
                     #     log.warning(context.warning(
                     #         "Background PDF %s doesn't exist.", bg))
+
                     output.addPage(page)
+
                     ctr += 1
                 out = pisaTempFile(capacity=context.capacity)
                 output.write(out)
+                if file_handler:
+                    file_handler.close()
                 # data = sout.getvalue()
                 # Found a background? So leave loop after first occurence
                 break

@@ -313,7 +313,7 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
             self._image = fileName
             self.fp = getattr(fileName, 'fp', None)
             try:
-                self.fileName = self._image.fileName
+                self.fileName = fileName
             except AttributeError:
                 self.fileName = 'PILIMAGE_%d' % id(self)
         else:

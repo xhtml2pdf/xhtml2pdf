@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import base64
+import io
 import logging
 import mimetypes
 import os.path
@@ -592,7 +593,7 @@ class pisaFileObject:
 
         self.basepath = basepath
         self.mimetype = None
-        self.file = None
+        self.file_content = None
         self.data = None
         self.uri = None
         self.local = None
@@ -638,7 +639,7 @@ class pisaFileObject:
                 self.mimetype = urlResponse.info().get(
                     "Content-Type", '').split(";")[0]
                 self.uri = urlResponse.geturl()
-                self.file = urlResponse
+                self.file_content = urlResponse.read()
 
             # Drive letters have len==1 but we are looking
             # for things like http:
@@ -675,10 +676,10 @@ class pisaFileObject:
                     if r1.getheader("content-encoding") == "gzip":
                         import gzip
 
-                        self.file = gzip.GzipFile(
+                        self.file_content = gzip.GzipFile(
                             mode="rb", fileobj=six.BytesIO(r1.read()))
                     else:
-                        self.file = pisaTempFile(r1.read())
+                        self.file_content = pisaTempFile(r1.read())
                 else:
                     log.debug(
                         "Received non-200 status: {}".format((r1.status, r1.reason)))
@@ -690,7 +691,7 @@ class pisaFileObject:
                     self.mimetype = urlResponse.info().get(
                         "Content-Type", '').split(";")[0]
                     self.uri = urlResponse.geturl()
-                    self.file = urlResponse
+                    self.file_content = urlResponse.read()
                 conn.close()
 
             else:
@@ -709,16 +710,19 @@ class pisaFileObject:
 
                     self.setMimeTypeByName(uri)
                     if self.mimetype and self.mimetype.startswith('text'):
-                        self.file = open(uri, "r") #removed bytes... lets hope it goes ok :/
+                        with open(uri, "r") as file_handler:
+                            # removed bytes... lets hope it goes ok :/
+                            self.file_content = file_handler.read()
                     else:
-                        # removed bytes... lets hope it goes ok :/
-                        self.file = open(uri, "rb")
+                        with open(uri, "rb") as file_handler:
+                            # removed bytes... lets hope it goes ok :/
+                            self.file_content = file_handler.read()
 
-    def getFile(self):
-        if self.file is not None:
-            return self.file
+    def getFileContent(self):
+        if self.file_content is not None:
+            return self.file_content
         if self.data is not None:
-            return pisaTempFile(self.data)
+            return self.data
         return None
 
     def getNamedFile(self):
@@ -728,8 +732,9 @@ class pisaFileObject:
             return str(self.local)
         if not self.tmp_file:
             self.tmp_file = tempfile.NamedTemporaryFile()
-            if self.file:
-                shutil.copyfileobj(self.file, self.tmp_file)
+            if self.file_content:
+                with io.StringIO(self.file_content) as file_handler:
+                    shutil.copyfileobj(file_handler, self.tmp_file)
             else:
                 self.tmp_file.write(self.getData())
             self.tmp_file.flush()
@@ -738,20 +743,20 @@ class pisaFileObject:
     def getData(self):
         if self.data is not None:
             return self.data
-        if self.file is not None:
-            try:
-                self.data = self.file.read()
-            except:
-                if self.mimetype and self.mimetype.startswith('text'):
-                    self.file = open(self.file.name, "rb") #removed bytes... lets hope it goes ok :/
-                    self.data = self.file.read().decode('utf-8')
-                else:
-                    raise
-            return self.data
+        if self.file_content is not None:
+            # try:
+            #     self.data = self.file_content
+            # except:
+            #     if self.mimetype and self.mimetype.startswith('text'):
+            #         self.file = open(self.file.name, "rb") #removed bytes... lets hope it goes ok :/
+            #         self.data = self.file.read().decode('utf-8')
+            #     else:
+            #         raise
+            return self.file_content
         return None
 
     def notFound(self):
-        return (self.file is None) and (self.data is None)
+        return (self.file_content is None) and (self.data is None)
 
     def setMimeTypeByName(self, name):
         " Guess the mime type "
