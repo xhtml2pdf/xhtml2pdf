@@ -693,10 +693,11 @@ class CSSParser(object):
         mediums = []
         while src and src[0] != '{':
             medium, src = self._getIdent(src)
-            if medium is None:
-                raise self.ParseError('@media rule expected media identifier', src, ctxsrc)
             # make "and ... {" work
-            if medium == 'and':
+            if medium in (None, 'and'):
+                # default to mediatype "all"
+                if medium is None:
+                    mediums.append('all')
                 # strip up to curly bracket
                 pattern = re.compile('.*({.*)')
                 match = re.match(pattern, src)
