@@ -1,28 +1,42 @@
 # -*- coding: utf-8 -*-
+
+# Copyright 2010 Dirk Holtwick, holtwick.it
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import base64
-from copy import copy
+import io
 import logging
 import mimetypes
 import os.path
 import re
 import shutil
-import string
 import sys
 import tempfile
-import xhtml2pdf.default
+from copy import copy
+
+import arabic_reshaper
 import reportlab
+import reportlab.pdfbase._cidfontdata
+import six
 from bidi.algorithm import get_display
 from reportlab.lib.colors import Color, toColor
-from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
-from reportlab.lib.units import inch, cm
-import six
-import reportlab.pdfbase._cidfontdata
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
+from reportlab.lib.units import cm, inch
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
-import arabic_reshaper
 
-
-
+import xhtml2pdf.default
 
 try:
     import httplib
@@ -44,19 +58,6 @@ try:
 except ImportError:
     from urllib import unquote as urllib_unquote
 
-# Copyright 2010 Dirk Holtwick, holtwick.it
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 rgb_re = re.compile(
     r"^.*?rgb[a]?[(]([0-9]+).*?([0-9]+).*?([0-9]+)(?:.*?(?:[01]\.(?:[0-9]+)))?[)].*?[ ]*$")
@@ -592,7 +593,7 @@ class pisaFileObject:
 
         self.basepath = basepath
         self.mimetype = None
-        self.file = None
+        self.file_content = None
         self.data = None
         self.uri = None
         self.local = None
@@ -638,7 +639,7 @@ class pisaFileObject:
                 self.mimetype = urlResponse.info().get(
                     "Content-Type", '').split(";")[0]
                 self.uri = urlResponse.geturl()
-                self.file = urlResponse
+                self.file_content = urlResponse.read()
 
             # Drive letters have len==1 but we are looking
             # for things like http:
@@ -675,10 +676,10 @@ class pisaFileObject:
                     if r1.getheader("content-encoding") == "gzip":
                         import gzip
 
-                        self.file = gzip.GzipFile(
+                        self.file_content = gzip.GzipFile(
                             mode="rb", fileobj=six.BytesIO(r1.read()))
                     else:
-                        self.file = pisaTempFile(r1.read())
+                        self.file_content = pisaTempFile(r1.read())
                 else:
                     log.debug(
                         "Received non-200 status: {}".format((r1.status, r1.reason)))
@@ -690,7 +691,7 @@ class pisaFileObject:
                     self.mimetype = urlResponse.info().get(
                         "Content-Type", '').split(";")[0]
                     self.uri = urlResponse.geturl()
-                    self.file = urlResponse
+                    self.file_content = urlResponse.read()
                 conn.close()
 
             else:
@@ -709,16 +710,19 @@ class pisaFileObject:
 
                     self.setMimeTypeByName(uri)
                     if self.mimetype and self.mimetype.startswith('text'):
-                        self.file = open(uri, "r") #removed bytes... lets hope it goes ok :/
+                        with open(uri, "r") as file_handler:
+                            # removed bytes... lets hope it goes ok :/
+                            self.file_content = file_handler.read()
                     else:
-                        # removed bytes... lets hope it goes ok :/
-                        self.file = open(uri, "rb")
+                        with open(uri, "rb") as file_handler:
+                            # removed bytes... lets hope it goes ok :/
+                            self.file_content = file_handler.read()
 
-    def getFile(self):
-        if self.file is not None:
-            return self.file
+    def getFileContent(self):
+        if self.file_content is not None:
+            return self.file_content
         if self.data is not None:
-            return pisaTempFile(self.data)
+            return self.data
         return None
 
     def getNamedFile(self):
@@ -728,8 +732,9 @@ class pisaFileObject:
             return str(self.local)
         if not self.tmp_file:
             self.tmp_file = tempfile.NamedTemporaryFile()
-            if self.file:
-                shutil.copyfileobj(self.file, self.tmp_file)
+            if self.file_content:
+                with io.StringIO(self.file_content) as file_handler:
+                    shutil.copyfileobj(file_handler, self.tmp_file)
             else:
                 self.tmp_file.write(self.getData())
             self.tmp_file.flush()
@@ -738,20 +743,20 @@ class pisaFileObject:
     def getData(self):
         if self.data is not None:
             return self.data
-        if self.file is not None:
-            try:
-                self.data = self.file.read()
-            except:
-                if self.mimetype and self.mimetype.startswith('text'):
-                    self.file = open(self.file.name, "rb") #removed bytes... lets hope it goes ok :/
-                    self.data = self.file.read().decode('utf-8')
-                else:
-                    raise
-            return self.data
+        if self.file_content is not None:
+            # try:
+            #     self.data = self.file_content
+            # except:
+            #     if self.mimetype and self.mimetype.startswith('text'):
+            #         self.file = open(self.file.name, "rb") #removed bytes... lets hope it goes ok :/
+            #         self.data = self.file.read().decode('utf-8')
+            #     else:
+            #         raise
+            return self.file_content
         return None
 
     def notFound(self):
-        return (self.file is None) and (self.data is None)
+        return (self.file_content is None) and (self.data is None)
 
     def setMimeTypeByName(self, name):
         " Guess the mime type "

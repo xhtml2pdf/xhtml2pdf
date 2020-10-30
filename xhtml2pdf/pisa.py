@@ -1,33 +1,34 @@
 # -*- coding: utf-8 -*-
-"""
-Copyright 2010 Dirk Holtwick, holtwick.it
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
-from xhtml2pdf.default import DEFAULT_CSS
-from xhtml2pdf.document import pisaDocument
-from xhtml2pdf.util import getFile
-from xhtml2pdf import __version__
-from xhtml2pdf.config.httpconfig import httpConfig
+# Copyright 2010 Dirk Holtwick, holtwick.it
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import getopt
 import glob
 import logging
 import os
-import six
 import sys
 import tempfile
+
+import six
+
+from xhtml2pdf import __version__
+from xhtml2pdf.config.httpconfig import httpConfig
+from xhtml2pdf.default import DEFAULT_CSS
+from xhtml2pdf.document import pisaDocument
+from xhtml2pdf.util import getFile
+
 try:
     import urllib2
 except ImportError:
@@ -101,7 +102,20 @@ See http.client.HTTPSConnection documentation for this parameters
   --http_timeout
 """).strip()
 
-COPYRIGHT = __doc__
+COPYRIGHT = """
+Copyright 2010 Dirk Holtwick, holtwick.it
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License."""
 
 LOG_FORMAT = "%(levelname)s [%(name)s] %(message)s"
 LOG_FORMAT_DEBUG = "%(levelname)s [%(name)s] %(pathname)s line %(lineno)d: %(message)s"
@@ -137,15 +151,12 @@ class pisaLinkLoader:
             if new_suffix in (".css", ".gif", ".jpg", ".png"):
                 suffix = new_suffix
         path = tempfile.mktemp(prefix="pisa-", suffix=suffix)
-        ufile = urllib2.urlopen(url)
-        tfile = open(path, "wb")
-        while True:
-            data = ufile.read(1024)
-            if not data:
-                break
-            tfile.write(data)
-        ufile.close()
-        tfile.close()
+        with urllib2.urlopen(url) as ufile, open(path, "wb") as tfile:
+            while True:
+                data = ufile.read(1024)
+                if not data:
+                    break
+                tfile.write(data)
         self.tfileList.append(path)
 
         if not self.quiet:
@@ -206,7 +217,7 @@ def execute():
     quiet = 0
     debug = 0
     tempdir = None
-    format = "pdf"
+    file_format = "pdf"
     css = None
     xhtml = None
     encoding = None
@@ -265,7 +276,7 @@ def execute():
 
         elif o in ("-t", "--format"):
             # Format XXX ???
-            format = a
+            file_format = a
 
         elif o in ("-b", "--base"):
             base_dir = a
@@ -276,7 +287,8 @@ def execute():
 
         elif o in ("-c", "--css"):
             # CSS
-            css = open(a, "r").read()
+            with open(a, "r") as file_handler:
+                css = file_handler.read()
 
         elif o in ("--css-dump",):
             # CSS dump
@@ -334,24 +346,25 @@ def execute():
         else:
             if src.startswith("http:") or src.startswith("https:"):
                 wpath = src
-                fsrc = getFile(src).getFile()
+                fsrc = getFile(src).getFileContent()
                 src = "".join(urlparse.urlsplit(src)[1:3]).replace("/", "-")
             else:
                 fsrc = wpath = os.path.abspath(src)
-                fsrc = open(fsrc, "rb")
+                with open(fsrc, "rb") as file_handler:
+                    fsrc = file_handler.read()
 
         if a_dest is None:
             dest_part = src
             if dest_part.lower().endswith(".html") or dest_part.lower().endswith(".htm"):
                 dest_part = ".".join(src.split(".")[:-1])
-            dest = dest_part + "." + format.lower()
+            dest = dest_part + "." + file_format.lower()
             for i in six.moves.range(10):
                 try:
                     open(dest, "wb").close()
                     break
                 except:
                     pass
-                dest = dest_part + "-%d.%s" % (i, format.lower())
+                dest = dest_part + "-%d.%s" % (i, file_format.lower())
         else:
             dest = a_dest
 
@@ -384,7 +397,7 @@ def execute():
             path=wpath,
             errout=sys.stdout,
             tempdir=tempdir,
-            format=format,
+            format=file_format,
             link_callback=lc,
             default_css=css,
             xhtml=xhtml,
@@ -457,7 +470,8 @@ def makeDataURI(data=None, mimetype=None, filename=None):
 
 
 def makeDataURIFromFile(filename):
-    data = open(filename, "rb").read()
+    with open(filename, "rb") as file_handler:
+        data = file_handler.read()
     return makeDataURI(data, filename=filename)
 
 

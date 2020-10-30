@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-import os
 import io
+import os
+from unittest import TestCase
 
 import html5lib
-from unittest import TestCase
+
 from xhtml2pdf.document import pisaDocument
 
 __doc__ = """

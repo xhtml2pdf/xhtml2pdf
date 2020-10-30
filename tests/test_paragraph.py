@@ -1,15 +1,16 @@
 # -*- coding: utf-8
-from __future__ import unicode_literals, absolute_import
+from __future__ import absolute_import, unicode_literals
 
 import copy
 import re
 from unittest import TestCase
+import tempfile
 
 from reportlab.lib.colors import Color
-from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.platypus import SimpleDocTemplate
 
-from xhtml2pdf.paragraph import Style, Word, Space, Text, BoxBegin, BoxEnd, LineBreak, Paragraph
+from xhtml2pdf.paragraph import BoxBegin, BoxEnd, LineBreak, Paragraph, Space, Style, Text, Word
 
 
 class LegacyParagraphTests(TestCase):
@@ -71,173 +72,174 @@ class LegacyParagraphTests(TestCase):
             )
 
         def test():
-            doc = SimpleDocTemplate("test.pdf")
-            story = []
+            with tempfile.TemporaryFile() as pdf_file:
+                doc = SimpleDocTemplate(pdf_file)
+                story = []
 
-            style = Style(fontName="Helvetica", textIndent=24.0)
-            fn = style["fontName"]
-            fs = style["fontSize"]
-            sampleText1 = createText(TEXT[:100], fn, fs)
-            sampleText2 = createText(TEXT[100:], fn, fs)
+                style = Style(fontName="Helvetica", textIndent=24.0)
+                fn = style["fontName"]
+                fs = style["fontSize"]
+                sampleText1 = createText(TEXT[:100], fn, fs)
+                sampleText2 = createText(TEXT[100:], fn, fs)
 
-            text = Text(sampleText1 + [
-                Space(
-                    fontName=fn,
-                    fontSize=fs),
-                Word(
-                    text="TrennbarTrennbar",
-                    pairs=[("Trenn-", "barTrennbar")],
-                    fontName=fn,
-                    fontSize=fs),
-                Space(
-                    fontName=fn,
-                    fontSize=fs),
-                Word(
-                    text="Normal",
-                    color=Color(1, 0, 0),
-                    fontName=fn,
-                    fontSize=fs),
-                Space(
-                    fontName=fn,
-                    fontSize=fs),
-                Word(
-                    text="gGrößer",
-                    fontName=fn,
-                    fontSize=fs * 1.5),
-                Space(
-                    fontName=fn,
-                    fontSize=fs),
-                Word(
-                    text="Bold",
-                    fontName="Times-Bold",
-                    fontSize=fs),
-                Space(
-                    fontName=fn,
-                    fontSize=fs),
-                Word(
-                    text="jItalic",
-                    fontName="Times-Italic",
-                    fontSize=fs),
-                Space(
-                    fontName=fn,
-                    fontSize=fs),
+                text = Text(sampleText1 + [
+                    Space(
+                        fontName=fn,
+                        fontSize=fs),
+                    Word(
+                        text="TrennbarTrennbar",
+                        pairs=[("Trenn-", "barTrennbar")],
+                        fontName=fn,
+                        fontSize=fs),
+                    Space(
+                        fontName=fn,
+                        fontSize=fs),
+                    Word(
+                        text="Normal",
+                        color=Color(1, 0, 0),
+                        fontName=fn,
+                        fontSize=fs),
+                    Space(
+                        fontName=fn,
+                        fontSize=fs),
+                    Word(
+                        text="gGrößer",
+                        fontName=fn,
+                        fontSize=fs * 1.5),
+                    Space(
+                        fontName=fn,
+                        fontSize=fs),
+                    Word(
+                        text="Bold",
+                        fontName="Times-Bold",
+                        fontSize=fs),
+                    Space(
+                        fontName=fn,
+                        fontSize=fs),
+                    Word(
+                        text="jItalic",
+                        fontName="Times-Italic",
+                        fontSize=fs),
+                    Space(
+                        fontName=fn,
+                        fontSize=fs),
 
-                # <span style="border: 1px solid red;">ipsum <span style="border: 1px solid green; padding: 4px;
-                # padding-left: 20px; background: yellow; margin-bottom: 8px; margin-left: 10px;">
-                # Lo<font size="12pt">re</font>m</span> <span style="background:blue; height: 30px;">ipsum</span>
-                # Lorem</span>
+                    # <span style="border: 1px solid red;">ipsum <span style="border: 1px solid green; padding: 4px;
+                    # padding-left: 20px; background: yellow; margin-bottom: 8px; margin-left: 10px;">
+                    # Lo<font size="12pt">re</font>m</span> <span style="background:blue; height: 30px;">ipsum</span>
+                    # Lorem</span>
 
-                BoxBegin(
-                    fontName=fn,
-                    fontSize=fs,
-                    **makeBorder(0.5, "solid", Color(0, 1, 0))),
-                Word(
-                    text="Lorem",
-                    fontName="Times-Bold",
-                    fontSize=fs),
-                Word(
-                    text="Lorem",
-                    fontName=fn,
-                    fontSize=fs),
-                Word(
-                    text="Lorem",
-                    fontName=fn,
-                    fontSize=fs),
-                Word(
-                    text="Lorem",
-                    fontName=fn,
-                    fontSize=fs),
-                Word(
-                    text="Lorem",
-                    fontName=fn,
-                    fontSize=fs),
-                Word(
-                    text="Lorem",
-                    fontName=fn,
-                    fontSize=fs),
-                Word(
-                    text="Lorem",
-                    fontName=fn,
-                    fontSize=fs),
-                Word(
-                    text="Lorem",
-                    fontName=fn,
-                    fontSize=fs),
-                Word(
-                    text="Lorem",
-                    fontName=fn,
-                    fontSize=fs),
-                Word(
-                    text="Lorem",
-                    fontName="Times-Bold",
-                    fontSize=fs),
-                Space(
-                    fontName=fn,
-                    fontSize=fs),
-                Word(
-                    text="Lorem",
-                    fontName=fn,
-                    fontSize=fs),
-                Space(
-                    fontName=fn,
-                    fontSize=fs),
-                Word(
-                    text="Lorem",
-                    fontName=fn,
-                    fontSize=fs),
-                Space(
-                    fontName=fn,
-                    fontSize=fs),
-                Word(
-                    text="Lorem",
-                    fontName=fn,
-                    fontSize=fs),
-                Space(
-                    fontName=fn,
-                    fontSize=fs),
-                BoxBegin(
-                    fontName=fn,
-                    fontSize=fs,
-                    backgroundColor=Color(1, 1, 0),
-                    **makeBorder(1, "solid", Color(1, 0, 0))),
-                Word(
-                    text="Lorem",
-                    fontName=fn,
-                    fontSize=fs),
-                BoxEnd(),
-                Space(
-                    fontName=fn,
-                    fontSize=fs),
-                Word(
-                    text="Lorem",
-                    fontName=fn,
-                    fontSize=fs),
-                Space(
-                    fontName=fn,
-                    fontSize=fs),
-                BoxEnd(),
+                    BoxBegin(
+                        fontName=fn,
+                        fontSize=fs,
+                        **makeBorder(0.5, "solid", Color(0, 1, 0))),
+                    Word(
+                        text="Lorem",
+                        fontName="Times-Bold",
+                        fontSize=fs),
+                    Word(
+                        text="Lorem",
+                        fontName=fn,
+                        fontSize=fs),
+                    Word(
+                        text="Lorem",
+                        fontName=fn,
+                        fontSize=fs),
+                    Word(
+                        text="Lorem",
+                        fontName=fn,
+                        fontSize=fs),
+                    Word(
+                        text="Lorem",
+                        fontName=fn,
+                        fontSize=fs),
+                    Word(
+                        text="Lorem",
+                        fontName=fn,
+                        fontSize=fs),
+                    Word(
+                        text="Lorem",
+                        fontName=fn,
+                        fontSize=fs),
+                    Word(
+                        text="Lorem",
+                        fontName=fn,
+                        fontSize=fs),
+                    Word(
+                        text="Lorem",
+                        fontName=fn,
+                        fontSize=fs),
+                    Word(
+                        text="Lorem",
+                        fontName="Times-Bold",
+                        fontSize=fs),
+                    Space(
+                        fontName=fn,
+                        fontSize=fs),
+                    Word(
+                        text="Lorem",
+                        fontName=fn,
+                        fontSize=fs),
+                    Space(
+                        fontName=fn,
+                        fontSize=fs),
+                    Word(
+                        text="Lorem",
+                        fontName=fn,
+                        fontSize=fs),
+                    Space(
+                        fontName=fn,
+                        fontSize=fs),
+                    Word(
+                        text="Lorem",
+                        fontName=fn,
+                        fontSize=fs),
+                    Space(
+                        fontName=fn,
+                        fontSize=fs),
+                    BoxBegin(
+                        fontName=fn,
+                        fontSize=fs,
+                        backgroundColor=Color(1, 1, 0),
+                        **makeBorder(1, "solid", Color(1, 0, 0))),
+                    Word(
+                        text="Lorem",
+                        fontName=fn,
+                        fontSize=fs),
+                    BoxEnd(),
+                    Space(
+                        fontName=fn,
+                        fontSize=fs),
+                    Word(
+                        text="Lorem",
+                        fontName=fn,
+                        fontSize=fs),
+                    Space(
+                        fontName=fn,
+                        fontSize=fs),
+                    BoxEnd(),
 
-                LineBreak(
-                    fontName=fn,
-                    fontSize=fs),
-                LineBreak(
-                    fontName=fn,
-                    fontSize=fs),
-            ] + sampleText2)
+                    LineBreak(
+                        fontName=fn,
+                        fontSize=fs),
+                    LineBreak(
+                        fontName=fn,
+                        fontSize=fs),
+                ] + sampleText2)
 
-            story.append(Paragraph(
-                copy.copy(text),
-                style,
-                debug=0))
-
-            for i in range(10):
-                style = copy.deepcopy(style)
-                style["textAlign"] = ALIGNMENTS[i % 4]
-                text = createText(("(%d) " % i) + TEXT, fn, fs)
                 story.append(Paragraph(
                     copy.copy(text),
                     style,
                     debug=0))
-            doc.build(story)
+
+                for i in range(10):
+                    style = copy.deepcopy(style)
+                    style["textAlign"] = ALIGNMENTS[i % 4]
+                    text = createText(("(%d) " % i) + TEXT, fn, fs)
+                    story.append(Paragraph(
+                        copy.copy(text),
+                        style,
+                        debug=0))
+                doc.build(story)
 
         test()

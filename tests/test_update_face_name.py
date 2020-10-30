@@ -2,11 +2,13 @@
 from __future__ import unicode_literals
 
 import io
-import html5lib
+import os
 from unittest import TestCase
+
+import html5lib
+
 from xhtml2pdf.document import pisaDocument
 from xhtml2pdf.w3c.cssDOMElementInterface import CSSDOMElementInterface
-import os
 
 __doc__ = """
         TTFWithSameFaceName provides us auxiliary functions to check 

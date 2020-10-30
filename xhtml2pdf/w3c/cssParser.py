@@ -1,23 +1,21 @@
 #!/usr/bin/env python
 
-##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-##~ Copyright (C) 2002-2004  TechGame Networks, LLC.
-##~
-##~ This library is free software; you can redistribute it and/or
-##~ modify it under the terms of the BSD style License as found in the
-##~ LICENSE file included with this distribution.
-##
-##  Modified by Dirk Holtwick <holtwick@web.de>, 2007-2008
-##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Copyright (C) 2002-2004 TechGame Networks, LLC.
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the BSD style License as found in the
+# LICENSE file included with this distribution.
+#
+# Modified by Dirk Holtwick <holtwick@web.de>, 2007-2008
+
 from __future__ import absolute_import
-
-
 # Added by benjaoming to fix python3 tests
 from __future__ import unicode_literals
 
+from reportlab.lib.pagesizes import landscape
+
 import xhtml2pdf.default
 from xhtml2pdf.util import getSize
-from reportlab.lib.pagesizes import landscape
 
 try:
     from future_builtins import filter
@@ -428,17 +426,14 @@ class CSSParser(object):
     # ~ Public CSS Parsing API
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def parseFile(self, srcFile, closeFile=False):
+    def parseFile(self, srcFile):
         """Parses CSS file-like objects using the current cssBuilder.
         Use for external stylesheets."""
 
-        try:
-            result = self.parse(srcFile.read())
-        finally:
-            if closeFile:
-                srcFile.close()
-        return result
+        with open(srcFile, "r") as file_handler:
+            file_content = file_handler.read()
 
+        return self.parse(file_content)
 
     def parse(self, src):
         """Parses CSS string source using the current cssBuilder.
@@ -492,8 +487,8 @@ class CSSParser(object):
             properties = []
             try:
                 for propertyName, src in six.iteritems(kwAttributes):
-                    src, property = self._parseDeclarationProperty(src.strip(), propertyName)
-                    properties.append(property)
+                    src, single_property = self._parseDeclarationProperty(src.strip(), propertyName)
+                    properties.append(single_property)
 
             except self.ParseError as err:
                 err.setFullCSSSource(src, inline=True)
@@ -1076,17 +1071,17 @@ class CSSParser(object):
         properties = []
         src = src.lstrip()
         while src[:1] not in ('', ',', '{', '}', '[', ']', '(', ')', '@'): # XXX @?
-            src, property = self._parseDeclaration(src)
+            src, single_property = self._parseDeclaration(src)
 
             # XXX Workaround for styles like "*font: smaller"
             if src.startswith("*"):
                 src = "-nothing-" + src[1:]
                 continue
 
-            if property is None:
+            if single_property is None:
                 src = src[1:].lstrip()
                 break
-            properties.append(property)
+            properties.append(single_property)
             if src.startswith(';'):
                 src = src[1:].lstrip()
             else:
@@ -1118,11 +1113,11 @@ class CSSParser(object):
                 # suppor a null transition, as well as an "=" transition
                 src = src[1:].lstrip()
 
-            src, property = self._parseDeclarationProperty(src, propertyName)
+            src, single_property = self._parseDeclarationProperty(src, propertyName)
         else:
-            property = None
+            single_property = None
 
-        return src, property
+        return src, single_property
 
 
     def _parseDeclarationProperty(self, src, propertyName):
@@ -1133,8 +1128,8 @@ class CSSParser(object):
         important, src = self._getMatchResult(self.re_important, src)
         src = src.lstrip()
 
-        property = self.cssBuilder.property(propertyName, expr, important)
-        return src, property
+        single_property = self.cssBuilder.property(propertyName, expr, important)
+        return src, single_property
 
 
     def _parseExpression(self, src, returnList=False):

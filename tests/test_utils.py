@@ -4,8 +4,8 @@ from unittest import TestCase
 from reportlab.lib.colors import Color
 
 from xhtml2pdf.tags import int_to_roman
-from xhtml2pdf.util import (getCoords, getColor, getSize, getFrameDimensions, getBox, pisaTempFile, getBorderStyle,
-                            set_value, copy_attrs, transform_attrs)
+from xhtml2pdf.util import (copy_attrs, getBorderStyle, getBox, getColor, getCoords, getFrameDimensions, getSize,
+                            pisaTempFile, set_value, transform_attrs)
 
 
 class UtilsCoordTestCase(TestCase):
