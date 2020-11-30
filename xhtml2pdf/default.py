@@ -316,6 +316,9 @@ TAGS = {
 
     "div": (1, {
         "align": ["left", "center", "right", "justify"],
+        "class": str,
+        "coltype": str,
+        "rowtype": str,
     }),
 
     "p": (1, {

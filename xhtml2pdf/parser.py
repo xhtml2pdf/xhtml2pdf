@@ -29,7 +29,10 @@ from reportlab.platypus.doctemplate import FrameBreak, NextPageTemplate
 from reportlab.platypus.flowables import KeepInFrame, PageBreak
 
 from xhtml2pdf.default import BOOL, BOX, COLOR, FILE, FONT, INT, MUST, POS, SIZE, STRING, TAGS
+from xhtml2pdf.default_grid_system import DefaultGridSystem
+from xhtml2pdf.xhtml2pdf_reportlab import PmlParagraph
 
+children = []
 # TODO: Why do we need to import these Tags here? They aren't uses in this file or any other file,
 #  but if we don't import them, Travis & AppVeyor fail. Very strange (fbernhart)
 from xhtml2pdf.tables import (TableData,
@@ -85,9 +88,15 @@ from xhtml2pdf.xhtml2pdf_reportlab import PmlLeftPageBreak, PmlRightPageBreak
 
 CSSAttrCache = {}
 
+text = []
+grid_text = []
+div_attr_list = []
+
 log = logging.getLogger("xhtml2pdf")
 
 rxhttpstrip = re.compile("https?://[^/]+(.*)", re.M | re.I)
+
+value = None
 
 
 class AttrContainer(dict):
@@ -296,7 +305,6 @@ def CSSCollect(node, c):
     # return node.cssAttrs
 
     if c.css:
-
         _key = getCSSAttrCacheKey(node)
 
         if hasattr(node.parentNode, "tagName"):
@@ -485,7 +493,6 @@ def pisaPreLoop(node, context, collect=False):
     """
     Collect all CSS definitions
     """
-
     data = u""
     if node.nodeType == Node.TEXT_NODE and collect:
         data = node.data
@@ -516,14 +523,21 @@ def pisaPreLoop(node, context, collect=False):
         result = pisaPreLoop(node, context, collect=collect)
         if collect:
             data += result
-
     return data
+
+def checking_div_grid(context, node):
+    if node.nodeType == Node.ELEMENT_NODE:
+        if node.tagName == 'div':
+            div_attribute = pisaGetAttributes(context, node.tagName, node.attributes)
+            system_grid_class = DefaultGridSystem.cols_bootstrap
+            if system_grid_class.get(div_attribute.get('class')):
+                if div_attribute.get('coltype') == 'child' or div_attribute.get('coltype') == None:
+                    return True
 
 
 def pisaLoop(node, context, path=None, **kw):
     if path is None:
         path = []
-
     # Initialize KW
     if not kw:
         kw = {
@@ -534,30 +548,63 @@ def pisaLoop(node, context, path=None, **kw):
         }
     else:
         kw = copy.copy(kw)
-
     # indent = len(path) * "  " # only used for debug print statements
-
     # TEXT
+
+    global incol
+    incol = False
+    div_grid = checking_div_grid(context, node)
+    global value
+
+    if div_grid:
+        global children
+        children = node.childNodes
+        value = div_grid
+    else:
+        value = False
+
+
     if node.nodeType == Node.TEXT_NODE:
+        # METHOD TO BUILD A GRID STRUCTURE NEEDED TO USE ON GRID EXPERIMENT
+        if value:
+            incol = True
+        else:
+            if node in children:
+                incol = True
+
+        #---------------------------------------------------------------------
+
         # print indent, "#", repr(node.data) #, context.frag
         context.addFrag(node.data)
         # context.text.append(node.value)
 
     # ELEMENT
     elif node.nodeType == Node.ELEMENT_NODE:
-
         node.tagName = node.tagName.replace(":", "").lower()
-
         if node.tagName in ("style", "script"):
             return
 
         path = copy.copy(path) + [node.tagName]
 
+        # PREPARE GRID ATTRIBUTES, NEEDED TO USE IN GRID EXPERIMENT
+
+        if node.tagName == 'img':
+            if value:
+                incol = True
+            else:
+                if node in children:
+                    incol = True
+
+        if node.tagName == 'div':
+            div_attr = pisaGetAttributes(context, node.tagName, node.attributes)
+            system_grid_class = DefaultGridSystem.cols_bootstrap
+            if div_attr.get('class') == 'row' or system_grid_class.get(div_attr.get('class')):
+                div_attr_list.append(div_attr)
+
         # Prepare attributes
         attr = pisaGetAttributes(context, node.tagName, node.attributes)
         # log.debug(indent + "<%s %s>" % (node.tagName, attr) +
         # repr(node.attributes.items())) #, path
-
         # Calculate styles
         context.cssAttr = CSSCollect(node, context)
         context.cssAttr = mapNonStandardAttrs(context.cssAttr, node, attr)
@@ -574,10 +621,8 @@ def pisaLoop(node, context, path=None, **kw):
         # print indent, node.tagName, display,
         # context.cssAttr.get("background-color", None), attr
         isBlock = (display == "block")
-
         if isBlock:
             context.addPara()
-
             # Page break by CSS
             if "-pdf-next-page" in context.cssAttr:
                 context.addStory(
@@ -683,6 +728,7 @@ def pisaLoop(node, context, path=None, **kw):
 
         # Visit child nodes
         context.fragBlock = fragBlock = copy.copy(context.frag)
+
         for nnode in node.childNodes:
             pisaLoop(nnode, context, path, **kw)
         context.fragBlock = fragBlock
@@ -693,7 +739,7 @@ def pisaLoop(node, context, path=None, **kw):
 
         # Block?
         if isBlock:
-            context.addPara()
+            context.addPara(incols=incol)
 
             # XXX Buggy!
 
@@ -724,7 +770,6 @@ def pisaLoop(node, context, path=None, **kw):
 
         # Static block, END
         if staticFrame:
-            context.addPara()
             for frame in staticFrame:
                 frame.pisaStaticStory = context.story
             context.swapStory(oldStory)
@@ -741,6 +786,72 @@ def pisaLoop(node, context, path=None, **kw):
         # Loop over children
         for node in node.childNodes:
             pisaLoop(node, context, path, **kw)
+
+        #NEEDED TO USE ON GRID EXPERIMENT
+
+# METHOD TO BUILD A GRID STRUCTURE NEEDED, TO USE ON GRID EXPERIMENT
+def grid_build_context(div_attr_list):
+    rows = DefaultGridSystem.rows
+    content = []
+    cont = 1
+    parent = 1
+    for div in div_attr_list:
+        if div.get('class') in rows and div.get('rowtype') == None:
+            dic = {
+                "class": 'columns',
+            }
+            content.append(dic)
+        if div.get('class') not in rows and div.get('coltype') == 'child' and parent != None:
+            dic = {
+                "class": div.get('class'),
+                "text": ' ',
+                "child": str(parent),
+            }
+            content.append(dic)
+            cont = cont + 1
+        if div.get('class') not in rows and div.get('coltype') == 'parent':
+            dic = {
+                "class": div.get('class'),
+                "text": ' ',
+                "parent": str(cont),
+            }
+            parent = cont
+            content.append(dic)
+            cont = cont + 1
+        if div.get('class') not in rows and div.get('coltype') == None:
+            dic = {
+                "class": div.get('class'),
+                "text": ' ',
+            }
+            parent = cont
+            content.append(dic)
+            cont = cont + 1
+    return content
+
+# METHOD TO SET TEXT INTO COLUMNS GRID STRUCTURE, NEEDED TO USE ON GRID EXPERIMENT
+def set_column_text(content,grid_text):
+    cont = 0
+    result = []
+    for i in content:
+        if not i.__contains__('parent') and i.get('class') != 'columns':
+            i['text'] = grid_text[cont]
+            result.append(i)
+            cont = cont + 1
+        else:
+            result.append(i)
+    return result
+
+def set_grid_class(divs):
+    system_grid_class = DefaultGridSystem.cols_bootstrap
+    result = []
+    for div in divs:
+        system_col = system_grid_class.get(div.get('class'))
+        if system_col:
+            div['class'] = system_col
+            result.append(div)
+        else:
+            result.append(div)
+    return result
 
 
 def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_output=None):
@@ -784,7 +895,7 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
     document = parser.parse(
         src, **parser_kwargs
     )  # encoding=encoding)
-
+    
     if xml_output:
         if encoding:
             xml_output.write(document.toprettyxml(encoding=encoding))
@@ -801,8 +912,8 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
     #    context.cssText = DEFAULT_CSS
     #    context.parseCSS()
     # context.debug(9, pprint.pformat(context.css))
-
     pisaLoop(document, context)
+    collect_grid_context(context)
     return context
 
 
@@ -817,3 +928,72 @@ def XHTML2PDF(*a, **kw):
 
 
 XML2PDF = XHTML2PDF
+
+
+def collect_paragraph_styles(context):
+    styles = []
+    for i in context.story:
+        if isinstance(i, PmlParagraph):
+            styles.append(i.frags[0])
+    return styles
+
+def multi_content_grid(frags):
+    result_list = []
+    for frag in frags:
+        if hasattr(frag, 'cbDefn'):
+            obj = {
+                'scr': frag.cbDefn.image,
+                'width': frag.cbDefn.width,
+                'height': frag.cbDefn.height,
+            }
+            result_list.append(obj)
+        else:
+            if frag.text != '':
+                result_list.append(frag.text)
+    return result_list
+
+def building_collected_grid_context(frags):
+    if frags[0].inCols == True:
+        del frags[-1]
+        count_frags = len(frags)
+        if count_frags > 1:
+            multi_content = multi_content_grid(frags)
+            grid_text.append(multi_content)
+            text.append(multi_content)
+        if count_frags == 1:
+            if hasattr(frags[0], 'cbDefn'):
+                obj = {
+                'scr': frags[0].cbDefn.image,
+                'width': frags[0].cbDefn.width,
+                'height': frags[0].cbDefn.height,
+                }
+                text.append(obj)
+                grid_text.append(obj)
+            else:
+                text.append(frags[0].text)
+                grid_text.append(frags[0].text)
+
+def collect_grid_context(context):
+    getting_next_frame_position(context)
+    for i in context.story:
+        if isinstance(i, PmlParagraph):
+           building_collected_grid_context(i.frags)
+
+def collect_content_inCols(context):
+    list_inCol = []
+    for i in context.story:
+        if isinstance(i, PmlParagraph):
+            if i.frags[0].inCols == True:
+                list_inCol.append(i.frags[0])
+    return list_inCol
+
+def getting_next_frame_position(context):
+    list = collect_content_inCols(context)
+    new_context = context
+    for i in new_context.story:
+        if isinstance(i, PmlParagraph):
+            if i.frags[0].inCols == True:
+                if i.frags[0] != list[-1]:
+                    context.story.insert(new_context.story.index(i) + 1, FrameBreak())
+
+

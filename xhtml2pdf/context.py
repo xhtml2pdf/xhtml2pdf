@@ -29,9 +29,6 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus.frames import Frame, ShowBoundaryValue
 from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
-from xhtml2pdf.util import (copy_attrs, getColor, getCoords, getFile,
-                            getFrameDimensions, getSize, pisaFileObject,
-                            set_value, set_asian_fonts, arabic_format, frag_text_language_check)
 
 import xhtml2pdf.default
 import xhtml2pdf.parser
@@ -55,6 +52,7 @@ log = logging.getLogger("xhtml2pdf")
 sizeDelta = 2       # amount to reduce font size by for super and sub script
 subFraction = 0.4   # fraction of font size that a sub script should be lowered
 superFraction = 0.4
+
 
 NBSP = u"\u00a0"
 
@@ -96,7 +94,7 @@ def getParaFrag(style):
               )
     set_value(frag,
               ('pageNumber', 'pageCount', 'outline',
-               'outlineOpen', 'keepWithNext'),
+               'outlineOpen', 'keepWithNext', 'inCols'),
               False)
 
     frag.text = ""
@@ -309,7 +307,6 @@ class pisaCSSBuilder(css.CSSBuilder):
             else:
                 frame_border = ShowBoundaryValue(
                     color=border_color, width=border_width)
-
             frameList.append(Frame(
                 x, y, w, h,
                 id=fname,
@@ -388,7 +385,7 @@ class pisaContext(object):
                   ('path', 'story', 'text', 'log', 'frameStaticList',
                    'pisaBackgroundList', 'frameList', 'anchorFrag',
                    'anchorName', 'fragList', 'fragAnchor', 'fragStack'
-                   ), [],  _copy=True)
+                   ), [], _copy=True)
 
         set_value(self, ('node', 'indexing_story',
                          'template', 'keepInFrameIndex',
@@ -398,6 +395,7 @@ class pisaContext(object):
         set_value(self, ('text', 'cssText', 'cssDefaultText'), "")
         set_value(self, ('templateList', 'frameStatic', 'imageData'),
                   {}, _copy=True)
+
         self.capacity = capacity
         self.toc = PmlTableOfContents()
         self.multiBuild = False
@@ -476,6 +474,7 @@ class pisaContext(object):
     def addStory(self, data):
         self.story.append(data)
 
+
     def swapStory(self, story=None):
         story = story if story is not None else []
         self.story, story = copy.copy(story), copy.copy(self.story)
@@ -551,8 +550,7 @@ class pisaContext(object):
     def dumpPara(self, frags, style):
         return
 
-    def addPara(self, force=False):
-
+    def addPara(self, force=False, incols=None):
         force = (force or self.force)
         self.force = False
 
@@ -620,8 +618,10 @@ class pisaContext(object):
                         para,
                         self.image,
                         side=self.imageData.get("align", "left"))
-
+                if isinstance(para, PmlParagraph):
+                    para.frags[0].inCols = incols
                 self.addStory(para)
+
 
             self.fragAnchor = []
             first.bulletText = None

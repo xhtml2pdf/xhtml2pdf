@@ -1176,7 +1176,7 @@ class Paragraph(Flowable):
         """
 
         if self.debug:
-            print (id(self), "breakLines")
+            print(id(self), "breakLines")
 
         if not isinstance(width, (tuple, list)):
             maxWidths = [width]
@@ -1190,7 +1190,8 @@ class Paragraph(Flowable):
         _handleBulletWidth(self.bulletText, style, maxWidths)
 
         maxWidth = maxWidths[0]
-
+        if self.encoding == 'utf8':
+            self.encoding = 'utf-8'
         self.height = 0
         autoLeading = getattr(self, 'autoLeading', getattr(style, 'autoLeading', ''))
         calcBounds = autoLeading not in ('', 'off')

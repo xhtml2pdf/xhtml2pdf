@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<style>
+    @page body{
+        size: letter;
+        @frame header_frame {
+            -pdf-frame-content: header_content;
+            left: 50pt; width: 512pt; top: 50pt; height: 40pt;
+        }
+        @frame content_frame {
+            left: 50pt; width: 512pt; top: 90pt; height: 632pt;
+        }
+        @frame footer_frame {
+            -pdf-frame-content: footer_content;
+            left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+        }
+    }
+</style>
+<body>
+
+    <div id="header_content">Grid Experiment</div>
+    <p>NO GRID</p>
+    <img width="30px" height="30px" src="img/beach.jpg">
+    <div id="footer_content">(c) - page <pdf:pagenumber>
+        of <pdf:pagecount>
+    </div>
+
+    <pdf:nexttemplate name="id0" />
+    <pdf:nextframe name="" />
+    <div class="row" style="text-align: center">
+    <div class="col-sm-6" coltype="parent" style="background-color: #99CC66">
+    <div class="row" rowtype="child">
+        <pdf:nextframe name="" />
+        <div class="col-sm-4" coltype="child" style="background-color: #FFBBBB">rosa col-4</div>
+        <div class="col-sm-8" coltype="child" style="background-color: #336699">azul col-8
+        </div>
+        </div>
+        </div>
+        <div class="col-sm-6">blanco cols-6</div>
+    </div>
+    <div class="row" style="text-align: center">
+        <div class="col-sm-4" style="background-color: aqua">
+            Celeste orem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
+            et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
+            exea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
+            fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+            mollit anim id est laborum.
+        </div>
+        <div class="col-sm-4" style="background-color: crimson">
+            Rojo Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
+            dolore magna aliqua consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna
+            aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+            consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+            pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
+            est laborum consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+            Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+            Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est
+            laborum consectetur adipiscing elit.
+        </div>
+        <div class="is-4" style="background-color: green">
+            Verde Lorem ipsum dolor sit amet, consectetur adipiscing elit ut labore et dolore magna aliqua. Ut enim ad
+            minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute
+            irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
+            occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum Verde Lorem
+            ipsum dolor sit amet, consectetur adipiscing elit ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+            quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
+            reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
+            cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum Verde Lorem ipsum
+            dolor sit amet, consectetur adipiscing elit ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
+            nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
+            reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
+            cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+        </div>
+    </div>
+    <div class="row" style="text-align: center">
+        <div class="col-sm-4" style="background-color: aquamarine">
+           <img width="200px" height="100px" src="img/beach.jpg">
+        </div>
+        <div class="col-sm-8" style="background-color: blueviolet">
+            Morado Lorem ipsum dolor sit amet, consectetur adipiscing elitv Lorem ipsum dolor sit amet, consectetur
+            adipiscing elitv Lorem ipsum dolor sit amet, consectetur adipiscing elitv Lorem ipsum dolor sit amet,
+            consectetur adipiscing elitv Lorem ipsum dolor sit amet, consectetur adipiscing elitv Lorem ipsum dolor sit
+            amet, consectetur adipiscing elitv.
+        </div>
+    </div>
+
+    <pdf:nexttemplate name="body" />
+    <pdf:nextframe name="" />
+    <div><p>NO GRID</p></div>
+
+</body>
+</html>

@@ -325,3 +325,237 @@ large 5cm margins and regular pages with regular 2cm margins.
     </body>
     </html>
 
+Using Grid System
+-------------------------------------
+
+
+Grid system is a new Xhtml2Pdf functionality which allows to generate a content structure for a PDF file. This new
+arrangement of content is based on rows and columns.
+The grid system structure that Xhtml2Pdf can interpret are ``Bootstrap 4`` and ``Bulma.io``.
+The specific classes of CSS framework are:
+
+=============       =========       ======================
+CSS Framework       Row Class       Columns Class
+=============       =========       ======================
+Boostrap 4             row          col-sm-x (x=1,2...12)
+Bulma.io             columns        is-x (x=1,2...12)
+=============       =========       ======================
+
+Thus, we can use the CSS framework that we feel more comfortable with.
+
+Along with the previuos introduccion, we would like to explain the scope of this method in the following examples:
+
+Example 1: Working simple columns.
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code:: html
+
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+    @page{
+        size: letter;
+        }
+    </style>
+    </head>
+    <body>
+    <div class="row" style="text-align: center">
+        <div class="col-sm-6" style="background-color: #99CC66">col-6</div>
+        <div class="col-sm-6">col-6</div>
+    </div>
+    <div class="row" style="text-align: center">
+        <div class="col-sm-4" style="background-color: aquamarine">
+            col-4 Lorem ipsum dolor sit amet, consectetur adipiscing elitv Lorem ipsum dolor sit amet, consectetur
+            adipiscing elitv Lorem ipsum dolor sit amet, consectetur adipiscing elitv Lorem ipsum dolor sit amet
+            consectetur.
+        </div>
+        <div class="col-sm-8" style="background-color: blueviolet">
+            col- 8 Lorem ipsum dolor sit amet, consectetur adipiscing elitv Lorem ipsum dolor sit amet, consectetur
+            adipiscing elitv Lorem ipsum dolor sit amet, consectetur adipiscing elitv Lorem ipsum dolor sit amet,
+            consectetur adipiscing elitv Lorem ipsum dolor sit amet, consectetur adipiscing elitv Lorem ipsum dolor sit
+            amet, consectetur adipiscing elitv.
+        </div>
+    </div>
+    </body>
+    </html>
+
+Example 2: Working columns into columns.
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In this example, is shown how to divide a column into more columns. Before showing you the example 2, please
+take into consideration the following points:
+
+* Add ``coltype="parent"`` attribute to the column you want to divide.
+* Add ``rowtype=child`` to the row you have added in the ``parent column``.
+* Add ``coltype=child`` to the columns that belong to ``children rows``.
+* It is imperative to add  the custom tag ``<pdf: netxframe name="" />`` right after adding the ``child column``.
+
+.. code:: html
+
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+    @page{
+        size: letter;
+    }
+    </style>
+    </head>
+    <body>
+        <div class="columns" style="text-align: center">
+            <!-- we must add coltype="parent" attr -->
+            <div class="is-6" coltype="parent" style="background-color: #99CC66">
+                <!-- we must add rowtype="child" attr -->
+                <div class="columns" rowtype="child">
+                <!-- we must add custom tag <pdf:nextframe name="" /> -->
+                <pdf:nextframe name="" />
+                    <!-- we must add coltype="child" attr -->
+                    <div class="is-4" coltype="child" style="background-color: #FFBBBB">col-4</div>
+                    <div class="is-8" coltype="child" style="background-color: #336699">col-8</div>
+                </div>
+            </div>
+            <div class="is-6">col-6</div>
+        </div>
+        <div class="columns" style="text-align: center">
+            <div class="is-4" style="background-color: aqua">
+                col-4 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+                labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi
+                ut aliquip exea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+                cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa
+                qui officia deserunt mollit anim id est laborum.
+            </div>
+            <div class="is-4" style="background-color: crimson">
+                col-4 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+                labore et dolore magna aliqua consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
+                et dolore magna aliqua.
+            </div>
+            <div class="is-4" style="background-color: green">
+                col-4 Lorem ipsum dolor sit amet, consectetur adipiscing elit ut labore et dolore magna aliqua.
+                Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+                consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+                pariatur.
+            </div>
+        </div>
+    </body>
+    </html>
+
+.. note:: The grid system classes used in this example are from Bulma.io
+
+
+Example 3: Working grid system along to normal document system.
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In this third example, is shown how to work a pdf file with grid template along with a simple template which uses a
+block system.
+Before showing you the example 3, please
+take into consideration the following point:
+
+* To change from grid template to simple template and vice versa in the end of each content use:
+
+.. code:: html
+
+    <!-- simple template to grid template -->
+    <pdf:nexttemplate name="id0" />
+    <pdf:nextframe name="" />
+
+    <!-- grid template to simple template -->
+    <pdf:nexttemplate name="body" />
+    <pdf:nextframe name="" />
+
+Full code
+^^^^^^^^^
+
+.. code:: html
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+    @page body{
+        size: letter;
+        @frame header_frame {
+            -pdf-frame-content: header_content;
+            left: 50pt; width: 512pt; top: 50pt; height: 40pt;
+        }
+        @frame content_frame {
+            left: 50pt; width: 512pt; top: 90pt; height: 632pt;
+        }
+        @frame footer_frame {
+            -pdf-frame-content: footer_content;
+            left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+        }
+    }
+    </style>
+    </head>
+    <body>
+    <div id="header_content">Grid Experiment</div>
+    <p>NO GRID</p>
+    <img width="30px" height="30px" src="img/beach.jpg">
+    <div id="footer_content">(c) - page <pdf:pagenumber>
+        of <pdf:pagecount>
+    </div>
+
+    <pdf:nexttemplate name="id0" />
+    <pdf:nextframe name="" />
+
+    <div class="row" style="text-align: center">
+        <div class="col-sm-6" coltype="parent" style="background-color: #99CC66">
+            <div class="row" rowtype="child">
+                <pdf:nextframe name="" />
+                <div class="col-sm-4" coltype="child" style="background-color: #FFBBBB">col-4</div>
+                <div class="col-sm-8" coltype="child" style="background-color: #336699">col-8</div>
+            </div>
+        </div>
+        <div class="col-sm-6">col-6</div>
+    </div>
+    <div class="row" style="text-align: center">
+        <div class="col-sm-4" style="background-color: aqua">
+            col-4 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        </div>
+        <div class="col-sm-4" style="background-color: crimson">
+            col-4 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
+            dolore magna aliqua consectetur adipiscing elit, sed do eiusmod tempor incididunt.
+        </div>
+        <div class="is-4" style="background-color: green">
+            col-4 Lorem ipsum dolor sit amet, consectetur adipiscing elit ut labore et dolore magna aliqua. Ut enim ad
+            minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+        </div>
+    </div>
+    <div class="row" style="text-align: center">
+        <div class="col-sm-4" style="background-color: aquamarine">
+           col-4 Lorem ipsum dolor sit amet, consectetur adipiscing elitv Lorem ipsum dolor sit amet
+        </div>
+        <div class="col-sm-8" style="background-color: blueviolet;">
+            col-8 Lorem ipsum dolor sit amet, consectetur adipiscing elitv Lorem ipsum dolor sit amet, consectetur
+            adipiscing elitv Lorem ipsum dolor sit amet, consectetur adipiscing elitv Lorem ipsum dolor sit amet,
+            consectetur adipiscing elitv Lorem ipsum dolor sit amet, consectetur adipiscing elitv Lorem ipsum dolor sit
+            amet, consectetur adipiscing elitv.
+        </div>
+    </div>
+
+    <pdf:nexttemplate name="body" />
+    <pdf:nextframe name="" />
+    <div><p>NO GRID</p></div>
+    </body>
+    </html>
+
+.. note:: In the example above, we used an image inside a column.
+
+.. warning::
+
+     This functionality is still in a developing process, some bugs may show up while you are working with it.
+
+    ::
+
+        * To avoid errors in the grid template structure, don't add images and text together.
+        * Try to not add a long paragraph in columns that are less wider than 5.
+        * When a paragraph is longer than the available page height, by default the grid system will do a page
+         break, and take the whole row that contains the mentioned paragraph. A Force text split will be needed to
+         avoid wasting space on the pages.
+        * For now the columns resulting from a column split cannot be splinted in more columns.
+

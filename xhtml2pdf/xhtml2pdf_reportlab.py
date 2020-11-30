@@ -129,6 +129,7 @@ class PmlBaseDoc(BaseDocTemplate):
         '''
         if pt has also templates for even and odd page convert it to list
         '''
+
         has_left_template = self._has_template_for_name(pt + '_left')
         has_right_template = self._has_template_for_name(pt + '_right')
 
