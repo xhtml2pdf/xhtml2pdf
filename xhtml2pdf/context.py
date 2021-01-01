@@ -93,7 +93,7 @@ def getParaFrag(style):
               )
     set_value(frag,
               ('pageNumber', 'pageCount', 'outline',
-               'outlineOpen', 'keepWithNext'),
+               'outlineOpen', 'keepWithNext', 'rtl'),
               False)
 
     frag.text = ""
