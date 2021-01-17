@@ -665,24 +665,34 @@ class pisaFileObject:
                     conn = httplib.HTTPSConnection(server,  **httpConfig)
                 else:
                     conn = httplib.HTTPConnection(server)
-                conn.request("GET", path)
-                r1 = conn.getresponse()
-                # log.debug("HTTP %r %r %r %r", server, path, uri, r1)
-                if (r1.status, r1.reason) == (200, "OK"):
-                    self.mimetype = r1.getheader(
-                        "Content-Type", '').split(";")[0]
-                    self.uri = uri
-                    log.debug("here")
-                    if r1.getheader("content-encoding") == "gzip":
-                        import gzip
 
-                        self.file_content = gzip.GzipFile(
-                            mode="rb", fileobj=six.BytesIO(r1.read()))
-                    else:
-                        self.file_content = pisaTempFile(r1.read())
+                is_httplib_succeed = False
+                try:
+                    conn.request("GET", path)
+                    r1 = conn.getresponse()
+
+                    is_req_ok = (r1.status, r1.reason) == (200, "OK")
+                    is_httplib_succeed = is_req_ok
+                    if not is_req_ok:
+                        log.debug(
+                            "Received non-200 status: {}".format((r1.status, r1.reason)))
+                    # log.debug("HTTP %r %r %r %r", server, path, uri, r1)
+                except ConnectionRefusedError as e:
+                    pass
+
+                if is_httplib_succeed:
+                        self.mimetype = r1.getheader(
+                            "Content-Type", '').split(";")[0]
+                        self.uri = uri
+                        log.debug("here")
+                        if r1.getheader("content-encoding") == "gzip":
+                            import gzip
+
+                            self.file_content = gzip.GzipFile(
+                                mode="rb", fileobj=six.BytesIO(r1.read()))
+                        else:
+                            self.file_content = pisaTempFile(r1.read())
                 else:
-                    log.debug(
-                        "Received non-200 status: {}".format((r1.status, r1.reason)))
                     try:
                         urlResponse = urllib2.urlopen(uri)
                     except urllib2.HTTPError as e:
@@ -692,6 +702,7 @@ class pisaFileObject:
                         "Content-Type", '').split(";")[0]
                     self.uri = urlResponse.geturl()
                     self.file_content = urlResponse.read()
+
                 conn.close()
 
             else:
