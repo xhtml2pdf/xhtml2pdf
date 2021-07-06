@@ -21,11 +21,15 @@ from hashlib import md5
 
 import reportlab.pdfbase.pdfform as pdfform
 import six
+import svglib
 from reportlab.lib.enums import TA_RIGHT
 from reportlab.lib.styles import ParagraphStyle
-from reportlab.lib.utils import LazyImageReader, flatten, getStringIO, haveImages, open_for_read
-from reportlab.platypus.doctemplate import BaseDocTemplate, IndexingFlowable, PageTemplate
-from reportlab.platypus.flowables import CondPageBreak, Flowable, KeepInFrame, ParagraphAndImage
+from reportlab.lib.utils import (LazyImageReader, flatten, getStringIO,
+                                 haveImages, open_for_read)
+from reportlab.platypus.doctemplate import (BaseDocTemplate, IndexingFlowable,
+                                            PageTemplate)
+from reportlab.platypus.flowables import (CondPageBreak, Flowable, KeepInFrame,
+                                          ParagraphAndImage)
 from reportlab.platypus.tableofcontents import TableOfContents
 from reportlab.platypus.tables import Table, TableStyle
 from reportlab.rl_config import register_reset
@@ -45,6 +49,14 @@ if not six.PY2:
     from html import escape as html_escape
 else:
     from cgi import escape as html_escape
+
+# Used for SVG rasterisation
+try:
+    from reportlab.graphics import renderPM
+    from svglib.svglib import svg2rlg
+except ImportError:
+    svg2rlg = None
+    renderPM = None
 
 log = logging.getLogger("xhtml2pdf")
 
@@ -368,8 +380,8 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
 
     def _read_image(self, fp):
         if sys.platform[0:4] == 'java':
-            from javax.imageio import ImageIO
             from java.io import ByteArrayInputStream
+            from javax.imageio import ImageIO
             input_stream = ByteArrayInputStream(fp.read())
             return ImageIO.read(input_stream)
         elif PILImage:
@@ -470,6 +482,12 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
                 fn = id(self)
             return fn
 
+svg2rlg = None
+if svglib:
+    from svglib.svglib import svg2rlg
+
+from reportlab.graphics import renderPDF, renderPM
+
 
 class PmlImage(Flowable, PmlMaxHeightMixIn):
 
@@ -501,6 +519,24 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         return self.dWidth, self.dHeight
 
     def getImage(self):
+        imgdata = six.BytesIO(self._imgdata)
+
+        if svg2rlg:
+            svg = svg2rlg(imgdata)
+            if svg:
+                scale_x = 1
+                scale_y = 1
+                if getattr(self, "drawWidth", None) is not None:
+                    scale_x = max(1, self.drawWidth / svg.width)
+                if getattr(self, "drawHeight", None) is not None:
+                    scale_y = max(1, self.drawHeight / svg.height)
+                if scale_x != 1 or scale_y != 1:
+                    svg.scale(scale_x, scale_y)
+                print(scale_x, scale_y)
+
+                imgdata = six.BytesIO()
+                renderPM.drawToFile(svg, imgdata, fmt="PNG")
+
         img = PmlImageReader(six.BytesIO(self._imgdata))
         return img
 
