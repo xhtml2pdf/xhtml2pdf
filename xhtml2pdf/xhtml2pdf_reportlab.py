@@ -52,11 +52,13 @@ else:
 
 # Used for SVG rasterisation
 try:
-    from reportlab.graphics import renderPM
+    from reportlab.graphics import renderPDF, renderPM
     from svglib.svglib import svg2rlg
 except ImportError:
     svg2rlg = None
     renderPM = None
+
+
 
 log = logging.getLogger("xhtml2pdf")
 
@@ -482,13 +484,6 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
                 fn = id(self)
             return fn
 
-svg2rlg = None
-if svglib:
-    from svglib.svglib import svg2rlg
-
-from reportlab.graphics import renderPDF, renderPM
-
-
 class PmlImage(Flowable, PmlMaxHeightMixIn):
 
     def __init__(self, data, width=None, height=None, mask="auto", mimetype=None, **kw):
@@ -498,9 +493,16 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         self._imgdata = data
         # print "###", repr(data)
         self.mimetype = mimetype
-        img = self.getImage()
-        if img:
-            self.imageWidth, self.imageHeight = img.getSize()
+
+        # Resolve size
+        drawing = self.getDrawing()
+        if drawing:
+            _, _, self.imageWidth, self.imageHeight = drawing.getBounds() or (0,0,0,0)
+        else:
+            img = self.getImage()
+            if img:
+                self.imageWidth, self.imageHeight = img.getSize()
+
         self.drawWidth = width or self.imageWidth
         self.drawHeight = height or self.imageHeight
 
@@ -518,29 +520,55 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         # print "imgage result", factor, self.dWidth, self.dHeight
         return self.dWidth, self.dHeight
 
-    def getImage(self):
-        imgdata = six.BytesIO(self._imgdata)
-
+    def getDrawing(self, width=None, height=None):
+        """ If this image is a vector image and the library is available, returns a ReportLab Drawing."""
         if svg2rlg:
-            svg = svg2rlg(imgdata)
-            if svg:
+            try:
+                drawing = svg2rlg(six.BytesIO(self._imgdata))
+            except Exception:
+                return None
+            if drawing:
+
+                # Apply size
                 scale_x = 1
                 scale_y = 1
                 if getattr(self, "drawWidth", None) is not None:
-                    scale_x = max(1, self.drawWidth / svg.width)
+                    if width is None:
+                        width = self.drawWidth
+                    scale_x = width / drawing.width
                 if getattr(self, "drawHeight", None) is not None:
-                    scale_y = max(1, self.drawHeight / svg.height)
+                    if height is None:
+                        height = self.drawHeight
+                    scale_y = height / drawing.height
                 if scale_x != 1 or scale_y != 1:
-                    svg.scale(scale_x, scale_y)
-                print(scale_x, scale_y)
+                    drawing.scale(scale_x, scale_y)
 
+                return drawing
+        return None
+
+    def getDrawingRaster(self):
+        """ If this image is a vector image and the libraries are available, returns a PNG raster. """
+        if svg2rlg and renderPM:
+            svg = self.getDrawing()
+            if svg:
                 imgdata = six.BytesIO()
                 renderPM.drawToFile(svg, imgdata, fmt="PNG")
+                return imgdata
+        return None
 
-        img = PmlImageReader(six.BytesIO(self._imgdata))
+    def getImage(self):
+        """ Returns a raster image. """
+        vectorRaster = self.getDrawingRaster()
+        imgdata = vectorRaster or six.BytesIO(self._imgdata)
+        img = PmlImageReader(imgdata)
         return img
 
     def draw(self):
+        # TODO this code should work, but untested
+        # drawing = self.getDrawing(self.dWidth, self.dHeight)
+        # if drawing and renderPDF:
+        #     renderPDF.draw(drawing, self.canv, 0, 0)
+        # else:
         img = self.getImage()
         self.canv.drawImage(
             img,
@@ -552,6 +580,8 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
     def identity(self, maxLen=None):
         r = Flowable.identity(self, maxLen)
         return r
+
+
 
 
 class PmlParagraphAndImage(ParagraphAndImage, PmlMaxHeightMixIn):
