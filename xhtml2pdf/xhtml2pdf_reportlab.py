@@ -35,7 +35,7 @@ from reportlab.platypus.tables import Table, TableStyle
 from reportlab.rl_config import register_reset
 
 from xhtml2pdf.reportlab_paragraph import Paragraph
-from xhtml2pdf.util import getBorderStyle, getUID
+from xhtml2pdf.util import getBorderStyle, getUID, pisaTempFile
 
 try:
     import PIL.Image as PILImage
@@ -490,7 +490,7 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         self.kw = kw
         self.hAlign = 'CENTER'
         self._mask = mask
-        self._imgdata = data
+        self._imgdata = data.getvalue() if isinstance(data, pisaTempFile) else data
         # print "###", repr(data)
         self.mimetype = mimetype
 
