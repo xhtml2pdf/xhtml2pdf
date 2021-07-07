@@ -23,6 +23,8 @@ from reportlab.platypus.flowables import Flowable
 from reportlab.platypus.paraparser import ParaParser
 from reportlab.rl_settings import _FUZZ
 
+from xhtml2pdf.util import getSize
+
 basestring = six.text_type
 unicode = six.text_type  # python 3
 
@@ -226,7 +228,7 @@ def _putFragLine(cur_x, tx, line):
 
     # Letter spacing
     if xs.style.letterSpacing != 'normal':
-        tx.setCharSpace(int(xs.style.letterSpacing))
+        tx.setCharSpace(getSize("".join(xs.style.letterSpacing)))
 
     ws = getattr(tx, '_wordSpace', 0)
     nSpaces = 0
