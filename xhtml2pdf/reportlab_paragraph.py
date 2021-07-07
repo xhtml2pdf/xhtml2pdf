@@ -246,7 +246,7 @@ def _putFragLine(cur_x, tx, line):
                     txfs = xs.style.fontSize
                 iy0, iy1 = imgVRange(h, cbDefn.valign, txfs)
                 cur_x_s = cur_x + nSpaces * ws
-                drawing = cbDefn.image.getVector(w, h)
+                drawing = cbDefn.image.getDrawing(w, h)
                 if drawing:
                     renderPDF.draw(drawing, tx._canvas, cur_x_s, cur_y + iy0)
                 else:
