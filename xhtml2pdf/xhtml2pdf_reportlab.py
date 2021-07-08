@@ -21,7 +21,6 @@ from hashlib import md5
 
 import reportlab.pdfbase.pdfform as pdfform
 import six
-import svglib
 from reportlab.lib.enums import TA_RIGHT
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.utils import (LazyImageReader, flatten, getStringIO,
