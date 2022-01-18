@@ -6,7 +6,6 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10"]
-        reportlab-version: ["3534","3568","3560","3605"]
     env:
       PYTHON_VERSION: ${{matrix.python-version}}
     steps:
@@ -25,9 +24,9 @@ jobs:
       - name: Test with tox
         run: tox
         env:
-          TOXENV: py${{matrix.python-version}}-rl${{matrix.reportlab-version}}
+          TOXENV: py${{matrix.python-version}}
       - name: Upload Test renders
         uses: actions/upload-artifact@v2
         with:
-          name: testrender-run-${{github.run_id}}-python${{matrix.python-version}}-reportlab${{matrix.reportlab-version}}
+          name: testrender-run-${{github.run_id}}-python${{matrix.python-version}}
           path: testrender/output
