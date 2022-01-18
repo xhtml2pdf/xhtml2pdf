@@ -2,31 +2,6 @@ build: false
 
 environment:
   matrix:
-      - PYTHON_HOME: "C:/Python35"
-        PYTHON_VERSION: 3.5
-        RL: 330
-      - PYTHON_HOME: "C:/Python35"
-        PYTHON_VERSION: 3.5
-        RL: 340
-      - PYTHON_HOME: "C:/Python35"
-        PYTHON_VERSION: 3.5
-        RL: 350
-      - PYTHON_HOME: "C:/Python35"
-        PYTHON_VERSION: 3.5
-        RL: 3510
-      - PYTHON_HOME: "C:/Python35"
-        PYTHON_VERSION: 3.5
-        RL: 3530
-      - PYTHON_HOME: "C:/Python35"
-        PYTHON_VERSION: 3.5
-        RL: 3550
-      - PYTHON_HOME: "C:/Python35"
-        PYTHON_VERSION: 3.5
-        RL: 360
-      - PYTHON_HOME: "C:/Python35"
-        PYTHON_VERSION: 3.5
-        RL: 365
-
       - PYTHON_HOME: "C:/Python36"
         PYTHON_VERSION: 3.6
         RL: 330

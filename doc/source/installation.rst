@@ -11,7 +11,7 @@ This is a typical Python library and is installed using pip
 Requirements
 --------------
 
-Tested are Python 3.5, 3.6, 3.7 and 3.8 at the moment. But support for Python < 3.6 will be dropped in the next release! Support for Python 3.9 is being worked on.
+Python 3.6+
 
 All additional requirements are listed in ``setup.py`` file and are
 installed automatically using the ``pip install xhtml2pdf`` method.
