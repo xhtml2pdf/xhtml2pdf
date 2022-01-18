@@ -6,6 +6,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10"]
+        reportlab-version: ["330","340","350","3510","3530","3550","360","365"]
     env:
       PYTHON_VERSION: ${{matrix.python-version}}
     steps:
@@ -20,6 +21,8 @@ jobs:
           sudo apt-get install --yes ghostscript imagemagick
           sudo sed -i 's#<policy domain="coder" rights="none" pattern="PDF" />#<policy domain="coder" rights="read|write" pattern="PDF" />#' /etc/ImageMagick-6/policy.xml
           python -m pip install --upgrade pip
-          python -m pip install tox tox-gh-actions
+          python -m pip install tox
       - name: Test with tox
         run: tox
+        env:
+          TOXENV: py${{matrix.python-version}}-rl${{matrix.reportlab-version}}
