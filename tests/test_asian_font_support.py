@@ -2,7 +2,7 @@
 import io
 from unittest import TestCase
 
-from PyPDF2 import PdfFileReader
+from PyPDF3 import PdfFileReader
 from reportlab.pdfbase import _cidfontdata
 
 from xhtml2pdf.document import pisaDocument
