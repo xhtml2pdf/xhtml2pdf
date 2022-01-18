@@ -269,7 +269,7 @@ parser.add_option('-F', '--nofail', dest='nofail', action='store_true',
                   )
 parser.add_option('-X', '--remove_transparencies', dest='remove_transparencies', action='store_false',
                   default=True, help="Don't try to remove transparent backgrounds "
-                  "Needed for Travis-CI"
+                  "Needed for CI"
                   )
 
 parser.add_option('--no-compare', dest='no_compare', action='store_true',
