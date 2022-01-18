@@ -20,6 +20,12 @@ environment:
       - PYTHON_HOME: "C:/Python35"
         PYTHON_VERSION: 3.5
         RL: 3550
+      - PYTHON_HOME: "C:/Python35"
+        PYTHON_VERSION: 3.5
+        RL: 360
+      - PYTHON_HOME: "C:/Python35"
+        PYTHON_VERSION: 3.5
+        RL: 365
 
       - PYTHON_HOME: "C:/Python36"
         PYTHON_VERSION: 3.6
@@ -39,6 +45,112 @@ environment:
       - PYTHON_HOME: "C:/Python36"
         PYTHON_VERSION: 3.6
         RL: 3550
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.6
+        RL: 360
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.6
+        RL: 365
+
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.7
+        RL: 330
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.7
+        RL: 340
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.7
+        RL: 350
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.7
+        RL: 3510
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.7
+        RL: 3530
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.7
+        RL: 3550
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.7
+        RL: 360
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.7
+        RL: 365
+
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.8
+        RL: 330
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.8
+        RL: 340
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.8
+        RL: 350
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.8
+        RL: 3510
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.8
+        RL: 3530
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.8
+        RL: 3550
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.8
+        RL: 360
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.8
+        RL: 365
+
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.9
+        RL: 330
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.9
+        RL: 340
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.9
+        RL: 350
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.9
+        RL: 3510
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.9
+        RL: 3530
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.9
+        RL: 3550
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.9
+        RL: 360
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.9
+        RL: 365
+
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.10
+        RL: 330
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.10
+        RL: 340
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.10
+        RL: 350
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.10
+        RL: 3510
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.10
+        RL: 3530
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.10
+        RL: 3550
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.10
+        RL: 360
+      - PYTHON_HOME: "C:/Python36"
+        PYTHON_VERSION: 3.10
+        RL: 365
 
 install:
   - cmd: |
