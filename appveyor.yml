@@ -1,5 +1,5 @@
 build: false
-
+image: Visual Studio 2022
 environment:
   matrix:
       - PYTHON_HOME: "C:/Python36"
@@ -104,6 +104,7 @@ install:
   - cmd: |
         set TOX_ENV=py%PYTHON_VERSION%-rl%RL%
         echo %TOX_ENV%
+        "%PYTHON_HOME%/python.exe --version"
         "%PYTHON_HOME%/python.exe" -m pip install --upgrade pip
         "%PYTHON_HOME%/Scripts/pip.exe" install tox coveralls
 
