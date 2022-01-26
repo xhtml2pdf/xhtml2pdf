@@ -69,9 +69,19 @@ class TableTest(TestCase):
         </html>
         """
 
-        context = pisaParser(BytesIO(html.encode('utf-8')), pisaContext(None))
+        with self.assertLogs("xhtml2pdf", level="DEBUG") as cm:
+            context = pisaParser(BytesIO(html.encode("utf-8")), pisaContext(None))
 
-        self.assertEqual(context.story, [], "Empty table doesn't return an empty story!")
+            self.assertEqual(
+                context.story, [], "Empty table doesn't return an empty story!"
+            )
+            self.assertEqual(
+                cm.output,
+                [
+                    "DEBUG:xhtml2pdf:Col widths: []",
+                    "WARNING:xhtml2pdf:<table> is empty\n'<table> </table>'",
+                ],
+            )
 
     def test_tr_background_color(self):
         """
