@@ -18,7 +18,7 @@ import logging
 
 import six
 
-from xhtml2pdf.util import PyPDF2, getFile, pisaTempFile
+from xhtml2pdf.util import PyPDF3, getFile, pisaTempFile
 
 log = logging.getLogger("xhtml2pdf")
 
@@ -49,9 +49,9 @@ class pisaPDF:
             self.files.append(doc.dest)
 
     def join(self, file=None):
-        output = PyPDF2.PdfFileWriter()
+        output = PyPDF3.PdfFileWriter()
         for pdffile in self.files:
-            pdf = PyPDF2.PdfFileReader(pdffile)
+            pdf = PyPDF3.PdfFileReader(pdffile)
             for pageNumber in six.moves.range(pdf.getNumPages()):
                 output.addPage(pdf.getPage(pageNumber))
 

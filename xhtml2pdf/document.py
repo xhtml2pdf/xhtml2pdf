@@ -24,7 +24,7 @@ from reportlab.platypus.frames import Frame
 from xhtml2pdf.context import pisaContext
 from xhtml2pdf.default import DEFAULT_CSS
 from xhtml2pdf.parser import pisaParser
-from xhtml2pdf.util import PyPDF2, getBox, pisaTempFile
+from xhtml2pdf.util import PyPDF3, getBox, pisaTempFile
 from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlPageTemplate
 
 if not six.PY2:
@@ -145,15 +145,15 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
         doc.build(context.story)
 
     # Add watermarks
-    if PyPDF2:
+    if PyPDF3:
         file_handler = None
         for bgouter in context.pisaBackgroundList:
             # If we have at least one background, then lets do it
             if bgouter:
                 istream = out
 
-                output = PyPDF2.PdfFileWriter()
-                input1 = PyPDF2.PdfFileReader(istream)
+                output = PyPDF3.PdfFileWriter()
+                input1 = PyPDF3.PdfFileReader(istream)
                 ctr = 0
                 # TODO: Why do we loop over the same list again?
                 # see bgouter at line 137
@@ -164,7 +164,7 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                             (bg.mimetype == "application/pdf")
                     ):
                         file_handler = open(bg.uri, 'rb')
-                        bginput = PyPDF2.PdfFileReader(file_handler)
+                        bginput = PyPDF3.PdfFileReader(file_handler)
                         pagebg = bginput.getPage(0)
                         pagebg.mergePage(page)
                         page = pagebg
@@ -195,7 +195,7 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                 # Found a background? So leave loop after first occurence
                 break
     else:
-        log.warning(context.warning("PyPDF2 not installed!"))
+        log.warning(context.warning("PyPDF3 not installed!"))
 
     # Get the resulting PDF and write it to the file object
     # passed from the caller

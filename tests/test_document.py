@@ -5,7 +5,7 @@ import os
 import tempfile
 from unittest import TestCase, skipIf
 
-from PyPDF2 import PdfFileReader
+from PyPDF3 import PdfFileReader
 
 from xhtml2pdf.document import pisaDocument
 
