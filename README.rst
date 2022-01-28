@@ -79,15 +79,11 @@ Development environment
 
    For more information about ``pip`` refer to http://www.pip-installer.org
 
-#. We will recommend using ``virtualenv`` for development. It's great to have a separate environment for each project, keeping the dependencies for multiple projects separated::
-
-    sudo pip install virtualenv
-
-   For more information about ``virtualenv`` refer to http://www.virtualenv.org
+#. We will recommend using ``virtualenv`` for development.
 
 #. Create a virtualenv for the project. This can be inside the project directory, but cannot be under version control::
 
-    virtualenv --distribute xhtml2pdfenv --python=python2
+    python -m venv xhtml2pdfenv
 
 #. Activate your virtualenv::
 

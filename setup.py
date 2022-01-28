@@ -18,13 +18,7 @@
 import os
 
 import xhtml2pdf
-
-try:
-    from setuptools import setup, find_packages
-except ImportError:
-    from ez_setup import use_setuptools
-
-    use_setuptools()
+from setuptools import setup, find_packages
 
 README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 
@@ -39,7 +33,8 @@ setup(
     maintainer_email="luisza14@gmail.com",
     url="http://github.com/xhtml2pdf/xhtml2pdf",
     keywords="PDF, HTML, XHTML, XML, CSS",
-    install_requires=["html5lib>=1.0.1", "PyPDF3", "Pillow", "reportlab>=3.3.0", "six",
+    install_requires=["html5lib>=1.0.1", "PyPDF3>=1.0.5", "Pillow>=8.1.1",
+                      "reportlab>=3.5.53", "svglib>=1.2.1",
                       "python-bidi>=0.4.2", "arabic-reshaper>=2.1.0"],
     include_package_data=True,
     packages=find_packages(exclude=["tests", "tests.*"]),
