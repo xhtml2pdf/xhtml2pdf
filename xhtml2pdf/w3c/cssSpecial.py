@@ -227,7 +227,7 @@ def parseSpecialRules(declarations, debug=0):
             part = getNextPart(parts) or oparts
             if part:
 
-                if isinstance(part, six.string_types) and (("." in part) or ("data:" in part)):
+                if isinstance(part, str) and (("." in part) or ("data:" in part)):
                     dd.append(("background-image", part, last))
                 else:
                     dd.append(("background-color", part, last))
