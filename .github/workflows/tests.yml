@@ -1,0 +1,32 @@
+name: Run Tests
+on: push
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
+    env:
+      PYTHON_VERSION: ${{matrix.python-version}}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{matrix.python-version}}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{matrix.python-version}}
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ghostscript imagemagick
+          sudo sed -i 's#<policy domain="coder" rights="none" pattern="PDF" />#<policy domain="coder" rights="read|write" pattern="PDF" />#' /etc/ImageMagick-6/policy.xml
+          python -m pip install --upgrade pip
+          python -m pip install tox
+      - name: Test with tox
+        run: tox
+        env:
+          TOXENV: py${{matrix.python-version}}
+      - name: Upload Test renders
+        uses: actions/upload-artifact@v2
+        with:
+          name: testrender-run-${{github.run_id}}-python${{matrix.python-version}}
+          path: testrender/output

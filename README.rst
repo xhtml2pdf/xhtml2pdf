@@ -9,14 +9,6 @@ XHTML2PDF
     :target: https://www.python.org/downloads
     :alt: Python versions
 
-.. image:: https://img.shields.io/travis/xhtml2pdf/xhtml2pdf/master.svg?label=Travis%20CI&logo=Travis&logoColor=white
-    :target: https://travis-ci.org/xhtml2pdf/xhtml2pdf
-    :alt: Travis CI
-
-.. image:: https://img.shields.io/appveyor/build/LegoStormtroopr/xhtml2pdf?label=AppVeyor&logo=appveyor&logoColor=white
-    :target: https://ci.appveyor.com/project/LegoStormtroopr/xhtml2pdf/branch/master
-    :alt: AppVeyor
-
 .. image:: https://img.shields.io/coveralls/github/xhtml2pdf/xhtml2pdf?label=Coveralls&logo=Coveralls&logoColor=white
     :target: https://coveralls.io/github/xhtml2pdf/xhtml2pdf
     :alt: Coveralls

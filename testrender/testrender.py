@@ -57,7 +57,8 @@ def create_diff_image(srcfile1, srcfile2, output_dir, options):
 
     outname = '%s.diff%s' % os.path.splitext(srcfile1)
     outfile = os.path.join(output_dir, outname)
-    _,result = exec_cmd(options, options.compare_cmd, '-metric', 'ae', srcfile1, srcfile2,'-lowlight-color','white',  '-colorspace', 'RGB', outfile)
+    # -quiet avoids a colorspace warning
+    _,result = exec_cmd(options, options.compare_cmd, srcfile1, srcfile2, '-quiet', '-metric', 'ae', '-lowlight-color','white', '-colorspace', 'RGB', outfile)
     diff_value = int(float(result.strip()))
     if diff_value > 0:
         if not options.quiet:
@@ -269,7 +270,7 @@ parser.add_option('-F', '--nofail', dest='nofail', action='store_true',
                   )
 parser.add_option('-X', '--remove_transparencies', dest='remove_transparencies', action='store_false',
                   default=True, help="Don't try to remove transparent backgrounds "
-                  "Needed for Travis-CI"
+                  "Needed for CI"
                   )
 
 parser.add_option('--no-compare', dest='no_compare', action='store_true',
