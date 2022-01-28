@@ -16,8 +16,6 @@
 
 import copy
 import logging
-
-import six
 from reportlab.platypus.tables import TableStyle
 
 from xhtml2pdf.tags import pisaTag
@@ -268,8 +266,8 @@ class pisaTagTD(pisaTag):
             end = (end[0], end[1] + rspan - 1)
         if begin != end:
             tdata.add_style(('SPAN', begin, end))
-            for x in six.moves.range(begin[0], end[0] + 1):
-                for y in six.moves.range(begin[1], end[1] + 1):
+            for x in range(begin[0], end[0] + 1):
+                for y in range(begin[1], end[1] + 1):
                     if x != begin[0] or y != begin[1]:
                         tdata.add_empty(x, y)
 

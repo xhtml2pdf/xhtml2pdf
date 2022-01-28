@@ -8,10 +8,6 @@
 #
 # Modified by Dirk Holtwick <holtwick@web.de>, 2007-2008
 
-from __future__ import absolute_import
-# Added by benjaoming to fix python3 tests
-from __future__ import unicode_literals
-
 from reportlab.lib.pagesizes import landscape
 
 import xhtml2pdf.default
@@ -42,8 +38,6 @@ Dependencies:
 """
 
 import re
-import six
-
 from . import cssSpecial
 
 
@@ -259,8 +253,8 @@ class CSSParseError(Exception):
 
     def setFullCSSSource(self, fullsrc, inline=False):
         self.fullsrc = fullsrc
-        if type(self.fullsrc) == six.binary_type:
-            self.fullsrc = six.text_type(self.fullsrc, 'utf-8')
+        if type(self.fullsrc) == bytes:
+            self.fullsrc = str(self.fullsrc, 'utf-8')
         if inline:
             self.inline = inline
         if self.fullsrc:
@@ -486,7 +480,7 @@ class CSSParser(object):
         try:
             properties = []
             try:
-                for propertyName, src in six.iteritems(kwAttributes):
+                for propertyName, src in kwAttributes.items():
                     src, single_property = self._parseDeclarationProperty(src.strip(), propertyName)
                     properties.append(single_property)
 
@@ -526,8 +520,8 @@ class CSSParser(object):
         ;
         """
         # FIXME: BYTES to STR 
-        if type(src) == six.binary_type:
-            src=six.text_type(src)
+        if type(src) == bytes:
+            src=src.decode()
         # Get rid of the comments
         src = self.re_comment.sub('', src)
 

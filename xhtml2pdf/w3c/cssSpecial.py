@@ -29,7 +29,6 @@ Optimized for use with PISA
 #import types
 TupleType = tuple
 ListType = list
-import six
 
 log = logging.getLogger("ho.css")
 
@@ -235,7 +234,7 @@ def parseSpecialRules(declarations, debug=0):
 
             if 0:
                 part = getNextPart(parts) or oparts
-                print ("~", part, parts, oparts, declarations)
+                print("~", part, parts, oparts, declarations)
                 # Color
                 if part and (not part.startswith("url")):
                     dd.append(("background-color", part, last))

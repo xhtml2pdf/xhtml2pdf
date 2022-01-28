@@ -24,11 +24,11 @@ import shutil
 import sys
 import tempfile
 from copy import copy
+from io import BytesIO
 
 import arabic_reshaper
 import reportlab
 import reportlab.pdfbase._cidfontdata
-import six
 from bidi.algorithm import get_display
 from reportlab.lib.colors import Color, toColor
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
@@ -37,27 +37,10 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 
 import xhtml2pdf.default
-
-try:
-    import httplib
-except ImportError:
-    import http.client as httplib
-
-try:
-    import urllib.request as urllib2
-except ImportError:
-    import urllib2
-
-try:
-    import urllib.parse as urlparse
-except ImportError:
-    import urlparse
-
-try:
-    from urllib.parse import unquote as urllib_unquote
-except ImportError:
-    from urllib import unquote as urllib_unquote
-
+import http.client as httplib
+import urllib.request as urllib2
+import urllib.parse as urlparse
+from urllib.parse import unquote as urllib_unquote
 
 rgb_re = re.compile(
     r"^.*?rgb[a]?[(]([0-9]+).*?([0-9]+).*?([0-9]+)(?:.*?(?:[01]\.(?:[0-9]+)))?[)].*?[ ]*$")
@@ -112,7 +95,7 @@ class memoized(object):
     def __call__(self, *args, **kwargs):
         # Make sure the following line is not actually slower than what you're
         # trying to memoize
-        args_plus = tuple(six.iteritems(kwargs))
+        args_plus = tuple(kwargs.items())
         key = (args, args_plus)
         try:
             if key not in self.cache:
@@ -457,11 +440,11 @@ GAE = "google.appengine" in sys.modules
 
 if GAE:
     STRATEGIES = (
-        six.BytesIO,
-        six.BytesIO)
+        BytesIO,
+        BytesIO)
 else:
     STRATEGIES = (
-        six.BytesIO,
+        BytesIO,
         tempfile.NamedTemporaryFile)
 
 
@@ -544,7 +527,7 @@ class pisaTempFile(object):
         self._delegate.flush()
         self._delegate.seek(0)
         value = self._delegate.read()
-        if not isinstance(value, six.binary_type):
+        if not isinstance(value, bytes):
             value = value.encode('utf-8')
         return value
 
@@ -564,7 +547,7 @@ class pisaTempFile(object):
             if needs_new_strategy:
                 self.makeTempFile()
 
-        if not isinstance(value, six.binary_type):
+        if not isinstance(value, bytes):
             value = value.encode('utf-8')
 
         self._delegate.write(value)
@@ -677,7 +660,7 @@ class pisaFileObject:
                         import gzip
 
                         self.file_content = gzip.GzipFile(
-                            mode="rb", fileobj=six.BytesIO(r1.read()))
+                            mode="rb", fileobj=BytesIO(r1.read()))
                     else:
                         self.file_content = pisaTempFile(r1.read())
                 else:

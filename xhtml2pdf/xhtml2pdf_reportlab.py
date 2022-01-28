@@ -18,9 +18,11 @@ import copy
 import logging
 import sys
 from hashlib import md5
+from html import escape as html_escape
+from io import BytesIO
 
+import PIL.Image as PILImage
 import reportlab.pdfbase.pdfform as pdfform
-import six
 from reportlab.lib.enums import TA_RIGHT
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.utils import (LazyImageReader, flatten, getStringIO,
@@ -37,27 +39,11 @@ from xhtml2pdf.reportlab_paragraph import Paragraph
 from xhtml2pdf.util import getBorderStyle, getUID, pisaTempFile
 
 try:
-    import PIL.Image as PILImage
-except:
-    try:
-        import Image as PILImage
-    except:
-        PILImage = None
-
-if not six.PY2:
-    from html import escape as html_escape
-else:
-    from cgi import escape as html_escape
-
-# Used for SVG rasterisation
-try:
     from reportlab.graphics import renderPDF, renderPM
     from svglib.svglib import svg2rlg
 except ImportError:
     svg2rlg = None
     renderPM = None
-
-
 
 log = logging.getLogger("xhtml2pdf")
 
@@ -162,11 +148,11 @@ class PmlBaseDoc(BaseDocTemplate):
                 del self._nextPageTemplateCycle
             self._nextPageTemplateIndex = pt
         elif isinstance(pt, (list, tuple)):
-            #used for alternating left/right pages
-            #collect the refs to the template objects, complain if any are bad
+            # used for alternating left/right pages
+            # collect the refs to the template objects, complain if any are bad
             c = PTCycle()
             for ptn in pt:
-                #special case name used to short circuit the iteration
+                # special case name used to short circuit the iteration
                 if ptn == '*':
                     c._restart = len(c)
                     continue
@@ -179,7 +165,7 @@ class PmlBaseDoc(BaseDocTemplate):
             elif c._restart > len(c):
                 raise ValueError("Invalid cycle restart position")
 
-            #ensure we start on the first one$
+            # ensure we start on the first one$
             self._nextPageTemplateCycle = c.cyclicIterator()
         else:
             raise TypeError("Argument pt should be string or integer or list")
@@ -233,15 +219,15 @@ class PmlPageTemplate(PageTemplate):
             # Background
             pisaBackground = None
             if (self.isFirstFlow(canvas)
-                and hasattr(self, "pisaBackground")
-                and self.pisaBackground
-                and (not self.pisaBackground.notFound())):
+                    and hasattr(self, "pisaBackground")
+                    and self.pisaBackground
+                    and (not self.pisaBackground.notFound())):
 
                 # Is image not PDF
                 if self.pisaBackground.mimetype.startswith("image/"):
 
                     try:
-                        self.img = PmlImageReader(six.BytesIO(self.pisaBackground.getData()))
+                        self.img = PmlImageReader(BytesIO(self.pisaBackground.getData()))
                         iw, ih = self.img.getSize()
                         pw, self.ph = canvas._pagesize
 
@@ -311,10 +297,10 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
 
     def __init__(self, fileName):
         if isinstance(fileName, PmlImageReader):
-            self.__dict__ = fileName.__dict__   # borgize
+            self.__dict__ = fileName.__dict__  # borgize
             return
-            #start wih lots of null private fields, to be populated by
-        #the relevant engine.
+            # start wih lots of null private fields, to be populated by
+        # the relevant engine.
         self.fileName = fileName
         self._image = None
         self._width = None
@@ -332,7 +318,7 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
         else:
             try:
                 self.fp = open_for_read(fileName, 'b')
-                if isinstance(self.fp, six.BytesIO().__class__):
+                if isinstance(self.fp, BytesIO().__class__):
                     # avoid messing with already internal files
                     imageReaderFlags = 0
                 if imageReaderFlags > 0:  # interning
@@ -348,13 +334,13 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
 
                         data = self._cache.setdefault(md5(data).digest(), data)
                     self.fp = getStringIO(data)
-                elif imageReaderFlags == - 1 and isinstance(fileName, six.text_type):
-                    #try Ralf Schmitt's re-opening technique of avoiding too many open files
+                elif imageReaderFlags == - 1 and isinstance(fileName, str):
+                    # try Ralf Schmitt's re-opening technique of avoiding too many open files
                     self.fp.close()
                     del self.fp  # will become a property in the next statement
                     self.__class__ = LazyImageReader
                 if haveImages:
-                    #detect which library we are using and open the image
+                    # detect which library we are using and open the image
                     if not self._image:
                         self._image = self._read_image(self.fp)
                     if getattr(self._image, 'format', None) == 'JPEG':
@@ -465,8 +451,9 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
             # 8-bit PNGs could give an empty string as transparency value, so
             # we have to be careful here.
             try:
-                return list(six.iterbytes(palette[transparency:transparency + 3]))
-            except:
+                return list(palette[transparency:transparency + 3])
+            except Exception as e:
+                log.debug(str(e), exc_info=e)
                 return None
         else:
             return None
@@ -483,6 +470,7 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
                 fn = id(self)
             return fn
 
+
 class PmlImage(Flowable, PmlMaxHeightMixIn):
 
     def __init__(self, data, width=None, height=None, mask="auto", mimetype=None, **kw):
@@ -496,7 +484,7 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         # Resolve size
         drawing = self.getDrawing()
         if drawing:
-            _, _, self.imageWidth, self.imageHeight = drawing.getBounds() or (0,0,0,0)
+            _, _, self.imageWidth, self.imageHeight = drawing.getBounds() or (0, 0, 0, 0)
         else:
             img = self.getImage()
             if img:
@@ -523,7 +511,7 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         """ If this image is a vector image and the library is available, returns a ReportLab Drawing."""
         if svg2rlg:
             try:
-                drawing = svg2rlg(six.BytesIO(self._imgdata))
+                drawing = svg2rlg(BytesIO(self._imgdata))
             except Exception:
                 return None
             if drawing:
@@ -550,7 +538,7 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         if svg2rlg and renderPM:
             svg = self.getDrawing()
             if svg:
-                imgdata = six.BytesIO()
+                imgdata = BytesIO()
                 renderPM.drawToFile(svg, imgdata, fmt="PNG")
                 return imgdata
         return None
@@ -558,7 +546,7 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
     def getImage(self):
         """ Returns a raster image. """
         vectorRaster = self.getDrawingRaster()
-        imgdata = vectorRaster or six.BytesIO(self._imgdata)
+        imgdata = vectorRaster or BytesIO(self._imgdata)
         img = PmlImageReader(imgdata)
         return img
 
@@ -579,8 +567,6 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
     def identity(self, maxLen=None):
         r = Flowable.identity(self, maxLen)
         return r
-
-
 
 
 class PmlParagraphAndImage(ParagraphAndImage, PmlMaxHeightMixIn):
@@ -633,8 +619,8 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
         # call the base class to do wrapping and calculate the size
         Paragraph.wrap(self, availWidth, availHeight)
 
-        #self.height = max(1, self.height)
-        #self.width = max(1, self.width)
+        # self.height = max(1, self.height)
+        # self.width = max(1, self.width)
 
         # increase the calculated size by the padding
         self.width = self.width + self.deltaWidth
@@ -647,7 +633,7 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
         if len(self.frags) <= 0:
             return []
 
-        #the split information is all inside self.blPara
+        # the split information is all inside self.blPara
         if not hasattr(self, 'deltaWidth'):
             self.wrap(availWidth, availHeight)
 
@@ -885,7 +871,7 @@ class PmlTableOfContents(TableOfContents):
                     max(lastMargin, leftColStyle.spaceBefore)))
                 # print leftColStyle.leftIndent
             lastMargin = leftColStyle.spaceAfter
-            #right col style is right aligned
+            # right col style is right aligned
             rightColStyle = ParagraphStyle(name='leftColLevel%d' % level,
                                            parent=leftColStyle,
                                            leftIndent=0,
@@ -927,6 +913,7 @@ class PmlLeftPageBreak(CondPageBreak):
             return availWidth, availHeight
         self.width = self.height = 0
         return 0, 0
+
 
 # --- Pdf Form
 

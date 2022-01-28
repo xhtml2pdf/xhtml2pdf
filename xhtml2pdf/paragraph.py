@@ -36,8 +36,6 @@ TODO
 import copy
 import logging
 import re
-
-import six
 from reportlab.lib.colors import Color
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.pdfbase.pdfmetrics import stringWidth
@@ -448,7 +446,7 @@ class Paragraph(Flowable):
         self.splitted = splitted
 
         # More attributes
-        for k, v in six.iteritems(kwDict):
+        for k, v in kwDict.items():
             setattr(self, k, v)
 
         # set later...
@@ -554,7 +552,7 @@ class Paragraph(Flowable):
                     _scheme_re = re.compile('^[a-zA-Z][-+a-zA-Z0-9]+$')
                     x, y, w, h = frag["x"], dy - y, frag["width"], frag["fontSize"]
                     rect = (x, y, w, h)
-                    if isinstance(link, six.text_type):
+                    if isinstance(link, str):
                         link = link.encode('utf8')
                     parts = link.split(':', 1)
                     scheme = len(parts) == 2 and parts[0].lower() or ''

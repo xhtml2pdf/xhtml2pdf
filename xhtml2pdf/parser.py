@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function, unicode_literals
-
 import copy
 import logging
 import re
@@ -23,7 +21,6 @@ import xml.dom.minidom
 from xml.dom import Node
 
 import html5lib
-import six
 from html5lib import treebuilders
 from reportlab.platypus.doctemplate import FrameBreak, NextPageTemplate
 from reportlab.platypus.flowables import KeepInFrame, PageBreak
@@ -115,7 +112,7 @@ def pisaGetAttributes(c, tag, attributes):
         block, adef = TAGS[tag]
         adef["id"] = STRING
 
-        for k, v in six.iteritems(adef):
+        for k, v in adef.items():
             nattrs[k] = None
             # print k, v
             # defaults, wenn vorhanden
@@ -324,7 +321,7 @@ def CSSCollect(node, c):
 
 
 def lower(sequence):
-    if isinstance(sequence, six.string_types):
+    if isinstance(sequence, str):
         return sequence.lower()
     else:
         return sequence[0].lower()
@@ -760,7 +757,7 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
     else:
         parser = html5lib.HTMLParser(tree=treebuilders.getTreeBuilder("dom"))
     parser_kwargs = {}
-    if isinstance(src, six.text_type):
+    if isinstance(src, str):
         # If an encoding was provided, do not change it.
         if not encoding:
             encoding = "utf-8"

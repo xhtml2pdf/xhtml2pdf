@@ -16,8 +16,6 @@
 
 import io
 import logging
-
-import six
 from reportlab.platypus.flowables import Spacer
 from reportlab.platypus.frames import Frame
 
@@ -27,10 +25,7 @@ from xhtml2pdf.parser import pisaParser
 from xhtml2pdf.util import PyPDF3, getBox, pisaTempFile
 from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlPageTemplate
 
-if not six.PY2:
-    from html import escape as html_escape
-else:
-    from cgi import escape as html_escape
+from html import escape as html_escape
 
 log = logging.getLogger("xhtml2pdf")
 

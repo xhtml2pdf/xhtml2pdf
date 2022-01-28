@@ -21,22 +21,15 @@ import os
 import sys
 import tempfile
 
-import six
-
 from xhtml2pdf import __version__
 from xhtml2pdf.config.httpconfig import httpConfig
 from xhtml2pdf.default import DEFAULT_CSS
 from xhtml2pdf.document import pisaDocument
 from xhtml2pdf.util import getFile
 
-try:
-    import urllib2
-except ImportError:
-    import urllib.request as urllib2
-try:
-    import urlparse
-except ImportError:
-    import urllib.parse as urlparse
+import urllib.request as urllib2
+import urllib.parse as urlparse
+
 
 log = logging.getLogger("xhtml2pdf")
 
@@ -358,7 +351,7 @@ def execute():
             if dest_part.lower().endswith(".html") or dest_part.lower().endswith(".htm"):
                 dest_part = ".".join(src.split(".")[:-1])
             dest = dest_part + "." + file_format.lower()
-            for i in six.moves.range(10):
+            for i in range(10):
                 try:
                     open(dest, "wb").close()
                     break
@@ -456,16 +449,12 @@ def makeDataURI(data=None, mimetype=None, filename=None):
     if not mimetype:
         if filename:
             import mimetypes
-
-
             mimetype = mimetypes.guess_type(filename)[0].split(";")[0]
         else:
             raise Exception("You need to provide a mimetype or a filename for makeDataURI")
-    # encodestring was deprecated in Python 3 and removed in Python 3.9.
-    if six.PY3:
-        encoded_data = base64.encodebytes(data).split()
-    else:
-        encoded_data = base64.encodestring(data).split()
+
+    encoded_data = base64.encodebytes(data).split()
+
     return "data:" + mimetype + ";base64," + "".join(encoded_data)
 
 

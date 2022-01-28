@@ -19,7 +19,6 @@ import logging
 import os
 import re
 
-import six
 from reportlab import rl_settings
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.fonts import addMapping
@@ -37,14 +36,11 @@ from xhtml2pdf.util import (arabic_format, copy_attrs, frag_text_language_check,
 from xhtml2pdf.w3c import css
 from xhtml2pdf.xhtml2pdf_reportlab import (PmlPageCount, PmlPageTemplate, PmlParagraph,
                                            PmlParagraphAndImage, PmlTableOfContents)
-
+import urllib.parse as urlparse
 TupleType = tuple
 ListType = list
-basestring = six.text_type
-try:
-    import urlparse
-except ImportError:
-    import urllib.parse as urlparse
+
+
 
 rl_settings.warnOnMissingFontGlyphs = 0
 log = logging.getLogger("xhtml2pdf")
@@ -167,7 +163,7 @@ class pisaCSSBuilder(css.CSSBuilder):
 
         if isinstance(data['src'], list):
             for part in uri:
-                if isinstance(part, basestring):
+                if isinstance(part, str):
                     fonts.append(part)
         else:
             fonts.append(uri)
@@ -524,7 +520,7 @@ class pisaContext(object):
 
     def addTOC(self):
         styles = []
-        for i in six.moves.range(20):
+        for i in range(20):
             self.node.attributes["class"] = "pdftoclevel%d" % i
             self.cssAttr = xhtml2pdf.parser.CSSCollect(self.node, self)
             xhtml2pdf.parser.CSS2Frag(self, {
@@ -797,12 +793,10 @@ class pisaContext(object):
         """
         # print names, self.fontList
         if type(names) is not ListType:
-            if type(names) not in six.string_types:
-                names = str(names)
+            names = str(names)
             names = names.strip().split(",")
         for name in names:
-            if type(name) not in six.string_types:
-                name = str(name)
+            name = str(name)
             font = name.strip().lower()
             if font in self.asianFontList:
                 font = self.asianFontList.get(font, None)
@@ -817,9 +811,7 @@ class pisaContext(object):
         alias = alias if alias is not None else []
         self.fontList[str(fontname).lower()] = str(fontname)
         for a in alias:
-            if type(fontname) not in six.string_types:
-                fontname = str(fontname)
-            self.fontList[str(a)] = fontname
+            self.fontList[str(a)] = str(fontname)
 
     def loadFont(self, names, src, encoding="WinAnsiEncoding", bold=0, italic=0):
 

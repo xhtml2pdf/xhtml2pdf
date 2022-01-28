@@ -15,9 +15,6 @@
 # limitations under the License.
 
 import logging
-
-import six
-
 from xhtml2pdf.util import PyPDF3, getFile, pisaTempFile
 
 log = logging.getLogger("xhtml2pdf")
@@ -52,7 +49,7 @@ class pisaPDF:
         output = PyPDF3.PdfFileWriter()
         for pdffile in self.files:
             pdf = PyPDF3.PdfFileReader(pdffile)
-            for pageNumber in six.moves.range(pdf.getNumPages()):
+            for pageNumber in range(pdf.getNumPages()):
                 output.addPage(pdf.getPage(pageNumber))
 
         if file is not None:

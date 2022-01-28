@@ -4,15 +4,11 @@
 # history http://www.reportlab.co.uk/cgi-bin/viewcvs.cgi/public/reportlab/trunk/reportlab/platypus/paragraph.py
 # Modifications by Dirk Holtwick, 2008
 
-from __future__ import unicode_literals
-
 import re
 import sys
 from copy import deepcopy
 from operator import truth
 from string import whitespace
-
-import six
 from reportlab.graphics import renderPDF
 from reportlab.lib.abag import ABag
 from reportlab.lib.colors import Color
@@ -24,10 +20,6 @@ from reportlab.platypus.paraparser import ParaParser
 from reportlab.rl_settings import _FUZZ
 
 from xhtml2pdf.util import getSize
-
-basestring = six.text_type
-unicode = six.text_type  # python 3
-
 PARAGRAPH_DEBUG = False
 LEADING_FACTOR = 1.0
 
@@ -546,7 +538,7 @@ def _drawBullet(canvas, offset, cur_y, bulletText, style):
     tx2 = canvas.beginText(style.bulletIndent, cur_y + getattr(style, "bulletOffsetY", 0))
     tx2.setFont(style.bulletFontName, style.bulletFontSize)
     tx2.setFillColor(hasattr(style, 'bulletColor') and style.bulletColor or style.textColor)
-    if isinstance(bulletText, basestring):
+    if isinstance(bulletText, str):
         tx2.textOut(bulletText)
     else:
         for f in bulletText:
@@ -580,7 +572,7 @@ def _handleBulletWidth(bulletText, style, maxWidths):
     work out bullet width and adjust maxWidths[0] if neccessary
     """
     if bulletText:
-        if isinstance(bulletText, basestring):
+        if isinstance(bulletText, str):
             bulletWidth = stringWidth(bulletText, style.bulletFontName, style.bulletFontSize)
         else:
             #it's a list of fragments
@@ -667,8 +659,6 @@ _scheme_re = re.compile('^[a-zA-Z][-+a-zA-Z0-9]+$')
 
 
 def _doLink(tx, link, rect):
-    if six.PY2:
-        link = six.text_type(link, 'utf8')
     parts = link.split(':', 1)
     scheme = len(parts) == 2 and parts[0].lower() or ''
     if _scheme_re.match(scheme) and scheme != 'document':
@@ -769,11 +759,11 @@ def textTransformFrags(frags, style):
     if tt:
         tt = tt.lower()
         if tt == 'lowercase':
-            tt = unicode.lower
+            tt = str.lower
         elif tt == 'uppercase':
-            tt = unicode.upper
+            tt = str.upper
         elif tt == 'capitalize':
-            tt = unicode.title
+            tt = str.title
         elif tt == 'none':
             return
         else:
@@ -782,7 +772,7 @@ def textTransformFrags(frags, style):
         if n == 1:
             #single fragment the easy case
             frags[0].text = tt(frags[0].text.decode('utf8')).encode('utf8')
-        elif tt is unicode.title:
+        elif tt is str.title:
             pb = True
             for f in frags:
                 t = f.text
@@ -803,13 +793,13 @@ def textTransformFrags(frags, style):
                 f.text = tt(t.decode('utf8')).encode('utf8')
 
 
-class cjkU(unicode):
+class cjkU(str):
     """
     simple class to hold the frag corresponding to a str
     """
 
     def __new__(cls, value, frag, encoding):
-        self = unicode.__new__(cls, value)
+        self = str.__new__(cls, value)
         self._frag = frag
         if hasattr(frag, 'cbDefn'):
             w = getattr(frag.cbDefn, 'width', 0)
@@ -864,7 +854,7 @@ def cjkFragSplit(frags, maxWidths, calcBounds, encoding='utf8'):
     U = []  # get a list of single glyphs with their widths etc etc
     for f in frags:
         text = f.text
-        if not isinstance(text, unicode):
+        if not isinstance(text, str):
             text = text.decode(encoding)
         if text:
             U.extend([cjkU(t, f, encoding) for t in text])
@@ -1273,8 +1263,8 @@ class Paragraph(Flowable):
                 endLine = (newWidth > maxWidth and n > 0) or lineBreak
                 if not endLine:
                     if lineBreak: continue      #throw it away
-                    if type(w[1][1]) != six.text_type:
-                        nText = six.text_type(w[1][1], 'utf-8')
+                    if type(w[1][1]) != str:
+                        nText = str(w[1][1], 'utf-8')
                     else:
                         nText = w[1][1]
 
@@ -1585,7 +1575,7 @@ class Paragraph(Flowable):
                     if link: _do_link_line(0, dx, ws, tx)
 
                     #now the middle of the paragraph, aligned with the left margin which is our origin.
-                    for i in six.moves.range(1, nLines):
+                    for i in range(1, nLines):
                         ws = lines[i][0]
                         t_off = dpl(tx, _offsets[i], ws, lines[i][1], noJustifyLast and i == lim)
                         if dpl != _justifyDrawParaLine: ws = 0
@@ -1593,7 +1583,7 @@ class Paragraph(Flowable):
                         if strike: _do_under_line(i, t_off + leftIndent, ws, tx, lm=0.125)
                         if link: _do_link_line(i, t_off + leftIndent, ws, tx)
                 else:
-                    for i in six.moves.range(1, nLines):
+                    for i in range(1, nLines):
                         dpl(tx, _offsets[i], lines[i][0], lines[i][1], noJustifyLast and i == lim)
             else:
                 f = lines[0]
@@ -1649,7 +1639,7 @@ class Paragraph(Flowable):
                 _do_post_text(tx)
 
                 #now the middle of the paragraph, aligned with the left margin which is our origin.
-                for i in six.moves.range(1, nLines):
+                for i in range(1, nLines):
                     f = lines[i]
                     dpl(tx, _offsets[i], f, noJustifyLast and i == lim)
                     _do_post_text(tx)
@@ -1705,7 +1695,7 @@ if __name__ == '__main__':    # NORUNTESTS
                 words = line[1]
             nwords = len(words)
             print ('line%d: %d(%s)\n  ') % (l, nwords, str(getattr(line, 'wordCount', 'Unknown'))),
-            for w in six.moves.range(nwords):
+            for w in range(nwords):
                 print ("%d:'%s'") % (w, getattr(words[w], 'text', words[w])),
             print()
 
@@ -1720,7 +1710,7 @@ if __name__ == '__main__':    # NORUNTESTS
         print ('dumpParagraphFrags(<Paragraph @ %d>) minWidth() = %.2f') % (id(P), P.minWidth())
         frags = P.frags
         n = len(frags)
-        for l in six.moves.range(n):
+        for l in range(n):
             print ("frag%d: '%s' %s") % (
             l, frags[l].text, ' '.join(['%s=%s' % (k, getattr(frags[l], k)) for k in frags[l].__dict__ if k != text]))
 

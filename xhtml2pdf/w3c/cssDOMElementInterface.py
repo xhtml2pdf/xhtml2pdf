@@ -8,8 +8,6 @@
 #
 # Modified by Dirk Holtwick <holtwick@web.de>, 2007-2008
 
-from __future__ import absolute_import
-
 from . import css  # python 3
 
 
