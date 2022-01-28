@@ -13,6 +13,7 @@ from operator import truth
 from string import whitespace
 
 import six
+from reportlab.graphics import renderPDF
 from reportlab.lib.abag import ABag
 from reportlab.lib.colors import Color
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
@@ -21,6 +22,8 @@ from reportlab.pdfbase.pdfmetrics import getAscentDescent, stringWidth
 from reportlab.platypus.flowables import Flowable
 from reportlab.platypus.paraparser import ParaParser
 from reportlab.rl_settings import _FUZZ
+
+from xhtml2pdf.util import getSize
 
 basestring = six.text_type
 unicode = six.text_type  # python 3
@@ -225,7 +228,7 @@ def _putFragLine(cur_x, tx, line):
 
     # Letter spacing
     if xs.style.letterSpacing != 'normal':
-        tx.setCharSpace(int(xs.style.letterSpacing))
+        tx.setCharSpace(getSize("".join(xs.style.letterSpacing)))
 
     ws = getattr(tx, '_wordSpace', 0)
     nSpaces = 0
@@ -243,7 +246,11 @@ def _putFragLine(cur_x, tx, line):
                     txfs = xs.style.fontSize
                 iy0, iy1 = imgVRange(h, cbDefn.valign, txfs)
                 cur_x_s = cur_x + nSpaces * ws
-                tx._canvas.drawImage(cbDefn.image.getImage(), cur_x_s, cur_y + iy0, w, h, mask='auto')
+                drawing = cbDefn.image.getDrawing(w, h)
+                if drawing:
+                    renderPDF.draw(drawing, tx._canvas, cur_x_s, cur_y + iy0)
+                else:
+                    tx._canvas.drawImage(cbDefn.image.getImage(), cur_x_s, cur_y + iy0, w, h, mask='auto')
                 cur_x += w
                 cur_x_s += w
                 setXPos(tx, cur_x_s - tx._x0)
@@ -661,7 +668,7 @@ _scheme_re = re.compile('^[a-zA-Z][-+a-zA-Z0-9]+$')
 
 def _doLink(tx, link, rect):
     if six.PY2:
-        link = six.text_type(link, 'utf8') 
+        link = six.text_type(link, 'utf8')
     parts = link.split(':', 1)
     scheme = len(parts) == 2 and parts[0].lower() or ''
     if _scheme_re.match(scheme) and scheme != 'document':
@@ -1270,7 +1277,7 @@ class Paragraph(Flowable):
                         nText = six.text_type(w[1][1], 'utf-8')
                     else:
                         nText = w[1][1]
-                        
+
                     if nText: n += 1
                     fontSize = f.fontSize
                     if calcBounds:
@@ -1544,7 +1551,7 @@ class Paragraph(Flowable):
 
                 #now the font for the rest of the paragraph
                 tx.setFont(f.fontName, f.fontSize, leading)
-                ws = getattr(tx, '_wordSpace', 0)  
+                ws = getattr(tx, '_wordSpace', 0)
                 t_off = dpl(tx, offset, ws, lines[0][1], noJustifyLast and nLines == 1)
                 if (hasattr(f, 'underline') and f.underline) or f.link or (hasattr(f, 'strike') and f.strike):
                     xs = tx.XtraState = ABag()
@@ -1727,7 +1734,7 @@ if __name__ == '__main__':    # NORUNTESTS
             print()
             l += 1
 
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
     from reportlab.lib.units import cm
 
     TESTS = sys.argv[1:]
