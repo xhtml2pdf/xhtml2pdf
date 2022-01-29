@@ -1,3 +1,11 @@
+INSTALLATION 
+-------------
+
+You need ImageMagic installed.    apt install imagemagick
+
+Check this if imagemagick policy prevent PDF generation
+https://stackoverflow.com/questions/52998331/imagemagick-security-policy-pdf-blocking-conversion
+
 FONT DIFFERENCES
 ----------------
 

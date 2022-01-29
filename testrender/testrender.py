@@ -9,11 +9,10 @@ import sys
 from optparse import OptionParser
 from subprocess import PIPE, Popen
 
+sys.path.append("..")
 from xhtml2pdf import pisa
 
-do_bytes = 'b'
-if sys.version[0] != '2':
-    do_bytes = ''
+do_bytes = ''
 
 def render_pdf(filename, output_dir, options):
     if options.debug:
