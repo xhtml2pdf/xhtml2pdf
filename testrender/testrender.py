@@ -282,9 +282,9 @@ parser.add_option('-c', '--create-reference', dest='create_reference',
                  'will be deleted and recreated before rendering!')
 parser.add_option('--debug', dest='debug', action='store_true',
                   default=False, help='More output for debugging')
-parser.add_option('--convert-cmd', dest='convert_cmd', default='/usr/bin/convert',
+parser.add_option('--convert-cmd', dest='convert_cmd', default='convert',
                   help='Path to ImageMagick "convert" tool')
-parser.add_option('--compare-cmd', dest='compare_cmd', default='/usr/bin/compare',
+parser.add_option('--compare-cmd', dest='compare_cmd', default='compare',
                   help='Path to ImageMagick "compare" tool')
 
 if __name__ == '__main__':
