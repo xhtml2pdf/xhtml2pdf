@@ -99,11 +99,11 @@ Development environment
 
 #. Run tests to check your configuration::
 
-    nosetests --with-coverage
+    python -m unittest discover
 
    You should have a log with the following success status::
 
-    Ran 36 tests in 0.322s
+    Ran 164 tests in 0.656s
 
     OK
 
