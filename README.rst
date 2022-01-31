@@ -51,7 +51,7 @@ This is a typical Python library and can be installed using pip::
 Requirements
 ============
 
-Only Python 3.4+ is tested and guaranteed to work.
+Only Python 3.7+ is tested and guaranteed to work.
 
 All additional requirements are listed in the ``requirements.txt`` file and are installed automatically using the ``pip install xhtml2pdf`` method.
 
