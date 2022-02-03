@@ -21,12 +21,20 @@ jobs:
           sudo sed -i 's#<policy domain="coder" rights="none" pattern="PDF" />#<policy domain="coder" rights="read|write" pattern="PDF" />#' /etc/ImageMagick-6/policy.xml
           python -m pip install --upgrade pip
           python -m pip install tox
+          
+      - name: run 
+        run: pip install -r requirements.txt
+           
+      - name: run 
+        run: make test-ref
+           
       - name: Test with tox
         run: tox
         env:
           TOXENV: py${{matrix.python-version}}
-      - name: Upload Test renders
-        uses: actions/upload-artifact@v2
-        with:
-          name: testrender-run-${{github.run_id}}-python${{matrix.python-version}}
-          path: testrender/output
+
+#      - name: Upload Test renders
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: testrender-run-${{github.run_id}}-python${{matrix.python-version}}
+#          path: testrender/output
