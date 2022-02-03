@@ -22,7 +22,8 @@ from reportlab.platypus.frames import Frame
 from xhtml2pdf.context import pisaContext
 from xhtml2pdf.default import DEFAULT_CSS
 from xhtml2pdf.parser import pisaParser
-from xhtml2pdf.util import PyPDF3, getBox, pisaTempFile
+from xhtml2pdf.util import PyPDF3, getBox
+from xhtml2pdf.files import pisaTempFile, cleanFiles
 from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlPageTemplate
 
 from html import escape as html_escape
@@ -156,9 +157,9 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                     page = input1.getPage(ctr)
                     if (
                             bg and not bg.notFound() and
-                            (bg.mimetype == "application/pdf")
+                            (bg.getMimeType() == "application/pdf")
                     ):
-                        file_handler = open(bg.uri, 'rb')
+                        file_handler = open(bg.getAbsPath(), 'rb')
                         bginput = PyPDF3.PdfFileReader(file_handler)
                         pagebg = bginput.getPage(0)
                         pagebg.mergePage(page)
@@ -202,5 +203,5 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
 
     data = out.getvalue()
     context.dest.write(data)  # TODO: context.dest is a tempfile as well...
-
+    cleanFiles()
     return context

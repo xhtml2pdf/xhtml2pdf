@@ -47,7 +47,7 @@ class VisualObject:
         pattern = os.path.join(folder, pattern)
         self.files = [x for x in glob.glob(pattern) if not x.startswith(".")]
         self.files.sort()
-        print "FILES", self.files
+        print("FILES", self.files)
         return self.files
 
     def loadFile(self, file, folder=None, delete=True):

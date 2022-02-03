@@ -331,99 +331,102 @@ class pisaTagIMG(pisaTag):
         attr = self.attr
         log.debug("Parsing img tag, src: {}".format(attr.src))
         log.debug("Attrs: {}".format(attr))
-        if attr.src and (not attr.src.notFound()):
 
-            try:
-                align = attr.align or c.frag.vAlign or "baseline"
-                width = c.frag.width
-                height = c.frag.height
+        if attr.src:
+            filedata = attr.src.getData()
+            if filedata:
+                try:
+                    align = attr.align or c.frag.vAlign or "baseline"
+                    width = c.frag.width
+                    height = c.frag.height
 
-                if attr.width:
-                    width = attr.width * dpi96
-                if attr.height:
-                    height = attr.height * dpi96
+                    if attr.width:
+                        width = attr.width * dpi96
+                    if attr.height:
+                        height = attr.height * dpi96
 
-                img = PmlImage(
-                    attr.src.getData(),
-                    width=None,
-                    height=None)
+                    img = PmlImage(
+                        filedata,
+                        width=None,
+                        height=None)
 
-                img.pisaZoom = c.frag.zoom
+                    img.pisaZoom = c.frag.zoom
 
-                img.drawHeight *= dpi96
-                img.drawWidth *= dpi96
+                    img.drawHeight *= dpi96
+                    img.drawWidth *= dpi96
 
-                if (width is None) and (height is not None):
-                    factor = getSize(height, default=img.drawHeight) / img.drawHeight
-                    img.drawWidth *= factor
-                    img.drawHeight = getSize(height, default=img.drawHeight)
-                elif (height is None) and (width is not None):
-                    factor = getSize(width, default=img.drawWidth) / img.drawWidth
-                    img.drawHeight *= factor
-                    img.drawWidth = getSize(width, default=img.drawWidth)
-                elif (width is not None) and (height is not None):
-                    img.drawWidth = getSize(width, default=img.drawWidth)
-                    img.drawHeight = getSize(height, default=img.drawHeight)
+                    if (width is None) and (height is not None):
+                        factor = getSize(height, default=img.drawHeight) / img.drawHeight
+                        img.drawWidth *= factor
+                        img.drawHeight = getSize(height, default=img.drawHeight)
+                    elif (height is None) and (width is not None):
+                        factor = getSize(width, default=img.drawWidth) / img.drawWidth
+                        img.drawHeight *= factor
+                        img.drawWidth = getSize(width, default=img.drawWidth)
+                    elif (width is not None) and (height is not None):
+                        img.drawWidth = getSize(width, default=img.drawWidth)
+                        img.drawHeight = getSize(height, default=img.drawHeight)
 
-                img.drawWidth *= img.pisaZoom
-                img.drawHeight *= img.pisaZoom
+                    img.drawWidth *= img.pisaZoom
+                    img.drawHeight *= img.pisaZoom
 
-                img.spaceBefore = c.frag.spaceBefore
-                img.spaceAfter = c.frag.spaceAfter
+                    img.spaceBefore = c.frag.spaceBefore
+                    img.spaceAfter = c.frag.spaceAfter
 
-                # print "image", id(img), img.drawWidth, img.drawHeight
+                    # print "image", id(img), img.drawWidth, img.drawHeight
 
-                '''
-                TODO:
+                    '''
+                    TODO:
+    
+                    - Apply styles
+                    - vspace etc.
+                    - Borders
+                    - Test inside tables
+                    '''
 
-                - Apply styles
-                - vspace etc.
-                - Borders
-                - Test inside tables
-                '''
+                    c.force = True
+                    if align in ["left", "right"]:
 
-                c.force = True
-                if align in ["left", "right"]:
+                        c.image = img
+                        c.imageData = dict(
+                            align=align
+                        )
 
-                    c.image = img
-                    c.imageData = dict(
-                        align=align
-                    )
+                    else:
 
-                else:
+                        # Important! Make sure that cbDefn is not inherited by other
+                        # fragments because of a bug in Reportlab!
+                        # afrag = c.frag.clone()
 
-                    # Important! Make sure that cbDefn is not inherited by other
-                    # fragments because of a bug in Reportlab!
-                    # afrag = c.frag.clone()
+                        valign = align
+                        if valign in ["texttop"]:
+                            valign = "top"
+                        elif valign in ["absmiddle"]:
+                            valign = "middle"
+                        elif valign in ["absbottom", "baseline"]:
+                            valign = "bottom"
 
-                    valign = align
-                    if valign in ["texttop"]:
-                        valign = "top"
-                    elif valign in ["absmiddle"]:
-                        valign = "middle"
-                    elif valign in ["absbottom", "baseline"]:
-                        valign = "bottom"
+                        afrag = c.frag.clone()
+                        afrag.text = ""
+                        afrag.fontName = "Helvetica" # Fix for a nasty bug!!!
+                        afrag.cbDefn = ABag(
+                            kind="img",
+                            image=img, # .getImage(), # XXX Inline?
+                            valign=valign,
+                            fontName="Helvetica",
+                            fontSize=img.drawHeight,
+                            width=img.drawWidth,
+                            height=img.drawHeight)
 
-                    afrag = c.frag.clone()
-                    afrag.text = ""
-                    afrag.fontName = "Helvetica" # Fix for a nasty bug!!!
-                    afrag.cbDefn = ABag(
-                        kind="img",
-                        image=img, # .getImage(), # XXX Inline?
-                        valign=valign,
-                        fontName="Helvetica",
-                        fontSize=img.drawHeight,
-                        width=img.drawWidth,
-                        height=img.drawHeight)
+                        c.fragList.append(afrag)
+                        c.fontSize = img.drawHeight
 
-                    c.fragList.append(afrag)
-                    c.fontSize = img.drawHeight
-
-            except Exception:  # TODO: Kill catch-all
-                log.warning(c.warning("Error in handling image"), exc_info=1)
+                except Exception:  # TODO: Kill catch-all
+                    log.warning(c.warning("Error in handling image"), exc_info=1)
+            else:
+                log.warning(c.warning("Need a valid file name!"))
         else:
             log.warning(c.warning("Need a valid file name!"))
-
 
 class pisaTagHR(pisaTag):
     def start(self, c):

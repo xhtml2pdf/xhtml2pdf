@@ -19,15 +19,13 @@ import glob
 import logging
 import os
 import sys
-import tempfile
 
 from xhtml2pdf import __version__
 from xhtml2pdf.config.httpconfig import httpConfig
 from xhtml2pdf.default import DEFAULT_CSS
 from xhtml2pdf.document import pisaDocument
-from xhtml2pdf.util import getFile
+from xhtml2pdf.files import getFile
 
-import urllib.request as urllib2
 import urllib.parse as urlparse
 
 
@@ -137,19 +135,9 @@ class pisaLinkLoader:
 
     def getFileName(self, name, relative=None):
         url = urlparse.urljoin(relative or self.src, name)
-        path = urlparse.urlsplit(url)[2]
-        suffix = ""
-        if "." in path:
-            new_suffix = "." + path.split(".")[-1].lower()
-            if new_suffix in (".css", ".gif", ".jpg", ".png"):
-                suffix = new_suffix
-        path = tempfile.mktemp(prefix="pisa-", suffix=suffix)
-        with urllib2.urlopen(url) as ufile, open(path, "wb") as tfile:
-            while True:
-                data = ufile.read(1024)
-                if not data:
-                    break
-                tfile.write(data)
+        instance = getFile(url)
+        filetmpdownloaded = instance.getNamedFile()
+        path = filetmpdownloaded.name
         self.tfileList.append(path)
 
         if not self.quiet:

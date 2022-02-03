@@ -18,6 +18,7 @@ import copy
 import logging
 import os
 import re
+from pathlib import Path
 
 from reportlab import rl_settings
 from reportlab.lib.enums import TA_LEFT
@@ -31,8 +32,9 @@ from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
 
 import xhtml2pdf.default
 import xhtml2pdf.parser
-from xhtml2pdf.util import (arabic_format, copy_attrs, frag_text_language_check, getColor, getCoords, getFile,
-                            getFrameDimensions, getSize, pisaFileObject, set_asian_fonts, set_value)
+from xhtml2pdf.files import  getFile, pisaFileObject
+from xhtml2pdf.util import (arabic_format, copy_attrs, frag_text_language_check, getColor, getCoords,
+                            getFrameDimensions, getSize, set_asian_fonts, set_value)
 from xhtml2pdf.w3c import css
 from xhtml2pdf.xhtml2pdf_reportlab import (PmlPageCount, PmlPageTemplate, PmlParagraph,
                                            PmlParagraphAndImage, PmlTableOfContents)
@@ -129,7 +131,7 @@ def getDirName(path):
     if parts.scheme:
         return path
     else:
-        return os.path.dirname(os.path.abspath(path))
+        return str(Path(path).parent.resolve())
 
 
 class pisaCSSBuilder(css.CSSBuilder):
@@ -170,11 +172,9 @@ class pisaCSSBuilder(css.CSSBuilder):
 
         for font in fonts:
             src = self.c.getFile(font, relative=self.c.cssParser.rootPath)
-            self.c.loadFont(
-                names,
-                src,
-                bold=bold,
-                italic=italic)
+            if not src.notFound():
+                self.c.loadFont(names, src,
+                                bold=bold, italic=italic)
         return {}, {}
 
     def _pisaAddFrame(self, name, data, first=False, border=None, size=(0, 0)):
@@ -408,7 +408,7 @@ class pisaContext(object):
         self.pathDocument = path or "__dummy__"
         parts = urlparse.urlparse(self.pathDocument)
         if not parts.scheme:
-            self.pathDocument = os.path.abspath(self.pathDocument)
+            self.pathDocument = str(Path(self.pathDocument).absolute().resolve())
         self.pathDirectory = getDirName(self.pathDocument)
 
         self.meta = dict(
@@ -756,36 +756,13 @@ class pisaContext(object):
         except:
             return self.context(msg)
 
-    # UTILS
-    def _getFileDeprecated(self, name, relative):
-        try:
-            path = relative or self.pathDirectory
-            if name.startswith("data:"):
-                return name
-            if self.pathCallback is not None:
-                nv = self.pathCallback(name, relative)
-            else:
-                if path is None:
-                    log.warning(
-                        "Could not find main directory for getting filename. Use CWD")
-                    path = os.getcwd()
-                nv = os.path.normpath(os.path.join(path, name))
-                if not (nv and os.path.isfile(nv)):
-                    nv = None
-            if nv is None:
-                log.warning(self.warning("File '%s' does not exist", name))
-            return nv
-        except:
-            log.warning(
-                self.warning("getFile %r %r %r", name, relative, path), exc_info=1)
-
     def getFile(self, name, relative=None):
         """
         Returns a file name or None
         """
-        if self.pathCallback is not None:
-            return getFile(self._getFileDeprecated(name, relative))
-        return getFile(name, relative or self.pathDirectory)
+        if name is None:
+            return
+        return getFile(name, relative or self.pathDirectory, callback=self.pathCallback)
 
     def getFontName(self, names, default="helvetica"):
         """
@@ -813,8 +790,8 @@ class pisaContext(object):
         for a in alias:
             self.fontList[str(a)] = str(fontname)
 
+    # TODO: convert to getFile to support remotes fonts
     def loadFont(self, names, src, encoding="WinAnsiEncoding", bold=0, italic=0):
-
         # XXX Just works for local filenames!
         if names and src:
 

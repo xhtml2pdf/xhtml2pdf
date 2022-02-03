@@ -83,7 +83,7 @@ def create_thumbnail(filename, options):
 
 
 def render_file(filename, output_dir, ref_dir, options):
-    if not options.quiet:
+    if options.debug:
         print('Rendering %s' % filename)
     pdf = render_pdf(filename, output_dir, options)
     pngs = convert_to_png(pdf, output_dir, options)
@@ -116,7 +116,7 @@ def exec_cmd(options, *args):
     proc = Popen(args, stdout=PIPE, stderr=PIPE)
     result = proc.communicate()
     if options.debug:
-        print(result[0], result[1])
+        print("Compare result: ", result[0], result[1])
     if proc.returncode:
         print('exec error (%i): %s' % (proc.returncode, result[1]))
         if not options.nofail:

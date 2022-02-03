@@ -15,7 +15,8 @@
 # limitations under the License.
 
 import logging
-from xhtml2pdf.util import PyPDF3, getFile, pisaTempFile
+from xhtml2pdf.util import PyPDF3
+from xhtml2pdf.files import getFile, pisaTempFile
 
 log = logging.getLogger("xhtml2pdf")
 
@@ -27,8 +28,9 @@ class pisaPDF:
 
     def addFromURI(self, url, basepath=None):
         obj = getFile(url, basepath)
-        if obj and (not obj.notFound()):
-            self.files.append(obj.getFileContent())
+        data = obj.getFileContent()
+        if data:
+            self.files.append(data)
 
     addFromFileName = addFromURI
 
@@ -39,7 +41,9 @@ class pisaPDF:
             self.addFromURI(f)
 
     def addFromString(self, data):
-        self.files.append(pisaTempFile(data, capacity=self.capacity))
+        f = getFile(data.encode(), capacity=self.capacity).getFileContent()
+        if f:
+            self.files.append(f)
 
     def addDocument(self, doc):
         if hasattr(doc.dest, "read"):
