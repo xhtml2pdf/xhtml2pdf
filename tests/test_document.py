@@ -154,6 +154,26 @@ class DocumentTest(TestCase):
 
             self.assertEqual(pdf_reader.getNumPages(), 2)
 
+    def test_document_nested_table(self):
+        """
+        Test that nested tables are being rendered.
+        """
+        tests_folder = os.path.dirname(os.path.realpath(__file__))
+        html_path = os.path.join(tests_folder, 'samples', 'nested_table.html')
+
+        with open(html_path) as html_file:
+            html = html_file.read()
+
+        with tempfile.TemporaryFile() as pdf_file:
+            pisaDocument(
+                src=io.StringIO(html),
+                dest=pdf_file
+            )
+            pdf_file.seek(0)
+            pdf_reader = PdfFileReader(pdf_file)
+            self.assertEqual(pdf_reader.getNumPages(), 1)
+
+
     @skipIf(IN_PYPY, "This doesn't work in pypy")
     def test_document_creation_without_metadata(self):
         with tempfile.TemporaryFile() as pdf_file:

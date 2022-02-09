@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>Nested Table</title>
+		<style type="text/css">
+body {
+	color: #003366;
+	background-color: #FFFFFF;
+	font-family: Verdana, Tahoma, sans-serif;
+	font-size: 11px;
+}
+
+table {
+	line-height: 10pt;
+	width: 100%;
+}
+
+th {
+	background-color: #ffd700;
+	padding: 0.1cm 0cm 0cm 0cm;
+	-pdf-word-wrap: CJK;
+}
+
+td {
+	padding: 0.1cm 0cm 0cm 0cm;
+	vertical-align: top;
+	background-color: #ffffcc;
+	-pdf-word-wrap: CJK;
+}
+</style>
+	</head>
+	<body>
+		<div>
+			<table border="1" width="100%">
+				<thead>
+					<tr>
+						<th>Column A</th>
+						<th>Column B</th>
+						<th>Column C</th>
+						<th>Column D</th>
+						<th>Column E</th>
+						<th>Column F</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>Value A</td>
+						<td>Value B</td>
+						<td></td>
+						<td></td>
+						<td>
+							<ul>
+								<li>
+									<table border="1" width="100%">
+										<thead>
+											<tr>
+												<th>Column 1</th>
+												<th>Column 2</th>
+												<th>Column 3</th>
+												<th>Column 4</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td>Value 1</td>
+												<td>Value 2</td>
+												<td></td>
+												<td>
+													Here is a sentence that is fifty-four characters long.
+													100 Hello WORLD, H.W.
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</li>
+							</ul>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</body>
+</html>
