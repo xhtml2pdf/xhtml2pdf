@@ -19,13 +19,13 @@ import logging
 import sys
 from hashlib import md5
 from html import escape as html_escape
-from io import BytesIO
+from io import BytesIO, StringIO
 
 import PIL.Image as PILImage
 import reportlab.pdfbase.pdfform as pdfform
 from reportlab.lib.enums import TA_RIGHT
 from reportlab.lib.styles import ParagraphStyle
-from reportlab.lib.utils import (LazyImageReader, flatten, getStringIO,
+from reportlab.lib.utils import (LazyImageReader, flatten,
                                  haveImages, open_for_read)
 from reportlab.platypus.doctemplate import (BaseDocTemplate, IndexingFlowable,
                                             PageTemplate)
@@ -333,7 +333,7 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
                             register_reset(self._cache.clear)
 
                         data = self._cache.setdefault(md5(data).digest(), data)
-                    self.fp = getStringIO(data)
+                    self.fp = StringIO(data)
                 elif imageReaderFlags == - 1 and isinstance(fileName, str):
                     # try Ralf Schmitt's re-opening technique of avoiding too many open files
                     self.fp.close()
