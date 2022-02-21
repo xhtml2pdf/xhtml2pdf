@@ -363,7 +363,7 @@ def _putFragLine(cur_x, tx, line):
 
     # XXX Modified for XHTML2PDF
     # Backcolor
-    if hasattr(f, "backColor"):
+    if words and hasattr(f, "backColor"):
         if xs.backgroundColor is not None:
             xs.backgrounds.append((xs.background_x, cur_x_s, xs.backgroundColor, xs.backgroundFontSize))
 
