@@ -4,7 +4,7 @@ html5lib>=1.1
 Pillow>=8.1.1
 PyPDF3>=1.0.5
 python-bidi>=0.4.2
-reportlab>=3.5.53
+reportlab==3.5.53
 Sphinx>=3.2.1
 sphinx-rtd-theme>=0.5.0
 svglib>=1.2.1
