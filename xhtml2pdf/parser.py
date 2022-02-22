@@ -330,9 +330,9 @@ def lower(sequence):
 def CSS2Frag(c, kw, isBlock):
     # COLORS
     if "color" in c.cssAttr:
-        c.frag.textColor = getColor(c.cssAttr["color"])
+        c.frag.textColor = getColor(c.cssAttr["color"], "#000000")
     if "background-color" in c.cssAttr:
-        c.frag.backColor = getColor(c.cssAttr["background-color"])
+        c.frag.backColor = getColor(c.cssAttr["background-color"], "#ffffff")
         # FONT SIZE, STYLE, WEIGHT
     if "font-family" in c.cssAttr:
         c.frag.fontName = c.getFontName(c.cssAttr["font-family"])
