@@ -573,7 +573,7 @@ class CSSSelectorCombinationQualifier(CSSSelectorQualifierBase):
 class CSSTerminalFunction(object):
     def __init__(self, name, params):
         self.name = name
-        self.params = params
+        self.params = [param if isinstance(param, str) else str(param) for param in params]
 
     def __repr__(self):
         return '<CSS function: %s(%s)>' % (self.name, ', '.join(self.params))
