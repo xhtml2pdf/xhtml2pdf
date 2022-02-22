@@ -34,7 +34,7 @@ setup(
     url="http://github.com/xhtml2pdf/xhtml2pdf",
     keywords="PDF, HTML, XHTML, XML, CSS",
     install_requires=["html5lib>=1.0.1", "PyPDF3>=1.0.5", "Pillow>=8.1.1",
-                      "reportlab>=3.5.53", "svglib>=1.2.1",
+                      "reportlab<3.6.7", "svglib>=1.2.1",
                       "python-bidi>=0.4.2", "arabic-reshaper>=2.1.0"],
     include_package_data=True,
     packages=find_packages(exclude=["tests", "tests.*"]),
