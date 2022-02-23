@@ -89,7 +89,7 @@ def getParaFrag(style):
               )
     set_value(frag,
               ('pageNumber', 'pageCount', 'outline',
-               'outlineOpen', 'keepWithNext'),
+               'outlineOpen', 'keepWithNext', 'rtl'),
               False)
 
     frag.text = ""
@@ -595,6 +595,8 @@ class pisaContext(object):
                     language = self.__getattribute__('language')
                     detect_language_result = arabic_format(self.text, language)
                     if detect_language_result != None:
+                        if self.text != detect_language_result:
+                            first.rtl = True
                         self.text = detect_language_result
                 para = PmlParagraph(
                     self.text,
@@ -607,6 +609,7 @@ class pisaContext(object):
                 para.outlineOpen = first.outlineOpen
                 para.keepWithNext = first.keepWithNext
                 para.autoLeading = "max"
+                para.rtl = first.rtl
 
                 if self.image:
                     para = PmlParagraphAndImage(

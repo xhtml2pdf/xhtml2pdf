@@ -1010,6 +1010,9 @@ class Paragraph(Flowable):
             blPara = self.breakLinesCJK([first_line_width, later_widths])
         else:
             blPara = self.breakLines([first_line_width, later_widths])
+            if hasattr(self, 'rtl'):
+                if self.rtl:
+                    blPara.lines = blPara.lines[::-1]
         self.blPara = blPara
         autoLeading = getattr(self, 'autoLeading', getattr(style, 'autoLeading', ''))
         leading = style.leading
