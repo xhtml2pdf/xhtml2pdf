@@ -183,7 +183,8 @@ def getColor(value, default=None):
     Convert to color value.
     This returns a Color object instance from a text bit.
     """
-
+    if value is None:
+        return
     if isinstance(value, Color):
         return value
     value = str(value).strip().lower()
@@ -631,10 +632,10 @@ class pisaFileObject:
                 log.debug("Sending request for {} with httplib".format(uri))
 
                 # External data
-                if basepath:
-                    uri = urlparse.urljoin(basepath, uri)
+                #if basepath:
+                #    uri = urlparse.urljoin(basepath, uri)
 
-                log.debug("Uri parsed: {}".format(uri))
+                #log.debug("Uri parsed: {}".format(uri))
 
                 #path = urlparse.urlsplit(url)[2]
                 #mimetype = getMimeType(path)
@@ -648,9 +649,11 @@ class pisaFileObject:
                     conn = httplib.HTTPSConnection(server,  **httpConfig)
                 else:
                     conn = httplib.HTTPConnection(server)
+
                 conn.request("GET", path)
                 r1 = conn.getresponse()
                 # log.debug("HTTP %r %r %r %r", server, path, uri, r1)
+                print(r1.status, r1.reason)
                 if (r1.status, r1.reason) == (200, "OK"):
                     self.mimetype = r1.getheader(
                         "Content-Type", '').split(";")[0]

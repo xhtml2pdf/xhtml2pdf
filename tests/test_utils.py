@@ -64,7 +64,7 @@ class UtilsColorTestCase(TestCase):
 
     def test_get_color_for_none(self):
         res = getColor(None, default='TOKEN')
-        self.assertEqual(res, 'TOKEN')
+        self.assertEqual(res, None)
 
     def test_get_color_for_RGB(self):
         res = getColor('#FF0000')

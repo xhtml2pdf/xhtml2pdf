@@ -109,7 +109,6 @@ class TableTest(TestCase):
         context = pisaParser(BytesIO(html.encode('utf-8')), pisaContext(None))
         table = context.story[0]
         color = table._bkgrndcmds[0][3]
-
         self.assertEqual(color.hexval(), '0x006400', '"background-color" in CSS not equal with output!')
 
     def test_td_colspan(self):
