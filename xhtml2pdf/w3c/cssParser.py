@@ -693,7 +693,7 @@ class CSSParser(object):
                 if medium is None:
                     mediums.append('all')
                 # strip up to curly bracket
-                pattern = re.compile('.*({.*)')
+                pattern = re.compile('.*?[{]')
                 match = re.match(pattern, src)
                 src = src[match.end()-1:]
                 break
