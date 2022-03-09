@@ -33,7 +33,10 @@ class HttpConfig(dict):
     - http_timeout
     
     """
-      
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self['timeout']=5
     def save_keys(self, name, value):
         if name=='nosslcheck':
             self['context']=ssl._create_unverified_context()
