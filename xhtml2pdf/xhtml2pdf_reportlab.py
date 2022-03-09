@@ -36,7 +36,8 @@ from reportlab.platypus.tables import Table, TableStyle
 from reportlab.rl_config import register_reset
 
 from xhtml2pdf.reportlab_paragraph import Paragraph
-from xhtml2pdf.util import getBorderStyle, getUID, pisaTempFile
+from xhtml2pdf.util import getBorderStyle, getUID
+from xhtml2pdf.files import pisaTempFile
 
 try:
     from reportlab.graphics import renderPDF, renderPM
@@ -224,7 +225,7 @@ class PmlPageTemplate(PageTemplate):
                     and (not self.pisaBackground.notFound())):
 
                 # Is image not PDF
-                if self.pisaBackground.mimetype.startswith("image/"):
+                if self.pisaBackground.getMimeType().startswith("image/"):
 
                     try:
                         self.img = PmlImageReader(BytesIO(self.pisaBackground.getData()))

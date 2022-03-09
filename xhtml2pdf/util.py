@@ -14,17 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import base64
-import io
 import logging
-import mimetypes
-import os.path
 import re
-import shutil
 import sys
-import tempfile
 from copy import copy
-from io import BytesIO
 
 import arabic_reshaper
 import reportlab
@@ -37,17 +30,9 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 
 import xhtml2pdf.default
-import http.client as httplib
-import urllib.request as urllib2
-import urllib.parse as urlparse
-from urllib.parse import unquote as urllib_unquote
 
 rgb_re = re.compile(
     r"^.*?rgb[a]?[(]([0-9]+).*?([0-9]+).*?([0-9]+)(?:.*?(?:[01]\.(?:[0-9]+)))?[)].*?[ ]*$")
-
-_reportlab_version = tuple(map(int, reportlab.Version.split('.')))
-if _reportlab_version < (2, 1):
-    raise ImportError("Reportlab Version 2.1+ is needed!")
 
 log = logging.getLogger("xhtml2pdf")
 
@@ -66,7 +51,7 @@ try:
 except ImportError:
     renderSVG = None
 
-from xhtml2pdf.config.httpconfig import httpConfig
+
 #=========================================================================
 # Memoize decorator
 #=========================================================================
@@ -437,326 +422,10 @@ _alignments = {
 def getAlign(value, default=TA_LEFT):
     return _alignments.get(str(value).lower(), default)
 
-GAE = "google.appengine" in sys.modules
-
-if GAE:
-    STRATEGIES = (
-        BytesIO,
-        BytesIO)
-else:
-    STRATEGIES = (
-        BytesIO,
-        tempfile.NamedTemporaryFile)
-
-
-class pisaTempFile(object):
-
-    """
-    A temporary file implementation that uses memory unless
-    either capacity is breached or fileno is requested, at which
-    point a real temporary file will be created and the relevant
-    details returned
-
-    If capacity is -1 the second strategy will never be used.
-
-    Inspired by:
-    http://code.activestate.com/recipes/496744/
-    """
-
-    STRATEGIES = STRATEGIES
-
-    CAPACITY = 10 * 1024
-
-    def __init__(self, buffer="", capacity=CAPACITY):
-        """Creates a TempFile object containing the specified buffer.
-        If capacity is specified, we use a real temporary file once the
-        file gets larger than that size.  Otherwise, the data is stored
-        in memory.
-        """
-
-        self.capacity = capacity
-        self.strategy = int(len(buffer) > self.capacity)
-        try:
-            self._delegate = self.STRATEGIES[self.strategy]()
-        except IndexError:
-            # Fallback for Google AppEnginge etc.
-            self._delegate = self.STRATEGIES[0]()
-        self.write(buffer)
-        # we must set the file's position for preparing to read
-        self.seek(0)
-
-    def makeTempFile(self):
-        """
-        Switch to next startegy. If an error occured,
-        stay with the first strategy
-        """
-
-        if self.strategy == 0:
-            try:
-                new_delegate = self.STRATEGIES[1]()
-                new_delegate.write(self.getvalue())
-                self._delegate = new_delegate
-                self.strategy = 1
-                log.warning("Created temporary file %s", self.name)
-            except:
-                self.capacity = - 1
-
-    def getFileName(self):
-        """
-        Get a named temporary file
-        """
-
-        self.makeTempFile()
-        return self.name
-
-    def fileno(self):
-        """
-        Forces this buffer to use a temporary file as the underlying.
-        object and returns the fileno associated with it.
-        """
-        self.makeTempFile()
-        return self._delegate.fileno()
-
-    def getvalue(self):
-        """
-        Get value of file. Work around for second strategy.
-        Always returns bytes
-        """
-
-        if self.strategy == 0:
-            return self._delegate.getvalue()
-        self._delegate.flush()
-        self._delegate.seek(0)
-        value = self._delegate.read()
-        if not isinstance(value, bytes):
-            value = value.encode('utf-8')
-        return value
-
-    def write(self, value):
-        """
-        If capacity != -1 and length of file > capacity it is time to switch
-        """
-
-        if self.capacity > 0 and self.strategy == 0:
-            len_value = len(value)
-            if len_value >= self.capacity:
-                needs_new_strategy = True
-            else:
-                self.seek(0, 2)  # find end of file
-                needs_new_strategy = \
-                    (self.tell() + len_value) >= self.capacity
-            if needs_new_strategy:
-                self.makeTempFile()
-
-        if not isinstance(value, bytes):
-            value = value.encode('utf-8')
-
-        self._delegate.write(value)
-
-    def __getattr__(self, name):
-        try:
-            return getattr(self._delegate, name)
-        except AttributeError:
-            # hide the delegation
-            e = "object '%s' has no attribute '%s'" \
-                % (self.__class__.__name__, name)
-            raise AttributeError(e)
 
 
 _rx_datauri = re.compile(
     "^data:(?P<mime>[a-z]+/[a-z]+);base64,(?P<data>.*)$", re.M | re.DOTALL)
-
-
-class pisaFileObject:
-
-    """
-    XXX
-    """
-
-    def __init__(self, uri, basepath=None):
-
-        self.basepath = basepath
-        self.mimetype = None
-        self.file_content = None
-        self.data = None
-        self.uri = None
-        self.local = None
-        self.tmp_file = None
-        uri = uri or str()
-        if not isinstance(uri, str):
-            uri = uri.decode("utf-8")
-        log.debug("FileObject %r, Basepath: %r", uri, basepath)
-
-        # Data URI
-        if uri.startswith("data:"):
-            m = _rx_datauri.match(uri)
-            self.mimetype = m.group("mime")
-
-            b64 = urllib_unquote(m.group("data"))
-
-            # The data may be incorrectly unescaped... repairs needed
-            b64 = b64.strip("b'").strip("'").encode()
-            b64 = re.sub(b"\\n", b'', b64)
-            b64 = re.sub(b'[^A-Za-z0-9\\+\\/]+', b'', b64)
-
-
-
-            # Add padding as needed, to make length into a multiple of 4
-            #
-            b64 += b"=" * ((4 - len(b64) % 4) % 4)
-
-            self.data = base64.b64decode(b64)
-
-        else:
-            # Check if we have an external scheme
-            if basepath and not urlparse.urlparse(uri).scheme:
-                urlParts = urlparse.urlparse(basepath)
-            else:
-                urlParts = urlparse.urlparse(uri)
-
-            log.debug("URLParts: {}".format((urlParts, urlParts.scheme)))
-
-            if urlParts.scheme == 'file':
-                if basepath and uri.startswith('/'):
-                    uri = urlparse.urljoin(basepath, uri[1:])
-                urlResponse = urllib2.urlopen(uri)
-                self.mimetype = urlResponse.info().get(
-                    "Content-Type", '').split(";")[0]
-                self.uri = urlResponse.geturl()
-                self.file_content = urlResponse.read()
-
-            # Drive letters have len==1 but we are looking
-            # for things like http:
-            elif urlParts.scheme in ('http', 'https'):
-
-                log.debug("Sending request for {} with httplib".format(uri))
-
-                # External data
-                #if basepath:
-                #    uri = urlparse.urljoin(basepath, uri)
-
-                #log.debug("Uri parsed: {}".format(uri))
-
-                #path = urlparse.urlsplit(url)[2]
-                #mimetype = getMimeType(path)
-
-                # Using HTTPLIB
-                url_splitted = urlparse.urlsplit(uri)
-                server = url_splitted[1]
-                path = url_splitted[2]
-                path += "?" + url_splitted[3] if url_splitted[3] else ""
-                if uri.startswith("https://"):
-                    conn = httplib.HTTPSConnection(server,  **httpConfig)
-                else:
-                    conn = httplib.HTTPConnection(server)
-
-                conn.request("GET", path)
-                r1 = conn.getresponse()
-                # log.debug("HTTP %r %r %r %r", server, path, uri, r1)
-                print(r1.status, r1.reason)
-                if (r1.status, r1.reason) == (200, "OK"):
-                    self.mimetype = r1.getheader(
-                        "Content-Type", '').split(";")[0]
-                    self.uri = uri
-                    log.debug("here")
-                    if r1.getheader("content-encoding") == "gzip":
-                        import gzip
-
-                        self.file_content = gzip.GzipFile(
-                            mode="rb", fileobj=BytesIO(r1.read()))
-                    else:
-                        self.file_content = pisaTempFile(r1.read())
-                else:
-                    log.debug(
-                        "Received non-200 status: {}".format((r1.status, r1.reason)))
-                    try:
-                        urlResponse = urllib2.urlopen(uri)
-                    except urllib2.HTTPError as e:
-                        log.error("Could not process uri: {}".format(e))
-                        return
-                    self.mimetype = urlResponse.info().get(
-                        "Content-Type", '').split(";")[0]
-                    self.uri = urlResponse.geturl()
-                    self.file_content = urlResponse.read()
-                conn.close()
-
-            else:
-
-                log.debug("Unrecognized scheme, assuming local file path")
-
-                # Local data
-                if basepath:
-                    if sys.platform == 'win32' and os.path.isfile(basepath):
-                        basepath = os.path.dirname(basepath)
-                    uri = os.path.normpath(os.path.join(basepath, uri))
-
-                if os.path.isfile(uri):
-                    self.uri = uri
-                    self.local = uri
-
-                    self.setMimeTypeByName(uri)
-                    if self.mimetype and self.mimetype.startswith('text'):
-                        with open(uri, "r") as file_handler:
-                            # removed bytes... lets hope it goes ok :/
-                            self.file_content = file_handler.read()
-                    else:
-                        with open(uri, "rb") as file_handler:
-                            # removed bytes... lets hope it goes ok :/
-                            self.file_content = file_handler.read()
-
-    def getFileContent(self):
-        if self.file_content is not None:
-            return self.file_content
-        if self.data is not None:
-            return self.data
-        return None
-
-    def getNamedFile(self):
-        if self.notFound():
-            return None
-        if self.local:
-            return str(self.local)
-        if not self.tmp_file:
-            self.tmp_file = tempfile.NamedTemporaryFile()
-            if self.file_content:
-                with io.StringIO(self.file_content) as file_handler:
-                    shutil.copyfileobj(file_handler, self.tmp_file)
-            else:
-                self.tmp_file.write(self.getData())
-            self.tmp_file.flush()
-        return self.tmp_file.name
-
-    def getData(self):
-        if self.data is not None:
-            return self.data
-        if self.file_content is not None:
-            # try:
-            #     self.data = self.file_content
-            # except:
-            #     if self.mimetype and self.mimetype.startswith('text'):
-            #         self.file = open(self.file.name, "rb") #removed bytes... lets hope it goes ok :/
-            #         self.data = self.file.read().decode('utf-8')
-            #     else:
-            #         raise
-            return self.file_content
-        return None
-
-    def notFound(self):
-        return (self.file_content is None) and (self.data is None)
-
-    def setMimeTypeByName(self, name):
-        " Guess the mime type "
-        mimetype = mimetypes.guess_type(name)[0]
-        if mimetype is not None:
-            self.mimetype = mimetypes.guess_type(name)[0].split(";")[0]
-
-
-def getFile(*a, **kw):
-    file = pisaFileObject(*a, **kw)
-    if file.notFound():
-        return None
-    return file
-
 
 COLOR_BY_NAME = {
     'activeborder': Color(212, 208, 200),

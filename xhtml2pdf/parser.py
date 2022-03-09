@@ -75,8 +75,8 @@ from xhtml2pdf.tags import (pisaTagIMG,
                             # pisaTagSELECT,
                             # pisaTagOPTION
                             )
-
-from xhtml2pdf.util import getAlign, getBool, getBox, getColor, getPos, getSize, pisaTempFile, toList, transform_attrs
+from xhtml2pdf.files import pisaTempFile
+from xhtml2pdf.util import getAlign, getBool, getBox, getColor, getPos, getSize, toList, transform_attrs
 from xhtml2pdf.w3c import cssDOMElementInterface
 from xhtml2pdf.xhtml2pdf_reportlab import PmlLeftPageBreak, PmlRightPageBreak
 
@@ -483,7 +483,7 @@ def pisaPreLoop(node, context, collect=False):
     Collect all CSS definitions
     """
 
-    data = u""
+    data = ""
     if node.nodeType == Node.TEXT_NODE and collect:
         data = node.data
 
@@ -740,7 +740,7 @@ def pisaLoop(node, context, path=None, **kw):
             pisaLoop(node, context, path, **kw)
 
 
-def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_output=None):
+def pisaParser(src, context, default_css="", xhtml=False, encoding="utf8", xml_output=None):
     """
     - Parse HTML and get miniDOM
     - Extract CSS informations, add default CSS, parse CSS
@@ -783,22 +783,13 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding=None, xml_out
     )  # encoding=encoding)
 
     if xml_output:
-        if encoding:
-            xml_output.write(document.toprettyxml(encoding=encoding))
-        else:
-            xml_output.write(document.toprettyxml(encoding="utf8"))
+        xml_output.write(document.toprettyxml(encoding=encoding))
 
     if default_css:
         context.addDefaultCSS(default_css)
 
     pisaPreLoop(document, context)
-    # try:
     context.parseCSS()
-    # except:
-    #    context.cssText = DEFAULT_CSS
-    #    context.parseCSS()
-    # context.debug(9, pprint.pformat(context.css))
-
     pisaLoop(document, context)
     return context
 
