@@ -14,8 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from reportlab.lib.pagesizes import (A0, A1, A2, A3, A4, A5, A6, B0, B1, B2, B3, B4, B5, B6, ELEVENSEVENTEEN, LEGAL,
-                                     LETTER)
+from reportlab.lib.pagesizes import (A0, A1, A2, A3, A4, A5, A6,A7, A8, A9, A10,
+                                     B0, B1, B2, B3, B4, B5, B6, B7, B8, B9, B10,
+                                     C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10,
+                                     JUNIOR_LEGAL, HALF_LETTER, GOV_LETTER, GOV_LEGAL, TABLOID, LEDGER,
+                                     ELEVENSEVENTEEN, LEGAL, LETTER)
 
 from xhtml2pdf import util
 
@@ -652,6 +655,10 @@ PML_PAGESIZES = {
     "a4": A4,
     "a5": A5,
     "a6": A6,
+    "a7": A7,
+    "a8": A8,
+    "a9": A9,
+    "a10": A10,
     "b0": B0,
     "b1": B1,
     "b2": B2,
@@ -659,8 +666,28 @@ PML_PAGESIZES = {
     "b4": B4,
     "b5": B5,
     "b6": B6,
+    "b7": B7,
+    "b8": B8,
+    "b9": B9,
+    "b10": B10,
+    "c0": C0,
+    "c1": C1,
+    "c2": C2,
+    "c3": C3,
+    "c4": C4,
+    "c5": C5,
+    "c6": C6,
+    "c7": C7,
+    "c8": C8,
+    "c9": C9,
+    "c10": C10,
     "letter": LETTER,
     "legal": LEGAL,
-    "ledger": ELEVENSEVENTEEN,
+    "ledger": LEDGER,
     "elevenseventeen": ELEVENSEVENTEEN,
+    "juniorlegal": JUNIOR_LEGAL,
+    "halfletter": HALF_LETTER,
+    "govletter": GOV_LETTER,
+    "govlegal": GOV_LEGAL,
+    "tabloid": TABLOID
 }
