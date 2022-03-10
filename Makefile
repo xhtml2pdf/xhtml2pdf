@@ -17,6 +17,8 @@ clean-build:
 	rm -fr build/
 	rm -fr dist/
 	rm -fr *.egg-info
+	rm -fr test/test_working
+	rm -fr testrender/data/test_working
 
 clean-pyc:
 	find . -name '*.pyc' -exec rm -f {} +
