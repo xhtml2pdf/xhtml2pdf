@@ -1,8 +1,18 @@
 @font-face {
-	font-family: "code2000";
-	src: url("font/code2000.ttf")
+	font-family: "horai-umefont";
+	src: url("font/horai-umefont/ume-hgo4.ttf")
 }
 
+@font-face {
+	font-family: "noto-thaana";
+	src: url("font/noto/NotoSansThaana-Regular.ttf")
+}
+
+
 html {
-    font-family: code2000;
+    font-family: horai-umefont;
+}
+
+.notothaana{
+    font-family: noto-thaana;
 }

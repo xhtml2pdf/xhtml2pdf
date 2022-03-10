@@ -1,0 +1,121 @@
+Source package: scalable-cyrfonts
+
+Binary packages: t1-cyrillic, t1-teams, t1-oldslavic,
+                 and scalable-cyrfonts-tex.
+
+Upstream packages:
+
+    1) urw-fonts-1.0.7pre40-src.tar.bz2 from
+       ftp://ftp.gnome.ru/fonts/
+       Maintainer: Valek Filippov <frob@df.ru>
+
+These fonts are included in t1-cyrillic and scalable-cyrfonts-tex.
+
+    2) urw-fonts-1.0.7pre40.tar.bz2
+       ftp://ftp.gnome.ru/fonts/
+       Maintainer: Valek Filippov <frob@df.ru>
+
+From this package we took only the documentation because it is not
+included in urw-fonts-1.0.7pre40-src.tar.bz2.
+
+    3) ftp://ftp.ice.ru/pub/fonts/type1/teams-1.1.tar.gz
+       Maintainer: TopTeam Co. <http://www.topteam.bg>
+		   Alexander Shopov <al_shopov@web.bg>
+
+These fonts are included in t1-teams and scalable-cyrfonts-tex.
+
+    4) oldslavic.tar.bz2 from 
+       ftp://ftp.gnome.ru/fonts/
+       Maintainer: Valek Filippov <frob@df.ru>
+
+These fonts are included in t1-oldslavic and scalable-cyrfonts-tex.
+
+License of the fonts in urw-fonts-1.0.7pre10-src.tar.bz2:
+
+These fonts were made from the free URW fonts distributed with
+ghostcript.  The license for result is the same as for the original
+fonts, i.e. GPL with an exception that you can put these fonts in your
+own non-GPLed documents.  On Debian GNU/Linux systems, the complete
+text of the GNU General Public License can be found in
+`/usr/share/common-licenses/GPL'.
+
+
+License of the fonts in teams-1.1.tar.gz:
+
+Copyright (C) 1994-2000 The TopTeam Co. All Rights Reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL TOPTEAM CO. BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of TopTeam Co. shall not
+be used in advertising or otherwise to promote the sale, use or other
+dealings in this Software without prior written authorization from
+TopTeam Co.
+
+License of the font in oldslavic.tar.bz2:
+
+(C) 2001 Valek Filippov  
+
+These fonts made by Valek Filippov with pfaedit (http://pfaedit.sf.net).
+They are based on the drawing from very old (about 1912) fonts album.
+
+License for it is GPL (GNU General Public License). As a special
+exception, permission is granted to include this font program in a
+Postscript or PDF file that consists of a document that contains text
+to be displayed or printed using this font, regardless of the
+conditions or license applying to the document itse lf.  On Debian
+GNU/Linux systems, the complete text of the GNU General Public License
+can be found in `/usr/share/common-licenses/GPL'.
+
+Changes to the fonts in the Debian packages:
+
+    1. The fonts are converted in PFB format.
+    2. The fonts n??????l are renamed to n??????d to avoid the name
+       collision with the fonts from the package gsfonts.
+    3. The PostScript names of the fonts and n??????d are
+       changed.  For example NimbusSanL-ReguItal becomed
+       NimbusSanWINC-ReguItal.  This is made to avoid the name
+       collision with the fonts from the package gsfonts.
+    4. Lower case letters are used in the names of the fonts.
+
+The TeX font metric files and virtual fonts are automatically
+generated from the AFM files.  Thus they share the same copyright terms.
+
+For this generation a portions of the package T2 are used.  T2 package
+is copyright 1997-1999 Werner Lemberg, Vladimir Volovich and any
+individual authors listed elsewhere in package files.  It may be
+distributed under the conditions of the LaTeX Project Public License,
+either version 1.1 of the license or (at your option) any later
+version.
+
+Two versions of the T2 package are included complete and unmodified in
+the directories t2 and t2-991215 of the source Debian package.  They
+were obtained from the following two addresses correspondingly:
+
+ftp://tug.ctan.org/pub/tex-archive/macros/latex/contrib/t2.zip
+ftp://ftp.vsu.ru/pub/tex/t2-current.tar.gz
+
+The file lppl.txt contains the text of the LaTeX Project Public
+License, version 1.3a.  The license is not included in the binary
+Debian packages because nothing in them is covered by it.
+
+All other files in these packages are made by me (Anton Zinoviev) and
+hereby I put them in public domain.
+
+Anton Zinoviev <zinoviev@debian.org>

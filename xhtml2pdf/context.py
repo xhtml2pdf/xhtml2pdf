@@ -848,11 +848,11 @@ class pisaContext(object):
 
                 if suffix == "afm":
                     afm = file.getNamedFile()
-                    tfile = pisaFileObject(baseName + ".pfb")
+                    tfile = pisaFileObject(baseName + ".pfb", basepath=file.basepath)
                     pfb = tfile.getNamedFile()
                 else:
                     pfb = file.getNamedFile()
-                    tfile = pisaFileObject(baseName + ".afm")
+                    tfile = pisaFileObject(baseName + ".afm", basepath=file.basepath)
                     afm = tfile.getNamedFile()
 
                 # determine full font name according to weight and style
