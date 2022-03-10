@@ -19,7 +19,7 @@ XHTML2PDF
 
 |
 
-The current release of xhtml2pdf is **xhtml2pdf 0.2.5**. Release Notes can be found here: `Release Notes <https://xhtml2pdf.readthedocs.io/en/latest/release-notes.html>`__
+The current release of xhtml2pdf is **xhtml2pdf 0.2.6**. Release Notes can be found here: `Release Notes <https://xhtml2pdf.readthedocs.io/en/latest/release-notes.html>`__
 As with all open-source software, its use in production depends on many factors, so be aware that you may find issues in some cases.
 
 **Big thanks** to everyone who has worked on this project so far and to those who help maintain it.
@@ -51,7 +51,7 @@ This is a typical Python library and can be installed using pip::
 Requirements
 ============
 
-Only Python 3.4+ is tested and guaranteed to work.
+Only Python 3.7+ is tested and guaranteed to work.
 
 All additional requirements are listed in the ``requirements.txt`` file and are installed automatically using the ``pip install xhtml2pdf`` method.
 
@@ -103,7 +103,7 @@ Development environment
 
    You should have a log with the following success status::
 
-    Ran 36 tests in 0.322s
+    Ran 167 tests in 34.585s
 
     OK
 
@@ -128,6 +128,11 @@ Two different test suites are available to assert that xhtml2pdf works reliably:
 #. Functional tests. Thanks to mawe42's super cool work, a full functional
    test suite is available at ``testrender/``.
 
+You can run them using make
+
+        make test  # run nosetest
+        make test-ref   # generate reference data for testrender
+        make test-all  # Run all test using tox
 
 Contact
 =======

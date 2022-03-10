@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
-Name: pisa
-Version: 3.0.33
+Name: xhtml2pdf
+Version: 0.2.6
 Summary: PDF generator using HTML and CSS
 Home-page: http://www.xhtml2pdf.com
 Author: Dirk Holtwick
@@ -17,8 +17,7 @@ Description: pisa is a html2pdf converter using the ReportLab Toolkit,
         (see 'demo' folder for examples)
 Keywords: PDF,HTML,XHTML,XML,CSS
 Platform: UNKNOWN
-Classifier: Development Status :: 5 - Production/Stable
-Classifier: Development Status :: 6 - Mature
+Classifier: Development Status :: 4 - Beta
 Classifier: Environment :: Console
 Classifier: Environment :: MacOS X
 Classifier: Environment :: Other Environment
@@ -41,7 +40,7 @@ Classifier: Intended Audience :: Manufacturing
 Classifier: Intended Audience :: Science/Research
 Classifier: Intended Audience :: System Administrators
 Classifier: Intended Audience :: Telecommunications Industry
-Classifier: License :: Free for non-commercial use
+Classifier: License :: Apache License 2.0
 Classifier: License :: OSI Approved :: GNU General Public License (GPL)
 Classifier: Natural Language :: English
 Classifier: Natural Language :: German
@@ -72,5 +71,5 @@ Classifier: Topic :: Text Processing :: Markup :: HTML
 Classifier: Topic :: Text Processing :: Markup :: XML
 Classifier: Topic :: Utilities
 Requires: html5lib
-Requires: pypdf
-Requires: pil
+Requires: pypdf3
+Requires: pillow

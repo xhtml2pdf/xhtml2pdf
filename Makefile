@@ -7,6 +7,7 @@ help:
 	@echo "test - run tests quickly with the default Python"
 	@echo "test-all - run tests on every Python version with tox"
 	@echo "test-ref - create reference directory for testrender"
+	@echo "test-render - run testrender tests"
 	@echo "docs - generate Sphinx HTML documentation, including API docs"
 	@echo "release - package and upload a release"
 	@echo "sdist - package"
@@ -30,6 +31,10 @@ lint:
 
 test:
 	python setup.py nosetests
+
+test-render:
+	cd testrender && python testrender.py --only-errors
+
 
 test-all:
 	tox

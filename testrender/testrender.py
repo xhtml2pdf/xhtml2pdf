@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-from __future__ import print_function
-
 import datetime
 import glob
 import os
@@ -8,15 +6,37 @@ import shutil
 import sys
 from optparse import OptionParser
 from subprocess import PIPE, Popen
+from pathlib import Path
 
 sys.path.append("..")
 from xhtml2pdf import pisa
 
 do_bytes = ''
 
+
+class Printer:
+    options=None
+    logs=''
+
+    def setOptions(self, options):
+        self.options=options
+
+    def __call__(self, *args, **kwargs):
+        if 'main' in kwargs and not self.options.quiet and not self.options.only_errors:
+            print(args[0])
+        self.logs+=args[0]+'\n'
+
+    def flush(self, end=False):
+        if self.options.only_errors and end:
+            print(self.logs)
+        elif self.options.debug or end:
+            print(self.logs)
+
+        self.logs = ''
+
+pprint=Printer()
+
 def render_pdf(filename, output_dir, options):
-    if options.debug:
-        print('Rendering %s' % filename)
     basename = os.path.basename(filename)
     outname = '%s.pdf' % os.path.splitext(basename)[0]
     output_path = os.path.join(output_dir, outname)
@@ -25,14 +45,14 @@ def render_pdf(filename, output_dir, options):
         result = pisa.pisaDocument(input_file, output_file, path=filename)
 
     if result.err:
-        print('Error rendering %s: %s' % (filename, result.err))
+        pprint('Error rendering %s: %s' % (filename, result.err))
         sys.exit(1)
     return output_path
 
 
 def convert_to_png(infile, output_dir, options):
-    if options.debug:
-        print('Converting %s to PNG' % infile)
+
+    pprint('Converting %s to PNG' % infile)
     basename = os.path.basename(infile)
     filename = os.path.splitext(basename)[0]
     outname = '%s.page%%0d.png' % filename
@@ -51,8 +71,8 @@ def convert_to_png(infile, output_dir, options):
 
 
 def create_diff_image(srcfile1, srcfile2, output_dir, options):
-    if options.debug:
-        print('Creating difference image for %s and %s' % (srcfile1, srcfile2))
+
+    pprint('Creating difference image for %s and %s' % (srcfile1, srcfile2))
 
     outname = '%s.diff%s' % os.path.splitext(srcfile1)
     outfile = os.path.join(output_dir, outname)
@@ -60,14 +80,13 @@ def create_diff_image(srcfile1, srcfile2, output_dir, options):
     _,result = exec_cmd(options, options.compare_cmd, srcfile1, srcfile2, '-quiet', '-metric', 'ae', '-lowlight-color','white', '-colorspace', 'RGB', outfile)
     diff_value = int(float(result.strip()))
     if diff_value > 0:
-        if not options.quiet:
-            print('Image %s differs from reference, value is %i' % (srcfile1, diff_value))
+        pprint('Image %s differs from reference, value is %i' % (srcfile1, diff_value))
     return outfile, diff_value
 
 
 def copy_ref_image(srcname, output_dir, options):
     if options.debug:
-        print('Copying reference image %s ' % srcname)
+        pprint('Copying reference image %s ' % srcname)
     dstname = os.path.basename(srcname)
     dstfile = os.path.join(output_dir, '%s.ref%s' % os.path.splitext(dstname))
     shutil.copyfile(srcname, dstfile)
@@ -76,15 +95,13 @@ def copy_ref_image(srcname, output_dir, options):
 
 def create_thumbnail(filename, options):
     thumbfile = '%s.thumb%s' % os.path.splitext(filename)
-    if options.debug:
-        print('Creating thumbnail of %s' % filename)
+    pprint('Creating thumbnail of %s' % filename)
     exec_cmd(options, options.convert_cmd, '-resize', '20%', filename, thumbfile)
     return thumbfile
 
 
 def render_file(filename, output_dir, ref_dir, options):
-    if options.debug:
-        print('Rendering %s' % filename)
+    pprint('Rendering %s' % Path(filename).name, main=True)
     pdf = render_pdf(filename, output_dir, options)
     pngs = convert_to_png(pdf, output_dir, options)
     if options.create_reference:
@@ -97,7 +114,7 @@ def render_file(filename, output_dir, ref_dir, options):
         for page in pages:
             refsrc = os.path.join(ref_dir, os.path.basename(page['png']))
             if not os.path.isfile(refsrc):
-                print('Reference image for %s not found!' % page['png'])
+                pprint('Reference image for %s not found!' % page['png'])
                 continue
             page['ref'] = copy_ref_image(refsrc, output_dir, options)
             page['ref_thumb'] = create_thumbnail(page['ref'], options)
@@ -107,18 +124,20 @@ def render_file(filename, output_dir, ref_dir, options):
             page['diff_thumb'] = create_thumbnail(page['diff'], options)
             if page['diff_value']:
                 diff_count += 1
+    pprint.flush()
     return pdf, pages, diff_count
 
 
 def exec_cmd(options, *args):
     if options.debug:
-        print('Executing %s' % ' '.join(args))
+        pprint('Executing %s' % ' '.join(args))
     proc = Popen(args, stdout=PIPE, stderr=PIPE)
     result = proc.communicate()
-    if options.debug:
-        print("Compare result: ", result[0], result[1])
+
+    pprint("Compare result: %r %r"%( result[0], result[1]))
     if proc.returncode:
-        print('exec error (%i): %s' % (proc.returncode, result[1]))
+        pprint('exec error (%i): %s' % (proc.returncode, result[1]))
+        pprint.flush(end=True)
         if not options.nofail:
             sys.exit(1)
     return result[0], result[1]
@@ -198,7 +217,7 @@ def create_html_file(results, template_file, output_dir, options):
 
 def main():
     options, args = parser.parse_args()
-
+    pprint.setOptions(options)
     base_dir = os.path.abspath(os.path.join(__file__, os.pardir))
     source_dir = os.path.join(base_dir, options.source_dir)
     if options.create_reference is not None:
@@ -211,7 +230,7 @@ def main():
     if os.path.isdir(output_dir):
         shutil.rmtree(output_dir)
     os.makedirs(output_dir)
-
+    pprint('Using:\n  source_dir=%s\n  output_dir=%s' % (source_dir, output_dir), main=True)
     results = []
     diff_count = 0
     if len(args) == 0:
@@ -226,22 +245,22 @@ def main():
     num = len(results)
 
     if options.create_reference is not None:
-        print('Created reference for %i file%s' % (num, '' if num == 1 else 's'))
+        pprint('Created reference for %i file%s' % (num, '' if num == 1 else 's'))
     else:
         htmlfile = create_html_file(results, template_file, output_dir, options)
-        if not options.quiet:
-            print('Rendered %i file%s' % (num, '' if num == 1 else 's'))
-            print('%i file%s differ%s from reference' % \
-                    (diff_count, diff_count != 1 and 's' or '',
-                     diff_count == 1 and 's' or ''))
-            print('Check %s for results' % htmlfile)
+        pprint('Rendered %i file%s' % (num, '' if num == 1 else 's'))
+        pprint('%i file%s differ%s from reference' % \
+                (diff_count, diff_count != 1 and 's' or '',
+                 diff_count == 1 and 's' or ''))
+        pprint('Check %s for results' % htmlfile)
         if diff_count:
+            pprint.flush(end=True)
             if options.nofail:
-                print("Differences were found but the error code is suppressed.")
+                pprint("Differences were found but the error code is suppressed.")
                 sys.exit(0)
             else:
                 sys.exit(1)
-
+    pprint.flush(end=True)
 
 parser = OptionParser(
     usage='rendertest.py [options] [source_file] [source_file] ...',

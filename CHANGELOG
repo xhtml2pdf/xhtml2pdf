@@ -1,0 +1,39 @@
+#. Release 2.0.6
+
+* Drop python 2 support.
+* Remove most of python 2 code and cleanup
+* Update packages dependencies
+* Remove six dependency and update Readme
+* Set timeout in https options
+* Add new file manager approach using factory method, now new classes deal with different types of data
+  B64InlineURI, LocalProtocolURI, NetworkFileUri, LocalFileURI, BytesFileUri
+* Now getColor return None when None is passed ignoring default value, but return default if bool(data) == false
+* rtl languages reversed lines added as a ParaFrag (note: not fully supported yet)
+* Check if Paragraph has 'rtl' attribute (note: not fully supported yet)
+* Fix UnboundLocalError in reportlab_paragraph (#585) (#586)
+* Remove usage of getStringIO (#590) removed form reportlab
+* Change test for github workflow using only Linux
+* Add Python 3.9, 3.10
+* Switch from PyPDF2 to PyPDF3
+* Add SVG support
+* Update package information.
+* Allow call tests using make.
+
+
+#. Release 0.2.4
+
+* Update link_callback documentation.
+* Stylize code lines in documentation.
+* Fixed cgi escape util on setup version.
+* Add test to python 3.7 and 3.8.
+* Fixed width assignation on fragments.
+* Support urllib in python 3 and python 2.
+* Add em unit support.
+* Repair base64 unscaped string.
+* Fixed urlparse when urls has parameters.
+* Fixed i_rgbcolor support.
+
+
+#. Old release
+
+Sorry I have no track of old changes in those version.
