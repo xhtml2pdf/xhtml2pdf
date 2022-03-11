@@ -42,7 +42,7 @@ def html2pdf(data, filename, open_file=False):
 
     pdf = pisa.CreatePDF(
         six.StringIO(data),
-        file(filename, "wb"))
+        open(filename, "wb"))
 
     if open_file and (not pdf.err):
         pisa.startViewer(filename)

@@ -37,7 +37,7 @@ setup(
                       "reportlab>=3.5.53", "svglib>=1.2.1",
                       "python-bidi>=0.4.2", "arabic-reshaper>=2.1.0"],
     include_package_data=True,
-    packages=find_packages(exclude=["tests", "tests.*"]),
+    packages=find_packages(exclude=["tests", "tests.*", "manual_test", "manual_test.*"]),
     #    test_suite = "tests", They're not even working yet
     entry_points={
         'console_scripts': [
