@@ -130,9 +130,11 @@ Two different test suites are available to assert that xhtml2pdf works reliably:
 
 You can run them using make
 
-        make test  # run nosetest
+.. code:: bash
+
+        make test       # run nosetest
         make test-ref   # generate reference data for testrender
-        make test-all  # Run all test using tox
+        make test-all   # Run all test using tox
 
 Contact
 =======
