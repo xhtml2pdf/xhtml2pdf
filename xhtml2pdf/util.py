@@ -36,21 +36,9 @@ rgb_re = re.compile(
 
 log = logging.getLogger("xhtml2pdf")
 
-try:
-    import PyPDF3
-except ImportError:
-    PyPDF3 = None
-
-try:
-    from reportlab.graphics import renderPM
-except ImportError:
-    renderPM = None
-
-try:
-    from reportlab.graphics import renderSVG
-except ImportError:
-    renderSVG = None
-
+import PyPDF3
+from reportlab.graphics import renderPM
+from reportlab.graphics import renderSVG
 
 #=========================================================================
 # Memoize decorator
@@ -651,3 +639,5 @@ def frag_text_language_check(context, frag_text):
         detect_language_result = arabic_format(frag_text, language)
         if detect_language_result:
             return detect_language_result
+
+DEFAULT_ASIAN_FONT = get_default_asian_font()

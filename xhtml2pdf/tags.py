@@ -79,7 +79,6 @@ class pisaTagSTYLE(pisaTag):
     def start(self, c):
         c.addPara()
 
-
     def end(self, c):
         c.clearFrag()
 
@@ -103,7 +102,6 @@ class pisaTagSUB(pisaTag):
 
 class pisaTagA(pisaTag):
     rxLink = r"^(#|[a-z]+\:).*"
-
 
     def start(self, c):
         attr = self.attr
@@ -408,10 +406,10 @@ class pisaTagIMG(pisaTag):
 
                         afrag = c.frag.clone()
                         afrag.text = ""
-                        afrag.fontName = "Helvetica" # Fix for a nasty bug!!!
+                        afrag.fontName = "Helvetica"  # Fix for a nasty bug!!!
                         afrag.cbDefn = ABag(
                             kind="img",
-                            image=img, # .getImage(), # XXX Inline?
+                            image=img,  # .getImage(), # XXX Inline?
                             valign=valign,
                             fontName="Helvetica",
                             fontSize=img.drawHeight,
@@ -428,6 +426,7 @@ class pisaTagIMG(pisaTag):
         else:
             log.warning(c.warning("Need a valid file name!"))
 
+
 class pisaTagHR(pisaTag):
     def start(self, c):
         c.addPara()
@@ -439,58 +438,59 @@ class pisaTagHR(pisaTag):
             spaceAfter=c.frag.spaceAfter
         ))
 
+
 # --- Forms
 
+class pisaTagINPUT(pisaTag):
 
-if 0:
+    def _render(self, c, attr):
+        width = 10
+        height = 10
+        if attr.type == "text":
+            width = 100
+            height = 12
+        c.addStory(xhtml2pdf_reportlab.PmlInput(attr.name,
+                                                input_type=attr.type,
+                                                default=attr.value,
+                                                width=width,
+                                                height=height,
+                                                ))
 
-    class pisaTagINPUT(pisaTag):
+    def end(self, c):
+        c.addPara()
+        attr = self.attr
+        if attr.name:
+            self._render(c, attr)
+        c.addPara()
 
-        def _render(self, c, attr):
-            width = 10
-            height = 10
-            if attr.type == "text":
-                width = 100
-                height = 12
-            c.addStory(xhtml2pdf_reportlab.PmlInput(attr.name,
-                                                    type=attr.type,
-                                                    default=attr.value,
-                                                    width=width,
-                                                    height=height,
-            ))
 
-        def end(self, c):
-            c.addPara()
-            attr = self.attr
-            if attr.name:
-                self._render(c, attr)
-            c.addPara()
+class pisaTagTEXTAREA(pisaTagINPUT):
 
-    class pisaTagTEXTAREA(pisaTagINPUT):
+    def _render(self, c, attr):
+        c.addStory(xhtml2pdf_reportlab.PmlInput(attr.name,
+                                                default="",
+                                                width=100,
+                                                height=100))
 
-        def _render(self, c, attr):
-            c.addStory(xhtml2pdf_reportlab.PmlInput(attr.name,
-                                                    default="",
-                                                    width=100,
-                                                    height=100))
 
-    class pisaTagSELECT(pisaTagINPUT):
+class pisaTagSELECT(pisaTagINPUT):
+    # https://developer.mozilla.org/en-US/docs/Web/HTML/Element/select
+    def start(self, c):
+        c.select_options = []
 
-        def start(self, c):
-            c.select_options = ["One", "Two", "Three"]
+    def end(self, c):
+        c.addStory(xhtml2pdf_reportlab.PmlInput(self.attr.name,
+                                                input_type="select",
+                                                default=c.select_options[0],
+                                                options=c.select_options,
+                                                width=100,
+                                                height=40))
+        c.select_options = None
 
-        def _render(self, c, attr):
-            c.addStory(xhtml2pdf_reportlab.PmlInput(attr.name,
-                                                    type="select",
-                                                    default=c.select_options[0],
-                                                    options=c.select_options,
-                                                    width=100,
-                                                    height=40))
-            c.select_options = None
 
-    class pisaTagOPTION(pisaTag):
-
-        pass
+class pisaTagOPTION(pisaTag):
+    def start(self, c):
+        c.select_options.append(self.attr.value)
 
 
 class pisaTagPDFNEXTPAGE(pisaTag):
@@ -644,17 +644,21 @@ class pisaTagPDFTEMPLATE(pisaTag):
         c.frameList = []
         c.frameStaticList = []
 
+
 class pisaTagPDFLANGUAGE(pisaTag):
     """
     <pdf:language name=""/>
     """
+
     def start(self, c):
-        setattr(c,'language',self.attr.name)
+        setattr(c, 'language', self.attr.name)
+
 
 class pisaTagPDFFONT(pisaTag):
     """
     <pdf:fontembed name="" src="" />
     """
+
     def start(self, c):
         deprecation("pdf:font")
         c.loadFont(self.attr.name, self.attr.src, self.attr.encoding)
@@ -685,6 +689,7 @@ class pisaTagPDFBARCODE(pisaTag):
         """
         Wrapper for barcode widget
         """
+
         def __init__(self, codeName="Code128", value="", **kw):
             self.vertical = kw.get('vertical', 0)
             self.widget = createBarcodeDrawing(codeName, value=value, **kw)

@@ -376,7 +376,7 @@ class pisaContext(object):
 
     def __init__(self, path, debug=0, capacity=-1):
         self.fontList = copy.copy(xhtml2pdf.default.DEFAULT_FONT)
-        self.asianFontList = copy.copy(xhtml2pdf.default.DEFAULT_ASIAN_FONT)
+        self.asianFontList = copy.copy(xhtml2pdf.util.DEFAULT_ASIAN_FONT)
         set_value(self,
                   ('path', 'story', 'text', 'log', 'frameStaticList',
                    'pisaBackgroundList', 'frameList', 'anchorFrag',

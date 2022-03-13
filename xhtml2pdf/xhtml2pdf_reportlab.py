@@ -921,13 +921,17 @@ class PmlLeftPageBreak(CondPageBreak):
 
 class PmlInput(Flowable):
     def __init__(self, name, input_type="text", width=10, height=10, default="",
-                 options=None):
+                 options=None, hAlign='LEFT', vAlign='BOTTOM'):
+        super()
         self.width = width
         self.height = height
         self.type = input_type
         self.name = name
         self.default = default
         self.options = options if options is not None else []
+        #these are hints to packers/frames as to how the floable should be positioned
+        self.hAlign = hAlign   #CENTER/CENTRE or RIGHT
+        self.vAlign = vAlign   #MIDDLE or TOP
 
     def wrap(self, *args):
         return self.width, self.height

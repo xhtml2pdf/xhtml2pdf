@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+ <form action="/action_page.php" method="get">
+  <label for="fname">First name:</label>
+  <input type="text" id="fname" name="fname" style="border-color: red;width: 100px"><br /><br />
+  <label for="lname">Last name:</label>
+  <input type="text" id="lname" name="lname"><br /><br />
+  <label for="cars">Choose a car:</label>
+
+<select name="cars" id="cars" multiple size="4"  required>
+  <option value="volvo">Volvo</option>
+  <option value="saab" selected>Saab</option>
+  <option value="mercedes">Mercedes</option>
+  <option value="audi">Audi</option>
+</select>
+
+<label for="story">Tell us your story:</label>
+
+<textarea id="story" name="story"
+          rows="5" cols="33">
+It was a dark and stormy night...
+</textarea>
+
+ <fieldset>
+    <legend>Choose your favorite monster</legend>
+
+    <input type="radio" id="kraken" name="monster">
+    <label for="kraken">Kraken</label><br/>
+
+    <input type="radio" id="sasquatch" name="monster">
+    <label for="sasquatch">Sasquatch</label><br/>
+
+    <input type="radio" id="mothman" name="monster">
+    <label for="mothman">Mothman</label>
+</fieldset>
+
+<label for="peas">Do you like peas?</label>
+<input type="checkbox" name="peas" id="peas">
+
+<label for="datef">When you born?</label>
+<input type="date" name="datef" id="datef">
+  <input type="submit" value="Submit">
+</form>
+</body>
+</html>
