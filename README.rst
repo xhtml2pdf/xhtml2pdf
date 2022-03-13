@@ -31,6 +31,7 @@ xhtml2pdf is a HTML to PDF converter using Python, the ReportLab Toolkit, html5l
 
 The main benefit of this tool is that a user with web skills like HTML and CSS is able to generate PDF templates very quickly without learning new technologies.
 
+Please consider support this project using `Patreon <https://www.patreon.com/xhtml2pdf>`__
 
 Documentation
 ==============
