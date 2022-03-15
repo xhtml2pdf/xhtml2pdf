@@ -17,11 +17,15 @@
 from __future__ import print_function, unicode_literals
 
 import copy
+import json
 import logging
 import re
 import string
 import warnings
 from reportlab.graphics.barcode import createBarcodeDrawing
+from reportlab.graphics.charts.piecharts import Pie
+from reportlab.graphics.shapes import Drawing
+from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import inch, mm
 from reportlab.platypus.doctemplate import FrameBreak, NextPageTemplate
@@ -644,6 +648,28 @@ class pisaTagPDFTEMPLATE(pisaTag):
         c.frameList = []
         c.frameStaticList = []
 
+
+class pisaTagCANVAS(pisaTag):
+    def start(self, c):
+        pass
+    def end(self, c):
+
+        data = json.loads(c.text)
+        c.clearFrag()
+        d = Drawing(400, 200)
+        pc = Pie()
+        pc.x = 150
+        pc.y = 50
+        pc.data = [10, 20, 30, 40, 50, 60]
+        pc.labels = ['a', 'b', 'c', 'd', 'e', 'f']
+        pc.slices.strokeWidth = 0.5
+        pc.slices[3].popout = 20
+        pc.slices[3].strokeWidth = 2
+        pc.slices[3].strokeDashArray = [2, 2]  # width border dash
+        pc.slices[3].labelRadius = 1.75
+        pc.slices[3].fontColor = colors.red
+        d.add(pc, '')
+        c.addStory(d)
 
 class pisaTagPDFLANGUAGE(pisaTag):
     """
