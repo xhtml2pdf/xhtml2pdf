@@ -775,11 +775,11 @@ class pisaTagCANVAS(pisaTag):
         super().__init__(node, attr)
         self.chart = None
         self.shapes = {
-            'horizontalbar': HorizontalBar(),
-            'verticalbar': VerticalBar(),
-            'horizontalline': HorizontalLine(),
-            'pie': PieChart(),
-            'doughnut': DoughnutChart()
+            'horizontalbar': HorizontalBar,
+            'verticalbar': VerticalBar,
+            'horizontalline': HorizontalLine,
+            'pie': PieChart,
+            'doughnut': DoughnutChart
         }
 
     def start(self, c):
@@ -805,15 +805,17 @@ class pisaTagCANVAS(pisaTag):
             if canvastype:
                 c.clearFrag()
 
-            self.chart = self.shapes[data['type']]
+            self.chart = self.shapes[data['type']]()
+            #self.chart.set_json(data)
             draw = Drawing(350, 150)  # CONTAINER
             draw.background = Rect(115, 25, 350, 150, strokeWidth=1, strokeColor="#868686", fillColor="#f8fce8")
 
             # REQUIRED DATA
+            self.chart.set_properties(data)
             self.chart.x = 150  # POSITION X INSIDE DRAWING
             self.chart.y = 50  # POSITION Y INSIDE DRAWING
-            self.chart.data = data['data']
-            self.chart.assign_labels(data['labels'])
+            #self.chart.data = data['data']
+            #self.chart.assign_labels(data['labels'])
             self.chart.load_extra_data()
 
             # ADD CHART TO DRAW OBJECT
