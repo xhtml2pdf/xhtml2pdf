@@ -17,11 +17,17 @@
 from __future__ import print_function, unicode_literals
 
 import copy
+import json
 import logging
 import re
 import string
 import warnings
 from reportlab.graphics.barcode import createBarcodeDrawing
+from reportlab.graphics.charts.textlabels import Label
+from reportlab.graphics.shapes import Drawing, Rect
+from reportlab.graphics.widgets.markers import makeMarker
+from reportlab.lib import colors
+from reportlab.lib.colors import HexColor
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import inch, mm
 from reportlab.platypus.doctemplate import FrameBreak, NextPageTemplate
@@ -29,6 +35,7 @@ from reportlab.platypus.flowables import Flowable, HRFlowable, PageBreak, Spacer
 from reportlab.platypus.frames import Frame
 from reportlab.platypus.paraparser import ABag, tt2ps
 
+from charts import DoughnutChart, PieChart, HorizontalLine, VerticalBar, HorizontalBar
 from xhtml2pdf import xhtml2pdf_reportlab
 from xhtml2pdf.util import dpi96, getAlign, getColor, getSize
 from xhtml2pdf.xhtml2pdf_reportlab import PmlImage, PmlPageTemplate
@@ -760,3 +767,60 @@ class pisaTagPDFBARCODE(pisaTag):
             valign=valign,
         )
         c.fragList.append(afrag)
+
+
+class pisaTagCANVAS(pisaTag):
+
+    def __init__(self, node, attr):
+        super().__init__(node, attr)
+        self.chart = None
+        self.shapes = {
+            'horizontalbar': HorizontalBar(),
+            'verticalbar': VerticalBar(),
+            'horizontalline': HorizontalLine(),
+            'pie': PieChart(),
+            'doughnut': DoughnutChart()
+        }
+
+    def start(self, c):
+        pass
+
+    def end(self, c):
+
+        data = None
+
+        try:
+            data = json.loads(c.text)
+        except json.JSONDecodeError:
+            print("JSON Decode Error")
+
+        if data:
+
+            nodetype = dict(c.node.attributes).get('type')
+            canvastype = None
+
+            if nodetype is not None:
+                canvastype = nodetype.nodeValue
+
+            if canvastype:
+                c.clearFrag()
+
+            self.chart = self.shapes[data['type']]
+            draw = Drawing(350, 150)  # CONTAINER
+            draw.background = Rect(115, 25, 350, 150, strokeWidth=1, strokeColor="#868686", fillColor="#f8fce8")
+
+            # REQUIRED DATA
+            self.chart.x = 150  # POSITION X INSIDE DRAWING
+            self.chart.y = 50  # POSITION Y INSIDE DRAWING
+            self.chart.data = data['data']
+            self.chart.assign_labels(data['labels'])
+            self.chart.load_extra_data()
+
+            # ADD CHART TO DRAW OBJECT
+            title = Label()
+            title.setText('GRAPH TITLE')
+            title.x = 290
+            title.y = 155
+            draw.add(title)
+            draw.add(self.chart)
+            c.addStory(draw)
