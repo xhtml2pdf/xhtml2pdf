@@ -788,6 +788,8 @@ class pisaTagCANVAS(pisaTag):
     def end(self, c):
 
         data = None
+        width = 350
+        height = 150
 
         try:
             data = json.loads(c.text)
@@ -797,6 +799,8 @@ class pisaTagCANVAS(pisaTag):
         if data:
 
             nodetype = dict(c.node.attributes).get('type')
+            nodewidth = dict(c.node.attributes).get('width')
+            nodeheight = dict(c.node.attributes).get('height')
             canvastype = None
 
             if nodetype is not None:
@@ -805,24 +809,21 @@ class pisaTagCANVAS(pisaTag):
             if canvastype:
                 c.clearFrag()
 
+            if nodewidth:
+                width = int(nodewidth.nodeValue)
+            if nodeheight:
+                height = int(nodeheight.nodeValue)
+
             self.chart = self.shapes[data['type']]()
-            #self.chart.set_json(data)
-            draw = Drawing(350, 150)  # CONTAINER
-            draw.background = Rect(115, 25, 350, 150, strokeWidth=1, strokeColor="#868686", fillColor="#f8fce8")
+            draw = Drawing(width, height)  # CONTAINER
+            draw.background = Rect(115, 25, width, height, strokeWidth=1, strokeColor="#868686", fillColor="#f8fce8")
+            title = Label()
 
             # REQUIRED DATA
             self.chart.set_properties(data)
-            self.chart.x = 150  # POSITION X INSIDE DRAWING
-            self.chart.y = 50  # POSITION Y INSIDE DRAWING
-            #self.chart.data = data['data']
-            #self.chart.assign_labels(data['labels'])
-            self.chart.load_extra_data()
+            self.chart.set_title_properties(data['title'], title)
 
             # ADD CHART TO DRAW OBJECT
-            title = Label()
-            title.setText('GRAPH TITLE')
-            title.x = 290
-            title.y = 155
             draw.add(title)
             draw.add(self.chart)
             c.addStory(draw)
