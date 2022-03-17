@@ -20,8 +20,6 @@ from reportlab.lib.pagesizes import (A0, A1, A2, A3, A4, A5, A6,A7, A8, A9, A10,
                                      JUNIOR_LEGAL, HALF_LETTER, GOV_LETTER, GOV_LEGAL, TABLOID, LEDGER,
                                      ELEVENSEVENTEEN, LEGAL, LETTER)
 
-from xhtml2pdf import util
-
 PML_WARNING = "warning"
 PML_ERROR = "error"
 PML_EXCEPTION = "PML Exception"
@@ -611,8 +609,6 @@ DEFAULT_LANGUAGE_LIST = {
     "pashto": "pashto",
     "sindhi": "sindhi"
 }
-
-DEFAULT_ASIAN_FONT = util.get_default_asian_font()
 
 DEFAULT_FONT = {
     "courier": "Courier",

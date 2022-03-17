@@ -36,21 +36,9 @@ rgb_re = re.compile(
 
 log = logging.getLogger("xhtml2pdf")
 
-try:
-    import PyPDF3
-except ImportError:
-    PyPDF3 = None
-
-try:
-    from reportlab.graphics import renderPM
-except ImportError:
-    renderPM = None
-
-try:
-    from reportlab.graphics import renderSVG
-except ImportError:
-    renderSVG = None
-
+import PyPDF3
+from reportlab.graphics import renderPM
+from reportlab.graphics import renderSVG
 
 #=========================================================================
 # Memoize decorator
