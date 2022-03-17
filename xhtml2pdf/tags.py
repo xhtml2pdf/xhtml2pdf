@@ -35,7 +35,7 @@ from reportlab.platypus.paraparser import ABag, tt2ps
 
 from xhtml2pdf import xhtml2pdf_reportlab
 from xhtml2pdf.util import dpi96, getAlign, getColor, getSize
-from xhtml2pdf.xhtml2pdf_reportlab import PmlImage, PmlPageTemplate
+from xhtml2pdf.xhtml2pdf_reportlab import PmlImage, PmlPageTemplate, PmlParagraph, PmlForm
 
 log = logging.getLogger("xhtml2pdf")
 
@@ -182,6 +182,8 @@ class pisaTagH5(pisaTagP):
 
 class pisaTagH6(pisaTagP):
     pass
+
+
 
 
 def listDecimal(c):
@@ -444,28 +446,19 @@ class pisaTagHR(pisaTag):
 
 
 # --- Forms
+class pisaTagFORM(pisaTag):
+    def start(self, c):
+        c.currentform = PmlForm('minombre')
+        c.addStory(c.currentform)
+
 
 class pisaTagINPUT(pisaTag):
 
-    def _render(self, c, attr):
-        width = 10
-        height = 10
-        if attr.type == "text":
-            width = 100
-            height = 12
-        c.addStory(xhtml2pdf_reportlab.PmlInput(attr.name,
-                                                input_type=attr.type,
-                                                default=attr.value,
-                                                width=width,
-                                                height=height,
-                                                ))
-
     def end(self, c):
-        c.addPara()
-        attr = self.attr
-        if attr.name:
-            self._render(c, attr)
-        c.addPara()
+        c.currentform.add_input(self)
+
+    def render_form(self, canvas):
+        pass
 
 
 class pisaTagTEXTAREA(pisaTagINPUT):

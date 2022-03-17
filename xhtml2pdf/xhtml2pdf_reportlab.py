@@ -957,3 +957,24 @@ class PmlInput(Flowable):
             c.rect(0, 0, self.width, self.height)
 
         c.restoreState()
+
+
+class PmlForm(Flowable):
+
+    def __init__(self, name, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.inputs = list()
+        self.name=name
+
+    def add_input(self, item):
+        self.inputs.append(item)
+
+    def wrap(self, *args):
+        return self.width, self.height
+
+    def draw(self):
+        self.canv.beginForm(self.name)
+        for item in self.inputs:
+            item.render_form(self.canv)
+        self.canv.endForm(self.name)
+        self.canv.doForm(self.name)

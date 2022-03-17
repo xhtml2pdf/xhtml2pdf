@@ -74,7 +74,8 @@ from xhtml2pdf.tags import (pisaTagIMG,
                             pisaTagTEXTAREA,
                             pisaTagSELECT,
                             pisaTagOPTION,
-                            pisaTagCANVAS
+                            pisaTagCANVAS,
+                            pisaTagFORM
                             )
 from xhtml2pdf.files import pisaTempFile
 from xhtml2pdf.util import getAlign, getBool, getBox, getColor, getPos, getSize, toList, transform_attrs
