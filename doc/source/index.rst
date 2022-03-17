@@ -21,6 +21,7 @@ Contents:
    usage
    format_html
    https_options
+   encryption
    howto-running-tests
    reference
    release-notes

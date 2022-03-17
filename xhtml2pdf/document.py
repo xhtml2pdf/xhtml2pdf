@@ -16,6 +16,8 @@
 
 import io
 import logging
+
+from reportlab.lib import pdfencrypt
 from reportlab.platypus.flowables import Spacer
 from reportlab.platypus.frames import Frame
 
@@ -77,9 +79,20 @@ def pisaStory(src, path=None, link_callback=None, debug=0, default_css=None,
     return context
 
 
+def get_encrypt_instance(data):
+    if data is None:
+        return
+
+    if isinstance(data, str):
+        return pdfencrypt.StandardEncryption(data)
+
+    return data
+
+
 def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                  default_css=None, xhtml=False, encoding=None, xml_output=None,
                  raise_exception=True, capacity=100 * 1024, context_meta=None,
+                 encrypt=None,
                  **kw):
     log.debug("pisaDocument options:\n  src = %r\n  dest = %r\n  path = %r\n  link_callback = %r\n  xhtml = %r\n  context_meta = %r",
               src,
@@ -113,6 +126,7 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                   context.meta["keywords"].strip().split(",") if x],
         title=context.meta["title"].strip(),
         showBoundary=0,
+        encrypt=get_encrypt_instance(encrypt),
         allowSplitting=1)
 
     # Prepare templates and their frames
