@@ -31,21 +31,21 @@ class Props:
                                 ("fontSize", int), ("strokeWidth", int), ("dy", int), ("dx", int), ("dxTextSpace", int),
                                 ("deltay", int), ("columnMaximum", int), ("variColumn", int), ("deltax", int),
                                 ("fontName", str), ("colorNamePairs", list)]
-
         self.prop_map_legend1 = [("x", int), ("y", int)]
-
         self.prop_map_bars = [("strokeWidth", int)]
         self.prop_map_barLabels = [("nudge", int), ("fontSize", int), ("fontName", str)]
-        self.prop_map_categoryAxis = [("visibleTicks", int), ("strokeWidth", int), ("tickShift", int), ("labelAxisMode", str)]
+        self.prop_map_categoryAxis = [("visibleTicks", int), ("strokeWidth", int), ("tickShift", int),
+                                      ("labelAxisMode", str)]
         self.prop_map_categoryAxis_labels = [("angle", int), ("dy", int), ("fontSize", int),
                                              ("boxAnchor", str), ("fontName", str), ("textAnchor", str)]
+        self.prop_map_slices = [("strokeWidth", int), ("labelRadius", float), ("poput", int), ("fontName", str),
+                                ("fontSize", int), ("strokeDashArray", str)]
 
     def add_prop(self, prop_map, data):
         prop_map += data
 
 
 class BaseChart:
-
 
     def set_legend(self, data, legend, props=None):
         if props is None:
@@ -65,13 +65,8 @@ class BaseChart:
                             legend.colorNamePairs.append((color[x], (data['labels'][y], " ", str(value))))
                         else:
                             legend.colorNamePairs.append((color[y], (data['labels'][y], " ", str(value))))
-                    else:
-                        legend.colorNamePairs.append((colors.pink, (data['labels'][y], " ", str(value))))
-            else:
-                if color:
+            elif color:
                     legend.colorNamePairs.append((color[x], (data['labels'][x], " ", str(obj))))
-                else:
-                    legend.colorNamePairs.append((colors.pink, (data['labels'][x], " ", str(obj))))
 
     def set_title_properties(self, data, title, props=None):
         if props is None:
@@ -144,15 +139,11 @@ class BaseBarChart(BaseChart):
 
 
 class HorizontalBar(HorizontalBarChart, BaseBarChart):
-
-    def __init__(self):
-        super().__init__()
+    pass
 
 
 class VerticalBar(VerticalBarChart, BaseBarChart):
-
-    def __init__(self):
-        super().__init__()
+    pass
 
 
 class HorizontalLine(HorizontalLineChart, BaseChart):
@@ -197,14 +188,24 @@ class PieChart(Pie, BaseChart):
         props.add_prop(props.prop_map, [("direction", str)])
         super().set_properties(data, props=props)
 
+        if "slices" in data:
+            self.set_slices(data['slices'], props=props)
+
     def assign_labels(self, labels):
         self.labels = labels
 
+    def set_slices(self, data, props=None):
+        if props is None:
+            props = Props(self)
+        props.add_prop(props.prop_map_slices, [("strokeColor", getColor)])
+        props.add_prop(props.prop_map_slices, [("fillColor", getColor)])
+        set_properties(self.slices, data, props.prop_map_slices)
+
     def get_colors(self):
-        colors = []
+        colors_list = []
         for x, obj in enumerate(self.data):
-            colors.append(self.slices[x].fillColor)
-        return colors
+            colors_list.append(self.slices[x].fillColor)
+        return colors_list
 
 
 class LegendedPieChart(LegendedPie, BaseChart):
@@ -218,6 +219,14 @@ class LegendedPieChart(LegendedPie, BaseChart):
         props = Props(self)
         props.add_prop(props.prop_map, [("legend_data", list)])
         super().set_properties(data, props=props)
+
+        if "legend1" in data:
+            self.set_legend1(self.legend1, data['legend1'], props=props)
+
+    def set_legend1(self, obj, data, props=None):
+        if props is None:
+            props = Props(self)
+        set_properties(obj, data, props.prop_map_legend1)
 
     def assign_labels(self, labels):
         self.legend_names = labels
