@@ -1,61 +1,85 @@
 from reportlab.graphics.charts.barcharts import VerticalBarChart, HorizontalBarChart
 from reportlab.graphics.charts.doughnut import Doughnut
 from reportlab.graphics.charts.linecharts import HorizontalLineChart
-from reportlab.graphics.charts.piecharts import Pie
-from reportlab.graphics.charts.textlabels import Label
+from reportlab.graphics.charts.piecharts import Pie, LegendedPie
 from reportlab.graphics.widgets.markers import makeMarker
+from reportlab.lib import colors
 
 from util import getColor
+
+
+def set_properties(obj, data, prop_map):
+
+    for key, fnc in prop_map:
+        if key in data:
+            try:
+                value = fnc(data[key])
+
+                if value is not None:
+                    obj.__setattr__(key, value)
+            except:
+                continue
 
 
 class Props:
 
     def __init__(self, instance):
+        self.prop_map_legend = [("x", int), ("y", int), ("deltax", int), ("alignment", str),("boxAnchor", str),
+                                ("fontSize", int), ("strokeWidth", int), ("dy", int), ("dx", int), ("dxTextSpace", int),
+                                ("deltay", int), ("columnMaximum", int), ("variColumn", int), ("deltax", int),
+                                ("fontName", str), ("colorNamePairs", list)]
+
+        self.prop_map_barLabels = [("nudge", int), ("fontSize", int), ("fontName", str)]
+        self.prop_map_categoryAxis = [("visibleTicks", int), ("strokeWidth", int),
+                                      ("tickShift", int), ("labelAxisMode", str)]#,("strokeColor", lambda x: instance.strokeColor(x))
         self.prop_map_title = [("x", int), ("y", int), ("_text", str)]
         self.prop_map = [("x", int), ("y", int), ("width", int), ("height", int), ("data", lambda x: x),
                          ("labels", lambda x: instance.assign_labels(x))]
 
-    def add_prop(self, data):
-        self.prop_map += data
-
-    def add_prop_title(self, data):
-        self.prop_map_title += data
+    def add_prop(self, prop_map, data):
+        prop_map += data
 
 
 class BaseChart:
-    title = None
 
-    def set_title_properties(self, data, title, props=None):
 
+    def set_legend(self, data, legend, props=None):
         if props is None:
             props = Props(self)
+        set_properties(legend, data, props.prop_map_legend)
+        return legend
 
-        for key, fnc in props.prop_map_title:
+    def load_data_legend(self, data, legend):
+        legend.colorNamePairs = []
+        color = self.get_colors()
 
-            if key in data:
-                try:
-                    value = fnc(data[key])
+        for x, obj in enumerate(data['data']):
+            if isinstance(obj, list):
+                for y, value in enumerate(obj):
+                    if color:
+                        if data['type'] == "doughnut":
+                            legend.colorNamePairs.append((color[x], (data['labels'][y], " ", str(value))))
+                        else:
+                            legend.colorNamePairs.append((color[y], (data['labels'][y], " ", str(value))))
+                    else:
+                        legend.colorNamePairs.append((colors.pink, (data['labels'][y], " ", str(value))))
+            else:
+                if color:
+                    legend.colorNamePairs.append((color[x], (data['labels'][x], " ", str(obj))))
+                else:
+                    legend.colorNamePairs.append((colors.pink, (data['labels'][x], " ", str(obj))))
 
-                    if value is not None:
-                        title.__setattr__(key, value)
-                except:
-                    continue
+    def set_title_properties(self, data, title, props=None):
+        if props is None:
+            props = Props(self)
+        set_properties(title, data, props.prop_map_title)
         return title
 
     def set_properties(self, data, props=None):
-
         if props is None:
             props = Props(self)
+        set_properties(self, data, props.prop_map)
 
-        for key, fnc in props.prop_map:
-            if key in data:
-                try:
-                    value = fnc(data[key])
-
-                    if value is not None:
-                        self.__setattr__(key, value)
-                except:
-                    continue
 
 class HorizontalBar(HorizontalBarChart, BaseChart):
 
@@ -64,11 +88,27 @@ class HorizontalBar(HorizontalBarChart, BaseChart):
 
     def set_properties(self, data, props=None):
         props = Props(self)
-        props.add_prop([("barLabelFormat", str)])
+        props.add_prop(props.prop_map, [("barLabelFormat", str)])
+        props.add_prop(props.prop_map, [("strokeColor", getColor)])
         super().set_properties(data, props=props)
+
+        if "barLabels" in data:
+            self.set_barLabels(data["barLabels"], props=props)
 
     def assign_labels(self, labels):
         self.categoryAxis.categoryNames = labels
+
+    def set_barLabels(self, data, props=None):
+        if props is None:
+            props = Props(self)
+        set_properties(self.barLabels, data, props.prop_map_barLabels)
+
+    def strokeColor(self, color):
+        self.strokeColor = color
+
+    def get_colors(self):
+        colors = []
+        return colors
 
 
 class VerticalBar(VerticalBarChart, BaseChart):
@@ -78,11 +118,36 @@ class VerticalBar(VerticalBarChart, BaseChart):
 
     def set_properties(self, data, props=None):
         props = Props(self)
-        props.add_prop([("barLabelFormat", str)])
+        props.add_prop(props.prop_map, [("barWidth", str)])
+        props.add_prop(props.prop_map, [("barSpacing", str)])
+        props.add_prop(props.prop_map, [("barLabelFormat", str)])
+        props.add_prop(props.prop_map, [("strokeColor", getColor)])
         super().set_properties(data, props=props)
+
+        if "barLabels" in data:
+            self.set_barLabels(data["barLabels"], props=props)
+
+        if "categoryAxis" in data:
+            self.set_categoryAxis(data["categoryAxis"], props=props)
 
     def assign_labels(self, labels):
         self.categoryAxis.categoryNames = labels
+
+
+    def set_barLabels(self, data, props=None):
+        if props is None:
+            props = Props(self)
+        set_properties(self.barLabels, data, props.prop_map_barLabels)
+
+    def set_categoryAxis(self, data, props=None):
+        if props is None:
+            props = Props(self)
+        props.add_prop(props.prop_map_categoryAxis, [("strokeColor", getColor)])
+        set_properties(self.categoryAxis, data, props.prop_map_categoryAxis)
+
+    def get_colors(self):
+        colors = []
+        return colors
 
 class HorizontalLine(HorizontalLineChart, BaseChart):
 
@@ -94,16 +159,21 @@ class HorizontalLine(HorizontalLineChart, BaseChart):
 
     def set_properties(self, data, props=None):
         props = Props(self)
-        props.add_prop([("fillColor", getColor)])
-        props.add_prop([("lineLabelFormat", str)])
-        props.add_prop([("strokeColor", int)])
-        props.add_prop([("marker", self.fill_marker)])
+        props.add_prop(props.prop_map, [("fillColor", getColor)])
+        props.add_prop(props.prop_map, [("lineLabelFormat", str)])
+        props.add_prop(props.prop_map, [("strokeColor", int)])
+        props.add_prop(props.prop_map, [("joinedLines", int)])
+        props.add_prop(props.prop_map, [("marker", self.fill_marker)])
         super().set_properties(data, props=props)
 
     def fill_marker(self, fill_type):
 
         for x in range(len(self.data)):
             self.lines[x].symbol = makeMarker(fill_type)
+
+    def get_colors(self):
+        colors = []
+        return colors
 
 
 class PieChart(Pie, BaseChart):
@@ -113,13 +183,38 @@ class PieChart(Pie, BaseChart):
 
     def set_properties(self, data, props=None):
         props = Props(self)
-        props.add_prop([("sideLabels", int)])
-        props.add_prop([("startAngle", int)])
-        props.add_prop([("direction", str)])
+        props.add_prop(props.prop_map, [("sideLabels", int)])
+        props.add_prop(props.prop_map, [("simpleLabels", int)])
+        props.add_prop(props.prop_map, [("sideLabelsOffset", int)])
+        props.add_prop(props.prop_map, [("startAngle", int)])
+        props.add_prop(props.prop_map, [("orderMode", str)])
+        props.add_prop(props.prop_map, [("direction", str)])
         super().set_properties(data, props=props)
 
     def assign_labels(self, labels):
         self.labels = labels
+
+    def get_colors(self):
+        colors = []
+        for x, obj in enumerate(self.data):
+            colors.append(self.slices[x].fillColor)
+        return colors
+
+
+class LegendedPieChart(LegendedPie, BaseChart):
+
+    def __init__(self):
+        super().__init__()
+        self.legend1.x = 350
+        self.legend1.y = 150
+
+    def set_properties(self, data, props=None):
+        props = Props(self)
+        props.add_prop(props.prop_map, [("legend_data", list)])
+        super().set_properties(data, props=props)
+
+    def assign_labels(self, labels):
+        self.legend_names = labels
 
 
 class DoughnutChart(Doughnut, BaseChart):
@@ -129,3 +224,9 @@ class DoughnutChart(Doughnut, BaseChart):
 
     def assign_labels(self, labels):
         self.labels = labels
+
+    def get_colors(self):
+        colors = []
+        for x, obj in enumerate(self.data):
+            colors.append(self.slices[x].fillColor)
+        return colors

@@ -12,7 +12,8 @@
             "title": {"_text": "Horizontal Bar Chart(1 Group)", "x": 290, "y": 155},
             "type": "horizontalbar",
             "x": 150, "y": 50,
-            "barLabelFormat": "%2.0f"
+            "barLabelFormat": "%2.0f",
+            "barLabels": {"nudge": 5}
       }
 </canvas>
 <canvas type="graph" width="350" height="150">
@@ -23,7 +24,8 @@
             "x_title": 290, "y_title": 155,
             "type": "verticalbar",
             "x": 150, "y": 50,
-            "barLabelFormat": "%2.0f"
+            "barLabelFormat": "%2.0f",
+            "barLabels": {"nudge": 5}
       }
 </canvas>
 <canvas type="graph" width="350" height="150">
@@ -33,7 +35,9 @@
             "title": {"_text": "Vertical Bar Chart(2 Groups)", "x": 290, "y": 155},
             "type": "verticalbar",
             "x": 150, "y": 50,
-            "barLabelFormat": "%2.0f"
+            "barLabelFormat": "%2.0f",
+            "barLabels": {"nudge": 5},
+            "categoryAxis": {"strokeColor": "#f01f34"}
       }
 </canvas>
 <canvas type="graph" width="350" height="200">
@@ -43,7 +47,8 @@
             "type": "horizontalbar",
             "x": 150, "y": 50,
             "width": 180, "height": 150,
-            "barLabelFormat": "%2.0f"
+            "barLabelFormat": "%2.0f",
+            "barLabels": {"nudge": 5}
       }
 </canvas>
 <canvas type="graph" width="350" height="180">
@@ -69,32 +74,90 @@
             "lineLabelFormat": "%2.0f"
       }
 </canvas>
-<canvas type="graph" width="350" height="200">
+<canvas type="graph" width="350" height="180">
       {
             "data": [10, 20, 30, 40, 50, 60],
             "labels": ["a", "b", "c", "d", "e", "f"],
-            "title": {"_text": "Pie Chart", "x": 290, "y": 200},
+            "title": {"_text": "Pie Chart", "x": 290, "y": 190},
             "type": "pie",
             "x": 150, "y": 50,
-            "sideLabels": 1
+            "sideLabels": 1,
+            "direction": "anticlockwise",
+            "simpleLabels": 0,
+            "legend": {
+                  "alignment": "right",
+                  "boxAnchor": "nw",
+                  "fontSize": 8,
+                  "strokeWidth": 0,
+                  "dy": 6,
+                  "dx": 6,
+                  "dxTextSpace": 4,
+                  "deltay": 6,
+                  "columnMaximum": 99,
+                  "variColumn": 1,
+                  "deltax": 175,
+                  "x": 350,
+                  "y": 125
+            }
+      }
+</canvas>
+<canvas type="graph" width="350" height="180">
+      {
+            "type": "legendedPie",
+            "data": [10, 20, 30, 40, 50, 60],
+            "title": {"_text": "Legended Pie Chart", "x": 290, "y": 190},
+            "legend_data": [10, 20, 30, 40, 50, 60],
+            "labels": ["a", "b", "c", "d", "e", "f"],
+            "x": 150, "y": 50
       }
 </canvas>
 <canvas type="graph" width="350" height="200">
       {
             "data": [10, 20, 30, 40, 50, 60],
             "labels": ["a", "b", "c", "d", "e", "f"],
-            "title": {"_text": "Doughnut Chart(1 Group)", "x": 290, "y": 155},
+            "title": {"_text": "Doughnut Chart(1 Group)", "x": 290, "y": 210},
             "type": "doughnut",
-            "x": 150, "y": 30
+            "x": 150, "y": 50,
+            "legend": {
+                  "alignment": "right",
+                  "boxAnchor": "nw",
+                  "fontSize": 8,
+                  "strokeWidth": 0,
+                  "dy": 6,
+                  "dx": 6,
+                  "dxTextSpace": 4,
+                  "deltay": 6,
+                  "columnMaximum": 99,
+                  "variColumn": 1,
+                  "deltax": 175,
+                  "x": 340,
+                  "y": 125
+            }
       }
 </canvas>
 <canvas type="graph" width="350" height="200">
       {
             "data": [[10, 20, 30, 40, 50, 60], [10, 20, 30, 40, 50, 60]],
             "labels": ["a", "b", "c", "d", "e", "f"],
-            "title": {"_text": "Doughnut Chart(2 Groups)", "x": 290, "y": 155},
+            "title": {"_text": "Doughnut Chart(2 Groups)", "x": 290, "y": 210},
             "type": "doughnut",
-            "x": 150, "y": 30
+            "x": 150, "y": 50,
+            "legend": {
+                  "alignment": "right",
+                  "boxAnchor": "nw",
+                  "fontSize": 8,
+                  "strokeWidth": 0,
+                  "dy": 6,
+                  "dx": 6,
+                  "dxTextSpace": 4,
+                  "deltay": 6,
+                  "columnMaximum": 99,
+                  "variColumn": 1,
+                  "deltax": 175,
+                  "x": 340,
+                  "y": 170,
+                  "fontName": "Helvetica"
+            }
       }
 </canvas>
 </body>
