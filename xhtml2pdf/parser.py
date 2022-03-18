@@ -752,6 +752,7 @@ def pisaParser(src, context, default_css="", xhtml=False, encoding="utf8", xml_o
     CSSAttrCache = {}
 
     if xhtml:
+        log.warning("xhtml parameter will be removed on next release 0.2.8")
         # TODO: XHTMLParser doesn't seem to exist...
         parser = html5lib.XHTMLParser(tree=treebuilders.getTreeBuilder("dom"))
     else:

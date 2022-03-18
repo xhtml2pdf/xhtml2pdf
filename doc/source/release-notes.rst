@@ -51,6 +51,47 @@ Versions >= 0.2
     --------------------------------------------
 
 
+..
+    0.2.7
+    ====================
+
+    Released: YYYY-MM-DD
+
+    **🎉 New**
+
+    * Add encryption and password protection
+    *
+
+    **💪🏼 Improvements**
+
+    * Note: for smaller improvements
+    *
+
+    **🐛 Bug-Fixes**
+
+    * Remove import cycle between utils and default
+    *
+
+    **⚠️ Deprecation**
+
+    *  `xhtml` in pisa.CreatePDF support will removed on next release
+    *  `XML2PDF` and `XHTML2PDF` will be removed on next release use `HTML2PDF` instead
+
+    **📘 Documentation**
+
+    *
+    *
+
+    **🧹 Cleanup**
+
+    *
+    *
+
+    | Thanks to the following people on GitHub for contributing to this release:
+    | *marcelagz*, *GitHub-Name-2* and *GitHub-Name-3* (Note: mention all the merged pull requests since last release here!)
+
+    --------------------------------------------
+
 
 0.2.6
 ====================
@@ -93,7 +134,7 @@ Released: 2022-03-11
 
 | Thanks to the following people on GitHub for contributing to this release:
 | *Roman914*, *LeonardoBein*, *myu20*, *myu20*, *captn3m0*, *audoh-tickitto*, *Momoumar*,
-| *timoludwig*, *fbernhart*,*mgodkowicz*, *anze3db * and *luisza* (Note: mention all the merged pull requests since last release here!)
+| *timoludwig*, *fbernhart*,*mgodkowicz*, *anze3db * and *luisza*
 
 --------------------------------------------
 
