@@ -13,7 +13,9 @@
             "type": "horizontalbar",
             "x": 150, "y": 50,
             "barLabelFormat": "%2.0f",
-            "barLabels": {"nudge": 5}
+            "bars": {"strokeColor": "#f01f34"},
+            "barLabels": {"nudge": 5},
+            "categoryAxis": {"strokeColor": "#f01f34"}
       }
 </canvas>
 <canvas type="graph" width="350" height="150">
@@ -25,12 +27,16 @@
             "type": "verticalbar",
             "x": 150, "y": 50,
             "barLabelFormat": "%2.0f",
-            "barLabels": {"nudge": 5}
+            "barLabels": {"nudge": 5},
+            "categoryAxis": {
+                  "strokeColor": "#f01f34",
+                  "labels": {"angle": 0, "boxAnchor": "n", "dy": -6, "fontName": "Helvetica", "fontSize": 8, "textAnchor": "middle"}
+            }
       }
 </canvas>
 <canvas type="graph" width="350" height="150">
       {
-            "data": [[13, 5, 20, 22, 37, 45, 19, 4], [14, 6, 21, 23, 38, 46, 20, 5]],
+            "data": [[13, 5, 20, 22, 37, 45], [14, 6, 21, 23, 38, 46]],
             "labels": ["a", "b", "c", "d", "e", "f"],
             "title": {"_text": "Vertical Bar Chart(2 Groups)", "x": 290, "y": 155},
             "type": "verticalbar",
@@ -41,7 +47,7 @@
       }
 </canvas>
 <canvas type="graph" width="350" height="200">
-      {     "data": [[13, 5, 20, 22, 37, 45, 19, 4], [14, 6, 21, 23, 38, 46, 20, 5]],
+      {     "data": [[13, 5, 20, 22, 37, 45], [14, 6, 21, 23, 38, 46]],
             "labels": ["a", "b", "c", "d", "e", "f"],
             "title": {"_text": "Horizontal Bar Chart(2 Groups)", "x": 290, "y": 210},
             "type": "horizontalbar",
@@ -49,6 +55,7 @@
             "width": 180, "height": 150,
             "barLabelFormat": "%2.0f",
             "barLabels": {"nudge": 5}
+
       }
 </canvas>
 <canvas type="graph" width="350" height="180">
@@ -67,7 +74,7 @@
       {
             "data": [[19, 3, 42, 25, 50, 43], [5, 15, 25, 38, 15, 58]],
             "labels": ["a", "b", "c", "d", "e", "f"],
-            "title": {"_text": "Horizontal Line Chart(2 Groups)", "x": 290, "y": 155},
+            "title": {"_text": "Horizontal Line Chart(2 Groups)", "x": 290, "y": 190},
             "type": "horizontalline",
             "marker": "FilledCircle",
             "x": 150, "y": 50,

@@ -24,17 +24,21 @@ def set_properties(obj, data, prop_map):
 class Props:
 
     def __init__(self, instance):
-        self.prop_map_legend = [("x", int), ("y", int), ("deltax", int), ("alignment", str),("boxAnchor", str),
+        self.prop_map = [("x", int), ("y", int), ("width", int), ("height", int), ("data", lambda x: x),
+                         ("labels", lambda x: instance.assign_labels(x))]
+        self.prop_map_title = [("x", int), ("y", int), ("_text", str)]
+        self.prop_map_legend = [("x", int), ("y", int), ("deltax", int), ("alignment", str), ("boxAnchor", str),
                                 ("fontSize", int), ("strokeWidth", int), ("dy", int), ("dx", int), ("dxTextSpace", int),
                                 ("deltay", int), ("columnMaximum", int), ("variColumn", int), ("deltax", int),
                                 ("fontName", str), ("colorNamePairs", list)]
 
+        self.prop_map_legend1 = [("x", int), ("y", int)]
+
+        self.prop_map_bars = [("strokeWidth", int)]
         self.prop_map_barLabels = [("nudge", int), ("fontSize", int), ("fontName", str)]
-        self.prop_map_categoryAxis = [("visibleTicks", int), ("strokeWidth", int),
-                                      ("tickShift", int), ("labelAxisMode", str)]#,("strokeColor", lambda x: instance.strokeColor(x))
-        self.prop_map_title = [("x", int), ("y", int), ("_text", str)]
-        self.prop_map = [("x", int), ("y", int), ("width", int), ("height", int), ("data", lambda x: x),
-                         ("labels", lambda x: instance.assign_labels(x))]
+        self.prop_map_categoryAxis = [("visibleTicks", int), ("strokeWidth", int), ("tickShift", int), ("labelAxisMode", str)]
+        self.prop_map_categoryAxis_labels = [("angle", int), ("dy", int), ("fontSize", int),
+                                             ("boxAnchor", str), ("fontName", str), ("textAnchor", str)]
 
     def add_prop(self, prop_map, data):
         prop_map += data
@@ -80,38 +84,12 @@ class BaseChart:
             props = Props(self)
         set_properties(self, data, props.prop_map)
 
-
-class HorizontalBar(HorizontalBarChart, BaseChart):
-
-    def __init__(self):
-        super().__init__()
-
-    def set_properties(self, data, props=None):
-        props = Props(self)
-        props.add_prop(props.prop_map, [("barLabelFormat", str)])
-        props.add_prop(props.prop_map, [("strokeColor", getColor)])
-        super().set_properties(data, props=props)
-
-        if "barLabels" in data:
-            self.set_barLabels(data["barLabels"], props=props)
-
-    def assign_labels(self, labels):
-        self.categoryAxis.categoryNames = labels
-
-    def set_barLabels(self, data, props=None):
-        if props is None:
-            props = Props(self)
-        set_properties(self.barLabels, data, props.prop_map_barLabels)
-
-    def strokeColor(self, color):
-        self.strokeColor = color
-
     def get_colors(self):
         colors = []
         return colors
 
 
-class VerticalBar(VerticalBarChart, BaseChart):
+class BaseBarChart(BaseChart):
 
     def __init__(self):
         super().__init__()
@@ -122,7 +100,11 @@ class VerticalBar(VerticalBarChart, BaseChart):
         props.add_prop(props.prop_map, [("barSpacing", str)])
         props.add_prop(props.prop_map, [("barLabelFormat", str)])
         props.add_prop(props.prop_map, [("strokeColor", getColor)])
+        props.add_prop(props.prop_map, [("groupSpacing", int)])
         super().set_properties(data, props=props)
+
+        if "bars" in data:
+            self.set_bars(data["bars"], props=props)
 
         if "barLabels" in data:
             self.set_barLabels(data["barLabels"], props=props)
@@ -130,8 +112,17 @@ class VerticalBar(VerticalBarChart, BaseChart):
         if "categoryAxis" in data:
             self.set_categoryAxis(data["categoryAxis"], props=props)
 
+            if "labels" in data['categoryAxis']:
+                self.set_categoryAxis_labels(data["categoryAxis"]["labels"], props=props)
+
     def assign_labels(self, labels):
         self.categoryAxis.categoryNames = labels
+
+    def set_bars(self, data, props=None):
+        if props is None:
+            props = Props(self)
+        props.add_prop(props.prop_map_bars, [("strokeColor", getColor)])
+        set_properties(self.bars, data, props.prop_map_bars)
 
 
     def set_barLabels(self, data, props=None):
@@ -145,9 +136,24 @@ class VerticalBar(VerticalBarChart, BaseChart):
         props.add_prop(props.prop_map_categoryAxis, [("strokeColor", getColor)])
         set_properties(self.categoryAxis, data, props.prop_map_categoryAxis)
 
-    def get_colors(self):
-        colors = []
-        return colors
+    def set_categoryAxis_labels(self, data, props=None):
+        if props is None:
+            props = Props(self)
+        props.add_prop(props.prop_map_categoryAxis_labels, [("fillColor", getColor)])
+        set_properties(self.categoryAxis.labels, data, props.prop_map_categoryAxis_labels)
+
+
+class HorizontalBar(HorizontalBarChart, BaseBarChart):
+
+    def __init__(self):
+        super().__init__()
+
+
+class VerticalBar(VerticalBarChart, BaseBarChart):
+
+    def __init__(self):
+        super().__init__()
+
 
 class HorizontalLine(HorizontalLineChart, BaseChart):
 
