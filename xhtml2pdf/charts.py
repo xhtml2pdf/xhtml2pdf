@@ -3,7 +3,6 @@ from reportlab.graphics.charts.doughnut import Doughnut
 from reportlab.graphics.charts.linecharts import HorizontalLineChart
 from reportlab.graphics.charts.piecharts import Pie, LegendedPie
 from reportlab.graphics.widgets.markers import makeMarker
-from reportlab.lib import colors
 
 from util import getColor
 
