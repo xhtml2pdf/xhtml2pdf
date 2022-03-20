@@ -374,6 +374,8 @@ class pisaFileObject:
     def getAbsPath(self):
         return self.instance.get_uri()
 
+    def getBytesIO(self):
+        return self.instance.get_BytesIO()
 
 def getFile(*a, **kw):
     return pisaFileObject(*a, **kw)
