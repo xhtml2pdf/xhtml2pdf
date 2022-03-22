@@ -43,10 +43,10 @@ test-ref:
 	cd testrender && python testrender.py --create-reference data/reference
 	
 docs:
-	$(MAKE) -C docs clean
-	$(MAKE) -C docs html
-	sphinx-build -b linkcheck ./docs _build/
-	sphinx-build -b html ./docs _build/
+	$(MAKE) -C doc clean
+	$(MAKE) -C doc html
+	sphinx-build -b linkcheck ./doc/source _build/
+	sphinx-build -b html ./doc/source _build/
 
 release: clean
 	python setup.py sdist bdist_wheel

@@ -88,19 +88,6 @@ xhtml2pdf adds the following vendor-specific properties:
      -pdf-outline-open
      -pdf-page-break
 
-@page background-image
---------------------------
-
-To add a watermark to the PDF, use the ``background-image`` property to specify
-a background image
-
-::
-
-    @page {
-        background-image: url('/path/to/pdf-background.jpg');
-    }
-
-
 Create PDF
 -------------
 
@@ -116,7 +103,6 @@ following arguments in this order:
    relative paths of images and style sheets. (XXX calculate
    automatically from src?)
 -  **link\_callback**: Handler for special file paths (see below).
--  **debug**: \*\* DEPRECATED \*\*
 -  **show\_error\_as\_pdf**: Boolean that indicates that the errors will
    be dumped into a PDF. This is usefull if that is the only way to show
    the errors like in simple web applications.
@@ -124,10 +110,16 @@ following arguments in this order:
    ``String``. If set to ``None`` the predefined CSS of xhtml2pdf is
    used.
 -  **xhtml**: Boolean to force parsing the source as XHTML. By default
-   the HTML5 parser tries to guess this.
+   the HTML5 parser tries to guess this.\*\* DEPRECATED \*\*
 -  **encoding**: The encoding name of the source. By default this is
    guessed by the HTML5 parser. But HTML with no meta information this
    may not work an then this argument is helpfull.
+-  **encrypt**: Encrypt parameters to build password protection and
+   encryption.
+-  **signature**: Dictionary that pass parameters to signature engine
+   using ``pkcs12``, ``pkcs11``, ``simple`` signatures key managers and
+   sign Pades with ``b`` or ``ltv``  signs modes.
+
 
 Link callback
 -------------
