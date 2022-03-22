@@ -34,7 +34,7 @@ from reportlab.platypus.flowables import Flowable, HRFlowable, PageBreak, Spacer
 from reportlab.platypus.frames import Frame
 from reportlab.platypus.paraparser import ABag, tt2ps
 
-from charts import DoughnutChart, PieChart, HorizontalLine, VerticalBar, HorizontalBar, LegendedPieChart
+from .charts import DoughnutChart, PieChart, HorizontalLine, VerticalBar, HorizontalBar, LegendedPieChart
 from xhtml2pdf import xhtml2pdf_reportlab
 from xhtml2pdf.util import dpi96, getAlign, getColor, getSize
 from xhtml2pdf.xhtml2pdf_reportlab import PmlImage, PmlPageTemplate

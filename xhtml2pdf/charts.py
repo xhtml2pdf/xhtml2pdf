@@ -4,7 +4,7 @@ from reportlab.graphics.charts.linecharts import HorizontalLineChart
 from reportlab.graphics.charts.piecharts import Pie, LegendedPie
 from reportlab.graphics.widgets.markers import makeMarker
 
-from util import getColor
+from .util import getColor
 
 
 def set_properties(obj, data, prop_map):

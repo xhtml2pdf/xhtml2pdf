@@ -6,7 +6,7 @@ Home-page: http://www.xhtml2pdf.com
 Author: Dirk Holtwick
 Author-email: dirk.holtwick@gmail.com
 License: GNU General Public License (GPL)
-Download-URL: http://pypi.python.org/pypi/pisa/
+Download-URL: http://pypi.python.org/pypi/xhtml2pdf/
 Description: pisa is a html2pdf converter using the ReportLab Toolkit,
         the HTML5lib and pyPdf. It supports HTML 5 and CSS 2.1 (and some of CSS 3).
         It is completely written in pure Python so it is platform independent.
@@ -73,3 +73,4 @@ Classifier: Topic :: Utilities
 Requires: html5lib
 Requires: pypdf3
 Requires: pillow
+Requires: pyhanko

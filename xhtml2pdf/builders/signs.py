@@ -5,8 +5,11 @@ from asn1crypto import x509, pem, crl, ocsp
 from pyhanko.pdf_utils.incremental_writer import IncrementalPdfFileWriter
 from pyhanko.sign import signers, timestamps
 from pyhanko.sign.fields import SigSeedSubFilter
-from pyhanko.sign.pkcs11 import open_pkcs11_session, PKCS11Signer
 from pyhanko_certvalidator import ValidationContext
+try:
+    from pyhanko.sign.pkcs11 import open_pkcs11_session, PKCS11Signer
+except ImportError as e:
+    open_pkcs11_session=PKCS11Signer = None
 
 from xhtml2pdf.files import getFile
 
@@ -102,6 +105,13 @@ class PDFSignature:
         if engine == 'pkcs12':
             signer = PDFSignature.test_pkcs12_signer(config)
         elif engine == 'pkcs11':
+            if PKCS11Signer is None:
+                raise ImportError(
+                    "pyhanko.sign.pkcs11 requires pyHanko to be installed with "
+                    "the [pkcs11] option. You can install missing "
+                    "dependencies by running \"pip install 'pyHanko[pkcs11]'\".", e
+                )
+
             signer = PDFSignature.test_pkcs11_signer(config)
         elif engine == 'simple':
             signer = PDFSignature.test_simple_signer(config)
