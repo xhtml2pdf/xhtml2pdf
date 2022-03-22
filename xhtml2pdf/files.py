@@ -48,7 +48,7 @@ class pisaTempFile(object):
         file gets larger than that size.  Otherwise, the data is stored
         in memory.
         """
-
+        self.name = None
         self.capacity = capacity
         self.strategy = int(len(buffer) > self.capacity)
         try:
@@ -160,7 +160,9 @@ class BaseFile:
             tmp_file.write(data)
             tmp_file.flush()
             files_tmp.append(tmp_file)
-            return tmp_file
+        if self.path is None:
+            self.path = tmp_file.name
+        return tmp_file
 
     def get_BytesIO(self):
         data = self.get_data()
@@ -286,8 +288,11 @@ class LocalFileURI(BaseFile):
         data = None
         log.debug("Unrecognized scheme, assuming local file path")
         path = Path(self.path)
-        uri = Path(self.basepath) / path
-        if not uri.exists() and path.exists():
+        uri = None
+        if self.basepath is not None:
+            uri = Path(self.basepath) / path
+
+        if path.exists() and (uri is None or not uri.exists()):
             uri = path
         if uri.is_file():
             self.uri = uri
@@ -309,9 +314,34 @@ class BytesFileUri(BaseFile):
         return self.path
 
 
+class LocalTmpFile(BaseFile):
+
+    def __init__(self, path, basepath):
+        self.path = path
+        self.basepath = None
+        self.mimetype = basepath
+        self.suffix = None
+        self.uri = None
+
+    def get_named_tmp_file(self):
+        tmp_file = super().get_named_tmp_file()
+        if self.path is None:
+            self.path = tmp_file.name
+        return tmp_file
+
+    def get_data(self):
+        if self.path is None:
+            return
+        with open(self.path, 'rb') as arch:
+            return arch.read()
+
+
 class FileNetworkManager:
     @staticmethod
     def get_manager(uri, basepath=None):
+        if uri is None:
+            instance = LocalTmpFile(uri, basepath)
+            return instance
         if isinstance(uri, bytes):
             instance = BytesFileUri(uri, basepath)
         elif uri.startswith("data:"):
@@ -342,7 +372,7 @@ class pisaFileObject:
             self.basepath = basepathret
         else:
             self.basepath = basepath
-        uri = uri or str()
+        #uri = uri or str()
         # if not isinstance(uri, str):
         #    uri = uri.decode("utf-8")
         log.debug("FileObject %r, Basepath: %r", uri, basepath)
@@ -374,6 +404,8 @@ class pisaFileObject:
     def getAbsPath(self):
         return self.instance.get_uri()
 
+    def getBytesIO(self):
+        return self.instance.get_BytesIO()
 
 def getFile(*a, **kw):
     return pisaFileObject(*a, **kw)

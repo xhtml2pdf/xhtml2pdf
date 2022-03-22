@@ -35,6 +35,7 @@ from reportlab.platypus.tableofcontents import TableOfContents
 from reportlab.platypus.tables import Table, TableStyle
 from reportlab.rl_config import register_reset
 
+from xhtml2pdf.builders.watermarks import WaterMarks
 from xhtml2pdf.reportlab_paragraph import Paragraph
 from xhtml2pdf.util import getBorderStyle, getUID
 from xhtml2pdf.files import pisaTempFile
@@ -216,45 +217,15 @@ class PmlPageTemplate(PageTemplate):
     def beforeDrawPage(self, canvas, doc):
         canvas.saveState()
         try:
-
-            # Background
             pisaBackground = None
-            if (self.isFirstFlow(canvas)
-                    and hasattr(self, "pisaBackground")
-                    and self.pisaBackground
-                    and (not self.pisaBackground.notFound())):
-
-                # Is image not PDF
+            if hasattr(self, "pisaBackground") and self.pisaBackground and (not self.pisaBackground.notFound()):
                 if self.pisaBackground.getMimeType().startswith("image/"):
-
-                    try:
-                        self.img = PmlImageReader(BytesIO(self.pisaBackground.getData()))
-                        iw, ih = self.img.getSize()
-                        pw, self.ph = canvas._pagesize
-
-                        width = pw  # min(iw, pw) # max
-                        wfactor = float(width) / iw
-                        height = self.ph  # min(ih, ph) # max
-                        hfactor = float(height) / ih
-                        factor_min = min(wfactor, hfactor)
-
-                        if self.isPortrait():
-                            self.w = iw * factor_min
-                            self.h = ih * factor_min
-                            canvas.drawImage(self.img, 0, self.ph - self.h, self.w, self.h)
-                        elif self.isLandscape():
-                            factor_max = max(wfactor, hfactor)
-                            self.h = ih * factor_max
-                            self.w = iw * factor_min
-                            canvas.drawImage(self.img, 0, 0, self.w, self.h)
-                    except:
-                        log.exception("Draw background")
-
-                # PDF!
+                    pisaBackground = WaterMarks.generate_pdf_background(self.pisaBackground,
+                                                                        self.pagesize, self.isPortrait())
                 else:
                     pisaBackground = self.pisaBackground
-
-            self.pisaBackgroundList.append(pisaBackground)
+            if pisaBackground:
+                self.pisaBackgroundList.append((canvas.getPageNumber(), pisaBackground))
 
             def pageNumbering(objList):
                 for obj in flatten(objList):
