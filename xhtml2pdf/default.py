@@ -381,6 +381,8 @@ TAGS = {
 
     "textarea": (1, {
         "name": STRING,
+        "cols": (SIZE, 40),
+        "rows": (SIZE, 1),
     }),
 
     "select": (1, {

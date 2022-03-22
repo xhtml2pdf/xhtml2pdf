@@ -921,13 +921,14 @@ class PmlLeftPageBreak(CondPageBreak):
 
 class PmlInput(Flowable):
     def __init__(self, name, input_type="text", width=10, height=10, default="",
-                 options=None):
+                 options=None, multiline=0):
         self.width = width
         self.height = height
         self.type = input_type
         self.name = name
         self.default = default
         self.options = options if options is not None else []
+        self.multiline = multiline
 
     def wrap(self, *args):
         return self.width, self.height
@@ -938,7 +939,7 @@ class PmlInput(Flowable):
         c.saveState()
         c.setFont("Helvetica", 10)
         if self.type == "text":
-            pdfform.textFieldRelative(c, self.name, 0, 0, self.width, self.height)
+            pdfform.textFieldRelative(c, self.name, 0, 0, self.width, self.height, multiline=self.multiline)
             c.rect(0, 0, self.width, self.height)
         elif self.type == "radio":
             c.rect(0, 0, self.width, self.height)
