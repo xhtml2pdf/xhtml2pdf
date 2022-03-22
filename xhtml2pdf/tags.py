@@ -17,11 +17,16 @@
 from __future__ import print_function, unicode_literals
 
 import copy
+import json
 import logging
 import re
 import string
 import warnings
+
 from reportlab.graphics.barcode import createBarcodeDrawing
+from reportlab.graphics.charts.legends import Legend
+from reportlab.graphics.charts.textlabels import Label
+from reportlab.graphics.shapes import Drawing, Rect
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import inch, mm
 from reportlab.platypus.doctemplate import FrameBreak, NextPageTemplate
@@ -29,6 +34,7 @@ from reportlab.platypus.flowables import Flowable, HRFlowable, PageBreak, Spacer
 from reportlab.platypus.frames import Frame
 from reportlab.platypus.paraparser import ABag, tt2ps
 
+from charts import DoughnutChart, PieChart, HorizontalLine, VerticalBar, HorizontalBar, LegendedPieChart
 from xhtml2pdf import xhtml2pdf_reportlab
 from xhtml2pdf.util import dpi96, getAlign, getColor, getSize
 from xhtml2pdf.xhtml2pdf_reportlab import PmlImage, PmlPageTemplate
@@ -760,3 +766,75 @@ class pisaTagPDFBARCODE(pisaTag):
             valign=valign,
         )
         c.fragList.append(afrag)
+
+
+class pisaTagCANVAS(pisaTag):
+
+    def __init__(self, node, attr):
+        super().__init__(node, attr)
+        self.chart = None
+        self.shapes = {
+            'horizontalbar': HorizontalBar,
+            'verticalbar': VerticalBar,
+            'horizontalline': HorizontalLine,
+            'pie': PieChart,
+            'doughnut': DoughnutChart,
+            'legendedPie': LegendedPieChart
+        }
+
+    def start(self, c):
+        pass
+
+    def end(self, c):
+
+        data = None
+        width = 350
+        height = 150
+
+        try:
+            data = json.loads(c.text)
+        except json.JSONDecodeError:
+            print("JSON Decode Error")
+
+        if data:
+
+            nodetype = dict(c.node.attributes).get('type')
+            nodewidth = dict(c.node.attributes).get('width')
+            nodeheight = dict(c.node.attributes).get('height')
+            canvastype = None
+
+            if nodetype is not None:
+                canvastype = nodetype.nodeValue
+
+            if canvastype:
+                c.clearFrag()
+
+            if nodewidth:
+                width = int(nodewidth.nodeValue)
+            if nodeheight:
+                height = int(nodeheight.nodeValue)
+
+            self.chart = self.shapes[data['type']]()
+            draw = Drawing(width, height)  # CONTAINER
+            draw.background = Rect(115, 25, width, height, strokeWidth=1, strokeColor="#868686", fillColor="#f8fce8")
+
+            # REQUIRED DATA
+            self.chart.set_properties(data)
+
+
+            #OPTIONAL DATA
+            if "title" in data:
+                title = Label()
+                self.chart.set_title_properties(data['title'], title)
+                draw.add(title)
+
+            if "legend" in data:
+                if data["legend"]:
+                    legend = Legend()
+                    self.chart.set_legend(data['legend'], legend)
+                    self.chart.load_data_legend(data, legend)
+                    draw.add(legend)
+
+            # ADD CHART TO DRAW OBJECT
+            draw.add(self.chart)
+            c.addStory(draw)
