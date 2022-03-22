@@ -288,8 +288,11 @@ class LocalFileURI(BaseFile):
         data = None
         log.debug("Unrecognized scheme, assuming local file path")
         path = Path(self.path)
-        uri = Path(self.basepath) / path
-        if not uri.exists() and path.exists():
+        uri = None
+        if self.basepath is not None:
+            uri = Path(self.basepath) / path
+
+        if path.exists() and (uri is None or not uri.exists()):
             uri = path
         if uri.is_file():
             self.uri = uri

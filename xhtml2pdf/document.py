@@ -21,6 +21,7 @@ from reportlab.lib import pdfencrypt
 from reportlab.platypus.flowables import Spacer
 from reportlab.platypus.frames import Frame
 
+from xhtml2pdf.builders.signs import PDFSignature
 from xhtml2pdf.builders.watermarks import WaterMarks
 from xhtml2pdf.context import pisaContext
 from xhtml2pdf.default import DEFAULT_CSS
@@ -93,7 +94,7 @@ def get_encrypt_instance(data):
 def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
                  default_css=None, xhtml=False, encoding=None, xml_output=None,
                  raise_exception=True, capacity=100 * 1024, context_meta=None,
-                 encrypt=None,
+                 encrypt=None, signature=None,
                  **kw):
     log.debug("pisaDocument options:\n  src = %r\n  dest = %r\n  path = %r\n  link_callback = %r\n  xhtml = %r\n  context_meta = %r",
               src,
@@ -158,8 +159,14 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
     # Add watermarks
     output=io.BytesIO()
     output, has_bg=WaterMarks.process_doc(context, out, output)
+
     if not has_bg:
         output=out
+    if signature:
+        signoutput = io.BytesIO()
+        do_ok=PDFSignature.sign(output,signoutput, signature)
+        if do_ok:
+            output=signoutput
 
     # Get the resulting PDF and write it to the file object
     # passed from the caller

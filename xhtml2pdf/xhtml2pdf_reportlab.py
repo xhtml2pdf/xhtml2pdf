@@ -221,7 +221,7 @@ class PmlPageTemplate(PageTemplate):
             if hasattr(self, "pisaBackground") and self.pisaBackground and (not self.pisaBackground.notFound()):
                 if self.pisaBackground.getMimeType().startswith("image/"):
                     pisaBackground = WaterMarks.generate_pdf_background(self.pisaBackground,
-                                                                        canvas._pagesize, self.isPortrait())
+                                                                        self.pagesize, self.isPortrait())
                 else:
                     pisaBackground = self.pisaBackground
             if pisaBackground:
