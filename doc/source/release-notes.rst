@@ -51,39 +51,36 @@ Versions >= 0.2
     --------------------------------------------
 
 
-
 ..
-    This is for the upcoming release. Please fill in the changes of your Pull Request:
-
-    0.2.6
+    0.2.7
     ====================
 
-    Released: 2020-MM-DD
+    Released: YYYY-MM-DD
 
     **🎉 New**
 
-    *
+    * Add encryption and password protection
     *
 
     **💪🏼 Improvements**
 
-    *
+    * Note: for smaller improvements
     *
 
     **🐛 Bug-Fixes**
 
-    *
+    * Remove import cycle between utils and default
     *
 
     **⚠️ Deprecation**
 
-    *
-    *
+    *  `xhtml` in pisa.CreatePDF support will removed on next release
+    *  `XML2PDF` and `XHTML2PDF` will be removed on next release use `HTML2PDF` instead
 
     **📘 Documentation**
 
-    * Created this release notes section.
-    * Updated the Sphinx version and the sphinx-rtd-theme version
+    *
+    *
 
     **🧹 Cleanup**
 
@@ -91,9 +88,55 @@ Versions >= 0.2
     *
 
     | Thanks to the following people on GitHub for contributing to this release:
-    | *GitHub-Name-1*, *GitHub-Name-2* and *GitHub-Name-3*
+    | *marcelagz*, *GitHub-Name-2* and *GitHub-Name-3* (Note: mention all the merged pull requests since last release here!)
 
     --------------------------------------------
+
+
+0.2.6
+====================
+
+Released: 2022-03-11
+
+**🎉 New**
+
+* Set timeout in https options
+* Add new file manager approach using factory method, now new classes deal with different types of data B64InlineURI, LocalProtocolURI, NetworkFileUri, LocalFileURI, BytesFileUri
+* rtl languages reversed lines added as a ParaFrag (note: not fully supported yet)
+* Check if Paragraph has 'rtl' attribute (note: not fully supported yet)
+* Add SVG support
+
+**💪🏼 Improvements**
+
+* Update packages dependencies
+* Now getColor return None when None is passed ignoring default value, but return default if bool(data) == false
+* Change test for github workflow using only Linux
+* Add Python 3.9, 3.10
+* Switch from PyPDF2 to PyPDF3
+* Allow call tests using make.
+
+**🐛 Bug-Fixes**
+
+* Fix UnboundLocalError in reportlab_paragraph (#585) (#586)
+
+**📘 Documentation**
+
+* Created this release notes section.
+* Updated the Sphinx version and the sphinx-rtd-theme version
+* Update package information.
+
+**🧹 Cleanup**
+
+* Drop python 2 support.
+* Remove most of python 2 code and cleanup
+* Remove six dependency and update Readme
+* Remove usage of getStringIO (#590) removed form reportlab
+
+| Thanks to the following people on GitHub for contributing to this release:
+| *Roman914*, *LeonardoBein*, *myu20*, *myu20*, *captn3m0*, *audoh-tickitto*, *Momoumar*,
+| *timoludwig*, *fbernhart*,*mgodkowicz*, *anze3db * and *luisza*
+
+--------------------------------------------
 
 
 0.2.5

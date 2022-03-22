@@ -22,7 +22,7 @@ from reportlab.pdfgen.canvas import Canvas
 from reportlab.lib.units import inch
 from reportlab.platypus import Frame
 
-import ho.pisa as pisa
+import xhtml2pdf.pisa as pisa
 
 def test(filename):
 
