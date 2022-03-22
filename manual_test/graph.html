@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<canvas type="graph" width="350" height="150">
+      {
+            "data": [[10, 20, 30, 40, 50, 60]],
+            "labels": ["a", "b", "c", "d", "e", "f"],
+            "title": {"_text": "Horizontal Bar Chart(1 Group)", "x": 290, "y": 155},
+            "type": "horizontalbar",
+            "x": 150, "y": 50,
+            "barLabelFormat": "%2.0f",
+            "bars": {"strokeColor": "#f01f34"},
+            "barLabels": {"nudge": 5},
+            "categoryAxis": {"strokeColor": "#f01f34"}
+      }
+</canvas>
+<canvas type="graph" width="350" height="150">
+      {
+            "data": [[10, 20, 30, 40, 50, 60]],
+            "labels": ["a", "b", "c", "d", "e", "f"],
+            "title": {"_text": "Vertical Bar Chart(1 Group)", "x": 290, "y": 155},
+            "x_title": 290, "y_title": 155,
+            "type": "verticalbar",
+            "x": 150, "y": 50,
+            "barLabelFormat": "%2.0f",
+            "barLabels": {"nudge": 5},
+            "categoryAxis": {
+                  "strokeColor": "#f01f34",
+                  "labels": {"angle": 0, "boxAnchor": "n", "dy": -6, "fontName": "Helvetica", "fontSize": 8, "textAnchor": "middle"}
+            }
+      }
+</canvas>
+<canvas type="graph" width="350" height="150">
+      {
+            "data": [[13, 5, 20, 22, 37, 45], [14, 6, 21, 23, 38, 46]],
+            "labels": ["a", "b", "c", "d", "e", "f"],
+            "title": {"_text": "Vertical Bar Chart(2 Groups)", "x": 290, "y": 155},
+            "type": "verticalbar",
+            "x": 150, "y": 50,
+            "barLabelFormat": "%2.0f",
+            "barLabels": {"nudge": 5},
+            "categoryAxis": {"strokeColor": "#f01f34"}
+      }
+</canvas>
+<canvas type="graph" width="350" height="200">
+      {     "data": [[13, 5, 20, 22, 37, 45], [14, 6, 21, 23, 38, 46]],
+            "labels": ["a", "b", "c", "d", "e", "f"],
+            "title": {"_text": "Horizontal Bar Chart(2 Groups)", "x": 290, "y": 210},
+            "type": "horizontalbar",
+            "x": 150, "y": 50,
+            "width": 180, "height": 150,
+            "barLabelFormat": "%2.0f",
+            "barLabels": {"nudge": 5}
+
+      }
+</canvas>
+<canvas type="graph" width="350" height="180">
+      {
+            "data": [[10, 3, 30, 25, 50, 43]],
+            "labels": ["a", "b", "c", "d", "e", "f"],
+            "title": {"_text": "Horizontal Line Chart(1 Group)", "x": 290, "y": 190},
+            "type": "horizontalline",
+            "fillColor": "#f01f34",
+            "marker": "FilledCircle",
+            "x": 150, "y": 50,
+            "lineLabelFormat": "%2.0f"
+      }
+</canvas>
+<canvas type="graph" width="350" height="200">
+      {
+            "data": [[19, 3, 42, 25, 50, 43], [5, 15, 25, 38, 15, 58]],
+            "labels": ["a", "b", "c", "d", "e", "f"],
+            "title": {"_text": "Horizontal Line Chart(2 Groups)", "x": 290, "y": 190},
+            "type": "horizontalline",
+            "marker": "FilledCircle",
+            "x": 150, "y": 50,
+            "lineLabelFormat": "%2.0f"
+      }
+</canvas>
+<canvas type="graph" width="350" height="180">
+      {
+            "data": [10, 20, 30, 40, 50, 60],
+            "labels": ["a", "b", "c", "d", "e", "f"],
+            "title": {"_text": "Pie Chart", "x": 290, "y": 190},
+            "type": "pie",
+            "x": 150, "y": 50,
+            "sideLabels": 1,
+            "direction": "anticlockwise",
+            "simpleLabels": 0,
+            "slices": {"strokeColor": "#f01f34", "strokeWidth": 2},
+            "legend": {
+                  "alignment": "right",
+                  "boxAnchor": "nw",
+                  "fontSize": 8,
+                  "strokeWidth": 0,
+                  "dy": 6,
+                  "dx": 6,
+                  "dxTextSpace": 4,
+                  "deltay": 6,
+                  "columnMaximum": 99,
+                  "variColumn": 1,
+                  "deltax": 175,
+                  "x": 350,
+                  "y": 125
+            }
+      }
+</canvas>
+<canvas type="graph" width="350" height="180">
+      {
+            "type": "legendedPie",
+            "data": [10, 20, 30, 40, 50, 60],
+            "title": {"_text": "Legended Pie Chart", "x": 290, "y": 190},
+            "legend_data": [10, 20, 30, 40, 50, 60],
+            "labels": ["a", "b", "c", "d", "e", "f"],
+            "x": 150, "y": 50,
+            "legend1": {
+                  "x": 350,
+                  "y": 150
+            }
+      }
+</canvas>
+<canvas type="graph" width="350" height="200">
+      {
+            "data": [10, 20, 30, 40, 50, 60],
+            "labels": ["a", "b", "c", "d", "e", "f"],
+            "title": {"_text": "Doughnut Chart(1 Group)", "x": 290, "y": 210},
+            "type": "doughnut",
+            "x": 150, "y": 50,
+            "legend": {
+                  "alignment": "right",
+                  "boxAnchor": "nw",
+                  "fontSize": 8,
+                  "strokeWidth": 0,
+                  "dy": 6,
+                  "dx": 6,
+                  "dxTextSpace": 4,
+                  "deltay": 6,
+                  "columnMaximum": 99,
+                  "variColumn": 1,
+                  "deltax": 175,
+                  "x": 340,
+                  "y": 125
+            }
+      }
+</canvas>
+<canvas type="graph" width="350" height="200">
+      {
+            "data": [[10, 20, 30, 40, 50, 60], [10, 20, 30, 40, 50, 60]],
+            "labels": ["a", "b", "c", "d", "e", "f"],
+            "title": {"_text": "Doughnut Chart(2 Groups)", "x": 290, "y": 210},
+            "type": "doughnut",
+            "x": 150, "y": 50,
+            "legend": {
+                  "alignment": "right",
+                  "boxAnchor": "nw",
+                  "fontSize": 8,
+                  "strokeWidth": 0,
+                  "dy": 6,
+                  "dx": 6,
+                  "dxTextSpace": 4,
+                  "deltay": 6,
+                  "columnMaximum": 99,
+                  "variColumn": 1,
+                  "deltax": 175,
+                  "x": 340,
+                  "y": 170,
+                  "fontName": "Helvetica"
+            }
+      }
+</canvas>
+</body>
+</html>
+
+
+
+
+
+
+
+
