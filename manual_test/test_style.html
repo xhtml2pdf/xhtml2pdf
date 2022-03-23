@@ -1,0 +1,84 @@
+<html>
+
+    <head>
+<style>
+ @page {
+    size: a4 landscape;
+    // 210 x 297 mm
+    margin: 2cm;
+	-pdf-frame-border: 1;
+}
+</style>
+
+        <style type='text/css'>
+            body{
+                color: gray;
+            }
+            .bg{
+                border: 5px solid red;
+            }
+            .blue{
+                color: blue;
+            }
+            #green{
+                color: green;
+            }
+            div#eins > p {
+                display:inline;
+
+            }
+            div{
+                margin: 2em;
+            }
+            div.zwei > p {
+                display:inline;
+            }
+
+            #drei > p >span{
+                color:red;
+            }
+            p[class='dick']{
+                font-weight: bold;
+            }
+            #vier p + p[class='dick']{
+                text-decoration: underline;
+            }
+            .hans + p{
+                text-decoration: underline;
+            }
+        </style>
+        <link href="css/grid.css" rel="stylesheet">
+
+    </head>
+
+<body>
+    Standardfarbe: grau
+     <div class="row">
+    <div id='eins' class="col-6 bg">
+        (mit div#eins > p :display inline;)
+        grau <p class='blue'>blau <span id='green'>gruen</span> blau</p>
+    </div>
+    <div class='zwei' class="col-6 bg">
+        (mit div.zwei > p :display inline;)
+        grau <p class='blue'>blau <span id='green'>gruen</span> blau</p>
+    </div>
+     <div class="col-4 bg">
+        (ohne div > p :display inline;)
+        grau <p class='blue'>blau <span id='green'>gruen</span> blau</p>
+    </div>
+    <div id='drei' class="col-4 bg">
+        grau <p class='blue'>blau <span id='green'>rot</span> blau</p>
+    </div>
+    <div id='vier' class="col-6 bg">
+        <p class='dick'>dick und fett</p>
+        <p><p class='dick'>fett und underlined</p><span> hier nicht
+mehr</span><p class='dick'> hier nur noch dick</p></p>
+    </div>
+    <div id='fuenf' class="col-2 bg">
+        <p class='hans'>xx</p>
+        <p>underlined</p>
+        <p>hier nicht</p>
+    </div>
+     </div>
+</body>
+</html>
