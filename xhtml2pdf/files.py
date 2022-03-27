@@ -291,8 +291,9 @@ class LocalFileURI(BaseFile):
         uri = None
         if self.basepath is not None:
             uri = Path(self.basepath) / path
-
-        if path.exists() and (uri is None or not uri.exists()):
+        else:
+            uri = Path('.') / path
+        if path.exists() and not uri.exists():
             uri = path
         if uri.is_file():
             self.uri = uri
