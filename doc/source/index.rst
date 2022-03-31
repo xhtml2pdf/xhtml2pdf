@@ -26,3 +26,4 @@ Contents:
    howto-running-tests
    reference
    release-notes
+   examples

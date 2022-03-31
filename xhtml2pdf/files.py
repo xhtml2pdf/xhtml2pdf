@@ -370,7 +370,8 @@ class pisaFileObject:
         if callback is not None:
             basepathret = callback(uri, basepath)
         if basepathret is not None:
-            self.basepath = basepathret
+            self.basepath = None
+            uri=basepathret
         else:
             self.basepath = basepath
         #uri = uri or str()
