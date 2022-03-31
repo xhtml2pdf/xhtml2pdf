@@ -37,3 +37,10 @@ You can use page name to separate backgrounds. All pages cover by the page name 
 	   background-image: url('img/otherbackground.pdf');
     }
 
+Some available configurations when you use images:
+
+- **background-opacity:** a number from 0 to 1, example 0.5
+- **background-object-position:** position of the image in the page, set as left bottom   ej. 500px 300px;
+- **background-height:**  height of the image ej 50px
+- **background-width:** width of the image ej 20px
+- **background-page-step:** Use when you want to step pages without watermark, default 1

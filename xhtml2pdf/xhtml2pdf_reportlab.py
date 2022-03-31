@@ -199,6 +199,8 @@ class PmlPageTemplate(PageTemplate):
         self.h = 0
         self.w = 0
 
+        self.backgroundids = []
+
     def isFirstFlow(self, canvas):
         if self._first_flow:
             if canvas.getPageNumber() <= self._page_count:
@@ -217,15 +219,19 @@ class PmlPageTemplate(PageTemplate):
     def beforeDrawPage(self, canvas, doc):
         canvas.saveState()
         try:
-            pisaBackground = None
-            if hasattr(self, "pisaBackground") and self.pisaBackground and (not self.pisaBackground.notFound()):
-                if self.pisaBackground.getMimeType().startswith("image/"):
-                    pisaBackground = WaterMarks.generate_pdf_background(self.pisaBackground,
-                                                                        self.pagesize, self.isPortrait())
-                else:
-                    pisaBackground = self.pisaBackground
-            if pisaBackground:
-                self.pisaBackgroundList.append((canvas.getPageNumber(), pisaBackground))
+
+            if doc.pageTemplate.id not in self.backgroundids:
+                pisaBackground = None
+                if hasattr(self, "pisaBackground") and self.pisaBackground and (not self.pisaBackground.notFound()):
+                    if self.pisaBackground.getMimeType().startswith("image/"):
+                        pisaBackground = WaterMarks.generate_pdf_background(self.pisaBackground,
+                                                                            self.pagesize, self.isPortrait(),
+                                                                            context=self.backgroundContext)
+                    else:
+                        pisaBackground = self.pisaBackground
+                    self.backgroundids.append(doc.pageTemplate.id)
+                if pisaBackground:
+                    self.pisaBackgroundList.append((canvas.getPageNumber(), pisaBackground, self.backgroundContext))
 
             def pageNumbering(objList):
                 for obj in flatten(objList):
