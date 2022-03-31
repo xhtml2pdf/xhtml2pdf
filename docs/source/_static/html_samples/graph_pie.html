@@ -1,0 +1,50 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pie</title>
+</head>
+<body>
+<canvas type="graph" width="350" height="180">
+      {
+            "data": [10, 20, 30, 40, 50, 60],
+            "labels": ["a", "b", "c", "d", "e", "f"],
+            "title": {"_text": "Pie Chart", "x": 290, "y": 190},
+            "type": "pie",
+            "x": 150, "y": 50,
+            "sideLabels": 1,
+            "direction": "anticlockwise",
+            "simpleLabels": 0,
+            "slices": {"strokeColor": "#f01f34", "strokeWidth": 2},
+            "legend": {
+                  "alignment": "right",
+                  "boxAnchor": "nw",
+                  "fontSize": 8,
+                  "strokeWidth": 0,
+                  "dy": 6,
+                  "dx": 6,
+                  "dxTextSpace": 4,
+                  "deltay": 6,
+                  "columnMaximum": 99,
+                  "variColumn": 1,
+                  "deltax": 175,
+                  "x": 350,
+                  "y": 125
+            }
+      }
+</canvas>
+<canvas type="graph" width="350" height="180">
+      {
+            "type": "legendedPie",
+            "data": [10, 20, 30, 40, 50, 60],
+            "title": {"_text": "Legended Pie Chart", "x": 290, "y": 190},
+            "legend_data": [10, 20, 30, 40, 50, 60],
+            "labels": ["a", "b", "c", "d", "e", "f"],
+            "x": 150, "y": 50,
+            "legend1": {
+                  "x": 350,
+                  "y": 150
+            }
+      }
+</canvas>
+</body>
+</html>

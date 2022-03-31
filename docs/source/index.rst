@@ -21,6 +21,7 @@ Contents:
    usage
    format_html
    https_options
+   graphics
    encryption_and_signatures
    watermarks
    howto-running-tests
