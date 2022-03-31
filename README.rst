@@ -19,7 +19,7 @@ XHTML2PDF
 
 |
 
-The current release of xhtml2pdf is **xhtml2pdf 0.2.6**. Release Notes can be found here: `Release Notes <https://xhtml2pdf.readthedocs.io/en/latest/release-notes.html>`__
+The current release of xhtml2pdf is **xhtml2pdf 0.2.7**. Release Notes can be found here: `Release Notes <https://xhtml2pdf.readthedocs.io/en/latest/release-notes.html>`__
 As with all open-source software, its use in production depends on many factors, so be aware that you may find issues in some cases.
 
 **Big thanks** to everyone who has worked on this project so far and to those who help maintain it.

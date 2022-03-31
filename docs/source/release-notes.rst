@@ -51,46 +51,40 @@ Versions >= 0.2
     --------------------------------------------
 
 
-..
-    0.2.7
-    ====================
 
-    Released: YYYY-MM-DD
+0.2.7
+====================
 
-    **🎉 New**
+Released: 2022-03-31
 
-    * Add encryption and password protection
-    *
+**🎉 New**
 
-    **💪🏼 Improvements**
+* Add encryption and password protection
+* New WaterMark management system with new options
+* Add Graphic builder
+* Add signing pdfs (simple and pades)
 
-    * Note: for smaller improvements
-    *
 
-    **🐛 Bug-Fixes**
+**🐛 Bug-Fixes**
 
-    * Remove import cycle between utils and default
-    *
+* Remove import cycle between utils and default
+* Fixed link_callback construction of path
+* Fixed path when is relative to current path
 
-    **⚠️ Deprecation**
+**⚠️ Deprecation**
 
-    *  `xhtml` in pisa.CreatePDF support will removed on next release
-    *  `XML2PDF` and `XHTML2PDF` will be removed on next release use `HTML2PDF` instead
+*  `xhtml` in pisa.CreatePDF support will removed on next release
+*  `XML2PDF` and `XHTML2PDF` will be removed on next release use `HTML2PDF` instead
 
-    **📘 Documentation**
+**📘 Documentation**
 
-    *
-    *
+* Add render pdf on documentation and add some html example.
+* Include graphics examples
 
-    **🧹 Cleanup**
 
-    *
-    *
-
-    | Thanks to the following people on GitHub for contributing to this release:
-    | *marcelagz*, *GitHub-Name-2* and *GitHub-Name-3* (Note: mention all the merged pull requests since last release here!)
-
-    --------------------------------------------
+| Thanks to the following people on GitHub for contributing to this release:
+| *marcelagz* for graphics support :)
+--------------------------------------------
 
 
 0.2.6
