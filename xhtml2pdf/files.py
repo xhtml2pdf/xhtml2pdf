@@ -13,7 +13,9 @@ from pathlib import Path
 from urllib import request
 from urllib.parse import unquote as urllib_unquote
 
+from xhtml2pdf.builders.grid import GridBuilder
 from xhtml2pdf.config.httpconfig import httpConfig
+from xhtml2pdf.default import PML_PAGESIZES
 
 GAE = "google.appengine" in sys.modules
 log = logging.getLogger("xhtml2pdf")
@@ -352,6 +354,30 @@ class LocalTmpFile(BaseFile):
         with open(self.path, 'rb') as arch:
             return arch.read()
 
+class GridFile(BaseFile):
+
+    def __init__(self, path, basepath):
+        self.path = path.replace('grid://', '')
+        self.prefix='col'
+
+    def get_data(self):
+        if self.path is None:
+            return
+        try:
+            page, orientation, columns, self.prefix = self.path.split('/')
+            pagesize = PML_PAGESIZES[page]
+            if orientation == "landscape":
+                pagesize = [pagesize[1], pagesize[0]]
+            columns = int(columns)
+        except ValueError as e:
+            return
+        except KeyError as e:
+            return
+
+        builder = GridBuilder(*pagesize, columns=columns, prefix=self.prefix)
+        data = builder.build()
+        return data.encode()
+
 
 class FileNetworkManager:
     @staticmethod
@@ -363,6 +389,8 @@ class FileNetworkManager:
             instance = BytesFileUri(uri, basepath)
         elif uri.startswith("data:"):
             instance = B64InlineURI(uri, basepath)
+        elif uri.startswith("grid:"):
+            instance = GridFile(uri, basepath)
         else:
             if basepath and not urlparse.urlparse(uri).scheme:
                 urlParts = urlparse.urlparse(basepath)
