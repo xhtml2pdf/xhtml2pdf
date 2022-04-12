@@ -26,11 +26,13 @@ class TTFWithSameFaceName(TestCase):
     ttf_pathBI = os.path.join(tests_folder, 'samples', 'font', 'Noto_Sans', 'NotoSans-BoldItalic.ttf')
 
     ff_R = "@font-face {{font-family: Noto_Regular; src: url(\'{ttf}\');}}".format(ttf=ttf_pathR)
+    ff_RM = "@font-face{{font-family: Noto_Regular_Minified; src: url(\'{ttf}\');}}".format(ttf=ttf_pathR)
     ff_B = "@font-face {{font-family: Noto_Bold; src: url(\'{ttf}\');}}".format(ttf=ttf_pathB)
     ff_I = "@font-face {{font-family: Noto_Italic; src: url(\'{ttf}\');}}".format(ttf=ttf_pathI)
     ff_BI = "@font-face {{font-family: Noto_BoldItalic; src: url(\'{ttf}\');}}".format(ttf=ttf_pathBI)
 
     css_R = ".classRegular{font-family: Noto_Regular;}"
+    css_RM = ".classRegularMinified{font-family: Noto_Regular_Minified;}"
     css_B = ".classBold{font-family: Noto_Bold;}"
     css_I = ".classItalic{font-family: Noto_Italic;}"
     css_BI = ".classBoldItalic{font-family: Noto_BoldItalic;}"
@@ -42,11 +44,13 @@ class TTFWithSameFaceName(TestCase):
                         <style type="text/css">
                 
                         {ff_R}
+                        {ff_RM}
                         {ff_B}
                         {ff_I}
                         {ff_BI}
                         
                         {css_R}
+                        {css_RM}
                         {css_B}
                         {css_I}
                         {css_BI}
@@ -57,6 +61,7 @@ class TTFWithSameFaceName(TestCase):
                         <body>
 
                         <span class="classRegular">My custom regular font type</span>
+                        <span class="classRegularMinified">My custom regular minified font type</span>
                         <span class="classBold">My custom bold font type</span>
                         <span class="classItalic">My custom italic font type</span>
                         <span class="classBoldItalic">My custom bold-italic font type</span>
@@ -65,8 +70,8 @@ class TTFWithSameFaceName(TestCase):
                         </html>
                     """
 
-    html = HTML_CONTENT.format(ff_R=ff_R, ff_B=ff_B, ff_I=ff_I, ff_BI=ff_BI,
-                               css_R=css_R, css_B=css_B, css_I=css_I, css_BI=css_BI)
+    html = HTML_CONTENT.format(ff_R=ff_R, ff_RM=ff_RM, ff_B=ff_B, ff_I=ff_I, ff_BI=ff_BI,
+                               css_R=css_R, css_RM=css_RM, css_B=css_B, css_I=css_I, css_BI=css_BI)
 
     def test_check_updated_face_name(self):
         """
