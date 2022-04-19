@@ -104,17 +104,17 @@ that converts relative URLs to absolute system paths.
         # create a pdf
         pisa_status = pisa.CreatePDF(
            html, dest=response, link_callback=link_callback)
-        # if error then show some funy view
+        # if error then show some funny view
         if pisa_status.err:
            return HttpResponse('We had some errors <pre>' + html + '</pre>')
         return response
 
-You can see in action in ``demo/djangoproject`` folder 
+You can see it in action in ``demo/djangoproject`` folder 
 
 Using in Command line 
 ----------------------
 
-xhtml2pdf also provides a convenient command line tool which you can use to convert HTML files
+xhtml2pdf also provides a convenient command line tool that you can use to convert HTML files
 to PDF documents using the command line.
 
 .. code:: bash
@@ -146,7 +146,7 @@ To generate a PDF from an HTML file called ``test.html`` call:
     $ xhtml2pdf -s test.html
 
 The resulting PDF will be called ``test.pdf`` (if this file is locked
-e.g. by the Adobe Reader it will be called ``test-0.pdf`` and so on).
+e.g. by the Adobe Reader, it will be called ``test-0.pdf`` and so on).
 The ``-s`` option takes care that the PDF will be opened directly in the
 Operating Systems default viewer.
 
@@ -166,8 +166,8 @@ You may also directly access pages from the internet:
 Using special properties
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If the conversion doesn't work as expected some more informations may be
-usefull. You may turn on the output of warnings adding ``-w`` or even
+If the conversion doesn't work as expected some more information may be
+usefull. You may turn on the output of warnings by adding ``-w`` or even
 the debugging output by using ``-d``.
 
 Another reason could be, that the parsing failed. Consider trying the
@@ -175,7 +175,7 @@ Another reason could be, that the parsing failed. Consider trying the
 that offers two internal parsing modes: one for HTML and one for XHTML.
 
 When generating the HTML output ``xhtml2pdf`` uses an internal default CSS
-definition (otherwise all tags would appear with no diffences). To get
+definition (otherwise all tags would appear with no differences). To get
 an impression of how this one looks like start ``xhtml2pdf`` like this:
 
 .. code:: bash
@@ -183,7 +183,7 @@ an impression of how this one looks like start ``xhtml2pdf`` like this:
     $ xhtml2pdf --css-dump > xhtml2pdf-default.css
 
 The CSS will be dumped into the file ``xhtml2pdf-default.css``. You may
-modify this or even take a totaly self defined one and hand it in by
+modify this or even take a totally self-defined one and hand it in by
 using the ``-css`` option, e.g.:
 
 .. code:: bash
