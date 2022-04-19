@@ -838,7 +838,7 @@ class CSSParser(object):
 
 
     def _parseAtFontFace(self, src):
-        src = src[len('@font-face '):].lstrip()
+        src = src[len('@font-face'):].lstrip()
         src, properties = self._parseDeclarationGroup(src)
         result = [self.cssBuilder.atFontFace(properties)]
         return src, result
