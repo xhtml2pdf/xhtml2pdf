@@ -120,7 +120,8 @@ class WaterMarks:
                 pagebg = bginput.getPage(0)
                 page = input1.getPage(ctr-1)
                 if index%step == 0:
-                    page.mergePage(pagebg)
+                    pagebg.mergePage(page)
+                    page = pagebg
                 pdfoutput.addPage(page)
                 has_bg=True
         if has_bg:
