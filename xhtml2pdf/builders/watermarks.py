@@ -114,13 +114,13 @@ class WaterMarks:
         input1 = PyPDF3.PdfFileReader(istream)
         has_bg=False
         for pages, bgouter, step in WaterMarks.get_watermark(context, input1.numPages):
-            bginput = PyPDF3.PdfFileReader(bgouter.getBytesIO())
-
             for index, ctr in enumerate(pages):
+                bginput = PyPDF3.PdfFileReader(bgouter.getBytesIO())
                 pagebg = bginput.getPage(0)
                 page = input1.getPage(ctr-1)
                 if index%step == 0:
-                    page.mergePage(pagebg)
+                    pagebg.mergePage(page)
+                    page = pagebg
                 pdfoutput.addPage(page)
                 has_bg=True
         if has_bg:
