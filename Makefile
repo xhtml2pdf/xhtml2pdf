@@ -49,7 +49,7 @@ docs:
 	sphinx-build -b html ./docs/source _build/
 
 release: clean
-	python setup.py sdist bdist_wheel
+	python setup.py sdist --formats tar bdist_wheel 
 	twine upload -s dist/*
 
 sdist: clean
