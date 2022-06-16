@@ -51,6 +51,23 @@ Versions >= 0.2
     --------------------------------------------
 
 
+0.2.8
+====================
+
+Released: 2022-06-16
+
+
+**🐛 Bug-Fixes**
+
+* Fix background-image issues with :issue:´614´ and pull requests with :pr:´619´
+* Fix CSSParseError for minified @font-face definitions  :pr:´609´ 
+* Fixed a few typos and grammar mistakes in usage.rst documentation. :pr:´610´
+
+
+| Thanks to the following people on GitHub for contributing to this release:
+| *MuhammedNihad*, *timoludwig*, *flash716*
+
+--------------------------------------------
 
 0.2.7
 ====================
