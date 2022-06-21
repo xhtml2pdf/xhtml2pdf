@@ -105,6 +105,11 @@ def _lineClean(L):
     return b" ".join( filter(truth, split(strip(L))) )
 
 
+def reverse_sentence(sentence):
+    words = str(sentence).split(' ') 
+    reverse_sentence = ' '.join(reversed(words)) 
+    return reverse_sentence 
+
 
 def cleanBlockQuotedText(text, joiner=b' '):
     """This is an internal utility which takes triple-
@@ -842,6 +847,7 @@ def makeCJKParaLine(U, extraSpace, calcBounds):
         f0 = f0.clone()
         f0.text = u''.join(CW)
         words.append(f0)
+    words.reverse()
     return FragLine(kind=1, extraSpace=extraSpace, wordCount=1, words=words[1:], fontSize=maxSize, ascent=maxAscent,
                     descent=minDescent)
 
@@ -1010,9 +1016,7 @@ class Paragraph(Flowable):
             blPara = self.breakLinesCJK([first_line_width, later_widths])
         else:
             blPara = self.breakLines([first_line_width, later_widths])
-            if hasattr(self, 'rtl'):
-                if self.rtl:
-                    blPara.lines = blPara.lines[::-1]
+
         self.blPara = blPara
         autoLeading = getattr(self, 'autoLeading', getattr(style, 'autoLeading', ''))
         leading = style.leading
@@ -1196,7 +1200,9 @@ class Paragraph(Flowable):
         calcBounds = autoLeading not in ('', 'off')
         frags = self.frags
         nFrags = len(frags)
+
         if nFrags == 1 and not hasattr(frags[0], 'cbDefn'):
+
             f = frags[0]
             fontSize = f.fontSize
             fontName = f.fontName
@@ -1206,14 +1212,17 @@ class Paragraph(Flowable):
             cLine = []
             currentWidth = -spaceWidth   # hack to get around extra space for word 1
             for word in words:
+
                 #this underscores my feeling that Unicode throughout would be easier!
                 wordWidth = stringWidth(word, fontName, fontSize, self.encoding)
                 newWidth = currentWidth + spaceWidth + wordWidth
                 if newWidth <= maxWidth or not len(cLine):
+
                     # fit one more on this line
                     cLine.append(word)
                     currentWidth = newWidth
                 else:
+
                     if currentWidth > self.width: self.width = currentWidth
                     #end of line
                     lines.append((maxWidth - currentWidth, cLine))
@@ -1242,7 +1251,9 @@ class Paragraph(Flowable):
                 return self.blPara
             n = 0
             words = []
-            for w in _getFragWords(frags):
+            frag_words = _getFragWords(frags)
+            frag_words.reverse() #reverse to fix rtl language issues
+            for w in frag_words:
                 f = w[-1][0]
                 fontName = f.fontName
                 fontSize = f.fontSize
@@ -1270,7 +1281,6 @@ class Paragraph(Flowable):
                         nText = str(w[1][1], 'utf-8')
                     else:
                         nText = w[1][1]
-
                     if nText: n += 1
                     fontSize = f.fontSize
                     if calcBounds:
@@ -1345,6 +1355,8 @@ class Paragraph(Flowable):
 
                     if currentWidth > self.width: self.width = currentWidth
                     #end of line
+                    
+                    words[0].text = reverse_sentence(words[0].text)
                     lines.append(FragLine(extraSpace=maxWidth - currentWidth, wordCount=n,
                                           lineBreak=lineBreak, words=words, fontSize=maxSize, ascent=maxAscent,
                                           descent=minDescent))
@@ -1396,6 +1408,7 @@ class Paragraph(Flowable):
             #deal with any leftovers on the final line
             if words != []:
                 if currentWidth > self.width: self.width = currentWidth
+                words[0].text = reverse_sentence(words[0].text)
                 lines.append(ParaLines(extraSpace=(maxWidth - currentWidth), wordCount=n,
                                        words=words, fontSize=maxSize, ascent=maxAscent, descent=minDescent))
             return ParaLines(kind=1, lines=lines)
