@@ -91,7 +91,7 @@ def get_encrypt_instance(data):
     return data
 
 
-def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
+def pisaDocument(src, dest=None, dest_bytes=False, path=None, link_callback=None, debug=0,
                  default_css=None, xhtml=False, encoding=None, xml_output=None,
                  raise_exception=True, capacity=100 * 1024, context_meta=None,
                  encrypt=None, signature=None,
@@ -170,6 +170,9 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
 
     # Get the resulting PDF and write it to the file object
     # passed from the caller
+    
+    # Get the resulting PDF and write it to the file object
+    # passed from the caller
 
     if dest is None:
         # No output file was passed - Let's use a pisaTempFile
@@ -179,4 +182,9 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
     data = output.getvalue()
     context.dest.write(data)  # TODO: context.dest is a tempfile as well...
     cleanFiles()
+    
+    if dest_bytes:
+        return data
+    
     return context
+   
