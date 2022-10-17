@@ -279,9 +279,9 @@ class LocalFileURI(BaseFile):
 
     def guess_mimetype(self, name):
         " Guess the mime type "
-        mimetype = mimetypes.guess_type(name)[0]
+        mimetype = mimetypes.guess_type(str(name))[0]
         if mimetype is not None:
-            mimetype = mimetypes.guess_type(name)[0].split(";")[0]
+            mimetype = mimetypes.guess_type(str(name))[0].split(";")[0]
         return mimetype
 
     def extract_data(self):
