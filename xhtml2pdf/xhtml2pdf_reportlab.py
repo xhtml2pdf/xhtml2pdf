@@ -251,6 +251,10 @@ class PmlPageTemplate(PageTemplate):
 
                 # Paint static frames
                 pagenumber = canvas.getPageNumber()
+                if pagenumber > self._page_count:
+                    self._page_count = canvas.getPageNumber()
+                    canvas._doctemplate._page_count = canvas.getPageNumber()
+                
                 for frame in self.pisaStaticList:
                     frame = copy.deepcopy(frame)
                     story = frame.pisaStaticStory
