@@ -587,7 +587,7 @@ ol {
     margin-left: 1.5em;
 }
 
-ul li div {
+ul li div:first-child {
     display: inline-block;
 }
 
