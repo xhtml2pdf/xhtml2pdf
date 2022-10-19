@@ -400,7 +400,6 @@ html {
     font-size: 10px;
     font-weight: normal;
     color: #000000;
-    background-color: transparent;
     margin: 0;
     padding: 0;
     line-height: 150%;
