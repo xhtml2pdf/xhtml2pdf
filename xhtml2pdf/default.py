@@ -587,6 +587,10 @@ ol {
     margin-left: 1.5em;
 }
 
+ul li div {
+    display: inline-block;
+}
+
 pre {
     white-space: pre;
 }
