@@ -402,7 +402,7 @@ def _justifyDrawParaLineX( tx, offset, line, last=0):
     setXPos(tx, offset)
     extraSpace = line.extraSpace
     nSpaces = line.wordCount - 1
-    if last or not nSpaces or abs(extraSpace) <= 1e-8 or line.lineBreak:
+    if last or not nSpaces or abs(extraSpace) <= 1e-8 or (hasattr(line, "lineBreak") and line.lineBreak):
         _putFragLine(offset, tx, line)  # no space modification
     else:
         tx.setWordSpace(extraSpace / float(nSpaces))
