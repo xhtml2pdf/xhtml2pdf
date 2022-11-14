@@ -32,6 +32,9 @@ from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlPageTemplate
 
 from html import escape as html_escape
 
+# for encryptioon
+from PyPDF3 import PdfFileWriter, PdfFileReader
+
 log = logging.getLogger("xhtml2pdf")
 
 
@@ -128,7 +131,7 @@ def pisaDocument(src, dest=None, dest_bytes=False, path=None, link_callback=None
                   context.meta["keywords"].strip().split(",") if x],
         title=context.meta["title"].strip(),
         showBoundary=0,
-        encrypt=get_encrypt_instance(encrypt),
+        # encrypt=get_encrypt_instance(encrypt), # do not encrypt here
         allowSplitting=1)
 
     # Prepare templates and their frames
@@ -168,6 +171,27 @@ def pisaDocument(src, dest=None, dest_bytes=False, path=None, link_callback=None
         if do_ok:
             output=signoutput
 
+
+    # encrypt
+    encrypt=get_encrypt_instance(encrypt)
+    if encrypt:
+        output_enc = io.BytesIO()
+        pdf_writer = PyPDF3.PdfFileWriter()
+        pdf_reader = PyPDF3.PdfFileReader(output)
+        for page in range(pdf_reader.getNumPages()):
+            pdf_writer.addPage(pdf_reader.getPage(page))
+
+        pdf_writer.encrypt(
+            user_pwd=encrypt.userPassword, 
+            owner_pwd=encrypt.ownerPassword,
+            overwrite_permission=encrypt.permissionBits(),
+            use_128bit=True,
+        )
+        pdf_writer.write(output_enc)
+        output = output_enc
+    # end encrypt
+    
+
     # Get the resulting PDF and write it to the file object
     # passed from the caller
     
@@ -187,4 +211,3 @@ def pisaDocument(src, dest=None, dest_bytes=False, path=None, link_callback=None
         return data
     
     return context
-   
