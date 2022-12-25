@@ -1,4 +1,4 @@
-import PyPDF3
+import pypdf
 from PIL import Image
 from reportlab.pdfgen.canvas import Canvas
 
@@ -57,7 +57,7 @@ class WaterMarks:
     @staticmethod
     def generate_pdf_background(pisafile, pagesize, is_portrait, context={}):
         """
-        PyPDF3 requires pdf as background so convert image to pdf in temporary file with same page dimensions
+        pypdf requires pdf as background so convert image to pdf in temporary file with same page dimensions
         :param pisafile:  Image File
         :param pagesize:  Page size for the new pdf
         :return: pisaFileObject as tempfile
@@ -110,18 +110,18 @@ class WaterMarks:
 
     @staticmethod
     def process_doc(context, istream, output):
-        pdfoutput = PyPDF3.PdfFileWriter()
-        input1 = PyPDF3.PdfFileReader(istream)
+        pdfoutput = pypdf.PdfWriter()
+        input1 = pypdf.PdfReader(istream)
         has_bg=False
-        for pages, bgouter, step in WaterMarks.get_watermark(context, input1.numPages):
+        for pages, bgouter, step in WaterMarks.get_watermark(context, len(input1.pages)):
             for index, ctr in enumerate(pages):
-                bginput = PyPDF3.PdfFileReader(bgouter.getBytesIO())
-                pagebg = bginput.getPage(0)
-                page = input1.getPage(ctr-1)
+                bginput = pypdf.PdfReader(bgouter.getBytesIO())
+                pagebg = bginput.pages[0]
+                page = input1.pages[ctr-1]
                 if index%step == 0:
-                    pagebg.mergePage(page)
+                    pagebg.merge_page(page)
                     page = pagebg
-                pdfoutput.addPage(page)
+                pdfoutput.add_page(page)
                 has_bg=True
         if has_bg:
             pdfoutput.write(output)

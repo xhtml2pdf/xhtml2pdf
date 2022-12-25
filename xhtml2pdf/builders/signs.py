@@ -188,7 +188,7 @@ class PDFSignature:
     def simple_sign(inputfile, output, config):
         signer = PDFSignature.get_signers(config)
         if signer:
-            w = IncrementalPdfFileWriter(inputfile)
+            w = IncrementalPdfWriter(inputfile)
             timestamper = PDFSignature.get_timestamps(config)
             signers.sign_pdf(
                 w, signers.PdfSignatureMetadata(field_name='Signature1'),
@@ -200,7 +200,7 @@ class PDFSignature:
     def lta_sign(inputfile, output, config):
         signer = PDFSignature.get_signers(config)
         timestamper = PDFSignature.get_timestamps(config)
-        w = IncrementalPdfFileWriter(inputfile)
+        w = IncrementalPdfWriter(inputfile)
         meta=PDFSignature.get_signature_meta(config)
 
         signature_meta = signers.PdfSignatureMetadata(**meta)

@@ -26,7 +26,7 @@ from xhtml2pdf.builders.watermarks import WaterMarks
 from xhtml2pdf.context import pisaContext
 from xhtml2pdf.default import DEFAULT_CSS
 from xhtml2pdf.parser import pisaParser
-from xhtml2pdf.util import PyPDF3, getBox
+from xhtml2pdf.util import pypdf, getBox
 from xhtml2pdf.files import pisaTempFile, cleanFiles
 from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlPageTemplate
 
