@@ -1,4 +1,4 @@
-arabic-reshaper>=2.1.0
+arabic-reshaper>=3.0.0
 coverage>=5.3
 html5lib>=1.1
 Pillow>=8.1.1

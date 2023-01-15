@@ -35,7 +35,7 @@ setup(
     keywords="PDF, HTML, XHTML, XML, CSS",
     install_requires=["html5lib>=1.0.1", "PyPDF3>=1.0.5", "Pillow>=8.1.1",
                       "reportlab>=3.5.53", "svglib>=1.2.1",
-                      "python-bidi>=0.4.2", "arabic-reshaper>=2.1.0",
+                      "python-bidi>=0.4.2", "arabic-reshaper>=3.0.0",
                       "pyHanko>=0.12.1",
                       "pyhanko-certvalidator>=0.19.5"],
     include_package_data=True,
