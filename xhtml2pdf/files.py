@@ -414,4 +414,6 @@ def getFile(*a, **kw):
 
 
 def cleanFiles():
-    files_tmp = []
+    for file in files_tmp:
+        file.close()
+    files_tmp.clear()
