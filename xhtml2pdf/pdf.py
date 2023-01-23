@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import logging
+from io import BytesIO
 from xhtml2pdf.util import pypdf
 from xhtml2pdf.files import getFile, pisaTempFile
 
@@ -30,7 +31,7 @@ class pisaPDF:
         obj = getFile(url, basepath)
         data = obj.getFileContent()
         if data:
-            self.files.append(data)
+            self.files.append(BytesIO(data))
 
     addFromFileName = addFromURI
 
