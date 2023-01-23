@@ -34,7 +34,7 @@ import xhtml2pdf.default
 import xhtml2pdf.parser
 from xhtml2pdf.files import  getFile, pisaFileObject
 from xhtml2pdf.util import (arabic_format, copy_attrs, frag_text_language_check, getColor, getCoords,
-                            getFrameDimensions, getSize, set_asian_fonts, set_value)
+                            getFrameDimensions, getSize, set_asian_fonts, set_value, getFloat)
 from xhtml2pdf.w3c import css
 from xhtml2pdf.xhtml2pdf_reportlab import (PmlPageCount, PmlPageTemplate, PmlParagraph,
                                            PmlParagraphAndImage, PmlTableOfContents)
@@ -207,6 +207,23 @@ class pisaCSSBuilder(css.CSSBuilder):
                 return func(data[attr])
             return default
 
+    def get_background_context(self, data):
+        dev = {}
+        object_position = data.get('background-object-position', None)
+        height=data.get('background-height', None)
+        width=data.get('background-width', None)
+        opacity=data.get('background-opacity', None)
+        dev['step']=getFloat(data.get('background-page-step', 1))
+        if object_position:
+            dev['object_position'] = [getSize(object_position[0]), getSize(object_position[1])]
+        if height:
+            dev['height'] = getSize(height)
+        if width:
+            dev['width'] = getSize(width)
+        if opacity:
+            dev['opacity'] = getFloat(opacity)
+        return dev
+
     def atPage(self, name, pseudopage, data, isLandscape, pageBorder):
         c = self.c
         name = name or "body"
@@ -282,6 +299,7 @@ class pisaCSSBuilder(css.CSSBuilder):
                 frameList.append(frame)
 
         background = data.get("background-image", None)
+        background_context = self.get_background_context(data)
         if background:
             # should be relative to the css file
             background = self.c.getFile(
@@ -320,6 +338,7 @@ class pisaCSSBuilder(css.CSSBuilder):
         pt.pisaStaticList = staticList
         pt.pisaBackground = background
         pt.pisaBackgroundList = c.pisaBackgroundList
+        pt.backgroundContext = background_context
 
         if isLandscape:
             pt.pageorientation = pt.LANDSCAPE

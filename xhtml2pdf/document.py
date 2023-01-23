@@ -21,10 +21,12 @@ from reportlab.lib import pdfencrypt
 from reportlab.platypus.flowables import Spacer
 from reportlab.platypus.frames import Frame
 
+from xhtml2pdf.builders.signs import PDFSignature
+from xhtml2pdf.builders.watermarks import WaterMarks
 from xhtml2pdf.context import pisaContext
 from xhtml2pdf.default import DEFAULT_CSS
 from xhtml2pdf.parser import pisaParser
-from xhtml2pdf.util import PyPDF3, getBox
+from xhtml2pdf.util import pypdf, getBox
 from xhtml2pdf.files import pisaTempFile, cleanFiles
 from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlPageTemplate
 
@@ -89,10 +91,10 @@ def get_encrypt_instance(data):
     return data
 
 
-def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
+def pisaDocument(src, dest=None, dest_bytes=False, path=None, link_callback=None, debug=0,
                  default_css=None, xhtml=False, encoding=None, xml_output=None,
                  raise_exception=True, capacity=100 * 1024, context_meta=None,
-                 encrypt=None,
+                 encrypt=None, signature=None,
                  **kw):
     log.debug("pisaDocument options:\n  src = %r\n  dest = %r\n  path = %r\n  link_callback = %r\n  xhtml = %r\n  context_meta = %r",
               src,
@@ -155,58 +157,20 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
         doc.build(context.story)
 
     # Add watermarks
-    if PyPDF3:
-        file_handler = None
-        for bgouter in context.pisaBackgroundList:
-            # If we have at least one background, then lets do it
-            if bgouter:
-                istream = out
+    output=io.BytesIO()
+    output, has_bg=WaterMarks.process_doc(context, out, output)
 
-                output = PyPDF3.PdfFileWriter()
-                input1 = PyPDF3.PdfFileReader(istream)
-                ctr = 0
-                # TODO: Why do we loop over the same list again?
-                # see bgouter at line 137
-                for bg in context.pisaBackgroundList:
-                    page = input1.getPage(ctr)
-                    if (
-                            bg and not bg.notFound() and
-                            (bg.getMimeType() == "application/pdf")
-                    ):
-                        file_handler = open(bg.getAbsPath(), 'rb')
-                        bginput = PyPDF3.PdfFileReader(file_handler)
-                        pagebg = bginput.getPage(0)
-                        pagebg.mergePage(page)
-                        page = pagebg
+    if not has_bg:
+        output=out
+    if signature:
+        signoutput = io.BytesIO()
+        do_ok=PDFSignature.sign(output,signoutput, signature)
+        if do_ok:
+            output=signoutput
 
-                    # Todo: the else-statement doesn't make a lot of sense to me; it's just throwing warnings
-                    #  on unittesting \tests. Probably we have to rewrite the whole "background-image" stuff
-                    #  to deal with cases like:
-                    #  Page1 .jpg background
-                    #  Page1 .pdf background
-                    #  Page1 .jpg background, Page2 no background
-                    #  Page1 .pdf background, Page2 no background
-                    #  Page1 .jpg background, Page2 .pdf background
-                    #  Page1 .pdf background, Page2 .jpg background
-                    #  etc.
-                    #  Right now it's kind of confusing. (fbernhart)
-                    # else:
-                    #     log.warning(context.warning(
-                    #         "Background PDF %s doesn't exist.", bg))
-
-                    output.addPage(page)
-
-                    ctr += 1
-                out = pisaTempFile(capacity=context.capacity)
-                output.write(out)
-                if file_handler:
-                    file_handler.close()
-                # data = sout.getvalue()
-                # Found a background? So leave loop after first occurence
-                break
-    else:
-        log.warning(context.warning("PyPDF3 not installed!"))
-
+    # Get the resulting PDF and write it to the file object
+    # passed from the caller
+    
     # Get the resulting PDF and write it to the file object
     # passed from the caller
 
@@ -215,7 +179,12 @@ def pisaDocument(src, dest=None, path=None, link_callback=None, debug=0,
         dest = io.BytesIO()
     context.dest = dest
 
-    data = out.getvalue()
+    data = output.getvalue()
     context.dest.write(data)  # TODO: context.dest is a tempfile as well...
     cleanFiles()
+    
+    if dest_bytes:
+        return data
+    
     return context
+   

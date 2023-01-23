@@ -36,7 +36,7 @@ rgb_re = re.compile(
 
 log = logging.getLogger("xhtml2pdf")
 
-import PyPDF3
+import pypdf
 from reportlab.graphics import renderPM
 from reportlab.graphics import renderSVG
 
@@ -387,6 +387,12 @@ def getBool(s):
     " Is it a boolean? "
     return str(s).lower() in ("y", "yes", "1", "true")
 
+def getFloat(s):
+    try:
+        s = float(s)
+    except:
+        pass
+    return s
 
 _uid = 0
 

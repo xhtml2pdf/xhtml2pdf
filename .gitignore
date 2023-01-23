@@ -48,6 +48,9 @@ output/*.html
 output/*/index.html
 
 # Sphinx
+_build
 docs/_build
 .settings/
 xhtml2pdf.sh
+docs/source/_static/pdf_samples/
+docs/source/examples.rst

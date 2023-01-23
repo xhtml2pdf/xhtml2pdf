@@ -1,0 +1,3 @@
+git+https://github.com/SuperKogito/sphinxcontrib-pdfembed
+Sphinx>=3.2.1
+sphinx-rtd-theme>=0.5.0

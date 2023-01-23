@@ -21,7 +21,10 @@ Contents:
    usage
    format_html
    https_options
-   encryption
+   graphics
+   encryption_and_signatures
+   watermarks
    howto-running-tests
    reference
    release-notes
+   examples

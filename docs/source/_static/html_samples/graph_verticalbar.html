@@ -1,0 +1,36 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vertical bars</title>
+</head>
+<body>
+<canvas type="graph" width="350" height="150">
+      {
+            "data": [[10, 20, 30, 40, 50, 60]],
+            "labels": ["a", "b", "c", "d", "e", "f"],
+            "title": {"_text": "Vertical Bar Chart(1 Group)", "x": 290, "y": 155},
+            "x_title": 290, "y_title": 155,
+            "type": "verticalbar",
+            "x": 150, "y": 50,
+            "barLabelFormat": "%2.0f",
+            "barLabels": {"nudge": 5},
+            "categoryAxis": {
+                  "strokeColor": "#f01f34",
+                  "labels": {"angle": 0, "boxAnchor": "n", "dy": -6, "fontName": "Helvetica", "fontSize": 8, "textAnchor": "middle"}
+            }
+      }
+</canvas>
+<canvas type="graph" width="350" height="150">
+      {
+            "data": [[13, 5, 20, 22, 37, 45], [14, 6, 21, 23, 38, 46]],
+            "labels": ["a", "b", "c", "d", "e", "f"],
+            "title": {"_text": "Vertical Bar Chart(2 Groups)", "x": 290, "y": 155},
+            "type": "verticalbar",
+            "x": 150, "y": 50,
+            "barLabelFormat": "%2.0f",
+            "barLabels": {"nudge": 5},
+            "categoryAxis": {"strokeColor": "#f01f34"}
+      }
+</canvas>
+</body>
+</html>

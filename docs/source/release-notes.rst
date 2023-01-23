@@ -51,46 +51,57 @@ Versions >= 0.2
     --------------------------------------------
 
 
-..
-    0.2.7
-    ====================
+0.2.8
+====================
 
-    Released: YYYY-MM-DD
+Released: 2022-06-16
 
-    **🎉 New**
 
-    * Add encryption and password protection
-    *
+**🐛 Bug-Fixes**
 
-    **💪🏼 Improvements**
+* Fix background-image issues with :issue:´614´ and pull requests with :pr:´619´
+* Fix CSSParseError for minified @font-face definitions  :pr:´609´ 
+* Fixed a few typos and grammar mistakes in usage.rst documentation. :pr:´610´
 
-    * Note: for smaller improvements
-    *
 
-    **🐛 Bug-Fixes**
+| Thanks to the following people on GitHub for contributing to this release:
+| *MuhammedNihad*, *timoludwig*, *flash716*
 
-    * Remove import cycle between utils and default
-    *
+--------------------------------------------
 
-    **⚠️ Deprecation**
+0.2.7
+====================
 
-    *  `xhtml` in pisa.CreatePDF support will removed on next release
-    *  `XML2PDF` and `XHTML2PDF` will be removed on next release use `HTML2PDF` instead
+Released: 2022-03-31
 
-    **📘 Documentation**
+**🎉 New**
 
-    *
-    *
+* Add encryption and password protection
+* New WaterMark management system with new options
+* Add Graphic builder
+* Add signing pdfs (simple and pades)
 
-    **🧹 Cleanup**
 
-    *
-    *
+**🐛 Bug-Fixes**
 
-    | Thanks to the following people on GitHub for contributing to this release:
-    | *marcelagz*, *GitHub-Name-2* and *GitHub-Name-3* (Note: mention all the merged pull requests since last release here!)
+* Remove import cycle between utils and default
+* Fixed link_callback construction of path
+* Fixed path when is relative to current path
 
-    --------------------------------------------
+**⚠️ Deprecation**
+
+*  `xhtml` in pisa.CreatePDF support will removed on next release
+*  `XML2PDF` and `XHTML2PDF` will be removed on next release use `HTML2PDF` instead
+
+**📘 Documentation**
+
+* Add render pdf on documentation and add some html example.
+* Include graphics examples
+
+
+| Thanks to the following people on GitHub for contributing to this release:
+| *marcelagz* for graphics support :)
+--------------------------------------------
 
 
 0.2.6

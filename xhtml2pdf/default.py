@@ -402,7 +402,6 @@ html {
     font-size: 10px;
     font-weight: normal;
     color: #000000;
-    background-color: transparent;
     margin: 0;
     padding: 0;
     line-height: 150%;
@@ -587,6 +586,10 @@ ul ul ul {
 ol {
     list-style-type: decimal;
     margin-left: 1.5em;
+}
+
+ul li div:first-child {
+    display: inline-block;
 }
 
 pre {
