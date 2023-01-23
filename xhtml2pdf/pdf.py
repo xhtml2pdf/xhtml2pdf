@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import logging
-from xhtml2pdf.util import PyPDF3
+from xhtml2pdf.util import pypdf
 from xhtml2pdf.files import getFile, pisaTempFile
 
 log = logging.getLogger("xhtml2pdf")
@@ -50,11 +50,11 @@ class pisaPDF:
             self.files.append(doc.dest)
 
     def join(self, file=None):
-        output = PyPDF3.PdfFileWriter()
+        output = pypdf.PdfWriter()
         for pdffile in self.files:
-            pdf = PyPDF3.PdfFileReader(pdffile)
-            for pageNumber in range(pdf.getNumPages()):
-                output.addPage(pdf.getPage(pageNumber))
+            pdf = pypdf.PdfReader(pdffile)
+            for pageNumber in range(len(pdf.pages)):
+                output.add_page(pdf.pages[pageNumber])
 
         if file is not None:
             output.write(file)

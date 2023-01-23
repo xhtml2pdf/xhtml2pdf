@@ -36,7 +36,7 @@ rgb_re = re.compile(
 
 log = logging.getLogger("xhtml2pdf")
 
-import PyPDF3
+import pypdf
 from reportlab.graphics import renderPM
 from reportlab.graphics import renderSVG
 

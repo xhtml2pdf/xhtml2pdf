@@ -2,7 +2,7 @@
 import io
 from unittest import TestCase
 
-from PyPDF3 import PdfFileReader
+from pypdf import PdfReader
 from reportlab.pdfbase import _cidfontdata
 
 from xhtml2pdf.document import pisaDocument
@@ -113,7 +113,7 @@ class AsianFontSupportTests(TestCase):
                 src=self.HTML_CONTENT,
                 dest=pdf_file)
             pdf_file.seek(0)
-            pdf_content = PdfFileReader(pdf_file)
+            pdf_content = PdfReader(pdf_file)
             pdf_fonts = read_fonts_from_pdf(pdf_content)
 
         # Read the fonts from the html content
@@ -161,7 +161,7 @@ def read_fonts_from_pdf(pdf):
     fonts = set()
 
     for page in pdf.pages:
-        obj = page.getObject()
+        obj = page.get_object()
         fonts = get_fonts_from_page(obj['/Resources']['/Font'], fonts)
 
     return fonts

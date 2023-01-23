@@ -5,7 +5,7 @@ import os
 import tempfile
 from unittest import TestCase, skipIf
 
-from PyPDF3 import PdfFileReader
+from pypdf import PdfReader
 
 from xhtml2pdf.document import pisaDocument
 
@@ -71,8 +71,8 @@ class DocumentTest(TestCase):
         # Rewind to the start of the file to read the pdf and get the
         # document's metadata
         pdf_file.seek(0)
-        pdf_reader = PdfFileReader(pdf_file)
-        pdf_info = pdf_reader.documentInfo
+        pdf_reader = PdfReader(pdf_file)
+        pdf_info = pdf_reader.metadata
 
         # Check the received metadata matches the expected metadata
         for original_key in METADATA:
@@ -96,9 +96,9 @@ class DocumentTest(TestCase):
                 dest=pdf_file
             )
             pdf_file.seek(0)
-            pdf_reader = PdfFileReader(pdf_file)
+            pdf_reader = PdfReader(pdf_file)
 
-            xobjects = pdf_reader.getPage(0)['/Resources']['/XObject'].getObject()
+            xobjects = pdf_reader.pages[0]['/Resources']['/XObject'].get_object()
             objects = [xobjects[key] for key in xobjects.keys()]
 
             # Identity the 'denker_transparent.png' image by its height and width, and make sure it's there.
@@ -122,9 +122,9 @@ class DocumentTest(TestCase):
                 dest=pdf_file
             )
             pdf_file.seek(0)
-            pdf_reader = PdfFileReader(pdf_file)
+            pdf_reader = PdfReader(pdf_file)
 
-            xobjects = pdf_reader.getPage(0)['/Resources']['/XObject'].getObject()
+            xobjects = pdf_reader.pages[0]['/Resources']['/XObject'].get_object()
             objects = [xobjects[key] for key in xobjects.keys()]
 
             # Identity the 'denker_transparent.png' image by its height and width, and make sure it's there.
@@ -150,9 +150,9 @@ class DocumentTest(TestCase):
                 dest=pdf_file
             )
             pdf_file.seek(0)
-            pdf_reader = PdfFileReader(pdf_file)
+            pdf_reader = PdfReader(pdf_file)
 
-            self.assertEqual(pdf_reader.getNumPages(), 2)
+            self.assertEqual(len(pdf_reader.pages), 2)
 
     def test_document_nested_table(self):
         """
@@ -170,8 +170,8 @@ class DocumentTest(TestCase):
                 dest=pdf_file
             )
             pdf_file.seek(0)
-            pdf_reader = PdfFileReader(pdf_file)
-            self.assertEqual(pdf_reader.getNumPages(), 1)
+            pdf_reader = PdfReader(pdf_file)
+            self.assertEqual(len(pdf_reader.pages), 1)
 
 
     @skipIf(IN_PYPY, "This doesn't work in pypy")
