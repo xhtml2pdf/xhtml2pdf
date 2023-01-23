@@ -448,7 +448,7 @@ class pisaTagHR(pisaTag):
 # --- Forms
 
 
-if 0:
+if 1:
 
     class pisaTagINPUT(pisaTag):
 
@@ -459,7 +459,7 @@ if 0:
                 width = 100
                 height = 12
             c.addStory(xhtml2pdf_reportlab.PmlInput(attr.name,
-                                                    type=attr.type,
+                                                    input_type=attr.type,
                                                     default=attr.value,
                                                     width=width,
                                                     height=height,
@@ -473,12 +473,20 @@ if 0:
             c.addPara()
 
     class pisaTagTEXTAREA(pisaTagINPUT):
-
+        #
         def _render(self, c, attr):
+            multiline = 1 if int(attr.rows) > 1 else 0
+            height = int(attr.rows) * 15
+            width = int(attr.cols) * 5
+
+            # this does not currently support the ability to pre-populate the text field with data that appeared within the <textarea></textarea> tags
             c.addStory(xhtml2pdf_reportlab.PmlInput(attr.name,
+                                                    input_type="text",
                                                     default="",
-                                                    width=100,
-                                                    height=100))
+                                                    width=width,
+                                                    height=height,
+                                                    multiline=multiline))
+
 
     class pisaTagSELECT(pisaTagINPUT):
 
@@ -487,7 +495,7 @@ if 0:
 
         def _render(self, c, attr):
             c.addStory(xhtml2pdf_reportlab.PmlInput(attr.name,
-                                                    type="select",
+                                                    input_type="select",
                                                     default=c.select_options[0],
                                                     options=c.select_options,
                                                     width=100,
