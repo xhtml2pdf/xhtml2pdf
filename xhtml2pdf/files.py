@@ -6,6 +6,7 @@ import mimetypes
 import re
 import sys
 import tempfile
+import threading
 import urllib.parse as urlparse
 from io import BytesIO
 from pathlib import Path
@@ -16,7 +17,6 @@ from xhtml2pdf.config.httpconfig import httpConfig
 
 GAE = "google.appengine" in sys.modules
 log = logging.getLogger("xhtml2pdf")
-files_tmp = []  # permanent safe file, to prevent file close
 if GAE:
     STRATEGIES = (
         BytesIO,
@@ -25,6 +25,22 @@ else:
     STRATEGIES = (
         BytesIO,
         tempfile.NamedTemporaryFile)
+
+
+class TmpFiles(threading.local):
+
+    files = []
+
+    def append(self, file):
+        self.files.append(file)
+
+    def cleanFiles(self):
+        for file in self.files:
+            file.close()
+        self.files.clear()
+
+
+files_tmp = TmpFiles()  # permanent safe file, to prevent file close
 
 
 class pisaTempFile(object):
@@ -409,11 +425,10 @@ class pisaFileObject:
     def getBytesIO(self):
         return self.instance.get_BytesIO()
 
+
 def getFile(*a, **kw):
     return pisaFileObject(*a, **kw)
 
 
 def cleanFiles():
-    for file in files_tmp:
-        file.close()
-    files_tmp.clear()
+    files_tmp.cleanFiles()
