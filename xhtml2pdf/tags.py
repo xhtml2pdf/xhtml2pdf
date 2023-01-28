@@ -285,7 +285,9 @@ class pisaTagUL(pisaTagP):
 
 
 class pisaTagOL(pisaTagUL):
-    pass
+    def start(self, c):
+        start = self.attr.start - 1 if self.attr.start else 0
+        self.counter, c.listCounter = c.listCounter, start
 
 
 class pisaTagLI(pisaTag):
