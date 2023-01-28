@@ -38,6 +38,7 @@ from .charts import DoughnutChart, PieChart, HorizontalLine, VerticalBar, Horizo
 from xhtml2pdf import xhtml2pdf_reportlab
 from xhtml2pdf.util import dpi96, getAlign, getColor, getSize
 from xhtml2pdf.xhtml2pdf_reportlab import PmlImage, PmlPageTemplate
+from .paragraph import PageNumberFlowable
 
 log = logging.getLogger("xhtml2pdf")
 
@@ -447,64 +448,61 @@ class pisaTagHR(pisaTag):
 
 # --- Forms
 
+class pisaTagINPUT(pisaTag):
 
-if 1:
+    def _render(self, c, attr):
+        width = 10
+        height = 10
+        if attr.type == "text":
+            width = 100
+            height = 12
+        c.addStory(xhtml2pdf_reportlab.PmlInput(attr.name,
+                                                input_type=attr.type,
+                                                default=attr.value,
+                                                width=width,
+                                                height=height,
+        ))
 
-    class pisaTagINPUT(pisaTag):
+    def end(self, c):
+        c.addPara()
+        attr = self.attr
+        if attr.name:
+            self._render(c, attr)
+        c.addPara()
 
-        def _render(self, c, attr):
-            width = 10
-            height = 10
-            if attr.type == "text":
-                width = 100
-                height = 12
-            c.addStory(xhtml2pdf_reportlab.PmlInput(attr.name,
-                                                    input_type=attr.type,
-                                                    default=attr.value,
-                                                    width=width,
-                                                    height=height,
-            ))
+class pisaTagTEXTAREA(pisaTagINPUT):
+    #
+    def _render(self, c, attr):
+        multiline = 1 if int(attr.rows) > 1 else 0
+        height = int(attr.rows) * 15
+        width = int(attr.cols) * 5
 
-        def end(self, c):
-            c.addPara()
-            attr = self.attr
-            if attr.name:
-                self._render(c, attr)
-            c.addPara()
-
-    class pisaTagTEXTAREA(pisaTagINPUT):
-        #
-        def _render(self, c, attr):
-            multiline = 1 if int(attr.rows) > 1 else 0
-            height = int(attr.rows) * 15
-            width = int(attr.cols) * 5
-
-            # this does not currently support the ability to pre-populate the text field with data that appeared within the <textarea></textarea> tags
-            c.addStory(xhtml2pdf_reportlab.PmlInput(attr.name,
-                                                    input_type="text",
-                                                    default="",
-                                                    width=width,
-                                                    height=height,
-                                                    multiline=multiline))
+        # this does not currently support the ability to pre-populate the text field with data that appeared within the <textarea></textarea> tags
+        c.addStory(xhtml2pdf_reportlab.PmlInput(attr.name,
+                                                input_type="text",
+                                                default="",
+                                                width=width,
+                                                height=height,
+                                                multiline=multiline))
 
 
-    class pisaTagSELECT(pisaTagINPUT):
+class pisaTagSELECT(pisaTagINPUT):
 
-        def start(self, c):
-            c.select_options = ["One", "Two", "Three"]
+    def start(self, c):
+        c.select_options = ["One", "Two", "Three"]
 
-        def _render(self, c, attr):
-            c.addStory(xhtml2pdf_reportlab.PmlInput(attr.name,
-                                                    input_type="select",
-                                                    default=c.select_options[0],
-                                                    options=c.select_options,
-                                                    width=100,
-                                                    height=40))
-            c.select_options = None
+    def _render(self, c, attr):
+        c.addStory(xhtml2pdf_reportlab.PmlInput(attr.name,
+                                                input_type="select",
+                                                default=c.select_options[0],
+                                                options=c.select_options,
+                                                width=100,
+                                                height=40))
+        c.select_options = None
 
-    class pisaTagOPTION(pisaTag):
+class pisaTagOPTION(pisaTag):
 
-        pass
+    pass
 
 
 class pisaTagPDFNEXTPAGE(pisaTag):
@@ -548,16 +546,19 @@ class pisaTagPDFSPACER(pisaTag):
         c.addStory(Spacer(1, self.attr.height))
 
 
+
 class pisaTagPDFPAGENUMBER(pisaTag):
     """
     <pdf:pagenumber example="" />
     """
 
     def start(self, c):
+        flow = PageNumberFlowable()
+        pn=c.addPageNumber(flow)
+        c.addStory(flow)
         c.frag.pageNumber = True
-        c.addFrag(self.attr.example)
+        c.addFrag(pn)
         c.frag.pageNumber = False
-
 
 class pisaTagPDFPAGECOUNT(pisaTag):
     """
@@ -565,8 +566,11 @@ class pisaTagPDFPAGECOUNT(pisaTag):
     """
 
     def start(self, c):
+        flow = PageNumberFlowable()
+        pc = c.getPageCount(flow)
+        c.addStory(flow)
         c.frag.pageCount = True
-        c.addFrag()
+        c.addFrag(pc)
         c.frag.pageCount = False
 
     def end(self, c):

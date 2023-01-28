@@ -569,3 +569,14 @@ class Paragraph(Flowable):
                         canvas.linkRect("", scheme != 'document' and link or parts[1], rect, relative=1)
 
         canvas.restoreState()
+
+
+class PageNumberFlowable(Flowable):
+    def __init__(self):
+        Flowable.__init__(self)
+        self.page=None
+        self.pagecount=None
+
+    def draw(self):
+        self.page = str(self.canv._doctemplate.page)
+        self.pagecount = str(self.canv._doctemplate._page_count)

@@ -387,6 +387,45 @@ class pisaCSSParser(css.CSSParser):
         return result
 
 
+class PageNumberText:
+    def __init__(self, *args, **kwargs):
+        self.data = ''
+
+    def __contains__(self, key):
+        if self.flowable.page is not None:
+            self.data = str(self.flowable.page)
+        return False
+
+    def split(self, text):
+        return [self.data]
+
+    def __getitem__(self, index):
+        return self.data[index]
+
+    def setFlowable(self, flowable):
+        self.flowable=flowable
+
+
+class PageCountText:
+    def __init__(self, *args, **kwargs):
+        self.data = ''
+
+    def __contains__(self, key):
+        if self.flowable.pagecount is not None:
+            self.data = str(self.flowable.pagecount)
+        return False
+
+    def split(self, text):
+        return [self.data]
+
+    def __getitem__(self, index):
+        if not self.data:
+            return self.data
+        return self.data[index]
+
+    def setFlowable(self, flowable):
+        self.flowable = flowable
+
 class pisaContext(object):
     """
     Helper class for creation of reportlab story and container for
@@ -560,6 +599,16 @@ class pisaContext(object):
             self.indexing_story = PmlPageCount()
             self.multiBuild = True
 
+    def getPageCount(self, flow):
+        pc=PageCountText()
+        pc.setFlowable(flow)
+        return pc
+
+    def addPageNumber(self, flow):
+        pgnumber = PageNumberText()
+        pgnumber.setFlowable(flow)
+        return pgnumber
+
     def dumpPara(self, frags, style):
         return
 
@@ -688,6 +737,11 @@ class pisaContext(object):
        # bold, italic, and underline
         frag.fontName = frag.bulletFontName = tt2ps(
             frag.fontName, frag.bold, frag.italic)
+        if isinstance(text, (PageNumberText, PageCountText)):
+            frag.text = text
+            #self.text += frag.text
+            self._appendFrag(frag)
+            return
 
         # Replace &shy; with empty and normalize NBSP
         text = (text
@@ -719,6 +773,7 @@ class pisaContext(object):
                         frag.text = text
                         self._appendFrag(frag)
         else:
+
             for text in re.split(u'(' + NBSP + u')', text):
                 frag = baseFrag.clone()
                 if text == NBSP:

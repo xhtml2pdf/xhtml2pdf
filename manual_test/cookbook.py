@@ -27,6 +27,7 @@ documents using it? The "pisa" project http://www.htmltopdf.org enables you to t
 import six
 
 from xhtml2pdf import pisa
+from faker import Faker
 
 # Shortcut for dumping all logs to the screen
 pisa.showLogging()
@@ -51,7 +52,25 @@ def html2pdf(data, filename, open_file=False):
 
 if __name__ == "__main__":
     HTMLTEST = """
-    <html><body>
+    <html>
+    <style>
+    @page {
+        size: a4 portrait;
+        @frame header_frame {           /* Static Frame */
+            -pdf-frame-content: header_content;
+            left: 50pt; width: 512pt; top: 50pt; height: 40pt;
+        }
+        @frame content_frame {          /* Content Frame */
+            left: 50pt; width: 512pt; top: 90pt; height: 632pt;
+        }
+        @frame footer_frame {           /* Another static Frame */
+            -pdf-frame-content: footer_content;
+            left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+        }
+
+    }
+    </style>
+    <body>
     <p>Hello <strong style="color: #f00;">World</strong>
     <hr>
     <table border="1" style="background: #eee; padding: 0.5em;">
@@ -69,8 +88,22 @@ if __name__ == "__main__":
             <td colspan="2" align="right">Sum</td>
             <td>0 EUR</td>
         </tr>
-    </table>
-    </body></html>
+    </table> 
+    %s
+   
+    <div id="header_content">Lyrics-R-Us</div>
+    <div id="footer_content">(c) - page <pdf:pagenumber>
+        of <pdf:pagecount>
+    </div>
+     </body>
+    </html>
     """
 
-    html2pdf(HTMLTEST, "test.pdf", open_file=False)
+
+
+    fake = Faker()
+    html  = HTMLTEST%(
+        "<br>".join(["<p>%s  <span style=\"color: #f00;\"><pdf:pagenumber> of <pdf:pagecount> </span></p>"%fake.text() for x in range(1000)])
+
+    )
+    html2pdf(html, "test.pdf", open_file=False)
