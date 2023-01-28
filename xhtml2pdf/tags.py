@@ -73,6 +73,8 @@ class pisaTagBODY(pisaTag):
 
     def start(self, c):
         c.baseFontSize = c.frag.fontSize
+        if 'dir' in self.attr and self.attr['dir']:
+            c.setDir(self.attr['dir'])
         # print("base font size", c.baseFontSize)
 
 
@@ -157,6 +159,8 @@ class pisaTagP(pisaTag):
         # save the type of tag; it's used in PmlBaseDoc.afterFlowable()
         # to check if we need to add an outline-entry
         # c.frag.tag = self.tag
+        if 'dir' in self.attr and self.attr['dir']:
+            c.setDir(self.attr['dir'])
         if self.attr.align is not None:
             c.frag.alignment = getAlign(self.attr.align)
 

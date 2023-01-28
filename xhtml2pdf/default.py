@@ -318,12 +318,17 @@ TAGS = {
 
     "div": (1, {
         "align": ["left", "center", "right", "justify"],
+        "dir": ["ltr", "rtl"]
     }),
 
     "p": (1, {
         "align": ["left", "center", "right", "justify"],
+        "dir": ["ltr", "rtl"]
     }),
 
+    "body": (1, {
+        "dir": ["ltr", "rtl"]
+    }),
     "br": (0, {
     }),
 

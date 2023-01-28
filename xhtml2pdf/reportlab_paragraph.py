@@ -72,6 +72,11 @@ def strip(text):
         text = text.decode('utf8')
     return text.strip().encode('utf8')
 
+def reverse_sentence(sentence):
+    words = str(sentence).split(' ')
+    reverse_sentence = ' '.join(reversed(words))
+    reverse_sentence = reverse_sentence[::-1]
+    return reverse_sentence
 
 class ParaLines(ABag):
     """
@@ -951,7 +956,9 @@ class Paragraph(Flowable):
 
         It will also be able to handle any MathML specified Greek characters.
     """
-    def __init__(self, text, style, bulletText=None, frags=None, caseSensitive=1, encoding='utf8'):
+    def __init__(self, text, style, bulletText=None, frags=None, caseSensitive=1,
+        encoding='utf8', dir='ltr'):
+        self.dir = dir
         self.caseSensitive = caseSensitive
         self.encoding = encoding
         self._setup(text, style, bulletText, frags, cleanBlockQuotedText)
@@ -1010,9 +1017,6 @@ class Paragraph(Flowable):
             blPara = self.breakLinesCJK([first_line_width, later_widths])
         else:
             blPara = self.breakLines([first_line_width, later_widths])
-            if hasattr(self, 'rtl'):
-                if self.rtl:
-                    blPara.lines = blPara.lines[::-1]
         self.blPara = blPara
         autoLeading = getattr(self, 'autoLeading', getattr(style, 'autoLeading', ''))
         leading = style.leading
@@ -1242,8 +1246,13 @@ class Paragraph(Flowable):
                 return self.blPara
             n = 0
             words = []
-            for w in _getFragWords(frags):
+            frag_words = _getFragWords(frags)
+            if self.dir == 'rtl':
+                frag_words.reverse()
+            for w in frag_words:
                 f = w[-1][0]
+                if self.dir == 'rtl':
+                    f.text=reverse_sentence(f.text)
                 fontName = f.fontName
                 fontSize = f.fontSize
                 spaceWidth = stringWidth(' ', fontName, fontSize)

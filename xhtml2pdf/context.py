@@ -33,6 +33,7 @@ from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
 import xhtml2pdf.default
 import xhtml2pdf.parser
 from xhtml2pdf.files import  getFile, pisaFileObject
+from xhtml2pdf.reportlab_paragraph import reverse_sentence
 from xhtml2pdf.util import (arabic_format, copy_attrs, frag_text_language_check, getColor, getCoords,
                             getFrameDimensions, getSize, set_asian_fonts, set_value, getFloat)
 from xhtml2pdf.w3c import css
@@ -405,10 +406,15 @@ class PageNumberText:
     def setFlowable(self, flowable):
         self.flowable=flowable
 
+    def __str__(self):
+        return self.data
 
 class PageCountText:
     def __init__(self, *args, **kwargs):
         self.data = ''
+
+    def __str__(self):
+        return self.data
 
     def __contains__(self, key):
         if self.flowable.pagecount is not None:
@@ -458,6 +464,7 @@ class pisaContext(object):
             ParagraphStyle('default%d' % self.UID()))
         self.fragStrip = True
         self.force = False
+        self.dir = 'ltr'
 
         # External callback function for path calculations
         self.pathCallback = None
@@ -476,6 +483,11 @@ class pisaContext(object):
             keywords="",
             pagesize=A4,
         )
+
+    def setDir(self, dir):
+        if dir == 'rtl':
+            self.frag.rtl=True
+        self.dir=dir
 
     def UID(self):
         self.uidctr += 1
@@ -663,21 +675,21 @@ class pisaContext(object):
                     language = self.__getattribute__('language')
                     detect_language_result = arabic_format(self.text, language)
                     if detect_language_result != None:
-                        if self.text != detect_language_result:
-                            first.rtl = True
                         self.text = detect_language_result
+
                 para = PmlParagraph(
                     self.text,
                     style,
                     frags=self.fragAnchor + self.fragList,
-                    bulletText=bulletText)
+                    bulletText=bulletText,
+                    dir=self.dir
+                )
 
                 para.outline = first.outline
                 para.outlineLevel = first.outlineLevel
                 para.outlineOpen = first.outlineOpen
                 para.keepWithNext = first.keepWithNext
                 para.autoLeading = "max"
-                para.rtl = first.rtl
 
                 if self.image:
                     para = PmlParagraphAndImage(

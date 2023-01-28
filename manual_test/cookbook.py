@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
     }
     </style>
-    <body>
+    <body dir="rtl">
     <p>Hello <strong style="color: #f00;">World</strong>
     <hr>
     <table border="1" style="background: #eee; padding: 0.5em;">
@@ -89,6 +89,8 @@ if __name__ == "__main__":
             <td>0 EUR</td>
         </tr>
     </table> 
+    <pdf:language name="arabic"/>
+    <p dir="rtl">Esto es un texto al revez</p>
     %s
    
     <div id="header_content">Lyrics-R-Us</div>
@@ -103,7 +105,7 @@ if __name__ == "__main__":
 
     fake = Faker()
     html  = HTMLTEST%(
-        "<br>".join(["<p>%s  <span style=\"color: #f00;\"><pdf:pagenumber> of <pdf:pagecount> </span></p>"%fake.text() for x in range(1000)])
+        "<br>".join(["<p>%s  <span style=\"color: #f00;\"><pdf:pagenumber> of <pdf:pagecount> </span></p>"%fake.text() for x in range(10)])
 
     )
     html2pdf(html, "test.pdf", open_file=False)
