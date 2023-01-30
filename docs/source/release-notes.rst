@@ -51,6 +51,32 @@ Versions >= 0.2
     --------------------------------------------
 
 
+0.2.9
+====================
+
+Released: 2023-01-30
+
+**Important notes**
+
+* Text RTL has new implementation but I am not sure if works as required, more works need so use it, for text and let me know if it's works.
+
+**🎉 New**
+
+* OL tag allow start counter
+* Div, P, And Body allows dir attribute (rtl and ltr) to provide text direction
+
+**💪🏼 Improvements**
+
+* Page counter and Page number are now available as simple text inside paragraphs
+* New regex for strip up to curly bracket
+* Change pyPDF3 to pypdf.
+
+| Thanks to the following people on GitHub for contributing to this release:
+| *BergLucas*, *matllubos*, *timoludwig*, *MartinThoma*, *charludo*, *jorenham*
+
+--------------------------------------------
+
+
 0.2.8
 ====================
 
