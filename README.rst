@@ -158,7 +158,7 @@ These are the major milestones and the maintainers of the project:
 * 2016-2018 Sam Spencer (@LegoStormtroopr)
 * 2018-Current Luis Zarate (@luisza) 
 
-For more history, see the ``CHANGELOG.txt`` file.
+For more history, see the `Release Notes <https://xhtml2pdf.readthedocs.io/en/latest/release-notes.html>`__.
 
 License
 =======
