@@ -89,12 +89,22 @@ if __name__ == "__main__":
             <td>0 EUR</td>
         </tr>
     </table> 
-    <pdf:language name="arabic"/>
+    
+    <p> Esto es un texto al revez</p>
     <p dir="rtl">Esto es un texto al revez</p>
+     <p>
+أشار إنفرسيني ، في تصريحات نُشرت يوم الأحد على الموقع الإلكتروني لصحيفة Il Post ، إلى حقيقة أن سفينة Geo Barents ، التي تديرها منظمة أطباء بلا حدود الإنسانية (MSF) ، نفذت عمليتي إنقاذ في وسط البحر الأبيض المتوسط ​​دون الحاجة إلى تفويض من الحكومة الإيطالية.
+ </p> 
+    
+    
+    
+    
+    
+    <a name="anchorpoint">abc</a>
     %s
    
-    <div id="header_content">Lyrics-R-Us</div>
-    <div id="footer_content">(c) - page <pdf:pagenumber>
+    <div id="header_content" >Lyrics-R-Us</div>
+    <div id="footer_content" >(c) - page <pdf:pagenumber>
         of <pdf:pagecount>
     </div>
      </body>
@@ -105,7 +115,7 @@ if __name__ == "__main__":
 
     fake = Faker()
     html  = HTMLTEST%(
-        "<br>".join(["<p>%s  <span style=\"color: #f00;\"><pdf:pagenumber> of <pdf:pagecount> </span></p>"%fake.text() for x in range(10)])
+        "<br>".join(["<p>%s  <span style=\"color: #f00;\"><pdf:pagenumber> of <pdf:pagecount> </span></p>"%fake.text() for x in range(1)])
 
     )
     html2pdf(html, "test.pdf", open_file=False)

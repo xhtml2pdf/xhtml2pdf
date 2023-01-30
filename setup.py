@@ -36,7 +36,7 @@ setup(
     install_requires=["html5lib>=1.0.1", "pypdf>=3.0.0", "Pillow>=8.1.1",
                       "reportlab>=3.5.53", "svglib>=1.2.1",
                       "python-bidi>=0.4.2", "arabic-reshaper>=3.0.0",
-                      "pyHanko>=0.12.1", "ypdf>=3.1.0",
+                      "pyHanko>=0.12.1", "pypdf>=3.1.0",
                       "pyhanko-certvalidator>=0.19.5"],
     include_package_data=True,
     packages=find_packages(exclude=["tests", "tests.*", "manual_test", "manual_test.*"]),

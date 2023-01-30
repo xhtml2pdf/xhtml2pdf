@@ -72,11 +72,6 @@ def strip(text):
         text = text.decode('utf8')
     return text.strip().encode('utf8')
 
-def reverse_sentence(sentence):
-    words = str(sentence).split(' ')
-    reverse_sentence = ' '.join(reversed(words))
-    reverse_sentence = reverse_sentence[::-1]
-    return reverse_sentence
 
 class ParaLines(ABag):
     """
@@ -427,8 +422,13 @@ def _sameFrag(f, g):
         if getattr(f, a, None) != getattr(g, a, None): return 0
     return 1
 
+def reverse_sentence(sentence):
+    words = str(sentence).split(' ')
+    reverse_sentence = ' '.join(reversed(words))
+    reverse_sentence = reverse_sentence[::-1]
+    return reverse_sentence
 
-def _getFragWords(frags):
+def _getFragWords(frags, reverse=False):
     """
     given a Parafrag list return a list of fragwords
         [[size, (f00,w00), ..., (f0n,w0n)],....,[size, (fm0,wm0), ..., (f0n,wmn)]]
@@ -443,13 +443,17 @@ def _getFragWords(frags):
         text = f.text
         if type(text) is bytes:
             text = text.decode('utf8')
+        if reverse:
+            text=reverse_sentence(text)
+
         # of paragraphs
         if text != '':
             if hangingStrip:
                 hangingStrip = False
                 text = text.lstrip()
-
             S = split(text)
+            if reverse:
+                S.reverse()
             if S == []:
                 S = ['']
             if W != [] and text[0] in whitespace:
@@ -1246,13 +1250,11 @@ class Paragraph(Flowable):
                 return self.blPara
             n = 0
             words = []
-            frag_words = _getFragWords(frags)
+            frag_words = _getFragWords(frags, reverse=self.dir == 'rtl')
             if self.dir == 'rtl':
                 frag_words.reverse()
             for w in frag_words:
                 f = w[-1][0]
-                if self.dir == 'rtl':
-                    f.text=reverse_sentence(f.text)
                 fontName = f.fontName
                 fontSize = f.fontSize
                 spaceWidth = stringWidth(' ', fontName, fontSize)

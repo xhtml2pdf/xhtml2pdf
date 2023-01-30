@@ -33,7 +33,6 @@ from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
 import xhtml2pdf.default
 import xhtml2pdf.parser
 from xhtml2pdf.files import  getFile, pisaFileObject
-from xhtml2pdf.reportlab_paragraph import reverse_sentence
 from xhtml2pdf.util import (arabic_format, copy_attrs, frag_text_language_check, getColor, getCoords,
                             getFrameDimensions, getSize, set_asian_fonts, set_value, getFloat)
 from xhtml2pdf.w3c import css
@@ -401,6 +400,8 @@ class PageNumberText:
         return [self.data]
 
     def __getitem__(self, index):
+        if not self.data:
+            return self.data
         return self.data[index]
 
     def setFlowable(self, flowable):
@@ -431,6 +432,12 @@ class PageCountText:
 
     def setFlowable(self, flowable):
         self.flowable = flowable
+
+def reverse_sentence(sentence):
+    words = str(sentence).split(' ')
+    reverse_sentence = ' '.join(reversed(words))
+    reverse_sentence = reverse_sentence[::-1]
+    return reverse_sentence
 
 class pisaContext(object):
     """
@@ -643,7 +650,6 @@ class pisaContext(object):
             frag.leading = leading
 
         if force or (self.text.strip() and self.fragList):
-
             # Update paragraph style by style of first fragment
             first = self.fragBlock
             style = self.toParagraphStyle(first)
