@@ -1,17 +1,26 @@
-# Security Policy
+# Security
 
-## Supported Versions
+## Reporting Potential Security Issues
 
-This project have a low maintainece so at this moment only the last release has security support.
+If you have encountered a potential security vulnerability in this project,
+please report it to us at *luisza {at} gmail.com*. We will work with you to
+verify the vulnerability and patch it.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 0.2.4   | :white_check_mark: |
+When reporting issues, please provide the following information:
 
+- Component(s) affected
+- A description indicating how to reproduce the issue
+- A summary of the security vulnerability and impact
 
-## Reporting a Vulnerability
+We request that you contact us via the email address above and give the
+project contributors a chance to resolve the vulnerability and issue a new
+release prior to any public exposure; this helps protect the project's
+users, and provides them with a chance to upgrade and/or update in order to
+protect their applications.
 
-We will improve this in the future, but if you found a security issue, please contact to @luisza, or email to luisza {at} gmail.com.
-I will try to answer as fast i can, I will clasify your report by severity and potencial damage it could generate.
-I answer slow but if the severity is hight I will contact you soon.
+## Policy
 
+If we verify a reported security vulnerability, our policy is:
+
+- We will patch the default branch and issue a new security fix release.
+- We will *not* provide backports for older versions.
