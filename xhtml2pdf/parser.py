@@ -72,6 +72,7 @@ from xhtml2pdf.tags import (pisaTagIMG,
                             pisaTagUL,
                             pisaTagINPUT,
                             pisaTagTEXTAREA,
+                            pisaTagCANVAS,
                             # pisaTagSELECT,
                             # pisaTagOPTION
                             )
