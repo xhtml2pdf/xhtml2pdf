@@ -50,6 +50,24 @@ Versions >= 0.2
 
     --------------------------------------------
 
+0.2.10
+======
+
+Released: 2023-04-20
+
+**🐛 Bug-Fixes**
+
+* Fix canvas graph issue :issue:´614´ in :pr:´619´
+
+**🧹 Cleanup**
+
+* Remove duplicate pypdf entry from `setup.py` in :pr:´619´
+
+| Thanks to the following people on GitHub for contributing to this release:
+| *brandonlake-semaphore*, *sunpoet*
+
+--------------------------------------------
+
 
 0.2.9
 ====================
