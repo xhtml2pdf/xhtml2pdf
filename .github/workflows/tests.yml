@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
     env:
       PYTHON_VERSION: ${{matrix.python-version}}
     steps:
@@ -21,13 +21,13 @@ jobs:
           sudo sed -i 's#<policy domain="coder" rights="none" pattern="PDF" />#<policy domain="coder" rights="read|write" pattern="PDF" />#' /etc/ImageMagick-6/policy.xml
           python -m pip install --upgrade pip
           python -m pip install tox
-          
-      - name: run 
+
+      - name: run
         run: pip install -r requirements.txt
-           
-      - name: run 
+
+      - name: run
         run: make test-ref
-           
+
       - name: Test with tox
         run: tox
         env:
