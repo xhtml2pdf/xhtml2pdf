@@ -41,7 +41,7 @@ setup(
         "pyhanko-certvalidator>=0.19.5",
         "pypdf>=3.1.0",
         "python-bidi>=0.4.2",
-        "reportlab>=3.5.53",
+        "  >=3.5.53,<4.0",
         "svglib>=1.2.1",
     ],
     include_package_data=True,
