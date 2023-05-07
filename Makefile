@@ -49,6 +49,8 @@ docs:
 	sphinx-build -b html ./docs/source _build/
 
 release: clean
+	git tag -a "v`python setup.py --version`" -m "Bump version `python setup.py --version`"
+	git push origin "v`python setup.py --version`"
 	python setup.py sdist --formats tar bdist_wheel 
 	twine upload -s dist/*
 
