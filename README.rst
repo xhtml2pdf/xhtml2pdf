@@ -56,14 +56,14 @@ Requirements
 
 Only Python 3.7+ is tested and guaranteed to work.
 
-All additional requirements are listed in the ``requirements.txt`` file and are installed automatically using the ``pip install xhtml2pdf`` method.
+All additional requirements are listed in the ``pyproject.toml`` file and are installed automatically using the ``pip install .`` method.
 
 As PDF library we depend on reportlab, which has optional C-extensions for performance optimizations.
 For more information about how to install them, have a look at the `reportlab docs <https://docs.reportlab.com/install/open_source_installation/>`__.
 
 
 Alternatives
-==============================
+============
 
 You can try `WeasyPrint <http://weasyprint.org>`__. The codebase is pretty, it has different features and it does a lot of what xhtml2pdf does.
 
@@ -85,33 +85,31 @@ Development environment
 
    For more information about ``pip`` refer to http://www.pip-installer.org
 
-#. We will recommend using ``virtualenv`` for development.
+#. We will recommend using ``venv`` for development.
 
-#. Create a virtualenv for the project. This can be inside the project directory, but cannot be under version control::
+#. Create a virtual environment for the project. This can be inside the project directory, but cannot be under version control::
 
-    python -m venv xhtml2pdfenv
+    python -m venv .venv
 
-#. Activate your virtualenv::
+#. Activate your virtual environment::
 
-    source xhtml2pdfenv/bin/activate
+    source .venv/bin/activate
 
    Later to deactivate it use::
 
     deactivate
 
-#. The next step will be to install/upgrade dependencies from the ``requirements.txt`` file::
+#. The next step will be to install/upgrade dependencies from the ``pyproject.toml`` file::
 
-    pip install -r requirements.txt
+    pip install -e .[test,docs,build]
 
 #. Run tests to check your configuration::
 
-    nosetests --with-coverage
+    tox
 
    You should have a log with the following success status::
 
-    Ran 167 tests in 34.585s
-
-    OK
+    congratulations :) (75.67 seconds)
 
 
 Python integration
@@ -129,7 +127,7 @@ Two different test suites are available to assert that xhtml2pdf works reliably:
    improved on a regular basis (contributions welcome). They should run in the
    expected way for Python's unittest module, i.e.::
 
-        nosetests --with-coverage (or your personal favorite)
+        tox
 
 #. Functional tests. Thanks to mawe42's super cool work, a full functional
    test suite is available at ``testrender/``.
@@ -138,7 +136,7 @@ You can run them using make
 
 .. code:: bash
 
-        make test       # run nosetest
+        make test       # run tests
         make test-ref   # generate reference data for testrender
         make test-all   # Run all test using tox
 

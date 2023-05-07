@@ -20,10 +20,7 @@ jobs:
           sudo apt-get install --yes ghostscript imagemagick
           sudo sed -i 's#<policy domain="coder" rights="none" pattern="PDF" />#<policy domain="coder" rights="read|write" pattern="PDF" />#' /etc/ImageMagick-6/policy.xml
           python -m pip install --upgrade pip
-          python -m pip install tox
-
-      - name: run
-        run: pip install -r requirements.txt
+          python -m pip install .[test]
 
       - name: run
         run: make test-ref

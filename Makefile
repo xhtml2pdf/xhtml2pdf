@@ -30,7 +30,7 @@ lint:
 	pep8 xhtml2pdf
 
 test:
-	python setup.py nosetests
+	coverage run -m unittest discover tests
 
 test-render:
 	cd testrender && python testrender.py --only-errors
@@ -49,11 +49,11 @@ docs:
 	sphinx-build -b html ./docs/source _build/
 
 release: clean
-	git tag -a "v`python setup.py --version`" -m "Bump version `python setup.py --version`"
-	git push origin "v`python setup.py --version`"
-	python setup.py sdist 
+	git tag -a "v`xhtml2pdf --version`" -m "Bump version `xhtml2pdf --version`"
+	git push origin "v`xhtml2pdf --version`"
+	python -m build --sdist
 	twine upload -s dist/*
 
 sdist: clean
-	python setup.py sdist
+	python -m build --sdist
 	ls -l dist
