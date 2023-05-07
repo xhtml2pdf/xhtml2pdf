@@ -2,30 +2,6 @@ build: false
 image: Visual Studio 2022
 environment:
   matrix:
-      - PYTHON_HOME: "C:/Python36"
-        PYTHON_VERSION: 3.6
-        RL: 330
-      - PYTHON_HOME: "C:/Python36"
-        PYTHON_VERSION: 3.6
-        RL: 340
-      - PYTHON_HOME: "C:/Python36"
-        PYTHON_VERSION: 3.6
-        RL: 350
-      - PYTHON_HOME: "C:/Python36"
-        PYTHON_VERSION: 3.6
-        RL: 3510
-      - PYTHON_HOME: "C:/Python36"
-        PYTHON_VERSION: 3.6
-        RL: 3530
-      - PYTHON_HOME: "C:/Python36"
-        PYTHON_VERSION: 3.6
-        RL: 3550
-      - PYTHON_HOME: "C:/Python36"
-        PYTHON_VERSION: 3.6
-        RL: 360
-      - PYTHON_HOME: "C:/Python36"
-        PYTHON_VERSION: 3.6
-        RL: 365
 
       - PYTHON_HOME: "C:/Python37"
         PYTHON_VERSION: 3.7
@@ -98,6 +74,31 @@ environment:
         RL: 360
       - PYTHON_HOME: "C:/Python310"
         PYTHON_VERSION: 3.10
+        RL: 365
+
+      - PYTHON_HOME: "C:/Python311"
+        PYTHON_VERSION: 3.11
+        RL: 330
+      - PYTHON_HOME: "C:/Python311"
+        PYTHON_VERSION: 3.11
+        RL: 340
+      - PYTHON_HOME: "C:/Python311"
+        PYTHON_VERSION: 3.11
+        RL: 350
+      - PYTHON_HOME: "C:/Python311"
+        PYTHON_VERSION: 3.11
+        RL: 3510
+      - PYTHON_HOME: "C:/Python311"
+        PYTHON_VERSION: 3.11
+        RL: 3530
+      - PYTHON_HOME: "C:/Python311"
+        PYTHON_VERSION: 3.11
+        RL: 3550
+      - PYTHON_HOME: "C:/Python311"
+        PYTHON_VERSION: 3.11
+        RL: 360
+      - PYTHON_HOME: "C:/Python311"
+        PYTHON_VERSION: 3.11
         RL: 365
 
 install:
