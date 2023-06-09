@@ -669,7 +669,8 @@ class pisaContext(object):
                 # We need this empty fragment to work around problems in
                 # Reportlab paragraphs regarding backGround etc.
                 if self.fragList:
-                    self.fragList.append(self.fragList[- 1].clone(text=''))
+                    # Reset not only text but also page#, otherwise you might end up with duplicate rendered page#s
+                    self.fragList.append(self.fragList[-1].clone(text='', pageNumber=False, pageCount=False))
                 else:
                     blank = self.frag.clone()
                     blank.fontName = "Helvetica"
