@@ -383,7 +383,7 @@ class pisaCSSParser(css.CSSParser):
             result = self.parse(cssFile.getData())
             self.rootPath = oldRootPath
         except Exception as e:
-            log.error(e)
+            log.exception(e)
         return result
 
 
