@@ -308,7 +308,7 @@ large 5cm margins and regular pages with regular 2cm margins.
     <html>
     <head>
     <style>
-        @page title_template { margin: 5cm; }
+        @page { margin: 5cm; }
         @page regular_template { margin: 2cm; }
     </style>
     </head>
