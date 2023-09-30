@@ -24,7 +24,7 @@ HTML/CSS to PDF converter
 Most people know how to write a page with HTML and CSS. Why not using these skills to dynamically generate PDF
 documents using it? The "pisa" project http://www.htmltopdf.org enables you to to this quite simple.
 """
-import six
+import io
 
 from xhtml2pdf import pisa
 from faker import Faker
@@ -42,7 +42,7 @@ def html2pdf(data, filename, open_file=False):
     """
 
     pdf = pisa.CreatePDF(
-        six.StringIO(data),
+        io.StringIO(data),
         open(filename, "wb"))
 
     if open_file and (not pdf.err):

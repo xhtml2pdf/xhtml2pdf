@@ -13,11 +13,6 @@ from reportlab.lib.pagesizes import landscape
 import xhtml2pdf.default
 from xhtml2pdf.util import getSize
 
-try:
-    from future_builtins import filter
-except ImportError:
-    pass
-
 """CSS-2.1 parser.
 
 The CSS 2.1 Specification this parser was derived from can be found at http://www.w3.org/TR/CSS21/

@@ -6,7 +6,6 @@ Created on 22/11/2016
 
 @author: luisza
 '''
-from __future__ import unicode_literals
 from django.test import TestCase, RequestFactory
 try:  # python2 and python3
     from .utils import extract_request_variables
