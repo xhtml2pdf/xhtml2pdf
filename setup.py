@@ -35,7 +35,7 @@ setup(
     keywords="PDF, HTML, XHTML, XML, CSS",
     install_requires=[
         "arabic-reshaper>=3.0.0",
-        "html5lib>=1.0.1",
+        "html5lib>=1.1",
         "Pillow>=8.1.1",
         "pyHanko>=0.12.1",
         "pyhanko-certvalidator>=0.19.5",
