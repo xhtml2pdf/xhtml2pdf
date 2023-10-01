@@ -44,8 +44,10 @@ extensions = [
 
 
 # Shortening external links. Here: issue & PR tracker of GitHub
-extlinks = {'issue': ('https://github.com/xhtml2pdf/xhtml2pdf/issues/%s', '#'),
-            'pr': ('https://github.com/xhtml2pdf/xhtml2pdf/pull/%s', '#')}
+extlinks = {
+    'issue': ('https://github.com/xhtml2pdf/xhtml2pdf/issues/%s', '#%s'),
+    'pr': ('https://github.com/xhtml2pdf/xhtml2pdf/pull/%s', '#%s')
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -82,7 +84,7 @@ release = '0.2.7'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -442,6 +444,8 @@ epub_exclude_files = ['search.html']
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/', None),
+}
 import build_samples as bs
 bs.build_resources()
