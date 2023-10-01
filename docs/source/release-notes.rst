@@ -67,6 +67,7 @@ Unreleased
 * Change print statement to log.exception (:pr:`700`)
 * Remove Python2 compatibility (:pr:`706`)
 * Depend on ``html5lib >= 1.1`` (:issue:`705`) (:pr:`709`)
+* Depend on ``reportlab >= 4.0.4`` (:issue:`699`) (:pr:`708`)
 
 | Thanks to the following people on GitHub for contributing to this release:
 | *JanEgner*, *lucasgadams*, *a-detiste*, *holtwick*, *stefan6419846*, *timobrembeck*
