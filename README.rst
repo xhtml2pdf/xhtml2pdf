@@ -150,8 +150,8 @@ History
 
 These are the major milestones and the maintainers of the project:
 
-* 2000-2007, commercial project, spirito.de, written by Dirk Holtwich
-* 2007-2010 Dirk Holtwich (project named "Pisa", project released as GPL)
+* 2000-2007 Dirk Holtwick (commercial project of spirito.de)
+* 2007-2010 Dirk Holtwick (project named "pisa", project released as GPL)
 * 2010-2012 Dirk Holtwick (project named "xhtml2pdf", changed license to Apache)
 * 2012-2015 Chris Glass (@chrisglass)
 * 2015-2016 Benjamin Bach (@benjaoming)
