@@ -50,6 +50,29 @@ Versions >= 0.2
 
     --------------------------------------------
 
+Unreleased
+====================
+
+**🐛 Bug-Fixes**
+
+* Fix page number & page count (:issue:`106`) (:pr:`695`)
+
+**📘 Documentation**
+
+* Update README (:pr:`707`)
+* Modernize Sphinx configuration (:pr:`711`)
+
+**🧹 Cleanup**
+
+* Change print statement to log.exception (:pr:`700`)
+* Remove Python2 compatibility (:pr:`706`)
+
+| Thanks to the following people on GitHub for contributing to this release:
+| *JanEgner*, *lucasgadams*, *a-detiste*, *holtwick*, *stefan6419846*
+
+--------------------------------------------
+
+
 0.2.11
 =======
 
