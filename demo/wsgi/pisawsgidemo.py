@@ -66,5 +66,5 @@ if __name__ == '__main__':
     app = wsgi.PisaMiddleware(app)
 
     httpd = make_server(HOST, PORT, app)
-    print "Serving HTTP on port %d..." % PORT
+    print(f"Serving HTTP on port {PORT}...")
     httpd.serve_forever()

@@ -64,8 +64,8 @@ class myLinkLoader:
                 tmpFile.close()
             self.tmpFileList.append(tmpPath)
             return tmpPath
-        except Exception, e:
-            log.exception("myLinkLoader.getFileName")
+        except Exception as e:
+            log.exception(e)
         return None
 
 def helloWorld():

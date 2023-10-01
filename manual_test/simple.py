@@ -36,7 +36,7 @@ def dumpErrors(pdf, showLog=True):
     #if pdf.warn:
     #    print "*** %d WARNINGS OCCURED" % pdf.warn
     if pdf.err:
-        print "*** %d ERRORS OCCURED" % pdf.err
+        print(f"*** {pdf.err} ERRORS OCCURED")
 
 def testSimple(
     data="""Hello <b>World</b><br/><img src="img/test.jpg"/>""",
@@ -73,12 +73,10 @@ def testCGI(data="Hello <b>World</b>"):
         )
 
     if pdf.err:
-        print "Content-Type: text/plain"
-        print
+        print("Content-Type: text/plain")
         dumpErrors(pdf)
     else:
-        print "Content-Type: application/octet-stream"
-        print
+        print("Content-Type: application/octet-stream")
         sys.stdout.write(result.getvalue())
 
 def testBackgroundAndImage(
