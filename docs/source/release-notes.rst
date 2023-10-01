@@ -27,7 +27,7 @@ Versions >= 0.2
 
     **🐛 Bug-Fixes**
 
-    * Note: Please reference GitHub issues with :issue:´999´ and pull requests with :pr:´999´
+    * Note: Please reference GitHub issues with :issue:`999` and pull requests with :pr:`999`
     *
 
     **⚠️ Deprecation**
@@ -59,7 +59,7 @@ This release only aims to fix issues with pycairo and xhtml2pdf dependencies wit
 
 **🐛 Bug-Fixes**
 
-* Fix setup.py and requirements dependency to set reportlab>=3.5.53,<4 :issue:´688´ in :pr:´690´
+* Fix setup.py and requirements dependency to set reportlab>=3.5.53,<4 :issue:`688` in :pr:`690`
 
 | Thanks to the following people on GitHub for contributing to this release:
 | *gaurab-10*, *jorenham* 
@@ -73,11 +73,11 @@ Released: 2023-04-20
 
 **🐛 Bug-Fixes**
 
-* Fix canvas graph issue :issue:´614´ in :pr:´619´
+* Fix canvas graph issue :issue:`614` in :pr:`619`
 
 **🧹 Cleanup**
 
-* Remove duplicate pypdf entry from `setup.py` in :pr:´619´
+* Remove duplicate pypdf entry from `setup.py` in :pr:`619`
 
 | Thanks to the following people on GitHub for contributing to this release:
 | *brandonlake-semaphore*, *sunpoet*
@@ -119,9 +119,9 @@ Released: 2022-06-16
 
 **🐛 Bug-Fixes**
 
-* Fix background-image issues with :issue:´614´ and pull requests with :pr:´619´
-* Fix CSSParseError for minified @font-face definitions  :pr:´609´ 
-* Fixed a few typos and grammar mistakes in usage.rst documentation. :pr:´610´
+* Fix background-image issues with :issue:`614` and pull requests with :pr:`619`
+* Fix CSSParseError for minified @font-face definitions  :pr:`609`
+* Fixed a few typos and grammar mistakes in usage.rst documentation. :pr:`610`
 
 
 | Thanks to the following people on GitHub for contributing to this release:
@@ -161,6 +161,7 @@ Released: 2022-03-31
 
 | Thanks to the following people on GitHub for contributing to this release:
 | *marcelagz* for graphics support :)
+
 --------------------------------------------
 
 
@@ -188,7 +189,7 @@ Released: 2022-03-11
 
 **🐛 Bug-Fixes**
 
-* Fix UnboundLocalError in reportlab_paragraph (#585) (#586)
+* Fix UnboundLocalError in reportlab_paragraph (:issue:`585`) (:pr:`586`)
 
 **📘 Documentation**
 
@@ -419,15 +420,15 @@ Released: 2016-05-18
 
 * Removed PyPy support
 * Avoid exceptions likely to occur systematic to how narrow a text column is #309 - thanks *jkDesignDE*
-* Improved tests for tables #305 - thanks *taddeimania*
-* Fix broken empty PDFs in Python2 #301 - thanks *citizen-stig*
-* Unknown page sizes now raise an exception #71 - thanks *benjaoming*
-* Unorderable types caused by duplicate CSS selectors / rules #69 - thanks *benjaoming*
-* Allow empty page definition with no space after @page - #88 - thanks *benjaoming*
-* Error when in addFromFile using file-like object #245 - thanks *benjaoming*
-* Python 3: Bad table formatting with empty columns #279 - thanks *citizen-stig and benjaoming*
-* Removed paragraph2.py, unused ghost file since the beginning of the project #289 - thanks *citizen-stig*
-* Catch-all exceptions removed in a lot of places, not quite done #290 - thanks *benjaoming*
+* Improved tests for tables :pr:`305` - thanks *taddeimania*
+* Fix broken empty PDFs in Python2 :pr:`301` - thanks *citizen-stig*
+* Unknown page sizes now raise an exception :pr:`71` - thanks *benjaoming*
+* Unorderable types caused by duplicate CSS selectors / rules :pr:`69` - thanks *benjaoming*
+* Allow empty page definition with no space after @page - :pr:`88` - thanks *benjaoming*
+* Error when in addFromFile using file-like object :pr:`245` - thanks *benjaoming*
+* Python 3: Bad table formatting with empty columns :pr:`279` - thanks *citizen-stig and benjaoming*
+* Removed paragraph2.py, unused ghost file since the beginning of the project :pr:`289` - thanks *citizen-stig*
+* Catch-all exceptions removed in a lot of places, not quite done :pr:`290` - thanks *benjaoming*
 
 
 --------------------------------------------
@@ -437,10 +438,10 @@ Released: 2016-05-18
 
 Released: 2016-05-01
 
-* Improved six usage, simplifies codebase #288 - thanks *citizen-stig*
-* Removed mutable types as default args #287 - thanks *citizen-stig*
-* Fix "hangs forever on simple input" #209
-* Base64 inline <img> works now #281 
+* Improved six usage, simplifies codebase :pr:`288` - thanks *citizen-stig*
+* Removed mutable types as default args :pr:`287` - thanks *citizen-stig*
+* Fix "hangs forever on simple input" :pr:`209`
+* Base64 inline <img> works now :pr:`281`
 
 --------------------------------------------
 
@@ -449,8 +450,8 @@ Released: 2016-05-01
 
 Released: 2016-04-14
 
-* Fixed: AttributeError: 'bytes' object has no attribute 'encode' #265
-* Improved tests, added code coverage 
+* Fixed: AttributeError: 'bytes' object has no attribute 'encode' :pr:`265`
+* Improved tests, added code coverage
 
 --------------------------------------------
 
@@ -479,7 +480,7 @@ Versions < 0.1
 Released: 2014-04-27
 
 * get css backgrounds and fonts relative to the css file path
-* fix CSS parser breaking on "@media screen and ..." (issue 132)
+* fix CSS parser breaking on "@media screen and ..." (:issue:`132`)
 
 --------------------------------------------
 
@@ -565,7 +566,7 @@ Version 3.0.32, 2009-05-08
 
 - NEW: New command line option '--base' to specify base path if input comes via STDIN
 - FIX: The 'keep in frame' feature for tables did not work inside of static frames (Arun Shanker Prasad)
-- FIX: Small typos 
+- FIX: Small typos
 
 Version 3.0.31, 2009-05-04
 
@@ -587,7 +588,7 @@ Version 3.0.30, 2009-03-27
 - FIX: Small bug fix for show_error_as_pdf
 - FIX: Demos used os.startfile which is not supported on non Windows OSes
 - FIX: Table available height threw exceptions
-- FIX: Switched from urllib2 to httplib for loading external sources 
+- FIX: Switched from urllib2 to httplib for loading external sources
 - FIX: Correct homepage and download page in setup.py
 - FIX: Paragraphs in lists repeated the bullet
 - FIX: Tables now support -pdf-keep-with-next
