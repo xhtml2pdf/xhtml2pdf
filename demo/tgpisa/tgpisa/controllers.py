@@ -5,11 +5,9 @@ try:
     pkg_resources.require("SQLObject>=0.8,<=0.10.0")
 except pkg_resources.DistributionNotFound:
     import sys
-    print >> sys.stderr, """You are required to install SQLObject but appear not to have done so.
-Please run your projects setup.py or run `easy_install SQLObject`.
-
-"""
+    print("You are required to install SQLObject but appear not to have done so.", file=sys.stderr)
     sys.exit(1)
+
 # import logging
 # log = logging.getLogger("tgpisa.controllers")
 

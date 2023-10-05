@@ -13,7 +13,7 @@ Requirements
 
 Python 3.7+
 
-All additional requirements are listed in ``setup.py`` file and are
+All additional requirements are listed in ``pyproject.toml`` file and are
 installed automatically using the ``pip install xhtml2pdf`` method.
 
 
@@ -28,40 +28,29 @@ Development environment
 
     For more information about ``pip`` refer to http://www.pip-installer.org/.
 
-#. We recommend using ``virtualenv`` for development. It is great to have a separate environment for
-   each project, keeping the dependencies for multiple projects separated
+#. We recommend using ``venv`` for development. It is great to have a separate environment for
+   each project, keeping the dependencies for multiple projects separated.
 
-    .. code:: bash
+    For more information about ``venv`` refer to https://docs.python.org/3/library/venv.html
 
-        sudo pip install virtualenv
-
-
-    For more information about ``virtualenv`` refer to http://www.virtualenv.org/
-
-#. Create a virtualenv for the project. This can be inside the project directory, but cannot be under
+#. Create a virtual environment for the project. This can be inside the project directory, but cannot be under
    version control
 
     .. code:: bash
 
-        virtualenv --distribute xhtml2pdfenv --python=python2
+        python -m venv .venv
 
-#. Activate your virtualenv
+#. Activate your virtual environment
 
     .. code:: bash
 
-        source xhtml2pdfenv/bin/activate
+        source .venv/bin/activate
 
     Later to deactivate use
 
     .. code:: bash
 
         deactivate
-
-#. Next step will be to install/upgrade dependencies from the ``requirements.txt`` file
-
-    .. code:: bash
-
-        pip install -r requirements.txt
 
 #. Run tests to check your configuration
 
