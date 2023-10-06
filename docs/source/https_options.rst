@@ -11,8 +11,8 @@ Basically you need to set httpConfig before call pisa.CreatePDF
     from xhtml2pdf.config.httpconfig import httpConfig
     httpConfig.save_keys('nosslcheck', True)
     pisaStatus = pisa.CreatePDF(
-            sourceHtml,               
-            dest=resultFile) 
+            sourceHtml,
+            dest=resultFile)
 
 Other way is setting as a dict
 
@@ -22,7 +22,7 @@ Other way is setting as a dict
     from xhtml2pdf.config.httpconfig import httpConfig
     httpConfig['context']=ssl._create_unverified_context()
 
-In this way you can insert arbitrary httplib.HTTPSConnection parameters, for more information see: 
+In this way you can insert arbitrary httplib.HTTPSConnection parameters, for more information see:
 
 - python2 : https://docs.python.org/2/library/httplib.html#httplib.HTTPSConnection
 - python3 : https://docs.python.org/3.4/library/http.client.html#http.client.HTTPSConnection
@@ -51,7 +51,7 @@ Those are the available options:
 
 
 
-available settings 
+available settings
 
 - http_key_file
 - http_cert_file

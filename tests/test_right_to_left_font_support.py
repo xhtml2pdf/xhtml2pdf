@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import io
 import os
 from unittest import TestCase
@@ -8,7 +7,7 @@ import html5lib
 from xhtml2pdf.document import pisaDocument
 
 __doc__ = """
-        RightToLeftFontSupportTests provides us auxiliary functions to check 
+        RightToLeftFontSupportTests provides us auxiliary functions to check
         the correct operation of the Arabic writing from right to left.
         """
 
@@ -54,14 +53,14 @@ class RightToLeftFontSupportTests(TestCase):
         <head>
         <title></title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-        
+
         <style type="text/css">
             {ff_R}
             {ff_M}
             {ff_B}
             {ff_SB}
             {ff_V}
-            
+
             .RegularClass {{ font-family: Regular }}
             .MediumClass {{ font-family: Medium }}
             .BoldClass {{ font-family: Bold }}
@@ -69,20 +68,20 @@ class RightToLeftFontSupportTests(TestCase):
             .VariableClass {{ font-family: Variable }}
         </style>
         </head>
-        
+
         <body>
         <p>
         The following lines are in Arabic/Hebrew/Persian etc., written from right to left.<br>
         There is an English sentence (from left to right) to show the difference.<br>
         If everything works as expected, the numbers 3 and 10 should change position<br>
         in the Arabic/Hebrew/Persian etc. sentences.<br><br>
-    
+
         We're also testing different font-weights:<br>
         Regular, Medium, Bold, SemiBold and Variable
         </p>
-        
+
         {language_tag}
-        
+
         <br><br>
         <span class="RegularClass">
         Hello. I have 3 children and 10 cats. That's awesome!<br>

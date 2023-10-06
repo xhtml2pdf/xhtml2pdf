@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -79,13 +77,13 @@ DEST
     (automatically used if file ends with ".xml")
   --html:
     Force parsing in HTML Mode (default)
-    
+
 [HTTP Connection options]
 
   --http_nosslcheck:
     No check ssl certificate.
-    
-See http.client.HTTPSConnection documentation for this parameters 
+
+See http.client.HTTPSConnection documentation for this parameters
 
   --http_key_file
   --http_cert_file

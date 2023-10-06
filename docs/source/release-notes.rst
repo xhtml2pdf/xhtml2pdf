@@ -87,7 +87,7 @@ This release only aims to fix issues with pycairo and xhtml2pdf dependencies wit
 * Fix setup.py and requirements dependency to set reportlab>=3.5.53,<4 :issue:`688` in :pr:`690`
 
 | Thanks to the following people on GitHub for contributing to this release:
-| *gaurab-10*, *jorenham* 
+| *gaurab-10*, *jorenham*
 
 --------------------------------------------
 

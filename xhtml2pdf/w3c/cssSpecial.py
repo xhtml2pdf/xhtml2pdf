@@ -1,18 +1,21 @@
-# -*- coding: utf-8 -*-
+"""
+Helper for complex CSS definitons like font, margin, padding and border
+Optimized for use with PISA.
 
-# Copyright 2010 Dirk Holtwick, holtwick.it
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+Copyright 2010 Dirk Holtwick, holtwick.it
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
 
 import logging
 
@@ -20,10 +23,6 @@ __reversion__ = "$Revision: 20 $"
 __author__ = "$Author: holtwick $"
 __date__ = "$Date: 2007-10-09 12:58:24 +0200 (Di, 09 Okt 2007) $"
 
-"""
-Helper for complex CSS definitons like font, margin, padding and border
-Optimized for use with PISA
-"""
 
 # support python 3
 # import types
@@ -88,43 +87,6 @@ _borderStyleTable = {
     "inset": 1,
     "outset": 1,
 }
-
-"""
-_relSizeTable = {
-    'pt':
-        # pt: absolute point size
-        # Note: this is 1/72th of an inch
-        (lambda value, pt: value),
-    'px':
-        # px: pixels, relative to the viewing device
-        # Note: approximate at the size of a pt
-        (lambda value, pt: value),
-    'ex':
-        # ex: proportional to the 'x-height' of the parent font
-        # Note: can't seem to dervie this value from wx.Font methods,
-        # so we'll approximate by calling it 1/2 a pt
-        (lambda value, pt: 2 * value),
-    'pc':
-        # pc: 12:1 pica:point size
-        # Note: this is 1/6th of an inch
-        (lambda value, pt: 12*value),
-    'in':
-        # in: 72 inches per point
-        (lambda value, pt: 72*value),
-    'cm':
-        # in: 72 inches per point, 2.54 cm per inch
-        (lambda value, pt,_r=72./2.54: _r*value),
-    'mm':
-        # in: 72 inches per point, 25.4 mm per inch
-        (lambda value, pt,_r=72./25.4: _r*value),
-    '%':
-        # %: percentage of the parent's pointSize
-        (lambda value, pt: 0.01 * pt * value),
-    'em':
-        # em: proportional to the 'font-size' of the parent font
-        (lambda value, pt: pt * value),
-    }
-"""
 
 
 def getNextPart(parts):

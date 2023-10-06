@@ -24,7 +24,7 @@ included in urw-fonts-1.0.7pre40-src.tar.bz2.
 
 These fonts are included in t1-teams and scalable-cyrfonts-tex.
 
-    4) oldslavic.tar.bz2 from 
+    4) oldslavic.tar.bz2 from
        ftp://ftp.gnome.ru/fonts/
        Maintainer: Valek Filippov <frob@df.ru>
 
@@ -70,7 +70,7 @@ TopTeam Co.
 
 License of the font in oldslavic.tar.bz2:
 
-(C) 2001 Valek Filippov  
+(C) 2001 Valek Filippov
 
 These fonts made by Valek Filippov with pfaedit (http://pfaedit.sf.net).
 They are based on the drawing from very old (about 1912) fonts album.

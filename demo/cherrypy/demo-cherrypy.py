@@ -1,5 +1,4 @@
-#!/usr/local/bin/python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 #############################################
 ## (C)opyright by Dirk Holtwick, 2008      ##
 ## All rights reserved                     ##

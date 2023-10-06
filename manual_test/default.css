@@ -1,28 +1,28 @@
 
 html {
-    font-family: Helvetica; 
-    font-size: 10px; 
+    font-family: Helvetica;
+    font-size: 10px;
     font-weight: normal;
-    color: #000000; 
+    color: #000000;
     background-color: transparent;
-    margin: 0; 
+    margin: 0;
     padding: 0;
     line-height: 150%;
     border: 1px none;
     display: inline;
     width: auto;
     height: auto;
-    white-space: normal;    
+    white-space: normal;
 }
 
-b, 
-strong { 
-    font-weight: bold; 
+b,
+strong {
+    font-weight: bold;
 }
 
-i, 
-em { 
-    font-style: italic; 
+i,
+em {
+    font-style: italic;
 }
 
 u {
@@ -63,13 +63,13 @@ h4,
 h5,
 h6 {
     font-weight:bold;
-    -pdf-outline: true;    
+    -pdf-outline: true;
     -pdf-outline-open: false;
 }
 
 h1 {
     /*18px via YUI Fonts CSS foundation*/
-    font-size:138.5%; 
+    font-size:138.5%;
     -pdf-outline-level: 0;
 }
 
@@ -200,4 +200,3 @@ blockquote {
     margin-left: 1.5em;
     margin-right: 1.5em;
 }
-

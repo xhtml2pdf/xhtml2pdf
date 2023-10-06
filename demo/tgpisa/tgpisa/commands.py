@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This module contains functions called from console script entry points."""
 
 import os

@@ -1,13 +1,13 @@
 Usage
 ==========
 
-Using with Python standalone 
+Using with Python standalone
 --------------------------------
 
 .. code:: python
 
     from xhtml2pdf import pisa             # import python module
-    
+
     # Define your data
     source_html = "<html><body><p>To PDF or not to PDF</p></body></html>"
     output_filename = "test.pdf"
@@ -16,12 +16,12 @@ Using with Python standalone
     def convert_html_to_pdf(source_html, output_filename):
         # open output file for writing (truncated binary)
         result_file = open(output_filename, "w+b")
-    
+
         # convert HTML to PDF
         pisa_status = pisa.CreatePDF(
                 source_html,                # the HTML to convert
                 dest=result_file)           # file handle to recieve result
-    
+
         # close output file
         result_file.close()                 # close output file
 
@@ -47,15 +47,15 @@ xhtml2pdf allows users to specify a ``link_callback`` parameter to point to a fu
 that converts relative URLs to absolute system paths.
 
 .. code:: python
-    
+
     import os
     from django.conf import settings
     from django.http import HttpResponse
     from django.template.loader import get_template
     from xhtml2pdf import pisa
     from django.contrib.staticfiles import finders
-    
-    
+
+
 	def link_callback(uri, rel):
 		"""
 		Convert HTML URIs to absolute system paths so xhtml2pdf can access those
@@ -85,9 +85,9 @@ that converts relative URLs to absolute system paths.
 			raise Exception(
 				'media URI must start with %s or %s' % (sUrl, mUrl)
 			)
-		return path 
-        
- 
+		return path
+
+
 
 .. code:: python
 
@@ -109,9 +109,9 @@ that converts relative URLs to absolute system paths.
            return HttpResponse('We had some errors <pre>' + html + '</pre>')
         return response
 
-You can see it in action in ``demo/djangoproject`` folder 
+You can see it in action in ``demo/djangoproject`` folder
 
-Using in Command line 
+Using in Command line
 ----------------------
 
 xhtml2pdf also provides a convenient command line tool that you can use to convert HTML files
@@ -188,4 +188,4 @@ using the ``-css`` option, e.g.:
 
 .. code:: bash
 
-    $ xhtml2pdf --css=xhtml2pdf-default.css test.html  
+    $ xhtml2pdf --css=xhtml2pdf-default.css test.html

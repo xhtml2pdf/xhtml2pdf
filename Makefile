@@ -41,7 +41,7 @@ test-all:
 
 test-ref:
 	cd testrender && python testrender.py --create-reference data/reference
-	
+
 docs:
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
