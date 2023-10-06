@@ -133,3 +133,7 @@ ignore_errors = true
 
 [tool.coverage.html]
 directory = "coverage_html_report"
+
+[tool.black]
+skip-magic-trailing-comma = true
+preview = true
