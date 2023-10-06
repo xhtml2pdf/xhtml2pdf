@@ -15,17 +15,39 @@ __doc__ = """
 
 class RightToLeftFontSupportTests(TestCase):
     tests_folder = os.path.dirname(os.path.realpath(__file__))
-    ttf_pathR = os.path.join(tests_folder, 'samples', 'font', 'Arabic_font', 'MarkaziText-Regular.ttf')
-    ttf_pathM = os.path.join(tests_folder, 'samples', 'font', 'Arabic_font', 'MarkaziText-Medium.ttf')
-    ttf_pathB = os.path.join(tests_folder, 'samples', 'font', 'Arabic_font', 'MarkaziText-Bold.ttf')
-    ttf_pathSB = os.path.join(tests_folder, 'samples', 'font', 'Arabic_font', 'MarkaziText-SemiBold.ttf')
-    ttf_pathV = os.path.join(tests_folder, 'samples', 'font', 'Arabic_font', 'MarkaziText-VariableFont_wght.ttf')
+    ttf_pathR = os.path.join(
+        tests_folder, "samples", "font", "Arabic_font", "MarkaziText-Regular.ttf"
+    )
+    ttf_pathM = os.path.join(
+        tests_folder, "samples", "font", "Arabic_font", "MarkaziText-Medium.ttf"
+    )
+    ttf_pathB = os.path.join(
+        tests_folder, "samples", "font", "Arabic_font", "MarkaziText-Bold.ttf"
+    )
+    ttf_pathSB = os.path.join(
+        tests_folder, "samples", "font", "Arabic_font", "MarkaziText-SemiBold.ttf"
+    )
+    ttf_pathV = os.path.join(
+        tests_folder,
+        "samples",
+        "font",
+        "Arabic_font",
+        "MarkaziText-VariableFont_wght.ttf",
+    )
 
-    ff_R = "@font-face {{font-family: Regular; src: url(\'{ttf}\');}}".format(ttf=ttf_pathR)
-    ff_M = "@font-face {{font-family: Medium; src: url(\'{ttf}\');}}".format(ttf=ttf_pathM)
-    ff_B = "@font-face {{font-family: Bold; src: url(\'{ttf}\');}}".format(ttf=ttf_pathB)
-    ff_SB = "@font-face {{font-family: SemiBold; src: url(\'{ttf}\');}}".format(ttf=ttf_pathSB)
-    ff_V = "@font-face {{font-family: Variable; src: url(\'{ttf}\');}}".format(ttf=ttf_pathV)
+    ff_R = "@font-face {{font-family: Regular; src: url('{ttf}');}}".format(
+        ttf=ttf_pathR
+    )
+    ff_M = "@font-face {{font-family: Medium; src: url('{ttf}');}}".format(
+        ttf=ttf_pathM
+    )
+    ff_B = "@font-face {{font-family: Bold; src: url('{ttf}');}}".format(ttf=ttf_pathB)
+    ff_SB = "@font-face {{font-family: SemiBold; src: url('{ttf}');}}".format(
+        ttf=ttf_pathSB
+    )
+    ff_V = "@font-face {{font-family: Variable; src: url('{ttf}');}}".format(
+        ttf=ttf_pathV
+    )
 
     HTML_CONTENT = """
         <html>
@@ -84,15 +106,22 @@ class RightToLeftFontSupportTests(TestCase):
 
     def test_pdf_language_tag_in_html(self):
         """
-            this function is used to check if the "Custom Tag" <pdf:language/>
-            is located in the HTML file through asssertNotEqual()
+        this function is used to check if the "Custom Tag" <pdf:language/>
+        is located in the HTML file through asssertNotEqual()
         """
 
-        text = ''
+        text = ""
         language_tag = '<pdf:language name=""/>'
 
-        html = self.HTML_CONTENT.format(ff_R=self.ff_R, ff_M=self.ff_M, ff_B=self.ff_B,
-                                        ff_SB=self.ff_SB, ff_V=self.ff_V, text=text, language_tag=language_tag)
+        html = self.HTML_CONTENT.format(
+            ff_R=self.ff_R,
+            ff_M=self.ff_M,
+            ff_B=self.ff_B,
+            ff_SB=self.ff_SB,
+            ff_V=self.ff_V,
+            text=text,
+            language_tag=language_tag,
+        )
 
         parser = html5lib.HTMLParser(tree=html5lib.treebuilders.getTreeBuilder("dom"))
         document = parser.parse(html)
@@ -101,113 +130,172 @@ class RightToLeftFontSupportTests(TestCase):
 
     def test_language_attribute_in_pisaDocument(self):
         """
-            Tests if the attribute 'language' is located in the pisaDocument.
+        Tests if the attribute 'language' is located in the pisaDocument.
         """
 
-        text = ''
+        text = ""
         language_tag = '<pdf:language name=""/>'
 
-        html = self.HTML_CONTENT.format(ff_R=self.ff_R, ff_M=self.ff_M, ff_B=self.ff_B,
-                                        ff_SB=self.ff_SB, ff_V=self.ff_V, text=text, language_tag=language_tag)
+        html = self.HTML_CONTENT.format(
+            ff_R=self.ff_R,
+            ff_M=self.ff_M,
+            ff_B=self.ff_B,
+            ff_SB=self.ff_SB,
+            ff_V=self.ff_V,
+            text=text,
+            language_tag=language_tag,
+        )
 
         with io.BytesIO() as pdf_file:
-            pisa_doc = pisaDocument(src=html,
-                                    dest=pdf_file)
+            pisa_doc = pisaDocument(src=html, dest=pdf_file)
 
-            self.assertTrue(hasattr(pisa_doc, 'language'), '<pdf:language> not found in the resulting PDF!')
+            self.assertTrue(
+                hasattr(pisa_doc, "language"),
+                "<pdf:language> not found in the resulting PDF!",
+            )
 
     def test_arabic_in_pdf_language(self):
         """
-            Tests if 'arabic' is the value of the 'language' attribute.
+        Tests if 'arabic' is the value of the 'language' attribute.
         """
-        text = 'مرحبا. لدي 3 طفلاً و 10 قطة. هذا رائع!'
+        text = "مرحبا. لدي 3 طفلاً و 10 قطة. هذا رائع!"
         language_tag = '<pdf:language name="arabic"/>'
 
-        html = self.HTML_CONTENT.format(ff_R=self.ff_R, ff_M=self.ff_M, ff_B=self.ff_B,
-                                        ff_SB=self.ff_SB, ff_V=self.ff_V, text=text, language_tag=language_tag)
+        html = self.HTML_CONTENT.format(
+            ff_R=self.ff_R,
+            ff_M=self.ff_M,
+            ff_B=self.ff_B,
+            ff_SB=self.ff_SB,
+            ff_V=self.ff_V,
+            text=text,
+            language_tag=language_tag,
+        )
 
         with io.BytesIO() as pdf_file:
-            pisa_doc = pisaDocument(src=html,
-                                    dest=pdf_file)
+            pisa_doc = pisaDocument(src=html, dest=pdf_file)
 
-            self.assertEqual(pisa_doc.language, 'arabic', '"arabic" not detected in <pdf:language>!')
+            self.assertEqual(
+                pisa_doc.language, "arabic", '"arabic" not detected in <pdf:language>!'
+            )
 
     def test_hebrew_in_pdf_language(self):
         """
-            Tests if 'hebrew' is the value of the 'language' attribute.
+        Tests if 'hebrew' is the value of the 'language' attribute.
         """
-        text = 'שלום. יש לי 3 ילדים ו -10 חתולים. זה מגניב!'
+        text = "שלום. יש לי 3 ילדים ו -10 חתולים. זה מגניב!"
         language_tag = '<pdf:language name="hebrew"/>'
 
-        html = self.HTML_CONTENT.format(ff_R=self.ff_R, ff_M=self.ff_M, ff_B=self.ff_B,
-                                        ff_SB=self.ff_SB, ff_V=self.ff_V, text=text, language_tag=language_tag)
+        html = self.HTML_CONTENT.format(
+            ff_R=self.ff_R,
+            ff_M=self.ff_M,
+            ff_B=self.ff_B,
+            ff_SB=self.ff_SB,
+            ff_V=self.ff_V,
+            text=text,
+            language_tag=language_tag,
+        )
 
         with io.BytesIO() as pdf_file:
-            pisa_doc = pisaDocument(src=html,
-                                    dest=pdf_file)
+            pisa_doc = pisaDocument(src=html, dest=pdf_file)
 
-            self.assertEqual(pisa_doc.language, 'hebrew', '"hebrew" not detected in <pdf:language>!')
+            self.assertEqual(
+                pisa_doc.language, "hebrew", '"hebrew" not detected in <pdf:language>!'
+            )
 
     def test_persian_in_pdf_language(self):
         """
-            Tests if 'persian' is the value of the 'language' attribute.
+        Tests if 'persian' is the value of the 'language' attribute.
         """
-        text = 'سلام. من 3 فرزند و 10 گربه دارم. عالی است!'
+        text = "سلام. من 3 فرزند و 10 گربه دارم. عالی است!"
         language_tag = '<pdf:language name="persian"/>'
 
-        html = self.HTML_CONTENT.format(ff_R=self.ff_R, ff_M=self.ff_M, ff_B=self.ff_B,
-                                        ff_SB=self.ff_SB, ff_V=self.ff_V, text=text, language_tag=language_tag)
+        html = self.HTML_CONTENT.format(
+            ff_R=self.ff_R,
+            ff_M=self.ff_M,
+            ff_B=self.ff_B,
+            ff_SB=self.ff_SB,
+            ff_V=self.ff_V,
+            text=text,
+            language_tag=language_tag,
+        )
 
         with io.BytesIO() as pdf_file:
-            pisa_doc = pisaDocument(src=html,
-                                    dest=pdf_file)
+            pisa_doc = pisaDocument(src=html, dest=pdf_file)
 
-            self.assertEqual(pisa_doc.language, 'persian', '"persian" not detected in <pdf:language>!')
+            self.assertEqual(
+                pisa_doc.language,
+                "persian",
+                '"persian" not detected in <pdf:language>!',
+            )
 
     def test_urdu_in_pdf_language(self):
         """
-            Tests if 'urdu' is the value of the 'language' attribute.
+        Tests if 'urdu' is the value of the 'language' attribute.
         """
-        text = 'ہیلو. میرے 3 بچے اور 10 بلیاں ہیں۔ یہ تو زبردست ہے!'
+        text = "ہیلو. میرے 3 بچے اور 10 بلیاں ہیں۔ یہ تو زبردست ہے!"
         language_tag = '<pdf:language name="urdu"/>'
 
-        html = self.HTML_CONTENT.format(ff_R=self.ff_R, ff_M=self.ff_M, ff_B=self.ff_B,
-                                        ff_SB=self.ff_SB, ff_V=self.ff_V, text=text, language_tag=language_tag)
+        html = self.HTML_CONTENT.format(
+            ff_R=self.ff_R,
+            ff_M=self.ff_M,
+            ff_B=self.ff_B,
+            ff_SB=self.ff_SB,
+            ff_V=self.ff_V,
+            text=text,
+            language_tag=language_tag,
+        )
 
         with io.BytesIO() as pdf_file:
-            pisa_doc = pisaDocument(src=html,
-                                    dest=pdf_file)
+            pisa_doc = pisaDocument(src=html, dest=pdf_file)
 
-            self.assertEqual(pisa_doc.language, 'urdu', '"urdu" not detected in <pdf:language>!')
+            self.assertEqual(
+                pisa_doc.language, "urdu", '"urdu" not detected in <pdf:language>!'
+            )
 
     def test_pashto_in_pdf_language(self):
         """
-            Tests if 'pashto' is the value of the 'language' attribute.
+        Tests if 'pashto' is the value of the 'language' attribute.
         """
-        text = 'سلام. زه 3 ماشومان او 10 پیشوګانې لرم. دا په زړه پوری دی!'
+        text = "سلام. زه 3 ماشومان او 10 پیشوګانې لرم. دا په زړه پوری دی!"
         language_tag = '<pdf:language name="pashto"/>'
 
-        html = self.HTML_CONTENT.format(ff_R=self.ff_R, ff_M=self.ff_M, ff_B=self.ff_B,
-                                        ff_SB=self.ff_SB, ff_V=self.ff_V, text=text, language_tag=language_tag)
+        html = self.HTML_CONTENT.format(
+            ff_R=self.ff_R,
+            ff_M=self.ff_M,
+            ff_B=self.ff_B,
+            ff_SB=self.ff_SB,
+            ff_V=self.ff_V,
+            text=text,
+            language_tag=language_tag,
+        )
 
         with io.BytesIO() as pdf_file:
-            pisa_doc = pisaDocument(src=html,
-                                    dest=pdf_file)
+            pisa_doc = pisaDocument(src=html, dest=pdf_file)
 
-            self.assertEqual(pisa_doc.language, 'pashto', '"pashto" not detected in <pdf:language>!')
+            self.assertEqual(
+                pisa_doc.language, "pashto", '"pashto" not detected in <pdf:language>!'
+            )
 
     def test_sindhi_in_pdf_language(self):
         """
-            Tests if 'sindhi' is the value of the 'language' attribute.
+        Tests if 'sindhi' is the value of the 'language' attribute.
         """
-        text = 'سلام. مون وٽ 3 ٻار ۽ 10 ٻچا آهن. اهو خوفناڪ آهي!'
+        text = "سلام. مون وٽ 3 ٻار ۽ 10 ٻچا آهن. اهو خوفناڪ آهي!"
         language_tag = '<pdf:language name="sindhi"/>'
 
-        html = self.HTML_CONTENT.format(ff_R=self.ff_R, ff_M=self.ff_M, ff_B=self.ff_B,
-                                        ff_SB=self.ff_SB, ff_V=self.ff_V, text=text, language_tag=language_tag)
+        html = self.HTML_CONTENT.format(
+            ff_R=self.ff_R,
+            ff_M=self.ff_M,
+            ff_B=self.ff_B,
+            ff_SB=self.ff_SB,
+            ff_V=self.ff_V,
+            text=text,
+            language_tag=language_tag,
+        )
 
         with io.BytesIO() as pdf_file:
-            pisa_doc = pisaDocument(src=html,
-                                    dest=pdf_file)
+            pisa_doc = pisaDocument(src=html, dest=pdf_file)
 
-            self.assertEqual(pisa_doc.language, 'sindhi', '"sindhi" not detected in <pdf:language>!')
+            self.assertEqual(
+                pisa_doc.language, "sindhi", '"sindhi" not detected in <pdf:language>!'
+            )

@@ -119,22 +119,42 @@ class Box(dict):
                     canvas.setLineWidth(width)
                     canvas.line(x1, y1, x2, y2)
 
-        _drawBorderLine(self.get("borderLeftStyle", None),
-                        self.get("borderLeftWidth", None),
-                        self.get("borderLeftColor", None),
-                        x, y, x, y + h)
-        _drawBorderLine(self.get("borderRightStyle", None),
-                        self.get("borderRightWidth", None),
-                        self.get("borderRightColor", None),
-                        x + w, y, x + w, y + h)
-        _drawBorderLine(self.get("borderTopStyle", None),
-                        self.get("borderTopWidth", None),
-                        self.get("borderTopColor", None),
-                        x, y + h, x + w, y + h)
-        _drawBorderLine(self.get("borderBottomStyle", None),
-                        self.get("borderBottomWidth", None),
-                        self.get("borderBottomColor", None),
-                        x, y, x + w, y)
+        _drawBorderLine(
+            self.get("borderLeftStyle", None),
+            self.get("borderLeftWidth", None),
+            self.get("borderLeftColor", None),
+            x,
+            y,
+            x,
+            y + h,
+        )
+        _drawBorderLine(
+            self.get("borderRightStyle", None),
+            self.get("borderRightWidth", None),
+            self.get("borderRightColor", None),
+            x + w,
+            y,
+            x + w,
+            y + h,
+        )
+        _drawBorderLine(
+            self.get("borderTopStyle", None),
+            self.get("borderTopWidth", None),
+            self.get("borderTopColor", None),
+            x,
+            y + h,
+            x + w,
+            y + h,
+        )
+        _drawBorderLine(
+            self.get("borderBottomStyle", None),
+            self.get("borderBottomWidth", None),
+            self.get("borderBottomColor", None),
+            x,
+            y,
+            x + w,
+            y,
+        )
 
         canvas.restoreState()
 
@@ -154,7 +174,6 @@ class Fragment(Box):
     isSoft = False
     isText = False
     isLF = False
-
 
     def calc(self):
         self["width"] = 0
@@ -203,7 +222,9 @@ class BoxBegin(Fragment):
     name = "begin"
 
     def calc(self):
-        self["width"] = self.get("marginLeft", 0) + self.get("paddingLeft", 0) # + border if border
+        self["width"] = self.get("marginLeft", 0) + self.get(
+            "paddingLeft", 0
+        )  # + border if border
 
     def draw(self, canvas, y):
         # if not self["length"]:
@@ -217,7 +238,9 @@ class BoxEnd(Fragment):
     name = "end"
 
     def calc(self):
-        self["width"] = self.get("marginRight", 0) + self.get("paddingRight", 0) # + border
+        self["width"] = self.get("marginRight", 0) + self.get(
+            "paddingRight", 0
+        )  # + border
 
 
 class Image(Fragment):
@@ -244,7 +267,7 @@ class Line(list):
     def doAlignment(self, width, alignment):
         # Apply alignment
         if alignment != TA_LEFT:
-            lineWidth = self[- 1]["x"] + self[- 1]["width"]
+            lineWidth = self[-1]["x"] + self[-1]["width"]
             emptySpace = width - lineWidth
             if alignment == TA_RIGHT:
                 for frag in self:
@@ -252,7 +275,9 @@ class Line(list):
             elif alignment == TA_CENTER:
                 for frag in self:
                     frag["x"] += emptySpace / 2.0
-            elif alignment == TA_JUSTIFY and not self.isLast: # XXX last line before split
+            elif (
+                alignment == TA_JUSTIFY and not self.isLast
+            ):  # XXX last line before split
                 delta = emptySpace / (len(self) - 1)
                 for i, frag in enumerate(self):
                     frag["x"] += i * delta
@@ -281,10 +306,12 @@ class Line(list):
 
         font_sizes = [0] + [frag.get("fontSize", 0) for frag in self]
         self.fontSize = max(font_sizes)
-        self.height = self.lineHeight = max(frag * self.LINEHEIGHT for frag in font_sizes)
+        self.height = self.lineHeight = max(
+            frag * self.LINEHEIGHT for frag in font_sizes
+        )
 
         # Apply line height
-        y = (self.lineHeight - self.fontSize) # / 2
+        y = self.lineHeight - self.fontSize  # / 2
         for frag in self:
             frag["y"] = y
 
@@ -346,7 +373,6 @@ class Text(list):
         lenText = len(self)
         pos = 0
         while pos < lenText:
-
             # Reset values for new line
             posBegin = pos
             line = Line(style)
@@ -357,7 +383,6 @@ class Text(list):
                 line.append(BoxBegin(box))
 
             while pos < lenText:
-
                 # Get fragment, its width and set X
                 frag = self[pos]
                 fragWidth = frag["width"]
@@ -406,7 +431,7 @@ class Text(list):
             x = 0
 
         # Apply alignment
-        self.lines[- 1].isLast = True
+        self.lines[-1].isLast = True
         for line in self.lines:
             line.doAlignment(maxWidth, style["textAlign"])
 
@@ -433,8 +458,8 @@ class Paragraph(Flowable):
     (spaceBefore, spaceAfter are handled by the Platypus framework.)
 
     """
-    def __init__(self, text, style, debug=False, splitted=False, **kwDict):
 
+    def __init__(self, text, style, debug=False, splitted=False, **kwDict):
         Flowable.__init__(self)
 
         self.text = text
@@ -474,7 +499,12 @@ class Paragraph(Flowable):
 
         self.width, self.height = availWidth, self.text.height
 
-        logger.debug("*** wrap (%f, %f) needed, splitIndex %r", self.width, self.height, self.splitIndex)
+        logger.debug(
+            "*** wrap (%f, %f) needed, splitIndex %r",
+            self.width,
+            self.height,
+            self.splitIndex,
+        )
 
         return self.width, self.height
 
@@ -487,15 +517,15 @@ class Paragraph(Flowable):
 
         splitted = []
         if self.splitIndex:
-            text1 = self.text[:self.splitIndex]
-            text2 = self.text[self.splitIndex:]
+            text1 = self.text[: self.splitIndex]
+            text2 = self.text[self.splitIndex :]
             p1 = Paragraph(Text(text1), self.style, debug=self.debug)
             p2 = Paragraph(Text(text2), self.style, debug=self.debug, splitted=True)
             splitted = [p1, p2]
 
             logger.debug("*** text1 %s / text %s", len(text1), len(text2))
 
-        logger.debug('*** return %s', self.splitted)
+        logger.debug("*** return %s", self.splitted)
 
         return splitted
 
@@ -522,20 +552,13 @@ class Paragraph(Flowable):
             canvas.setStrokeColor(bc)
             canvas.setLineWidth(bw)
             canvas.setFillColor(bg)
-            canvas.rect(
-                style.leftIndent,
-                0,
-                self.width,
-                self.height,
-                fill=1,
-                stroke=1)
+            canvas.rect(style.leftIndent, 0, self.width, self.height, fill=1, stroke=1)
 
         y = 0
         dy = self.height
         for line in self.text.lines:
             y += line.height
             for frag in line:
-
                 # Box
                 if hasattr(frag, "draw"):
                     frag.draw(canvas, dy - y)
@@ -549,24 +572,29 @@ class Paragraph(Flowable):
                 # XXX LINK
                 link = frag.get("link", None)
                 if link:
-                    _scheme_re = re.compile('^[a-zA-Z][-+a-zA-Z0-9]+$')
+                    _scheme_re = re.compile("^[a-zA-Z][-+a-zA-Z0-9]+$")
                     x, y, w, h = frag["x"], dy - y, frag["width"], frag["fontSize"]
                     rect = (x, y, w, h)
                     if isinstance(link, str):
-                        link = link.encode('utf8')
-                    parts = link.split(':', 1)
-                    scheme = len(parts) == 2 and parts[0].lower() or ''
-                    if _scheme_re.match(scheme) and scheme != 'document':
-                        kind = scheme.lower() == 'pdf' and 'GoToR' or 'URI'
-                        if kind == 'GoToR':
+                        link = link.encode("utf8")
+                    parts = link.split(":", 1)
+                    scheme = len(parts) == 2 and parts[0].lower() or ""
+                    if _scheme_re.match(scheme) and scheme != "document":
+                        kind = scheme.lower() == "pdf" and "GoToR" or "URI"
+                        if kind == "GoToR":
                             link = parts[1]
 
                         canvas.linkURL(link, rect, relative=1, kind=kind)
                     else:
-                        if link[0] == '#':
+                        if link[0] == "#":
                             link = link[1:]
-                            scheme = ''
-                        canvas.linkRect("", scheme != 'document' and link or parts[1], rect, relative=1)
+                            scheme = ""
+                        canvas.linkRect(
+                            "",
+                            scheme != "document" and link or parts[1],
+                            rect,
+                            relative=1,
+                        )
 
         canvas.restoreState()
 
@@ -574,8 +602,8 @@ class Paragraph(Flowable):
 class PageNumberFlowable(Flowable):
     def __init__(self):
         Flowable.__init__(self)
-        self.page=None
-        self.pagecount=None
+        self.page = None
+        self.pagecount = None
 
     def draw(self):
         self.page = str(self.canv._doctemplate.page)

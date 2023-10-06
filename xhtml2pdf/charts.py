@@ -8,7 +8,6 @@ from .util import getColor
 
 
 def set_properties(obj, data, prop_map):
-
     for key, fnc in prop_map:
         if key in data:
             try:
@@ -21,31 +20,65 @@ def set_properties(obj, data, prop_map):
 
 
 class Props:
-
     def __init__(self, instance):
-        self.prop_map = [("x", int), ("y", int), ("width", int), ("height", int), ("data", lambda x: x),
-                         ("labels", lambda x: instance.assign_labels(x))]
+        self.prop_map = [
+            ("x", int),
+            ("y", int),
+            ("width", int),
+            ("height", int),
+            ("data", lambda x: x),
+            ("labels", lambda x: instance.assign_labels(x)),
+        ]
         self.prop_map_title = [("x", int), ("y", int), ("_text", str)]
-        self.prop_map_legend = [("x", int), ("y", int), ("deltax", int), ("alignment", str), ("boxAnchor", str),
-                                ("fontSize", int), ("strokeWidth", int), ("dy", int), ("dx", int), ("dxTextSpace", int),
-                                ("deltay", int), ("columnMaximum", int), ("variColumn", int), ("deltax", int),
-                                ("fontName", str), ("colorNamePairs", list)]
+        self.prop_map_legend = [
+            ("x", int),
+            ("y", int),
+            ("deltax", int),
+            ("alignment", str),
+            ("boxAnchor", str),
+            ("fontSize", int),
+            ("strokeWidth", int),
+            ("dy", int),
+            ("dx", int),
+            ("dxTextSpace", int),
+            ("deltay", int),
+            ("columnMaximum", int),
+            ("variColumn", int),
+            ("deltax", int),
+            ("fontName", str),
+            ("colorNamePairs", list),
+        ]
         self.prop_map_legend1 = [("x", int), ("y", int)]
         self.prop_map_bars = [("strokeWidth", int)]
         self.prop_map_barLabels = [("nudge", int), ("fontSize", int), ("fontName", str)]
-        self.prop_map_categoryAxis = [("visibleTicks", int), ("strokeWidth", int), ("tickShift", int),
-                                      ("labelAxisMode", str)]
-        self.prop_map_categoryAxis_labels = [("angle", int), ("dy", int), ("fontSize", int),
-                                             ("boxAnchor", str), ("fontName", str), ("textAnchor", str)]
-        self.prop_map_slices = [("strokeWidth", int), ("labelRadius", float), ("poput", int), ("fontName", str),
-                                ("fontSize", int), ("strokeDashArray", str)]
+        self.prop_map_categoryAxis = [
+            ("visibleTicks", int),
+            ("strokeWidth", int),
+            ("tickShift", int),
+            ("labelAxisMode", str),
+        ]
+        self.prop_map_categoryAxis_labels = [
+            ("angle", int),
+            ("dy", int),
+            ("fontSize", int),
+            ("boxAnchor", str),
+            ("fontName", str),
+            ("textAnchor", str),
+        ]
+        self.prop_map_slices = [
+            ("strokeWidth", int),
+            ("labelRadius", float),
+            ("poput", int),
+            ("fontName", str),
+            ("fontSize", int),
+            ("strokeDashArray", str),
+        ]
 
     def add_prop(self, prop_map, data):
         prop_map += data
 
 
 class BaseChart:
-
     def set_legend(self, data, legend, props=None):
         if props is None:
             props = Props(self)
@@ -56,16 +89,22 @@ class BaseChart:
         legend.colorNamePairs = []
         color = self.get_colors()
 
-        for x, obj in enumerate(data['data']):
+        for x, obj in enumerate(data["data"]):
             if isinstance(obj, list):
                 for y, value in enumerate(obj):
                     if color:
-                        if data['type'] == "doughnut":
-                            legend.colorNamePairs.append((color[x], (data['labels'][y], " ", str(value))))
+                        if data["type"] == "doughnut":
+                            legend.colorNamePairs.append(
+                                (color[x], (data["labels"][y], " ", str(value)))
+                            )
                         else:
-                            legend.colorNamePairs.append((color[y], (data['labels'][y], " ", str(value))))
+                            legend.colorNamePairs.append(
+                                (color[y], (data["labels"][y], " ", str(value)))
+                            )
             elif color:
-                    legend.colorNamePairs.append((color[x], (data['labels'][x], " ", str(obj))))
+                legend.colorNamePairs.append(
+                    (color[x], (data["labels"][x], " ", str(obj)))
+                )
 
     def set_title_properties(self, data, title, props=None):
         if props is None:
@@ -84,7 +123,6 @@ class BaseChart:
 
 
 class BaseBarChart(BaseChart):
-
     def __init__(self):
         super().__init__()
 
@@ -106,8 +144,10 @@ class BaseBarChart(BaseChart):
         if "categoryAxis" in data:
             self.set_categoryAxis(data["categoryAxis"], props=props)
 
-            if "labels" in data['categoryAxis']:
-                self.set_categoryAxis_labels(data["categoryAxis"]["labels"], props=props)
+            if "labels" in data["categoryAxis"]:
+                self.set_categoryAxis_labels(
+                    data["categoryAxis"]["labels"], props=props
+                )
 
     def assign_labels(self, labels):
         self.categoryAxis.categoryNames = labels
@@ -117,7 +157,6 @@ class BaseBarChart(BaseChart):
             props = Props(self)
         props.add_prop(props.prop_map_bars, [("strokeColor", getColor)])
         set_properties(self.bars, data, props.prop_map_bars)
-
 
     def set_barLabels(self, data, props=None):
         if props is None:
@@ -134,7 +173,9 @@ class BaseBarChart(BaseChart):
         if props is None:
             props = Props(self)
         props.add_prop(props.prop_map_categoryAxis_labels, [("fillColor", getColor)])
-        set_properties(self.categoryAxis.labels, data, props.prop_map_categoryAxis_labels)
+        set_properties(
+            self.categoryAxis.labels, data, props.prop_map_categoryAxis_labels
+        )
 
 
 class HorizontalBar(HorizontalBarChart, BaseBarChart):
@@ -146,7 +187,6 @@ class VerticalBar(VerticalBarChart, BaseBarChart):
 
 
 class HorizontalLine(HorizontalLineChart, BaseChart):
-
     def __init__(self):
         super().__init__()
 
@@ -163,7 +203,6 @@ class HorizontalLine(HorizontalLineChart, BaseChart):
         super().set_properties(data, props=props)
 
     def fill_marker(self, fill_type):
-
         for x in range(len(self.data)):
             self.lines[x].symbol = makeMarker(fill_type)
 
@@ -173,7 +212,6 @@ class HorizontalLine(HorizontalLineChart, BaseChart):
 
 
 class PieChart(Pie, BaseChart):
-
     def __init__(self):
         super().__init__()
 
@@ -188,7 +226,7 @@ class PieChart(Pie, BaseChart):
         super().set_properties(data, props=props)
 
         if "slices" in data:
-            self.set_slices(data['slices'], props=props)
+            self.set_slices(data["slices"], props=props)
 
     def assign_labels(self, labels):
         self.labels = labels
@@ -208,7 +246,6 @@ class PieChart(Pie, BaseChart):
 
 
 class LegendedPieChart(LegendedPie, BaseChart):
-
     def __init__(self):
         super().__init__()
         self.legend1.x = 350
@@ -220,7 +257,7 @@ class LegendedPieChart(LegendedPie, BaseChart):
         super().set_properties(data, props=props)
 
         if "legend1" in data:
-            self.set_legend1(self.legend1, data['legend1'], props=props)
+            self.set_legend1(self.legend1, data["legend1"], props=props)
 
     def set_legend1(self, obj, data, props=None):
         if props is None:
@@ -232,7 +269,6 @@ class LegendedPieChart(LegendedPie, BaseChart):
 
 
 class DoughnutChart(Doughnut, BaseChart):
-
     def __init__(self):
         super().__init__()
 

@@ -25,8 +25,8 @@ Helper for complex CSS definitons like font, margin, padding and border
 Optimized for use with PISA
 """
 
-#support python 3
-#import types
+# support python 3
+# import types
 TupleType = tuple
 ListType = list
 
@@ -39,24 +39,16 @@ def toList(value):
     return value
 
 
-_styleTable = {
-    "normal": "",
-    "italic": "",
-    "oblique": "",
-}
+_styleTable = {"normal": "", "italic": "", "oblique": ""}
 
-_variantTable = {
-    "normal": None,
-    "small-caps": None,
-}
+_variantTable = {"normal": None, "small-caps": None}
 
 _weightTable = {
     "light": 300,
-    "lighter": 300, # fake relativness for now
+    "lighter": 300,  # fake relativness for now
     "normal": 400,
     "bold": 700,
-    "bolder": 700, # fake relativness for now
-
+    "bolder": 700,  # fake relativness for now
     "100": 100,
     "200": 200,
     "300": 300,
@@ -66,13 +58,12 @@ _weightTable = {
     "700": 700,
     "800": 800,
     "900": 900,
-
-    #wx.LIGHT: 300,
-    #wx.NORMAL: 400,
-    #wx.BOLD: 700,
+    # wx.LIGHT: 300,
+    # wx.NORMAL: 400,
+    # wx.BOLD: 700,
 }
 
-#_absSizeTable = {
+# _absSizeTable = {
 #    "xx-small" : 3./5.,
 #    "x-small": 3./4.,
 #    "small": 8./9.,
@@ -98,7 +89,7 @@ _borderStyleTable = {
     "outset": 1,
 }
 
-'''
+"""
 _relSizeTable = {
     'pt':
         # pt: absolute point size
@@ -133,7 +124,7 @@ _relSizeTable = {
         # em: proportional to the 'font-size' of the parent font
         (lambda value, pt: pt * value),
     }
-'''
+"""
 
 
 def getNextPart(parts):
@@ -166,7 +157,7 @@ def splitBorder(parts):
             width = part
 
         # Style
-        elif hasattr(part, 'lower') and part.lower() in _borderStyleTable:
+        elif hasattr(part, "lower") and part.lower() in _borderStyleTable:
             style = part
 
         # Color
@@ -184,7 +175,6 @@ def parseSpecialRules(declarations, debug=0):
     dd = []
 
     for d in declarations:
-
         if debug:
             log.debug("CSS special  IN: %r", d)
 
@@ -211,7 +201,7 @@ def parseSpecialRules(declarations, debug=0):
                 # Size and Line Height
             if isinstance(part, tuple) and len(part) == 3:
                 fontSize, slash, lineHeight = part
-                assert slash == '/'
+                assert slash == "/"
                 dd.append(("font-size", fontSize, last))
                 dd.append(("line-height", lineHeight, last))
             else:
@@ -226,7 +216,6 @@ def parseSpecialRules(declarations, debug=0):
             # XXX We do not receive url() and parts list, so we go for a dirty work arround
             part = getNextPart(parts) or oparts
             if part:
-
                 if isinstance(part, str) and (("." in part) or ("data:" in part)):
                     dd.append(("background-image", part, last))
                 else:
@@ -244,9 +233,9 @@ def parseSpecialRules(declarations, debug=0):
                     dd.append(("background-image", part, last))
                     # XXX Incomplete! Error in url()!
 
-# TODO: We should definitely outsource the "if len() ==" part into a separate function!
-# Because we're repeating the same if-elif-else statement for MARGIN, PADDING,
-# BORDER-WIDTH, BORDER-COLOR and BORDER-STYLE. That's pretty messy. (fbernhart)
+        # TODO: We should definitely outsource the "if len() ==" part into a separate function!
+        # Because we're repeating the same if-elif-else statement for MARGIN, PADDING,
+        # BORDER-WIDTH, BORDER-COLOR and BORDER-STYLE. That's pretty messy. (fbernhart)
         # MARGIN
         elif name == "margin":
             if len(parts) == 1:
@@ -400,15 +389,16 @@ def parseSpecialRules(declarations, debug=0):
     if debug and dd:
         log.debug("CSS special OUT:\n%s", "\n".join([repr(d) for d in dd]))
 
-    if 0: #declarations!=dd:
-        print ("###", declarations)
-        print ("#->", dd)
+    if 0:  # declarations!=dd:
+        print("###", declarations)
+        print("#->", dd)
         # CSS MODIFY! END
     return dd
 
 
-#import re
-#_rxhttp = re.compile(r"url\([\'\"]?http\:\/\/[^\/]", re.IGNORECASE|re.DOTALL)
+# import re
+# _rxhttp = re.compile(r"url\([\'\"]?http\:\/\/[^\/]", re.IGNORECASE|re.DOTALL)
+
 
 def cleanupCSS(src):
     # src = _rxhttp.sub('url(', src)

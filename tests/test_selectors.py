@@ -22,7 +22,7 @@ class SelectorsTest(TestCase):
         general_css = "p { color: yellow;}"
         specific_css = ".red { color: red;}"
 
-        parser = CSSParser(CSSBuilder(mediumSet=['pdf']))
+        parser = CSSParser(CSSBuilder(mediumSet=["pdf"]))
 
         general_selector = list(parser.parse(general_css)[0].keys())[0]
         specific_selector = list(parser.parse(specific_css)[0].keys())[0]

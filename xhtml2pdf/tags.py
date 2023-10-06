@@ -32,7 +32,14 @@ from reportlab.platypus.flowables import Flowable, HRFlowable, PageBreak, Spacer
 from reportlab.platypus.frames import Frame
 from reportlab.platypus.paraparser import ABag, tt2ps
 
-from .charts import DoughnutChart, PieChart, HorizontalLine, VerticalBar, HorizontalBar, LegendedPieChart
+from .charts import (
+    DoughnutChart,
+    PieChart,
+    HorizontalLine,
+    VerticalBar,
+    HorizontalBar,
+    LegendedPieChart,
+)
 from xhtml2pdf import xhtml2pdf_reportlab
 from xhtml2pdf.util import dpi96, getAlign, getColor, getSize
 from xhtml2pdf.xhtml2pdf_reportlab import PmlImage, PmlPageTemplate
@@ -71,8 +78,8 @@ class pisaTagBODY(pisaTag):
 
     def start(self, c):
         c.baseFontSize = c.frag.fontSize
-        if 'dir' in self.attr and self.attr['dir']:
-            c.setDir(self.attr['dir'])
+        if "dir" in self.attr and self.attr["dir"]:
+            c.setDir(self.attr["dir"])
         # print("base font size", c.baseFontSize)
 
 
@@ -85,7 +92,6 @@ class pisaTagTITLE(pisaTag):
 class pisaTagSTYLE(pisaTag):
     def start(self, c):
         c.addPara()
-
 
     def end(self, c):
         c.clearFrag()
@@ -111,7 +117,6 @@ class pisaTagSUB(pisaTag):
 class pisaTagA(pisaTag):
     rxLink = r"^(#|[a-z]+\:).*"
 
-
     def start(self, c):
         attr = self.attr
         # XXX Also support attr.id ?
@@ -123,10 +128,7 @@ class pisaTagA(pisaTag):
             afrag.fontName = "Helvetica"
             afrag.bold = 0
             afrag.italic = 0
-            afrag.cbDefn = ABag(
-                kind="anchor",
-                name=attr.name,
-                label="anchor")
+            afrag.cbDefn = ABag(kind="anchor", name=attr.name, label="anchor")
             c.fragAnchor.append(afrag)
             c.anchorName.append(attr.name)
         if attr.href and re.match(self.rxLink, attr.href):
@@ -157,8 +159,8 @@ class pisaTagP(pisaTag):
         # save the type of tag; it's used in PmlBaseDoc.afterFlowable()
         # to check if we need to add an outline-entry
         # c.frag.tag = self.tag
-        if 'dir' in self.attr and self.attr['dir']:
-            c.setDir(self.attr['dir'])
+        if "dir" in self.attr and self.attr["dir"]:
+            c.setDir(self.attr["dir"])
         if self.attr.align is not None:
             c.frag.alignment = getAlign(self.attr.align)
 
@@ -197,19 +199,19 @@ def listDecimal(c):
 
 
 roman_numeral_map = (
-    (1000, 'M'),
-    (900, 'CM'),
-    (500, 'D'),
-    (400, 'CD'),
-    (100, 'C'),
-    (90, 'XC'),
-    (50, 'L'),
-    (40, 'XL'),
-    (10, 'X'),
-    (9, 'IX'),
-    (5, 'V'),
-    (4, 'IV'),
-    (1, 'I'),
+    (1000, "M"),
+    (900, "CM"),
+    (500, "D"),
+    (400, "CD"),
+    (100, "C"),
+    (90, "XC"),
+    (50, "L"),
+    (40, "XL"),
+    (10, "X"),
+    (9, "IX"),
+    (5, "V"),
+    (4, "IV"),
+    (1, "I"),
 )
 
 
@@ -219,7 +221,7 @@ def int_to_roman(i):
         count = int(i / integer)
         result.append(numeral * count)
         i -= integer * count
-    return ''.join(result)
+    return "".join(result)
 
 
 def listUpperRoman(c):
@@ -249,9 +251,9 @@ def listLowerAlpha(c):
     return listUpperAlpha(c).lower()
 
 
-_bullet = u"\u2022"
+_bullet = "\u2022"
 _list_style_type = {
-    "none": u"",
+    "none": "",
     "disc": _bullet,
     "circle": _bullet,  # XXX PDF has no equivalent
     "square": _bullet,  # XXX PDF has no equivalent
@@ -299,13 +301,10 @@ class pisaTagLI(pisaTag):
 
         self.offset = 0
         if frag.listStyleImage is not None:
-            frag.text = u""
+            frag.text = ""
             f = frag.listStyleImage
             if f and (not f.notFound()):
-                img = PmlImage(
-                    f.getData(),
-                    width=None,
-                    height=None)
+                img = PmlImage(f.getData(), width=None, height=None)
                 img.drawHeight *= dpi96
                 img.drawWidth *= dpi96
                 img.pisaZoom = frag.zoom
@@ -314,14 +313,16 @@ class pisaTagLI(pisaTag):
                 frag.image = img
                 self.offset = max(0, img.drawHeight - c.frag.fontSize)
         else:
-            if type(lst) == type(u""):
+            if type(lst) == type(""):
                 frag.text = lst
             else:
                 # XXX This should be the recent font, but it throws errors in Reportlab!
                 frag.text = lst(c)
 
         # XXX This should usually be done in the context!!!
-        frag.fontName = frag.bulletFontName = tt2ps(frag.fontName, frag.bold, frag.italic)
+        frag.fontName = frag.bulletFontName = tt2ps(
+            frag.fontName, frag.bold, frag.italic
+        )
         c.frag.bulletText = [frag]
 
     def end(self, c):
@@ -356,10 +357,7 @@ class pisaTagIMG(pisaTag):
                     if attr.height:
                         height = attr.height * dpi96
 
-                    img = PmlImage(
-                        filedata,
-                        width=None,
-                        height=None)
+                    img = PmlImage(filedata, width=None, height=None)
 
                     img.pisaZoom = c.frag.zoom
 
@@ -367,7 +365,9 @@ class pisaTagIMG(pisaTag):
                     img.drawWidth *= dpi96
 
                     if (width is None) and (height is not None):
-                        factor = getSize(height, default=img.drawHeight) / img.drawHeight
+                        factor = (
+                            getSize(height, default=img.drawHeight) / img.drawHeight
+                        )
                         img.drawWidth *= factor
                         img.drawHeight = getSize(height, default=img.drawHeight)
                     elif (height is None) and (width is not None):
@@ -386,25 +386,21 @@ class pisaTagIMG(pisaTag):
 
                     # print "image", id(img), img.drawWidth, img.drawHeight
 
-                    '''
+                    """
                     TODO:
     
                     - Apply styles
                     - vspace etc.
                     - Borders
                     - Test inside tables
-                    '''
+                    """
 
                     c.force = True
                     if align in ["left", "right"]:
-
                         c.image = img
-                        c.imageData = dict(
-                            align=align
-                        )
+                        c.imageData = dict(align=align)
 
                     else:
-
                         # Important! Make sure that cbDefn is not inherited by other
                         # fragments because of a bug in Reportlab!
                         # afrag = c.frag.clone()
@@ -419,15 +415,16 @@ class pisaTagIMG(pisaTag):
 
                         afrag = c.frag.clone()
                         afrag.text = ""
-                        afrag.fontName = "Helvetica" # Fix for a nasty bug!!!
+                        afrag.fontName = "Helvetica"  # Fix for a nasty bug!!!
                         afrag.cbDefn = ABag(
                             kind="img",
-                            image=img, # .getImage(), # XXX Inline?
+                            image=img,  # .getImage(), # XXX Inline?
                             valign=valign,
                             fontName="Helvetica",
                             fontSize=img.drawHeight,
                             width=img.drawWidth,
-                            height=img.drawHeight)
+                            height=img.drawHeight,
+                        )
 
                         c.fragList.append(afrag)
                         c.fontSize = img.drawHeight
@@ -439,33 +436,40 @@ class pisaTagIMG(pisaTag):
         else:
             log.warning(c.warning("Need a valid file name!"))
 
+
 class pisaTagHR(pisaTag):
     def start(self, c):
         c.addPara()
-        c.addStory(HRFlowable(
-            color=self.attr.color,
-            thickness=self.attr.size,
-            width=self.attr.get('width', "100%") or "100%",
-            spaceBefore=c.frag.spaceBefore,
-            spaceAfter=c.frag.spaceAfter
-        ))
+        c.addStory(
+            HRFlowable(
+                color=self.attr.color,
+                thickness=self.attr.size,
+                width=self.attr.get("width", "100%") or "100%",
+                spaceBefore=c.frag.spaceBefore,
+                spaceAfter=c.frag.spaceAfter,
+            )
+        )
+
 
 # --- Forms
 
-class pisaTagINPUT(pisaTag):
 
+class pisaTagINPUT(pisaTag):
     def _render(self, c, attr):
         width = 10
         height = 10
         if attr.type == "text":
             width = 100
             height = 12
-        c.addStory(xhtml2pdf_reportlab.PmlInput(attr.name,
-                                                input_type=attr.type,
-                                                default=attr.value,
-                                                width=width,
-                                                height=height,
-        ))
+        c.addStory(
+            xhtml2pdf_reportlab.PmlInput(
+                attr.name,
+                input_type=attr.type,
+                default=attr.value,
+                width=width,
+                height=height,
+            )
+        )
 
     def end(self, c):
         c.addPara()
@@ -473,6 +477,7 @@ class pisaTagINPUT(pisaTag):
         if attr.name:
             self._render(c, attr)
         c.addPara()
+
 
 class pisaTagTEXTAREA(pisaTagINPUT):
     #
@@ -482,30 +487,37 @@ class pisaTagTEXTAREA(pisaTagINPUT):
         width = int(attr.cols) * 5
 
         # this does not currently support the ability to pre-populate the text field with data that appeared within the <textarea></textarea> tags
-        c.addStory(xhtml2pdf_reportlab.PmlInput(attr.name,
-                                                input_type="text",
-                                                default="",
-                                                width=width,
-                                                height=height,
-                                                multiline=multiline))
+        c.addStory(
+            xhtml2pdf_reportlab.PmlInput(
+                attr.name,
+                input_type="text",
+                default="",
+                width=width,
+                height=height,
+                multiline=multiline,
+            )
+        )
 
 
 class pisaTagSELECT(pisaTagINPUT):
-
     def start(self, c):
         c.select_options = ["One", "Two", "Three"]
 
     def _render(self, c, attr):
-        c.addStory(xhtml2pdf_reportlab.PmlInput(attr.name,
-                                                input_type="select",
-                                                default=c.select_options[0],
-                                                options=c.select_options,
-                                                width=100,
-                                                height=40))
+        c.addStory(
+            xhtml2pdf_reportlab.PmlInput(
+                attr.name,
+                input_type="select",
+                default=c.select_options[0],
+                options=c.select_options,
+                width=100,
+                height=40,
+            )
+        )
         c.select_options = None
 
-class pisaTagOPTION(pisaTag):
 
+class pisaTagOPTION(pisaTag):
     pass
 
 
@@ -550,7 +562,6 @@ class pisaTagPDFSPACER(pisaTag):
         c.addStory(Spacer(1, self.attr.height))
 
 
-
 class pisaTagPDFPAGENUMBER(pisaTag):
     """
     <pdf:pagenumber example="" />
@@ -558,11 +569,12 @@ class pisaTagPDFPAGENUMBER(pisaTag):
 
     def start(self, c):
         flow = PageNumberFlowable()
-        pn=c.addPageNumber(flow)
+        pn = c.addPageNumber(flow)
         c.addStory(flow)
         c.frag.pageNumber = True
         c.addFrag(pn)
         c.frag.pageNumber = False
+
 
 class pisaTagPDFPAGECOUNT(pisaTag):
     """
@@ -606,13 +618,17 @@ class pisaTagPDFFRAME(pisaTag):
 
         x, y, w, h = attrs.box
         self.frame = Frame(
-            x, y, w, h,
+            x,
+            y,
+            w,
+            h,
             id=name,
             leftPadding=0,
             rightPadding=0,
             bottomPadding=0,
             topPadding=0,
-            showBoundary=attrs.border)
+            showBoundary=attrs.border,
+        )
 
         self.static = False
         if self.attr.static:
@@ -652,11 +668,7 @@ class pisaTagPDFTEMPLATE(pisaTag):
         if len(c.frameList) <= 0:
             log.warning(c.warning("missing frame definitions for template"))
 
-        pt = PmlPageTemplate(
-            id=name,
-            frames=c.frameList,
-            pagesize=A4,
-        )
+        pt = PmlPageTemplate(id=name, frames=c.frameList, pagesize=A4)
         pt.pisaStaticList = c.frameStaticList
         pt.pisaBackgroundList = c.pisaBackgroundList
         pt.pisaBackground = self.attr.background
@@ -666,17 +678,21 @@ class pisaTagPDFTEMPLATE(pisaTag):
         c.frameList = []
         c.frameStaticList = []
 
+
 class pisaTagPDFLANGUAGE(pisaTag):
     """
     <pdf:language name=""/>
     """
+
     def start(self, c):
-        setattr(c,'language',self.attr.name)
+        setattr(c, "language", self.attr.name)
+
 
 class pisaTagPDFFONT(pisaTag):
     """
     <pdf:fontembed name="" src="" />
     """
+
     def start(self, c):
         deprecation("pdf:font")
         c.loadFont(self.attr.name, self.attr.src, self.attr.encoding)
@@ -707,8 +723,9 @@ class pisaTagPDFBARCODE(pisaTag):
         """
         Wrapper for barcode widget
         """
+
         def __init__(self, codeName="Code128", value="", **kw):
-            self.vertical = kw.get('vertical', 0)
+            self.vertical = kw.get("vertical", 0)
             self.widget = createBarcodeDrawing(codeName, value=value, **kw)
 
         def draw(self, canvas, xoffset=0, **kw):
@@ -775,34 +792,28 @@ class pisaTagPDFBARCODE(pisaTag):
         afrag.text = ""
         afrag.fontName = fontName
         afrag.cbDefn = ABag(
-            kind="barcode",
-            barcode=barcode,
-            width=width,
-            height=height,
-            valign=valign,
+            kind="barcode", barcode=barcode, width=width, height=height, valign=valign
         )
         c.fragList.append(afrag)
 
 
 class pisaTagCANVAS(pisaTag):
-
     def __init__(self, node, attr):
         super().__init__(node, attr)
         self.chart = None
         self.shapes = {
-            'horizontalbar': HorizontalBar,
-            'verticalbar': VerticalBar,
-            'horizontalline': HorizontalLine,
-            'pie': PieChart,
-            'doughnut': DoughnutChart,
-            'legendedPie': LegendedPieChart
+            "horizontalbar": HorizontalBar,
+            "verticalbar": VerticalBar,
+            "horizontalline": HorizontalLine,
+            "pie": PieChart,
+            "doughnut": DoughnutChart,
+            "legendedPie": LegendedPieChart,
         }
 
     def start(self, c):
         pass
 
     def end(self, c):
-
         data = None
         width = 350
         height = 150
@@ -813,10 +824,9 @@ class pisaTagCANVAS(pisaTag):
             print("JSON Decode Error")
 
         if data:
-
-            nodetype = dict(c.node.attributes).get('type')
-            nodewidth = dict(c.node.attributes).get('width')
-            nodeheight = dict(c.node.attributes).get('height')
+            nodetype = dict(c.node.attributes).get("type")
+            nodewidth = dict(c.node.attributes).get("width")
+            nodeheight = dict(c.node.attributes).get("height")
             canvastype = None
 
             if nodetype is not None:
@@ -830,24 +840,31 @@ class pisaTagCANVAS(pisaTag):
             if nodeheight:
                 height = int(nodeheight.nodeValue)
 
-            self.chart = self.shapes[data['type']]()
+            self.chart = self.shapes[data["type"]]()
             draw = Drawing(width, height)  # CONTAINER
-            draw.background = Rect(115, 25, width, height, strokeWidth=1, strokeColor="#868686", fillColor="#f8fce8")
+            draw.background = Rect(
+                115,
+                25,
+                width,
+                height,
+                strokeWidth=1,
+                strokeColor="#868686",
+                fillColor="#f8fce8",
+            )
 
             # REQUIRED DATA
             self.chart.set_properties(data)
 
-
-            #OPTIONAL DATA
+            # OPTIONAL DATA
             if "title" in data:
                 title = Label()
-                self.chart.set_title_properties(data['title'], title)
+                self.chart.set_title_properties(data["title"], title)
                 draw.add(title)
 
             if "legend" in data:
                 if data["legend"]:
                     legend = Legend()
-                    self.chart.set_legend(data['legend'], legend)
+                    self.chart.set_legend(data["legend"], legend)
                     self.chart.load_data_legend(data, legend)
                     draw.add(legend)
 

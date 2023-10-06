@@ -22,7 +22,7 @@ __doc__ = """
 
 
 class AsianFontSupportTests(TestCase):
-    HTML_CONTENT = u"""
+    HTML_CONTENT = """
     <html>
     <head>
     <title></title>
@@ -103,15 +103,13 @@ class AsianFontSupportTests(TestCase):
 
     def test_asian_font_in_pdf(self):
         """
-            Tests if the asian fonts used in the CSS property "font-family"
-            are correctly embeded in the pdf result.
+        Tests if the asian fonts used in the CSS property "font-family"
+        are correctly embeded in the pdf result.
         """
 
         # Read the embeded fonts from the finished pdf file
         with io.BytesIO() as pdf_file:
-            pisa_doc = pisaDocument(
-                src=self.HTML_CONTENT,
-                dest=pdf_file)
+            pisa_doc = pisaDocument(src=self.HTML_CONTENT, dest=pdf_file)
             pdf_file.seek(0)
             pdf_content = PdfReader(pdf_file)
             pdf_fonts = read_fonts_from_pdf(pdf_content)
@@ -123,37 +121,53 @@ class AsianFontSupportTests(TestCase):
                 html_fonts.append(html_font_family)
 
         # Test, if all of the font-families from the html are also in the pdf file
-        self.assertTrue(pdf_fonts.issuperset(html_fonts), 'Not all asian fonts detected in the PDF file!')
+        self.assertTrue(
+            pdf_fonts.issuperset(html_fonts),
+            "Not all asian fonts detected in the PDF file!",
+        )
 
     def test_get_default_asian_font(self):
-        """ Tests if we can successfully extract the default asian fonts """
+        """Tests if we can successfully extract the default asian fonts"""
 
         DEFAULT_ASIAN_FONT = get_default_asian_font()
 
         # Test, if is dict
-        self.assertIsInstance(DEFAULT_ASIAN_FONT, dict, 'get_default_asian_font not returning a dict!')
+        self.assertIsInstance(
+            DEFAULT_ASIAN_FONT, dict, "get_default_asian_font not returning a dict!"
+        )
         # Test, if dict is not empty
-        self.assertNotEqual(DEFAULT_ASIAN_FONT, {}, 'get_default_asian_font return an empty dict!')
+        self.assertNotEqual(
+            DEFAULT_ASIAN_FONT, {}, "get_default_asian_font return an empty dict!"
+        )
 
     def test_asian_reportlab_fonts(self):
-        """ Tests the asian font list that we're getting from reportlab
-            If there is an Error here, ReportLab probably has changed/added new asian fonts
+        """Tests the asian font list that we're getting from reportlab
+        If there is an Error here, ReportLab probably has changed/added new asian fonts
         """
 
-        reference = {'HeiseiMin-W3': ('jpn', 'UniJIS-UCS2-H'), 'HeiseiKakuGo-W5': ('jpn', 'UniJIS-UCS2-H'),
-                     'STSong-Light': ('chs', 'UniGB-UCS2-H'), 'MSung-Light': ('cht', 'UniGB-UCS2-H'),
-                     'HYSMyeongJo-Medium': ('kor', 'UniKS-UCS2-H'), 'HYGothic-Medium': ('kor', 'UniKS-UCS2-H')}
+        reference = {
+            "HeiseiMin-W3": ("jpn", "UniJIS-UCS2-H"),
+            "HeiseiKakuGo-W5": ("jpn", "UniJIS-UCS2-H"),
+            "STSong-Light": ("chs", "UniGB-UCS2-H"),
+            "MSung-Light": ("cht", "UniGB-UCS2-H"),
+            "HYSMyeongJo-Medium": ("kor", "UniKS-UCS2-H"),
+            "HYGothic-Medium": ("kor", "UniKS-UCS2-H"),
+        }
 
         reportlab_fonts = _cidfontdata.defaultUnicodeEncodings
 
         # Test if equal to reference
-        self.assertEqual(reference, reportlab_fonts, 'New asian fonts added or changed by ReportLab !')
+        self.assertEqual(
+            reference,
+            reportlab_fonts,
+            "New asian fonts added or changed by ReportLab !",
+        )
 
 
 def get_fonts_from_page(obj, fnt):
     for k in obj:
-        if '/BaseFont' in obj[k]:
-            fnt.add(str(obj[k]['/BaseFont'])[1:])
+        if "/BaseFont" in obj[k]:
+            fnt.add(str(obj[k]["/BaseFont"])[1:])
     return fnt
 
 
@@ -162,6 +176,6 @@ def read_fonts_from_pdf(pdf):
 
     for page in pdf.pages:
         obj = page.get_object()
-        fonts = get_fonts_from_page(obj['/Resources']['/Font'], fonts)
+        fonts = get_fonts_from_page(obj["/Resources"]["/Font"], fonts)
 
     return fonts

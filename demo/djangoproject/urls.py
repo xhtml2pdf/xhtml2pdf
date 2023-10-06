@@ -16,7 +16,4 @@ Including another URLconf
 from django.conf.urls import url
 import views
 
-urlpatterns = [
-    url(r'^$', views.index),
-    url(r'^download$', views.render_pdf),
-]
+urlpatterns = [url(r"^$", views.index), url(r"^download$", views.render_pdf)]

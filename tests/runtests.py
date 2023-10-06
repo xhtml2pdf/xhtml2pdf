@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.abspath(os.pardir))
 
 def buildTestSuite():
     suite = unittest.TestSuite()
-    for testcase in glob.glob('test_*.py'):
+    for testcase in glob.glob("test_*.py"):
         module = os.path.splitext(testcase)[0]
         suite.addTest(__import__(module).buildTestSuite())
     return suite

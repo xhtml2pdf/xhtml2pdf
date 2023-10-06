@@ -62,7 +62,6 @@ else:
 
 class DocumentTest(TestCase):
     def _compare_pdf_metadata(self, pdf_file, assertion):
-
         # Ensure something has been written
         self.assertNotEqual(pdf_file.tell(), 0)
 
@@ -85,22 +84,26 @@ class DocumentTest(TestCase):
         Test that a transparent PNG image is rendered properly.
         """
         tests_folder = os.path.dirname(os.path.realpath(__file__))
-        image_path = os.path.join(tests_folder, 'samples', 'img', 'denker-transparent.png')
-        extra_html = "<img src=\"{image_path}\">".format(image_path=image_path)
+        image_path = os.path.join(
+            tests_folder, "samples", "img", "denker-transparent.png"
+        )
+        extra_html = '<img src="{image_path}">'.format(image_path=image_path)
 
         with tempfile.TemporaryFile() as pdf_file:
             pisaDocument(
                 src=io.StringIO(HTML_CONTENT.format(head="", extra_html=extra_html)),
-                dest=pdf_file
+                dest=pdf_file,
             )
             pdf_file.seek(0)
             pdf_reader = PdfReader(pdf_file)
 
-            xobjects = pdf_reader.pages[0]['/Resources']['/XObject'].get_object()
+            xobjects = pdf_reader.pages[0]["/Resources"]["/XObject"].get_object()
             objects = [xobjects[key] for key in xobjects.keys()]
 
             # Identity the 'denker_transparent.png' image by its height and width, and make sure it's there.
-            denker_transparant = [obj for obj in objects if obj['/Height'] == 137 and obj['/Width'] == 70]
+            denker_transparant = [
+                obj for obj in objects if obj["/Height"] == 137 and obj["/Width"] == 70
+            ]
             self.assertEqual(len(denker_transparant), 1)
 
     def test_document_background_image(self):
@@ -108,25 +111,32 @@ class DocumentTest(TestCase):
         Test that a transparent PNG image is rendered properly.
         """
         tests_folder = os.path.dirname(os.path.realpath(__file__))
-        image_path = os.path.join(tests_folder, 'samples', 'img', 'denker-transparent.png')
+        image_path = os.path.join(
+            tests_folder, "samples", "img", "denker-transparent.png"
+        )
 
         css_background = """<style>@page {{background-image: url('{background_location}');
                          @frame {{left: 10pt}}}}</style>""".format(
-            background_location=image_path)
+            background_location=image_path
+        )
 
         with tempfile.TemporaryFile() as pdf_file:
             pisaDocument(
-                src=io.StringIO(HTML_CONTENT.format(head=css_background, extra_html="")),
-                dest=pdf_file
+                src=io.StringIO(
+                    HTML_CONTENT.format(head=css_background, extra_html="")
+                ),
+                dest=pdf_file,
             )
             pdf_file.seek(0)
             pdf_reader = PdfReader(pdf_file)
 
-            xobjects = pdf_reader.pages[0]['/Resources']['/XObject'].get_object()
+            xobjects = pdf_reader.pages[0]["/Resources"]["/XObject"].get_object()
             objects = [xobjects[key] for key in xobjects.keys()]
 
             # Identity the 'denker_transparent.png' image by its height and width, and make sure it's there.
-            denker_transparant = [obj for obj in objects if obj['/Height'] == 137 and obj['/Width'] == 70]
+            denker_transparant = [
+                obj for obj in objects if obj["/Height"] == 137 and obj["/Width"] == 70
+            ]
             self.assertEqual(len(denker_transparant), 1)
 
     def test_document_background_image_not_on_all_pages(self):
@@ -134,18 +144,21 @@ class DocumentTest(TestCase):
         Test that all pages are being rendered, when background is a pdf file and it's applied for the first page only.
         """
         tests_folder = os.path.dirname(os.path.realpath(__file__))
-        background_path = os.path.join(tests_folder, 'samples', 'images.pdf')
+        background_path = os.path.join(tests_folder, "samples", "images.pdf")
 
         css = """"<style>@page {{background-image: url('{background_location}'); @frame {{left: 10pt}}}}
               @page two {{@frame {{left: 10 pt}}}}</style>""".format(
-            background_location=background_path)
+            background_location=background_path
+        )
 
-        extra_html = """<pdf:nexttemplate name="two"> <pdf:nextpage> <p>Hello, world!</p>"""
+        extra_html = (
+            """<pdf:nexttemplate name="two"> <pdf:nextpage> <p>Hello, world!</p>"""
+        )
 
         with tempfile.TemporaryFile() as pdf_file:
             pisaDocument(
                 src=io.StringIO(HTML_CONTENT.format(head=css, extra_html=extra_html)),
-                dest=pdf_file
+                dest=pdf_file,
             )
             pdf_file.seek(0)
             pdf_reader = PdfReader(pdf_file)
@@ -157,27 +170,23 @@ class DocumentTest(TestCase):
         Test that nested tables are being rendered.
         """
         tests_folder = os.path.dirname(os.path.realpath(__file__))
-        html_path = os.path.join(tests_folder, 'samples', 'nested_table.html')
+        html_path = os.path.join(tests_folder, "samples", "nested_table.html")
 
         with open(html_path) as html_file:
             html = html_file.read()
 
         with tempfile.TemporaryFile() as pdf_file:
-            pisaDocument(
-                src=io.StringIO(html),
-                dest=pdf_file
-            )
+            pisaDocument(src=io.StringIO(html), dest=pdf_file)
             pdf_file.seek(0)
             pdf_reader = PdfReader(pdf_file)
             self.assertEqual(len(pdf_reader.pages), 1)
-
 
     @skipIf(IN_PYPY, "This doesn't work in pypy")
     def test_document_creation_without_metadata(self):
         with tempfile.TemporaryFile() as pdf_file:
             pisaDocument(
                 src=io.StringIO(HTML_CONTENT.format(head="", extra_html="")),
-                dest=pdf_file
+                dest=pdf_file,
             )
             self._compare_pdf_metadata(pdf_file, self.assertNotEqual)
 
@@ -187,7 +196,7 @@ class DocumentTest(TestCase):
             pisaDocument(
                 src=io.StringIO(HTML_CONTENT.format(head="", extra_html="")),
                 dest=pdf_file,
-                context_meta=METADATA
+                context_meta=METADATA,
             )
             self._compare_pdf_metadata(pdf_file, self.assertEqual)
 
@@ -198,7 +207,7 @@ class DocumentTest(TestCase):
                 pisaDocument(
                     src=io.StringIO(HTML_CONTENT.format(head=css_code, extra_html="")),
                     dest=pdf_file,
-                    context_meta=METADATA
+                    context_meta=METADATA,
                 )
                 self._compare_pdf_metadata(pdf_file, self.assertEqual)
 
@@ -208,9 +217,14 @@ class DocumentTest(TestCase):
 
     def test_in_memory_document(self):
         with io.BytesIO() as in_memory_file:
-            pisaDocument(HTML_CONTENT.format(head="", extra_html=""), dest=in_memory_file)
+            pisaDocument(
+                HTML_CONTENT.format(head="", extra_html=""), dest=in_memory_file
+            )
             self.assertGreater(len(in_memory_file.getvalue()), 0)
 
         with io.BytesIO() as in_memory_file:
-            pisaDocument(io.StringIO(HTML_CONTENT.format(head="", extra_html="")), dest=in_memory_file)
+            pisaDocument(
+                io.StringIO(HTML_CONTENT.format(head="", extra_html="")),
+                dest=in_memory_file,
+            )
             self.assertGreater(len(in_memory_file.getvalue()), 0)

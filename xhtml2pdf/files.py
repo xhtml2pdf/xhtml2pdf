@@ -18,17 +18,12 @@ from xhtml2pdf.config.httpconfig import httpConfig
 GAE = "google.appengine" in sys.modules
 log = logging.getLogger("xhtml2pdf")
 if GAE:
-    STRATEGIES = (
-        BytesIO,
-        BytesIO)
+    STRATEGIES = (BytesIO, BytesIO)
 else:
-    STRATEGIES = (
-        BytesIO,
-        tempfile.NamedTemporaryFile)
+    STRATEGIES = (BytesIO, tempfile.NamedTemporaryFile)
 
 
 class TmpFiles(threading.local):
-
     files = []
 
     def append(self, file):
@@ -90,7 +85,7 @@ class pisaTempFile(object):
                 self.strategy = 1
                 log.warning("Created temporary file %s", self.name)
             except:
-                self.capacity = - 1
+                self.capacity = -1
 
     def getFileName(self):
         """
@@ -120,7 +115,7 @@ class pisaTempFile(object):
         self._delegate.seek(0)
         value = self._delegate.read()
         if not isinstance(value, bytes):
-            value = value.encode('utf-8')
+            value = value.encode("utf-8")
         return value
 
     def write(self, value):
@@ -134,13 +129,12 @@ class pisaTempFile(object):
                 needs_new_strategy = True
             else:
                 self.seek(0, 2)  # find end of file
-                needs_new_strategy = \
-                    (self.tell() + len_value) >= self.capacity
+                needs_new_strategy = (self.tell() + len_value) >= self.capacity
             if needs_new_strategy:
                 self.makeTempFile()
 
         if not isinstance(value, bytes):
-            value = value.encode('utf-8')
+            value = value.encode("utf-8")
 
         self._delegate.write(value)
 
@@ -149,8 +143,7 @@ class pisaTempFile(object):
             return getattr(self._delegate, name)
         except AttributeError:
             # hide the delegation
-            e = "object '%s' has no attribute '%s'" \
-                % (self.__class__.__name__, name)
+            e = "object '%s' has no attribute '%s'" % (self.__class__.__name__, name)
             raise AttributeError(e)
 
 
@@ -188,7 +181,8 @@ class BaseFile:
 
 class B64InlineURI(BaseFile):
     _rx_datauri = re.compile(
-        "^data:(?P<mime>[a-z]+/[a-z]+);base64,(?P<data>.*)$", re.M | re.DOTALL)
+        "^data:(?P<mime>[a-z]+/[a-z]+);base64,(?P<data>.*)$", re.M | re.DOTALL
+    )
 
     def get_data(self):
         try:
@@ -204,8 +198,8 @@ class B64InlineURI(BaseFile):
 
         # The data may be incorrectly unescaped... repairs needed
         b64 = b64.strip("b'").strip("'").encode()
-        b64 = re.sub(b"\\n", b'', b64)
-        b64 = re.sub(b'[^A-Za-z0-9\\+\\/]+', b'', b64)
+        b64 = re.sub(b"\\n", b"", b64)
+        b64 = re.sub(b"[^A-Za-z0-9\\+\\/]+", b"", b64)
 
         # Add padding as needed, to make length into a multiple of 4
         #
@@ -215,7 +209,6 @@ class B64InlineURI(BaseFile):
 
 
 class LocalProtocolURI(BaseFile):
-
     def get_data(self):
         try:
             return self.extract_data()
@@ -223,11 +216,10 @@ class LocalProtocolURI(BaseFile):
             log.error("Extract data form local file based on protocol")
 
     def extract_data(self):
-        if self.basepath and self.path.startswith('/'):
+        if self.basepath and self.path.startswith("/"):
             uri = urlparse.urljoin(self.basepath, self.path[1:])
             urlResponse = request.urlopen(uri)
-            self.mimetype = urlResponse.info().get(
-                "Content-Type", '').split(";")[0]
+            self.mimetype = urlResponse.info().get("Content-Type", "").split(";")[0]
             return urlResponse.read()
 
 
@@ -263,8 +255,7 @@ class NetworkFileUri(BaseFile):
         conn.request("GET", path)
         r1 = conn.getresponse()
         if (r1.status, r1.reason) == (200, "OK"):
-            self.mimetype = r1.getheader(
-                "Content-Type", '').split(";")[0]
+            self.mimetype = r1.getheader("Content-Type", "").split(";")[0]
             data = r1.read()
             if r1.getheader("content-encoding") == "gzip":
                 is_gzip = True
@@ -294,7 +285,7 @@ class LocalFileURI(BaseFile):
             log.error("Extract data form local file")
 
     def guess_mimetype(self, name):
-        " Guess the mime type "
+        "Guess the mime type"
         mimetype = mimetypes.guess_type(str(name))[0]
         if mimetype is not None:
             mimetype = mimetypes.guess_type(str(name))[0].split(";")[0]
@@ -308,14 +299,14 @@ class LocalFileURI(BaseFile):
         if self.basepath is not None:
             uri = Path(self.basepath) / path
         else:
-            uri = Path('.') / path
+            uri = Path(".") / path
         if path.exists() and not uri.exists():
             uri = path
         if uri.is_file():
             self.uri = uri
             self.suffix = uri.suffix
             self.mimetype = self.guess_mimetype(uri)
-            if self.mimetype and self.mimetype.startswith('text'):
+            if self.mimetype and self.mimetype.startswith("text"):
                 with open(uri, "r") as file_handler:
                     # removed bytes... lets hope it goes ok :/
                     data = file_handler.read()
@@ -332,7 +323,6 @@ class BytesFileUri(BaseFile):
 
 
 class LocalTmpFile(BaseFile):
-
     def __init__(self, path, basepath):
         self.path = path
         self.basepath = None
@@ -349,7 +339,7 @@ class LocalTmpFile(BaseFile):
     def get_data(self):
         if self.path is None:
             return
-        with open(self.path, 'rb') as arch:
+        with open(self.path, "rb") as arch:
             return arch.read()
 
 
@@ -370,9 +360,9 @@ class FileNetworkManager:
                 urlParts = urlparse.urlparse(uri)
 
             log.debug("URLParts: {}".format((urlParts, urlParts.scheme)))
-            if urlParts.scheme == 'file':
+            if urlParts.scheme == "file":
                 instance = LocalProtocolURI(uri, basepath)
-            elif urlParts.scheme in ('http', 'https'):
+            elif urlParts.scheme in ("http", "https"):
                 instance = NetworkFileUri(uri, basepath)
             else:
                 instance = LocalFileURI(uri, basepath)
@@ -387,10 +377,10 @@ class pisaFileObject:
             basepathret = callback(uri, basepath)
         if basepathret is not None:
             self.basepath = None
-            uri=basepathret
+            uri = basepathret
         else:
             self.basepath = basepath
-        #uri = uri or str()
+        # uri = uri or str()
         # if not isinstance(uri, str):
         #    uri = uri.decode("utf-8")
         log.debug("FileObject %r, Basepath: %r", uri, basepath)

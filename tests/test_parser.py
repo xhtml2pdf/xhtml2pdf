@@ -16,7 +16,6 @@ BODY
 
 
 class ParserTest(TestCase):
-
     def testParser(self):
         c = pisaContext(".")
         r = pisaParser(_data, c)
@@ -43,8 +42,8 @@ class ParserTest(TestCase):
     def test_image_os_path(self):
         c = pisaContext(".")
         tests_folder = os.path.dirname(os.path.realpath(__file__))
-        img_path = os.path.join(tests_folder, 'samples', 'img', 'denker.png')
-        data = '<img src="{0}">'.format(img_path).encode('utf-8')
+        img_path = os.path.join(tests_folder, "samples", "img", "denker.png")
+        data = '<img src="{0}">'.format(img_path).encode("utf-8")
         r = pisaParser(data, c)
         self.assertEqual(c, r)
         self.assertEqual(r.err, 0)
@@ -52,6 +51,9 @@ class ParserTest(TestCase):
 
     def test_image_base64(self):
         c = pisaContext(".")
-        data = b'<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=">'
+        data = (
+            b"<img"
+            b' src="data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=">'
+        )
         r = pisaParser(data, c)
         self.assertEqual(r.warn, 0)

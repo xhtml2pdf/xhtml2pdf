@@ -41,7 +41,7 @@ class TableTest(TestCase):
         html = HTML_CONTENT
 
         result = BytesIO()
-        pdf = pisaDocument(BytesIO(html.encode('utf-8')), result)
+        pdf = pisaDocument(BytesIO(html.encode("utf-8")), result)
 
         parser = html5lib.HTMLParser(tree=html5lib.treebuilders.getTreeBuilder("dom"))
         document = parser.parse(html)
@@ -106,10 +106,14 @@ class TableTest(TestCase):
         </html>
         """
 
-        context = pisaParser(BytesIO(html.encode('utf-8')), pisaContext(None))
+        context = pisaParser(BytesIO(html.encode("utf-8")), pisaContext(None))
         table = context.story[0]
         color = table._bkgrndcmds[0][3]
-        self.assertEqual(color.hexval(), '0x006400', '"background-color" in CSS not equal with output!')
+        self.assertEqual(
+            color.hexval(),
+            "0x006400",
+            '"background-color" in CSS not equal with output!',
+        )
 
     def test_td_colspan(self):
         """
@@ -138,11 +142,13 @@ class TableTest(TestCase):
         </html>
         """
 
-        context = pisaParser(BytesIO(html.encode('utf-8')), pisaContext(None))
+        context = pisaParser(BytesIO(html.encode("utf-8")), pisaContext(None))
         table = context.story[0]
         col_span = table._spanCmds[0][2]
 
-        self.assertEqual(col_span, (2, 0), '"colspan=" not working properly in the <td> tag!')
+        self.assertEqual(
+            col_span, (2, 0), '"colspan=" not working properly in the <td> tag!'
+        )
 
     def test_td_rowspan(self):
         """
@@ -173,11 +179,13 @@ class TableTest(TestCase):
         </html>
         """
 
-        context = pisaParser(BytesIO(html.encode('utf-8')), pisaContext(None))
+        context = pisaParser(BytesIO(html.encode("utf-8")), pisaContext(None))
         table = context.story[0]
         row_span = table._spanCmds[0][2]
 
-        self.assertEqual(row_span, (0, 2), '"rowspan=" not working properly in the <td> tag!')
+        self.assertEqual(
+            row_span, (0, 2), '"rowspan=" not working properly in the <td> tag!'
+        )
 
     def test_td_width_and_height(self):
         """
@@ -207,12 +215,12 @@ class TableTest(TestCase):
         </html>
         """
 
-        context = pisaParser(BytesIO(html.encode('utf-8')), pisaContext(None))
+        context = pisaParser(BytesIO(html.encode("utf-8")), pisaContext(None))
         table = context.story[0]
         col_widths = table._colWidths
         row_heights = table._rowHeights
 
         for width in col_widths:
-            self.assertEqual(width, 2.0, '<td> width in CSS not equal with output!')
+            self.assertEqual(width, 2.0, "<td> width in CSS not equal with output!")
         for height in row_heights:
-            self.assertEqual(height, 3.0, '<td> height in CSS not equal with output!')
+            self.assertEqual(height, 3.0, "<td> height in CSS not equal with output!")
