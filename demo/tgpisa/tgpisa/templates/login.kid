@@ -103,7 +103,7 @@
 
             <input py:if="forward_url" type="hidden" name="forward_url"
                 value="${forward_url}"/>
-                
+
             <div py:for="name,values in original_parameters.items()" py:strip="1">
             <input py:for="value in isinstance(values, list) and values or [values]"
                 type="hidden" name="${name}" value="${value}"/>

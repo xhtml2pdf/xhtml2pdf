@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,16 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+HTML/CSS to PDF converter.
+
+Most people know how to write a page with HTML and CSS. Why not using these skills to
+dynamically generate PDF documents using it? The "pisa" project
+http://www.htmltopdf.org enables you to to this quite simple.
+"""
+
 __version__ = "$Revision: 176 $"
 __author__ = "$Author: holtwick $"
 __date__ = "$Date: 2008-03-15 00:11:47 +0100 (Sa, 15 Mrz 2008) $"
 
-"""
-HTML/CSS to PDF converter
-
-Most people know how to write a page with HTML and CSS. Why not using these skills to dynamically generate PDF
-documents using it? The "pisa" project http://www.htmltopdf.org enables you to to this quite simple.
-"""
 import io
 
 from xhtml2pdf import pisa
@@ -86,21 +86,21 @@ if __name__ == "__main__":
             <td colspan="2" align="right">Sum</td>
             <td>0 EUR</td>
         </tr>
-    </table> 
-    
+    </table>
+
     <p> Esto es un texto al revez</p>
     <p dir="rtl">Esto es un texto al revez</p>
      <p>
 أشار إنفرسيني ، في تصريحات نُشرت يوم الأحد على الموقع الإلكتروني لصحيفة Il Post ، إلى حقيقة أن سفينة Geo Barents ، التي تديرها منظمة أطباء بلا حدود الإنسانية (MSF) ، نفذت عمليتي إنقاذ في وسط البحر الأبيض المتوسط ​​دون الحاجة إلى تفويض من الحكومة الإيطالية.
- </p> 
-    
-    
-    
-    
-    
+ </p>
+
+
+
+
+
     <a name="anchorpoint">abc</a>
     %s
-   
+
     <div id="header_content" >Lyrics-R-Us</div>
     <div id="footer_content" >(c) - page <pdf:pagenumber>
         of <pdf:pagecount>

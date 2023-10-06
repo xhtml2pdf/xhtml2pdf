@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Copyright 2010 Dirk Holtwick, holtwick.it
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -77,10 +75,7 @@ POS = 10
 # STYLE   = 11
 MUST = 23
 
-"""
-Definition of all known tags. Also used for building the reference
-"""
-
+#: Definition of all known tags. Also used for building the reference
 TAGS = {
     # FORMAT
     # "document": (1, {

@@ -11,7 +11,7 @@
 	@frame header_frame {           /* Static frame */
 	    -pdf-frame-content: header_content;
 	    left: 1cm; width: 19cm; top: 0.5cm; height: 2cm;
-	    {% if border %}	    -pdf-frame-border: 1;  {% endif %}   /* for debugging the layout */ 
+	    {% if border %}	    -pdf-frame-border: 1;  {% endif %}   /* for debugging the layout */
 	}
 	@frame content_frame {          /* Content Frame */
 	    left: 1cm; width: 19cm; top: 3cm; height: 22.2cm;
@@ -44,5 +44,3 @@
         {% if border %}	    -pdf-frame-border: 1;  {% endif %}   /* for debugging the layout */
     }
 {% endif %}
-
-

@@ -16,7 +16,7 @@
 .content tr,
 .content td,
 .content th {
-	border: 0;	
+	border: 0;
 }
 
 .content {
@@ -24,7 +24,7 @@
 	background: #fff; */
 	font: 13px arial,helvetica,clean,sans-serif;
 	font-style: normal;
-		
+
 	line-height: 150%;
 }
 
@@ -40,15 +40,15 @@
 	clear: both;
 }
 
-.content input, 
-.content textarea, 
+.content input,
+.content textarea,
 .content select {
 	font:13px/1.22 arial,helvetica,clean,sans-serif;
-	
+
 }
 
 .content table {
-	font-size:inherit;	
+	font-size:inherit;
 }
 
 .content pre,
@@ -56,7 +56,7 @@
 .content kbd,
 .content samp,
 .content tt {
-	font-family:monospace;	
+	font-family:monospace;
 	line-height:99%;
 	background-color: #eee;
 }
@@ -65,27 +65,27 @@
 .content table {
 	font-size:100%;
 	table-layout: fixed;
-	border-collapse: collapse;	
+	border-collapse: collapse;
 	border-spacing: 0;
 	empty-cells: show;
 }
-.content caption, 
-.content th, 
+.content caption,
+.content th,
 .content td {
 	text-align: left;
 	vertical-align: top;
 	font-weight: normal;
 }
 
-.content blockquote:before, 
-.content blockquote:after, 
-.content q:before, 
-.content q:after { 
-	content: ""; 
+.content blockquote:before,
+.content blockquote:after,
+.content q:before,
+.content q:after {
+	content: "";
 }
-.content blockquote, 
-.content q { 
-	quotes: "" ""; 
+.content blockquote,
+.content q {
+	quotes: "" "";
 }
 
 .content h1 {
@@ -122,7 +122,7 @@
 .content sup,
 .content sub {
 	line-height:-1px;
-	vertical-align: text-top; 
+	vertical-align: text-top;
 	font-size: 80%;
 }
 .content sub {
@@ -211,7 +211,7 @@
 .content table.table-black td {
 	border-bottom:1px solid #000;
 	border-right:1px solid #000;
-	padding:.5em;	
+	padding:.5em;
 }
 
 .content table.table-black th,
@@ -245,7 +245,7 @@
 .content table.table-red td {
 	border-bottom:1px solid red;
 	border-right:1px solid red;
-	padding:.5em;	
+	padding:.5em;
 }
 
 .content table.table-red th,
@@ -279,7 +279,7 @@
 .content table.table-blue td {
 	border-bottom:1px solid blue;
 	border-right:1px solid blue;
-	padding:.5em;	
+	padding:.5em;
 }
 
 .content table.table-blue th,
@@ -300,7 +300,7 @@
 }
 
 /* The above separated solution is a workaround for Firefox who
-   draws the left border 1�x outside of the box */ 
+   draws the left border 1�x outside of the box */
 
 * html .content table.table-black,
 * html .content table.table-red,
@@ -325,7 +325,7 @@
 }
 
 /* .content img[align=left] */
-.content img.align-left {	
+.content img.align-left {
 	margin-right: 0.5em;
 	margin-bottom: 0.5em;
 }
@@ -347,8 +347,8 @@
   border: none;
 }
 
-* html .content hr { 
-	margin: 0 0 1.2em 0; 
+* html .content hr {
+	margin: 0 0 1.2em 0;
 }
 
 .content label,
@@ -369,7 +369,7 @@
 }
 
 .content .highlight {
-	background: yellow;	
+	background: yellow;
 }
 
 /*** COLUMNS ***/
@@ -414,7 +414,7 @@ div.col-right {
 
 .content-edit table {
 	border-left: 1px dotted #ccc;
-	border-top: 1px dotted #ccc;	
+	border-top: 1px dotted #ccc;
 }
 
 .content-edit td,

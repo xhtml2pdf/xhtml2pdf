@@ -1,6 +1,6 @@
 * {
 	margin: 0;
-	padding: 0;	
+	padding: 0;
 	font-weight: normal;
 	font-style: inherit;
 	font-size: 100%;
@@ -22,25 +22,25 @@ table,
 tr,
 td,
 th,
-tbody, 
-tfoot, 
+tbody,
+tfoot,
 thead,
-applet, 
-object, 
+applet,
+object,
 iframe,
 frame,
 frameset {
-	border: 0;	
+	border: 0;
 }
 
-h1, 
-h2, 
-h3, 
-h4, 
-h5, 
-h6, 
-pre, 
-table, 
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+pre,
+table,
 blockquote {
 	clear: both;
 }
@@ -52,11 +52,11 @@ body {
 	font:13px/1.22 arial,helvetica,clean,sans-serif;
 	font-style: normal;
 	*font-size:small;
-	*font:x-small; 	
+	*font:x-small;
 }
 
-input, 
-textarea, 
+input,
+textarea,
 select {
 	font:13px/1.22 arial,helvetica,clean,sans-serif;
 	*font-size:13px;
@@ -77,7 +77,7 @@ table {
 	font-size:inherit;
 	font:100%;
 	table-layout: fixed;
-	border-collapse: collapse;	
+	border-collapse: collapse;
 	border-spacing: 0;
 	empty-cells: show;
 }
@@ -89,15 +89,15 @@ caption, th, td {
 }
 
 /* Remove possible quote marks (") from <q>, <blockquote>. */
-blockquote:before, 
-blockquote:after, 
-q:before, 
-q:after { 
-	content: ""; 
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+	content: "";
 }
 
-blockquote, q { 
-	quotes: "" ""; 
+blockquote, q {
+	quotes: "" "";
 }
 
 /* CLEAR */
@@ -113,7 +113,7 @@ blockquote, q {
 	clear: both;
 }
 
-.clear:after, 
+.clear:after,
 .container:after {
     content: ".";
     display: block;
@@ -141,7 +141,7 @@ input.validation-failed,
 select.validation-failed {
 	background: #FFFFCC;
 	border: 2px solid red;
-} 
+}
 
 textarea.sample,
 input.sample {
@@ -152,7 +152,7 @@ input.readonly {
 	background: #eee;
 }
 
-input.required {	
+input.required {
 }
 
 
@@ -185,13 +185,13 @@ input.required {
 		height: inherit !important;
 	}
 
-	body a:link, 
+	body a:link,
 	body a:visited {
 		background: transparent;
 		text-decoration: underline;
 	}
 
-	body a[href*="http://"]:link:after, 
+	body a[href*="http://"]:link:after,
 	body a[href*="http://"]:visited:after {
 	   content: " <" attr(href) "> ";
 	}
@@ -214,4 +214,3 @@ input.required {
 	}
 }
 /* CSS Document */
-

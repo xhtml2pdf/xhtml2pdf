@@ -40,18 +40,18 @@
     <br />
 
 	<h1 > Build settings </h1>
-	
+
 
      Page size: <select name="page_size">
   					<option value="letter" selected>Letter A4</option>
 				</select> <br>
-				
+
 	 Page orientation:	<select name="page_orientation">
   					<option value="landscape" > Landscape</option>
   					<option value="portrait" selected > Portrait</option>
 		</select> <br>
-	 
-    
+
+
     Example: <select name="example_number">
   				<option value="1" selected> Frames </option>
   				<option value="2"  > Example with 2 Static Frames and 1 Content Frame</option>
@@ -60,28 +60,28 @@
 	Show Frame border <input type="checkbox" name="border" checked="1"/><br>
     Show generated html  <input type="checkbox" name="show_html" /><br><br>
     <input type="submit" value="Convert HTML to PDF" />
-    
+
     </form>
 </div>
 <div class="col col-2">
 <div id="1" class="box">
 	<h1> Example with  <br> One Frame </h1>
 <pre>
-Just put html there 
-or &#123;% lorem 3 p %&#125; 
+Just put html there
+or &#123;% lorem 3 p %&#125;
 or an image with
 
-&#123;% load static %&#125; 
+&#123;% load static %&#125;
 &lt;img src="&#123;% static 'xhtml2pdf.png' %&#125;" &gt;
-</pre>	
+</pre>
 </div>
 <div id="2" class="box">
 	<h1> Example with 2 Static Frames <br>and 1 Content Frame </h1>
 <pre>
 &lt;div id=&quot;header_content&quot;&gt; header text here &lt;/div&gt;
 &lt;div id=&quot;content&quot; &gt; &#123;% lorem 3 p %&#125;   &lt;/div&gt;
-&lt;div id=&quot;footer_content&quot;&gt; 
-&lt;pdf:pagenumber/&gt;  
+&lt;div id=&quot;footer_content&quot;&gt;
+&lt;pdf:pagenumber/&gt;
 of  &lt;pdf:pagecount/&gt;&lt;/div&gt;
 
 </pre>
@@ -94,7 +94,7 @@ of  &lt;pdf:pagecount/&gt;&lt;/div&gt;
 &lt;div id=&quot;footer_content&quot;&gt;(c) - page &lt;pdf:pagenumber&gt;
     of &lt;pdf:pagecount&gt;
 &lt;/div&gt;
-&#123;% lorem 30 p %&#125;	
+&#123;% lorem 30 p %&#125;
 
 </pre>
 </div>

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (C) 2002-2004  TechGame Networks, LLC.
 #
 # This library is free software; you can redistribute it and/or

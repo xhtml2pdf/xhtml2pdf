@@ -83,7 +83,7 @@ class WaterMarks:
         hfactor = float(height) / ih
         factor_min = min(wfactor, hfactor)
         factor_max = max(wfactor, hfactor)
-        
+
         if is_portrait:
             w = iw * factor_min
             h = ih * factor_min

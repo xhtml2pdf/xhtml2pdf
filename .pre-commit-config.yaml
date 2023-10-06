@@ -1,4 +1,35 @@
 repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-ast
+      - id: check-builtin-literals
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-executables-have-shebangs
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-shebang-scripts-are-executable
+      - id: check-symlinks
+      - id: check-toml
+      - id: check-vcs-permalinks
+      - id: check-xml
+      - id: check-yaml
+      - id: debug-statements
+      - id: destroyed-symlinks
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: fix-byte-order-marker
+      - id: fix-encoding-pragma
+        args: [--remove]
+      - id: mixed-line-ending
+      - id: no-commit-to-branch
+        args: [--branch, master]
+      - id: pretty-format-json
+      - id: sort-simple-yaml
+      - id: trailing-whitespace
+        exclude: .github/PULL_REQUEST_TEMPLATE.md
   - repo: https://github.com/psf/black
     rev: 23.9.1
     hooks:

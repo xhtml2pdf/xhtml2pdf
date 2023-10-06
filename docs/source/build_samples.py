@@ -34,7 +34,7 @@ def build_resources():
     text = """
 Examples
 ################
-    
+
     """
     for path, dirc, files in os.walk(source_path):
         for name in files:
@@ -48,7 +48,7 @@ Examples
 %s
 
 .. literalinclude:: _static/html_samples/%s
-   :language: html                 
+   :language: html
 
 :pdfembed:`src:_static/pdf_samples/%s, height:600, width:600, align:middle`
                     """ % (

@@ -1,19 +1,13 @@
-#!/usr/bin/env python
+"""
+CSS-2.1 parser.
 
-# Copyright (C) 2002-2004 TechGame Networks, LLC.
-#
-# This library is free software; you can redistribute it and/or
-# modify it under the terms of the BSD style License as found in the
-# LICENSE file included with this distribution.
-#
-# Modified by Dirk Holtwick <holtwick@web.de>, 2007-2008
+Copyright (C) 2002-2004 TechGame Networks, LLC.
 
-from reportlab.lib.pagesizes import landscape
+This library is free software; you can redistribute it and/or
+modify it under the terms of the BSD style License as found in the
+LICENSE file included with this distribution.
 
-import xhtml2pdf.default
-from xhtml2pdf.util import getSize
-
-"""CSS-2.1 parser.
+Modified by Dirk Holtwick <holtwick@web.de>, 2007-2008
 
 The CSS 2.1 Specification this parser was derived from can be found at http://www.w3.org/TR/CSS21/
 
@@ -28,9 +22,13 @@ Primary Classes:
         usable results from the CSS parser.
 
 Dependencies:
-    python 2.3 (or greater)
     re
 """
+
+from reportlab.lib.pagesizes import landscape
+
+import xhtml2pdf.default
+from xhtml2pdf.util import getSize
 
 import re
 from . import cssSpecial

@@ -1,4 +1,4 @@
-Working with HTML 
+Working with HTML
 ===================
 
 PDF vs. HTML
@@ -11,7 +11,7 @@ PDF is specifically designed around pages of a specific width and height.
 PDF page elements (such as paragraphs, tables and images) are positioned
 at absolute (X,Y) coordinates.
 
-.. note:: 
+.. note::
 
     While true PDF files use (0,0) to denote the bottom left of a page,
     xhtml2pdf uses (0,0) to denote the top left of a page, partly to
@@ -130,35 +130,35 @@ Example with 2 Static Frames and 1 Content Frame
             size: a4 portrait;
             @frame header_frame {           /* Static Frame */
                 -pdf-frame-content: header_content;
-                left: 50pt; width: 512pt; top: 50pt; height: 40pt; 
+                left: 50pt; width: 512pt; top: 50pt; height: 40pt;
             }
             @frame content_frame {          /* Content Frame */
                 left: 50pt; width: 512pt; top: 90pt; height: 632pt;
             }
             @frame footer_frame {           /* Another static Frame */
                 -pdf-frame-content: footer_content;
-                left: 50pt; width: 512pt; top: 772pt; height: 20pt; 
+                left: 50pt; width: 512pt; top: 772pt; height: 20pt;
             }
-        } 
+        }
     </style>
     </head>
 
     <body>
         <!-- Content for Static Frame 'header_frame' -->
         <div id="header_content">Lyrics-R-Us</div>
-        
+
         <!-- Content for Static Frame 'footer_frame' -->
         <div id="footer_content">(c) - page <pdf:pagenumber>
             of <pdf:pagecount>
         </div>
-        
+
         <!-- HTML Content -->
         To PDF or not to PDF
     </body>
     </html>
 
 In the example above, the vendor-specific tags ``<pdf:pagenumber>`` and ``<pdf:pagecount>``
-are used to display page numbers and the total page count. This example will produce the 
+are used to display page numbers and the total page count. This example will produce the
 following PDF Document:
 
 ::
@@ -181,7 +181,7 @@ following PDF Document:
 ::
 
     # Developer's note:
-    # To avoid a problem where duplicate numbers are printed, 
+    # To avoid a problem where duplicate numbers are printed,
     # make sure that these tags are immediately followed by a newline.
 
 
@@ -205,19 +205,19 @@ Example page template with a header, two columns, and a footer
             size: letter portrait;
             @frame header_frame {           /* Static frame */
                 -pdf-frame-content: header_content;
-                left: 50pt; width: 512pt; top: 50pt; height: 40pt; 
+                left: 50pt; width: 512pt; top: 50pt; height: 40pt;
             }
             @frame col1_frame {             /* Content frame 1 */
                 left: 44pt; width: 245pt; top: 90pt; height: 632pt;
             }
             @frame col2_frame {             /* Content frame 2 */
                 left: 323pt; width: 245pt; top: 90pt; height: 632pt;
-            } 
+            }
             @frame footer_frame {           /* Static frame */
                 -pdf-frame-content: footer_content;
-                left: 50pt; width: 512pt; top: 772pt; height: 20pt; 
+                left: 50pt; width: 512pt; top: 772pt; height: 20pt;
             }
-        } 
+        }
     </style>
     <head>
     <body>
@@ -270,10 +270,10 @@ appears in the HTML content flow.
     </style>
       ...
     <body>
-        <p>Keep these lines</p>    
+        <p>Keep these lines</p>
         <table><tr><td>And this table</td></tr></table>
         <p>together in one frame</p>
-    
+
         <p class="separator">&nbsp;<p>
 
         <p>Keep these sets of lines</p>
@@ -312,16 +312,15 @@ large 5cm margins and regular pages with regular 2cm margins.
         @page regular_template { margin: 2cm; }
     </style>
     </head>
-    
-    <body>    
+
+    <body>
         <h1>Title Page</h1>
         This is a title page with a large 5cm margin.
-    
+
         <!-- switch page templates -->
         <pdf:nexttemplate name="regular_template" />
-    
+
         <h1>Chapter 1</h1>
-        This is a regular page with a regular 2cm margin.    
+        This is a regular page with a regular 2cm margin.
     </body>
     </html>
-

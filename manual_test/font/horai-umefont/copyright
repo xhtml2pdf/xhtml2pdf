@@ -36,7 +36,7 @@ License: UmeFont
  .
  これらのフォントはフリー（自由な）ソフトウエアです。
  あらゆる改変の有無に関わらず、また商業的な利用であっても、自由にご利用、
- 複製、再配布することができますが、全て無保証とさせていただきます。 
+ 複製、再配布することができますが、全て無保証とさせていただきます。
  .
  ---------------------------------------------------------------------------
     UmeFont license (In English)
@@ -74,4 +74,3 @@ Copyright: 2004-2019, Hideki Yamane (Debian-JP) <henrich@debian.or.jp>
 License: GPL-3
  On Debian systems the full text of the GNU General Public License Version 3
  can be found in the `/usr/share/common-licenses/GPL-3' file.
-

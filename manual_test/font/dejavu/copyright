@@ -5,7 +5,7 @@ Upstream-Author: Stepan Roh <src@users.sourceforge.net> (original author),
 Source: https://dejavu-fonts.github.io/
 
 Files: *
-Copyright: Copyright (c) 2003 by Bitstream, Inc. All Rights Reserved. 
+Copyright: Copyright (c) 2003 by Bitstream, Inc. All Rights Reserved.
  Bitstream Vera is a trademark of Bitstream, Inc.
  DejaVu changes are in public domain.
 License: bitstream-vera
@@ -51,7 +51,7 @@ License: bitstream-vera
  org.
 
 Files: debian/*
-Copyright: (C) 2005-2006 Peter Cernak <pce@users.sourceforge.net> 
+Copyright: (C) 2005-2006 Peter Cernak <pce@users.sourceforge.net>
            (C) 2006-2011 Davide Viti <zinosat@tiscali.it>
            (C) 2011-2013 Christian Perrier <bubulle@debian.org>
            (C) 2013 Fabian Greffrath <fabian+debian@greffrath.com>

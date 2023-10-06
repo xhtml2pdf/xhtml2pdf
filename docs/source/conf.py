@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # xhtml2pdf documentation build configuration file, created by
 # sphinx-quickstart on Thu Nov 17 21:20:59 2016.

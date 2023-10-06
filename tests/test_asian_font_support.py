@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import io
 from unittest import TestCase
 
@@ -9,11 +8,11 @@ from xhtml2pdf.document import pisaDocument
 from xhtml2pdf.util import get_default_asian_font
 
 __doc__ = """
-        AsianFontSupportTests provides us auxiliary functions to check 
+        AsianFontSupportTests provides us auxiliary functions to check
         the correct operation of Asian fonts included in Report Lab.
 
         Adobe asian language pack in Report Lab:
-        
+
         Simplified Chinese = ['STSong-Light']
         Tradicional Chinese = ['MSung-Light']
         Japanese = ['HeiseiMin-W3', 'HeiseiKakuGo-W5']
@@ -31,10 +30,10 @@ class AsianFontSupportTests(TestCase):
 
     .chs { font-family: STSong-Light }
     .cht { font-family: MSung-Light }
-    
+
     .jpn1 { font-family: HeiseiMin-W3 }
     .jpn2 { font-family: HeiseiKakuGo-W5 }
-    
+
      .kor1 { font-family: HYSMyeongJo-Medium }
      .kor2 { font-family: HYGothic-Medium }
 
@@ -42,7 +41,7 @@ class AsianFontSupportTests(TestCase):
     </head>
 
     <body>
-    
+
     <p> I ate dinner. We had a three-course meal. Brad came to dinner with us. He loves fish tacos.
         In the end, we all felt like we ate too much. We all agreed; it was a magnificent evening.
         I hope that, when I've built up my savings, I'll be able to travel to Mexico.
@@ -57,14 +56,14 @@ class AsianFontSupportTests(TestCase):
                     哦，我多么想去！ 在所有旅行的地方中，墨西哥在我的列表中排名第一。 你想和我一起旅行吗？ 语言学习不是很有趣吗？
                     有很多要理解的。 我喜欢学习！ 句子有多种形状和大小。 没有什么能说完整的句子了。
                     一旦了解了所有要素，将句子拼凑起来就很容易了。
-    </p>             
+    </p>
     <p class="cht"> 我吃過晚餐了。 我們吃了三道菜。 布拉德和我們一起吃飯。 他愛炸玉米餅。 最後，我們所有人都覺得自己吃得太多。
                     我們都同意； 那是一個宏偉的夜晚。 我希望，當我積累了積蓄之後，就能去墨西哥旅行。 享受一周的文化吸收會不會很可愛？
                     哦，我多麼想去！ 在所有旅行的地方中，墨西哥在我的列表中排名第一。 你想和我一起旅行嗎？ 語言學習不是很有趣嗎？
                     有很多要理解的。 我喜歡學習！ 句子有多種形狀和大小。 沒有什麼能說完整的句子了。
                     一旦了解了所有要素，將句子拼湊起來就很容易了。
     </p>
-    
+
     <p class="jpn1">私は夕食を食べました。 3コースの食事をしました。 ブラッドは私たちと一緒に夕食に来ました。 彼は魚のタコスが大好きです。
                     結局、私たちは皆、食べ過ぎたように感じました。 私たちは皆同意しました。 素晴らしい夜でした。
                     貯金が貯まったら、メキシコに旅行できるようになることを願っています。 文化に浸る一週間を楽しむのは素敵ではないでしょうか？

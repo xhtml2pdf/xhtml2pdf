@@ -1,4 +1,4 @@
-INSTALLATION 
+INSTALLATION
 -------------
 
 You need ImageMagic installed.    apt install imagemagick
@@ -14,7 +14,7 @@ the "difference images" may show a lot of highlighted pixels, especially on
 rendered text.
 
 To get around this problem, first make sure that the differences reported
-by the tool are really only marginal font-rendering shifts. Then create 
+by the tool are really only marginal font-rendering shifts. Then create
 your own set of reference images with the following command:
 
 $ ./testrender.py --create-reference <REFDIR>

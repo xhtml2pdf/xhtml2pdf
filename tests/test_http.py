@@ -22,7 +22,7 @@ class HttpTest(TestCase):
     <h1>works</h1>
 
     <img src="https://cars.usnews.com/static/images/Auto/custom/14737/2022_Acura_ILX_1.jpg" alt="" />
-    
+
   </body>
 </html>
     """

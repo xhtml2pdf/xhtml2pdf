@@ -1,5 +1,4 @@
-#!C:\Python25\python.exe
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 """Start script for the tgpisa TurboGears project.
 
 This script is only needed during development for running from the project
@@ -14,6 +13,6 @@ from tgpisa.commands import start, ConfigurationError
 if __name__ == "__main__":
     try:
         start()
-    except ConfigurationError, exc:
+    except ConfigurationError as exc:
         sys.stderr.write(str(exc))
         sys.exit(1)
