@@ -57,7 +57,6 @@ class TableTest(TestCase):
         Test, if an empty table will return an empty story;
         This will also raise a log.warning()
         """
-
         html = """
         <html>
         <head>
@@ -69,7 +68,7 @@ class TableTest(TestCase):
         </html>
         """
 
-        with self.assertLogs("xhtml2pdf", level="DEBUG") as cm:
+        with self.assertLogs("xhtml2pdf.tables", level="DEBUG") as cm:
             context = pisaParser(BytesIO(html.encode("utf-8")), pisaContext(None))
 
             self.assertEqual(
@@ -78,8 +77,8 @@ class TableTest(TestCase):
             self.assertEqual(
                 cm.output,
                 [
-                    "DEBUG:xhtml2pdf:Col widths: []",
-                    "WARNING:xhtml2pdf:<table> is empty\n'<table> </table>'",
+                    "DEBUG:xhtml2pdf.tables:Col widths: []",
+                    "WARNING:xhtml2pdf.tables:<table> is empty\n'<table> </table>'",
                 ],
             )
 
@@ -88,7 +87,6 @@ class TableTest(TestCase):
         Test background on <tr> tag;
         If it works, "darkgreen" will be returned as hexval "0x006400"
         """
-
         html = """
         <html>
         <head>
@@ -120,7 +118,6 @@ class TableTest(TestCase):
         Test colspan on <td> tag;
         If it works, colspan="3" will be equal to (2, 0) in _spanCmds of the ReportLab table
         """
-
         html = """
         <html>
         <head>
@@ -155,7 +152,6 @@ class TableTest(TestCase):
         Test rowspan on <td> tag;
         If it works, rowspan="3" will be equal to (0, 2) in _spanCmds of the ReportLab table
         """
-
         html = """
         <html>
         <head>
@@ -192,7 +188,6 @@ class TableTest(TestCase):
         Test width and height on <td> tag;
         If it works, width: 2pt will be equal to 2.0 and height: 3pt will be equal to 3.0 in the ReportLab table
         """
-
         html = """
         <html>
         <head>

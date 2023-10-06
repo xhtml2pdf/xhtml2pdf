@@ -3,14 +3,10 @@ Created on 22/11/2016
 
 @author: luisza
 """
-from django.test import TestCase, RequestFactory
+from django.test import RequestFactory, TestCase
 
-try:  # python2 and python3
-    from .utils import extract_request_variables
-    from .views import render_pdf
-except:
-    from utils import extract_request_variables
-    from views import render_pdf
+from .utils import extract_request_variables
+from .views import render_pdf
 
 
 class Djxhtml2pfdTestCase(TestCase):

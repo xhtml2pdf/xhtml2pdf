@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import getopt
 import glob
 import logging
 import os
 import sys
+import urllib.parse as urlparse
 
 from xhtml2pdf import __version__
 from xhtml2pdf.config.httpconfig import httpConfig
@@ -24,10 +26,7 @@ from xhtml2pdf.default import DEFAULT_CSS
 from xhtml2pdf.document import pisaDocument
 from xhtml2pdf.files import getFile
 
-import urllib.parse as urlparse
-
-
-log = logging.getLogger("xhtml2pdf")
+log = logging.getLogger(__name__)
 
 # Backward compatibility
 CreatePDF = pisaDocument
@@ -122,7 +121,7 @@ class pisaLinkLoader:
     it when pisaLinkLoader is unloaded.
     """
 
-    def __init__(self, src, quiet=True):
+    def __init__(self, src, *, quiet=True):
         self.quiet = quiet
         self.src = src
         self.tfileList = []
@@ -139,7 +138,7 @@ class pisaLinkLoader:
         self.tfileList.append(path)
 
         if not self.quiet:
-            print("  Loading %s to %s" % (url, path))
+            print(f"  Loading {url} to {path}")
 
         return path
 
@@ -147,10 +146,10 @@ class pisaLinkLoader:
 def command():
     if "--profile" in sys.argv:
         print("*** PROFILING ENABLED")
-        import cProfile as profile
+        import cProfile
         import pstats
 
-        prof = profile.Profile()
+        prof = cProfile.Profile()
         prof.runcall(execute)
         pstats.Stats(prof).strip_dirs().sort_stats("cumulative").print_stats()
     else:
@@ -246,7 +245,7 @@ def execute():
 
         elif o in ("-w", "--warn"):
             # Warnings
-            log_level = min(log_level, logging.WARN)  # If also -d ignore -w
+            log_level = min(log_level, logging.WARNING)  # If also -d ignore -w
 
         elif o in ("-d", "--debug"):
             # Debug
@@ -269,7 +268,7 @@ def execute():
 
         elif o in ("-c", "--css"):
             # CSS
-            with open(a, "r") as file_handler:
+            with open(a) as file_handler:
                 css = file_handler.read()
 
         elif o in ("--css-dump",):
@@ -302,11 +301,7 @@ def execute():
         a_src = args[0]
         a_dest = None
 
-    if "*" in a_src:
-        a_src = glob.glob(a_src)
-        # print a_src
-    else:
-        a_src = [a_src]
+    a_src = glob.glob(a_src) if "*" in a_src else [a_src]
 
     for src in a_src:
         # If not forced to parse in a special way have a look
@@ -322,15 +317,14 @@ def execute():
             wpath = os.getcwd()
             if base_dir:
                 wpath = base_dir
+        elif src.startswith(("http:", "https:")):
+            wpath = src
+            fsrc = getFile(src).getFileContent()
+            src = "".join(urlparse.urlsplit(src)[1:3]).replace("/", "-")
         else:
-            if src.startswith("http:") or src.startswith("https:"):
-                wpath = src
-                fsrc = getFile(src).getFileContent()
-                src = "".join(urlparse.urlsplit(src)[1:3]).replace("/", "-")
-            else:
-                fsrc = wpath = os.path.abspath(src)
-                with open(fsrc, "rb") as file_handler:
-                    fsrc = file_handler.read()
+            fsrc = wpath = os.path.abspath(src)
+            with open(fsrc, "rb") as file_handler:
+                fsrc = file_handler.read()
 
         if a_dest is None:
             dest_part = src
@@ -341,9 +335,10 @@ def execute():
             dest = dest_part + "." + file_format.lower()
             for i in range(10):
                 try:
-                    open(dest, "wb").close()
+                    with open(dest, "wb") as file:
+                        file.close()
                     break
-                except:
+                except Exception:
                     pass
                 dest = dest_part + "-%d.%s" % (i, file_format.lower())
         else:
@@ -362,15 +357,16 @@ def execute():
         else:
             dest = os.path.abspath(dest)
             try:
-                open(dest, "wb").close()
-            except:
+                with open(dest, "wb") as file:
+                    file.close()
+            except Exception:
                 print("File '%s' seems to be in use of another application." % dest)
                 sys.exit(2)
-            fdest = open(dest, "wb")
+            fdest = open(dest, "wb")  # noqa: SIM115
             fdestclose = 1
 
         if not quiet:
-            print("Converting {} to {}...".format(src, dest))
+            print(f"Converting {src} to {dest}...")
 
         pisaDocument(
             fsrc,
@@ -400,30 +396,24 @@ def execute():
 
 
 def startViewer(filename):
-    """
-    Helper for opening a PDF file
-    """
-
+    """Helper for opening a PDF file."""
     if filename:
         try:
             os.startfile(filename)
-        except:
+        except Exception:
             # try to opan a la apple
             os.system('open "%s"' % filename)
 
 
-def showLogging(debug=False):
-    """
-    Shortcut for enabling log dump
-    """
-
+def showLogging(*, debug=False):
+    """Shortcut for enabling log dump."""
     try:
-        log_level = logging.WARN
+        log_level = logging.WARNING
         log_format = LOG_FORMAT_DEBUG
         if debug:
             log_level = logging.DEBUG
         logging.basicConfig(level=log_level, format=log_format)
-    except:
+    except Exception:
         logging.basicConfig()
 
 
@@ -440,9 +430,8 @@ def makeDataURI(data=None, mimetype=None, filename=None):
 
             mimetype = mimetypes.guess_type(filename)[0].split(";")[0]
         else:
-            raise Exception(
-                "You need to provide a mimetype or a filename for makeDataURI"
-            )
+            msg = "You need to provide a mimetype or a filename for makeDataURI"
+            raise RuntimeError(msg)
 
     encoded_data = base64.encodebytes(data).split()
 

@@ -1,32 +1,30 @@
 import os
 
 from django.conf import settings
+from django.contrib.staticfiles import finders
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.template.loader import get_template
-from xhtml2pdf import pisa
-from django.contrib.staticfiles import finders
 
-try:  # python2 and python3
-    from .utils import extract_request_variables
-except:
-    from utils import extract_request_variables
+from xhtml2pdf import pisa
+
+from .utils import extract_request_variables
 
 
 def index(request):
     return render(request, "index.html")
 
 
-def link_callback(uri, rel):
+def link_callback(uri, _rel):
     """
     Convert HTML URIs to absolute system paths so xhtml2pdf can access those
-    resources
+    resources.
     """
     result = finders.find(uri)
     if result:
         if not isinstance(result, (list, tuple)):
             result = [result]
-        result = list(os.path.realpath(path) for path in result)
+        result = [os.path.realpath(path) for path in result]
         path = result[0]
     else:
         sUrl = settings.STATIC_URL  # Typically /static/
@@ -43,7 +41,8 @@ def link_callback(uri, rel):
 
     # make sure that file exists
     if not os.path.isfile(path):
-        raise Exception("media URI must start with %s or %s" % (sUrl, mUrl))
+        msg = f"media URI must start with {sUrl} or {mUrl}"
+        raise RuntimeError(msg)
     return path
 
 
@@ -64,6 +63,6 @@ def render_pdf(request):
         pisaStatus = pisa.CreatePDF(html, dest=response, link_callback=link_callback)
         if pisaStatus.err:
             return HttpResponse(
-                "We had some errors with code %s <pre>%s</pre>" % (pisaStatus.err, html)
+                f"We had some errors with code {pisaStatus.err} <pre>{html}</pre>"
             )
     return response

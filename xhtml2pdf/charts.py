@@ -1,10 +1,10 @@
-from reportlab.graphics.charts.barcharts import VerticalBarChart, HorizontalBarChart
+from reportlab.graphics.charts.barcharts import HorizontalBarChart, VerticalBarChart
 from reportlab.graphics.charts.doughnut import Doughnut
 from reportlab.graphics.charts.linecharts import HorizontalLineChart
-from reportlab.graphics.charts.piecharts import Pie, LegendedPie
+from reportlab.graphics.charts.piecharts import LegendedPie, Pie
 from reportlab.graphics.widgets.markers import makeMarker
 
-from .util import getColor
+from xhtml2pdf.util import getColor
 
 
 def set_properties(obj, data, prop_map):
@@ -15,7 +15,7 @@ def set_properties(obj, data, prop_map):
 
                 if value is not None:
                     obj.__setattr__(key, value)
-            except:
+            except Exception:
                 continue
 
 
@@ -74,7 +74,8 @@ class Props:
             ("strokeDashArray", str),
         ]
 
-    def add_prop(self, prop_map, data):
+    @staticmethod
+    def add_prop(prop_map, data):
         prop_map += data
 
 
@@ -117,9 +118,9 @@ class BaseChart:
             props = Props(self)
         set_properties(self, data, props.prop_map)
 
-    def get_colors(self):
-        colors = []
-        return colors
+    @staticmethod
+    def get_colors():
+        return []
 
 
 class BaseBarChart(BaseChart):
@@ -206,9 +207,9 @@ class HorizontalLine(HorizontalLineChart, BaseChart):
         for x in range(len(self.data)):
             self.lines[x].symbol = makeMarker(fill_type)
 
-    def get_colors(self):
-        colors = []
-        return colors
+    @staticmethod
+    def get_colors():
+        return []
 
 
 class PieChart(Pie, BaseChart):
@@ -240,7 +241,7 @@ class PieChart(Pie, BaseChart):
 
     def get_colors(self):
         colors_list = []
-        for x, obj in enumerate(self.data):
+        for x, _obj in enumerate(self.data):
             colors_list.append(self.slices[x].fillColor)
         return colors_list
 
@@ -277,6 +278,6 @@ class DoughnutChart(Doughnut, BaseChart):
 
     def get_colors(self):
         colors = []
-        for x, obj in enumerate(self.data):
+        for x, _obj in enumerate(self.data):
             colors.append(self.slices[x].fillColor)
         return colors

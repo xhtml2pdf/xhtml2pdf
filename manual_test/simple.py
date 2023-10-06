@@ -12,23 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "$Revision: 194 $"
-__author__ = "$Author: holtwick $"
-__date__ = "$Date: 2008-04-18 18:59:53 +0200 (Fr, 18 Apr 2008) $"
-
 import os
 import sys
-import cgi
-import cStringIO
-import logging
 
-import xhtml2pdf.pisa as pisa
+import cStringIO
+
+from xhtml2pdf import pisa
 
 # Shortcut for dumping all logs to the screen
 pisa.showLogging()
 
 
-def dumpErrors(pdf, showLog=True):
+def dumpErrors(pdf, *, _showLog=True):
     # if showLog and pdf.log:
     #    for mode, line, msg, code in pdf.log:
     #        print "%s in line %d: %s" % (mode, line, msg)
@@ -44,10 +39,10 @@ def testSimple(
     """
     Simple test showing how to create a PDF file from
     PML Source String. Also shows errors and tries to start
-    the resulting PDF
+    the resulting PDF.
     """
-
-    pdf = pisa.CreatePDF(cStringIO.StringIO(data), file(dest, "wb"))
+    with open(dest, "wb") as file:
+        pdf = pisa.CreatePDF(cStringIO.StringIO(data), file)
 
     if pdf.err:
         dumpErrors(pdf)
@@ -58,9 +53,8 @@ def testSimple(
 def testCGI(data="Hello <b>World</b>"):
     """
     This one shows, how to get the resulting PDF as a
-    file object and then send it to STDOUT
+    file object and then send it to STDOUT.
     """
-
     result = cStringIO.StringIO()
 
     pdf = pisa.CreatePDF(cStringIO.StringIO(data), result)
@@ -77,16 +71,16 @@ def testBackgroundAndImage(src="test-background.html", dest="test-background.pdf
     """
     Simple test showing how to create a PDF file from
     PML Source String. Also shows errors and tries to start
-    the resulting PDF
+    the resulting PDF.
     """
-
-    pdf = pisa.CreatePDF(
-        file(src, "r"),
-        file(dest, "wb"),
-        log_warn=1,
-        log_err=1,
-        path=os.path.join(os.getcwd(), src),
-    )
+    with open(src) as src_file, open(dest, "wb") as dst_file:
+        pdf = pisa.CreatePDF(
+            src_file,
+            dst_file,
+            log_warn=1,
+            log_err=1,
+            path=os.path.join(os.getcwd(), src),
+        )
 
     dumpErrors(pdf)
     if not pdf.err:
@@ -104,14 +98,15 @@ def testURL(url="http://www.htmltopdf.org", dest="test-website.pdf"):
     """
     import urllib
 
-    pdf = pisa.CreatePDF(
-        urllib.urlopen(url),
-        file(dest, "wb"),
-        log_warn=1,
-        log_err=1,
-        path=url,
-        link_callback=pisa.pisaLinkLoader(url).getFileName,
-    )
+    with open(dest, "wb") as file:
+        pdf = pisa.CreatePDF(
+            urllib.urlopen(url),
+            file,
+            log_warn=1,
+            log_err=1,
+            path=url,
+            link_callback=pisa.pisaLinkLoader(url).getFileName,
+        )
 
     dumpErrors(pdf)
     if not pdf.err:

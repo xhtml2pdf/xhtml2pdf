@@ -360,8 +360,9 @@ class PisaTagTableTestCase(TestCase):
             }
         )
 
-    def _getElement(self, tagName, body="filler"):
-        dom = minidom.parseString("<{}>{}</{}>".format(tagName, body, tagName))
+    @staticmethod
+    def _getElement(tagName, body="filler"):
+        dom = minidom.parseString(f"<{tagName}>{body}</{tagName}>")
         return dom.getElementsByTagName(tagName)[0]
 
     def test_will_set_attrs_on_tabledata(self):

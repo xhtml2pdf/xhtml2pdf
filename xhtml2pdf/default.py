@@ -46,15 +46,15 @@ from reportlab.lib.pagesizes import (
     C8,
     C9,
     C10,
-    JUNIOR_LEGAL,
-    HALF_LETTER,
-    GOV_LETTER,
-    GOV_LEGAL,
-    TABLOID,
-    LEDGER,
     ELEVENSEVENTEEN,
+    GOV_LEGAL,
+    GOV_LETTER,
+    HALF_LETTER,
+    JUNIOR_LEGAL,
+    LEDGER,
     LEGAL,
     LETTER,
+    TABLOID,
 )
 
 PML_WARNING = "warning"

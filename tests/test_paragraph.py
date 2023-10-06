@@ -1,7 +1,7 @@
 import copy
 import re
-from unittest import TestCase
 import tempfile
+from unittest import TestCase
 
 from reportlab.lib.colors import Color
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
@@ -20,7 +20,8 @@ from xhtml2pdf.paragraph import (
 
 
 class LegacyParagraphTests(TestCase):
-    def test_legacy(self):
+    @staticmethod
+    def test_legacy():
         """Test function coming from paragraph.__main__"""
         ALIGNMENTS = (TA_LEFT, TA_RIGHT, TA_CENTER, TA_JUSTIFY)
 
@@ -50,24 +51,25 @@ class LegacyParagraphTests(TestCase):
                     yield Space(fontName=fn, fontSize=fs)
 
         def createText(data, fn, fs):
-            text = Text(list(textGenerator(data, fn, fs)))
-            return text
+            return Text(list(textGenerator(data, fn, fs)))
 
-        def makeBorder(width, style="solid", color=Color(1, 0, 0)):
-            return dict(
-                borderLeftColor=color,
-                borderLeftWidth=width,
-                borderLeftStyle=style,
-                borderRightColor=color,
-                borderRightWidth=width,
-                borderRightStyle=style,
-                borderTopColor=color,
-                borderTopWidth=width,
-                borderTopStyle=style,
-                borderBottomColor=color,
-                borderBottomWidth=width,
-                borderBottomStyle=style,
-            )
+        def makeBorder(width, style="solid", color=None):
+            if not color:
+                color = Color(1, 0, 0)
+            return {
+                "borderLeftColor": color,
+                "borderLeftWidth": width,
+                "borderLeftStyle": style,
+                "borderRightColor": color,
+                "borderRightWidth": width,
+                "borderRightStyle": style,
+                "borderTopColor": color,
+                "borderTopWidth": width,
+                "borderTopStyle": style,
+                "borderBottomColor": color,
+                "borderBottomWidth": width,
+                "borderBottomStyle": style,
+            }
 
         def test():
             with tempfile.TemporaryFile() as pdf_file:
@@ -81,7 +83,7 @@ class LegacyParagraphTests(TestCase):
                 sampleText2 = createText(TEXT[100:], fn, fs)
 
                 text = Text(
-                    sampleText1
+                    sampleText1  # noqa: RUF005
                     + [
                         Space(fontName=fn, fontSize=fs),
                         Word(

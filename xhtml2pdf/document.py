@@ -14,6 +14,7 @@
 
 import io
 import logging
+from html import escape as html_escape
 
 from reportlab.lib import pdfencrypt
 from reportlab.platypus.flowables import Spacer
@@ -23,14 +24,12 @@ from xhtml2pdf.builders.signs import PDFSignature
 from xhtml2pdf.builders.watermarks import WaterMarks
 from xhtml2pdf.context import pisaContext
 from xhtml2pdf.default import DEFAULT_CSS
+from xhtml2pdf.files import cleanFiles, pisaTempFile
 from xhtml2pdf.parser import pisaParser
-from xhtml2pdf.util import pypdf, getBox
-from xhtml2pdf.files import pisaTempFile, cleanFiles
+from xhtml2pdf.util import getBox
 from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlPageTemplate
 
-from html import escape as html_escape
-
-log = logging.getLogger("xhtml2pdf")
+log = logging.getLogger(__name__)
 
 
 def pisaErrorDocument(dest, c):
@@ -57,11 +56,11 @@ def pisaStory(
     link_callback=None,
     debug=0,
     default_css=None,
-    xhtml=False,
+    xhtml=False,  # noqa: FBT002
     encoding=None,
     context=None,
     xml_output=None,
-    **kw,
+    **_kwargs,
 ):
     # Prepare Context
     if not context:
@@ -91,7 +90,7 @@ def pisaStory(
 
 def get_encrypt_instance(data):
     if data is None:
-        return
+        return None
 
     if isinstance(data, str):
         return pdfencrypt.StandardEncryption(data)
@@ -102,20 +101,20 @@ def get_encrypt_instance(data):
 def pisaDocument(
     src,
     dest=None,
-    dest_bytes=False,
+    dest_bytes=False,  # noqa: FBT002
     path=None,
     link_callback=None,
     debug=0,
     default_css=None,
-    xhtml=False,
+    xhtml=False,  # noqa: FBT002
     encoding=None,
     xml_output=None,
-    raise_exception=True,
+    raise_exception=True,  # noqa: FBT002, ARG001
     capacity=100 * 1024,
     context_meta=None,
     encrypt=None,
     signature=None,
-    **kw,
+    **_kwargs,
 ):
     log.debug(
         "pisaDocument options:\n  src = %r\n  dest = %r\n  path = %r\n  link_callback ="
@@ -188,7 +187,7 @@ def pisaDocument(
             pagesize=context.pageSize,
         )
 
-    doc.addPageTemplates([body] + list(context.templateList.values()))
+    doc.addPageTemplates([body, *list(context.templateList.values())])
 
     # Use multibuild e.g. if a TOC has to be created
     if context.multiBuild:

@@ -14,8 +14,8 @@
 
 import copy
 import logging
-import os
 import re
+import urllib.parse as urlparse
 from pathlib import Path
 
 from reportlab import rl_settings
@@ -28,20 +28,20 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus.frames import Frame, ShowBoundaryValue
 from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
 
-import xhtml2pdf.default
-import xhtml2pdf.parser
+from xhtml2pdf import default, parser
 from xhtml2pdf.files import getFile, pisaFileObject
 from xhtml2pdf.util import (
     arabic_format,
     copy_attrs,
     frag_text_language_check,
+    get_default_asian_font,
     getColor,
     getCoords,
+    getFloat,
     getFrameDimensions,
     getSize,
     set_asian_fonts,
     set_value,
-    getFloat,
 )
 from xhtml2pdf.w3c import css
 from xhtml2pdf.xhtml2pdf_reportlab import (
@@ -51,14 +51,9 @@ from xhtml2pdf.xhtml2pdf_reportlab import (
     PmlParagraphAndImage,
     PmlTableOfContents,
 )
-import urllib.parse as urlparse
-
-TupleType = tuple
-ListType = list
-
 
 rl_settings.warnOnMissingFontGlyphs = 0
-log = logging.getLogger("xhtml2pdf")
+log = logging.getLogger(__name__)
 
 sizeDelta = 2  # amount to reduce font size by for super and sub script
 subFraction = 0.4  # fraction of font size that a sub script should be lowered
@@ -133,7 +128,7 @@ def getParaFrag(style):
     set_value(
         frag,
         ("pageNumber", "pageCount", "outline", "outlineOpen", "keepWithNext", "rtl"),
-        False,
+        False,  # noqa: FBT003
     )
 
     frag.text = ""
@@ -172,17 +167,14 @@ def getDirName(path):
     parts = urlparse.urlparse(path)
     if parts.scheme:
         return path
-    else:
-        return str(Path(path).parent.resolve())
+    return str(Path(path).parent.resolve())
 
 
 class pisaCSSBuilder(css.CSSBuilder):
     def atFontFace(self, declarations):
-        """
-        Embed fonts
-        """
+        """Embed fonts."""
         result = self.ruleset([self.selector("*")], declarations)
-        data = list(result[0].values())[0]
+        data = next(iter(result[0].values()))
         if "src" not in data:
             # invalid - source is required, ignore this specification
             return {}, {}
@@ -201,15 +193,10 @@ class pisaCSSBuilder(css.CSSBuilder):
 
         # The "src" attribute can be a CSS group but in that case
         # ignore everything except the font URI
-        uri = data["src"]
-        fonts = []
-
         if isinstance(data["src"], list):
-            for part in uri:
-                if isinstance(part, str):
-                    fonts.append(part)
+            fonts = [part for part in data["src"] if isinstance(part, str)]
         else:
-            fonts.append(uri)
+            fonts = [data["src"]]
 
         for font in fonts:
             src = self.c.getFile(font, relative=self.c.cssParser.rootPath)
@@ -217,7 +204,9 @@ class pisaCSSBuilder(css.CSSBuilder):
                 self.c.loadFont(names, src, bold=bold, italic=italic)
         return {}, {}
 
-    def _pisaAddFrame(self, name, data, first=False, border=None, size=(0, 0)):
+    def _pisaAddFrame(
+        self, name, data, first=False, border=None, size=(0, 0)  # noqa: FBT002
+    ):
         c = self.c
         if not name:
             name = "-pdf-frame-%d" % c.UID()
@@ -241,23 +230,25 @@ class pisaCSSBuilder(css.CSSBuilder):
             data,
         )
 
-    def _getFromData(self, data, attr, default=None, func=None):
+    @staticmethod
+    def _getFromData(data, attr, default=None, func=None):
         if not func:
 
             def func(x):
                 return x
 
-        if type(attr) in (list, tuple):
+        if isinstance(attr, (list, tuple)):
             for a in attr:
                 if a in data:
                     return func(data[a])
                 return default
-        else:
-            if attr in data:
-                return func(data[attr])
-            return default
+            return None
+        if attr in data:
+            return func(data[attr])
+        return default
 
-    def get_background_context(self, data):
+    @staticmethod
+    def get_background_context(data):
         dev = {}
         object_position = data.get("background-object-position", None)
         height = data.get("background-height", None)
@@ -404,7 +395,7 @@ class pisaCSSBuilder(css.CSSBuilder):
 
             if static:
                 frame.pisaStaticStory = []
-                c.frameStatic[static] = [frame] + c.frameStatic.get(static, [])
+                c.frameStatic[static] = [frame, *c.frameStatic.get(static, [])]
                 staticList.append(frame)
             else:
                 frameList.append(frame)
@@ -501,8 +492,8 @@ class pisaCSSParser(css.CSSParser):
         try:
             result = self.parse(cssFile.getData())
             self.rootPath = oldRootPath
-        except Exception as e:
-            log.exception(e)
+        except Exception:
+            log.exception("Error while parsing CSS file")
         return result
 
 
@@ -557,19 +548,18 @@ class PageCountText:
 def reverse_sentence(sentence):
     words = str(sentence).split(" ")
     reverse_sentence = " ".join(reversed(words))
-    reverse_sentence = reverse_sentence[::-1]
-    return reverse_sentence
+    return reverse_sentence[::-1]
 
 
-class pisaContext(object):
+class pisaContext:
     """
     Helper class for creation of reportlab story and container for
     various data.
     """
 
     def __init__(self, path, debug=0, capacity=-1):
-        self.fontList = copy.copy(xhtml2pdf.default.DEFAULT_FONT)
-        self.asianFontList = copy.copy(xhtml2pdf.util.get_default_asian_font())
+        self.fontList = copy.copy(default.DEFAULT_FONT)
+        self.asianFontList = copy.copy(get_default_asian_font())
         set_value(
             self,
             (
@@ -587,7 +577,7 @@ class pisaContext(object):
                 "fragStack",
             ),
             [],
-            _copy=True,
+            do_copy=True,
         )
 
         set_value(
@@ -604,7 +594,7 @@ class pisaContext(object):
         )
         set_value(self, ("err", "warn", "uidctr", "listCounter"), 0)
         set_value(self, ("text", "cssText", "cssDefaultText"), "")
-        set_value(self, ("templateList", "frameStatic", "imageData"), {}, _copy=True)
+        set_value(self, ("templateList", "frameStatic", "imageData"), {}, do_copy=True)
         self.capacity = capacity
         self.toc = PmlTableOfContents()
         self.multiBuild = False
@@ -627,12 +617,18 @@ class pisaContext(object):
             self.pathDocument = str(Path(self.pathDocument).absolute().resolve())
         self.pathDirectory = getDirName(self.pathDocument)
 
-        self.meta = dict(author="", title="", subject="", keywords="", pagesize=A4)
+        self.meta = {
+            "author": "",
+            "title": "",
+            "subject": "",
+            "keywords": "",
+            "pagesize": A4,
+        }
 
-    def setDir(self, dir):
-        if dir == "rtl":
+    def setDir(self, direction):
+        if direction == "rtl":
             self.frag.rtl = True
-        self.dir = dir
+        self.dir = direction
 
     def UID(self):
         self.uidctr += 1
@@ -760,8 +756,8 @@ class pisaContext(object):
         styles = []
         for i in range(20):
             self.node.attributes["class"] = "pdftoclevel%d" % i
-            self.cssAttr = xhtml2pdf.parser.CSSCollect(self.node, self)
-            xhtml2pdf.parser.CSS2Frag(
+            self.cssAttr = parser.CSSCollect(self.node, self)
+            parser.CSS2Frag(
                 self,
                 {
                     "margin-top": 0,
@@ -769,7 +765,7 @@ class pisaContext(object):
                     "margin-left": 0,
                     "margin-right": 0,
                 },
-                True,
+                isBlock=True,
             )
             pstyle = self.toParagraphStyle(self.frag)
             styles.append(pstyle)
@@ -783,25 +779,28 @@ class pisaContext(object):
             self.indexing_story = PmlPageCount()
             self.multiBuild = True
 
-    def getPageCount(self, flow):
+    @staticmethod
+    def getPageCount(flow):
         pc = PageCountText()
         pc.setFlowable(flow)
         return pc
 
-    def addPageNumber(self, flow):
+    @staticmethod
+    def addPageNumber(flow):
         pgnumber = PageNumberText()
         pgnumber.setFlowable(flow)
         return pgnumber
 
-    def dumpPara(self, frags, style):
+    @staticmethod
+    def dumpPara(_frags, _style):
         return
 
-    def addPara(self, force=False):
+    def addPara(self, *, force=False):
         force = force or self.force
         self.force = False
 
         # Cleanup the trail
-        rfragList = reversed(self.fragList)
+        reversed(self.fragList)
 
         # Find maximum lead
         maxLeading = 0
@@ -847,7 +846,7 @@ class pisaContext(object):
                 if hasattr(self, "language"):
                     language = self.__getattribute__("language")
                     detect_language_result = arabic_format(self.text, language)
-                    if detect_language_result != None:
+                    if detect_language_result is not None:
                         self.text = detect_language_result
 
                 para = PmlParagraph(
@@ -980,23 +979,24 @@ class pisaContext(object):
         self.frag = self.fragStack.pop()
 
     # XXX
-    def _getFragment(self, l=20):
+    def _getFragment(self, line=20):
         try:
-            return repr(" ".join(self.node.toxml().split()[:l]))
-        except:
+            return repr(" ".join(self.node.toxml().split()[:line]))
+        except Exception:
             return ""
 
-    def _getLineNumber(self):
+    @staticmethod
+    def _getLineNumber():
         return 0
 
     def context(self, msg):
-        return "%s\n%s" % (str(msg), self._getFragment(50))
+        return f"{msg!s}\n{self._getFragment(50)}"
 
     def warning(self, msg, *args):
         self.warn += 1
         self.log.append(
             (
-                xhtml2pdf.default.PML_WARNING,
+                default.PML_WARNING,
                 self._getLineNumber(),
                 str(msg),
                 self._getFragment(50),
@@ -1004,38 +1004,29 @@ class pisaContext(object):
         )
         try:
             return self.context(msg % args)
-        except:
+        except Exception:
             return self.context(msg)
 
     def error(self, msg, *args):
         self.err += 1
         self.log.append(
-            (
-                xhtml2pdf.default.PML_ERROR,
-                self._getLineNumber(),
-                str(msg),
-                self._getFragment(50),
-            )
+            (default.PML_ERROR, self._getLineNumber(), str(msg), self._getFragment(50))
         )
         try:
             return self.context(msg % args)
-        except:
+        except Exception:
             return self.context(msg)
 
     def getFile(self, name, relative=None):
-        """
-        Returns a file name or None
-        """
+        """Returns a file name or None."""
         if name is None:
-            return
+            return None
         return getFile(name, relative or self.pathDirectory, callback=self.pathCallback)
 
     def getFontName(self, names, default="helvetica"):
-        """
-        Name of a font
-        """
+        """Name of a font."""
         # print names, self.fontList
-        if type(names) is not ListType:
+        if not isinstance(names, list):
             names = str(names)
             names = names.strip().split(",")
         for name in names:
@@ -1066,7 +1057,7 @@ class pisaContext(object):
             log.debug("Load font %r", src)
             if isinstance(names, str) and names.startswith("#"):
                 names = names.strip("#")
-            if type(names) is ListType:
+            if isinstance(names, list):
                 fontAlias = names
             else:
                 fontAlias = (x.lower().strip() for x in names.split(",") if x)
@@ -1074,7 +1065,6 @@ class pisaContext(object):
             # XXX Problems with unicode here
             fontAlias = [str(x) for x in fontAlias]
 
-            ffname = names
             fontName = fontAlias[0]
             parts = src.split(".")
             baseName, suffix = ".".join(parts[:-1]), parts[-1]
@@ -1106,7 +1096,7 @@ class pisaContext(object):
                                 addMapping(fontName, bold, italic, fullFontName)
 
                     # Register "normal" name and the place holder for style
-                    self.registerFont(fontName, fontAlias + [fullFontName])
+                    self.registerFont(fontName, [*fontAlias, fullFontName])
 
             elif suffix in ("afm", "pfb"):
                 if suffix == "afm":
@@ -1147,7 +1137,7 @@ class pisaContext(object):
 
                     # Register "normal" name and the place holder for style
                     self.registerFont(
-                        fontName, fontAlias + [fullFontName, fontNameOriginal]
+                        fontName, [*fontAlias, fullFontName, fontNameOriginal]
                     )
             else:
                 log.warning(self.warning("wrong attributes for <pdf:font>"))

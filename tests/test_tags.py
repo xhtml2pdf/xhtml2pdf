@@ -2,7 +2,6 @@ from unittest import TestCase
 from xml.dom import minidom
 
 from xhtml2pdf import tags
-from xhtml2pdf.parser import AttrContainer
 from xhtml2pdf.context import pisaContext
 from xhtml2pdf.parser import AttrContainer, pisaGetAttributes
 

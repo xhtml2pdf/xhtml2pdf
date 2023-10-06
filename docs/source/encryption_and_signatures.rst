@@ -1,8 +1,8 @@
 Encryption and signing
-=========================
+======================
 
 Simple encryption
---------------------
+-----------------
 
 If the argument is a string object, it is used as the User password to the PDF.
 The argument can also be an instance of the class
@@ -17,7 +17,7 @@ encryption settings
             dest=resultFile)
 
 Complex encryption
---------------------
+------------------
 
 The `StandardEncryption` constructor takes the following arguments:
 
@@ -47,13 +47,13 @@ flags
             dest=resultFile)
 
 Signing pdf
-=================
+===========
 
 `CreatePDF` now has a `signature` parameter that allow to pass signature configuration
 
 
 Simple Signing
---------------------
+--------------
 
 Signature use `Pyhanko <https://pyhanko.readthedocs.io/en/latest/>`__ internally, so `signature` parameter
 allow many of the available configurations on that documentation.
@@ -86,7 +86,7 @@ The control parameters are required:
 **ca_chain**: Could be a list or Path, define the chain of trust
 
 PKCS12 Signing
---------------------
+--------------
 
 **pfx_file**: String or Path to pkcs12 file.
 
@@ -101,7 +101,7 @@ PKCS12 Signing
 
 
 PKCS11 Signing
---------------------
+--------------
 
 .. note::
     You need to install `pyHanko[pkcs11]`

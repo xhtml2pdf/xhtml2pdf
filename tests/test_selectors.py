@@ -24,7 +24,7 @@ class SelectorsTest(TestCase):
 
         parser = CSSParser(CSSBuilder(mediumSet=["pdf"]))
 
-        general_selector = list(parser.parse(general_css)[0].keys())[0]
-        specific_selector = list(parser.parse(specific_css)[0].keys())[0]
+        general_selector = next(iter(parser.parse(general_css)[0].keys()))
+        specific_selector = next(iter(parser.parse(specific_css)[0].keys()))
 
         self.assertGreater(specific_selector, general_selector)

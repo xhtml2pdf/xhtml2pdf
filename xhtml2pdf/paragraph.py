@@ -15,9 +15,8 @@
 """
 A paragraph class to be used with ReportLab Platypus.
 
-TODO
-====
-
+Todo:
+----
 - Bullets
 - Weblinks and internal links
 - Borders and margins (Box)
@@ -30,15 +29,18 @@ TODO
 - Sub and super
 
 """
+
+
 import copy
 import logging
 import re
+
 from reportlab.lib.colors import Color
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.platypus.flowables import Flowable
 
-logger = logging.getLogger("xhtml2pdf")
+logger = logging.getLogger(__name__)
 
 
 class Style(dict):
@@ -177,24 +179,18 @@ class Fragment(Box):
 
 
 class Word(Fragment):
-    """
-    A single word.
-    """
+    """A single word."""
 
     name = "word"
     isText = True
 
     def calc(self):
-        """
-        XXX Cache stringWith if not accelerated?!
-        """
+        """XXX Cache stringWith if not accelerated?!."""
         self["width"] = stringWidth(self["text"], self["fontName"], self["fontSize"])
 
 
 class Space(Fragment):
-    """
-    A space between fragments that is the usual place for line breaking.
-    """
+    """A space between fragments that is the usual place for line breaking."""
 
     name = "space"
     isSoft = True
@@ -204,15 +200,11 @@ class Space(Fragment):
 
 
 class LineBreak(Fragment):
-    """
-    Line break.
-    """
+    """Line break."""
 
     name = "br"
     isSoft = True
     isLF = True
-
-    pass
 
 
 class BoxBegin(Fragment):
@@ -243,13 +235,9 @@ class BoxEnd(Fragment):
 class Image(Fragment):
     name = "image"
 
-    pass
-
 
 class Line(list):
-    """
-    Container for line fragments.
-    """
+    """Container for line fragments."""
 
     LINEHEIGHT = 1.0
 
@@ -284,20 +272,16 @@ class Line(list):
             x = frag["x"] + frag["width"]
             if isinstance(frag, BoxBegin):
                 self.boxStack.append(frag)
-            elif isinstance(frag, BoxEnd):
-                if self.boxStack:
-                    frag = self.boxStack.pop()
-                    frag["length"] = x - frag["x"]
+            elif isinstance(frag, BoxEnd) and self.boxStack:
+                frag = self.boxStack.pop()
+                frag["length"] = x - frag["x"]
 
         # Handle the rest
         for frag in self.boxStack:
             frag["length"] = x - frag["x"]
 
     def doLayout(self, width):
-        """
-        Align words in previous line.
-        """
-
+        """Align words in previous line."""
         # Calculate dimensions
         self.width = width
 
@@ -340,19 +324,17 @@ class Text(list):
         self.maxWidth = 0
         self.maxHeight = 0
         self.style = style
-        list.__init__(self, data)
+        super().__init__(data)
 
     def calc(self):
-        """
-        Calculate sizes of fragments.
-        """
+        """Calculate sizes of fragments."""
         for word in self:
             word.calc()
 
-    def splitIntoLines(self, maxWidth, maxHeight, splitted=False):
+    def splitIntoLines(self, maxWidth, maxHeight, *, splitted=False):
         """
         Split text into lines and calculate X positions. If we need more
-        space in height than available we return the rest of the text
+        space in height than available we return the rest of the text.
         """
         self.lines = []
         self.height = 0
@@ -435,9 +417,7 @@ class Text(list):
         return None
 
     def dumpLines(self):
-        """
-        For debugging dump all line and their content
-        """
+        """For debugging dump all line and their content."""
         for i, line in enumerate(self.lines):
             logger.debug("Line %d:", i)
             logger.debug(line.dumpFragments())
@@ -456,7 +436,9 @@ class Paragraph(Flowable):
 
     """
 
-    def __init__(self, text, style, debug=False, splitted=False, **kwDict):
+    def __init__(
+        self, text, style, debug=False, splitted=False, **kwDict  # noqa: FBT002
+    ):
         Flowable.__init__(self)
 
         self.text = text
@@ -476,10 +458,7 @@ class Paragraph(Flowable):
 
     # overwritten methods from Flowable class
     def wrap(self, availWidth, availHeight):
-        """
-        Determine the rectangle this paragraph really needs.
-        """
-
+        """Determine the rectangle this paragraph really needs."""
         # memorize available space
         self.avWidth = availWidth
         self.avHeight = availHeight
@@ -506,10 +485,7 @@ class Paragraph(Flowable):
         return self.width, self.height
 
     def split(self, availWidth, availHeight):
-        """
-        Split ourselves in two paragraphs.
-        """
-
+        """Split ourselves in two paragraphs."""
         logger.debug("*** split (%f, %f)", availWidth, availHeight)
 
         splitted = []
@@ -527,10 +503,7 @@ class Paragraph(Flowable):
         return splitted
 
     def draw(self):
-        """
-        Render the content of the paragraph.
-        """
-
+        """Render the content of the paragraph."""
         logger.debug("*** draw")
 
         if not self.text:

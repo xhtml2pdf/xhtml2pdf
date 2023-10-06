@@ -1,7 +1,7 @@
-from xhtml2pdf import pisa
-from pathlib import Path
 import os
-import sys
+from pathlib import Path
+
+from xhtml2pdf import pisa
 
 dir_temp = "/"
 
@@ -9,20 +9,20 @@ dir_temp = "/"
 def convert_to_pdf_file(
     inputfile, outputfile, link_callback=None, encrypt=None, signature=None
 ):
-    with open(outputfile, "wb") as arch:
-        with open(inputfile, "r", encoding="utf-8", errors="ignore") as source:
-            pdfcontext = pisa.CreatePDF(
-                source,
-                arch,
-                encrypt=encrypt,
-                link_callback=link_callback,
-                signature=signature,
-                show_error_as_pdf=True,
-            )
-            return pdfcontext
+    with open(outputfile, "wb") as arch, open(
+        inputfile, encoding="utf-8", errors="ignore"
+    ) as source:
+        return pisa.CreatePDF(
+            source,
+            arch,
+            encrypt=encrypt,
+            link_callback=link_callback,
+            signature=signature,
+            show_error_as_pdf=True,
+        )
 
 
-def link_callback(uri, rel):
+def link_callback(uri, _rel):
     link = Path("./_static/html_samples") / uri
     return str(link.absolute().resolve())
 
@@ -36,7 +36,7 @@ Examples
 ################
 
     """
-    for path, dirc, files in os.walk(source_path):
+    for _path, _dirc, files in os.walk(source_path):
         for name in files:
             if name.endswith(".html"):
                 filename = name.replace(".html", ".pdf")
@@ -44,14 +44,14 @@ Examples
                     source_path / name, pdf_path / filename, link_callback=link_callback
                 )
                 text += """
-%s
-%s
+{}
+{}
 
-.. literalinclude:: _static/html_samples/%s
+.. literalinclude:: _static/html_samples/{}
    :language: html
 
-:pdfembed:`src:_static/pdf_samples/%s, height:600, width:600, align:middle`
-                    """ % (
+:pdfembed:`src:_static/pdf_samples/{}, height:600, width:600, align:middle`
+                    """.format(
                     pdfcontext.meta["title"],
                     "-" * (len(pdfcontext.meta["title"]) + 2),
                     name,

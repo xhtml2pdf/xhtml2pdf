@@ -12,15 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "$Revision: 194 $"
-__author__ = "$Author: holtwick $"
-__date__ = "$Date: 2008-04-18 18:59:53 +0200 (Fr, 18 Apr 2008) $"
-
-from reportlab.pdfgen.canvas import Canvas
 from reportlab.lib.units import inch
+from reportlab.pdfgen.canvas import Canvas
 from reportlab.platypus import Frame
 
-import xhtml2pdf.pisa as pisa
+from xhtml2pdf import pisa
 
 
 def test(filename):

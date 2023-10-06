@@ -1,8 +1,8 @@
 Working with HTML
-===================
+=================
 
 PDF vs. HTML
-------------------
+------------
 
 Before we discuss how to define page layouts with xhtml2pdf style sheets, it helps
 to understand some of the inherent differences between PDF and HTML.
@@ -38,7 +38,7 @@ frame is filled up, the content will continue to print in the next
 frame, and the next, and so on, until the entire HTML content has been printed.
 
 Defining Page Layouts
------------------------
+---------------------
 
 xhtml2pdf facilitates the conversion of HTML content into a PDF document by flowing
 the continuous HTML content through one or more pages using Pages and Frames.
@@ -47,7 +47,7 @@ A Frame represents a rectangular region within a page through which the HTML
 content will flow.
 
 Pages
-^^^^^^^
+^^^^^
 
 The **@page** object defines a **Page template** by defining the properties of a page,
 such as page type (letter or A4), page orientation (portrait or landscape), and page margins.
@@ -63,7 +63,7 @@ The @page definition follows the style sheet convention of ordinary CSS style sh
     </style>
 
 Frames
-^^^^^^^
+^^^^^^
 
 The **@frame** object defines the position and size of rectangular region within a page.
 A @page object can hold one or more @frame objects.
@@ -107,7 +107,7 @@ This will result in the following page layout:
          property to your each of your @frame objects.
 
 Static frames vs Content frames
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 xhtml2pdf uses the concept of **Static Frames** to define content that remains the same
 across different pages (like headers and footers), and uses **Content Frames**
 to position the to-be-converted HTML content.
@@ -119,7 +119,7 @@ Content Frames are @frame objects without this property defined. Regular HTML
 content will flow through Content Frames.
 
 Example with 2 Static Frames and 1 Content Frame
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code:: html
 
@@ -186,7 +186,7 @@ following PDF Document:
 
 
 Flowing HTML content through Content Frames
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Content frames are used to position the HTML content across multiple pages.
 HTML content will start printing in the first available Content Frame. Once the first
 frame is filled up, the content will continue to print in the next
@@ -194,7 +194,7 @@ frame, and the next, and so on, until the entire HTML content has been printed.
 This concept is illustrated by the example below.
 
 Example page template with a header, two columns, and a footer
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code:: html
 
@@ -250,10 +250,10 @@ Here's what the resulting PDF document could look like:
 
 
 Advanced concepts
-===================
+=================
 
 Keeping text and tables together
--------------------------------------
+--------------------------------
 
 You can prevent a block of text from being split across separate frames through the use of the
 vendor-specific ``-pdf-keep-with-next`` property.
@@ -282,7 +282,7 @@ appears in the HTML content flow.
     </body>
 
 Named Page templates
-------------------------
+--------------------
 
 Page templates can be named by providing the name after the @page keyword
 
@@ -294,7 +294,7 @@ Page templates can be named by providing the name after the @page keyword
 
 
 Switching between multiple Page templates
-----------------------------------------------
+-----------------------------------------
 
 PDF documents sometimes requires a different page layout across different sections
 of the document. xhtml2pdf allows you to define multiple @page templates

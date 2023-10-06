@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import copy
 import logging
 import re
@@ -36,19 +37,23 @@ from xhtml2pdf.default import (
     STRING,
     TAGS,
 )
+from xhtml2pdf.files import pisaTempFile
 
 # TODO: Why do we need to import these Tags here? They aren't uses in this file or any other file,
-#  but if we don't import them, Travis & AppVeyor fail. Very strange (fbernhart)
-from xhtml2pdf.tables import TableData, pisaTagTABLE, pisaTagTD, pisaTagTR, pisaTagTH
-
-from xhtml2pdf.tags import (
-    pisaTagIMG,
-    pisaTagPDFLANGUAGE,
-    pisaTagPDFNEXTPAGE,
+#  but if we don't import them, the tests fail. Very strange (fbernhart)
+from xhtml2pdf.tables import (  # noqa: F401
+    TableData,
+    pisaTagTABLE,
+    pisaTagTD,
+    pisaTagTH,
+    pisaTagTR,
+)
+from xhtml2pdf.tags import (  # noqa: F401
     pisaTag,
     pisaTagA,
     pisaTagBODY,
     pisaTagBR,
+    pisaTagCANVAS,
     pisaTagDIV,
     pisaTagFONT,
     pisaTagH1,
@@ -58,6 +63,8 @@ from xhtml2pdf.tags import (
     pisaTagH5,
     pisaTagH6,
     pisaTagHR,
+    pisaTagIMG,
+    pisaTagINPUT,
     pisaTagLI,
     pisaTagMETA,
     pisaTagOL,
@@ -65,7 +72,9 @@ from xhtml2pdf.tags import (
     pisaTagPDFBARCODE,
     pisaTagPDFFONT,
     pisaTagPDFFRAME,
+    pisaTagPDFLANGUAGE,
     pisaTagPDFNEXTFRAME,
+    pisaTagPDFNEXTPAGE,
     pisaTagPDFNEXTTEMPLATE,
     pisaTagPDFPAGECOUNT,
     pisaTagPDFPAGENUMBER,
@@ -75,15 +84,10 @@ from xhtml2pdf.tags import (
     pisaTagSTYLE,
     pisaTagSUB,
     pisaTagSUP,
+    pisaTagTEXTAREA,
     pisaTagTITLE,
     pisaTagUL,
-    pisaTagINPUT,
-    pisaTagTEXTAREA,
-    pisaTagCANVAS,
-    # pisaTagSELECT,
-    # pisaTagOPTION
 )
-from xhtml2pdf.files import pisaTempFile
 from xhtml2pdf.util import (
     getAlign,
     getBool,
@@ -97,9 +101,9 @@ from xhtml2pdf.util import (
 from xhtml2pdf.w3c import cssDOMElementInterface
 from xhtml2pdf.xhtml2pdf_reportlab import PmlLeftPageBreak, PmlRightPageBreak
 
-CSSAttrCache = {}
+log = logging.getLogger(__name__)
 
-log = logging.getLogger("xhtml2pdf")
+CSSAttrCache = {}
 
 rxhttpstrip = re.compile("https?://[^/]+(.*)", re.M | re.I)
 
@@ -108,7 +112,7 @@ class AttrContainer(dict):
     def __getattr__(self, name):
         try:
             return dict.__getattr__(self, name)
-        except:
+        except Exception:
             return self[name]
 
 
@@ -119,7 +123,8 @@ def pisaGetAttributes(c, tag, attributes):
             try:
                 # XXX no Unicode! Reportlab fails with template names
                 attrs[str(k)] = str(v)
-            except:
+            except Exception as e:  # noqa: PERF203
+                log.debug("%s during string conversion for %s=%s", e, k, v, exc_info=1)
                 attrs[k] = v
 
     nattrs = {}
@@ -131,12 +136,11 @@ def pisaGetAttributes(c, tag, attributes):
             nattrs[k] = None
             # print k, v
             # defaults, wenn vorhanden
-            if type(v) == tuple:
-                if v[1] == MUST:
-                    if k not in attrs:
-                        log.warning(c.warning("Attribute '%s' must be set!", k))
-                        nattrs[k] = None
-                        continue
+            if isinstance(v, tuple):
+                if v[1] == MUST and k not in attrs:
+                    log.warning(c.warning("Attribute '%s' must be set!", k))
+                    nattrs[k] = None
+                    continue
                 nv = attrs.get(k, v[1])
                 dfl = v[1]
                 v = v[0]
@@ -145,7 +149,7 @@ def pisaGetAttributes(c, tag, attributes):
                 dfl = None
 
             if nv is not None:
-                if type(v) == list:
+                if isinstance(v, list):
                     nv = nv.strip().lower()
                     if nv not in v:
                         # ~ raise PML_EXCEPTION, "attribute '%s' of wrong value, allowed is one of: %s" % (k, repr(v))
@@ -165,7 +169,7 @@ def pisaGetAttributes(c, tag, attributes):
                 elif v == SIZE:
                     try:
                         nv = getSize(nv)
-                    except:
+                    except Exception:
                         log.warning(c.warning("Attribute '%s' expects a size value", k))
 
                 elif v == BOX:
@@ -258,7 +262,7 @@ def getCSSAttr(self, cssCascade, attrName, default=NotImplemented):
     # XXX Workaround for inline styles
     try:
         style = self.cssStyle
-    except:
+    except Exception:
         style = self.cssStyle = cssCascade.parser.parseInline(
             self.cssElement.getStyleAttr() or ""
         )[0]
@@ -270,9 +274,8 @@ def getCSSAttr(self, cssCascade, attrName, default=NotImplemented):
             result = self.parentNode.getCSSAttr(cssCascade, attrName, default)
         elif default is not NotImplemented:
             return default
-        raise LookupError(
-            "Could not find inherited CSS attribute value for '%s'" % (attrName,)
-        )
+        msg = f"Could not find inherited CSS attribute value for '{attrName}'"
+        raise LookupError(msg)
 
     if result is not None:
         self.cssAttrs[attrName] = result
@@ -280,14 +283,14 @@ def getCSSAttr(self, cssCascade, attrName, default=NotImplemented):
 
 
 # TODO: Monkeypatching standard lib should go away.
-xml.dom.minidom.Element.getCSSAttr = getCSSAttr
+xml.dom.minidom.Element.getCSSAttr = getCSSAttr  # type: ignore[attr-defined]
 
 # Create an aliasing system.  Many sources use non-standard tags, because browsers allow
 # them to.  This allows us to map a nonstandard name to the standard one.
 nonStandardAttrNames = {"bgcolor": "background-color"}
 
 
-def mapNonStandardAttrs(c, n, attrList):
+def mapNonStandardAttrs(c, _node, attrList):
     for attr in nonStandardAttrNames:
         if attr in attrList and nonStandardAttrNames[attr] not in c:
             c[nonStandardAttrNames[attr]] = attrList[attr]
@@ -303,7 +306,7 @@ def getCSSAttrCacheKey(node):
             _id = v
         elif k == "style":
             _st = v
-    return "%s#%s#%s#%s#%s" % (id(node.parentNode), node.tagName.lower(), _cl, _id, _st)
+    return f"{id(node.parentNode)}#{node.tagName.lower()}#{_cl}#{_id}#{_st}"
 
 
 def CSSCollect(node, c):
@@ -311,14 +314,16 @@ def CSSCollect(node, c):
     # return node.cssAttrs
 
     if c.css:
-        _key = getCSSAttrCacheKey(node)
+        key = getCSSAttrCacheKey(node)
 
-        if hasattr(node.parentNode, "tagName"):
-            if node.parentNode.tagName.lower() != "html":
-                CachedCSSAttr = CSSAttrCache.get(_key, None)
-                if CachedCSSAttr is not None:
-                    node.cssAttrs = CachedCSSAttr
-                    return CachedCSSAttr
+        if (
+            hasattr(node.parentNode, "tagName")
+            and node.parentNode.tagName.lower() != "html"
+        ):
+            CachedCSSAttr = CSSAttrCache.get(key, None)
+            if CachedCSSAttr is not None:
+                node.cssAttrs = CachedCSSAttr
+                return CachedCSSAttr
 
         node.cssElement = cssDOMElementInterface.CSSDOMElementInterface(node)
         node.cssAttrs = {}
@@ -329,18 +334,17 @@ def CSSCollect(node, c):
                 cssAttrMap[cssAttrName] = node.getCSSAttr(c.cssCascade, cssAttrName)
             # except LookupError:
             #    pass
-            except Exception:  # TODO: Kill this catch-all!
-                log.debug("CSS error '%s'", cssAttrName, exc_info=1)
+            except Exception as e:  # noqa: PERF203
+                log.debug("%r during CSS attr '%s'", e, cssAttrName, exc_info=1)
 
-        CSSAttrCache[_key] = node.cssAttrs
+        CSSAttrCache[key] = node.cssAttrs
     return node.cssAttrs
 
 
 def lower(sequence):
     if isinstance(sequence, str):
         return sequence.lower()
-    else:
-        return sequence[0].lower()
+    return sequence[0].lower()
 
 
 def CSS2Frag(c, kw, isBlock):
@@ -502,11 +506,8 @@ def CSS2Frag(c, kw, isBlock):
         )
 
 
-def pisaPreLoop(node, context, collect=False):
-    """
-    Collect all CSS definitions
-    """
-
+def pisaPreLoop(node, context, *, collect=False):
+    """Collect all CSS definitions."""
     data = ""
     if node.nodeType == Node.TEXT_NODE and collect:
         data = node.data
@@ -529,7 +530,9 @@ def pisaPreLoop(node, context, collect=False):
 
                 if name == "link" and attr.href and attr.rel.lower() == "stylesheet":
                     # print "CSS LINK", attr
-                    context.addCSS('\n@import "%s" %s;' % (attr.href, ",".join(media)))
+                    context.addCSS(
+                        '\n@import "{}" {};'.format(attr.href, ",".join(media))
+                    )
 
     for node in node.childNodes:
         result = pisaPreLoop(node, context, collect=collect)
@@ -564,7 +567,7 @@ def pisaLoop(node, context, path=None, **kw):
         if node.tagName in ("style", "script"):
             return
 
-        path = copy.copy(path) + [node.tagName]
+        path = [*copy.copy(path), node.tagName]
 
         # Prepare attributes
         attr = pisaGetAttributes(context, node.tagName, node.attributes)
@@ -596,9 +599,11 @@ def pisaLoop(node, context, path=None, **kw):
                 context.addStory(
                     NextPageTemplate(str(context.cssAttr["-pdf-next-page"]))
                 )
-            if "-pdf-page-break" in context.cssAttr:
-                if str(context.cssAttr["-pdf-page-break"]).lower() == "before":
-                    context.addStory(PageBreak())
+            if (
+                "-pdf-page-break" in context.cssAttr
+                and str(context.cssAttr["-pdf-page-break"]).lower() == "before"
+            ):
+                context.addStory(PageBreak())
             if "-pdf-frame-break" in context.cssAttr:
                 if str(context.cssAttr["-pdf-frame-break"]).lower() == "before":
                     context.addStory(FrameBreak())
@@ -631,7 +636,7 @@ def pisaLoop(node, context, path=None, **kw):
         context.pushFrag()
 
         # Map styles to Reportlab fragment properties
-        CSS2Frag(context, kw, isBlock)
+        CSS2Frag(context, kw, isBlock=isBlock)
 
         # EXTRAS
         transform_attrs(
@@ -760,16 +765,20 @@ def pisaLoop(node, context, path=None, **kw):
 
 
 def pisaParser(
-    src, context, default_css="", xhtml=False, encoding="utf8", xml_output=None
+    src,
+    context,
+    default_css="",
+    xhtml=False,  # noqa: FBT002
+    encoding="utf8",
+    xml_output=None,
 ):
     """
     - Parse HTML and get miniDOM
     - Extract CSS informations, add default CSS, parse CSS
     - Handle the document DOM itself and build reportlab story
-    - Return Context object
+    - Return Context object.
     """
-
-    global CSSAttrCache
+    global CSSAttrCache  # noqa: PLW0603
     CSSAttrCache = {}
 
     if xhtml:

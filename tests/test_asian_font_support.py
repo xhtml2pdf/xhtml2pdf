@@ -1,3 +1,4 @@
+# ruff: noqa: RUF001
 import io
 from unittest import TestCase
 
@@ -7,20 +8,20 @@ from reportlab.pdfbase import _cidfontdata
 from xhtml2pdf.document import pisaDocument
 from xhtml2pdf.util import get_default_asian_font
 
-__doc__ = """
-        AsianFontSupportTests provides us auxiliary functions to check
-        the correct operation of Asian fonts included in Report Lab.
-
-        Adobe asian language pack in Report Lab:
-
-        Simplified Chinese = ['STSong-Light']
-        Tradicional Chinese = ['MSung-Light']
-        Japanese = ['HeiseiMin-W3', 'HeiseiKakuGo-W5']
-        Korean = ['HYSMyeongJo-Medium','HYGothic-Medium']
-    """
-
 
 class AsianFontSupportTests(TestCase):
+    """
+    AsianFontSupportTests provides us auxiliary functions to check
+    the correct operation of Asian fonts included in Report Lab.
+
+    Adobe asian language pack in Report Lab:
+
+    Simplified Chinese = ['STSong-Light']
+    Tradicional Chinese = ['MSung-Light']
+    Japanese = ['HeiseiMin-W3', 'HeiseiKakuGo-W5']
+    Korean = ['HYSMyeongJo-Medium','HYGothic-Medium']
+    """
+
     HTML_CONTENT = """
     <html>
     <head>
@@ -105,7 +106,6 @@ class AsianFontSupportTests(TestCase):
         Tests if the asian fonts used in the CSS property "font-family"
         are correctly embeded in the pdf result.
         """
-
         # Read the embeded fonts from the finished pdf file
         with io.BytesIO() as pdf_file:
             pisa_doc = pisaDocument(src=self.HTML_CONTENT, dest=pdf_file)
@@ -114,10 +114,11 @@ class AsianFontSupportTests(TestCase):
             pdf_fonts = read_fonts_from_pdf(pdf_content)
 
         # Read the fonts from the html content
-        html_fonts = []
-        for css_class in pisa_doc.css[0].values():
-            for html_font_family in css_class.values():
-                html_fonts.append(html_font_family)
+        html_fonts = [
+            html_font_family
+            for css_class in pisa_doc.css[0].values()
+            for html_font_family in css_class.values()
+        ]
 
         # Test, if all of the font-families from the html are also in the pdf file
         self.assertTrue(
@@ -127,7 +128,6 @@ class AsianFontSupportTests(TestCase):
 
     def test_get_default_asian_font(self):
         """Tests if we can successfully extract the default asian fonts"""
-
         DEFAULT_ASIAN_FONT = get_default_asian_font()
 
         # Test, if is dict
@@ -140,10 +140,10 @@ class AsianFontSupportTests(TestCase):
         )
 
     def test_asian_reportlab_fonts(self):
-        """Tests the asian font list that we're getting from reportlab
+        """
+        Tests the asian font list that we're getting from reportlab
         If there is an Error here, ReportLab probably has changed/added new asian fonts
         """
-
         reference = {
             "HeiseiMin-W3": ("jpn", "UniJIS-UCS2-H"),
             "HeiseiKakuGo-W5": ("jpn", "UniJIS-UCS2-H"),

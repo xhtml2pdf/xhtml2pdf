@@ -2,7 +2,7 @@ Usage
 ==========
 
 Using with Python standalone
---------------------------------
+----------------------------
 
 .. code:: python
 
@@ -40,7 +40,7 @@ of the file open. Advanced options will be discussed later in this document.
 
 
 Using xhtml2pdf in Django
-----------------------------
+-------------------------
 
 To allow URL references to be resolved using Django's STATIC_URL and MEDIA_URL settings,
 xhtml2pdf allows users to specify a ``link_callback`` parameter to point to a function
@@ -82,7 +82,7 @@ that converts relative URLs to absolute system paths.
 
 		# make sure that file exists
 		if not os.path.isfile(path):
-			raise Exception(
+			raise RuntimeError(
 				'media URI must start with %s or %s' % (sUrl, mUrl)
 			)
 		return path
@@ -131,13 +131,13 @@ The ``-s`` option can be used to start the default PDF viewer after the conversi
     $ xhtml2pdf -s test.html
 
 Advanced Command line tool options
---------------------------------------
+----------------------------------
 
 Use ``xhtml2pdf --help`` to get started.
 
 
 Converting HTML data
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
 
 To generate a PDF from an HTML file called ``test.html`` call:
 
@@ -164,7 +164,7 @@ You may also directly access pages from the internet:
     $ xhtml2pdf -s http://www.xhtml2pdf.com/
 
 Using special properties
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 If the conversion doesn't work as expected some more information may be
 usefull. You may turn on the output of warnings by adding ``-w`` or even

@@ -12,18 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "$Revision: 194 $"
-__author__ = "$Author: holtwick $"
-__date__ = "$Date: 2008-04-18 18:59:53 +0200 (Fr, 18 Apr 2008) $"
-
-import ho.pisa as pisa
 
 import logging
+import os
 
-log = logging.getLogger(__file__)
+from ho import pisa
+
+log = logging.getLogger(__name__)
 
 
-def dummyLoader(name):
+def dummyLoader(_name):
     return (
         '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00F\x00\x00\x00\x89\x04\x03\x00\x00\x00c\xbeS\xd6\x00\x00\x000PLTE\x00\x00\x00\n\x06\x04\x18\x14\x0f-&\x1eLB6w`E\x8f\x80q\xb2\x9c\x82\xbe\xa1{\xc7\xb0\x96\xd1\xbd\xa9\xd9\xd0\xc6\xef\xeb\xe6\xf8\xf3\xef\xff\xfb\xf7\xff\xff\xffZ\x83\x0b|\x00\x00\x0c\xedIDATx^u\x97]l\x1bWv\xc7g\xe2`\x81\xbe\xcd%Gr\xd3\xa7P\x12e\xb7\x01\x8a\xd0")E\x01\x02\x8f\xf8!\x8bI\x17\x10\xc5!))5`\xf1C\xb4\xb25`S\xb2l\xb95\x90H\xa4.\xb9/u$K3\xe3\xa2\x80W\x12\xc59L\xf6a\xb3\x8dcN\xd6@\xb7\x1f\x01\x8a\x85\x16\x9b-\xfa\x81M\xb8@\x83l\xd1\xd8\xbc|)\xd0\x97\x82\xea\xb93\x92\xec"\xce\x11'
         " \t3?\xfe\xcf\xff\x9e{\xce\x01(\x1c>7\x18\xfb\xc2\xfaE\xffk_\xb6\x18\xeb\x1e>\x8f\xe92d\xfe%T\xa8\x98\xfa\x07\x1f"
@@ -51,9 +49,7 @@ class myLinkLoader:
     """
 
     def __init__(self, **kw):
-        """
-        The self.kw could be used in getFileName if you like
-        """
+        """The self.kw could be used in getFileName if you like."""
         self.kw = kw
         self.tmpFileList = []
 
@@ -63,7 +59,6 @@ class myLinkLoader:
         self.tmpFileList = []
 
     def getFileName(self, path, relative=None):
-        import os
         import tempfile
 
         log.info("myLinkLoader.getFileName: %r %r %r", path, relative, self.kw)
@@ -73,16 +68,16 @@ class myLinkLoader:
                 if new_suffix in (".css", ".gif", ".jpg", ".png"):
                     suffix = new_suffix
             tmpPath = tempfile.mktemp(prefix="pisa-", suffix=suffix)
-            tmpFile = file(tmpPath, "wb")
-            try:
-                # Here you may add your own stuff
-                tmpFile.write(dummyLoader(path))
-            finally:
-                tmpFile.close()
-            self.tmpFileList.append(tmpPath)
-            return tmpPath
-        except Exception as e:
-            log.exception(e)
+            with open(tmpPath, "wb") as tmpFile:
+                try:
+                    # Here you may add your own stuff
+                    tmpFile.write(dummyLoader(path))
+                finally:
+                    tmpFile.close()
+                self.tmpFileList.append(tmpPath)
+            return tmpPath  # noqa: TRY300
+        except Exception:
+            log.exception("Error during file name retrieval")
         return None
 
 
@@ -91,16 +86,17 @@ def helloWorld():
 
     lc = myLinkLoader(database="some_name", port=666).getFileName
 
-    pdf = pisa.CreatePDF(
-        """
-            <p>
-            Hello <strong>World</strong>
-            <p>
-            <img src="apath/some.png">
-        """,
-        file(filename, "wb"),
-        link_callback=lc,
-    )
+    with open(filename, "wb") as file:
+        pdf = pisa.CreatePDF(
+            """
+                <p>
+                Hello <strong>World</strong>
+                <p>
+                <img src="apath/some.png">
+            """,
+            file,
+            link_callback=lc,
+        )
     if not pdf.err:
         pisa.startViewer(filename)
 

@@ -12,17 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "$Revision: 194 $"
-__author__ = "$Author: holtwick $"
-__date__ = "$Date: 2008-04-18 18:59:53 +0200 (Fr, 18 Apr 2008) $"
-
-
-import os, os.path
 import logging
+import os
+import os.path
 
 from xhtml2pdf import pisa
 
-log = logging.getLogger(__file__)
+log = logging.getLogger(__name__)
 
 
 def helloWorld():
@@ -32,26 +28,27 @@ def helloWorld():
         os.path.join(os.path.abspath(__file__), os.pardir, "pdf/background-sample.pdf")
     )
     bguri = pisa.makeDataURIFromFile(bguri)
-    html = """
+    html = f"""
             <style>
-            @page {
-                background: url("%s");
-                @frame text {
+            @page {{
+                background: url("{bguri}");
+                @frame text {{
                     top: 6cm;
                     left: 4cm;
                     right: 4cm;
                     bottom: 4cm;
                     -pdf-frame-border: 1;
-                }
-            }
+                }}
+            }}
             </style>
 
             <p>
             Hello <strong>World</strong>
             <p>
-            <img src="%s">
-        """ % (bguri, datauri)
-    pdf = pisa.pisaDocument(html, open(filename, "wb"), path=__file__)
+            <img src="{datauri}">
+        """
+    with open(filename, "wb") as file:
+        pdf = pisa.pisaDocument(html, file, path=__file__)
     if not pdf.err:
         pisa.startViewer(filename)
 

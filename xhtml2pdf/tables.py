@@ -12,15 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import copy
 import logging
+
 from reportlab.platypus.tables import TableStyle
 
 from xhtml2pdf.tags import pisaTag
 from xhtml2pdf.util import getAlign, getBorderStyle, getSize, set_value
 from xhtml2pdf.xhtml2pdf_reportlab import PmlKeepInFrame, PmlTable
 
-log = logging.getLogger("xhtml2pdf")
+log = logging.getLogger(__name__)
 
 
 def _width(value=None):
@@ -45,6 +47,7 @@ class TableData:
     def __init__(self):
         self.data = []
         self.styles = []
+
         self.span = []
         self.mode = ""
         self.padding = 0
@@ -167,7 +170,8 @@ class TableData:
 
 
 class pisaTagTABLE(pisaTag):
-    def set_borders(self, frag, attrs):
+    @staticmethod
+    def set_borders(frag, attrs):
         set_value(
             frag,
             (
@@ -237,7 +241,7 @@ class pisaTagTABLE(pisaTag):
         for i, row in enumerate(data):
             data[i] += [""] * (maxcols - len(row))
 
-        log.debug("Col widths: {}".format(list(tdata.colw)))
+        log.debug("Col widths: %r", tdata.colw)
         if tdata.data:
             # log.debug("Table styles %r", tdata.styles)
             t = PmlTable(
@@ -283,7 +287,8 @@ class pisaTagTR(pisaTag):
         tdata.col = 0
         tdata.data.append([])
 
-    def end(self, c):
+    @staticmethod
+    def end(c):
         c.tableData.row += 1
 
 
@@ -338,7 +343,7 @@ class pisaTagTD(pisaTag):
             # If is value, the set it in the right place in the arry
             if width is not None:
                 tdata.colw[col] = _width(width)
-                log.debug("Col {} has width {}".format(col, width))
+                log.debug("Col %d has width %d", col, width)
             else:
                 # If there are no child nodes, nothing within the column can change the
                 # width.  Set the column width to the sum of the right and left padding
@@ -346,7 +351,7 @@ class pisaTagTD(pisaTag):
                 log.debug(width)
                 if len(self.node.childNodes) == 0:
                     width = c.frag.paddingLeft + c.frag.paddingRight
-                    log.debug("Col {} has width {}".format(col, width))
+                    log.debug("Col %d has width %d", col, width)
                     if width:
                         tdata.colw[col] = _width(width)
                 else:

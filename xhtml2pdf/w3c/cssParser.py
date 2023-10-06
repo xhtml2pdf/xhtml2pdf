@@ -25,14 +25,17 @@ Dependencies:
     re
 """
 
+# ruff: noqa: N802, N803, N815, N816, N999
+
+
+import re
+from abc import abstractmethod
+
 from reportlab.lib.pagesizes import landscape
 
 import xhtml2pdf.default
 from xhtml2pdf.util import getSize
-
-import re
-from . import cssSpecial
-
+from xhtml2pdf.w3c import cssSpecial
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ~ Definitions
@@ -47,8 +50,9 @@ def stripAtRuleIdent(src):
     return re.sub(r"^@[a-z\-]+\s*", "", src)
 
 
-class CSSSelectorAbstract(object):
-    """Outlines the interface between CSSParser and it's rule-builder for selectors.
+class CSSSelectorAbstract:
+    """
+    Outlines the interface between CSSParser and it's rule-builder for selectors.
 
     CSSBuilderAbstract.selector and CSSBuilderAbstract.combineSelectors must
     return concrete implementations of this abstract.
@@ -56,128 +60,163 @@ class CSSSelectorAbstract(object):
     See css.CSSMutableSelector for an example implementation.
     """
 
+    @abstractmethod
     def addHashId(self, hashId):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
+    @abstractmethod
     def addClass(self, class_):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
+    @abstractmethod
     def addAttribute(self, attrName):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
-    def addAttributeOperation(self, attrName, op, attrValue):
-        raise NotImplementedError("Subclass responsibility")
+    @abstractmethod
+    def addAttributeOperation(self, attrName, op, attr_value):
+        raise NotImplementedError
 
+    @abstractmethod
     def addPseudo(self, name):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
+    @abstractmethod
     def addPseudoFunction(self, name, value):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
 
-class CSSBuilderAbstract(object):
-    """Outlines the interface between CSSParser and it's rule-builder.  Compose
+class CSSBuilderAbstract:
+    """
+    Outlines the interface between CSSParser and it's rule-builder.  Compose
     CSSParser with a concrete implementation of the builder to get usable
     results from the CSS parser.
 
     See css.CSSBuilder for an example implementation
     """
 
+    @abstractmethod
     def setCharset(self, charset):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
     # ~ css results ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    @abstractmethod
     def beginStylesheet(self):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
+    @abstractmethod
     def stylesheet(self, elements):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
+    @abstractmethod
     def endStylesheet(self):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
+    @abstractmethod
     def beginInline(self):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
+    @abstractmethod
     def inline(self, declarations):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
+    @abstractmethod
     def endInline(self):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
+    @abstractmethod
     def ruleset(self, selectors, declarations):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
     # ~ css namespaces ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    @abstractmethod
     def resolveNamespacePrefix(self, nsPrefix, name):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
     # ~ css @ directives ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    @abstractmethod
     def atCharset(self, charset):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
+    @abstractmethod
     def atImport(self, import_, mediums, cssParser):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
+    @abstractmethod
     def atNamespace(self, nsPrefix, uri):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
+    @abstractmethod
     def atMedia(self, mediums, ruleset):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
+    @abstractmethod
     def atPage(self, page, pseudopage, declarations):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
+    @abstractmethod
     def atFontFace(self, declarations):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
+    @abstractmethod
     def atIdent(self, atIdent, cssParser, src):
         return src, NotImplemented
 
     # ~ css selectors ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    @abstractmethod
     def combineSelectors(self, selectorA, combiner, selectorB):
-        """Return value must implement CSSSelectorAbstract"""
-        raise NotImplementedError("Subclass responsibility")
+        """Return value must implement CSSSelectorAbstract."""
+        raise NotImplementedError
 
+    @abstractmethod
     def selector(self, name):
-        """Return value must implement CSSSelectorAbstract"""
-        raise NotImplementedError("Subclass responsibility")
+        """Return value must implement CSSSelectorAbstract."""
+        raise NotImplementedError
 
     # ~ css declarations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def property(self, name, value, important=False):
-        raise NotImplementedError("Subclass responsibility")
+    @abstractmethod
+    def property(self, name, value, *, important=False):  # noqa: A003
+        raise NotImplementedError
 
+    @abstractmethod
     def combineTerms(self, termA, combiner, termB):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
+    @abstractmethod
     def termIdent(self, value):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
+    @abstractmethod
     def termNumber(self, value, units=None):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
+    @abstractmethod
     def termRGB(self, value):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
+    @abstractmethod
     def termURI(self, value):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
+    @abstractmethod
     def termString(self, value):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
+    @abstractmethod
     def termUnicodeRange(self, value):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
+    @abstractmethod
     def termFunction(self, name, value):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
-    def termUnknown(self, src):
-        raise NotImplementedError("Subclass responsibility")
+    @abstractmethod
+    def termUnknown(self, _src):
+        raise NotImplementedError
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -186,16 +225,16 @@ class CSSBuilderAbstract(object):
 
 
 class CSSParseError(Exception):
-    src = None
-    ctxsrc = None
-    fullsrc = None
+    src = ""
+    ctxsrc = ""
+    fullsrc = ""
     inline = False
     srcCtxIdx = None
     srcFullIdx = None
     ctxsrcFullIdx = None
 
     def __init__(self, msg, src, ctxsrc=None):
-        Exception.__init__(self, msg)
+        super().__init__(msg)
         self.src = src
         self.ctxsrc = ctxsrc or src
         if self.ctxsrc:
@@ -204,21 +243,20 @@ class CSSParseError(Exception):
                 del self.srcCtxIdx
 
     def __str__(self):
-        if self.ctxsrc:
+        if self.ctxsrc and self.srcCtxIdx:
             return (
-                Exception.__str__(self)
+                super().__str__()
                 + ":: ("
-                + repr(self.ctxsrc[: self.srcCtxIdx])
+                + str(repr(self.ctxsrc[: self.srcCtxIdx]))
                 + ", "
-                + repr(self.ctxsrc[self.srcCtxIdx : self.srcCtxIdx + 20])
+                + str(repr(self.ctxsrc[self.srcCtxIdx : self.srcCtxIdx + 20]))
                 + ")"
             )
-        else:
-            return Exception.__str__(self) + ":: " + repr(self.src[:40])
+        return super().__str__() + ":: " + repr(self.src[:40])
 
-    def setFullCSSSource(self, fullsrc, inline=False):
+    def setFullCSSSource(self, fullsrc, *, inline=False):
         self.fullsrc = fullsrc
-        if type(self.fullsrc) == bytes:
+        if isinstance(self.fullsrc, bytes):
             self.fullsrc = str(self.fullsrc, "utf-8")
         if inline:
             self.inline = inline
@@ -234,8 +272,14 @@ class CSSParseError(Exception):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-class CSSParser(object):
-    """CSS-2.1 parser dependent only upon the re module.
+def regex_or(*args):
+    """Small helper to join regex expressions"""
+    return "|".join(args)
+
+
+class CSSParser:
+    """
+    CSS-2.1 parser dependent only upon the re module.
 
     Implemented directly from http://www.w3.org/TR/CSS21/grammar.html
     Tested with some existing CSS stylesheets for portability.
@@ -298,75 +342,69 @@ class CSSParser(object):
     # ~ Regular expressions
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    if True:  # makes the following code foldable
-        _orRule = lambda *args: "|".join(args)
-        _reflags = re.I | re.M | re.U
-        i_hex = "[0-9a-fA-F]"
-        i_nonascii = "[\200-\377]"
-        i_unicode = r"\\(?:%s){1,6}\s?" % i_hex
-        i_escape = _orRule(i_unicode, r"\\[ -~\200-\377]")
-        # i_nmstart = _orRule('[A-Za-z_]', i_nonascii, i_escape)
-        i_nmstart = _orRule(
-            r"\-[^0-9]|[A-Za-z_]", i_nonascii, i_escape
-        )  # XXX Added hyphen, http://www.w3.org/TR/CSS21/syndata.html#value-def-identifier
-        i_nmchar = _orRule("[-0-9A-Za-z_]", i_nonascii, i_escape)
-        i_ident = "((?:%s)(?:%s)*)" % (i_nmstart, i_nmchar)
-        re_ident = re.compile(i_ident, _reflags)
-        # Caution: treats all characters above 0x7f as legal for an identifier.
-        i_unicodeid = r"([^\u0000-\u007f]+)"
-        re_unicodeid = re.compile(i_unicodeid, _reflags)
-        i_unicodestr1 = r"(\'[^\u0000-\u007f]+\')"
-        i_unicodestr2 = r"(\"[^\u0000-\u007f]+\")"
-        i_unicodestr = _orRule(i_unicodestr1, i_unicodestr2)
-        re_unicodestr = re.compile(i_unicodestr, _reflags)
-        i_element_name = r"((?:%s)|\*)" % (i_ident[1:-1],)
-        re_element_name = re.compile(i_element_name, _reflags)
-        i_namespace_selector = r"((?:%s)|\*|)\|(?!=)" % (i_ident[1:-1],)
-        re_namespace_selector = re.compile(i_namespace_selector, _reflags)
-        i_class = r"\." + i_ident
-        re_class = re.compile(i_class, _reflags)
-        i_hash = "#((?:%s)+)" % i_nmchar
-        re_hash = re.compile(i_hash, _reflags)
-        i_rgbcolor = "(#%s{8}|#%s{6}|#%s{3})" % (i_hex, i_hex, i_hex)
-        re_rgbcolor = re.compile(i_rgbcolor, _reflags)
-        i_nl = "\n|\r\n|\r|\f"
-        i_escape_nl = r"\\(?:%s)" % i_nl
-        i_string_content = _orRule("[\t !#$%&(-~]", i_escape_nl, i_nonascii, i_escape)
-        i_string1 = '"((?:%s|\')*)"' % i_string_content
-        i_string2 = "'((?:%s|\")*)'" % i_string_content
-        i_string = _orRule(i_string1, i_string2)
-        re_string = re.compile(i_string, _reflags)
-        i_uri = r"url\(\s*(?:(?:%s)|((?:%s)+))\s*\)" % (
-            i_string,
-            _orRule("[!#$%&*-~]", i_nonascii, i_escape),
-        )
-        # XXX For now
-        # i_uri = '(url\\(.*?\\))'
-        re_uri = re.compile(i_uri, _reflags)
-        i_num = (  # XXX Added out paranthesis, because e.g. .5em was not parsed correctly
-            r"(([-+]?[0-9]+(?:\.[0-9]+)?)|([-+]?\.[0-9]+))"
-        )
-        re_num = re.compile(i_num, _reflags)
-        i_unit = "(%%|%s)?" % i_ident
-        re_unit = re.compile(i_unit, _reflags)
-        i_function = i_ident + r"\("
-        re_function = re.compile(i_function, _reflags)
-        i_functionterm = "[-+]?" + i_function
-        re_functionterm = re.compile(i_functionterm, _reflags)
-        i_unicoderange1 = r"(?:U\+%s{1,6}-%s{1,6})" % (i_hex, i_hex)
-        i_unicoderange2 = r"(?:U\+\?{1,6}|{h}(\?{0,5}|{h}(\?{0,4}|{h}(\?{0,3}|{h}(\?{0,2}|{h}(\??|{h}))))))"
-        i_unicoderange = (
-            i_unicoderange1  # '(%s|%s)' % (i_unicoderange1, i_unicoderange2)
-        )
-        re_unicoderange = re.compile(i_unicoderange, _reflags)
+    _reflags = re.I | re.M | re.U
+    i_hex = "[0-9a-fA-F]"
+    i_nonascii = "[\200-\377]"
+    i_unicode = r"\\(?:%s){1,6}\s?" % i_hex
+    i_escape = regex_or(i_unicode, r"\\[ -~\200-\377]")
+    # i_nmstart = regex_or('[A-Za-z_]', i_nonascii, i_escape)
+    i_nmstart = regex_or(
+        r"\-[^0-9]|[A-Za-z_]", i_nonascii, i_escape
+    )  # XXX Added hyphen, http://www.w3.org/TR/CSS21/syndata.html#value-def-identifier
+    i_nmchar = regex_or("[-0-9A-Za-z_]", i_nonascii, i_escape)
+    i_ident = f"((?:{i_nmstart})(?:{i_nmchar})*)"
+    re_ident = re.compile(i_ident, _reflags)
+    # Caution: treats all characters above 0x7f as legal for an identifier.
+    i_unicodeid = r"([^\u0000-\u007f]+)"
+    re_unicodeid = re.compile(i_unicodeid, _reflags)
+    i_unicodestr1 = r"(\'[^\u0000-\u007f]+\')"
+    i_unicodestr2 = r"(\"[^\u0000-\u007f]+\")"
+    i_unicodestr = regex_or(i_unicodestr1, i_unicodestr2)
+    re_unicodestr = re.compile(i_unicodestr, _reflags)
+    i_element_name = rf"((?:{i_ident[1:-1]})|\*)"
+    re_element_name = re.compile(i_element_name, _reflags)
+    i_namespace_selector = rf"((?:{i_ident[1:-1]})|\*|)\|(?!=)"
+    re_namespace_selector = re.compile(i_namespace_selector, _reflags)
+    i_class = r"\." + i_ident
+    re_class = re.compile(i_class, _reflags)
+    i_hash = "#((?:%s)+)" % i_nmchar
+    re_hash = re.compile(i_hash, _reflags)
+    i_rgbcolor = f"(#{i_hex}{{8}}|#{i_hex}{{6}}|#{i_hex}{{3}})"
+    re_rgbcolor = re.compile(i_rgbcolor, _reflags)
+    i_nl = "\n|\r\n|\r|\f"
+    i_escape_nl = r"\\(?:%s)" % i_nl
+    i_string_content = regex_or("[\t !#$%&(-~]", i_escape_nl, i_nonascii, i_escape)
+    i_string1 = '"((?:%s|\')*)"' % i_string_content
+    i_string2 = "'((?:%s|\")*)'" % i_string_content
+    i_string = regex_or(i_string1, i_string2)
+    re_string = re.compile(i_string, _reflags)
+    i_uri = r"url\(\s*(?:(?:{})|((?:{})+))\s*\)".format(
+        i_string, regex_or("[!#$%&*-~]", i_nonascii, i_escape)
+    )
+    # XXX For now
+    # i_uri = '(url\\(.*?\\))'
+    re_uri = re.compile(i_uri, _reflags)
+    i_num = (  # XXX Added out paranthesis, because e.g. .5em was not parsed correctly
+        r"(([-+]?[0-9]+(?:\.[0-9]+)?)|([-+]?\.[0-9]+))"
+    )
+    re_num = re.compile(i_num, _reflags)
+    i_unit = "(%%|%s)?" % i_ident
+    re_unit = re.compile(i_unit, _reflags)
+    i_function = i_ident + r"\("
+    re_function = re.compile(i_function, _reflags)
+    i_functionterm = "[-+]?" + i_function
+    re_functionterm = re.compile(i_functionterm, _reflags)
+    i_unicoderange1 = rf"(?:U\+{i_hex}{{1,6}}-{i_hex}{{1,6}})"
+    i_unicoderange2 = r"(?:U\+\?{1,6}|{h}(\?{0,5}|{h}(\?{0,4}|{h}(\?{0,3}|{h}(\?{0,2}|{h}(\??|{h}))))))"
+    i_unicoderange = i_unicoderange1  # '(%s|%s)' % (i_unicoderange1, i_unicoderange2)
+    re_unicoderange = re.compile(i_unicoderange, _reflags)
 
-        # i_comment = '(?:\/\*[^*]*\*+([^/*][^*]*\*+)*\/)|(?://.*)'
-        # gabriel: only C convention for comments is allowed in CSS
-        i_comment = r"(?:\/\*[^*]*\*+([^/*][^*]*\*+)*\/)"
-        re_comment = re.compile(i_comment, _reflags)
-        i_important = r"!\s*(important)"
-        re_important = re.compile(i_important, _reflags)
-        del _orRule
+    # i_comment = '(?:\/\*[^*]*\*+([^/*][^*]*\*+)*\/)|(?://.*)'
+    # gabriel: only C convention for comments is allowed in CSS
+    i_comment = r"(?:\/\*[^*]*\*+([^/*][^*]*\*+)*\/)"
+    re_comment = re.compile(i_comment, _reflags)
+    i_important = r"!\s*(important)"
+    re_important = re.compile(i_important, _reflags)
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # ~ Public
@@ -378,11 +416,11 @@ class CSSParser(object):
     # ~ CSS Builder to delegate to ~~~~~~~~~~~~~~~~~~~~~~~~
 
     def getCSSBuilder(self):
-        """A concrete instance implementing CSSBuilderAbstract"""
+        """A concrete instance implementing CSSBuilderAbstract."""
         return self._cssBuilder
 
     def setCSSBuilder(self, cssBuilder):
-        """A concrete instance implementing CSSBuilderAbstract"""
+        """A concrete instance implementing CSSBuilderAbstract."""
         self._cssBuilder = cssBuilder
 
     cssBuilder = property(getCSSBuilder, setCSSBuilder)
@@ -392,18 +430,20 @@ class CSSParser(object):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def parseFile(self, srcFile):
-        """Parses CSS file-like objects using the current cssBuilder.
-        Use for external stylesheets."""
-
-        with open(srcFile, "r") as file_handler:
+        """
+        Parses CSS file-like objects using the current cssBuilder.
+        Use for external stylesheets.
+        """
+        with open(srcFile) as file_handler:
             file_content = file_handler.read()
 
         return self.parse(file_content)
 
     def parse(self, src):
-        """Parses CSS string source using the current cssBuilder.
-        Use for embedded stylesheets."""
-
+        """
+        Parses CSS string source using the current cssBuilder.
+        Use for embedded stylesheets.
+        """
         self.cssBuilder.beginStylesheet()
         try:
             # XXX Some simple preprocessing
@@ -419,9 +459,10 @@ class CSSParser(object):
         return stylesheet
 
     def parseInline(self, src):
-        """Parses CSS inline source string using the current cssBuilder.
-        Use to parse a tag's 'sytle'-like attribute."""
-
+        """
+        Parses CSS inline source string using the current cssBuilder.
+        Use to parse a tag's 'sytle'-like attribute.
+        """
         self.cssBuilder.beginInline()
         try:
             try:
@@ -436,7 +477,8 @@ class CSSParser(object):
         return result
 
     def parseAttributes(self, attributes=None, **kwAttributes):
-        """Parses CSS attribute source strings, and return as an inline stylesheet.
+        """
+        Parses CSS attribute source strings, and return as an inline stylesheet.
         Use to parse a tag's highly CSS-based attributes like 'font'.
 
         See also: parseSingleAttr
@@ -449,9 +491,9 @@ class CSSParser(object):
         try:
             properties = []
             try:
-                for propertyName, src in kwAttributes.items():
+                for property_name, src in kwAttributes.items():
                     src, single_property = self._parseDeclarationProperty(
-                        src.strip(), propertyName
+                        src.strip(), property_name
                     )
                     properties.append(single_property)
 
@@ -464,32 +506,32 @@ class CSSParser(object):
             self.cssBuilder.endInline()
         return result
 
-    def parseSingleAttr(self, attrValue):
-        """Parse a single CSS attribute source string, and returns the built CSS expression.
+    def parseSingleAttr(self, attr_value):
+        """
+        Parse a single CSS attribute source string, and returns the built CSS expression.
         Use to parse a tag's highly CSS-based attributes like 'font'.
 
         See also: parseAttributes
         """
-
-        results = self.parseAttributes(temp=attrValue)
+        results = self.parseAttributes(temp=attr_value)
         if "temp" in results[1]:
             return results[1]["temp"]
-        else:
-            return results[0]["temp"]
+        return results[0]["temp"]
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # ~ Internal _parse methods
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def _parseStylesheet(self, src):
-        """stylesheet
+        """
+        stylesheet
         : [ CHARSET_SYM S* STRING S* ';' ]?
             [S|CDO|CDC]* [ import [S|CDO|CDC]* ]*
             [ [ ruleset | media | page | font_face ] [S|CDO|CDC]* ]*
         ;
         """
         # FIXME: BYTES to STR
-        if type(src) == bytes:
+        if isinstance(src, bytes):
             src = src.decode()
         # Get rid of the comments
         src = self.re_comment.sub("", src)
@@ -525,8 +567,9 @@ class CSSParser(object):
         stylesheet = self.cssBuilder.stylesheet(stylesheetElements, stylesheetImports)
         return src, stylesheet
 
-    def _parseSCDOCDC(self, src):
-        """[S|CDO|CDC]*"""
+    @staticmethod
+    def _parseSCDOCDC(src):
+        """[S|CDO|CDC]*."""
         while 1:
             src = src.lstrip()
             if src.startswith("<!--"):
@@ -540,22 +583,21 @@ class CSSParser(object):
     # ~ CSS @ directives ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def _parseAtCharset(self, src):
-        """[ CHARSET_SYM S* STRING S* ';' ]?"""
+        """[ CHARSET_SYM S* STRING S* ';' ]?."""
         if isAtRuleIdent(src, "charset"):
             src = stripAtRuleIdent(src)
             charset, src = self._getString(src)
             src = src.lstrip()
             if src[:1] != ";":
-                raise self.ParseError(
-                    "@charset expected a terminating ';'", src, self.ctxsrc
-                )
+                msg = "@charset expected a terminating ';'"
+                raise self.ParseError(msg, src, self.ctxsrc)
             src = src[1:].lstrip()
 
             self.cssBuilder.atCharset(charset)
         return src
 
     def _parseAtImports(self, src):
-        """[ import [S|CDO|CDC]* ]*"""
+        """[ import [S|CDO|CDC]* ]*."""
         result = []
         while isAtRuleIdent(src, "import"):
             ctxsrc = src
@@ -563,7 +605,8 @@ class CSSParser(object):
 
             import_, src = self._getStringOrURI(src)
             if import_ is None:
-                raise self.ParseError("Import expecting string or url", src, ctxsrc)
+                msg = "Import expecting string or url"
+                raise self.ParseError(msg, src, ctxsrc)
 
             mediums = []
             medium, src = self._getIdent(src.lstrip())
@@ -580,7 +623,8 @@ class CSSParser(object):
                 mediums = ["all"]
 
             if src[:1] != ";":
-                raise self.ParseError("@import expected a terminating ';'", src, ctxsrc)
+                msg = "@import expected a terminating ';'"
+                raise self.ParseError(msg, src, ctxsrc)
             src = src[1:].lstrip()
 
             stylesheet = self.cssBuilder.atImport(import_, mediums, self)
@@ -591,11 +635,11 @@ class CSSParser(object):
         return src, result
 
     def _parseAtNamespace(self, src):
-        """namespace :
+        """
+        Namespace :
 
         @namespace S* [IDENT S*]? [STRING|URI] S* ';' S*
         """
-
         src = self._parseSCDOCDC(src)
         while isAtRuleIdent(src, "namespace"):
             ctxsrc = src
@@ -605,20 +649,19 @@ class CSSParser(object):
             if namespace is None:
                 nsPrefix, src = self._getIdent(src)
                 if nsPrefix is None:
-                    raise self.ParseError(
-                        "@namespace expected an identifier or a URI", src, ctxsrc
-                    )
+                    msg = "@namespace expected an identifier or a URI"
+                    raise self.ParseError(msg, src, ctxsrc)
                 namespace, src = self._getStringOrURI(src.lstrip())
                 if namespace is None:
-                    raise self.ParseError("@namespace expected a URI", src, ctxsrc)
+                    msg = "@namespace expected a URI"
+                    raise self.ParseError(msg, src, ctxsrc)
             else:
                 nsPrefix = None
 
             src = src.lstrip()
             if src[:1] != ";":
-                raise self.ParseError(
-                    "@namespace expected a terminating ';'", src, ctxsrc
-                )
+                msg = "@namespace expected a terminating ';'"
+                raise self.ParseError(msg, src, ctxsrc)
             src = src[1:].lstrip()
 
             self.cssBuilder.atNamespace(nsPrefix, namespace)
@@ -627,7 +670,7 @@ class CSSParser(object):
         return src
 
     def _parseAtKeyword(self, src):
-        """[media | page | font_face | unknown_keyword]"""
+        """[media | page | font_face | unknown_keyword]."""
         ctxsrc = src
         if isAtRuleIdent(src, "media"):
             src, result = self._parseAtMedia(src)
@@ -643,11 +686,13 @@ class CSSParser(object):
         elif src.startswith("@"):
             src, result = self._parseAtIdent(src)
         else:
-            raise self.ParseError("Unknown state in atKeyword", src, ctxsrc)
+            msg = "Unknown state in atKeyword"
+            raise self.ParseError(msg, src, ctxsrc)
         return src, result
 
     def _parseAtMedia(self, src):
-        """media
+        """
+        media
         : MEDIA_SYM S* medium [ ',' S* medium ]* '{' S* ruleset* '}' S*
         ;
         """
@@ -668,13 +713,11 @@ class CSSParser(object):
                 src = src[match.end() - 1 :]
                 break
             mediums.append(medium)
-            if src[0] == ",":
-                src = src[1:].lstrip()
-            else:
-                src = src.lstrip()
+            src = src[1:].lstrip() if src[0] == "," else src.lstrip()
 
         if not src.startswith("{"):
-            raise self.ParseError("Ruleset opening '{' not found", src, ctxsrc)
+            msg = "Ruleset opening '{' not found"
+            raise self.ParseError(msg, src, ctxsrc)
         src = src[1:].lstrip()
 
         stylesheetElements = []
@@ -697,20 +740,20 @@ class CSSParser(object):
             src = src.lstrip()
 
         if not src.startswith("}"):
-            raise self.ParseError("Ruleset closing '}' not found", src, ctxsrc)
-        else:
-            src = src[1:].lstrip()
+            msg = "Ruleset closing '}' not found"
+            raise self.ParseError(msg, src, ctxsrc)
+        src = src[1:].lstrip()
 
         result = self.cssBuilder.atMedia(mediums, stylesheetElements)
         return src, result
 
     def _parseAtPage(self, src):
-        """page
+        """
+        page
         : PAGE_SYM S* IDENT? pseudo_page? S*
             '{' S* declaration [ ';' S* declaration ]* '}' S*
         ;
         """
-
         data = {}
         pageBorder = None
         isLandscape = False
@@ -733,9 +776,9 @@ class CSSParser(object):
 
         # XXX Extended for PDF use
         if not src.startswith("{"):
-            raise self.ParseError("Ruleset opening '{' not found", src, ctxsrc)
-        else:
-            src = src[1:].lstrip()
+            msg = "Ruleset opening '{' not found"
+            raise self.ParseError(msg, src, ctxsrc)
+        src = src[1:].lstrip()
 
         while src and not src.startswith("}"):
             if src.startswith("@"):
@@ -785,7 +828,8 @@ class CSSParser(object):
                         elif valueStr in xhtml2pdf.default.PML_PAGESIZES:
                             self.c.pageSize = xhtml2pdf.default.PML_PAGESIZES[valueStr]
                         else:
-                            raise RuntimeError("Unknown size value for @page")
+                            msg = "Unknown size value for @page"
+                            raise RuntimeError(msg)
 
                     if len(sizeList) == 2:
                         self.c.pageSize = tuple(sizeList)
@@ -802,9 +846,7 @@ class CSSParser(object):
         return src[1:].lstrip(), result
 
     def _parseAtFrame(self, src):
-        """
-        XXX Proprietary for PDF
-        """
+        """XXX Proprietary for PDF."""
         src = src[len("@frame ") :].lstrip()
         box, src = self._getIdent(src)
         src, properties = self._parseDeclarationGroup(src.lstrip())
@@ -821,9 +863,8 @@ class CSSParser(object):
         ctxsrc = src
         atIdent, src = self._getIdent(src[1:])
         if atIdent is None:
-            raise self.ParseError(
-                "At-rule expected an identifier for the rule", src, ctxsrc
-            )
+            msg = "At-rule expected an identifier for the rule"
+            raise self.ParseError(msg, src, ctxsrc)
 
         src, result = self.cssBuilder.atIdent(atIdent, self, src)
 
@@ -853,14 +894,16 @@ class CSSParser(object):
                     # try to parse it as a stylesheet block
                     src, stylesheet = self._parseStylesheet(src)
             else:
-                raise self.ParserError("Unable to ignore @-rule block", src, ctxsrc)
+                msg = "Unable to ignore @-rule block"
+                raise self.ParserError(msg, src, ctxsrc)
 
         return src.lstrip(), result
 
     # ~ ruleset - see selector and declaration groups ~~~~
 
     def _parseRuleset(self, src):
-        """ruleset
+        """
+        ruleset
         : selector [ ',' S* selector ]*
             '{' S* declaration [ ';' S* declaration ]* '}' S*
         ;
@@ -884,7 +927,8 @@ class CSSParser(object):
         return src, selectors
 
     def _parseSelector(self, src):
-        """selector
+        """
+        selector
         : simple_selector [ combinator simple_selector ]*
         ;
         """
@@ -913,7 +957,8 @@ class CSSParser(object):
         return src.lstrip(), selector
 
     def _parseSimpleSelector(self, src):
-        """simple_selector
+        """
+        simple_selector
         : [ namespace_selector ]? element_name? [ HASH | class | attrib | pseudo ]* S*
         ;
         """
@@ -925,7 +970,8 @@ class CSSParser(object):
         elif src[:1] in self.SelectorQualifiers:
             name = "*"
         else:
-            raise self.ParseError("Selector name or qualifier expected", src, ctxsrc)
+            msg = "Selector name or qualifier expected"
+            raise self.ParseError(msg, src, ctxsrc)
 
         name = self.cssBuilder.resolveNamespacePrefix(nsPrefix, name)
         selector = self.cssBuilder.selector(name)
@@ -950,16 +996,16 @@ class CSSParser(object):
         return src.lstrip(), selector
 
     def _parseSelectorAttribute(self, src, selector):
-        """attrib
+        """
+        attrib
         : '[' S* [ namespace_selector ]? IDENT S* [ [ '=' | INCLUDES | DASHMATCH ] S*
             [ IDENT | STRING ] S* ]? ']'
         ;
         """
         ctxsrc = src
         if not src.startswith("["):
-            raise self.ParseError(
-                "Selector Attribute opening '[' not found", src, ctxsrc
-            )
+            msg = "Selector Attribute opening '[' not found"
+            raise self.ParseError(msg, src, ctxsrc)
         src = src[1:].lstrip()
 
         nsPrefix, src = self._getMatchResult(self.re_namespace_selector, src)
@@ -968,7 +1014,8 @@ class CSSParser(object):
         src = src.lstrip()
 
         if attrName is None:
-            raise self.ParseError("Expected a selector attribute name", src, ctxsrc)
+            msg = "Expected a selector attribute name"
+            raise self.ParseError(msg, src, ctxsrc)
         if nsPrefix is not None:
             attrName = self.cssBuilder.resolveNamespacePrefix(nsPrefix, attrName)
 
@@ -980,51 +1027,50 @@ class CSSParser(object):
         src = src[len(op) :].lstrip()
 
         if op:
-            attrValue, src = self._getIdent(src)
-            if attrValue is None:
-                attrValue, src = self._getString(src)
-                if attrValue is None:
-                    raise self.ParseError(
-                        "Expected a selector attribute value", src, ctxsrc
-                    )
+            attr_value, src = self._getIdent(src)
+            if attr_value is None:
+                attr_value, src = self._getString(src)
+                if attr_value is None:
+                    msg = "Expected a selector attribute value"
+                    raise self.ParseError(msg, src, ctxsrc)
         else:
-            attrValue = None
+            attr_value = None
 
         if not src.startswith("]"):
-            raise self.ParseError(
-                "Selector Attribute closing ']' not found", src, ctxsrc
-            )
-        else:
-            src = src[1:]
+            msg = "Selector Attribute closing ']' not found"
+            raise self.ParseError(msg, src, ctxsrc)
+        src = src[1:]
 
         if op:
-            selector.addAttributeOperation(attrName, op, attrValue)
+            selector.addAttributeOperation(attrName, op, attr_value)
         else:
             selector.addAttribute(attrName)
         return src, selector
 
     def _parseSelectorPseudo(self, src, selector):
-        """pseudo
+        """
+        pseudo
         : ':' [ IDENT | function ]
         ;
         """
         ctxsrc = src
         if not src.startswith(":"):
-            raise self.ParseError("Selector Pseudo ':' not found", src, ctxsrc)
+            msg = "Selector Pseudo ':' not found"
+            raise self.ParseError(msg, src, ctxsrc)
         src = re.search("^:{1,2}(.*)", src, re.M | re.S).group(1)
 
         name, src = self._getIdent(src)
         if not name:
-            raise self.ParseError("Selector Pseudo identifier not found", src, ctxsrc)
+            msg = "Selector Pseudo identifier not found"
+            raise self.ParseError(msg, src, ctxsrc)
 
         if src.startswith("("):
             # function
             src = src[1:].lstrip()
-            src, term = self._parseExpression(src, True)
+            src, term = self._parseExpression(src, return_list=True)
             if not src.startswith(")"):
-                raise self.ParseError(
-                    "Selector Pseudo Function closing ')' not found", src, ctxsrc
-                )
+                msg = "Selector Pseudo Function closing ')' not found"
+                raise self.ParseError(msg, src, ctxsrc)
             src = src[1:]
             selector.addPseudoFunction(name, term)
         else:
@@ -1034,14 +1080,13 @@ class CSSParser(object):
 
     # ~ declaration and expression parsing ~~~~~~~~~~~~~~~
 
-    def _parseDeclarationGroup(self, src, braces=True):
+    def _parseDeclarationGroup(self, src, *, braces=True):
         ctxsrc = src
         if src.startswith("{"):
             src, braces = src[1:], True
         elif braces:
-            raise self.ParseError(
-                "Declaration group opening '{' not found", src, ctxsrc
-            )
+            msg = "Declaration group opening '{' not found"
+            raise self.ParseError(msg, src, ctxsrc)
 
         properties = []
         src = src.lstrip()
@@ -1064,23 +1109,23 @@ class CSSParser(object):
 
         if braces:
             if not src.startswith("}"):
-                raise self.ParseError(
-                    "Declaration group closing '}' not found", src, ctxsrc
-                )
+                msg = "Declaration group closing '}' not found"
+                raise self.ParseError(msg, src, ctxsrc)
             src = src[1:]
 
         return src.lstrip(), properties
 
     def _parseDeclaration(self, src):
-        """declaration
+        """
+        declaration
         : ident S* ':' S* expr prio?
         | /* empty */
         ;
         """
         # property
-        propertyName, src = self._getIdent(src)
+        property_name, src = self._getIdent(src)
 
-        if propertyName is not None:
+        if property_name is not None:
             src = src.lstrip()
             # S* : S*
             if src[:1] in (":", "="):
@@ -1089,13 +1134,13 @@ class CSSParser(object):
                 # suppor a null transition, as well as an "=" transition
                 src = src[1:].lstrip()
 
-            src, single_property = self._parseDeclarationProperty(src, propertyName)
+            src, single_property = self._parseDeclarationProperty(src, property_name)
         else:
             single_property = None
 
         return src, single_property
 
-    def _parseDeclarationProperty(self, src, propertyName):
+    def _parseDeclarationProperty(self, src, property_name):
         # expr
         src, expr = self._parseExpression(src)
 
@@ -1103,10 +1148,12 @@ class CSSParser(object):
         important, src = self._getMatchResult(self.re_important, src)
         src = src.lstrip()
 
-        single_property = self.cssBuilder.property(propertyName, expr, important)
+        single_property = self.cssBuilder.property(
+            property_name, expr, important=important
+        )
         return src, single_property
 
-    def _parseExpression(self, src, returnList=False):
+    def _parseExpression(self, src, *, return_list=False):
         """
         expr
         : term [ operator term ]*
@@ -1124,17 +1171,16 @@ class CSSParser(object):
             src, term2 = self._parseExpressionTerm(src.lstrip())
             if term2 is NotImplemented:
                 break
-            else:
-                term = self.cssBuilder.combineTerms(term, operator, term2)
+            term = self.cssBuilder.combineTerms(term, operator, term2)
 
-        if operator is None and returnList:
+        if operator is None and return_list:
             term = self.cssBuilder.combineTerms(term, None, None)
             return src, term
-        else:
-            return src, term
+        return src, term
 
     def _parseExpressionTerm(self, src):
-        """term
+        """
+        term
         : unary_operator?
             [ NUMBER S* | PERCENTAGE S* | LENGTH S* | EMS S* | EXS S* | ANGLE S* |
             TIME S* | FREQ S* | function ]
@@ -1162,11 +1208,10 @@ class CSSParser(object):
 
         result, src = self._getMatchResult(self.re_functionterm, src)
         if result is not None:
-            src, params = self._parseExpression(src, True)
+            src, params = self._parseExpression(src, return_list=True)
             if src[0] != ")":
-                raise self.ParseError(
-                    "Terminal function expression expected closing ')'", src, ctxsrc
-                )
+                msg = "Terminal function expression expected closing ')'"
+                raise self.ParseError(msg, src, ctxsrc)
             src = src[1:].lstrip()
             term = self.cssBuilder.termFunction(result, params)
             return src, term
@@ -1220,8 +1265,7 @@ class CSSParser(object):
             else:
                 strres = ""
             return strres, src[result.end() :]
-        else:
-            return default, src
+        return default, src
 
     def _getStringOrURI(self, src):
         result, src = self._getString(src, self.re_uri)
@@ -1229,9 +1273,9 @@ class CSSParser(object):
             result, src = self._getString(src)
         return result, src
 
-    def _getMatchResult(self, rexpression, src, default=None, group=1):
+    @staticmethod
+    def _getMatchResult(rexpression, src, default=None, group=1):
         result = rexpression.match(src)
         if result:
             return result.group(group), src[result.end() :]
-        else:
-            return default, src
+        return default, src

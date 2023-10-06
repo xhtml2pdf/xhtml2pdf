@@ -6,7 +6,8 @@
 #
 #  Modified by Dirk Holtwick <holtwick@web.de>, 2007-2008
 
-"""CSS-2.1 engine
+"""
+CSS-2.1 engine
 
 Primary classes:
     * CSSElementInterfaceAbstract
@@ -25,16 +26,15 @@ Primary classes:
         CSSParser requests.
 
 Dependencies:
-    python 2.3 (or greater)
     sets, cssParser, re (via cssParser)
 """
+# ruff: noqa: N802, N803, N815
 
 import copy
-import os
+from abc import abstractmethod
+from pathlib import Path
 
-from . import cssParser
-from . import cssSpecial
-
+from xhtml2pdf.w3c import cssParser, cssSpecial
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ~ To replace any for with list comprehension
@@ -57,9 +57,10 @@ CSSParseError = cssParser.CSSParseError
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-class CSSElementInterfaceAbstract(object):
+class CSSElementInterfaceAbstract:
+    @abstractmethod
     def getAttr(self, name, default=NotImplemented):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
     def getIdAttr(self):
         return self.getAttr("id", "")
@@ -67,27 +68,32 @@ class CSSElementInterfaceAbstract(object):
     def getClassAttr(self):
         return self.getAttr("class", "")
 
+    @abstractmethod
     def getInlineStyle(self):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
+    @abstractmethod
     def matchesNode(self):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
+    @abstractmethod
     def inPseudoState(self, name, params=()):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
+    @abstractmethod
     def iterXMLParents(self):
-        """Results must be compatible with CSSElementInterfaceAbstract"""
-        raise NotImplementedError("Subclass responsibility")
+        """Results must be compatible with CSSElementInterfaceAbstract."""
+        raise NotImplementedError
 
+    @abstractmethod
     def getPreviousSibling(self):
-        raise NotImplementedError("Subclass responsibility")
+        raise NotImplementedError
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-class CSSCascadeStrategy(object):
+class CSSCascadeStrategy:
     author = None
     user = None
     userAgenr = None
@@ -107,7 +113,7 @@ class CSSCascadeStrategy(object):
             user = self.user
         if userAgent is None:
             userAgent = self.userAgenr
-        return self.__class__(author, user, userAgent)
+        return type(self)(author, user, userAgent)
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -133,7 +139,8 @@ class CSSCascadeStrategy(object):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def findStyleFor(self, element, attrName, default=NotImplemented):
-        """Attempts to find the style setting for attrName in the CSSRulesets.
+        """
+        Attempts to find the style setting for attrName in the CSSRulesets.
 
         Note: This method does not attempt to resolve rules that return
         "inherited", "default", or values that have units (including "%").
@@ -144,7 +151,8 @@ class CSSCascadeStrategy(object):
         return self._extractStyleForRule(rule, attrName, default)
 
     def findStylesForEach(self, element, attrNames, default=NotImplemented):
-        """Attempts to find the style setting for attrName in the CSSRulesets.
+        """
+        Attempts to find the style setting for attrName in the CSSRulesets.
 
         Note: This method does not attempt to resolve rules that return
         "inherited", "default", or values that have units (including "%").
@@ -188,7 +196,7 @@ class CSSCascadeStrategy(object):
         return rules
 
     def findCSSRulesForEach(self, element, attrNames):
-        rules = dict((name, []) for name in attrNames)
+        rules = {name: [] for name in attrNames}
 
         inline = element.getInlineStyle()
         for ruleset in self.iterCSSRulesets(inline):
@@ -201,15 +209,17 @@ class CSSCascadeStrategy(object):
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def _extractStyleForRule(self, rule, attrName, default=NotImplemented):
+    @staticmethod
+    def _extractStyleForRule(rule, attrName, default=NotImplemented):
         if rule:
             # rule is packed in a list to differentiate from "no rule" vs "rule
             # whose value evalutates as False"
             style = rule[-1][1]
             return style[attrName]
-        elif default is not NotImplemented:
+        if default is not NotImplemented:
             return default
-        raise LookupError("Could not find style for '%s' in %r" % (attrName, rule))
+        msg = f"Could not find style for '{attrName}' in {rule!r}"
+        raise LookupError(msg)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -217,7 +227,7 @@ class CSSCascadeStrategy(object):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-class CSSSelectorBase(object):
+class CSSSelectorBase:
     inline = False
     _hash = None
     _specificity = None
@@ -235,28 +245,24 @@ class CSSSelectorBase(object):
             return object.__hash__(self)
         return self._hash
 
-    def getNSPrefix(self):
+    @property
+    def nsPrefix(self):
         return self.completeName[0]
 
-    nsPrefix = property(getNSPrefix)
-
-    def getName(self):
+    @property
+    def name(self):
         return self.completeName[2]
 
-    name = property(getName)
-
-    def getNamespace(self):
+    @property
+    def namespace(self):
         return self.completeName[1]
 
-    namespace = property(getNamespace)
-
-    def getFullName(self):
+    @property
+    def fullName(self):
         return self.completeName[1:3]
 
-    fullName = property(getFullName)
-
     def __repr__(self):
-        strArgs = (self.__class__.__name__,) + self.specificity() + (self.asString(),)
+        strArgs = (type(self).__name__, *self.specificity(), self.asString())
         return "<%s %d:%d:%d:%d %s >" % strArgs
 
     def __str__(self):
@@ -266,11 +272,9 @@ class CSSSelectorBase(object):
         return (self.specificity(), self.fullName, self.qualifiers)
 
     def __eq__(self, other):
-        """Python 3"""
         return self._as_comparison_key() == other._as_comparison_key()
 
     def __lt__(self, other):
-        """Python 3"""
         return self._as_comparison_key() < other._as_comparison_key()
 
     def specificity(self):
@@ -279,21 +283,19 @@ class CSSSelectorBase(object):
         return self._specificity
 
     def _calcSpecificity(self):
-        """from http://www.w3.org/TR/CSS21/cascade.html#specificity"""
+        """From http://www.w3.org/TR/CSS21/cascade.html#specificity."""
         hashCount = 0
         qualifierCount = 0
         elementCount = int(self.name != "*")
-        for q in self.qualifiers:
-            if q.isHash():
+        for qualifier in self.qualifiers:
+            if qualifier.isHash():
                 hashCount += 1
-            elif q.isClass():
+            elif qualifier.isClass() or qualifier.isAttr():
                 qualifierCount += 1
-            elif q.isAttr():
-                qualifierCount += 1
-            elif q.isPseudo():
+            elif qualifier.isPseudo():
                 elementCount += 1
-            elif q.isCombiner():
-                i, h, q, e = q.selector.specificity()
+            elif qualifier.isCombiner():
+                i, h, q, e = qualifier.selector.specificity()
                 hashCount += h
                 qualifierCount += q
                 elementCount += e
@@ -312,16 +314,12 @@ class CSSSelectorBase(object):
         ):
             return False
 
-        for qualifier in self.qualifiers:
-            if not qualifier.matches(element):
-                return False
-        else:
-            return True
+        return all(qualifier.matches(element) for qualifier in self.qualifiers)
 
     def asString(self):
         result = []
         if self.nsPrefix is not None:
-            result.append("%s|%s" % (self.nsPrefix, self.name))
+            result.append(f"{self.nsPrefix}|{self.name}")
         else:
             result.append(self.name)
 
@@ -351,11 +349,10 @@ class CSSMutableSelector(CSSSelectorBase, cssParser.CSSSelectorAbstract):
             self.completeName, [q.asImmutable() for q in self.qualifiers]
         )
 
-    def combineSelectors(klass, selectorA, op, selectorB):
+    @staticmethod
+    def combineSelectors(selectorA, op, selectorB):
         selectorB.addCombination(op, selectorA)
         return selectorB
-
-    combineSelectors = classmethod(combineSelectors)
 
     def addCombination(self, op, other):
         self._addQualifier(CSSSelectorCombinationQualifier(op, other))
@@ -369,8 +366,8 @@ class CSSMutableSelector(CSSSelectorBase, cssParser.CSSSelectorAbstract):
     def addAttribute(self, attrName):
         self._addQualifier(CSSSelectorAttributeQualifier(attrName))
 
-    def addAttributeOperation(self, attrName, op, attrValue):
-        self._addQualifier(CSSSelectorAttributeQualifier(attrName, op, attrValue))
+    def addAttributeOperation(self, attrName, op, attr_value):
+        self._addQualifier(CSSSelectorAttributeQualifier(attrName, op, attr_value))
 
     def addPseudo(self, name):
         self._addQualifier(CSSSelectorPseudoQualifier(name))
@@ -397,10 +394,9 @@ class CSSImmutableSelector(CSSSelectorBase):
         CSSSelectorBase.__init__(self, completeName)
         self._updateHash()
 
-    def fromSelector(klass, selector):
-        return klass(selector.completeName, selector.qualifiers)
-
-    fromSelector = classmethod(fromSelector)
+    @classmethod
+    def fromSelector(cls, selector):
+        return cls(selector.completeName, selector.qualifiers)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -410,24 +406,33 @@ class CSSImmutableSelector(CSSSelectorBase):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-class CSSSelectorQualifierBase(object):
-    def isHash(self):
+class CSSSelectorQualifierBase:
+    @staticmethod
+    def isHash():
         return False
 
-    def isClass(self):
+    @staticmethod
+    def isClass():
         return False
 
-    def isAttr(self):
+    @staticmethod
+    def isAttr():
         return False
 
-    def isPseudo(self):
+    @staticmethod
+    def isPseudo():
         return False
 
-    def isCombiner(self):
+    @staticmethod
+    def isCombiner():
         return False
 
     def asImmutable(self):
         return self
+
+    @abstractmethod
+    def asString(self):
+        raise NotImplementedError
 
     def __str__(self):
         return self.asString()
@@ -437,24 +442,23 @@ class CSSSelectorHashQualifier(CSSSelectorQualifierBase):
     def __init__(self, hashId):
         self.hashId = hashId
 
-    def isHash(self):
+    @staticmethod
+    def isHash():
         return True
 
     def __hash__(self):
         return hash((self.hashId,))
 
     def asString(self):
-        return "#" + self.hashId
+        return f"#{self.hashId}"
 
     def matches(self, element):
         return element.getIdAttr() == self.hashId
 
     def __eq__(self, other):
-        """Python 3"""
         return self.hashId == other.hashId
 
     def __lt__(self, other):
-        """Python 3"""
         return self.hashId < other.hashId
 
 
@@ -462,42 +466,42 @@ class CSSSelectorClassQualifier(CSSSelectorQualifierBase):
     def __init__(self, classId):
         self.classId = classId
 
-    def isClass(self):
+    @staticmethod
+    def isClass():
         return True
 
     def __hash__(self):
         return hash((self.classId,))
 
     def asString(self):
-        return "." + self.classId
+        return f".{self.classId}"
 
     def matches(self, element):
         # return self.classId in element.getClassAttr().split()
-        attrValue = element.domElement.attributes.get("class")
-        if attrValue is not None:
-            return self.classId in attrValue.value.split()
+        attr_value = element.domElement.attributes.get("class")
+        if attr_value is not None:
+            return self.classId in attr_value.value.split()
         return False
 
     def __eq__(self, other):
-        """Python 3"""
         return self.classId == other.classId
 
     def __lt__(self, other):
-        """Python 3"""
         return self.classId < other.classId
 
 
 class CSSSelectorAttributeQualifier(CSSSelectorQualifierBase):
     name, op, value = None, None, NotImplemented
 
-    def __init__(self, attrName, op=None, attrValue=NotImplemented):
+    def __init__(self, attrName, op=None, attr_value=NotImplemented):
         self.name = attrName
         if op is not self.op:
             self.op = op
-        if attrValue is not self.value:
-            self.value = attrValue
+        if attr_value is not self.value:
+            self.value = attr_value
 
-    def isAttr(self):
+    @staticmethod
+    def isAttr():
         return True
 
     def __hash__(self):
@@ -505,27 +509,28 @@ class CSSSelectorAttributeQualifier(CSSSelectorQualifierBase):
 
     def asString(self):
         if self.value is NotImplemented:
-            return "[%s]" % (self.name,)
-        return "[%s%s%s]" % (self.name, self.op, self.value)
+            return f"[{self.name}]"
+        return f"[{self.name}{self.op}{self.value}]"
 
     def matches(self, element):
         if self.op is None:
             return element.getAttr(self.name, NotImplemented) != NotImplemented
-        elif self.op == "=":
+        if self.op == "=":
             return self.value == element.getAttr(self.name, NotImplemented)
-        elif self.op == "~=":
+        if self.op == "~=":
             # return self.value in element.getAttr(self.name, '').split()
-            attrValue = element.domElement.attributes.get(self.name)
-            if attrValue is not None:
-                return self.value in attrValue.value.split()
+            attr_value = element.domElement.attributes.get(self.name)
+            if attr_value is not None:
+                return self.value in attr_value.value.split()
             return False
-        elif self.op == "|=":
+        if self.op == "|=":
             # return self.value in element.getAttr(self.name, '').split('-')
-            attrValue = element.domElement.attributes.get(self.name)
-            if attrValue is not None:
-                return self.value in attrValue.value.split("-")
+            attr_value = element.domElement.attributes.get(self.name)
+            if attr_value is not None:
+                return self.value in attr_value.value.split("-")
             return False
-        raise RuntimeError("Unknown operator %r for %r" % (self.op, self))
+        msg = f"Unknown operator {self.op!r} for {self!r}"
+        raise RuntimeError(msg)
 
 
 class CSSSelectorPseudoQualifier(CSSSelectorQualifierBase):
@@ -533,7 +538,8 @@ class CSSSelectorPseudoQualifier(CSSSelectorQualifierBase):
         self.name = attrName
         self.params = tuple(params)
 
-    def isPseudo(self):
+    @staticmethod
+    def isPseudo():
         return True
 
     def __hash__(self):
@@ -541,9 +547,8 @@ class CSSSelectorPseudoQualifier(CSSSelectorQualifierBase):
 
     def asString(self):
         if self.params:
-            return ":" + self.name
-        else:
-            return ":%s(%s)" % (self.name, self.params)
+            return f":{self.name}"
+        return f":{self.name}({self.params})"
 
     def matches(self, element):
         return element.inPseudoState(self.name, self.params)
@@ -554,29 +559,31 @@ class CSSSelectorCombinationQualifier(CSSSelectorQualifierBase):
         self.op = op
         self.selector = selector
 
-    def isCombiner(self):
+    @staticmethod
+    def isCombiner():
         return True
 
     def __hash__(self):
         return hash((self.op, self.selector))
 
     def asImmutable(self):
-        return self.__class__(self.op, self.selector.asImmutable())
+        return type(self)(self.op, self.selector.asImmutable())
 
     def asString(self):
-        return "%s%s" % (self.selector.asString(), self.op)
+        return f"{self.selector.asString()}{self.op}"
 
     def matches(self, element):
         op, selector = self.op, self.selector
         if op == " ":
             return any(selector.matches(parent) for parent in element.iterXMLParents())
-        elif op == ">":
+        if op == ">":
             parent = next(element.iterXMLParents(), None)
             if parent is None:
                 return False
             return selector.matches(parent)
-        elif op == "+":
+        if op == "+":
             return selector.matches(element.getPreviousSibling())
+        return None
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -584,7 +591,7 @@ class CSSSelectorCombinationQualifier(CSSSelectorQualifierBase):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-class CSSTerminalFunction(object):
+class CSSTerminalFunction:
     def __init__(self, name, params):
         self.name = name
         self.params = [
@@ -592,12 +599,14 @@ class CSSTerminalFunction(object):
         ]
 
     def __repr__(self):
-        return "<CSS function: %s(%s)>" % (self.name, ", ".join(self.params))
+        return "<CSS function: {}({})>".format(self.name, ", ".join(self.params))
 
 
 class CSSTerminalOperator(tuple):
-    def __new__(klass, *args):
-        return tuple.__new__(klass, args)
+    __slots__ = ()
+
+    def __new__(cls, *args):
+        return tuple.__new__(cls, args)
 
     def __repr__(self):
         return "op" + tuple.__repr__(self)
@@ -608,15 +617,11 @@ class CSSTerminalOperator(tuple):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-class CSSDeclarations(dict):
-    pass
-
+class CSSDeclarations(dict):  # noqa: PLW1641
     def __eq__(self, other):
-        """Python 3"""
         return False
 
     def __lt__(self, other):
-        """Python 3"""
         return False
 
 
@@ -636,7 +641,7 @@ class CSSRuleset(dict):
         return self.findCSSRulesFor(element, attrName)[-1:]
 
     def mergeStyles(self, styles):
-        "XXX Bugfix for use in PISA"
+        """XXX Bugfix for use in PISA."""
         for k, v in styles.items():
             if k in self and self[k]:
                 self[k] = copy.copy(self[k])
@@ -676,7 +681,7 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
 
     def __init__(self, mediumSet=mediumSet, trackImportance=trackImportance):
         self.setMediumSet(mediumSet)
-        self.setTrackImportance(trackImportance)
+        self.setTrackImportance(trackImportance=trackImportance)
 
     def isValidMedium(self, mediums):
         if not mediums:
@@ -699,7 +704,7 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
     def getTrackImportance(self):
         return self.trackImportance
 
-    def setTrackImportance(self, trackImportance=True):
+    def setTrackImportance(self, *, trackImportance=True):
         self.trackImportance = trackImportance
 
     # ~ helpers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -723,8 +728,7 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
                 else:
                     normal.append(d[:-1])
             return DeclarationsFactory(normal), DeclarationsFactory(important)
-        else:
-            return DeclarationsFactory(declarations)
+        return DeclarationsFactory(declarations)
 
     def _xmlnsGetSynonym(self, uri):
         # Don't forget to substitute our namespace synonyms!
@@ -749,14 +753,13 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
                 normal.mergeStyles(normalStyleElement)
                 important.mergeStyles(importantStyleElement)
             return normal, important
-        else:
-            result = self.RulesetFactory()
-            for stylesheet in stylesheetImports:
-                result.mergeStyles(stylesheet)
+        result = self.RulesetFactory()
+        for stylesheet in stylesheetImports:
+            result.mergeStyles(stylesheet)
 
-            for styleElement in stylesheetElements:
-                result.mergeStyles(styleElement)
-            return result
+        for styleElement in stylesheetElements:
+            result.mergeStyles(styleElement)
+        return result
 
     def beginInline(self):
         self._pushState()
@@ -764,7 +767,8 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
     def endInline(self):
         self._popState()
 
-    def specialRules(self, declarations):
+    @staticmethod
+    def specialRules(declarations):
         return cssSpecial.parseSpecialRules(declarations)
 
     def inline(self, declarations):
@@ -786,10 +790,9 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
                 if importantDecl:
                     important[s] = importantDecl
             return normal, important
-        else:
-            declarations = self._declarations(declarations)
-            result = [(s.asImmutable(), declarations) for s in selectors]
-            return self.RulesetFactory(result)
+        declarations = self._declarations(declarations)
+        result = [(s.asImmutable(), declarations) for s in selectors]
+        return self.RulesetFactory(result)
 
     # ~ css namespaces ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -819,17 +822,14 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
         return None
 
     def atPage(self, page, pseudopage, declarations):
-        """
-        This is overriden by xhtml2pdf.context.pisaCSSBuilder
-        """
+        """This is overriden by xhtml2pdf.context.pisaCSSBuilder."""
         return self.ruleset([self.selector("*")], declarations)
 
     def atFontFace(self, declarations):
-        """
-        This is overriden by xhtml2pdf.context.pisaCSSBuilder
-        """
+        """This is overriden by xhtml2pdf.context.pisaCSSBuilder."""
         return self.ruleset([self.selector("*")], declarations)
 
+    @abstractmethod
     def atIdent(self, atIdent, cssParser, src):
         return src, NotImplemented
 
@@ -843,7 +843,7 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
 
     # ~ css declarations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def property(self, name, value, important=False):
+    def property(self, name, value, *, important=False):  # noqa: A003
         if self.trackImportance:
             return (name, value, important)
         return (name, value)
@@ -854,40 +854,46 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
                 termA.append(termB)
                 return termA
             return [termA, termB]
-        elif op is None and termB is None:
+        if op is None and termB is None:
             return [termA]
-        else:
-            if isinstance(termA, list):
-                # Bind these "closer" than the list operators -- i.e. work on
-                # the (recursively) last element of the list
-                termA[-1] = self.combineTerms(termA[-1], op, termB)
-                return termA
-            return self.TermOperatorFactory(termA, op, termB)
+        if isinstance(termA, list):
+            # Bind these "closer" than the list operators -- i.e. work on
+            # the (recursively) last element of the list
+            termA[-1] = self.combineTerms(termA[-1], op, termB)
+            return termA
+        return self.TermOperatorFactory(termA, op, termB)
 
-    def termIdent(self, value):
+    @staticmethod
+    def termIdent(value):
         return value
 
-    def termNumber(self, value, units=None):
+    @staticmethod
+    def termNumber(value, units=None):
         if units:
             return value, units
         return value
 
-    def termRGB(self, value):
+    @staticmethod
+    def termRGB(value):
         return value
 
-    def termURI(self, value):
+    @staticmethod
+    def termURI(value):
         return value
 
-    def termString(self, value):
+    @staticmethod
+    def termString(value):
         return value
 
-    def termUnicodeRange(self, value):
+    @staticmethod
+    def termUnicodeRange(value):
         return value
 
     def termFunction(self, name, value):
         return self.TermFunctionFactory(name, value)
 
-    def termUnknown(self, src):
+    @staticmethod
+    def termUnknown(src):
         return src, NotImplemented
 
 
@@ -899,7 +905,7 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
 class CSSParser(cssParser.CSSParser):
     CSSBuilderFactory = CSSBuilder
 
-    def __init__(self, cssBuilder=None, create=True, **kw):
+    def __init__(self, cssBuilder=None, *, create=True, **kw):
         if not cssBuilder and create:
             assert cssBuilder is None
             cssBuilder = self.createCSSBuilder(**kw)
@@ -909,6 +915,6 @@ class CSSParser(cssParser.CSSParser):
         return self.CSSBuilderFactory(**kw)
 
     def parseExternal(self, cssResourceName):
-        if os.path.isfile(cssResourceName):
+        if Path(cssResourceName).is_file():
             return self.parseFile(cssResourceName)
         raise RuntimeError('Cannot resolve external CSS file: "%s"' % cssResourceName)

@@ -7,15 +7,15 @@ import html5lib
 from xhtml2pdf.document import pisaDocument
 from xhtml2pdf.w3c.cssDOMElementInterface import CSSDOMElementInterface
 
-__doc__ = """
-        TTFWithSameFaceName provides us auxiliary functions to check
-        the correct way to choose the font style when we use a ttf file with the same face name.
-        it always takes the last one @font-face font-family for all the text so to avoid this issue
-        we have to add a "#" in the begin of the font-family value
-        """
-
 
 class TTFWithSameFaceName(TestCase):
+    """
+    TTFWithSameFaceName provides us auxiliary functions to check
+    the correct way to choose the font style when we use a ttf file with the same face name.
+    it always takes the last one @font-face font-family for all the text so to avoid this issue
+    we have to add a "#" in the begin of the font-family value
+    """
+
     tests_folder = os.path.dirname(os.path.realpath(__file__))
     ttf_pathR = os.path.join(
         tests_folder, "samples", "font", "Noto_Sans", "NotoSans-Regular.ttf"
@@ -30,23 +30,13 @@ class TTFWithSameFaceName(TestCase):
         tests_folder, "samples", "font", "Noto_Sans", "NotoSans-BoldItalic.ttf"
     )
 
-    ff_R = "@font-face {{font-family: Noto_Regular; src: url('{ttf}');}}".format(
-        ttf=ttf_pathR
-    )
+    ff_R = f"@font-face {{font-family: Noto_Regular; src: url('{ttf_pathR}');}}"
     ff_RM = (
-        "@font-face{{font-family: Noto_Regular_Minified; src: url('{ttf}');}}".format(
-            ttf=ttf_pathR
-        )
+        f"@font-face{{font-family: Noto_Regular_Minified; src: url('{ttf_pathR}');}}"
     )
-    ff_B = "@font-face {{font-family: Noto_Bold; src: url('{ttf}');}}".format(
-        ttf=ttf_pathB
-    )
-    ff_I = "@font-face {{font-family: Noto_Italic; src: url('{ttf}');}}".format(
-        ttf=ttf_pathI
-    )
-    ff_BI = "@font-face {{font-family: Noto_BoldItalic; src: url('{ttf}');}}".format(
-        ttf=ttf_pathBI
-    )
+    ff_B = f"@font-face {{font-family: Noto_Bold; src: url('{ttf_pathB}');}}"
+    ff_I = f"@font-face {{font-family: Noto_Italic; src: url('{ttf_pathI}');}}"
+    ff_BI = f"@font-face {{font-family: Noto_BoldItalic; src: url('{ttf_pathBI}');}}"
 
     css_R = ".classRegular{font-family: Noto_Regular;}"
     css_RM = ".classRegularMinified{font-family: Noto_Regular_Minified;}"
@@ -105,7 +95,6 @@ class TTFWithSameFaceName(TestCase):
         this function help us to check is the font-family value on the pdf and
         the font-family from html element are same.
         """
-
         # Create the pisaDocument in memory from the HTML
         with io.BytesIO() as pdf_file:
             pisa_doc = pisaDocument(src=self.html, dest=pdf_file)

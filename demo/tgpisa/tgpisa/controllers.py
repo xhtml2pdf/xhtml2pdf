@@ -1,7 +1,12 @@
-from turbogears import controllers, expose, flash
-
 # from tgpisa import model
+import logging
+
+import cherrypy
+import cStringIO as StringIO
 import pkg_resources
+import sx.pisa3 as pisa
+from turbogears import controllers, expose, flash
+from turbogears.decorator import weak_signature_decorator
 
 try:
     pkg_resources.require("SQLObject>=0.8,<=0.10.0")
@@ -14,17 +19,11 @@ except pkg_resources.DistributionNotFound:
     )
     sys.exit(1)
 
-# import logging
-# log = logging.getLogger("tgpisa.controllers")
-
-from turbogears.decorator import weak_signature_decorator
-import sx.pisa3 as pisa
-import cStringIO as StringIO
-import cherrypy
+log = logging.getLogger(__name__)
 
 
 def pdf(filename=None, content_type="application/pdf"):
-    def entangle(func):
+    def entangle(_func):
         def decorated(func, *args, **kw):
             def kwpop(default, *names):
                 for name in names:
@@ -56,16 +55,16 @@ def pdf(filename=None, content_type="application/pdf"):
 
 class Root(controllers.RootController):
     @expose()
-    def index(self):
-        import time
-
+    @staticmethod
+    def index():
         return """<a href="pdf">Open PDF...</a>"""
 
     @pdf(filename="test.pdf")
     @expose(template="tgpisa.templates.welcome")
-    def pdf(self):
+    @staticmethod
+    def pdf():
         import time
 
         # log.debug("Happy TurboGears Controller Responding For Duty")
         flash("Your application is now running")
-        return dict(now=time.ctime())
+        return {"now": time.ctime()}
