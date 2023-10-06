@@ -7,6 +7,3 @@
 # LICENSE file included with this distribution.
 #
 # Modified by Dirk Holtwick <holtwick@web.de>, 2007
-
-
-

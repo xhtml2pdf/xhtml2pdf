@@ -18,8 +18,9 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('.'))
-sys.path.insert(0, os.path.abspath('../../'))
+
+sys.path.insert(0, os.path.abspath("."))
+sys.path.insert(0, os.path.abspath("../../"))
 
 from xhtml2pdf import __version__
 
@@ -33,44 +34,44 @@ from xhtml2pdf import __version__
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.doctest',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.todo',
-    'sphinx.ext.coverage',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.githubpages',
-    'sphinx.ext.extlinks',
-    'sphinxcontrib.pdfembed'
+    "sphinx.ext.autodoc",
+    "sphinx.ext.doctest",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.todo",
+    "sphinx.ext.coverage",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.githubpages",
+    "sphinx.ext.extlinks",
+    "sphinxcontrib.pdfembed",
 ]
 
 
 # Shortening external links. Here: issue & PR tracker of GitHub
 extlinks = {
-    'issue': ('https://github.com/xhtml2pdf/xhtml2pdf/issues/%s', '#%s'),
-    'pr': ('https://github.com/xhtml2pdf/xhtml2pdf/pull/%s', '#%s')
+    "issue": ("https://github.com/xhtml2pdf/xhtml2pdf/issues/%s", "#%s"),
+    "pr": ("https://github.com/xhtml2pdf/xhtml2pdf/pull/%s", "#%s"),
 }
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
 # source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ".rst"
 
 # The encoding of source files.
 #
 # source_encoding = 'utf-8-sig'
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 # General information about the project.
-project = 'xhtml2pdf'
-copyright = '2023, xhtml2pdf'
-author = 'xhtml2pdf'
+project = "xhtml2pdf"
+copyright = "2023, xhtml2pdf"
+author = "xhtml2pdf"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -122,7 +123,7 @@ exclude_patterns = []
 # show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = "sphinx"
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
@@ -139,7 +140,7 @@ todo_include_todos = True
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -173,8 +174,8 @@ html_theme = 'sphinx_rtd_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
-html_css_files = ['custom.css']
+html_static_path = ["_static"]
+html_css_files = ["custom.css"]
 
 
 # Add any extra paths that contain custom files (such as robots.txt or
@@ -255,34 +256,30 @@ html_css_files = ['custom.css']
 # html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'xhtml2pdfdoc'
+htmlhelp_basename = "xhtml2pdfdoc"
 
 # -- Options for LaTeX output ---------------------------------------------
 
 latex_elements = {
-     # The paper size ('letterpaper' or 'a4paper').
-     #
-     # 'papersize': 'letterpaper',
-
-     # The font size ('10pt', '11pt' or '12pt').
-     #
-     # 'pointsize': '10pt',
-
-     # Additional stuff for the LaTeX preamble.
-     #
-     # 'preamble': '',
-
-     # Latex figure (float) alignment
-     #
-     # 'figure_align': 'htbp',
+    # The paper size ('letterpaper' or 'a4paper').
+    #
+    # 'papersize': 'letterpaper',
+    # The font size ('10pt', '11pt' or '12pt').
+    #
+    # 'pointsize': '10pt',
+    # Additional stuff for the LaTeX preamble.
+    #
+    # 'preamble': '',
+    # Latex figure (float) alignment
+    #
+    # 'figure_align': 'htbp',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'xhtml2pdf.tex', u'xhtml2pdf Documentation',
-     u'xhtml2pdf', 'manual'),
+    (master_doc, "xhtml2pdf.tex", "xhtml2pdf Documentation", "xhtml2pdf", "manual")
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -322,10 +319,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, 'xhtml2pdf', u'xhtml2pdf Documentation',
-     [author], 1)
-]
+man_pages = [(master_doc, "xhtml2pdf", "xhtml2pdf Documentation", [author], 1)]
 
 # If true, show URL addresses after external links.
 #
@@ -338,9 +332,15 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'xhtml2pdf', u'xhtml2pdf Documentation',
-     author, 'xhtml2pdf', 'One line description of project.',
-     'Miscellaneous'),
+    (
+        master_doc,
+        "xhtml2pdf",
+        "xhtml2pdf Documentation",
+        author,
+        "xhtml2pdf",
+        "One line description of project.",
+        "Miscellaneous",
+    )
 ]
 
 # Documents to append as an appendix to all manuals.
@@ -414,7 +414,7 @@ epub_copyright = copyright
 # epub_post_files = []
 
 # A list of files that should not be packed into the epub file.
-epub_exclude_files = ['search.html']
+epub_exclude_files = ["search.html"]
 
 # The depth of the table of contents in toc.ncx.
 #
@@ -446,8 +446,7 @@ epub_exclude_files = ['search.html']
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {
-    'python': ('https://docs.python.org/', None),
-}
+intersphinx_mapping = {"python": ("https://docs.python.org/", None)}
 import build_samples as bs
+
 bs.build_resources()

@@ -16,7 +16,7 @@ except:
 
 
 def index(request):
-    return render(request, 'index.html')
+    return render(request, "index.html")
 
 
 def link_callback(uri, rel):
@@ -45,29 +45,27 @@ def link_callback(uri, rel):
 
     # make sure that file exists
     if not os.path.isfile(path):
-        raise Exception(
-            'media URI must start with %s or %s' % (sUrl, mUrl)
-        )
+        raise Exception("media URI must start with %s or %s" % (sUrl, mUrl))
     return path
 
-def render_pdf(request):
 
-    template_path = 'user_printer.html'
+def render_pdf(request):
+    template_path = "user_printer.html"
     context = extract_request_variables(request)
 
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="report.pdf"'
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = 'attachment; filename="report.pdf"'
 
     template = get_template(template_path)
     html = template.render(context)
-    if request.POST.get('show_html', ''):
-        response['Content-Type'] = 'application/text'
-        response['Content-Disposition'] = 'attachment; filename="report.txt"'
+    if request.POST.get("show_html", ""):
+        response["Content-Type"] = "application/text"
+        response["Content-Disposition"] = 'attachment; filename="report.txt"'
         response.write(html)
     else:
-        pisaStatus = pisa.CreatePDF(
-            html, dest=response, link_callback=link_callback)
+        pisaStatus = pisa.CreatePDF(html, dest=response, link_callback=link_callback)
         if pisaStatus.err:
-            return HttpResponse('We had some errors with code %s <pre>%s</pre>' % (pisaStatus.err,
-                                                                                   html))
+            return HttpResponse(
+                "We had some errors with code %s <pre>%s</pre>" % (pisaStatus.err, html)
+            )
     return response

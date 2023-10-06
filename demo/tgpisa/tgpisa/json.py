@@ -7,4 +7,3 @@
 # lists, dicts, numbers and strings
 
 from turbojson.jsonify import jsonify
-

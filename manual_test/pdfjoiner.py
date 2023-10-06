@@ -16,18 +16,16 @@
 
 
 __reversion__ = "$Revision: 20 $"
-__author__    = "$Author: holtwick $"
-__date__      = "$Date: 2007-10-09 12:58:24 +0200 (Di, 09 Okt 2007) $"
+__author__ = "$Author: holtwick $"
+__date__ = "$Date: 2007-10-09 12:58:24 +0200 (Di, 09 Okt 2007) $"
 
 from sx.pisa3 import pisa
 from sx.pisa3 import pisa_pdf
 
-if __name__=="__main__":
-
+if __name__ == "__main__":
     pdf = pisa_pdf.pisaPDF()
 
-    subPdf = pisa.pisaDocument(
-        u"""
+    subPdf = pisa.pisaDocument("""
             Hello <strong>World</strong>
         """)
     pdf.addDocument(subPdf)

@@ -28,8 +28,8 @@ class Filter(object):
         self.app = app
 
     def __call__(self, environ, start_response):
-        script_name = environ.get('SCRIPT_NAME', '')
-        path_info = environ.get('PATH_INFO', '')
+        script_name = environ.get("SCRIPT_NAME", "")
+        path_info = environ.get("PATH_INFO", "")
         sent = []
         written_response = StringIO()
 
@@ -48,16 +48,17 @@ class Filter(object):
             for chunk in app_iter:
                 written_response.write(chunk)
         finally:
-            if hasattr(app_iter, 'close'):
+            if hasattr(app_iter, "close"):
                 app_iter.close()
         body = written_response.getvalue()
         status, headers, body = self.filter(
-            script_name, path_info, environ, status, headers, body)
+            script_name, path_info, environ, status, headers, body
+        )
         start_response(status, headers, exc_info)
         return [body]
 
     def should_filter(self, status, headers):
-        print (headers)
+        print(headers)
 
     def filter(self, status, headers, body):
         raise NotImplementedError
@@ -65,11 +66,11 @@ class Filter(object):
 
 class HTMLFilter(Filter):
     def should_filter(self, status, headers):
-        if not status.startswith('200'):
+        if not status.startswith("200"):
             return False
         for name, value in headers:
-            if name.lower() == 'content-type':
-                return value.startswith('text/html')
+            if name.lower() == "content-type":
+                return value.startswith("text/html")
         return False
 
 
@@ -81,7 +82,7 @@ class PisaMiddleware(HTMLFilter):
             pisa.CreatePDF(body, dst, show_error_as_pdf=True)
             headers = [
                 ("content-type", "application/pdf"),
-                ("content-disposition", "attachment; filename=" + topdf)
+                ("content-disposition", "attachment; filename=" + topdf),
             ]
             body = dst.getvalue()
         return status, headers, body

@@ -37,24 +37,34 @@ log = logging.getLogger("xhtml2pdf")
 
 def pisaErrorDocument(dest, c):
     out = pisaTempFile(capacity=c.capacity)
-    out.write("<p style='background-color:red;'><strong>%d error(s) occured:</strong><p>" % c.err)
+    out.write(
+        "<p style='background-color:red;'><strong>%d error(s) occured:</strong><p>"
+        % c.err
+    )
     for mode, line, msg, _ in c.log:
         if mode == "error":
-            out.write("<pre>%s in line %d: %s</pre>" %
-                      (mode, line, html_escape(msg)))
+            out.write("<pre>%s in line %d: %s</pre>" % (mode, line, html_escape(msg)))
 
     out.write("<p><strong>%d warning(s) occured:</strong><p>" % c.warn)
     for mode, line, msg, _ in c.log:
         if mode == "warning":
-            out.write("<p>%s in line %d: %s</p>" %
-                      (mode, line, html_escape(msg)))
+            out.write("<p>%s in line %d: %s</p>" % (mode, line, html_escape(msg)))
 
     return pisaDocument(out.getvalue(), dest, raise_exception=False)
 
 
-def pisaStory(src, path=None, link_callback=None, debug=0, default_css=None,
-              xhtml=False, encoding=None, context=None, xml_output=None,
-              **kw):
+def pisaStory(
+    src,
+    path=None,
+    link_callback=None,
+    debug=0,
+    default_css=None,
+    xhtml=False,
+    encoding=None,
+    context=None,
+    xml_output=None,
+    **kw,
+):
     # Prepare Context
     if not context:
         context = pisaContext(path, debug=debug)
@@ -91,18 +101,34 @@ def get_encrypt_instance(data):
     return data
 
 
-def pisaDocument(src, dest=None, dest_bytes=False, path=None, link_callback=None, debug=0,
-                 default_css=None, xhtml=False, encoding=None, xml_output=None,
-                 raise_exception=True, capacity=100 * 1024, context_meta=None,
-                 encrypt=None, signature=None,
-                 **kw):
-    log.debug("pisaDocument options:\n  src = %r\n  dest = %r\n  path = %r\n  link_callback = %r\n  xhtml = %r\n  context_meta = %r",
-              src,
-              dest,
-              path,
-              link_callback,
-              xhtml,
-              context_meta)
+def pisaDocument(
+    src,
+    dest=None,
+    dest_bytes=False,
+    path=None,
+    link_callback=None,
+    debug=0,
+    default_css=None,
+    xhtml=False,
+    encoding=None,
+    xml_output=None,
+    raise_exception=True,
+    capacity=100 * 1024,
+    context_meta=None,
+    encrypt=None,
+    signature=None,
+    **kw,
+):
+    log.debug(
+        "pisaDocument options:\n  src = %r\n  dest = %r\n  path = %r\n  link_callback ="
+        " %r\n  xhtml = %r\n  context_meta = %r",
+        src,
+        dest,
+        path,
+        link_callback,
+        xhtml,
+        context_meta,
+    )
 
     # Prepare simple context
     context = pisaContext(path, debug=debug, capacity=capacity)
@@ -113,8 +139,17 @@ def pisaDocument(src, dest=None, dest_bytes=False, path=None, link_callback=None
     context.pathCallback = link_callback
 
     # Build story
-    context = pisaStory(src, path, link_callback, debug, default_css, xhtml,
-                        encoding, context=context, xml_output=xml_output)
+    context = pisaStory(
+        src,
+        path,
+        link_callback,
+        debug,
+        default_css,
+        xhtml,
+        encoding,
+        context=context,
+        xml_output=xml_output,
+    )
 
     # Buffer PDF into memory
     out = io.BytesIO()
@@ -124,12 +159,12 @@ def pisaDocument(src, dest=None, dest_bytes=False, path=None, link_callback=None
         pagesize=context.pageSize,
         author=context.meta["author"].strip(),
         subject=context.meta["subject"].strip(),
-        keywords=[x.strip() for x in
-                  context.meta["keywords"].strip().split(",") if x],
+        keywords=[x.strip() for x in context.meta["keywords"].strip().split(",") if x],
         title=context.meta["title"].strip(),
         showBoundary=0,
         encrypt=get_encrypt_instance(encrypt),
-        allowSplitting=1)
+        allowSplitting=1,
+    )
 
     # Prepare templates and their frames
     if "body" in context.templateList:
@@ -140,13 +175,20 @@ def pisaDocument(src, dest=None, dest_bytes=False, path=None, link_callback=None
         body = PmlPageTemplate(
             id="body",
             frames=[
-                Frame(x, y, w, h,
-                      id="body",
-                      leftPadding=0,
-                      rightPadding=0,
-                      bottomPadding=0,
-                      topPadding=0)],
-            pagesize=context.pageSize)
+                Frame(
+                    x,
+                    y,
+                    w,
+                    h,
+                    id="body",
+                    leftPadding=0,
+                    rightPadding=0,
+                    bottomPadding=0,
+                    topPadding=0,
+                )
+            ],
+            pagesize=context.pageSize,
+        )
 
     doc.addPageTemplates([body] + list(context.templateList.values()))
 
@@ -157,20 +199,20 @@ def pisaDocument(src, dest=None, dest_bytes=False, path=None, link_callback=None
         doc.build(context.story)
 
     # Add watermarks
-    output=io.BytesIO()
-    output, has_bg=WaterMarks.process_doc(context, out, output)
+    output = io.BytesIO()
+    output, has_bg = WaterMarks.process_doc(context, out, output)
 
     if not has_bg:
-        output=out
+        output = out
     if signature:
         signoutput = io.BytesIO()
-        do_ok=PDFSignature.sign(output,signoutput, signature)
+        do_ok = PDFSignature.sign(output, signoutput, signature)
         if do_ok:
-            output=signoutput
+            output = signoutput
 
     # Get the resulting PDF and write it to the file object
     # passed from the caller
-    
+
     # Get the resulting PDF and write it to the file object
     # passed from the caller
 
@@ -182,9 +224,8 @@ def pisaDocument(src, dest=None, dest_bytes=False, path=None, link_callback=None
     data = output.getvalue()
     context.dest.write(data)  # TODO: context.dest is a tempfile as well...
     cleanFiles()
-    
+
     if dest_bytes:
         return data
-    
+
     return context
-   

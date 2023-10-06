@@ -44,7 +44,6 @@ def _height(value=None):
 
 
 class TableData:
-
     def __init__(self):
         self.data = []
         self.styles = []
@@ -70,80 +69,138 @@ class TableData:
             # tables. If the y-coordinate is valid, we insert an empty cell.
             # As for the x coordinate, we somehow don't care.
             if y < len(data):
-                data[y].insert(x, '')
+                data[y].insert(x, "")
         return data
 
     def add_cell_styles(self, c, begin, end, mode="td"):
         self.mode = mode.upper()
         if c.frag.backColor and mode != "tr":  # XXX Stimmt das so?
-            self.add_style(('BACKGROUND', begin, end, c.frag.backColor))
+            self.add_style(("BACKGROUND", begin, end, c.frag.backColor))
 
         if 0:
-            log.debug("%r", (
-                begin,
-                end,
-                c.frag.borderTopWidth,
-                c.frag.borderTopStyle,
-                c.frag.borderTopColor,
-                c.frag.borderBottomWidth,
-                c.frag.borderBottomStyle,
-                c.frag.borderBottomColor,
-                c.frag.borderLeftWidth,
-                c.frag.borderLeftStyle,
-                c.frag.borderLeftColor,
-                c.frag.borderRightWidth,
-                c.frag.borderRightStyle,
-                c.frag.borderRightColor,
-            ))
+            log.debug(
+                "%r",
+                (
+                    begin,
+                    end,
+                    c.frag.borderTopWidth,
+                    c.frag.borderTopStyle,
+                    c.frag.borderTopColor,
+                    c.frag.borderBottomWidth,
+                    c.frag.borderBottomStyle,
+                    c.frag.borderBottomColor,
+                    c.frag.borderLeftWidth,
+                    c.frag.borderLeftStyle,
+                    c.frag.borderLeftColor,
+                    c.frag.borderRightWidth,
+                    c.frag.borderRightStyle,
+                    c.frag.borderRightColor,
+                ),
+            )
 
-        if getBorderStyle(c.frag.borderTopStyle) and c.frag.borderTopWidth and c.frag.borderTopColor is not None:
-            self.add_style(('LINEABOVE', begin, (end[0], begin[1]),
-                            c.frag.borderTopWidth,
-                            c.frag.borderTopColor,
-                            "squared"))
-        if getBorderStyle(c.frag.borderLeftStyle) and c.frag.borderLeftWidth and c.frag.borderLeftColor is not None:
-            self.add_style(('LINEBEFORE', begin, (begin[0], end[1]),
-                            c.frag.borderLeftWidth,
-                            c.frag.borderLeftColor,
-                            "squared"))
-        if getBorderStyle(c.frag.borderRightStyle) and c.frag.borderRightWidth and c.frag.borderRightColor is not None:
-            self.add_style(('LINEAFTER', (end[0], begin[1]), end,
-                            c.frag.borderRightWidth,
-                            c.frag.borderRightColor,
-                            "squared"))
-        if getBorderStyle(
-                c.frag.borderBottomStyle) and c.frag.borderBottomWidth and c.frag.borderBottomColor is not None:
-            self.add_style(('LINEBELOW', (begin[0], end[1]), end,
-                            c.frag.borderBottomWidth,
-                            c.frag.borderBottomColor,
-                            "squared"))
+        if (
+            getBorderStyle(c.frag.borderTopStyle)
+            and c.frag.borderTopWidth
+            and c.frag.borderTopColor is not None
+        ):
+            self.add_style(
+                (
+                    "LINEABOVE",
+                    begin,
+                    (end[0], begin[1]),
+                    c.frag.borderTopWidth,
+                    c.frag.borderTopColor,
+                    "squared",
+                )
+            )
+        if (
+            getBorderStyle(c.frag.borderLeftStyle)
+            and c.frag.borderLeftWidth
+            and c.frag.borderLeftColor is not None
+        ):
+            self.add_style(
+                (
+                    "LINEBEFORE",
+                    begin,
+                    (begin[0], end[1]),
+                    c.frag.borderLeftWidth,
+                    c.frag.borderLeftColor,
+                    "squared",
+                )
+            )
+        if (
+            getBorderStyle(c.frag.borderRightStyle)
+            and c.frag.borderRightWidth
+            and c.frag.borderRightColor is not None
+        ):
+            self.add_style(
+                (
+                    "LINEAFTER",
+                    (end[0], begin[1]),
+                    end,
+                    c.frag.borderRightWidth,
+                    c.frag.borderRightColor,
+                    "squared",
+                )
+            )
+        if (
+            getBorderStyle(c.frag.borderBottomStyle)
+            and c.frag.borderBottomWidth
+            and c.frag.borderBottomColor is not None
+        ):
+            self.add_style(
+                (
+                    "LINEBELOW",
+                    (begin[0], end[1]),
+                    end,
+                    c.frag.borderBottomWidth,
+                    c.frag.borderBottomColor,
+                    "squared",
+                )
+            )
+        self.add_style(("LEFTPADDING", begin, end, c.frag.paddingLeft or self.padding))
         self.add_style(
-            ('LEFTPADDING', begin, end, c.frag.paddingLeft or self.padding))
+            ("RIGHTPADDING", begin, end, c.frag.paddingRight or self.padding)
+        )
+        self.add_style(("TOPPADDING", begin, end, c.frag.paddingTop or self.padding))
         self.add_style(
-            ('RIGHTPADDING', begin, end, c.frag.paddingRight or self.padding))
-        self.add_style(
-            ('TOPPADDING', begin, end, c.frag.paddingTop or self.padding))
-        self.add_style(
-            ('BOTTOMPADDING', begin, end, c.frag.paddingBottom or self.padding))
+            ("BOTTOMPADDING", begin, end, c.frag.paddingBottom or self.padding)
+        )
 
 
 class pisaTagTABLE(pisaTag):
-
     def set_borders(self, frag, attrs):
+        set_value(
+            frag,
+            (
+                "borderLeftColor",
+                "borderRightColor",
+                "borderTopColor",
+                "borderBottomColor",
+            ),
+            attrs.bordercolor,
+        )
 
-        set_value(frag,
-                  ('borderLeftColor', 'borderRightColor', 'borderTopColor',
-                   'borderBottomColor'), attrs.bordercolor)
-
-        set_value(frag,
-                  ('borderLeftWidth', 'borderRightWidth', 'borderTopWidth',
-                   'borderBottomWidth'),
-                  attrs.border)
-        set_value(frag,
-                  ('borderBottomStyle', 'borderLeftStyle', 'borderTopStyle',
-                   'borderRightStyle'),
-                  "solid"
-                  )
+        set_value(
+            frag,
+            (
+                "borderLeftWidth",
+                "borderRightWidth",
+                "borderTopWidth",
+                "borderBottomWidth",
+            ),
+            attrs.border,
+        )
+        set_value(
+            frag,
+            (
+                "borderBottomStyle",
+                "borderLeftStyle",
+                "borderTopStyle",
+                "borderRightStyle",
+            ),
+            "solid",
+        )
 
     def start(self, c):
         c.addPara()
@@ -157,7 +214,7 @@ class pisaTagTABLE(pisaTag):
             self.set_borders(c.frag, attrs)
 
         tdata.padding = attrs.cellpadding
-        tdata.add_cell_styles(c, (0, 0), (-1, - 1), "table")
+        tdata.add_cell_styles(c, (0, 0), (-1, -1), "table")
         tdata.align = attrs.align.upper()
         tdata.col = 0
         tdata.row = 0
@@ -180,7 +237,7 @@ class pisaTagTABLE(pisaTag):
             maxcols = [0]
 
         for i, row in enumerate(data):
-            data[i] += [''] * (maxcols - len(row))
+            data[i] += [""] * (maxcols - len(row))
 
         log.debug("Col widths: {}".format(list(tdata.colw)))
         if tdata.data:
@@ -194,8 +251,9 @@ class pisaTagTABLE(pisaTag):
                 # repeatCols = 1,
                 repeatRows=tdata.repeat,
                 hAlign=tdata.align,
-                vAlign='TOP',
-                style=TableStyle(tdata.styles))
+                vAlign="TOP",
+                style=TableStyle(tdata.styles),
+            )
             t.totalWidth = _width(tdata.width)
             t.spaceBefore = c.frag.spaceBefore
             t.spaceAfter = c.frag.spaceAfter
@@ -213,7 +271,6 @@ class pisaTagTABLE(pisaTag):
 
 
 class pisaTagTR(pisaTag):
-
     def start(self, c):
         tdata = c.tableData
         row = tdata.row
@@ -223,8 +280,8 @@ class pisaTagTR(pisaTag):
         tdata.add_cell_styles(c, begin, end, "tr")
         c.frag.vAlign = self.attr.valign or c.frag.vAlign
         if c.frag.backColor:
-            tdata.add_style(('BACKGROUND', begin, end, c.frag.backColor))
-            
+            tdata.add_style(("BACKGROUND", begin, end, c.frag.backColor))
+
         tdata.col = 0
         tdata.data.append([])
 
@@ -233,9 +290,7 @@ class pisaTagTR(pisaTag):
 
 
 class pisaTagTD(pisaTag):
-
     def start(self, c):
-
         if self.attr.align is not None:
             c.frag.alignment = getAlign(self.attr.align)
 
@@ -265,7 +320,7 @@ class pisaTagTD(pisaTag):
         if rspan:
             end = (end[0], end[1] + rspan - 1)
         if begin != end:
-            tdata.add_style(('SPAN', begin, end))
+            tdata.add_style(("SPAN", begin, end))
             for x in range(begin[0], end[0] + 1):
                 for y in range(begin[1], end[1] + 1):
                     if x != begin[0] or y != begin[1]:
@@ -277,8 +332,7 @@ class pisaTagTD(pisaTag):
         # Calculate widths
         # Add empty placeholders for new columns
         if (col + 1) > len(tdata.colw):
-            tdata.colw = tdata.colw + \
-                ((col + 1 - len(tdata.colw)) * [_width()])
+            tdata.colw = tdata.colw + ((col + 1 - len(tdata.colw)) * [_width()])
 
         # Get value of with, if no spanning
         if not cspan:
@@ -304,34 +358,47 @@ class pisaTagTD(pisaTag):
 
         # Calculate heights
         if row + 1 > len(tdata.rowh):
-            tdata.rowh = tdata.rowh + \
-                ((row + 1 - len(tdata.rowh)) * [_width()])
+            tdata.rowh = tdata.rowh + ((row + 1 - len(tdata.rowh)) * [_width()])
         if not rspan:
-            height = c.frag.height or self.attr.get('height', None)
+            height = c.frag.height or self.attr.get("height", None)
             if height is not None:
                 tdata.rowh[row] = _height(height)
-                tdata.add_style(('FONTSIZE', begin, end, 1.0))
-                tdata.add_style(('LEADING', begin, end, 1.0))
+                tdata.add_style(("FONTSIZE", begin, end, 1.0))
+                tdata.add_style(("LEADING", begin, end, 1.0))
 
         # Vertical align
         valign = self.attr.valign or c.frag.vAlign
         if valign is not None:
-            tdata.add_style(('VALIGN', begin, end, valign.upper()))
+            tdata.add_style(("VALIGN", begin, end, valign.upper()))
 
         # Reset border, otherwise the paragraph block will have borders too
         frag = c.frag
 
-        set_value(frag,
-                  ('borderLeftWidth', 'borderRightWidth',
-                   'borderTopWidth', 'borderBottomWidth'),
-                  0)
+        set_value(
+            frag,
+            (
+                "borderLeftWidth",
+                "borderRightWidth",
+                "borderTopWidth",
+                "borderBottomWidth",
+            ),
+            0,
+        )
 
-        set_value(frag,
-                  ('borderLeftColor', 'borderLeftStyle', 'borderRightColor',
-                   'borderRightStyle', 'borderTopColor', 'borderTopStyle',
-                   'borderBottomColor', 'borderBottomStyle'),
-                  None
-                  )
+        set_value(
+            frag,
+            (
+                "borderLeftColor",
+                "borderLeftStyle",
+                "borderRightColor",
+                "borderRightStyle",
+                "borderTopColor",
+                "borderTopStyle",
+                "borderBottomColor",
+                "borderBottomStyle",
+            ),
+            None,
+        )
 
     def end(self, c):
         tdata = c.tableData
@@ -344,11 +411,7 @@ class pisaTagTD(pisaTag):
             # tdata.keepinframe["content"] = cell
             mode = c.cssAttr.get("-pdf-keep-in-frame-mode", "shrink")
             # keepInFrame mode is passed to Platypus for rendering
-            cell = PmlKeepInFrame(
-                maxWidth=0,
-                maxHeight=0,
-                mode=mode,
-                content=cell)
+            cell = PmlKeepInFrame(maxWidth=0, maxHeight=0, mode=mode, content=cell)
 
         c.swapStory(self.story)
 

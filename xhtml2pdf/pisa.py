@@ -113,7 +113,7 @@ LOG_FORMAT_DEBUG = "%(levelname)s [%(name)s] %(pathname)s line %(lineno)d: %(mes
 
 
 def usage():
-    print (USAGE)
+    print(USAGE)
 
 
 class pisaLinkLoader:
@@ -141,54 +141,57 @@ class pisaLinkLoader:
         self.tfileList.append(path)
 
         if not self.quiet:
-            print ("  Loading %s to %s" % (url, path))
+            print("  Loading %s to %s" % (url, path))
 
         return path
 
 
 def command():
     if "--profile" in sys.argv:
-        print ("*** PROFILING ENABLED")
+        print("*** PROFILING ENABLED")
         import cProfile as profile
         import pstats
 
         prof = profile.Profile()
         prof.runcall(execute)
-        pstats.Stats(prof).strip_dirs().sort_stats('cumulative').print_stats()
+        pstats.Stats(prof).strip_dirs().sort_stats("cumulative").print_stats()
     else:
         execute()
 
 
 def execute():
-
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "dhqstwcxb", [
-            "quiet",
-            "help",
-            "start-viewer",
-            "start",
-            "debug=",
-            "copyright",
-            "version",
-            "warn",
-            "tempdir=",
-            "format=",
-            "css=",
-            "base=",
-            "css-dump",
-            "xml-dump",
-            "xhtml",
-            "xml",
-            "html",
-            "encoding=",
-            "system",
-            "profile",
-            "http_nosslcheck",
-            "http_key_file",
-            "http_cert_file",
-            "http_source_address",
-            "http_timeout"
-        ])
+        opts, args = getopt.getopt(
+            sys.argv[1:],
+            "dhqstwcxb",
+            [
+                "quiet",
+                "help",
+                "start-viewer",
+                "start",
+                "debug=",
+                "copyright",
+                "version",
+                "warn",
+                "tempdir=",
+                "format=",
+                "css=",
+                "base=",
+                "css-dump",
+                "xml-dump",
+                "xhtml",
+                "xml",
+                "html",
+                "encoding=",
+                "system",
+                "profile",
+                "http_nosslcheck",
+                "http_key_file",
+                "http_cert_file",
+                "http_source_address",
+                "http_timeout",
+            ],
+        )
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -214,25 +217,25 @@ def execute():
             usage()
             sys.exit()
 
-        elif o in("--version",):
+        elif o in ("--version",):
             print(__version__)
             sys.exit(0)
 
         elif o in ("--copyright"):
-            print (COPYRIGHT)
+            print(COPYRIGHT)
             sys.exit(0)
 
         elif o in ("--system",):
-            print (COPYRIGHT)
-            print ()
-            print ("SYSTEM INFORMATIONS")
-            print ("--------------------------------------------")
-            print ("OS:                %s" % sys.platform)
-            print ("Python:            %s" % sys.version)
-            print ("html5lib:          ?")
+            print(COPYRIGHT)
+            print()
+            print("SYSTEM INFORMATIONS")
+            print("--------------------------------------------")
+            print("OS:                %s" % sys.platform)
+            print("Python:            %s" % sys.version)
+            print("html5lib:          ?")
             import reportlab
 
-            print ("Reportlab:         %s" % reportlab.Version)
+            print("Reportlab:         %s" % reportlab.Version)
             sys.exit(0)
 
         elif o in ("-s", "--start-viewer", "--start"):
@@ -273,7 +276,7 @@ def execute():
 
         elif o in ("--css-dump",):
             # CSS dump
-            print (DEFAULT_CSS)
+            print(DEFAULT_CSS)
             return
 
         elif o in ("--xml-dump",):
@@ -281,7 +284,7 @@ def execute():
 
         elif o in ("-x", "--xml", "--xhtml"):
             xhtml = True
-        
+
         elif o in ("--html",):
             xhtml = False
 
@@ -289,9 +292,7 @@ def execute():
             continue
 
     if not quiet:
-        logging.basicConfig(
-            level=log_level,
-            format=log_format)
+        logging.basicConfig(level=log_level, format=log_format)
 
     if len(args) not in (1, 2):
         usage()
@@ -310,7 +311,6 @@ def execute():
         a_src = [a_src]
 
     for src in a_src:
-
         # If not forced to parse in a special way have a look
         # at the filename suffix
         if xhtml is None:
@@ -336,7 +336,9 @@ def execute():
 
         if a_dest is None:
             dest_part = src
-            if dest_part.lower().endswith(".html") or dest_part.lower().endswith(".htm"):
+            if dest_part.lower().endswith(".html") or dest_part.lower().endswith(
+                ".htm"
+            ):
                 dest_part = ".".join(src.split(".")[:-1])
             dest = dest_part + "." + file_format.lower()
             for i in range(10):
@@ -354,6 +356,7 @@ def execute():
         if dest == "-" or base_dir:
             if sys.platform == "win32":
                 import msvcrt
+
                 msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
 
             fdest = sys.stdout
@@ -363,13 +366,13 @@ def execute():
             try:
                 open(dest, "wb").close()
             except:
-                print ("File '%s' seems to be in use of another application." % dest)
+                print("File '%s' seems to be in use of another application." % dest)
                 sys.exit(2)
             fdest = open(dest, "wb")
             fdestclose = 1
 
         if not quiet:
-            print ("Converting {} to {}...".format(src, dest))
+            print("Converting {} to {}...".format(src, dest))
 
         pisaDocument(
             fsrc,
@@ -383,7 +386,7 @@ def execute():
             default_css=css,
             xhtml=xhtml,
             encoding=encoding,
-            xml_output=xml_output
+            xml_output=xml_output,
         )
 
         if xml_output:
@@ -394,7 +397,7 @@ def execute():
 
         if (not errors) and startviewer:
             if not quiet:
-                print ("Open viewer for file %s" % dest)
+                print("Open viewer for file %s" % dest)
             startViewer(dest)
 
 
@@ -421,9 +424,7 @@ def showLogging(debug=False):
         log_format = LOG_FORMAT_DEBUG
         if debug:
             log_level = logging.DEBUG
-        logging.basicConfig(
-            level=log_level,
-            format=log_format)
+        logging.basicConfig(level=log_level, format=log_format)
     except:
         logging.basicConfig()
 
@@ -431,15 +432,19 @@ def showLogging(debug=False):
 # Background informations in data URI here:
 # http://en.wikipedia.org/wiki/Data_URI_scheme
 
+
 def makeDataURI(data=None, mimetype=None, filename=None):
     import base64
 
     if not mimetype:
         if filename:
             import mimetypes
+
             mimetype = mimetypes.guess_type(filename)[0].split(";")[0]
         else:
-            raise Exception("You need to provide a mimetype or a filename for makeDataURI")
+            raise Exception(
+                "You need to provide a mimetype or a filename for makeDataURI"
+            )
 
     encoded_data = base64.encodebytes(data).split()
 

@@ -4,8 +4,8 @@ from unittest import TestCase
 from xhtml2pdf.context import pisaContext
 from xhtml2pdf.parser import pisaParser
 
-class HttpTest(TestCase):
 
+class HttpTest(TestCase):
     def test_timeout(self):
         """
         Test why some http request doesn't have a timeout
@@ -27,7 +27,6 @@ class HttpTest(TestCase):
 </html>
     """
 
-        context = pisaParser(BytesIO(html.encode('utf-8')), pisaContext(None))
-
+        context = pisaParser(BytesIO(html.encode("utf-8")), pisaContext(None))
 
         self.assertEqual(1, 1)

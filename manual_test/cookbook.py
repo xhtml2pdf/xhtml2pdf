@@ -15,8 +15,8 @@
 # limitations under the License.
 
 __version__ = "$Revision: 176 $"
-__author__  = "$Author: holtwick $"
-__date__    = "$Date: 2008-03-15 00:11:47 +0100 (Sa, 15 Mrz 2008) $"
+__author__ = "$Author: holtwick $"
+__date__ = "$Date: 2008-03-15 00:11:47 +0100 (Sa, 15 Mrz 2008) $"
 
 """
 HTML/CSS to PDF converter
@@ -34,21 +34,19 @@ pisa.showLogging()
 
 
 def html2pdf(data, filename, open_file=False):
-
     """
     Simple test showing how to create a PDF file from
     PML Source String. Also shows errors and tries to start
     the resulting PDF
     """
 
-    pdf = pisa.CreatePDF(
-        io.StringIO(data),
-        open(filename, "wb"))
+    pdf = pisa.CreatePDF(io.StringIO(data), open(filename, "wb"))
 
     if open_file and (not pdf.err):
         pisa.startViewer(filename)
 
     return not pdf.err
+
 
 if __name__ == "__main__":
     HTMLTEST = """
@@ -111,11 +109,15 @@ if __name__ == "__main__":
     </html>
     """
 
-
-
     fake = Faker()
-    html  = HTMLTEST%(
-        "<br>".join(["<p>%s  <span style=\"color: #f00;\"><pdf:pagenumber> of <pdf:pagecount> </span></p>"%fake.text() for x in range(1)])
-
+    html = HTMLTEST % (
+        "<br>".join(
+            [
+                '<p>%s  <span style="color: #f00;"><pdf:pagenumber> of <pdf:pagecount>'
+                " </span></p>"
+                % fake.text()
+                for x in range(1)
+            ]
+        )
     )
     html2pdf(html, "test.pdf", open_file=False)
