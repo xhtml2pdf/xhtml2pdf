@@ -30,8 +30,14 @@ jobs:
         env:
           TOXENV: py${{matrix.python-version}}
 
-#      - name: Upload Test renders
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: testrender-run-${{github.run_id}}-python${{matrix.python-version}}
-#          path: testrender/output
+      - name: Generate coverage report
+        run: coverage xml
+
+      - name: Upload test coverage
+        uses: coverallsapp/github-action@v2
+        env:
+          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+        with:
+          github-token: ${{ github.token }}
+          file: "coverage.xml"
+          format: "cobertura"
