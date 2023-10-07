@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from __future__ import annotations
 
 import logging
 import os
@@ -48,12 +48,12 @@ class myLinkLoader:
     and handle temporary files after they are not needed any more.
     """
 
-    def __init__(self, **kw):
+    def __init__(self, **kw) -> None:
         """The self.kw could be used in getFileName if you like."""
         self.kw = kw
-        self.tmpFileList = []
+        self.tmpFileList: list[str] = []
 
-    def __del__(self):
+    def __del__(self) -> None:
         for path in self.tmpFileList:
             os.remove(path)
         self.tmpFileList = []

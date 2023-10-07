@@ -33,6 +33,7 @@ Dependencies:
 import copy
 from abc import abstractmethod
 from pathlib import Path
+from typing import ClassVar
 
 from xhtml2pdf.w3c import cssParser, cssSpecial
 
@@ -98,7 +99,7 @@ class CSSCascadeStrategy:
     user = None
     userAgenr = None
 
-    def __init__(self, author=None, user=None, userAgent=None):
+    def __init__(self, author=None, user=None, userAgent=None) -> None:
         if author is not None:
             self.author = author
         if user is not None:
@@ -232,7 +233,7 @@ class CSSSelectorBase:
     _hash = None
     _specificity = None
 
-    def __init__(self, completeName="*"):
+    def __init__(self, completeName="*") -> None:
         if not isinstance(completeName, tuple):
             completeName = (None, "*", completeName)
         self.completeName = completeName
@@ -261,11 +262,11 @@ class CSSSelectorBase:
     def fullName(self):
         return self.completeName[1:3]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         strArgs = (type(self).__name__, *self.specificity(), self.asString())
         return "<%s %d:%d:%d:%d %s >" % strArgs
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.asString()
 
     def _as_comparison_key(self):
@@ -342,7 +343,7 @@ class CSSInlineSelector(CSSSelectorBase):
 
 
 class CSSMutableSelector(CSSSelectorBase, cssParser.CSSSelectorAbstract):
-    qualifiers = []
+    qualifiers: ClassVar[list] = []
 
     def asImmutable(self):
         return CSSImmutableSelector(
@@ -388,7 +389,7 @@ class CSSMutableSelector(CSSSelectorBase, cssParser.CSSSelectorAbstract):
 
 
 class CSSImmutableSelector(CSSSelectorBase):
-    def __init__(self, completeName="*", qualifiers=()):
+    def __init__(self, completeName="*", qualifiers=()) -> None:
         # print completeName, qualifiers
         self.qualifiers = tuple(qualifiers)
         CSSSelectorBase.__init__(self, completeName)
@@ -434,12 +435,12 @@ class CSSSelectorQualifierBase:
     def asString(self):
         raise NotImplementedError
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.asString()
 
 
 class CSSSelectorHashQualifier(CSSSelectorQualifierBase):
-    def __init__(self, hashId):
+    def __init__(self, hashId) -> None:
         self.hashId = hashId
 
     @staticmethod
@@ -463,7 +464,7 @@ class CSSSelectorHashQualifier(CSSSelectorQualifierBase):
 
 
 class CSSSelectorClassQualifier(CSSSelectorQualifierBase):
-    def __init__(self, classId):
+    def __init__(self, classId) -> None:
         self.classId = classId
 
     @staticmethod
@@ -493,7 +494,7 @@ class CSSSelectorClassQualifier(CSSSelectorQualifierBase):
 class CSSSelectorAttributeQualifier(CSSSelectorQualifierBase):
     name, op, value = None, None, NotImplemented
 
-    def __init__(self, attrName, op=None, attr_value=NotImplemented):
+    def __init__(self, attrName, op=None, attr_value=NotImplemented) -> None:
         self.name = attrName
         if op is not self.op:
             self.op = op
@@ -534,7 +535,7 @@ class CSSSelectorAttributeQualifier(CSSSelectorQualifierBase):
 
 
 class CSSSelectorPseudoQualifier(CSSSelectorQualifierBase):
-    def __init__(self, attrName, params=()):
+    def __init__(self, attrName, params=()) -> None:
         self.name = attrName
         self.params = tuple(params)
 
@@ -555,7 +556,7 @@ class CSSSelectorPseudoQualifier(CSSSelectorQualifierBase):
 
 
 class CSSSelectorCombinationQualifier(CSSSelectorQualifierBase):
-    def __init__(self, op, selector):
+    def __init__(self, op, selector) -> None:
         self.op = op
         self.selector = selector
 
@@ -592,13 +593,13 @@ class CSSSelectorCombinationQualifier(CSSSelectorQualifierBase):
 
 
 class CSSTerminalFunction:
-    def __init__(self, name, params):
+    def __init__(self, name, params) -> None:
         self.name = name
         self.params = [
             param if isinstance(param, str) else str(param) for param in params
         ]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<CSS function: {}({})>".format(self.name, ", ".join(self.params))
 
 
@@ -608,7 +609,7 @@ class CSSTerminalOperator(tuple):
     def __new__(cls, *args):
         return tuple.__new__(cls, args)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "op" + tuple.__repr__(self)
 
 
@@ -674,12 +675,12 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
     DeclarationsFactory = CSSDeclarations
     TermFunctionFactory = CSSTerminalFunction
     TermOperatorFactory = CSSTerminalOperator
-    xmlnsSynonyms = {}
+    xmlnsSynonyms: ClassVar[dict] = {}
     mediumSet = None
     trackImportance = True
     charset = None
 
-    def __init__(self, mediumSet=mediumSet, trackImportance=trackImportance):
+    def __init__(self, mediumSet=mediumSet, trackImportance=trackImportance) -> None:
         self.setMediumSet(mediumSet)
         self.setTrackImportance(trackImportance=trackImportance)
 
@@ -829,8 +830,8 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
         """This is overriden by xhtml2pdf.context.pisaCSSBuilder."""
         return self.ruleset([self.selector("*")], declarations)
 
-    @abstractmethod
-    def atIdent(self, atIdent, cssParser, src):
+    @staticmethod
+    def atIdent(_atIdent, _cssParser, src):
         return src, NotImplemented
 
     # ~ css selectors ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -905,7 +906,7 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
 class CSSParser(cssParser.CSSParser):
     CSSBuilderFactory = CSSBuilder
 
-    def __init__(self, cssBuilder=None, *, create=True, **kw):
+    def __init__(self, cssBuilder=None, *, create=True, **kw) -> None:
         if not cssBuilder and create:
             assert cssBuilder is None
             cssBuilder = self.createCSSBuilder(**kw)

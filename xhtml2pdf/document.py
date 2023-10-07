@@ -52,7 +52,7 @@ def pisaErrorDocument(dest, c):
 
 def pisaStory(
     src,
-    path=None,
+    path="",
     link_callback=None,
     debug=0,
     default_css=None,
@@ -102,7 +102,7 @@ def pisaDocument(
     src,
     dest=None,
     dest_bytes=False,  # noqa: FBT002
-    path=None,
+    path="",
     link_callback=None,
     debug=0,
     default_css=None,

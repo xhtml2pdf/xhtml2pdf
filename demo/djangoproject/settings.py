@@ -9,9 +9,10 @@ https://docs.djangoproject.com/en/1.10/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.10/ref/settings/
 """
-
+from __future__ import annotations
 
 import os
+from typing import Any
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -21,23 +22,23 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "m#y9vtxiob&xop2gnb3a#aa)4j!7shu2n&+zvj0#i8*p45cw*z"
+SECRET_KEY: str = "m#y9vtxiob&xop2gnb3a#aa)4j!7shu2n&+zvj0#i8*p45cw*z"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG: bool = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS: list[str] = []
 
 
 # Application definition
 
-INSTALLED_APPS = ["django.contrib.messages", "django.contrib.staticfiles"]
+INSTALLED_APPS: list[str] = ["django.contrib.messages", "django.contrib.staticfiles"]
 
-MIDDLEWARE = []
+MIDDLEWARE: list[str] = []
 
-ROOT_URLCONF = "urls"
+ROOT_URLCONF: str = "urls"
 
-TEMPLATES = [
+TEMPLATES: list[dict[str, Any]] = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [os.path.join(BASE_DIR, "templates")],
@@ -52,13 +53,13 @@ TEMPLATES = [
     }
 ]
 
-WSGI_APPLICATION = "wsgi.application"
+WSGI_APPLICATION: str = "wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/1.10/ref/settings/#databases
 
-DATABASES = {
+DATABASES: dict[str, dict[str, str]] = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
@@ -69,7 +70,7 @@ DATABASES = {
 # Password validation
 # https://docs.djangoproject.com/en/1.10/ref/settings/#auth-password-validators
 
-AUTH_PASSWORD_VALIDATORS = [
+AUTH_PASSWORD_VALIDATORS: list[dict[str, str]] = [
     {
         "NAME": (
             "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
@@ -84,21 +85,21 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/1.10/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE: str = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE: str = "UTC"
 
-USE_I18N = True
+USE_I18N: bool = True
 
-USE_L10N = True
+USE_L10N: bool = True
 
-USE_TZ = True
+USE_TZ: bool = True
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
-STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "static/")
-MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
+STATIC_URL: str = "/static/"
+STATIC_ROOT: str = os.path.join(BASE_DIR, "static/")
+MEDIA_URL: str = "/media/"
+MEDIA_ROOT: str = os.path.join(BASE_DIR, "media/")

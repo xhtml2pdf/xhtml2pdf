@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from __future__ import annotations
 
 import getopt
 import glob
@@ -121,12 +121,12 @@ class pisaLinkLoader:
     it when pisaLinkLoader is unloaded.
     """
 
-    def __init__(self, src, *, quiet=True):
+    def __init__(self, src, *, quiet=True) -> None:
         self.quiet = quiet
         self.src = src
-        self.tfileList = []
+        self.tfileList: list[str] = []
 
-    def __del__(self):
+    def __del__(self) -> None:
         for path in self.tfileList:
             os.remove(path)
 

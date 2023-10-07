@@ -41,7 +41,7 @@ class RightToLeftFontSupportTests(TestCase):
     ff_SB = f"@font-face {{font-family: SemiBold; src: url('{ttf_pathSB}');}}"
     ff_V = f"@font-face {{font-family: Variable; src: url('{ttf_pathV}');}}"
 
-    HTML_CONTENT = """
+    HTML_CONTENT: str = """
         <html>
         <head>
         <title></title>
@@ -96,7 +96,7 @@ class RightToLeftFontSupportTests(TestCase):
         </html>
     """
 
-    def test_pdf_language_tag_in_html(self):
+    def test_pdf_language_tag_in_html(self) -> None:
         """
         this function is used to check if the "Custom Tag" <pdf:language/>
         is located in the HTML file through asssertNotEqual()
@@ -119,7 +119,7 @@ class RightToLeftFontSupportTests(TestCase):
         tag_element = document.getElementsByTagName("pdf:language")
         self.assertNotEqual(tag_element, [])
 
-    def test_language_attribute_in_pisaDocument(self):
+    def test_language_attribute_in_pisaDocument(self) -> None:
         """Tests if the attribute 'language' is located in the pisaDocument."""
         text = ""
         language_tag = '<pdf:language name=""/>'
@@ -142,7 +142,7 @@ class RightToLeftFontSupportTests(TestCase):
                 "<pdf:language> not found in the resulting PDF!",
             )
 
-    def test_arabic_in_pdf_language(self):
+    def test_arabic_in_pdf_language(self) -> None:
         """Tests if 'arabic' is the value of the 'language' attribute."""
         text = "مرحبا. لدي 3 طفلاً و 10 قطة. هذا رائع!"
         language_tag = '<pdf:language name="arabic"/>'
@@ -164,7 +164,7 @@ class RightToLeftFontSupportTests(TestCase):
                 pisa_doc.language, "arabic", '"arabic" not detected in <pdf:language>!'
             )
 
-    def test_hebrew_in_pdf_language(self):
+    def test_hebrew_in_pdf_language(self) -> None:
         """Tests if 'hebrew' is the value of the 'language' attribute."""
         text = "שלום. יש לי 3 ילדים ו -10 חתולים. זה מגניב!"
         language_tag = '<pdf:language name="hebrew"/>'
@@ -186,7 +186,7 @@ class RightToLeftFontSupportTests(TestCase):
                 pisa_doc.language, "hebrew", '"hebrew" not detected in <pdf:language>!'
             )
 
-    def test_persian_in_pdf_language(self):
+    def test_persian_in_pdf_language(self) -> None:
         """Tests if 'persian' is the value of the 'language' attribute."""
         text = "سلام. من 3 فرزند و 10 گربه دارم. عالی است!"
         language_tag = '<pdf:language name="persian"/>'
@@ -210,7 +210,7 @@ class RightToLeftFontSupportTests(TestCase):
                 '"persian" not detected in <pdf:language>!',
             )
 
-    def test_urdu_in_pdf_language(self):
+    def test_urdu_in_pdf_language(self) -> None:
         """Tests if 'urdu' is the value of the 'language' attribute."""
         text = "ہیلو. میرے 3 بچے اور 10 بلیاں ہیں۔ یہ تو زبردست ہے!"
         language_tag = '<pdf:language name="urdu"/>'
@@ -232,7 +232,7 @@ class RightToLeftFontSupportTests(TestCase):
                 pisa_doc.language, "urdu", '"urdu" not detected in <pdf:language>!'
             )
 
-    def test_pashto_in_pdf_language(self):
+    def test_pashto_in_pdf_language(self) -> None:
         """Tests if 'pashto' is the value of the 'language' attribute."""
         text = "سلام. زه 3 ماشومان او 10 پیشوګانې لرم. دا په زړه پوری دی!"
         language_tag = '<pdf:language name="pashto"/>'
@@ -254,7 +254,7 @@ class RightToLeftFontSupportTests(TestCase):
                 pisa_doc.language, "pashto", '"pashto" not detected in <pdf:language>!'
             )
 
-    def test_sindhi_in_pdf_language(self):
+    def test_sindhi_in_pdf_language(self) -> None:
         """Tests if 'sindhi' is the value of the 'language' attribute."""
         text = "سلام. مون وٽ 3 ٻار ۽ 10 ٻچا آهن. اهو خوفناڪ آهي!"
         language_tag = '<pdf:language name="sindhi"/>'

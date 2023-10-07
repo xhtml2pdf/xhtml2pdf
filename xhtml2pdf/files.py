@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import base64
 import gzip
 import http.client as httplib
@@ -10,6 +12,7 @@ import threading
 import urllib.parse as urlparse
 from io import BytesIO
 from pathlib import Path
+from typing import Any, ClassVar
 from urllib import request
 from urllib.parse import unquote as urllib_unquote
 
@@ -17,17 +20,19 @@ from xhtml2pdf.config.httpconfig import httpConfig
 
 log = logging.getLogger(__name__)
 
-GAE = "google.appengine" in sys.modules
-STRATEGIES = (BytesIO, BytesIO) if GAE else (BytesIO, tempfile.NamedTemporaryFile)
+GAE: bool = "google.appengine" in sys.modules
+STRATEGIES: tuple[type, Any] = (
+    (BytesIO, BytesIO) if GAE else (BytesIO, tempfile.NamedTemporaryFile)
+)
 
 
 class TmpFiles(threading.local):
-    files = []
+    files: ClassVar[list] = []
 
-    def append(self, file):
+    def append(self, file) -> None:
         self.files.append(file)
 
-    def cleanFiles(self):
+    def cleanFiles(self) -> None:
         for file in self.files:
             file.close()
         self.files.clear()
@@ -49,18 +54,18 @@ class pisaTempFile:
 
     STRATEGIES = STRATEGIES
 
-    CAPACITY = 10 * 1024
+    CAPACITY: int = 10 * 1024
 
-    def __init__(self, buffer="", capacity=CAPACITY):
+    def __init__(self, buffer: str = "", capacity: int = CAPACITY) -> None:
         """
         Creates a TempFile object containing the specified buffer.
         If capacity is specified, we use a real temporary file once the
         file gets larger than that size.  Otherwise, the data is stored
         in memory.
         """
-        self.name = None
-        self.capacity = capacity
-        self.strategy = int(len(buffer) > self.capacity)
+        self.name: str | None = None
+        self.capacity: int = capacity
+        self.strategy: int = int(len(buffer) > self.capacity)
         try:
             self._delegate = self.STRATEGIES[self.strategy]()
         except IndexError:
@@ -138,7 +143,7 @@ class pisaTempFile:
 
 
 class BaseFile:
-    def __init__(self, path, basepath):
+    def __init__(self, path, basepath) -> None:
         self.path = path
         self.basepath = basepath
         self.mimetype = None
@@ -218,7 +223,7 @@ class LocalProtocolURI(BaseFile):
 
 
 class NetworkFileUri(BaseFile):
-    def __init__(self, path, basepath):
+    def __init__(self, path, basepath) -> None:
         super().__init__(path, basepath)
         self.attempts = 3
         self.actual_attempts = 0
@@ -317,7 +322,7 @@ class BytesFileUri(BaseFile):
 
 
 class LocalTmpFile(BaseFile):
-    def __init__(self, path, basepath):
+    def __init__(self, path, basepath) -> None:
         self.path = path
         self.basepath = None
         self.mimetype = basepath
@@ -363,7 +368,7 @@ class FileNetworkManager:
 
 
 class pisaFileObject:
-    def __init__(self, uri, basepath=None, callback=None):
+    def __init__(self, uri, basepath=None, callback=None) -> None:
         self.uri = uri
         basepathret = None
         if callback is not None:

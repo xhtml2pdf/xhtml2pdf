@@ -38,13 +38,13 @@ class TTFWithSameFaceName(TestCase):
     ff_I = f"@font-face {{font-family: Noto_Italic; src: url('{ttf_pathI}');}}"
     ff_BI = f"@font-face {{font-family: Noto_BoldItalic; src: url('{ttf_pathBI}');}}"
 
-    css_R = ".classRegular{font-family: Noto_Regular;}"
-    css_RM = ".classRegularMinified{font-family: Noto_Regular_Minified;}"
-    css_B = ".classBold{font-family: Noto_Bold;}"
-    css_I = ".classItalic{font-family: Noto_Italic;}"
-    css_BI = ".classBoldItalic{font-family: Noto_BoldItalic;}"
+    css_R: str = ".classRegular{font-family: Noto_Regular;}"
+    css_RM: str = ".classRegularMinified{font-family: Noto_Regular_Minified;}"
+    css_B: str = ".classBold{font-family: Noto_Bold;}"
+    css_I: str = ".classItalic{font-family: Noto_Italic;}"
+    css_BI: str = ".classBoldItalic{font-family: Noto_BoldItalic;}"
 
-    HTML_CONTENT = """
+    HTML_CONTENT: str = """
                         <html>
                         <title></title>
                         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -90,7 +90,7 @@ class TTFWithSameFaceName(TestCase):
         css_BI=css_BI,
     )
 
-    def test_check_updated_face_name(self):
+    def test_check_updated_face_name(self) -> None:
         """
         this function help us to check is the font-family value on the pdf and
         the font-family from html element are same.

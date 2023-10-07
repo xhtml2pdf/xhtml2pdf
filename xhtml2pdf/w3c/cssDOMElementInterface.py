@@ -7,9 +7,14 @@
 # Modified by Dirk Holtwick <holtwick@web.de>, 2007-2008
 
 # ruff: noqa: N802, N803, N815, N816, N999
+from __future__ import annotations
 
+from typing import TYPE_CHECKING, Callable, ClassVar
 
 from xhtml2pdf.w3c import css
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ~ Definitions
@@ -25,7 +30,7 @@ class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
 
     style = None
 
-    _pseudoStateHandlerLookup = {
+    _pseudoStateHandlerLookup: ClassVar[dict[str, Callable[[Self], bool]]] = {
         "first-child": lambda self: not bool(self.getPreviousSibling()),
         "not-first-child": lambda self: bool(self.getPreviousSibling()),
         "last-child": lambda self: not bool(self.getNextSibling()),
@@ -43,7 +48,7 @@ class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
     # ~ Definitions
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def __init__(self, domElement, cssParser=None):
+    def __init__(self, domElement, cssParser=None) -> None:
         self.domElement = domElement
         # print self.domElement.attributes
         if cssParser is not None:

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # ruff: noqa: N802, N803
-
+from __future__ import annotations
 
 import contextlib
 import copy
@@ -22,6 +22,7 @@ import sys
 from hashlib import md5
 from html import escape as html_escape
 from io import BytesIO, StringIO
+from typing import ClassVar, Tuple, cast
 from uuid import uuid4
 
 import PIL.Image as PILImage
@@ -63,7 +64,7 @@ PRODUCER = "xhtml2pdf <https://github.com/xhtml2pdf/xhtml2pdf/>"
 
 
 class PTCycle(list):
-    def __init__(self):
+    def __init__(self) -> None:
         self._restart = 0
         self._idx = 0
         list.__init__(self)
@@ -193,21 +194,21 @@ class PmlPageTemplate(PageTemplate):
     # by default portrait
     pageorientation = PORTRAIT
 
-    def __init__(self, **kw):
-        self.pisaStaticList = []
-        self.pisaBackgroundList = []
+    def __init__(self, **kw) -> None:
+        self.pisaStaticList: list = []
+        self.pisaBackgroundList: list = []
         self.pisaBackground = None
         PageTemplate.__init__(self, **kw)
-        self._page_count = 0
-        self._first_flow = True
+        self._page_count: int = 0
+        self._first_flow: bool = True
 
         # Background Image
         self.img = None
-        self.ph = 0
-        self.h = 0
-        self.w = 0
+        self.ph: int = 0
+        self.h: int = 0
+        self.w: int = 0
 
-        self.backgroundids = []
+        self.backgroundids: list = []
 
     def isFirstFlow(self, canvas):
         if self._first_flow:
@@ -291,9 +292,9 @@ _ctr = 1
 class PmlImageReader:  # TODO We need a factory here, returning either a class for java or a class for PIL
     """Wraps up either PIL or Java to get data from bitmaps."""
 
-    _cache = {}
+    _cache: ClassVar[dict] = {}
 
-    def __init__(self, fileName):
+    def __init__(self, fileName) -> None:
         if isinstance(fileName, PmlImageReader):
             self.__dict__ = fileName.__dict__  # borgize
             return
@@ -462,7 +463,7 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
         else:
             return None
 
-    def __str__(self):
+    def __str__(self) -> str:
         try:
             fn = self.fileName.read()
             if not fn:
@@ -476,7 +477,9 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
 
 
 class PmlImage(Flowable, PmlMaxHeightMixIn):
-    def __init__(self, data, width=None, height=None, mask="auto", mimetype=None, **kw):
+    def __init__(
+        self, data, width=None, height=None, mask="auto", mimetype=None, **kw
+    ) -> None:
         self.kw = kw
         self.hAlign = "CENTER"
         self._mask = mask
@@ -487,19 +490,16 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         # Resolve size
         drawing = self.getDrawing()
         if drawing:
-            _, _, self.imageWidth, self.imageHeight = drawing.getBounds() or (
-                0,
-                0,
-                0,
-                0,
+            _, _, self.imageWidth, self.imageHeight = cast(
+                Tuple[int, int, int, int], drawing.getBounds() or (0, 0, 0, 0)
             )
         else:
             img = self.getImage()
             if img:
-                self.imageWidth, self.imageHeight = img.getSize()
+                self.imageWidth, self.imageHeight = cast(Tuple[int, int], img.getSize())
 
-        self.drawWidth = width or self.imageWidth
-        self.drawHeight = height or self.imageHeight
+        self.drawWidth: int = width or self.imageWidth
+        self.drawHeight: int = height or self.imageHeight
 
     def wrap(self, availWidth, availHeight):
         """
@@ -848,7 +848,7 @@ class PmlTable(Table, PmlMaxHeightMixIn):
 
 
 class PmlPageCount(IndexingFlowable):
-    def __init__(self):
+    def __init__(self) -> None:
         IndexingFlowable.__init__(self)
         self.second_round = False
 
@@ -916,7 +916,7 @@ class PmlTableOfContents(TableOfContents):
 
 
 class PmlRightPageBreak(CondPageBreak):
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def wrap(self, availWidth, availHeight):
@@ -929,7 +929,7 @@ class PmlRightPageBreak(CondPageBreak):
 
 
 class PmlLeftPageBreak(CondPageBreak):
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def wrap(self, availWidth, availHeight):
@@ -954,7 +954,7 @@ class PmlInput(Flowable):
         default="",
         options=None,
         multiline=0,
-    ):
+    ) -> None:
         self.width = width
         self.height = height
         self.type = input_type

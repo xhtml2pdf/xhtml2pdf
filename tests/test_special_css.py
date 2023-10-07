@@ -9,7 +9,7 @@ class FontTest(TestCase):
     into font-size, font-weight, etc.
     """
 
-    def test_font_size_family(self):
+    def test_font_size_family(self) -> None:
         func_in = [("font", [("15", "px"), "Comic Sans"], None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -18,7 +18,7 @@ class FontTest(TestCase):
         ]
         self.assertEqual(func_out, expected)
 
-    def test_font_style_size_family(self):
+    def test_font_style_size_family(self) -> None:
         func_in = [("font", ["italic", ("15", "px"), "Comic Sans"], None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -28,7 +28,7 @@ class FontTest(TestCase):
         ]
         self.assertEqual(func_out, expected)
 
-    def test_font_variant_size_family(self):
+    def test_font_variant_size_family(self) -> None:
         func_in = [("font", ["small-caps", ("15", "px"), "Comic Sans"], None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -38,7 +38,7 @@ class FontTest(TestCase):
         ]
         self.assertEqual(func_out, expected)
 
-    def test_font_weight_size_family(self):
+    def test_font_weight_size_family(self) -> None:
         func_in = [("font", ["bold", ("15", "px"), "Comic Sans"], None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -48,7 +48,7 @@ class FontTest(TestCase):
         ]
         self.assertEqual(func_out, expected)
 
-    def test_font_style_variant_weight_size_height_family(self):
+    def test_font_style_variant_weight_size_height_family(self) -> None:
         func_in = [
             (
                 "font",
@@ -80,13 +80,13 @@ class BackgroundTest(TestCase):
     properly into background-image and background-color
     """
 
-    def test_background_image(self):
+    def test_background_image(self) -> None:
         func_in = [("background", "image.jpg", None)]
         func_out = parseSpecialRules(func_in)
         expected = [("background-image", "image.jpg", None)]
         self.assertEqual(func_out, expected)
 
-    def test_background_color(self):
+    def test_background_color(self) -> None:
         func_in = [("background", "lightblue", None)]
         func_out = parseSpecialRules(func_in)
         expected = [("background-color", "lightblue", None)]
@@ -99,7 +99,7 @@ class MarginTest(TestCase):
     left, right, top, bottom - depending on the amount of given values (1 to 4)
     """
 
-    def test_one_margin_value(self):
+    def test_one_margin_value(self) -> None:
         func_in = [("margin", ("11", "px"), None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -110,7 +110,7 @@ class MarginTest(TestCase):
         ]
         self.assertEqual(func_out, expected)
 
-    def test_two_margin_values(self):
+    def test_two_margin_values(self) -> None:
         func_in = [("margin", [("11", "px"), ("22", "px")], None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -121,7 +121,7 @@ class MarginTest(TestCase):
         ]
         self.assertEqual(func_out, expected)
 
-    def test_three_margin_values(self):
+    def test_three_margin_values(self) -> None:
         func_in = [("margin", [("11", "px"), ("22", "px"), ("33", "px")], None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -132,7 +132,7 @@ class MarginTest(TestCase):
         ]
         self.assertEqual(func_out, expected)
 
-    def test_four_margin_values(self):
+    def test_four_margin_values(self) -> None:
         func_in = [
             ("margin", [("11", "px"), ("22", "px"), ("33", "px"), ("44", "px")], None)
         ]
@@ -152,7 +152,7 @@ class PaddingTest(TestCase):
     left, right, top, bottom - depending on the amount of given values (1 to 4)
     """
 
-    def test_one_padding_value(self):
+    def test_one_padding_value(self) -> None:
         func_in = [("padding", ("11", "px"), None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -163,7 +163,7 @@ class PaddingTest(TestCase):
         ]
         self.assertEqual(func_out, expected)
 
-    def test_two_padding_values(self):
+    def test_two_padding_values(self) -> None:
         func_in = [("padding", [("11", "px"), ("22", "px")], None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -174,7 +174,7 @@ class PaddingTest(TestCase):
         ]
         self.assertEqual(func_out, expected)
 
-    def test_three_padding_values(self):
+    def test_three_padding_values(self) -> None:
         func_in = [("padding", [("11", "px"), ("22", "px"), ("33", "px")], None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -185,7 +185,7 @@ class PaddingTest(TestCase):
         ]
         self.assertEqual(func_out, expected)
 
-    def test_four_padding_values(self):
+    def test_four_padding_values(self) -> None:
         func_in = [
             ("padding", [("11", "px"), ("22", "px"), ("33", "px"), ("44", "px")], None)
         ]
@@ -205,7 +205,7 @@ class BorderWidthTest(TestCase):
     left, right, top, bottom -  depending on the amount of given values (1 to 4)
     """
 
-    def test_one_border_width_value(self):
+    def test_one_border_width_value(self) -> None:
         func_in = [("border-width", ("11", "px"), None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -216,7 +216,7 @@ class BorderWidthTest(TestCase):
         ]
         self.assertEqual(func_out, expected)
 
-    def test_two_border_width_values(self):
+    def test_two_border_width_values(self) -> None:
         func_in = [("border-width", [("11", "px"), ("22", "px")], None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -227,7 +227,7 @@ class BorderWidthTest(TestCase):
         ]
         self.assertEqual(func_out, expected)
 
-    def test_three_border_width_values(self):
+    def test_three_border_width_values(self) -> None:
         func_in = [("border-width", [("11", "px"), ("22", "px"), ("33", "px")], None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -238,7 +238,7 @@ class BorderWidthTest(TestCase):
         ]
         self.assertEqual(func_out, expected)
 
-    def test_four_border_width_values(self):
+    def test_four_border_width_values(self) -> None:
         func_in = [
             (
                 "border-width",
@@ -257,7 +257,7 @@ class BorderWidthTest(TestCase):
 
 
 class BorderColorTest(TestCase):
-    def test_one_border_color_value(self):
+    def test_one_border_color_value(self) -> None:
         func_in = [("border-color", ["red"], None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -268,7 +268,7 @@ class BorderColorTest(TestCase):
         ]
         self.assertEqual(func_out, expected)
 
-    def test_two_border_color_values(self):
+    def test_two_border_color_values(self) -> None:
         func_in = [("border-color", ["red", "green"], None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -279,7 +279,7 @@ class BorderColorTest(TestCase):
         ]
         self.assertEqual(func_out, expected)
 
-    def test_three_border_color_values(self):
+    def test_three_border_color_values(self) -> None:
         func_in = [("border-color", ["red", "green", "blue"], None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -290,7 +290,7 @@ class BorderColorTest(TestCase):
         ]
         self.assertEqual(func_out, expected)
 
-    def test_four_border_color_values(self):
+    def test_four_border_color_values(self) -> None:
         func_in = [("border-color", ["red", "green", "blue", "pink"], None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -308,7 +308,7 @@ class BorderStyleTest(TestCase):
     left, right, top, bottom - depending on the amount of given values (1 to 4)
     """
 
-    def test_one_border_style_value(self):
+    def test_one_border_style_value(self) -> None:
         func_in = [("border-style", ["dotted"], None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -319,7 +319,7 @@ class BorderStyleTest(TestCase):
         ]
         self.assertEqual(func_out, expected)
 
-    def test_two_border_style_values(self):
+    def test_two_border_style_values(self) -> None:
         func_in = [("border-style", ["dotted", "solid"], None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -330,7 +330,7 @@ class BorderStyleTest(TestCase):
         ]
         self.assertEqual(func_out, expected)
 
-    def test_three_border_style_values(self):
+    def test_three_border_style_values(self) -> None:
         func_in = [("border-style", ["dotted", "solid", "double"], None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -341,7 +341,7 @@ class BorderStyleTest(TestCase):
         ]
         self.assertEqual(func_out, expected)
 
-    def test_four_border_style_values(self):
+    def test_four_border_style_values(self) -> None:
         func_in = [("border-style", ["dotted", "solid", "double", "dashed"], None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -356,31 +356,31 @@ class BorderStyleTest(TestCase):
 class BorderSplitTest(TestCase):
     """Tests the functionality of splitBorder(), that should output (width, style color)"""
 
-    def test_split_border_empty(self):
-        func_in = []
+    def test_split_border_empty(self) -> None:
+        func_in: list = []
         func_out = splitBorder(func_in)
         expected = (None, None, None)
         self.assertEqual(func_out, expected)
 
-    def test_split_border_style(self):
+    def test_split_border_style(self) -> None:
         func_in = ["dotted"]
         func_out = splitBorder(func_in)
         expected = (None, "dotted", None)
         self.assertEqual(func_out, expected)
 
-    def test_split_border_style_width(self):
+    def test_split_border_style_width(self) -> None:
         func_in = ["dotted", ("99", "px")]
         func_out = splitBorder(func_in)
         expected = (("99", "px"), "dotted", None)
         self.assertEqual(func_out, expected)
 
-    def test_split_border_style_color(self):
+    def test_split_border_style_color(self) -> None:
         func_in = ["red", "dotted"]
         func_out = splitBorder(func_in)
         expected = (None, "dotted", "red")
         self.assertEqual(func_out, expected)
 
-    def test_split_border_style_width_color(self):
+    def test_split_border_style_width_color(self) -> None:
         func_in = ["red", "dotted", ("99", "px")]
         func_out = splitBorder(func_in)
         expected = (("99", "px"), "dotted", "red")
@@ -393,7 +393,7 @@ class BorderTest(TestCase):
     width, style and color - depending on the amount of given values (1 to 3)
     """
 
-    def test_border_style(self):
+    def test_border_style(self) -> None:
         func_in = [("border", "dotted", None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -404,7 +404,7 @@ class BorderTest(TestCase):
         ]
         self.assertEqual(func_out, expected)
 
-    def test_border_width_style(self):
+    def test_border_width_style(self) -> None:
         func_in = [("border", [("99", "px"), "dotted"], None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -419,7 +419,7 @@ class BorderTest(TestCase):
         ]
         self.assertEqual(func_out, expected)
 
-    def test_border_style_color(self):
+    def test_border_style_color(self) -> None:
         func_in = [("border", ["dotted", "red"], None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -434,7 +434,7 @@ class BorderTest(TestCase):
         ]
         self.assertEqual(func_out, expected)
 
-    def test_border_width_style_color(self):
+    def test_border_width_style_color(self) -> None:
         func_in = [("border", [("99", "px"), "dotted", "red"], None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -460,13 +460,13 @@ class BorderTop(TestCase):
     width, style, color - depending on the amount of given values (1 to 3)
     """
 
-    def test_border_top_style(self):
+    def test_border_top_style(self) -> None:
         func_in = [("border-top", "dotted", None)]
         func_out = parseSpecialRules(func_in)
         expected = [("border-top-style", "dotted", None)]
         self.assertEqual(func_out, expected)
 
-    def test_border_top_widt_style(self):
+    def test_border_top_widt_style(self) -> None:
         func_in = [("border-top", [("99", "px"), "dotted"], None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -475,7 +475,7 @@ class BorderTop(TestCase):
         ]
         self.assertEqual(func_out, expected)
 
-    def test_border_top_style_color(self):
+    def test_border_top_style_color(self) -> None:
         func_in = [("border-top", ["dotted", "red"], None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -484,7 +484,7 @@ class BorderTop(TestCase):
         ]
         self.assertEqual(func_out, expected)
 
-    def test_border_top_width_style_color(self):
+    def test_border_top_width_style_color(self) -> None:
         func_in = [("border-top", [("99", "px"), "dotted", "red"], None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -502,7 +502,7 @@ class BorderBottom(TestCase):
     as it's the same as in BorderTop()
     """
 
-    def test_border_top_width_style_color(self):
+    def test_border_top_width_style_color(self) -> None:
         func_in = [("border-bottom", [("99", "px"), "dotted", "red"], None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -520,7 +520,7 @@ class BorderLeft(TestCase):
     as it's the same as in BorderTop()
     """
 
-    def test_border_top_width_style_color(self):
+    def test_border_top_width_style_color(self) -> None:
         func_in = [("border-left", [("99", "px"), "dotted", "red"], None)]
         func_out = parseSpecialRules(func_in)
         expected = [
@@ -538,7 +538,7 @@ class BorderRight(TestCase):
     as it's the same as in BorderTop()
     """
 
-    def test_border_top_width_style_color(self):
+    def test_border_top_width_style_color(self) -> None:
         func_in = [("border-right", [("99", "px"), "dotted", "red"], None)]
         func_out = parseSpecialRules(func_in)
         expected = [

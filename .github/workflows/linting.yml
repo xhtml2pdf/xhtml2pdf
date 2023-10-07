@@ -6,14 +6,18 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
     - uses: pre-commit/action@v3.0.0
       env:
-        SKIP: black,ruff,no-commit-to-branch
+        SKIP: black,ruff,mypy,no-commit-to-branch
   black:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
       - uses: psf/black@stable
         with:
           version: "23.9.1"
@@ -24,3 +28,12 @@ jobs:
       - uses: chartboost/ruff-action@v1
         with:
           version: "0.0.292"
+  mypy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jpetrucciani/mypy-check@1.5.1
+        with:
+          python_version: "3.11"
+          mypy_flags: '--config-file pyproject.toml --ignore-missing-imports --scripts-are-modules'
+          requirements: "types-pkg_resources"
