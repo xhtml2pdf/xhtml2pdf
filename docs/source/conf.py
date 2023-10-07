@@ -15,7 +15,8 @@ documentation root, use os.path.abspath to make it absolute, like shown here.
 from __future__ import annotations
 
 from xhtml2pdf import __version__
-from xhtml2pdf.build_samples import build_resources
+
+from .build_samples import build_resources
 
 build_resources()
 
