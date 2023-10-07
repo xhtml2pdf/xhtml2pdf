@@ -72,6 +72,7 @@ Unreleased
 * Enforce consistent file formatting (:pr:`715`)
 * Add ruff code linter (:pr:`716`)
 * Start using type hints & validate them via mypy (:pr:`717`)
+* Drop support for Python 3.7 (reached end of life on 2023-06-27) (:pr:`718`)
 
 | Thanks to the following people on GitHub for contributing to this release:
 | *JanEgner*, *lucasgadams*, *a-detiste*, *holtwick*, *stefan6419846*, *timobrembeck*

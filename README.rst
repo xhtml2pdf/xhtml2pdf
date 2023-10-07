@@ -54,7 +54,7 @@ This is a typical Python library and can be installed using pip::
 Requirements
 ============
 
-Only Python 3.7+ is tested and guaranteed to work.
+Only Python 3.8+ is tested and guaranteed to work.
 
 All additional requirements are listed in the ``pyproject.toml`` file and are installed automatically using the ``pip install .`` method.
 

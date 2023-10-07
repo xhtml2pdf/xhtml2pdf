@@ -26,7 +26,6 @@ classifiers = [
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -45,7 +44,7 @@ classifiers = [
     "Topic :: Text Processing :: Markup :: XML",
     "Topic :: Utilities",
 ]
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 dependencies = [
     "arabic-reshaper>=3.0.0",
     "html5lib>=1.1",
@@ -92,7 +91,7 @@ exclude = ["tests", "tests.*", "manual_test", "manual_test.*"]
 [tool.tox]
 legacy_tox_ini = """
     [tox]
-    envlist = py{3.7,3.8,3.9,3.10,3.11}
+    envlist = py{3.8,3.9,3.10,3.11}
 
     [testenv]
     deps = coverage[toml]
