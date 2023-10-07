@@ -7,7 +7,7 @@ from xhtml2pdf.parser import AttrContainer, pisaGetAttributes
 
 
 class PisaTagTestCase(TestCase):
-    def test_pisa_tag_will_set_attrs_on_init(self):
+    def test_pisa_tag_will_set_attrs_on_init(self) -> None:
         dom = minidom.parseString("<unit>test</unit>")
         element = dom.getElementsByTagName("unit")[0]
         attrs = AttrContainer({})
@@ -18,10 +18,10 @@ class PisaTagTestCase(TestCase):
 
 
 class PisaTagOLTestCase(TestCase):
-    def test_pisa_ol_tag_start_attr(self):
+    def test_pisa_ol_tag_start_attr(self) -> None:
         dom = minidom.parseString('<ol start="10"><li>item</li></ol>')
         element = dom.getElementsByTagName("ol")[0]
-        context = pisaContext([])
+        context = pisaContext()
         attrs = pisaGetAttributes(context, element.tagName.lower(), element.attributes)
         instance = tags.pisaTagOL(element, attrs)
         instance.start(context)

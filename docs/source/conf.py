@@ -12,7 +12,7 @@ If extensions (or modules to document with autodoc) are in another directory,
 add these directories to sys.path here. If the directory is relative to the
 documentation root, use os.path.abspath to make it absolute, like shown here.
 """
-
+from __future__ import annotations
 
 from xhtml2pdf import __version__
 from xhtml2pdf.build_samples import build_resources
@@ -97,7 +97,7 @@ language = "en"
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = []
+exclude_patterns: list[str] = []
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
@@ -256,7 +256,7 @@ htmlhelp_basename = "xhtml2pdfdoc"
 
 # -- Options for LaTeX output ---------------------------------------------
 
-latex_elements = {
+latex_elements: dict[str, str] = {
     # The paper size ('letterpaper' or 'a4paper').
     #
     # 'papersize': 'letterpaper',
@@ -274,7 +274,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
-latex_documents = [
+latex_documents: list[tuple[str, ...]] = [
     (master_doc, "xhtml2pdf.tex", "xhtml2pdf Documentation", "xhtml2pdf", "manual")
 ]
 
@@ -315,7 +315,9 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "xhtml2pdf", "xhtml2pdf Documentation", [author], 1)]
+man_pages: list[tuple[str, str, str, list, int]] = [
+    (master_doc, "xhtml2pdf", "xhtml2pdf Documentation", [author], 1)
+]
 
 # If true, show URL addresses after external links.
 #
@@ -327,7 +329,7 @@ man_pages = [(master_doc, "xhtml2pdf", "xhtml2pdf Documentation", [author], 1)]
 # Grouping the document tree into Texinfo files. List of tuples
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
-texinfo_documents = [
+texinfo_documents: list[tuple] = [
     (
         master_doc,
         "xhtml2pdf",
@@ -442,4 +444,6 @@ epub_exclude_files = ["search.html"]
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {"python": ("https://docs.python.org/", None)}
+intersphinx_mapping: dict[str, tuple[str, str | None]] = {
+    "python": ("https://docs.python.org/", None)
+}

@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from __future__ import annotations
 
 import copy
 import logging
@@ -44,14 +44,21 @@ def _height(value=None):
 
 
 class TableData:
-    def __init__(self):
-        self.data = []
-        self.styles = []
-
-        self.span = []
-        self.mode = ""
-        self.padding = 0
-        self.col = 0
+    def __init__(self) -> None:
+        self.align: str = ""
+        self.col: int = 0
+        self.colw: list = []
+        self.data: list = []
+        self.mode: str = ""
+        self.padding: int = 0
+        self.repeat: bool = False
+        self.row: int = 0
+        self.rowh: list = []
+        self.span: list = []
+        self.styles: list[
+            tuple[str, tuple[int, int], tuple[int, int], str, str, str]
+        ] = []
+        self.width: int = 0
 
     def add_cell(self, data=None):
         self.col += 1

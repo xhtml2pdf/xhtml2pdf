@@ -8,7 +8,7 @@ from pypdf import PdfReader
 
 from xhtml2pdf.document import pisaDocument
 
-HTML_CONTENT = """<!DOCTYPE html>
+HTML_CONTENT: str = """<!DOCTYPE html>
 <html>
 <head>
 {head:s}
@@ -76,7 +76,7 @@ class DocumentTest(TestCase):
 
             assertion(actual_value, expected_value)
 
-    def test_document_with_transparent_image(self):
+    def test_document_with_transparent_image(self) -> None:
         """Test that a transparent PNG image is rendered properly."""
         tests_folder = os.path.dirname(os.path.realpath(__file__))
         image_path = os.path.join(
@@ -101,7 +101,7 @@ class DocumentTest(TestCase):
             ]
             self.assertEqual(len(denker_transparant), 1)
 
-    def test_document_background_image(self):
+    def test_document_background_image(self) -> None:
         """Test that a transparent PNG image is rendered properly."""
         tests_folder = os.path.dirname(os.path.realpath(__file__))
         image_path = os.path.join(
@@ -130,7 +130,7 @@ class DocumentTest(TestCase):
             ]
             self.assertEqual(len(denker_transparant), 1)
 
-    def test_document_background_image_not_on_all_pages(self):
+    def test_document_background_image_not_on_all_pages(self) -> None:
         """Test that all pages are being rendered, when background is a pdf file and it's applied for the first page only."""
         tests_folder = os.path.dirname(os.path.realpath(__file__))
         background_path = os.path.join(tests_folder, "samples", "images.pdf")
@@ -154,7 +154,7 @@ class DocumentTest(TestCase):
 
             self.assertEqual(len(pdf_reader.pages), 2)
 
-    def test_document_nested_table(self):
+    def test_document_nested_table(self) -> None:
         """Test that nested tables are being rendered."""
         tests_folder = os.path.dirname(os.path.realpath(__file__))
         html_path = os.path.join(tests_folder, "samples", "nested_table.html")
@@ -169,7 +169,7 @@ class DocumentTest(TestCase):
             self.assertEqual(len(pdf_reader.pages), 1)
 
     @skipIf(IN_PYPY, "This doesn't work in pypy")
-    def test_document_creation_without_metadata(self):
+    def test_document_creation_without_metadata(self) -> None:
         with tempfile.TemporaryFile() as pdf_file:
             pisaDocument(
                 src=io.StringIO(HTML_CONTENT.format(head="", extra_html="")),
@@ -178,7 +178,7 @@ class DocumentTest(TestCase):
             self._compare_pdf_metadata(pdf_file, self.assertNotEqual)
 
     @skipIf(IN_PYPY, "This doesn't work in pypy")
-    def test_document_creation_with_metadata(self):
+    def test_document_creation_with_metadata(self) -> None:
         with tempfile.TemporaryFile() as pdf_file:
             pisaDocument(
                 src=io.StringIO(HTML_CONTENT.format(head="", extra_html="")),
@@ -188,7 +188,7 @@ class DocumentTest(TestCase):
             self._compare_pdf_metadata(pdf_file, self.assertEqual)
 
     @skipIf(IN_PYPY, "This doesn't work in pypy")
-    def test_document_creation_with_css_metadata(self):
+    def test_document_creation_with_css_metadata(self) -> None:
         for css_code in CSS_TESTS:
             with tempfile.TemporaryFile() as pdf_file:
                 pisaDocument(
@@ -198,11 +198,11 @@ class DocumentTest(TestCase):
                 )
                 self._compare_pdf_metadata(pdf_file, self.assertEqual)
 
-    def test_destination_is_none(self):
+    def test_destination_is_none(self) -> None:
         context = pisaDocument(HTML_CONTENT.format(head="", extra_html=""))
         self.assertGreater(len(context.dest.getvalue()), 0)
 
-    def test_in_memory_document(self):
+    def test_in_memory_document(self) -> None:
         with io.BytesIO() as in_memory_file:
             pisaDocument(
                 HTML_CONTENT.format(head="", extra_html=""), dest=in_memory_file

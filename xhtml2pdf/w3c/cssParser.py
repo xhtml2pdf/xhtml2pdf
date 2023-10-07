@@ -26,10 +26,11 @@ Dependencies:
 """
 
 # ruff: noqa: N802, N803, N815, N816, N999
-
+from __future__ import annotations
 
 import re
 from abc import abstractmethod
+from typing import ClassVar
 
 from reportlab.lib.pagesizes import landscape
 
@@ -93,10 +94,6 @@ class CSSBuilderAbstract:
 
     See css.CSSBuilder for an example implementation
     """
-
-    @abstractmethod
-    def setCharset(self, charset):
-        raise NotImplementedError
 
     # ~ css results ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -225,15 +222,15 @@ class CSSBuilderAbstract:
 
 
 class CSSParseError(Exception):
-    src = ""
-    ctxsrc = ""
-    fullsrc = ""
-    inline = False
-    srcCtxIdx = None
-    srcFullIdx = None
-    ctxsrcFullIdx = None
+    src: str = ""
+    ctxsrc: str = ""
+    fullsrc: bytes | str = ""
+    inline: bool = False
+    srcCtxIdx: int | None = None
+    srcFullIdx: int | None = None
+    ctxsrcFullIdx: int | None = None
 
-    def __init__(self, msg, src, ctxsrc=None):
+    def __init__(self, msg, src, ctxsrc=None) -> None:
         super().__init__(msg)
         self.src = src
         self.ctxsrc = ctxsrc or src
@@ -242,7 +239,7 @@ class CSSParseError(Exception):
             if self.srcCtxIdx < 0:
                 del self.srcCtxIdx
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.ctxsrc and self.srcCtxIdx:
             return (
                 super().__str__()
@@ -333,10 +330,10 @@ class CSSParser:
 
     ParseError = CSSParseError
 
-    AttributeOperators = ["=", "~=", "|=", "&=", "^=", "!=", "<>"]
-    SelectorQualifiers = ("#", ".", "[", ":")
-    SelectorCombiners = ["+", ">"]
-    ExpressionOperators = ("/", "+", ",")
+    AttributeOperators: ClassVar[list[str]] = ["=", "~=", "|=", "&=", "^=", "!=", "<>"]
+    SelectorQualifiers: ClassVar[tuple[str, ...]] = ("#", ".", "[", ":")
+    SelectorCombiners: ClassVar[list[str]] = ["+", ">"]
+    ExpressionOperators: ClassVar[tuple[str, ...]] = ("/", "+", ",")
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # ~ Regular expressions
@@ -410,7 +407,7 @@ class CSSParser:
     # ~ Public
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def __init__(self, cssBuilder=None):
+    def __init__(self, cssBuilder=None) -> None:
         self.setCSSBuilder(cssBuilder)
 
     # ~ CSS Builder to delegate to ~~~~~~~~~~~~~~~~~~~~~~~~

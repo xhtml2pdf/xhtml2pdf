@@ -4,7 +4,7 @@ from xhtml2pdf.w3c.css import CSSBuilder, CSSParser
 
 
 class SelectorsTest(TestCase):
-    def test_selector_lt(self):
+    def test_selector_lt(self) -> None:
         # test html:
         # <html>
         #   <head>

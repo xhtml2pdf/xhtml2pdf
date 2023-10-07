@@ -8,7 +8,7 @@ from xhtml2pdf.document import pisaDocument
 from xhtml2pdf.parser import pisaParser
 from xhtml2pdf.w3c.cssDOMElementInterface import CSSDOMElementInterface
 
-HTML_CONTENT = """
+HTML_CONTENT: str = """
 <html>
 <head>
     <title>None</title>
@@ -37,7 +37,7 @@ HTML_CONTENT = """
 
 
 class TableTest(TestCase):
-    def test_th_has_no_css_rules(self):
+    def test_th_has_no_css_rules(self) -> None:
         html = HTML_CONTENT
 
         result = BytesIO()
@@ -52,7 +52,7 @@ class TableTest(TestCase):
 
         self.assertEqual(rules, [])
 
-    def test_empty_table(self):
+    def test_empty_table(self) -> None:
         """
         Test, if an empty table will return an empty story;
         This will also raise a log.warning()
@@ -69,7 +69,7 @@ class TableTest(TestCase):
         """
 
         with self.assertLogs("xhtml2pdf.tables", level="DEBUG") as cm:
-            context = pisaParser(BytesIO(html.encode("utf-8")), pisaContext(None))
+            context = pisaParser(BytesIO(html.encode("utf-8")), pisaContext())
 
             self.assertEqual(
                 context.story, [], "Empty table doesn't return an empty story!"
@@ -82,7 +82,7 @@ class TableTest(TestCase):
                 ],
             )
 
-    def test_tr_background_color(self):
+    def test_tr_background_color(self) -> None:
         """
         Test background on <tr> tag;
         If it works, "darkgreen" will be returned as hexval "0x006400"
@@ -104,7 +104,7 @@ class TableTest(TestCase):
         </html>
         """
 
-        context = pisaParser(BytesIO(html.encode("utf-8")), pisaContext(None))
+        context = pisaParser(BytesIO(html.encode("utf-8")), pisaContext())
         table = context.story[0]
         color = table._bkgrndcmds[0][3]
         self.assertEqual(
@@ -113,7 +113,7 @@ class TableTest(TestCase):
             '"background-color" in CSS not equal with output!',
         )
 
-    def test_td_colspan(self):
+    def test_td_colspan(self) -> None:
         """
         Test colspan on <td> tag;
         If it works, colspan="3" will be equal to (2, 0) in _spanCmds of the ReportLab table
@@ -139,7 +139,7 @@ class TableTest(TestCase):
         </html>
         """
 
-        context = pisaParser(BytesIO(html.encode("utf-8")), pisaContext(None))
+        context = pisaParser(BytesIO(html.encode("utf-8")), pisaContext())
         table = context.story[0]
         col_span = table._spanCmds[0][2]
 
@@ -147,7 +147,7 @@ class TableTest(TestCase):
             col_span, (2, 0), '"colspan=" not working properly in the <td> tag!'
         )
 
-    def test_td_rowspan(self):
+    def test_td_rowspan(self) -> None:
         """
         Test rowspan on <td> tag;
         If it works, rowspan="3" will be equal to (0, 2) in _spanCmds of the ReportLab table
@@ -175,7 +175,7 @@ class TableTest(TestCase):
         </html>
         """
 
-        context = pisaParser(BytesIO(html.encode("utf-8")), pisaContext(None))
+        context = pisaParser(BytesIO(html.encode("utf-8")), pisaContext())
         table = context.story[0]
         row_span = table._spanCmds[0][2]
 
@@ -183,7 +183,7 @@ class TableTest(TestCase):
             row_span, (0, 2), '"rowspan=" not working properly in the <td> tag!'
         )
 
-    def test_td_width_and_height(self):
+    def test_td_width_and_height(self) -> None:
         """
         Test width and height on <td> tag;
         If it works, width: 2pt will be equal to 2.0 and height: 3pt will be equal to 3.0 in the ReportLab table
@@ -210,7 +210,7 @@ class TableTest(TestCase):
         </html>
         """
 
-        context = pisaParser(BytesIO(html.encode("utf-8")), pisaContext(None))
+        context = pisaParser(BytesIO(html.encode("utf-8")), pisaContext())
         table = context.story[0]
         col_widths = table._colWidths
         row_heights = table._rowHeights

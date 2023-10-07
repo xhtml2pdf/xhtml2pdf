@@ -30,7 +30,7 @@ class HttpConfig(dict):
 
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self["timeout"] = 5
 
@@ -52,7 +52,7 @@ class HttpConfig(dict):
             return True
         return False
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         dev = ""
         for key, value in self.items():
             dev += f"{key!r} = {value!r}, "

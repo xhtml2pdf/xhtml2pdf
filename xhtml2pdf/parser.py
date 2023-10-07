@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from __future__ import annotations
 
 import copy
 import logging
@@ -103,7 +103,7 @@ from xhtml2pdf.xhtml2pdf_reportlab import PmlLeftPageBreak, PmlRightPageBreak
 
 log = logging.getLogger(__name__)
 
-CSSAttrCache = {}
+CSSAttrCache: dict[str, dict] = {}
 
 rxhttpstrip = re.compile("https?://[^/]+(.*)", re.M | re.I)
 

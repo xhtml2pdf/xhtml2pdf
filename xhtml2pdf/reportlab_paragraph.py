@@ -2,13 +2,14 @@
 # see license.txt for license details
 # history http://www.reportlab.co.uk/cgi-bin/viewcvs.cgi/public/reportlab/trunk/reportlab/platypus/paragraph.py
 # Modifications by Dirk Holtwick, 2008
-
+from __future__ import annotations
 
 import re
 import sys
 from copy import deepcopy
 from operator import truth
 from string import whitespace
+from typing import Callable
 
 from reportlab.graphics import renderPDF
 from reportlab.lib.abag import ABag
@@ -519,7 +520,7 @@ def _getFragWords(frags, *, reverse=False):
     return R
 
 
-def _split_blParaSimple(blPara, start, stop):
+def _split_blParaSimple(blPara, start: int, stop: int) -> list:
     f = blPara.clone()
     for a in ("lines", "kind", "text"):
         if hasattr(f, a):
@@ -532,7 +533,7 @@ def _split_blParaSimple(blPara, start, stop):
     return [f]
 
 
-def _split_blParaHard(blPara, start, stop):
+def _split_blParaHard(blPara, start: int, stop: int) -> list:
     f = []
     lines = blPara.lines[start:stop]
     for line in lines:
@@ -1009,13 +1010,13 @@ class Paragraph(Flowable):
         caseSensitive=1,
         encoding="utf8",
         dir="ltr",  # noqa: A002
-    ):
+    ) -> None:
         self.dir = dir
         self.caseSensitive = caseSensitive
         self.encoding = encoding
         self._setup(text, style, bulletText, frags, cleanBlockQuotedText)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         n = type(self).__name__
         L = [n + "("]
         keys = self.__dict__.keys()
@@ -1107,18 +1108,18 @@ class Paragraph(Flowable):
             fN = f.fontName
             words = hasattr(f, "text") and split(f.text, " ") or f.words
 
-            def func(w, fS=fS, fN=fN):
+            def func(w: list, fS=fS, fN=fN) -> int:
                 return stringWidth(w, fN, fS)
 
         else:
             words = _getFragWords(frags)
 
-            def func(w, fS=None, fN=None):  # noqa: ARG001
+            def func(w: list, fS=None, fN=None) -> int:  # noqa: ARG001
                 return w[0]
 
         return max(map(func, words))
 
-    def _get_split_blParaFunc(self):
+    def _get_split_blParaFunc(self) -> Callable:
         return _split_blParaSimple if self.blPara.kind == 0 else _split_blParaHard
 
     def split(self, availWidth, availHeight):

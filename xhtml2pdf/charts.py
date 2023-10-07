@@ -20,7 +20,7 @@ def set_properties(obj, data, prop_map):
 
 
 class Props:
-    def __init__(self, instance):
+    def __init__(self, instance) -> None:
         self.prop_map = [
             ("x", int),
             ("y", int),
@@ -124,7 +124,7 @@ class BaseChart:
 
 
 class BaseBarChart(BaseChart):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def set_properties(self, data, props=None):
@@ -188,7 +188,7 @@ class VerticalBar(VerticalBarChart, BaseBarChart):
 
 
 class HorizontalLine(HorizontalLineChart, BaseChart):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def assign_labels(self, labels):
@@ -213,7 +213,7 @@ class HorizontalLine(HorizontalLineChart, BaseChart):
 
 
 class PieChart(Pie, BaseChart):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def set_properties(self, data, props=None):
@@ -247,7 +247,7 @@ class PieChart(Pie, BaseChart):
 
 
 class LegendedPieChart(LegendedPie, BaseChart):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.legend1.x = 350
         self.legend1.y = 150
@@ -270,7 +270,7 @@ class LegendedPieChart(LegendedPie, BaseChart):
 
 
 class DoughnutChart(Doughnut, BaseChart):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def assign_labels(self, labels):

@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
 import copy
 import logging
@@ -30,6 +31,7 @@ from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
 
 from xhtml2pdf import default, parser
 from xhtml2pdf.files import getFile, pisaFileObject
+from xhtml2pdf.tables import TableData
 from xhtml2pdf.util import (
     arabic_format,
     copy_attrs,
@@ -498,10 +500,10 @@ class pisaCSSParser(css.CSSParser):
 
 
 class PageNumberText:
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         self.data = ""
 
-    def __contains__(self, key):
+    def __contains__(self, key) -> bool:
         if self.flowable.page is not None:
             self.data = str(self.flowable.page)
         return False
@@ -517,18 +519,18 @@ class PageNumberText:
     def setFlowable(self, flowable):
         self.flowable = flowable
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.data
 
 
 class PageCountText:
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         self.data = ""
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.data
 
-    def __contains__(self, key):
+    def __contains__(self, key) -> bool:
         if self.flowable.pagecount is not None:
             self.data = str(self.flowable.pagecount)
         return False
@@ -557,67 +559,59 @@ class pisaContext:
     various data.
     """
 
-    def __init__(self, path, debug=0, capacity=-1):
-        self.fontList = copy.copy(default.DEFAULT_FONT)
-        self.asianFontList = copy.copy(get_default_asian_font())
-        set_value(
-            self,
-            (
-                "path",
-                "story",
-                "text",
-                "log",
-                "frameStaticList",
-                "pisaBackgroundList",
-                "frameList",
-                "anchorFrag",
-                "anchorName",
-                "fragList",
-                "fragAnchor",
-                "fragStack",
-            ),
-            [],
-            do_copy=True,
-        )
+    def __init__(self, path: str = "", debug: int = 0, capacity: int = -1) -> None:
+        self.fontList: dict[str, str] = copy.copy(default.DEFAULT_FONT)
+        self.asianFontList: dict[str, str] = copy.copy(get_default_asian_font())
+        self.anchorFrag: list = []
+        self.anchorName: list = []
+        self.fragAnchor: list = []
+        self.fragList: list = []
+        self.fragStack: list = []
+        self.frameList: list = []
+        self.frameStaticList: list = []
+        self.frameStatioundList: list = []
+        self.log: list = []
+        self.path: list = []
+        self.pisaBackgroundList: list = []
+        self.story: list = []
+        self.image = None
+        self.indexing_story = None
+        self.keepInFrameIndex = None
+        self.node = None
+        self.template = None
+        self.tableData: TableData = TableData()
+        self.err: int = 0
+        self.listCounter: int = 0
+        self.uidctr: int = 0
+        self.warn: int = 0
+        self.cssDefaultText: str = ""
+        self.cssText: str = ""
+        self.text: str = ""
+        self.frameStatic: dict = {}
+        self.imageData: dict = {}
+        self.templateList: dict = {}
+        self.capacity: int = capacity
+        self.toc: PmlTableOfContents = PmlTableOfContents()
+        self.multiBuild: bool = False
+        self.pageSize: tuple[float, float] = A4
+        self.baseFontSize: float = getSize("12pt")
+        self.frag: ParaFrag = getParaFrag(ParagraphStyle(f"default{self.UID()}"))
+        self.fragBlock: ParaFrag = self.frag
+        self.fragStrip: bool = True
+        self.force: bool = False
+        self.dir: str = "ltr"
 
-        set_value(
-            self,
-            (
-                "node",
-                "indexing_story",
-                "template",
-                "keepInFrameIndex",
-                "tableData",
-                "image",
-            ),
-            None,
-        )
-        set_value(self, ("err", "warn", "uidctr", "listCounter"), 0)
-        set_value(self, ("text", "cssText", "cssDefaultText"), "")
-        set_value(self, ("templateList", "frameStatic", "imageData"), {}, do_copy=True)
-        self.capacity = capacity
-        self.toc = PmlTableOfContents()
-        self.multiBuild = False
-        self.pageSize = A4
-        self.baseFontSize = getSize("12pt")
-        self.frag = self.fragBlock = getParaFrag(
-            ParagraphStyle("default%d" % self.UID())
-        )
-        self.fragStrip = True
-        self.force = False
-        self.dir = "ltr"
-
-        # External callback function for path calculations
+        #: External callback function for path calculations
         self.pathCallback = None
 
         # Store path to document
-        self.pathDocument = path or "__dummy__"
+        self.pathDocument: str = path or "__dummy__"
         parts = urlparse.urlparse(self.pathDocument)
         if not parts.scheme:
             self.pathDocument = str(Path(self.pathDocument).absolute().resolve())
-        self.pathDirectory = getDirName(self.pathDocument)
+        self.pathDirectory: str = getDirName(self.pathDocument)
 
-        self.meta = {
+        self.meta: dict[str, str | tuple[float, float]] = {
             "author": "",
             "title": "",
             "subject": "",

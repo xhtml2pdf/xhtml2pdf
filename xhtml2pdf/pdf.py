@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from __future__ import annotations
 
 import logging
 from io import BytesIO
@@ -24,9 +24,9 @@ log = logging.getLogger(__name__)
 
 
 class pisaPDF:
-    def __init__(self, capacity=-1):
+    def __init__(self, capacity=-1) -> None:
         self.capacity = capacity
-        self.files = []
+        self.files: list[BytesIO] = []
 
     def addFromURI(self, url, basepath=None):
         obj = getFile(url, basepath)

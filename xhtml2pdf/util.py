@@ -11,12 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from __future__ import annotations
 
 import contextlib
 import logging
 import re
 from copy import copy
+from typing import Any
 
 import arabic_reshaper
 import reportlab
@@ -54,8 +55,8 @@ class Memoized:
     and that are called often. It's a perfect match for our getSize etc...
     """
 
-    def __init__(self, func):
-        self.cache = {}
+    def __init__(self, func) -> None:
+        self.cache: dict = {}
         self.func = func
         self.__doc__ = self.func.__doc__  # To avoid great confusion
         self.__name__ = self.func.__name__  # This also avoids great confusion
@@ -75,11 +76,9 @@ class Memoized:
             return self.func(*args, **kwargs)
 
 
-def toList(value, *, cast_tuple=True):
-    cls = (list, tuple) if cast_tuple else (list)
-    if not isinstance(value, cls):
-        return [value]
-    return list(value)
+def toList(value: Any, *, cast_tuple: bool = True) -> list:
+    cls: tuple[type, ...] = (list, tuple) if cast_tuple else (list,)
+    return list(value) if isinstance(value, cls) else [value]
 
 
 def transform_attrs(obj, keys, container, func, extras=None):

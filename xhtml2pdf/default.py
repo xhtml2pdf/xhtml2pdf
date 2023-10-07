@@ -57,21 +57,25 @@ from reportlab.lib.pagesizes import (
     TABLOID,
 )
 
-PML_WARNING = "warning"
-PML_ERROR = "error"
-PML_EXCEPTION = "PML Exception"
-PML_PREFIX = "pdf:"
+BOOL: int
+MUST: int
+TAGS: dict
+DEFAULT_CSS: str
+PML_WARNING: str = "warning"
+PML_ERROR: str = "error"
+PML_EXCEPTION: str = "PML Exception"
+PML_PREFIX: str = "pdf:"
 
 # CLASS   = 1
 BOOL = 2
-FONT = 3
-COLOR = 4
-FILE = 5
-SIZE = 6
-INT = 7
-STRING = 8
-BOX = 9
-POS = 10
+FONT: int = 3
+COLOR: int = 4
+FILE: int = 5
+SIZE: int = 6
+INT: int = 7
+STRING: int = 8
+BOX: int = 9
+POS: int = 10
 # STYLE   = 11
 MUST = 23
 

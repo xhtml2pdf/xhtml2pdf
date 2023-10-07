@@ -6,7 +6,7 @@ from xhtml2pdf.parser import pisaParser
 
 
 class HttpTest(TestCase):
-    def test_timeout(self):
+    def test_timeout(self) -> None:
         """Test why some http request doesn't have a timeout"""
         html = """<!DOCTYPE html>
 <html lang="bs">
@@ -24,6 +24,6 @@ class HttpTest(TestCase):
 </html>
     """
 
-        pisaParser(BytesIO(html.encode("utf-8")), pisaContext(None))
+        pisaParser(BytesIO(html.encode("utf-8")), pisaContext())
 
         self.assertEqual(1, 1)

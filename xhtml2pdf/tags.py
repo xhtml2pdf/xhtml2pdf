@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from __future__ import annotations
 
 import copy
 import json
@@ -19,6 +19,7 @@ import logging
 import re
 import string
 import warnings
+from typing import ClassVar
 
 from reportlab.graphics.barcode import createBarcodeDrawing
 from reportlab.graphics.charts.legends import Legend
@@ -53,7 +54,7 @@ def deprecation(message):
 class pisaTag:
     """The default class for a tag definition."""
 
-    def __init__(self, node, attr):
+    def __init__(self, node, attr) -> None:
         self.node = node
         self.tag = node.tagName
         self.attr = attr
@@ -692,7 +693,7 @@ class pisaTagPDFFONT(pisaTag):
 
 
 class pisaTagPDFBARCODE(pisaTag):
-    _codeName = {
+    _codeName: ClassVar[dict[str, str]] = {
         "I2OF5": "I2of5",
         "ITF": "I2of5",
         "CODE39": "Standard39",
@@ -715,7 +716,7 @@ class pisaTagPDFBARCODE(pisaTag):
     class _barcodeWrapper(Flowable):
         """Wrapper for barcode widget."""
 
-        def __init__(self, codeName="Code128", value="", **kw):
+        def __init__(self, codeName="Code128", value="", **kw) -> None:
             self.vertical = kw.get("vertical", 0)
             self.widget = createBarcodeDrawing(codeName, value=value, **kw)
 
@@ -789,7 +790,7 @@ class pisaTagPDFBARCODE(pisaTag):
 
 
 class pisaTagCANVAS(pisaTag):
-    def __init__(self, node, attr):
+    def __init__(self, node, attr) -> None:
         super().__init__(node, attr)
         self.chart = None
         self.shapes = {

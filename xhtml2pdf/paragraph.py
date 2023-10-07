@@ -29,11 +29,12 @@ Todo:
 - Sub and super
 
 """
-
+from __future__ import annotations
 
 import copy
 import logging
 import re
+from typing import Any, ClassVar
 
 from reportlab.lib.colors import Color
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
@@ -51,7 +52,7 @@ class Style(dict):
     naming follows the convention of CSS written in camelCase letters.
     """
 
-    DEFAULT = {
+    DEFAULT: ClassVar[dict[str, Any]] = {
         "textAlign": TA_LEFT,
         "textIndent": 0.0,
         "width": None,
@@ -65,7 +66,7 @@ class Style(dict):
         "link": None,
     }
 
-    def __init__(self, **kw):
+    def __init__(self, **kw) -> None:
         self.update(self.DEFAULT)
         self.update(kw)
         self.spaceBefore = 0
@@ -94,7 +95,7 @@ class Box(dict):
 
     """
 
-    name = "box"
+    name: str = "box"
 
     def drawBox(self, canvas, x, y, w, h):
         canvas.saveState()
@@ -241,12 +242,12 @@ class Line(list):
 
     LINEHEIGHT = 1.0
 
-    def __init__(self, style):
+    def __init__(self, style) -> None:
         self.width = 0
         self.height = 0
         self.isLast = False
         self.style = style
-        self.boxStack = []
+        self.boxStack: list = []
         list.__init__(self)
 
     def doAlignment(self, width, alignment):
@@ -313,17 +314,17 @@ class Text(list):
     and positions.
     """
 
-    def __init__(self, data=None, style=None):
+    def __init__(self, data=None, style=None) -> None:
         # Mutable arguments are a shit idea
         if data is None:
             data = []
 
-        self.lines = []
-        self.width = 0
-        self.height = 0
-        self.maxWidth = 0
-        self.maxHeight = 0
-        self.style = style
+        self.lines: list = []
+        self.width: int = 0
+        self.height: int = 0
+        self.maxWidth: int = 0
+        self.maxHeight: int = 0
+        self.style: Style = style
         super().__init__(data)
 
     def calc(self):
@@ -331,7 +332,9 @@ class Text(list):
         for word in self:
             word.calc()
 
-    def splitIntoLines(self, maxWidth, maxHeight, *, splitted=False):
+    def splitIntoLines(
+        self, maxWidth: int, maxHeight: int, *, splitted: bool = False
+    ) -> int | None:
         """
         Split text into lines and calculate X positions. If we need more
         space in height than available we return the rest of the text.
@@ -340,7 +343,7 @@ class Text(list):
         self.height = 0
         self.maxWidth = self.width = maxWidth
         self.maxHeight = maxHeight
-        boxStack = []
+        boxStack: list = []
 
         style = self.style
         x = 0
@@ -438,7 +441,7 @@ class Paragraph(Flowable):
 
     def __init__(
         self, text, style, debug=False, splitted=False, **kwDict  # noqa: FBT002
-    ):
+    ) -> None:
         Flowable.__init__(self)
 
         self.text = text
@@ -570,7 +573,7 @@ class Paragraph(Flowable):
 
 
 class PageNumberFlowable(Flowable):
-    def __init__(self):
+    def __init__(self) -> None:
         Flowable.__init__(self)
         self.page = None
         self.pagecount = None
