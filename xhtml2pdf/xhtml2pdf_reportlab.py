@@ -536,17 +536,22 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
                 # Apply size
                 scale_x = 1
                 scale_y = 1
-                if getattr(self, "drawWidth", None) is not None:
-                    if width is None:
-                        width = self.drawWidth
-                    scale_x = width / drawing.width
-                if getattr(self, "drawHeight", None) is not None:
-                    if height is None:
-                        height = self.drawHeight
-                    scale_y = height / drawing.height
-                if scale_x != 1 or scale_y != 1:
-                    drawing.scale(scale_x, scale_y)
-
+                try:
+                    if getattr(self, "drawWidth", None) is not None:
+                        if width is None:
+                            width = self.drawWidth
+                        scale_x = width / drawing.width
+                    if getattr(self, "drawHeight", None) is not None:
+                        if height is None:
+                            height = self.drawHeight
+                        scale_y = height / drawing.height
+                    if scale_x != 1 or scale_y != 1:
+                        drawing.scale(scale_x, scale_y)
+                except ZeroDivisionError:
+                    log.warning(
+                        "SVG drawing could not be resized: %r",
+                        self.src or self._imgdata[:50],
+                    )
                 return drawing
         return None
 

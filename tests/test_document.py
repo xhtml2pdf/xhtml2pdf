@@ -154,6 +154,27 @@ class DocumentTest(TestCase):
 
             self.assertEqual(len(pdf_reader.pages), 2)
 
+    def test_document_with_broken_image(self) -> None:
+        """Test that broken images don't cause unhandled exception"""
+        # Although this is just html, it will be recognized as svg
+        image_path = "https://raw.githubusercontent.com/xhtml2pdf/xhtml2pdf/b01b1d8f9497dedd0f2454409d03408bdeea997c/tests/samples/images.html"
+        extra_html = f'<img src="{image_path}">'
+        with open(os.devnull, "wb") as pdf_file, self.assertLogs(
+            "xhtml2pdf.xhtml2pdf_reportlab", level="WARNING"
+        ) as cm:
+            pisaDocument(
+                src=io.StringIO(HTML_CONTENT.format(head="", extra_html=extra_html)),
+                dest=pdf_file,
+            )
+            self.assertEqual(
+                cm.output,
+                [
+                    "WARNING:xhtml2pdf.xhtml2pdf_reportlab:SVG drawing could not be"
+                    " resized:"
+                    " 'https://raw.githubusercontent.com/xhtml2pdf/xhtml2pdf/b01b1d8f9497dedd0f2454409d03408bdeea997c/tests/samples/images.html'"
+                ],
+            )
+
     def test_document_nested_table(self) -> None:
         """Test that nested tables are being rendered."""
         tests_folder = os.path.dirname(os.path.realpath(__file__))
