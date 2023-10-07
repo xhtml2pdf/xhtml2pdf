@@ -11,7 +11,7 @@ This is a typical Python library and is installed using pip
 Requirements
 ------------
 
-Python 3.7+
+Python 3.8+
 
 All additional requirements are listed in ``pyproject.toml`` file and are
 installed automatically using the ``pip install xhtml2pdf`` method.
