@@ -15,12 +15,10 @@ from urllib.parse import unquote as urllib_unquote
 
 from xhtml2pdf.config.httpconfig import httpConfig
 
+log = logging.getLogger(__name__)
+
 GAE = "google.appengine" in sys.modules
-log = logging.getLogger("xhtml2pdf")
-if GAE:
-    STRATEGIES = (BytesIO, BytesIO)
-else:
-    STRATEGIES = (BytesIO, tempfile.NamedTemporaryFile)
+STRATEGIES = (BytesIO, BytesIO) if GAE else (BytesIO, tempfile.NamedTemporaryFile)
 
 
 class TmpFiles(threading.local):
@@ -38,7 +36,7 @@ class TmpFiles(threading.local):
 files_tmp = TmpFiles()  # permanent safe file, to prevent file close
 
 
-class pisaTempFile(object):
+class pisaTempFile:
     """
     A temporary file implementation that uses memory unless
     either capacity is breached or fileno is requested, at which
@@ -46,7 +44,7 @@ class pisaTempFile(object):
     details returned
     If capacity is -1 the second strategy will never be used.
     Inspired by:
-    http://code.activestate.com/recipes/496744/
+    http://code.activestate.com/recipes/496744/.
     """
 
     STRATEGIES = STRATEGIES
@@ -54,7 +52,8 @@ class pisaTempFile(object):
     CAPACITY = 10 * 1024
 
     def __init__(self, buffer="", capacity=CAPACITY):
-        """Creates a TempFile object containing the specified buffer.
+        """
+        Creates a TempFile object containing the specified buffer.
         If capacity is specified, we use a real temporary file once the
         file gets larger than that size.  Otherwise, the data is stored
         in memory.
@@ -74,9 +73,8 @@ class pisaTempFile(object):
     def makeTempFile(self):
         """
         Switch to next startegy. If an error occured,
-        stay with the first strategy
+        stay with the first strategy.
         """
-
         if self.strategy == 0:
             try:
                 new_delegate = self.STRATEGIES[1]()
@@ -84,14 +82,11 @@ class pisaTempFile(object):
                 self._delegate = new_delegate
                 self.strategy = 1
                 log.warning("Created temporary file %s", self.name)
-            except:
+            except Exception:
                 self.capacity = -1
 
     def getFileName(self):
-        """
-        Get a named temporary file
-        """
-
+        """Get a named temporary file."""
         self.makeTempFile()
         return self.name
 
@@ -106,9 +101,8 @@ class pisaTempFile(object):
     def getvalue(self):
         """
         Get value of file. Work around for second strategy.
-        Always returns bytes
+        Always returns bytes.
         """
-
         if self.strategy == 0:
             return self._delegate.getvalue()
         self._delegate.flush()
@@ -119,10 +113,7 @@ class pisaTempFile(object):
         return value
 
     def write(self, value):
-        """
-        If capacity != -1 and length of file > capacity it is time to switch
-        """
-
+        """If capacity != -1 and length of file > capacity it is time to switch."""
         if self.capacity > 0 and self.strategy == 0:
             len_value = len(value)
             if len_value >= self.capacity:
@@ -141,10 +132,9 @@ class pisaTempFile(object):
     def __getattr__(self, name):
         try:
             return getattr(self._delegate, name)
-        except AttributeError:
-            # hide the delegation
-            e = "object '%s' has no attribute '%s'" % (self.__class__.__name__, name)
-            raise AttributeError(e)
+        except AttributeError as e:
+            msg = f"object '{type(self).__name__}' has no attribute '{name}'"
+            raise AttributeError(msg) from e
 
 
 class BaseFile:
@@ -177,6 +167,7 @@ class BaseFile:
         data = self.get_data()
         if data:
             return BytesIO(data)
+        return None
 
 
 class B64InlineURI(BaseFile):
@@ -187,8 +178,8 @@ class B64InlineURI(BaseFile):
     def get_data(self):
         try:
             return self.extract_data()
-        except Exception as e:
-            log.error("Extract data form data: in tag")
+        except Exception:
+            log.exception("Error while extracting data form data in tag")
 
     def extract_data(self):
         m = self._rx_datauri.match(self.path)
@@ -212,8 +203,10 @@ class LocalProtocolURI(BaseFile):
     def get_data(self):
         try:
             return self.extract_data()
-        except Exception as e:
-            log.error("Extract data form local file based on protocol")
+        except Exception:
+            log.exception(
+                "Error while extracting data form local file based on protocol"
+            )
 
     def extract_data(self):
         if self.basepath and self.path.startswith("/"):
@@ -221,6 +214,7 @@ class LocalProtocolURI(BaseFile):
             urlResponse = request.urlopen(uri)
             self.mimetype = urlResponse.info().get("Content-Type", "").split(";")[0]
             return urlResponse.read()
+        return None
 
 
 class NetworkFileUri(BaseFile):
@@ -236,12 +230,14 @@ class NetworkFileUri(BaseFile):
             self.actual_attempts += 1
             try:
                 data = self.extract_data()
-            except Exception as e:
-                log.error("Extract data remote trying %d" % self.actual_attempts)
+            except Exception:
+                log.exception(
+                    "Error while extracting data remote trying %d", self.actual_attempts
+                )
         return data
 
     def get_httplib(self, uri):
-        log.debug(f"Sending request for {uri} with httplib")
+        log.debug("Sending request for %r with httplib", uri)
         data, is_gzip = None, False
         url_splitted = urlparse.urlsplit(uri)
         server = url_splitted[1]
@@ -260,7 +256,7 @@ class NetworkFileUri(BaseFile):
             if r1.getheader("content-encoding") == "gzip":
                 is_gzip = True
         else:
-            log.debug(f"Received non-200 status: {r1.status} {r1.reason}")
+            log.debug("Received non-200 status: %d %s", r1.status, r1.reason)
         return data, is_gzip
 
     def extract_data(self):
@@ -273,7 +269,7 @@ class NetworkFileUri(BaseFile):
         data, is_gzip = self.get_httplib(uri)
         if is_gzip:
             data = gzip.GzipFile(mode="rb", fileobj=BytesIO(data))
-        log.debug("Uri parsed: {}".format(uri))
+        log.debug("Uri parsed: %r", uri)
         return data
 
 
@@ -281,11 +277,12 @@ class LocalFileURI(BaseFile):
     def get_data(self):
         try:
             return self.extract_data()
-        except Exception as e:
-            log.error("Extract data form local file")
+        except Exception:
+            log.exception("Error while extracting data form local file")
 
-    def guess_mimetype(self, name):
-        "Guess the mime type"
+    @staticmethod
+    def guess_mimetype(name):
+        """Guess the mime type."""
         mimetype = mimetypes.guess_type(str(name))[0]
         if mimetype is not None:
             mimetype = mimetypes.guess_type(str(name))[0].split(";")[0]
@@ -296,10 +293,7 @@ class LocalFileURI(BaseFile):
         log.debug("Unrecognized scheme, assuming local file path")
         path = Path(self.path)
         uri = None
-        if self.basepath is not None:
-            uri = Path(self.basepath) / path
-        else:
-            uri = Path(".") / path
+        uri = Path(self.basepath) / path if self.basepath is not None else Path() / path
         if path.exists() and not uri.exists():
             uri = path
         if uri.is_file():
@@ -307,7 +301,7 @@ class LocalFileURI(BaseFile):
             self.suffix = uri.suffix
             self.mimetype = self.guess_mimetype(uri)
             if self.mimetype and self.mimetype.startswith("text"):
-                with open(uri, "r") as file_handler:
+                with open(uri) as file_handler:
                     # removed bytes... lets hope it goes ok :/
                     data = file_handler.read()
             else:
@@ -338,7 +332,7 @@ class LocalTmpFile(BaseFile):
 
     def get_data(self):
         if self.path is None:
-            return
+            return None
         with open(self.path, "rb") as arch:
             return arch.read()
 
@@ -347,8 +341,7 @@ class FileNetworkManager:
     @staticmethod
     def get_manager(uri, basepath=None):
         if uri is None:
-            instance = LocalTmpFile(uri, basepath)
-            return instance
+            return LocalTmpFile(uri, basepath)
         if isinstance(uri, bytes):
             instance = BytesFileUri(uri, basepath)
         elif uri.startswith("data:"):
@@ -359,7 +352,7 @@ class FileNetworkManager:
             else:
                 urlParts = urlparse.urlparse(uri)
 
-            log.debug("URLParts: {}".format((urlParts, urlParts.scheme)))
+            log.debug("URLParts: %r, %r", urlParts, urlParts.scheme)
             if urlParts.scheme == "file":
                 instance = LocalProtocolURI(uri, basepath)
             elif urlParts.scheme in ("http", "https"):
@@ -394,6 +387,7 @@ class pisaFileObject:
         f = self.instance.get_named_tmp_file()
         if f:
             return f.name
+        return None
 
     def getData(self):
         return self.instance.get_data()

@@ -4,21 +4,14 @@ from xhtml2pdf.w3c.css import CSSBuilder, CSSParser
 
 
 class CssMediaRuleTest(TestCase):
-    """
-    Test cases for the css @media rule (https://www.w3.org/TR/css3-mediaqueries/)
-    """
+    """Test cases for the css @media rule (https://www.w3.org/TR/css3-mediaqueries/)"""
 
     def setUp(self):
-        """
-        Setup css parser for all test cases
-        """
+        """Setup css parser for all test cases"""
         self.parser = CSSParser(CSSBuilder(mediumSet=["all"]))
 
     def test_media_all(self):
-        """
-        Test if the rule "@media all {" works
-        """
-
+        """Test if the rule "@media all {" works"""
         media_all = """
             @media all {
                 p { color: yellow; }
@@ -31,10 +24,7 @@ class CssMediaRuleTest(TestCase):
         self.assertDictEqual(css_media_all, {"color": "yellow"})
 
     def test_media_all_and(self):
-        """
-        Test if the rule "@media all and (...) {" works
-        """
-
+        """Test if the rule "@media all and (...) {" works"""
         media_all_and = """
             @media all and (max-width: 500px) {
                 p { color: yellow; }
@@ -47,10 +37,7 @@ class CssMediaRuleTest(TestCase):
         self.assertDictEqual(css_media_all_and, {"color": "yellow"})
 
     def test_media_all_default(self):
-        """
-        Test if the rule "@media (...) {" works (no media type defaults to "all")
-        """
-
+        """Test if the rule "@media (...) {" works (no media type defaults to "all")"""
         media_all_default = """
             @media (max-width: 500px) {
                 p { color: yellow; }
@@ -64,4 +51,4 @@ class CssMediaRuleTest(TestCase):
 
     @staticmethod
     def _get_first_dict_value(dictionary):
-        return dictionary[list(dictionary.keys())[0]]
+        return dictionary[next(iter(dictionary.keys()))]

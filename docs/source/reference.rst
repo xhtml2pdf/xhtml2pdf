@@ -2,7 +2,7 @@ Reference
 ==========
 
 Supported @page properties and values
---------------------------------------------
+-------------------------------------
 
 Valid @page properties:
 
@@ -34,7 +34,7 @@ Valid size syntax and values:
 
 
 Supported @frame properties:
------------------------------
+----------------------------
 
 Valid @frame properties.
 
@@ -49,7 +49,7 @@ two out of three bottom/top/height properties, and
 two out of three left/right/width properties per @frame object.
 
 Supported CSS properties
-----------------------------
+------------------------
 
 xhtml2pdf supports the following standard CSS properties
 
@@ -89,7 +89,7 @@ xhtml2pdf adds the following vendor-specific properties:
      -pdf-page-break
 
 Create PDF
--------------
+----------
 
 The main function of xhtml2pdf is called CreatePDF(). It offers the
 following arguments in this order:
@@ -147,7 +147,7 @@ Defaults
 
 
 Fonts
---------
+-----
 
 By default there is just a certain set of fonts available for PDF. Here
 is the complete list - and their repective alias names - ``xhtml2pdf``
@@ -303,7 +303,7 @@ Please check the following example:
 
 
 Outlines/ Bookmarks
-------------------------
+-------------------
 
 PDF supports outlines (Adobe calls them "bookmarks"). By default
 ``xhtml2pdf`` defines the ``<h1>`` to ``<h6>`` tags to be shown in the
@@ -330,7 +330,7 @@ Example:
     }
 
 Table of Contents
----------------------
+-----------------
 
 It is possible to automatically generate a Table of Contents (TOC) with
 ``xhtml2pdf``. By default all headings from ``<h1>`` to ``<h6>`` will be
@@ -359,7 +359,7 @@ simple example for a nice looking CSS:
     }
 
 Tables
---------
+------
 
 Tables are supported but may behave a little different to the way you
 might expect them to do. These restriction are due to the underlying
@@ -370,7 +370,7 @@ table mechanism of ReportLab.
 -  Tables can not float left or right and can not be inlined
 
 Long cells
-------------
+----------
 
 ``xhtml2pdf`` is not able to split table cells that are larger than the available
 space. To work around it you may define what should happen in this case.
@@ -382,14 +382,14 @@ The ``-pdf-keep-in-frame-mode`` can be one of: "error", "overflow",
     table {    -pdf-keep-in-frame-mode: shrink;}
 
 Cell widths
-------------
+-----------
 
 The table renderer is not able to adjust the width of the table
 automatically. Therefore you should explicitly set the width of the
 table and to the table rows or cells.
 
 Headers
---------
+-------
 
 It is possible to repeat table rows if a page break occurs within a
 table. The number of repeated rows is passed in the property
@@ -408,7 +408,7 @@ Borders
 Borders are supported. Use corresponding CSS styles.
 
 Images
---------
+------
 
 Size
 ----
@@ -450,7 +450,7 @@ is achieved through ``align`` property and available values are any of
     <pdf:barcode value="BARCODE TEXT COMES HERE" type="code128" humanreadable="1" align="right" />
 
 Custom Tags
---------------
+-----------
 
 ``xhtml2pdf`` provides some custom tags. They are all prefixed by the
 namespace identifier ``pdf:``. As the HTML5 parser used by xhtml2pdf
@@ -479,7 +479,7 @@ Prints current page number. The argument "example" defines the space the
 page number will require e.g. "00".
 
 pdf:pagecount
-~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
 
 Prints total page count.
 

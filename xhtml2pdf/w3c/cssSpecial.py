@@ -17,25 +17,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+# ruff: noqa: N802, N803, N815, N816, N999
+
 import logging
 
-__reversion__ = "$Revision: 20 $"
-__author__ = "$Author: holtwick $"
-__date__ = "$Date: 2007-10-09 12:58:24 +0200 (Di, 09 Okt 2007) $"
+from xhtml2pdf.util import toList
 
-
-# support python 3
-# import types
-TupleType = tuple
-ListType = list
-
-log = logging.getLogger("ho.css")
-
-
-def toList(value):
-    if type(value) != ListType:
-        return [value]
-    return value
+log = logging.getLogger(__name__)
 
 
 _styleTable = {"normal": "", "italic": "", "oblique": ""}
@@ -90,15 +78,11 @@ _borderStyleTable = {
 
 
 def getNextPart(parts):
-    if parts:
-        part = parts.pop(0)
-    else:
-        part = None
-    return part
+    return parts.pop(0) if parts else None
 
 
 def isSize(value):
-    return value and ((type(value) is TupleType) or value == "0")
+    return value and (isinstance(value, tuple) or value == "0")
 
 
 def splitBorder(parts):
@@ -107,7 +91,6 @@ def splitBorder(parts):
 
     http://www.w3.org/TR/CSS21/box.html#border-shorthand-properties
     """
-
     width = style = color = None
 
     if len(parts) > 3:
@@ -142,7 +125,7 @@ def parseSpecialRules(declarations, debug=0):
 
         name, parts, last = d
         oparts = parts
-        parts = toList(parts)
+        parts = toList(parts, cast_tuple=False)
 
         # FONT
         if name == "font":
@@ -164,8 +147,9 @@ def parseSpecialRules(declarations, debug=0):
             if isinstance(part, tuple) and len(part) == 3:
                 fontSize, slash, lineHeight = part
                 assert slash == "/"
-                dd.append(("font-size", fontSize, last))
-                dd.append(("line-height", lineHeight, last))
+                dd.extend(
+                    (("font-size", fontSize, last), ("line-height", lineHeight, last))
+                )
             else:
                 dd.append(("font-size", part, last))
                 # Face/ Family
@@ -216,10 +200,14 @@ def parseSpecialRules(declarations, debug=0):
                 left = parts[3]
             else:
                 continue
-            dd.append(("margin-left", left, last))
-            dd.append(("margin-right", right, last))
-            dd.append(("margin-top", top, last))
-            dd.append(("margin-bottom", bottom, last))
+            dd.extend(
+                (
+                    ("margin-left", left, last),
+                    ("margin-right", right, last),
+                    ("margin-top", top, last),
+                    ("margin-bottom", bottom, last),
+                )
+            )
 
         # PADDING
         elif name == "padding":
@@ -239,10 +227,14 @@ def parseSpecialRules(declarations, debug=0):
                 left = parts[3]
             else:
                 continue
-            dd.append(("padding-left", left, last))
-            dd.append(("padding-right", right, last))
-            dd.append(("padding-top", top, last))
-            dd.append(("padding-bottom", bottom, last))
+            dd.extend(
+                (
+                    ("padding-left", left, last),
+                    ("padding-right", right, last),
+                    ("padding-top", top, last),
+                    ("padding-bottom", bottom, last),
+                )
+            )
 
         # BORDER WIDTH
         elif name == "border-width":
@@ -262,10 +254,14 @@ def parseSpecialRules(declarations, debug=0):
                 left = parts[3]
             else:
                 continue
-            dd.append(("border-left-width", left, last))
-            dd.append(("border-right-width", right, last))
-            dd.append(("border-top-width", top, last))
-            dd.append(("border-bottom-width", bottom, last))
+            dd.extend(
+                (
+                    ("border-left-width", left, last),
+                    ("border-right-width", right, last),
+                    ("border-top-width", top, last),
+                    ("border-bottom-width", bottom, last),
+                )
+            )
 
         # BORDER COLOR
         elif name == "border-color":
@@ -285,10 +281,14 @@ def parseSpecialRules(declarations, debug=0):
                 left = parts[3]
             else:
                 continue
-            dd.append(("border-left-color", left, last))
-            dd.append(("border-right-color", right, last))
-            dd.append(("border-top-color", top, last))
-            dd.append(("border-bottom-color", bottom, last))
+            dd.extend(
+                (
+                    ("border-left-color", left, last),
+                    ("border-right-color", right, last),
+                    ("border-top-color", top, last),
+                    ("border-bottom-color", bottom, last),
+                )
+            )
 
         # BORDER STYLE
         elif name == "border-style":
@@ -308,29 +308,45 @@ def parseSpecialRules(declarations, debug=0):
                 left = parts[3]
             else:
                 continue
-            dd.append(("border-left-style", left, last))
-            dd.append(("border-right-style", right, last))
-            dd.append(("border-top-style", top, last))
-            dd.append(("border-bottom-style", bottom, last))
+            dd.extend(
+                (
+                    ("border-left-style", left, last),
+                    ("border-right-style", right, last),
+                    ("border-top-style", top, last),
+                    ("border-bottom-style", bottom, last),
+                )
+            )
 
         # BORDER
         elif name == "border":
             width, style, color = splitBorder(parts)
             if width is not None:
-                dd.append(("border-left-width", width, last))
-                dd.append(("border-right-width", width, last))
-                dd.append(("border-top-width", width, last))
-                dd.append(("border-bottom-width", width, last))
+                dd.extend(
+                    (
+                        ("border-left-width", width, last),
+                        ("border-right-width", width, last),
+                        ("border-top-width", width, last),
+                        ("border-bottom-width", width, last),
+                    )
+                )
             if style is not None:
-                dd.append(("border-left-style", style, last))
-                dd.append(("border-right-style", style, last))
-                dd.append(("border-top-style", style, last))
-                dd.append(("border-bottom-style", style, last))
+                dd.extend(
+                    (
+                        ("border-left-style", style, last),
+                        ("border-right-style", style, last),
+                        ("border-top-style", style, last),
+                        ("border-bottom-style", style, last),
+                    )
+                )
             if color is not None:
-                dd.append(("border-left-color", color, last))
-                dd.append(("border-right-color", color, last))
-                dd.append(("border-top-color", color, last))
-                dd.append(("border-bottom-color", color, last))
+                dd.extend(
+                    (
+                        ("border-left-color", color, last),
+                        ("border-right-color", color, last),
+                        ("border-top-color", color, last),
+                        ("border-bottom-color", color, last),
+                    )
+                )
 
         # BORDER TOP, BOTTOM, LEFT, RIGHT
         elif name in ("border-top", "border-bottom", "border-left", "border-right"):

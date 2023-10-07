@@ -354,9 +354,7 @@ class BorderStyleTest(TestCase):
 
 
 class BorderSplitTest(TestCase):
-    """
-    Tests the functionality of splitBorder(), that should output (width, style color)
-    """
+    """Tests the functionality of splitBorder(), that should output (width, style color)"""
 
     def test_split_border_empty(self):
         func_in = []

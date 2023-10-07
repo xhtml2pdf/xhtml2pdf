@@ -9,7 +9,7 @@ This is a typical Python library and is installed using pip
     pip install xhtml2pdf
 
 Requirements
---------------
+------------
 
 Python 3.7+
 
@@ -18,7 +18,7 @@ installed automatically using the ``pip install xhtml2pdf`` method.
 
 
 Development environment
----------------------------
+-----------------------
 
 #. If you don't have it, install ``pip``, the python package installer
 

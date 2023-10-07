@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from reportlab.lib.colors import Color
 
+from xhtml2pdf.files import pisaTempFile
 from xhtml2pdf.tags import int_to_roman
 from xhtml2pdf.util import (
     copy_attrs,
@@ -14,11 +15,10 @@ from xhtml2pdf.util import (
     set_value,
     transform_attrs,
 )
-from xhtml2pdf.files import pisaTempFile
 
 
 class UtilsCoordTestCase(TestCase):
-    def test_getCoords_simple(self):
+    def test_get_coordinates_simple(self):
         res = getCoords(1, 1, 10, 10, (10, 10))
         self.assertEqual(res, (1, -1, 10, 10))
 
@@ -26,23 +26,23 @@ class UtilsCoordTestCase(TestCase):
         res = getCoords(1, 1, 10, 10, (10, 10))
         self.assertEqual(res, (1, -1, 10, 10))
 
-    def test_getCoords_x_lt_0(self):
+    def test_get_coordinates_x_lt_0(self):
         res = getCoords(-1, 1, 10, 10, (10, 10))
         self.assertEqual(res, (9, -1, 10, 10))
 
-    def test_getCoords_y_lt_0(self):
+    def test_get_coordinates_y_lt_0(self):
         res = getCoords(1, -1, 10, 10, (10, 10))
         self.assertEqual(res, (1, -9, 10, 10))
 
-    def test_getCoords_w_and_h_none(self):
+    def test_get_coordinates_w_and_h_none(self):
         res = getCoords(1, 1, None, None, (10, 10))
         self.assertEqual(res, (1, 9))
 
-    def test_getCoords_w_lt_0(self):
+    def test_get_coordinates_w_lt_0(self):
         res = getCoords(1, 1, -1, 10, (10, 10))
         self.assertEqual(res, (1, -1, 8, 10))
 
-    def test_getCoords_h_lt_0(self):
+    def test_get_coordinates_h_lt_0(self):
         res = getCoords(1, 1, 10, -1, (10, 10))
         self.assertEqual(res, (1, 1, 10, 8))
 
@@ -142,25 +142,25 @@ class UtilsGetSizeTestCase(TestCase):
 
 
 class PisaDimensionTestCase(TestCase):
-    def test_FrameDimensions_left_top_width_height(self):
+    def test_frame_dimensions_left_top_width_height(self):
         dims = {"left": "10pt", "top": "20pt", "width": "30pt", "height": "40pt"}
         expected = (10.0, 20.0, 30.0, 40.0)
         result = getFrameDimensions(dims, 100, 200)
         self.assertEqual(expected, result)
 
-    def test_FrameDimensions_left_top_bottom_right(self):
+    def test_frame_dimensions_left_top_bottom_right(self):
         dims = {"left": "10pt", "top": "20pt", "bottom": "30pt", "right": "40pt"}
         expected = (10.0, 20.0, 50.0, 150.0)
         result = getFrameDimensions(dims, 100, 200)
         self.assertEqual(expected, result)
 
-    def test_FrameDimensions_bottom_right_width_height(self):
+    def test_frame_dimensions_bottom_right_width_height(self):
         dims = {"bottom": "10pt", "right": "20pt", "width": "70pt", "height": "80pt"}
         expected = (10.0, 110.0, 70.0, 80.0)
         result = getFrameDimensions(dims, 100, 200)
         self.assertEqual(expected, result)
 
-    def test_FrameDimensions_left_top_width_height_with_margin(self):
+    def test_frame_dimensions_left_top_width_height_with_margin(self):
         dims = {
             "left": "10pt",
             "top": "20pt",
@@ -175,7 +175,7 @@ class PisaDimensionTestCase(TestCase):
         result = getFrameDimensions(dims, 100, 200)
         self.assertEqual(expected, result)
 
-    def test_FrameDimensions_bottom_right_width_height_with_margin(self):
+    def test_frame_dimensions_bottom_right_width_height_with_margin(self):
         dims = {
             "bottom": "10pt",
             "right": "20pt",
@@ -196,10 +196,10 @@ class PisaDimensionTestCase(TestCase):
         result = getFrameDimensions(dims, 100, 200)
         self.assertEqual(result, expected)
 
-    def test_trame_dimentions_for_height_without_top_or_bottom(self):
+    def test_frame_dimensions_for_height_without_top_or_bottom(self):
         dims = {
             "left": "10pt",
-            #'top': '20pt',
+            # 'top': '20pt',
             "width": "30pt",
             "height": "40pt",
         }
@@ -207,9 +207,9 @@ class PisaDimensionTestCase(TestCase):
         result = getFrameDimensions(dims, 100, 200)
         self.assertEqual(expected, result)
 
-    def test_trame_dimentions_for_width_without_left_or_right(self):
+    def test_frame_dimensions_for_width_without_left_or_right(self):
         dims = {
-            #'left': '10pt',
+            # 'left': '10pt',
             "top": "20pt",
             "width": "30pt",
             "height": "40pt",

@@ -13,15 +13,15 @@
 # limitations under the License.
 
 import logging
-
+from abc import abstractmethod
 from io import StringIO
 
-import xhtml2pdf.pisa as pisa
+from xhtml2pdf import pisa
 
-log = logging.getLogger("xhtml2pdf.wsgi")
+log = logging.getLogger(__name__)
 
 
-class Filter(object):
+class Filter:
     def __init__(self, app):
         self.app = app
 
@@ -34,9 +34,8 @@ class Filter(object):
         def replacement_start_response(status, headers, exc_info=None):
             if not self.should_filter(status, headers):
                 return start_response(status, headers, exc_info)
-            else:
-                sent[:] = [status, headers, exc_info]
-                return written_response.write
+            sent[:] = [status, headers, exc_info]
+            return written_response.write
 
         app_iter = self.app(environ, replacement_start_response)
         if not sent:
@@ -55,15 +54,18 @@ class Filter(object):
         start_response(status, headers, exc_info)
         return [body]
 
-    def should_filter(self, status, headers):
+    @staticmethod
+    def should_filter(_status, headers):
         print(headers)
 
-    def filter(self, status, headers, body):
+    @abstractmethod
+    def filter(self, status, headers, body):  # noqa: A003
         raise NotImplementedError
 
 
 class HTMLFilter(Filter):
-    def should_filter(self, status, headers):
+    @staticmethod
+    def should_filter(status, headers):
         if not status.startswith("200"):
             return False
         for name, value in headers:
@@ -73,7 +75,8 @@ class HTMLFilter(Filter):
 
 
 class PisaMiddleware(HTMLFilter):
-    def filter(self, script_name, path_info, environ, status, headers, body):
+    @staticmethod
+    def filter(_script_name, _path_info, environ, status, headers, body):  # noqa: A003
         topdf = environ.get("pisa.topdf", "")
         if topdf:
             dst = StringIO()

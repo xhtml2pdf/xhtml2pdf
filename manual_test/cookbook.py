@@ -19,28 +19,24 @@ Most people know how to write a page with HTML and CSS. Why not using these skil
 dynamically generate PDF documents using it? The "pisa" project
 http://www.htmltopdf.org enables you to to this quite simple.
 """
-
-__version__ = "$Revision: 176 $"
-__author__ = "$Author: holtwick $"
-__date__ = "$Date: 2008-03-15 00:11:47 +0100 (Sa, 15 Mrz 2008) $"
-
 import io
 
-from xhtml2pdf import pisa
 from faker import Faker
+
+from xhtml2pdf import pisa
 
 # Shortcut for dumping all logs to the screen
 pisa.showLogging()
 
 
-def html2pdf(data, filename, open_file=False):
+def html2pdf(data, filename, *, open_file=False):
     """
     Simple test showing how to create a PDF file from
     PML Source String. Also shows errors and tries to start
-    the resulting PDF
+    the resulting PDF.
     """
-
-    pdf = pisa.CreatePDF(io.StringIO(data), open(filename, "wb"))
+    with open(filename, "wb") as file:
+        pdf = pisa.CreatePDF(io.StringIO(data), file)
 
     if open_file and (not pdf.err):
         pisa.startViewer(filename)
@@ -91,7 +87,7 @@ if __name__ == "__main__":
     <p> Esto es un texto al revez</p>
     <p dir="rtl">Esto es un texto al revez</p>
      <p>
-أشار إنفرسيني ، في تصريحات نُشرت يوم الأحد على الموقع الإلكتروني لصحيفة Il Post ، إلى حقيقة أن سفينة Geo Barents ، التي تديرها منظمة أطباء بلا حدود الإنسانية (MSF) ، نفذت عمليتي إنقاذ في وسط البحر الأبيض المتوسط ​​دون الحاجة إلى تفويض من الحكومة الإيطالية.
+أشار إنفرسيني ، في تصريحات نُشرت يوم الأحد على الموقع الإلكتروني لصحيفة Il Post ، إلى حقيقة أن سفينة Geo Barents ، التي تديرها منظمة أطباء بلا حدود الإنسانية (MSF) ، نفذت عمليتي إنقاذ في وسط البحر الأبيض المتوسط \u200b\u200bدون الحاجة إلى تفويض من الحكومة الإيطالية.
  </p>
 
 

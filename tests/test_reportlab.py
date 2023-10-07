@@ -4,18 +4,21 @@ from xhtml2pdf import xhtml2pdf_reportlab
 
 
 class PTCycleTest(TestCase):
-    def test_init(self):
+    @staticmethod
+    def test_init():
         xhtml2pdf_reportlab.PTCycle()
 
-    def test_cyclicIterator(self):
+    @staticmethod
+    def test_cyclicIterator():
         ptcycle = xhtml2pdf_reportlab.PTCycle()
         ptcycle.extend(range(10))
-        for ele in ptcycle:
+        for _ele in ptcycle:
             pass
 
 
 class PmlMaxHeightMixInTest(TestCase):
-    def test_setMaxHeight_height_lt_70000(self):
+    @staticmethod
+    def test_setMaxHeight_height_lt_70000():
         pmlmaxheightmixin = xhtml2pdf_reportlab.PmlMaxHeightMixIn()
         pmlmaxheightmixin.setMaxHeight(69999)
 
@@ -27,7 +30,8 @@ class PmlMaxHeightMixInTest(TestCase):
     #     pmlmaxheightmixin = xhtml2pdf_reportlab.PmlMaxHeightMixIn()
     #     pmlmaxheightmixin.setMaxHeight(69999)
 
-    def test_setMaxHeight_height_gte_70000(self):
+    @staticmethod
+    def test_setMaxHeight_height_gte_70000():
         pmlmaxheightmixin = xhtml2pdf_reportlab.PmlMaxHeightMixIn()
         pmlmaxheightmixin.setMaxHeight(70000)
 

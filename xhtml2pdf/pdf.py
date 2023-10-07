@@ -12,12 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import logging
 from io import BytesIO
-from xhtml2pdf.util import pypdf
+
+from pypdf import PdfReader, PdfWriter
+
 from xhtml2pdf.files import getFile, pisaTempFile
 
-log = logging.getLogger("xhtml2pdf")
+log = logging.getLogger(__name__)
 
 
 class pisaPDF:
@@ -49,9 +52,9 @@ class pisaPDF:
             self.files.append(doc.dest)
 
     def join(self, file=None):
-        output = pypdf.PdfWriter()
+        output = PdfWriter()
         for pdffile in self.files:
-            pdf = pypdf.PdfReader(pdffile)
+            pdf = PdfReader(pdffile)
             for pageNumber in range(len(pdf.pages)):
                 output.add_page(pdf.pages[pageNumber])
 

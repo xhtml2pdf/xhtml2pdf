@@ -1,6 +1,7 @@
 import io
 import os
 import tempfile
+from importlib.util import find_spec
 from unittest import TestCase, skipIf
 
 from pypdf import PdfReader
@@ -52,12 +53,8 @@ METADATA = {
     "keywords": "pdf, documents",
 }
 
-try:
-    import __pypy__
-except ImportError:
-    IN_PYPY = False
-else:
-    IN_PYPY = True
+
+IN_PYPY = find_spec("__pypy__") is not None
 
 
 class DocumentTest(TestCase):
@@ -73,21 +70,19 @@ class DocumentTest(TestCase):
 
         # Check the received metadata matches the expected metadata
         for original_key in METADATA:
-            actual_key = "/{}".format(original_key.capitalize())
+            actual_key = f"/{original_key.capitalize()}"
             actual_value = pdf_info[actual_key]
             expected_value = METADATA[original_key]
 
             assertion(actual_value, expected_value)
 
     def test_document_with_transparent_image(self):
-        """
-        Test that a transparent PNG image is rendered properly.
-        """
+        """Test that a transparent PNG image is rendered properly."""
         tests_folder = os.path.dirname(os.path.realpath(__file__))
         image_path = os.path.join(
             tests_folder, "samples", "img", "denker-transparent.png"
         )
-        extra_html = '<img src="{image_path}">'.format(image_path=image_path)
+        extra_html = f'<img src="{image_path}">'
 
         with tempfile.TemporaryFile() as pdf_file:
             pisaDocument(
@@ -98,7 +93,7 @@ class DocumentTest(TestCase):
             pdf_reader = PdfReader(pdf_file)
 
             xobjects = pdf_reader.pages[0]["/Resources"]["/XObject"].get_object()
-            objects = [xobjects[key] for key in xobjects.keys()]
+            objects = [xobjects[key] for key in xobjects]
 
             # Identity the 'denker_transparent.png' image by its height and width, and make sure it's there.
             denker_transparant = [
@@ -107,18 +102,14 @@ class DocumentTest(TestCase):
             self.assertEqual(len(denker_transparant), 1)
 
     def test_document_background_image(self):
-        """
-        Test that a transparent PNG image is rendered properly.
-        """
+        """Test that a transparent PNG image is rendered properly."""
         tests_folder = os.path.dirname(os.path.realpath(__file__))
         image_path = os.path.join(
             tests_folder, "samples", "img", "denker-transparent.png"
         )
 
-        css_background = """<style>@page {{background-image: url('{background_location}');
-                         @frame {{left: 10pt}}}}</style>""".format(
-            background_location=image_path
-        )
+        css_background = f"""<style>@page {{background-image: url('{image_path}');
+                         @frame {{left: 10pt}}}}</style>"""
 
         with tempfile.TemporaryFile() as pdf_file:
             pisaDocument(
@@ -131,7 +122,7 @@ class DocumentTest(TestCase):
             pdf_reader = PdfReader(pdf_file)
 
             xobjects = pdf_reader.pages[0]["/Resources"]["/XObject"].get_object()
-            objects = [xobjects[key] for key in xobjects.keys()]
+            objects = [xobjects[key] for key in xobjects]
 
             # Identity the 'denker_transparent.png' image by its height and width, and make sure it's there.
             denker_transparant = [
@@ -140,9 +131,7 @@ class DocumentTest(TestCase):
             self.assertEqual(len(denker_transparant), 1)
 
     def test_document_background_image_not_on_all_pages(self):
-        """
-        Test that all pages are being rendered, when background is a pdf file and it's applied for the first page only.
-        """
+        """Test that all pages are being rendered, when background is a pdf file and it's applied for the first page only."""
         tests_folder = os.path.dirname(os.path.realpath(__file__))
         background_path = os.path.join(tests_folder, "samples", "images.pdf")
 
@@ -166,9 +155,7 @@ class DocumentTest(TestCase):
             self.assertEqual(len(pdf_reader.pages), 2)
 
     def test_document_nested_table(self):
-        """
-        Test that nested tables are being rendered.
-        """
+        """Test that nested tables are being rendered."""
         tests_folder = os.path.dirname(os.path.realpath(__file__))
         html_path = os.path.join(tests_folder, "samples", "nested_table.html")
 

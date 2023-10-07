@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
+
 import datetime
 import glob
 import os
 import shutil
 import sys
 from optparse import OptionParser
-from subprocess import PIPE, Popen
 from pathlib import Path
+from subprocess import PIPE, Popen
 
-sys.path.append("..")
 from xhtml2pdf import pisa
 
 do_bytes = ""
@@ -26,10 +26,8 @@ class Printer:
             print(args[0])
         self.logs += args[0] + "\n"
 
-    def flush(self, end=False):
-        if self.options.only_errors and end:
-            print(self.logs)
-        elif self.options.debug or end:
+    def flush(self, *, end=False):
+        if self.options.debug or end:
             print(self.logs)
 
         self.logs = ""
@@ -38,7 +36,7 @@ class Printer:
 pprint = Printer()
 
 
-def render_pdf(filename, output_dir, options):
+def render_pdf(filename, output_dir, _options):
     basename = os.path.basename(filename)
     outname = "%s.pdf" % os.path.splitext(basename)[0]
     output_path = os.path.join(output_dir, outname)
@@ -47,7 +45,7 @@ def render_pdf(filename, output_dir, options):
         result = pisa.pisaDocument(input_file, output_file, path=filename)
 
     if result.err:
-        pprint("Error rendering %s: %s" % (filename, result.err))
+        pprint(f"Error rendering {filename}: {result.err}")
         sys.exit(1)
     return output_path
 
@@ -81,9 +79,9 @@ def convert_to_png(infile, output_dir, options):
 
 
 def create_diff_image(srcfile1, srcfile2, output_dir, options):
-    pprint("Creating difference image for %s and %s" % (srcfile1, srcfile2))
+    pprint(f"Creating difference image for {srcfile1} and {srcfile2}")
 
-    outname = "%s.diff%s" % os.path.splitext(srcfile1)
+    outname = "{}.diff{}".format(*os.path.splitext(srcfile1))
     outfile = os.path.join(output_dir, outname)
     # -quiet avoids a colorspace warning
     _, result = exec_cmd(
@@ -110,13 +108,13 @@ def copy_ref_image(srcname, output_dir, options):
     if options.debug:
         pprint("Copying reference image %s " % srcname)
     dstname = os.path.basename(srcname)
-    dstfile = os.path.join(output_dir, "%s.ref%s" % os.path.splitext(dstname))
+    dstfile = os.path.join(output_dir, "{}.ref{}".format(*os.path.splitext(dstname)))
     shutil.copyfile(srcname, dstfile)
     return dstfile
 
 
 def create_thumbnail(filename, options):
-    thumbfile = "%s.thumb%s" % os.path.splitext(filename)
+    thumbfile = "{}.thumb{}".format(*os.path.splitext(filename))
     pprint("Creating thumbnail of %s" % filename)
     exec_cmd(options, options.convert_cmd, "-resize", "20%", filename, thumbfile)
     return thumbfile
@@ -155,7 +153,7 @@ def exec_cmd(options, *args):
     proc = Popen(args, stdout=PIPE, stderr=PIPE)
     result = proc.communicate()
 
-    pprint("Compare result: %r %r" % (result[0], result[1]))
+    pprint(f"Compare result: {result[0]!r} {result[1]!r}")
     if proc.returncode:
         pprint("exec error (%i): %s" % (proc.returncode, result[1]))
         pprint.flush(end=True)
@@ -173,15 +171,14 @@ def create_html_file(results, template_file, output_dir, options):
         htmlname = os.path.basename(origin_html)
 
         html.append(
-            '<div class="result">\n<h2><a href="%(pdf)s"'
-            ' class="pdf-file">%(pdf)s</a></h2>\n<h2>Generated from <a'
-            ' href="../%(src)s/%(html)s" class="">%(html)s</a></h2>\n'
-            % {"pdf": pdfname, "html": htmlname, "src": options.source_dir}
+            f'<div class="result">\n<h2><a href="{pdfname}"'
+            f' class="pdf-file">{pdfname}</a></h2>\n<h2>Generated from <a'
+            f' href="../{options.source_dir}/{htmlname}" class="">{htmlname}</a></h2>\n'
         )
         for i, page in enumerate(pages):
-            variables = dict(
-                ((k, os.path.basename(v)) for k, v in page.items() if k != "diff_value")
-            )
+            variables = {
+                k: os.path.basename(v) for k, v in page.items() if k != "diff_value"
+            }
             variables["page"] = i + 1
             if "diff" in page:
                 variables["diff_value"] = page["diff_value"]
@@ -224,19 +221,19 @@ def create_html_file(results, template_file, output_dir, options):
                 )
         html.append("</div>\n\n")
 
-    now = datetime.datetime.now()
-    title = "xhtml2pdf Test Rendering Results, (Python %s) %s" % (
-        sys.version,
-        now.strftime("%c"),
+    now = datetime.datetime.now()  # noqa: DTZ005
+    title = "xhtml2pdf Test Rendering Results, (Python {}) {}".format(
+        sys.version, now.strftime("%c")
     )
-    template = open(template_file, "r" + do_bytes).read()
-    template = template.replace("%%TITLE%%", title)
-    template = template.replace("%%RESULTS%%", "\n".join(html))
+    with open(template_file, "r" + do_bytes) as file:
+        template = file.read()
+        template = template.replace("%%TITLE%%", title)
+        template = template.replace("%%RESULTS%%", "\n".join(html))
 
-    htmlfile = os.path.join(output_dir, "index.html")
-    outfile = open(htmlfile, "w" + do_bytes)
-    outfile.write(template)
-    outfile.close()
+        htmlfile = os.path.join(output_dir, "index.html")
+        with open(htmlfile, "w" + do_bytes) as outfile:
+            outfile.write(template)
+            outfile.close()
     return htmlfile
 
 
@@ -255,9 +252,7 @@ def main():
     if os.path.isdir(output_dir):
         shutil.rmtree(output_dir)
     os.makedirs(output_dir)
-    pprint(
-        "Using:\n  source_dir=%s\n  output_dir=%s" % (source_dir, output_dir), main=True
-    )
+    pprint(f"Using:\n  source_dir={source_dir}\n  output_dir={output_dir}", main=True)
     results = []
     diff_count = 0
     if len(args) == 0:

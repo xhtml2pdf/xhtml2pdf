@@ -1,8 +1,8 @@
 Https option
-==============
+============
 
 Using in python
---------------------------------
+---------------
 
 Basically you need to set httpConfig before call pisa.CreatePDF
 
@@ -29,7 +29,7 @@ In this way you can insert arbitrary httplib.HTTPSConnection parameters, for mor
 
 
 Using in shell
---------------------------------
+--------------
 
 So you can call to xhtml2pdf passing httplib parameters with something like:
 

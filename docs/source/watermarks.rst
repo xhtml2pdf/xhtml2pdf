@@ -1,12 +1,12 @@
 How To Use Watermarks
-========================
+=====================
 
 .. note::
     WaterMarks use other pdf as background, so images build new pdf automatically
 
 
 WaterMark in all pages
--------------------------
+----------------------
 To add a watermark to the PDF, use the `background-image` property to specify a background image
 
 .. code:: html
@@ -18,7 +18,7 @@ To add a watermark to the PDF, use the `background-image` property to specify a 
 
 
 WaterMark in various pages
-----------------------------
+--------------------------
 
 .. note::
     If you use images as background, try to use an image with the same size of the page, otherwise image will be scaled

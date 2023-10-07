@@ -1,9 +1,8 @@
-from setuptools import setup, find_packages
-from turbogears.finddata import find_package_data
-
 import os
 
-execfile(os.path.join("tgpisa", "release.py"))
+from setuptools import find_packages, setup
+from tgpisa import release
+from turbogears.finddata import find_package_data
 
 packages = find_packages()
 package_data = find_package_data(where="tgpisa", package="tgpisa")
@@ -15,14 +14,14 @@ if os.path.isdir("locales"):
 
 setup(
     name="tgpisa",
-    version=version,
+    version=release.version,
     # uncomment the following lines if you fill them out in release.py
-    # description=description,
-    # author=author,
-    # author_email=email,
-    # url=url,
-    # download_url=download_url,
-    # license=license,
+    # description=release.description,
+    # author=release.author,
+    # author_email=release.email,
+    # url=release.url,
+    # download_url=release.download_url,
+    # license=release.license,
     install_requires=["TurboGears >= 1.0.4.3", "SQLObject>=0.8,<=0.10.0"],
     zip_safe=False,
     packages=packages,

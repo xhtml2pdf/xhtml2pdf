@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+import contextlib
 import logging
 import re
-import sys
 from copy import copy
 
 import arabic_reshaper
@@ -29,24 +30,20 @@ from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 
 import xhtml2pdf.default
 
+log = logging.getLogger(__name__)
+
 rgb_re = re.compile(
     r"^.*?rgb[a]?[(]([0-9]+).*?([0-9]+).*?([0-9]+)(?:.*?(?:[01]\.(?:[0-9]+)))?[)].*?[ ]*$"
 )
-
-log = logging.getLogger("xhtml2pdf")
-
-import pypdf
-from reportlab.graphics import renderPM
-from reportlab.graphics import renderSVG
 
 # =========================================================================
 # Memoize decorator
 # =========================================================================
 
 
-class memoized(object):
+class Memoized:
     """
-    A kwargs-aware memoizer, better than the one in python :)
+    A kwargs-aware memoizer, better than the one in python :).
 
     Don't pass in too large kwargs, since this turns them into a tuple of
     tuples. Also, avoid mutable types (as usual for memoizers)
@@ -78,25 +75,9 @@ class memoized(object):
             return self.func(*args, **kwargs)
 
 
-def ErrorMsg():
-    """
-    Helper to get a nice traceback as string
-    """
-    import traceback
-
-    limit = None
-    _type, value, tb = sys.exc_info()
-    _list = traceback.format_tb(tb, limit) + traceback.format_exception_only(
-        _type, value
-    )
-    return "Traceback (innermost last):\n" + "%-20s %s" % (
-        " ".join(_list[:-1]),
-        _list[-1],
-    )
-
-
-def toList(value):
-    if type(value) not in (list, tuple):
+def toList(value, *, cast_tuple=True):
+    cls = (list, tuple) if cast_tuple else (list)
+    if not isinstance(value, cls):
         return [value]
     return list(value)
 
@@ -114,7 +95,7 @@ def transform_attrs(obj, keys, container, func, extras=None):
     """
     cpextras = extras
 
-    for reportlab, css in keys:
+    for reportlab_key, css in keys:
         extras = cpextras
         if extras is None:
             extras = []
@@ -122,13 +103,13 @@ def transform_attrs(obj, keys, container, func, extras=None):
             extras = [extras]
         if css in container:
             extras.insert(0, container[css])
-            setattr(obj, reportlab, func(*extras))
+            setattr(obj, reportlab_key, func(*extras))
 
 
 def copy_attrs(obj1, obj2, attrs):
     """
     Allows copy a list of attributes from object2 to object1.
-    Useful for copy ccs attributes to fragment
+    Useful for copy ccs attributes to fragment.
     """
     for attr in attrs:
         value = getattr(obj2, attr) if hasattr(obj2, attr) else None
@@ -137,28 +118,26 @@ def copy_attrs(obj1, obj2, attrs):
         setattr(obj1, attr, value)
 
 
-def set_value(obj, attrs, value, _copy=False):
-    """
-    Allows set the same value to a list of attributes
-    """
+def set_value(obj, attrs, value, *, do_copy=False):
+    """Allows set the same value to a list of attributes."""
     for attr in attrs:
-        if _copy:
+        if do_copy:
             value = copy(value)
         setattr(obj, attr, value)
 
 
-@memoized
+@Memoized
 def getColor(value, default=None):
     """
     Convert to color value.
     This returns a Color object instance from a text bit.
     """
     if value is None:
-        return
+        return None
     if isinstance(value, Color):
         return value
     value = str(value).strip().lower()
-    if value == "transparent" or value == "none":
+    if value in {"transparent", "none"}:
         return default
     if value in COLOR_BY_NAME:
         return COLOR_BY_NAME[value]
@@ -166,8 +145,8 @@ def getColor(value, default=None):
         value = "#" + value[1] + value[1] + value[2] + value[2] + value[3] + value[3]
     elif rgb_re.search(value):
         # e.g., value = "<css function: rgb(153, 51, 153)>", go figure:
-        r, g, b = [int(x) for x in rgb_re.search(value).groups()]
-        value = "#%02x%02x%02x" % (r, g, b)
+        r, g, b = (int(x) for x in rgb_re.search(value).groups())
+        value = f"#{r:02x}{g:02x}{b:02x}"
     else:
         # Shrug
         pass
@@ -181,10 +160,10 @@ def getBorderStyle(value, default=None):
     return default
 
 
-mm = cm / 10.0
-dpi96 = 1.0 / 96.0 * inch
+MM = cm / 10.0
+DPI96 = 1.0 / 96.0 * inch
 
-_absoluteSizeTable = {
+ABSOLUTE_SIZE_TABLE = {
     "1": 50.0 / 100.0,
     "xx-small": 50.0 / 100.0,
     "x-small": 50.0 / 100.0,
@@ -202,7 +181,7 @@ _absoluteSizeTable = {
     "xxx-large": 200.0 / 100.0,
 }
 
-_relativeSizeTable = {
+RELATIVE_SIZE_TABLE = {
     "larger": 1.25,
     "smaller": 0.75,
     "+4": 200.0 / 100.0,
@@ -217,7 +196,7 @@ _relativeSizeTable = {
 MIN_FONT_SIZE = 1.0
 
 
-@memoized
+@Memoized
 def getSize(value, relative=0, base=None, default=0.0):
     """
     Converts strings to standard sizes.
@@ -233,54 +212,53 @@ def getSize(value, relative=0, base=None, default=0.0):
         original = value
         if value is None:
             return relative
-        elif type(value) is float:
+        if isinstance(value, float):
             return value
-        elif isinstance(value, int):
+        if isinstance(value, int):
             return float(value)
-        elif type(value) in (tuple, list):
+        if isinstance(value, (tuple, list)):
             value = "".join(value)
         value = str(value).strip().lower().replace(",", ".")
         if value[-2:] == "cm":
             return float(value[:-2].strip()) * cm
-        elif value[-2:] == "mm":
-            return float(value[:-2].strip()) * mm  # 1mm = 0.1cm
-        elif value[-2:] == "in":
+        if value[-2:] == "mm":
+            return float(value[:-2].strip()) * MM  # 1MM = 0.1cm
+        if value[-2:] == "in":
             return float(value[:-2].strip()) * inch  # 1pt == 1/72inch
-        elif value[-2:] == "pt":
+        if value[-2:] == "pt":
             return float(value[:-2].strip())
-        elif value[-2:] == "pc":
+        if value[-2:] == "pc":
             return float(value[:-2].strip()) * 12.0  # 1pc == 12pt
-        elif value[-2:] == "px":
+        if value[-2:] == "px":
             # XXX W3C says, use 96pdi
             # http://www.w3.org/TR/CSS21/syndata.html#length-units
-            return float(value[:-2].strip()) * dpi96
-        elif value in ("none", "0", "0.0", "auto"):
+            return float(value[:-2].strip()) * DPI96
+        if value in ("none", "0", "0.0", "auto"):
             return 0.0
-        elif relative:
+        if relative:
             if value[-3:] == "rem":  # XXX
                 # 1rem = 1 * fontSize
                 return float(value[:-3].strip()) * relative
-            elif value[-2:] == "em":  # XXX
+            if value[-2:] == "em":  # XXX
                 # 1em = 1 * fontSize
                 return float(value[:-2].strip()) * relative
-            elif value[-2:] == "ex":  # XXX
+            if value[-2:] == "ex":  # XXX
                 # 1ex = 1/2 fontSize
                 return float(value[:-2].strip()) * (relative / 2.0)
-            elif value[-1:] == "%":
+            if value[-1:] == "%":
                 # 1% = (fontSize * 1) / 100
                 return (relative * float(value[:-1].strip())) / 100.0
-            elif value in ("normal", "inherit"):
+            if value in ("normal", "inherit"):
                 return relative
-            elif value in _relativeSizeTable:
+            if value in RELATIVE_SIZE_TABLE:
                 if base:
-                    return max(MIN_FONT_SIZE, base * _relativeSizeTable[value])
-                return max(MIN_FONT_SIZE, relative * _relativeSizeTable[value])
-            elif value in _absoluteSizeTable:
+                    return max(MIN_FONT_SIZE, base * RELATIVE_SIZE_TABLE[value])
+                return max(MIN_FONT_SIZE, relative * RELATIVE_SIZE_TABLE[value])
+            if value in ABSOLUTE_SIZE_TABLE:
                 if base:
-                    return max(MIN_FONT_SIZE, base * _absoluteSizeTable[value])
-                return max(MIN_FONT_SIZE, relative * _absoluteSizeTable[value])
-            else:
-                return max(MIN_FONT_SIZE, relative * float(value))
+                    return max(MIN_FONT_SIZE, base * ABSOLUTE_SIZE_TABLE[value])
+                return max(MIN_FONT_SIZE, relative * ABSOLUTE_SIZE_TABLE[value])
+            return max(MIN_FONT_SIZE, relative * float(value))
         try:
             value = float(value)
         except ValueError:
@@ -292,12 +270,12 @@ def getSize(value, relative=0, base=None, default=0.0):
         return default
 
 
-@memoized
+@Memoized
 def getCoords(x, y, w, h, pagesize):
     """
     As a stupid programmer I like to use the upper left
     corner of the document as the 0,0 coords therefore
-    we need to do some fancy calculations
+    we need to do some fancy calculations.
     """
     # ~ print pagesize
     ax, ay = pagesize
@@ -314,7 +292,7 @@ def getCoords(x, y, w, h, pagesize):
     return x, (ay - y)
 
 
-@memoized
+@Memoized
 def getBox(box, pagesize):
     """
     Parse sizes by corners in the form:
@@ -324,13 +302,15 @@ def getBox(box, pagesize):
     """
     box = str(box).split()
     if len(box) != 4:
-        raise Exception("box not defined right way")
-    x, y, w, h = [getSize(pos) for pos in box]
+        msg = "box not defined right way"
+        raise RuntimeError(msg)
+    x, y, w, h = (getSize(pos) for pos in box)
     return getCoords(x, y, w, h, pagesize)
 
 
 def getFrameDimensions(data, page_width, page_height):
-    """Calculate dimensions of a frame
+    """
+    Calculate dimensions of a frame.
 
     Returns left, top, width and height of the frame in points.
     """
@@ -367,42 +347,28 @@ def getFrameDimensions(data, page_width, page_height):
     return left, top, width, height
 
 
-@memoized
+@Memoized
 def getPos(position, pagesize):
-    """
-    Pair of coordinates
-    """
+    """Pair of coordinates."""
     position = str(position).split()
     if len(position) != 2:
-        raise Exception("position not defined right way")
-    x, y = [getSize(pos) for pos in position]
+        msg = "position not defined right way"
+        raise RuntimeError(msg)
+    x, y = (getSize(pos) for pos in position)
     return getCoords(x, y, None, None, pagesize)
 
 
 def getBool(s):
-    "Is it a boolean?"
+    """Is it a boolean?."""
     return str(s).lower() in ("y", "yes", "1", "true")
 
 
 def getFloat(s):
-    try:
-        s = float(s)
-    except:
-        pass
-    return s
+    with contextlib.suppress(Exception):
+        return float(s)
 
 
-_uid = 0
-
-
-def getUID():
-    "Unique ID"
-    global _uid
-    _uid += 1
-    return str(_uid)
-
-
-_alignments = {
+ALIGNMENTS = {
     "left": TA_LEFT,
     "center": TA_CENTER,
     "middle": TA_CENTER,
@@ -412,7 +378,7 @@ _alignments = {
 
 
 def getAlign(value, default=TA_LEFT):
-    return _alignments.get(str(value).lower(), default)
+    return ALIGNMENTS.get(str(value).lower(), default)
 
 
 _rx_datauri = re.compile(
@@ -608,11 +574,7 @@ def get_default_asian_font():
     for font in fonts:
         upper_font_list.append(font)
         lower_font_list.append(font.lower())
-    default_asian_font = {
-        lower_font_list[i]: upper_font_list[i] for i in range(len(lower_font_list))
-    }
-
-    return default_asian_font
+    return {lower_font_list[i]: upper_font_list[i] for i in range(len(lower_font_list))}
 
 
 def set_asian_fonts(fontname):
@@ -626,6 +588,7 @@ def detect_language(name):
     asian_language_list = xhtml2pdf.default.DEFAULT_LANGUAGE_LIST
     if name in asian_language_list:
         return name
+    return None
 
 
 def arabic_format(text, language):
@@ -642,8 +605,7 @@ def arabic_format(text, language):
     ):
         ar = arabic_reshaper.reshape(text)
         return get_display(ar)
-    else:
-        return None
+    return None
 
 
 def frag_text_language_check(context, frag_text):
@@ -652,3 +614,5 @@ def frag_text_language_check(context, frag_text):
         detect_language_result = arabic_format(frag_text, language)
         if detect_language_result:
             return detect_language_result
+        return None
+    return None

@@ -2,7 +2,7 @@ import pypdf
 from PIL import Image
 from reportlab.pdfgen.canvas import Canvas
 
-from xhtml2pdf.files import pisaFileObject, getFile
+from xhtml2pdf.files import getFile, pisaFileObject
 
 
 class WaterMarks:
@@ -29,11 +29,10 @@ class WaterMarks:
         if object_position:
             # x, y, width=None, height=None
             x, y = object_position
+        elif is_portrait:
+            x, y = 0, ph - height
         else:
-            if is_portrait:
-                x, y = 0, ph - height
-            else:
-                x, y = 0, 0
+            x, y = 0, 0
         if csswidth:
             width = csswidth
         if cssheight:
@@ -54,14 +53,16 @@ class WaterMarks:
         return pisafile.getBytesIO()
 
     @staticmethod
-    def generate_pdf_background(pisafile, pagesize, is_portrait, context={}):
+    def generate_pdf_background(pisafile, pagesize, is_portrait, context=None):
         """
-        pypdf requires pdf as background so convert image to pdf in temporary file with same page dimensions
+        Pypdf requires pdf as background so convert image to pdf in temporary file with same page dimensions
         :param pisafile:  Image File
         :param pagesize:  Page size for the new pdf
-        :return: pisaFileObject as tempfile
+        :return: pisaFileObject as tempfile.
         """
         # don't move up, we are preventing circular import
+        if context is None:
+            context = {}
         from xhtml2pdf.xhtml2pdf_reportlab import PmlImageReader
 
         output = pisaFileObject(None, "application/pdf")  # build temporary file
@@ -100,9 +101,7 @@ class WaterMarks:
     @staticmethod
     def get_watermark(context, max_numpage):
         if context.pisaBackgroundList:
-            pages = list(map(lambda x: x[0], context.pisaBackgroundList)) + [
-                max_numpage + 1
-            ]
+            pages = [x[0] for x in context.pisaBackgroundList] + [max_numpage + 1]
             pages.pop(0)
             counter = 0
             for page, bgfile, pgcontext in context.pisaBackgroundList:

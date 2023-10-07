@@ -12,18 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# ruff: noqa: N802, N803
+
+
+import contextlib
 import copy
 import logging
 import sys
 from hashlib import md5
 from html import escape as html_escape
 from io import BytesIO, StringIO
+from uuid import uuid4
 
 import PIL.Image as PILImage
-import reportlab.pdfbase.pdfform as pdfform
 from reportlab.lib.enums import TA_RIGHT
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.utils import LazyImageReader, flatten, haveImages, open_for_read
+from reportlab.pdfbase import pdfform
 from reportlab.platypus.doctemplate import (
     BaseDocTemplate,
     IndexingFlowable,
@@ -40,18 +45,18 @@ from reportlab.platypus.tables import Table, TableStyle
 from reportlab.rl_config import register_reset
 
 from xhtml2pdf.builders.watermarks import WaterMarks
-from xhtml2pdf.reportlab_paragraph import Paragraph
-from xhtml2pdf.util import getBorderStyle, getUID
 from xhtml2pdf.files import pisaTempFile
+from xhtml2pdf.reportlab_paragraph import Paragraph
+from xhtml2pdf.util import getBorderStyle
 
 try:
-    from reportlab.graphics import renderPDF, renderPM
+    from reportlab.graphics import renderPM
     from svglib.svglib import svg2rlg
 except ImportError:
     svg2rlg = None
     renderPM = None
 
-log = logging.getLogger("xhtml2pdf")
+log = logging.getLogger(__name__)
 
 MAX_IMAGE_RATIO = 0.95
 PRODUCER = "xhtml2pdf <https://github.com/xhtml2pdf/xhtml2pdf/>"
@@ -96,10 +101,7 @@ class PmlMaxHeightMixIn:
 
 
 class PmlBaseDoc(BaseDocTemplate):
-    """
-    We use our own document template to get access to the canvas
-    and set some informations once.
-    """
+    """We use our own document template to get access to the canvas and set some informations once."""
 
     def beforePage(self):
         self.canv._doc.info.producer = PRODUCER
@@ -135,9 +137,7 @@ class PmlBaseDoc(BaseDocTemplate):
             )
 
     def handle_nextPageTemplate(self, pt):
-        """
-        if pt has also templates for even and odd page convert it to list
-        """
+        """If pt has also templates for even and odd page convert it to list."""
         has_left_template = self._has_template_for_name(pt + "_left")
         has_right_template = self._has_template_for_name(pt + "_right")
 
@@ -153,7 +153,7 @@ class PmlBaseDoc(BaseDocTemplate):
                     self._nextPageTemplateIndex = self.pageTemplates.index(t)
                     return
             raise ValueError("can't find template('%s')" % pt)
-        elif isinstance(pt, int):
+        if isinstance(pt, int):
             if hasattr(self, "_nextPageTemplateCycle"):
                 del self._nextPageTemplateCycle
             self._nextPageTemplateIndex = pt
@@ -171,20 +171,20 @@ class PmlBaseDoc(BaseDocTemplate):
                         c.append(t)
                         break
             if not c:
-                raise ValueError("No valid page templates in cycle")
-            elif c._restart > len(c):
-                raise ValueError("Invalid cycle restart position")
+                msg = "No valid page templates in cycle"
+                raise ValueError(msg)
+            if c._restart > len(c):
+                msg = "Invalid cycle restart position"
+                raise ValueError(msg)
 
             # ensure we start on the first one$
             self._nextPageTemplateCycle = c.cyclicIterator()
         else:
-            raise TypeError("Argument pt should be string or integer or list")
+            msg = "Argument pt should be string or integer or list"
+            raise TypeError(msg)
 
     def _has_template_for_name(self, name):
-        for template in self.pageTemplates:
-            if template.id == name.strip():
-                return True
-        return False
+        return any(template.id == name.strip() for template in self.pageTemplates)
 
 
 class PmlPageTemplate(PageTemplate):
@@ -201,7 +201,7 @@ class PmlPageTemplate(PageTemplate):
         self._page_count = 0
         self._first_flow = True
 
-        ### Background Image ###
+        # Background Image
         self.img = None
         self.ph = 0
         self.h = 0
@@ -273,11 +273,11 @@ class PmlPageTemplate(PageTemplate):
                     canvas._doctemplate._page_count = canvas.getPageNumber()
 
                 for frame in self.pisaStaticList:
-                    frame = copy.deepcopy(frame)
-                    story = frame.pisaStaticStory
+                    frame_copy = copy.deepcopy(frame)
+                    story = frame_copy.pisaStaticStory
                     pageNumbering(story)
 
-                    frame.addFromList(story, canvas)
+                    frame_copy.addFromList(story, canvas)
 
             except Exception:  # TODO: Kill this!
                 log.debug("PmlPageTemplate", exc_info=1)
@@ -288,12 +288,8 @@ class PmlPageTemplate(PageTemplate):
 _ctr = 1
 
 
-class PmlImageReader(
-    object
-):  # TODO We need a factory here, returning either a class for java or a class for PIL
-    """
-    Wraps up either PIL or Java to get data from bitmaps
-    """
+class PmlImageReader:  # TODO We need a factory here, returning either a class for java or a class for PIL
+    """Wraps up either PIL or Java to get data from bitmaps."""
 
     _cache = {}
 
@@ -326,10 +322,8 @@ class PmlImageReader(
                 if imageReaderFlags > 0:  # interning
                     data = self.fp.read()
                     if imageReaderFlags & 2:  # autoclose
-                        try:
+                        with contextlib.suppress(Exception):
                             self.fp.close()
-                        except:
-                            pass
                     if imageReaderFlags & 4:  # cache the data
                         if not self._cache:
                             register_reset(self._cache.clear)
@@ -352,40 +346,44 @@ class PmlImageReader(
 
                     try:
                         self._width, self._height, c = readJPEGInfo(self.fp)
-                    except:
-                        raise RuntimeError(
+                    except Exception as e:
+                        msg = (
                             "Imaging Library not available, unable to import bitmaps"
                             " only jpegs"
                         )
+                        raise RuntimeError(msg) from e
                     self.jpeg_fh = self._jpeg_fh
                     self._data = self.fp.read()
                     self._dataA = None
                     self.fp.seek(0)
-            except:  # TODO: Kill the catch-all
+            except Exception as e:  # TODO: Kill the catch-all
                 et, ev, tb = sys.exc_info()
-                if hasattr(ev, "args"):
-                    a = str(ev.args[-1]) + " fileName=%r" % fileName
+                if hasattr(ev, "args") and isinstance(ev, Exception):
+                    a = f"{ev.args[-1]} fileName={fileName!r}"
                     ev.args = ev.args[:-1] + (a,)
-                    raise RuntimeError("{0} {1} {2}".format(et, ev, tb))
-                else:
-                    raise
+                    msg = f"{et} {ev} {tb}"
+                    raise RuntimeError(msg) from e
+                raise
 
-    def _read_image(self, fp):
+    @staticmethod
+    def _read_image(fp):
         if sys.platform[0:4] == "java":
             from java.io import ByteArrayInputStream
             from javax.imageio import ImageIO
 
             input_stream = ByteArrayInputStream(fp.read())
             return ImageIO.read(input_stream)
-        elif PILImage:
+        if PILImage:
             return PILImage.open(fp)
+        return None
 
     def _jpeg_fh(self):
         fp = self.fp
         fp.seek(0)
         return fp
 
-    def jpeg_fh(self):
+    @staticmethod
+    def jpeg_fh():
         return None
 
     def getSize(self):
@@ -398,7 +396,7 @@ class PmlImageReader(
         return self._width, self._height
 
     def getRGBData(self):
-        "Return byte array of RGB data as string"
+        """Return byte array of RGB data as string."""
         if self._data is None:
             self._dataA = None
             if sys.platform[0:4] == "java":
@@ -444,7 +442,7 @@ class PmlImageReader(
     def getTransparent(self):
         if sys.platform[0:4] == "java":
             return None
-        elif "transparency" in self._image.info:
+        if "transparency" in self._image.info:
             transparency = self._image.info["transparency"] * 3
             palette = self._image.palette
             if hasattr(palette, "palette"):
@@ -470,7 +468,7 @@ class PmlImageReader(
             if not fn:
                 fn = id(self)
             return "PmlImageObject_%s" % hash(fn)
-        except:
+        except Exception:
             fn = self.fileName
             if not fn:
                 fn = id(self)
@@ -504,7 +502,11 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         self.drawHeight = height or self.imageHeight
 
     def wrap(self, availWidth, availHeight):
-        "This can be called more than once! Do not overwrite important data like drawWidth"
+        """
+        Resize the image if necessary.
+
+        This can be called more than once! Do not overwrite important data like drawWidth.
+        """
         availHeight = self.setMaxHeight(availHeight)
         # print "image wrap", id(self), availWidth, availHeight, self.drawWidth, self.drawHeight
         width = min(self.drawWidth, availWidth)
@@ -553,11 +555,10 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         return None
 
     def getImage(self):
-        """Returns a raster image."""
+        """Return a raster image."""
         vectorRaster = self.getDrawingRaster()
         imgdata = vectorRaster or BytesIO(self._imgdata)
-        img = PmlImageReader(imgdata)
-        return img
+        return PmlImageReader(imgdata)
 
     def draw(self):
         # TODO this code should work, but untested
@@ -569,8 +570,7 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         self.canv.drawImage(img, 0, 0, self.dWidth, self.dHeight, mask=self._mask)
 
     def identity(self, maxLen=None):
-        r = Flowable.identity(self, maxLen)
-        return r
+        return Flowable.identity(self, maxLen)
 
 
 class PmlParagraphAndImage(ParagraphAndImage, PmlMaxHeightMixIn):
@@ -665,13 +665,13 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
             last = getattr(self.canv, "outlineLast", -1) + 1
             while last < self.outlineLevel:
                 # print "(OUTLINE",  last, self.text
-                key = getUID()
+                key = uuid4().hex
                 self.canv.bookmarkPage(key)
                 self.canv.addOutlineEntry(self.text, key, last, not self.outlineOpen)
                 last += 1
             self.canv.outlineLast = self.outlineLevel
 
-            key = getUID()
+            key = uuid4().hex
 
             self.canv.bookmarkPage(key)
             self.canv.addOutlineEntry(
@@ -783,11 +783,10 @@ class PmlKeepInFrame(KeepInFrame, PmlMaxHeightMixIn):
 
 
 class PmlTable(Table, PmlMaxHeightMixIn):
-    def _normWidth(self, w, maxw):
-        """
-        Helper for calculating percentages
-        """
-        if type(w) == type(""):
+    @staticmethod
+    def _normWidth(w, maxw):
+        """Normalize width when using percentages."""
+        if isinstance(w, str):
             w = (maxw / 100.0) * float(w[:-1])
         elif (w is None) or (w == "*"):
             w = maxw
@@ -803,9 +802,7 @@ class PmlTable(Table, PmlMaxHeightMixIn):
         self.setMaxHeight(availHeight)
 
         # Strange bug, sometime the totalWidth is not set !?
-        try:
-            self.totalWidth
-        except:
+        if not hasattr(self, "totalWidth"):
             self.totalWidth = availWidth
 
         # Prepare values
@@ -819,12 +816,12 @@ class PmlTable(Table, PmlMaxHeightMixIn):
         # self._colWidths therefore we have to modify list in place
         for i, colWidth in enumerate(newColWidths):
             if (colWidth is not None) or (colWidth == "*"):
-                colWidth = self._normWidth(colWidth, totalWidth)
+                newColWidth = self._normWidth(colWidth, totalWidth)
                 remainingWidth -= colWidth
             else:
                 remainingCols += 1
-                colWidth = None
-            newColWidths[i] = colWidth
+                newColWidth = None
+            newColWidths[i] = newColWidth
 
         # Distribute remaining space
         minCellWidth = totalWidth * 0.01
@@ -866,10 +863,7 @@ class PmlPageCount(IndexingFlowable):
 
 class PmlTableOfContents(TableOfContents):
     def wrap(self, availWidth, availHeight):
-        """
-        All table properties should be known by now.
-        """
-
+        """All table properties should be known by now."""
         widths = (availWidth - self.rightColumnWidth, self.rightColumnWidth)
 
         # makes an internal table which does all the work.

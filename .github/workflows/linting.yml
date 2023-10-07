@@ -8,7 +8,7 @@ jobs:
     - uses: actions/setup-python@v4
     - uses: pre-commit/action@v3.0.0
       env:
-        SKIP: black,no-commit-to-branch
+        SKIP: black,ruff,no-commit-to-branch
   black:
     runs-on: ubuntu-latest
     steps:
@@ -17,3 +17,10 @@ jobs:
       - uses: psf/black@stable
         with:
           version: "23.9.1"
+  ruff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: chartboost/ruff-action@v1
+        with:
+          version: "0.0.292"

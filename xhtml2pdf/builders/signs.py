@@ -1,20 +1,20 @@
 import logging
 from pathlib import Path
 
-from asn1crypto import x509, pem, crl, ocsp
+from asn1crypto import crl, ocsp, pem, x509
 from pyhanko.pdf_utils.incremental_writer import IncrementalPdfFileWriter
 from pyhanko.sign import signers, timestamps
 from pyhanko.sign.fields import SigSeedSubFilter
 from pyhanko_certvalidator import ValidationContext
 
 try:
-    from pyhanko.sign.pkcs11 import open_pkcs11_session, PKCS11Signer
-except ImportError as e:
+    from pyhanko.sign.pkcs11 import PKCS11Signer, open_pkcs11_session
+except ImportError:
     open_pkcs11_session = PKCS11Signer = None
 
 from xhtml2pdf.files import getFile
 
-log = logging.getLogger("xhtml2pdf")
+log = logging.getLogger(__name__)
 
 
 class PDFSignature:
@@ -25,23 +25,24 @@ class PDFSignature:
             if isinstance(passphrase, str):
                 passphrase = passphrase.encode()
             return passphrase
+        return None
 
     @staticmethod
-    def get_chains(config, key):
+    def get_chains(config, _key):
         chains = []
         if "ca_chain" in config:
             chain = config["ca_chain"]
             if not isinstance(chain, list):
                 chain = [chain]
             for c in chain:
-                if isinstance(c, Path) or isinstance(c, str):
+                if isinstance(c, (Path, str)):
                     pisafile = getFile(c)
                     _, _, digicert_ca_bytes = pem.unarmor(pisafile.getData())
                     chains.append(x509.Certificate.load(digicert_ca_bytes))
                 else:
                     chains.append(c)
         if not chains:
-            return
+            return None
         return chains
 
     @staticmethod
@@ -49,40 +50,40 @@ class PDFSignature:
         passphrase = PDFSignature.get_passphrase(config)
         if "key" in config and "cert" in config and passphrase:
             chain = PDFSignature.get_chains(config, "ca_chain")
-            signer = signers.SimpleSigner.load(
+            return signers.SimpleSigner.load(
                 config["key"],
                 config["cert"],
                 ca_chain_files=chain,
                 key_passphrase=passphrase,
             )
-            return signer
+        return None
 
     @staticmethod
     def test_pkcs12_signer(config):
         passphrase = PDFSignature.get_passphrase(config)
         if "pfx_file" in config and passphrase:
-            signer = signers.SimpleSigner.load_pkcs12(
+            return signers.SimpleSigner.load_pkcs12(
                 pfx_file=config["pfx_file"], passphrase=passphrase
             )
-            return signer
+        return None
 
     @staticmethod
     def test_pkcs11_signer(config):
         session = PDFSignature.get_session(config)
-        keys = dict(
-            pkcs11_session=session,
-            cert_label=None,
-            signing_cert=None,
-            ca_chain=None,
-            key_label=None,
-            prefer_pss=False,
-            embed_roots=True,
-            other_certs_to_pull=(),
-            bulk_fetch=True,
-            key_id=None,
-            cert_id=None,
-            use_raw_mechanism=False,
-        )
+        keys = {
+            "pkcs11_session": session,
+            "cert_label": None,
+            "signing_cert": None,
+            "ca_chain": None,
+            "key_label": None,
+            "prefer_pss": False,
+            "embed_roots": True,
+            "other_certs_to_pull": (),
+            "bulk_fetch": True,
+            "key_id": None,
+            "cert_id": None,
+            "use_raw_mechanism": False,
+        }
 
         for key in keys:
             if key in config:
@@ -92,19 +93,18 @@ class PDFSignature:
                 else:
                     keys[key] = config[key]
 
-        signer = PKCS11Signer(**keys)
-        return signer
+        return PKCS11Signer(**keys)
 
     @staticmethod
     def get_timestamps(config):
         if "tsa" in config:
-            tst_client = timestamps.HTTPTimeStamper(url=config["tsa"])
-            return tst_client
+            return timestamps.HTTPTimeStamper(url=config["tsa"])
+        return None
 
     @staticmethod
     def get_signers(config):
         if "engine" not in config:
-            return
+            return None
 
         signer = None
         engine = config["engine"]
@@ -112,12 +112,12 @@ class PDFSignature:
             signer = PDFSignature.test_pkcs12_signer(config)
         elif engine == "pkcs11":
             if PKCS11Signer is None:
-                raise ImportError(
-                    "pyhanko.sign.pkcs11 requires pyHanko to be installed with "
-                    "the [pkcs11] option. You can install missing "
-                    "dependencies by running \"pip install 'pyHanko[pkcs11]'\".",
-                    e,
+                msg = (
+                    "pyhanko.sign.pkcs11 requires pyHanko to be installed with the"
+                    " [pkcs11] option. You can install missing dependencies by running"
+                    " \"pip install 'pyHanko[pkcs11]'\"."
                 )
+                raise ImportError(msg)
 
             signer = PDFSignature.test_pkcs11_signer(config)
         elif engine == "simple":
@@ -128,14 +128,13 @@ class PDFSignature:
     def sign(inputfile, output, config):
         if config["type"] == "lta":
             return PDFSignature.lta_sign(inputfile, output, config)
-        else:
-            return PDFSignature.simple_sign(inputfile, output, config)
+        return PDFSignature.simple_sign(inputfile, output, config)
 
     @staticmethod
     def parse_crls(crls):
         list_crls = []
         for x in crls:
-            if isinstance(x, Path) or isinstance(x, str):
+            if isinstance(x, (Path, str)):
                 pisafile = getFile(x)
                 cert_list = crl.CertificateList.load(pisafile.getData())
                 list_crls.append(cert_list)
@@ -154,7 +153,7 @@ class PDFSignature:
 
     @staticmethod
     def get_validation_context(config):
-        context = dict(allow_fetching=True)
+        context = {"allow_fetching": True}
         if "validation_context" in config:
             if "crls" in config["validation_context"]:
                 config["validation_context"]["crls"] = PDFSignature.parse_crls(
@@ -185,19 +184,19 @@ class PDFSignature:
 
     @staticmethod
     def get_signature_meta(config):
-        meta = dict(
-            field_name="Signature1",
-            md_algorithm="sha256",
-            location=None,
-            reason=None,
-            name=None,
-            certify=False,
-            embed_validation_info=True,
-            use_pades_lta=True,
-            subfilter=SigSeedSubFilter.PADES,
-            timestamp_field_name=None,
-            validation_context=PDFSignature.get_validation_context(config),
-        )
+        meta = {
+            "field_name": "Signature1",
+            "md_algorithm": "sha256",
+            "location": None,
+            "reason": None,
+            "name": None,
+            "certify": False,
+            "embed_validation_info": True,
+            "use_pades_lta": True,
+            "subfilter": SigSeedSubFilter.PADES,
+            "timestamp_field_name": None,
+            "validation_context": PDFSignature.get_validation_context(config),
+        }
         if "meta" in config:
             meta.update(config["meta"])
         return meta
@@ -206,7 +205,7 @@ class PDFSignature:
     def simple_sign(inputfile, output, config):
         signer = PDFSignature.get_signers(config)
         if signer:
-            w = IncrementalPdfWriter(inputfile)
+            w = IncrementalPdfFileWriter(inputfile)
             timestamper = PDFSignature.get_timestamps(config)
             signers.sign_pdf(
                 w,
@@ -216,12 +215,13 @@ class PDFSignature:
                 timestamper=timestamper,
             )
             return True
+        return None
 
     @staticmethod
     def lta_sign(inputfile, output, config):
         signer = PDFSignature.get_signers(config)
         timestamper = PDFSignature.get_timestamps(config)
-        w = IncrementalPdfWriter(inputfile)
+        w = IncrementalPdfFileWriter(inputfile)
         meta = PDFSignature.get_signature_meta(config)
 
         signature_meta = signers.PdfSignatureMetadata(**meta)
@@ -234,6 +234,7 @@ class PDFSignature:
                 output=output,
             )
             return True
+        return None
 
     @staticmethod
     def get_session(config):
@@ -244,10 +245,11 @@ class PDFSignature:
 
         if user_pin is not None and lib_location is not None:
             if slot_no is not None or token_label is not None:
-                session = open_pkcs11_session(
+                return open_pkcs11_session(
                     lib_location,
                     slot_no=slot_no,
                     token_label=token_label,
                     user_pin=user_pin,
                 )
-                return session
+            return None
+        return None

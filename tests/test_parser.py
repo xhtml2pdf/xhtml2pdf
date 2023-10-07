@@ -43,7 +43,7 @@ class ParserTest(TestCase):
         c = pisaContext(".")
         tests_folder = os.path.dirname(os.path.realpath(__file__))
         img_path = os.path.join(tests_folder, "samples", "img", "denker.png")
-        data = '<img src="{0}">'.format(img_path).encode("utf-8")
+        data = f'<img src="{img_path}">'.encode()
         r = pisaParser(data, c)
         self.assertEqual(c, r)
         self.assertEqual(r.err, 0)

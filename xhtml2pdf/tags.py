@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import copy
 import json
 import logging
@@ -30,20 +31,19 @@ from reportlab.platypus.flowables import Flowable, HRFlowable, PageBreak, Spacer
 from reportlab.platypus.frames import Frame
 from reportlab.platypus.paraparser import ABag, tt2ps
 
-from .charts import (
+from xhtml2pdf.charts import (
     DoughnutChart,
-    PieChart,
-    HorizontalLine,
-    VerticalBar,
     HorizontalBar,
+    HorizontalLine,
     LegendedPieChart,
+    PieChart,
+    VerticalBar,
 )
-from xhtml2pdf import xhtml2pdf_reportlab
-from xhtml2pdf.util import dpi96, getAlign, getColor, getSize
-from xhtml2pdf.xhtml2pdf_reportlab import PmlImage, PmlPageTemplate
-from .paragraph import PageNumberFlowable
+from xhtml2pdf.paragraph import PageNumberFlowable
+from xhtml2pdf.util import DPI96, getAlign, getColor, getSize
+from xhtml2pdf.xhtml2pdf_reportlab import PmlImage, PmlInput, PmlPageTemplate
 
-log = logging.getLogger("xhtml2pdf")
+log = logging.getLogger(__name__)
 
 
 def deprecation(message):
@@ -51,19 +51,19 @@ def deprecation(message):
 
 
 class pisaTag:
-    """
-    The default class for a tag definition
-    """
+    """The default class for a tag definition."""
 
     def __init__(self, node, attr):
         self.node = node
         self.tag = node.tagName
         self.attr = attr
 
-    def start(self, c):
+    @staticmethod
+    def start(c):
         pass
 
-    def end(self, c):
+    @staticmethod
+    def end(c):
         pass
 
 
@@ -82,16 +82,19 @@ class pisaTagBODY(pisaTag):
 
 
 class pisaTagTITLE(pisaTag):
-    def end(self, c):
+    @staticmethod
+    def end(c):
         c.meta["title"] = c.text
         c.clearFrag()
 
 
 class pisaTagSTYLE(pisaTag):
-    def start(self, c):
+    @staticmethod
+    def start(c):
         c.addPara()
 
-    def end(self, c):
+    @staticmethod
+    def end(c):
         c.clearFrag()
 
 
@@ -103,12 +106,14 @@ class pisaTagMETA(pisaTag):
 
 
 class pisaTagSUP(pisaTag):
-    def start(self, c):
+    @staticmethod
+    def start(c):
         c.frag.super = 1
 
 
 class pisaTagSUB(pisaTag):
-    def start(self, c):
+    @staticmethod
+    def start(c):
         c.frag.sub = 1
 
 
@@ -132,7 +137,8 @@ class pisaTagA(pisaTag):
         if attr.href and re.match(self.rxLink, attr.href):
             c.frag.link = attr.href
 
-    def end(self, c):
+    @staticmethod
+    def end(c):
         pass
 
 
@@ -148,7 +154,8 @@ class pisaTagFONT(pisaTag):
             size = getSize(self.attr["size"], c.frag.fontSize, c.baseFontSize)
             c.frag.fontSize = max(size, 1.0)
 
-    def end(self, c):
+    @staticmethod
+    def end(c):
         pass
 
 
@@ -303,19 +310,18 @@ class pisaTagLI(pisaTag):
             f = frag.listStyleImage
             if f and (not f.notFound()):
                 img = PmlImage(f.getData(), width=None, height=None)
-                img.drawHeight *= dpi96
-                img.drawWidth *= dpi96
+                img.drawHeight *= DPI96
+                img.drawWidth *= DPI96
                 img.pisaZoom = frag.zoom
                 img.drawWidth *= img.pisaZoom
                 img.drawHeight *= img.pisaZoom
                 frag.image = img
                 self.offset = max(0, img.drawHeight - c.frag.fontSize)
+        elif isinstance(lst, str):
+            frag.text = lst
         else:
-            if type(lst) == type(""):
-                frag.text = lst
-            else:
-                # XXX This should be the recent font, but it throws errors in Reportlab!
-                frag.text = lst(c)
+            # XXX This should be the recent font, but it throws errors in Reportlab!
+            frag.text = lst(c)
 
         # XXX This should usually be done in the context!!!
         frag.fontName = frag.bulletFontName = tt2ps(
@@ -328,7 +334,8 @@ class pisaTagLI(pisaTag):
 
 
 class pisaTagBR(pisaTag):
-    def start(self, c):
+    @staticmethod
+    def start(c):
         c.frag.lineBreak = 1
         c.addFrag()
         c.fragStrip = True
@@ -339,8 +346,8 @@ class pisaTagBR(pisaTag):
 class pisaTagIMG(pisaTag):
     def start(self, c):
         attr = self.attr
-        log.debug("Parsing img tag, src: {}".format(attr.src))
-        log.debug("Attrs: {}".format(attr))
+        log.debug("Parsing img tag, src: %r", attr.src)
+        log.debug("Attrs: %r", attr)
 
         if attr.src:
             filedata = attr.src.getData()
@@ -351,16 +358,16 @@ class pisaTagIMG(pisaTag):
                     height = c.frag.height
 
                     if attr.width:
-                        width = attr.width * dpi96
+                        width = attr.width * DPI96
                     if attr.height:
-                        height = attr.height * dpi96
+                        height = attr.height * DPI96
 
                     img = PmlImage(filedata, width=None, height=None)
 
                     img.pisaZoom = c.frag.zoom
 
-                    img.drawHeight *= dpi96
-                    img.drawWidth *= dpi96
+                    img.drawHeight *= DPI96
+                    img.drawWidth *= DPI96
 
                     if (width is None) and (height is not None):
                         factor = (
@@ -396,7 +403,7 @@ class pisaTagIMG(pisaTag):
                     c.force = True
                     if align in ["left", "right"]:
                         c.image = img
-                        c.imageData = dict(align=align)
+                        c.imageData = {"align": align}
 
                     else:
                         # Important! Make sure that cbDefn is not inherited by other
@@ -453,14 +460,15 @@ class pisaTagHR(pisaTag):
 
 
 class pisaTagINPUT(pisaTag):
-    def _render(self, c, attr):
+    @staticmethod
+    def _render(c, attr):
         width = 10
         height = 10
         if attr.type == "text":
             width = 100
             height = 12
         c.addStory(
-            xhtml2pdf_reportlab.PmlInput(
+            PmlInput(
                 attr.name,
                 input_type=attr.type,
                 default=attr.value,
@@ -478,15 +486,15 @@ class pisaTagINPUT(pisaTag):
 
 
 class pisaTagTEXTAREA(pisaTagINPUT):
-    #
-    def _render(self, c, attr):
+    @staticmethod
+    def _render(c, attr):
         multiline = 1 if int(attr.rows) > 1 else 0
         height = int(attr.rows) * 15
         width = int(attr.cols) * 5
 
         # this does not currently support the ability to pre-populate the text field with data that appeared within the <textarea></textarea> tags
         c.addStory(
-            xhtml2pdf_reportlab.PmlInput(
+            PmlInput(
                 attr.name,
                 input_type="text",
                 default="",
@@ -498,12 +506,14 @@ class pisaTagTEXTAREA(pisaTagINPUT):
 
 
 class pisaTagSELECT(pisaTagINPUT):
-    def start(self, c):
+    @staticmethod
+    def start(c):
         c.select_options = ["One", "Two", "Three"]
 
-    def _render(self, c, attr):
+    @staticmethod
+    def _render(c, attr):
         c.addStory(
-            xhtml2pdf_reportlab.PmlInput(
+            PmlInput(
                 attr.name,
                 input_type="select",
                 default=c.select_options[0],
@@ -520,9 +530,7 @@ class pisaTagOPTION(pisaTag):
 
 
 class pisaTagPDFNEXTPAGE(pisaTag):
-    """
-    <pdf:nextpage name="" />
-    """
+    """<pdf:nextpage name="" />."""
 
     def start(self, c):
         c.addPara()
@@ -532,28 +540,23 @@ class pisaTagPDFNEXTPAGE(pisaTag):
 
 
 class pisaTagPDFNEXTTEMPLATE(pisaTag):
-    """
-    <pdf:nexttemplate name="" />
-    """
+    """<pdf:nexttemplate name="" />."""
 
     def start(self, c):
         c.addStory(NextPageTemplate(self.attr["name"]))
 
 
 class pisaTagPDFNEXTFRAME(pisaTag):
-    """
-    <pdf:nextframe name="" />
-    """
+    """<pdf:nextframe name="" />."""
 
-    def start(self, c):
+    @staticmethod
+    def start(c):
         c.addPara()
         c.addStory(FrameBreak())
 
 
 class pisaTagPDFSPACER(pisaTag):
-    """
-    <pdf:spacer height="" />
-    """
+    """<pdf:spacer height="" />."""
 
     def start(self, c):
         c.addPara()
@@ -561,11 +564,10 @@ class pisaTagPDFSPACER(pisaTag):
 
 
 class pisaTagPDFPAGENUMBER(pisaTag):
-    """
-    <pdf:pagenumber example="" />
-    """
+    """<pdf:pagenumber example="" />."""
 
-    def start(self, c):
+    @staticmethod
+    def start(c):
         flow = PageNumberFlowable()
         pn = c.addPageNumber(flow)
         c.addStory(flow)
@@ -575,11 +577,10 @@ class pisaTagPDFPAGENUMBER(pisaTag):
 
 
 class pisaTagPDFPAGECOUNT(pisaTag):
-    """
-    <pdf:pagecount />
-    """
+    """<pdf:pagecount />."""
 
-    def start(self, c):
+    @staticmethod
+    def start(c):
         flow = PageNumberFlowable()
         pc = c.getPageCount(flow)
         c.addStory(flow)
@@ -587,24 +588,22 @@ class pisaTagPDFPAGECOUNT(pisaTag):
         c.addFrag(pc)
         c.frag.pageCount = False
 
-    def end(self, c):
+    @staticmethod
+    def end(c):
         c.addPageCount()
 
 
 class pisaTagPDFTOC(pisaTag):
-    """
-    <pdf:toc />
-    """
+    """<pdf:toc />."""
 
-    def end(self, c):
+    @staticmethod
+    def end(c):
         c.multiBuild = True
         c.addTOC()
 
 
 class pisaTagPDFFRAME(pisaTag):
-    """
-    <pdf:frame name="" static box="" />
-    """
+    """<pdf:frame name="" static box="" />."""
 
     def start(self, c):
         deprecation("pdf:frame")
@@ -648,7 +647,7 @@ class pisaTagPDFTEMPLATE(pisaTag):
     """
     <pdf:template name="" static box="" >
         <pdf:frame...>
-    </pdf:template>
+    </pdf:template>.
     """
 
     def start(self, c):
@@ -678,18 +677,14 @@ class pisaTagPDFTEMPLATE(pisaTag):
 
 
 class pisaTagPDFLANGUAGE(pisaTag):
-    """
-    <pdf:language name=""/>
-    """
+    """<pdf:language name=""/>."""
 
     def start(self, c):
-        setattr(c, "language", self.attr.name)
+        c.language = self.attr.name
 
 
 class pisaTagPDFFONT(pisaTag):
-    """
-    <pdf:fontembed name="" src="" />
-    """
+    """<pdf:fontembed name="" src="" />."""
 
     def start(self, c):
         deprecation("pdf:font")
@@ -718,9 +713,7 @@ class pisaTagPDFBARCODE(pisaTag):
     }
 
     class _barcodeWrapper(Flowable):
-        """
-        Wrapper for barcode widget
-        """
+        """Wrapper for barcode widget."""
 
         def __init__(self, codeName="Code128", value="", **kw):
             self.vertical = kw.get("vertical", 0)
@@ -808,7 +801,8 @@ class pisaTagCANVAS(pisaTag):
             "legendedPie": LegendedPieChart,
         }
 
-    def start(self, c):
+    @staticmethod
+    def start(c):
         pass
 
     def end(self, c):
@@ -859,12 +853,11 @@ class pisaTagCANVAS(pisaTag):
                 self.chart.set_title_properties(data["title"], title)
                 draw.add(title)
 
-            if "legend" in data:
-                if data["legend"]:
-                    legend = Legend()
-                    self.chart.set_legend(data["legend"], legend)
-                    self.chart.load_data_legend(data, legend)
-                    draw.add(legend)
+            if "legend" in data and data["legend"]:
+                legend = Legend()
+                self.chart.set_legend(data["legend"], legend)
+                self.chart.load_data_legend(data, legend)
+                draw.add(legend)
 
             # ADD CHART TO DRAW OBJECT
             draw.add(self.chart)

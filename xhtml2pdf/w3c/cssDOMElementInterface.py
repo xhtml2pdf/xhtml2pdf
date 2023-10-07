@@ -6,8 +6,10 @@
 #
 # Modified by Dirk Holtwick <holtwick@web.de>, 2007-2008
 
-from . import css  # python 3
+# ruff: noqa: N802, N803, N815, N816, N999
 
+
+from xhtml2pdf.w3c import css
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ~ Definitions
@@ -15,7 +17,7 @@ from . import css  # python 3
 
 
 class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
-    """An implementation of css.CSSElementInterfaceAbstract for xml.dom Element Nodes"""
+    """An implementation of css.CSSElementInterfaceAbstract for xml.dom Element Nodes."""
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # ~ Constants / Variables / Etc.
@@ -62,15 +64,14 @@ class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
         if namespace in (None, "", "*"):
             # matches any namespace
             return True
-        else:  # full compare
-            return namespace == self.domElement.namespaceURI
+        # full compare
+        return namespace == self.domElement.namespaceURI
 
     def getAttr(self, name, default=NotImplemented):
-        attrValue = self.domElement.attributes.get(name)
-        if attrValue is not None:
-            return attrValue.value
-        else:
-            return default
+        attr_value = self.domElement.attributes.get(name)
+        if attr_value is not None:
+            return attr_value.value
+        return default
 
     def getIdAttr(self):
         return self.getAttr("id", "")
@@ -82,11 +83,11 @@ class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
         return self.getAttr("style", None)
 
     def inPseudoState(self, name, params=()):
-        handler = self._pseudoStateHandlerLookup.get(name, lambda self: False)
+        handler = self._pseudoStateHandlerLookup.get(name, lambda _: False)
         return handler(self)
 
-    def iterXMLParents(self, includeSelf=False):
-        klass = self.__class__
+    def iterXMLParents(self, *, includeSelf=False):
+        klass = type(self)
         current = self.domElement
         if not includeSelf:
             current = current.parentNode
@@ -99,8 +100,7 @@ class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
         while sibling:
             if sibling.nodeType == sibling.ELEMENT_NODE:
                 return sibling
-            else:
-                sibling = sibling.previousSibling
+            sibling = sibling.previousSibling
         return None
 
     def getNextSibling(self):
@@ -108,8 +108,7 @@ class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
         while sibling:
             if sibling.nodeType == sibling.ELEMENT_NODE:
                 return sibling
-            else:
-                sibling = sibling.nextSibling
+            sibling = sibling.nextSibling
         return None
 
     def getInlineStyle(self):

@@ -5,7 +5,7 @@ def extract_request_variables(request):
     page_size = request.POST.get("page_size", "letter")
     page_orientation = request.POST.get("page_orientation", "portrait")
 
-    pagesize = "%s %s" % (page_size, page_orientation)
+    pagesize = f"{page_size} {page_orientation}"
 
     template = Template(request.POST.get("data", ""))
     data = template.render(Context({}))

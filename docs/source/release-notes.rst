@@ -51,7 +51,7 @@ Versions >= 0.2
     --------------------------------------------
 
 Unreleased
-====================
+==========
 
 **🐛 Bug-Fixes**
 
@@ -68,6 +68,9 @@ Unreleased
 * Remove Python2 compatibility (:pr:`706`)
 * Depend on ``html5lib >= 1.1`` (:issue:`705`) (:pr:`709`)
 * Depend on ``reportlab >= 4.0.4`` (:issue:`699`) (:pr:`708`)
+* Use black code style (:pr:`714`)
+* Enforce consistent file formatting (:pr:`715`)
+* Add ruff code linter (:pr:`716`)
 
 | Thanks to the following people on GitHub for contributing to this release:
 | *JanEgner*, *lucasgadams*, *a-detiste*, *holtwick*, *stefan6419846*, *timobrembeck*
@@ -111,7 +114,7 @@ Released: 2023-04-20
 
 
 0.2.9
-====================
+=====
 
 Released: 2023-01-30
 
@@ -131,13 +134,13 @@ Released: 2023-01-30
 * Change pyPDF3 to pypdf.
 
 | Thanks to the following people on GitHub for contributing to this release:
-| *BergLucas*, *matllubos*, *timoludwig*, *MartinThoma*, *charludo*, *jorenham*
+| *BergLucas*, *matllubos*, *timobrembeck*, *MartinThoma*, *charludo*, *jorenham*
 
 --------------------------------------------
 
 
 0.2.8
-====================
+=====
 
 Released: 2022-06-16
 
@@ -150,12 +153,12 @@ Released: 2022-06-16
 
 
 | Thanks to the following people on GitHub for contributing to this release:
-| *MuhammedNihad*, *timoludwig*, *flash716*
+| *MuhammedNihad*, *timobrembeck*, *flash716*
 
 --------------------------------------------
 
 0.2.7
-====================
+=====
 
 Released: 2022-03-31
 
@@ -191,7 +194,7 @@ Released: 2022-03-31
 
 
 0.2.6
-====================
+=====
 
 Released: 2022-03-11
 
@@ -231,13 +234,13 @@ Released: 2022-03-11
 
 | Thanks to the following people on GitHub for contributing to this release:
 | *Roman914*, *LeonardoBein*, *myu20*, *myu20*, *captn3m0*, *audoh-tickitto*, *Momoumar*,
-| *timoludwig*, *fbernhart*,*mgodkowicz*, *anze3db * and *luisza*
+| *timobrembeck*, *fbernhart*,*mgodkowicz*, *anze3db * and *luisza*
 
 --------------------------------------------
 
 
 0.2.5
-====================
+=====
 
 Released: 2020-10-08
 
@@ -290,7 +293,7 @@ Released: 2020-10-08
 --------------------------------------------
 
 0.2.4
-====================
+=====
 
 Released: 2020-01-18
 
@@ -319,7 +322,7 @@ Released: 2020-01-18
 --------------------------------------------
 
 0.2.3
-====================
+=====
 
 Released: 2018-09-14
 
@@ -328,7 +331,7 @@ Changes were not documented
 --------------------------------------------
 
 0.2.2
-====================
+=====
 
 Released: 2018-04-16
 
@@ -337,7 +340,7 @@ Changes were not documented
 --------------------------------------------
 
 0.2.1
-====================
+=====
 
 Released: 2018-02-16
 
@@ -361,7 +364,7 @@ Released: 2018-02-16
 --------------------------------------------
 
 0.2
-====================
+===
 
 Released: 2018-02-15
 
@@ -398,7 +401,7 @@ Released: 2018-02-15
 --------------------------------------------
 
 0.2beta1
-====================
+========
 
 Released: 2016-11-30
 
@@ -412,7 +415,7 @@ Versions >= 0.1, < 0.2
 **********************
 
 0.1beta3
-====================
+========
 
 Released: 2016-08-16
 
@@ -421,7 +424,7 @@ Changes were not documented
 --------------------------------------------
 
 0.1beta2
-====================
+========
 
 Released: 2016-08-01
 
@@ -439,7 +442,7 @@ Changes were not documented
 --------------------------------------------
 
 0.1alpha4
-====================
+=========
 
 Released: 2016-05-18
 
@@ -459,7 +462,7 @@ Released: 2016-05-18
 --------------------------------------------
 
 0.1alpha3
-====================
+=========
 
 Released: 2016-05-01
 
@@ -471,7 +474,7 @@ Released: 2016-05-01
 --------------------------------------------
 
 0.1alpha2
-====================
+=========
 
 Released: 2016-04-14
 
@@ -481,7 +484,7 @@ Released: 2016-04-14
 --------------------------------------------
 
 0.1alpha1
-====================
+=========
 
 Released: 2016-01-20
 
@@ -500,7 +503,7 @@ Versions < 0.1
 **************
 
 0.0.6
-====================
+=====
 
 Released: 2014-04-27
 
@@ -510,7 +513,7 @@ Released: 2014-04-27
 --------------------------------------------
 
 0.0.5
-====================
+=====
 
 Released: 2013-03-25
 
@@ -522,7 +525,7 @@ Released: 2013-03-25
 --------------------------------------------
 
 0.0.4
-====================
+=====
 
 Released: 2012-05-23
 
@@ -533,7 +536,7 @@ Released: 2012-05-23
 --------------------------------------------
 
 0.0.3
-====================
+=====
 
 Released: 2011-06-19
 
@@ -543,7 +546,7 @@ Changes were not documented
 
 
 0.0.2
-====================
+=====
 
 Released: 2011-05-27
 
@@ -553,7 +556,7 @@ Changes were not documented
 
 
 0.0.1
-====================
+=====
 
 Released: 2011-05-20
 
@@ -563,7 +566,7 @@ Changes were not documented
 
 
 0.0.0
-====================
+=====
 
 Released: 2011-05-19
 

@@ -12,16 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "$Revision: 194 $"
-__author__ = "$Author: holtwick $"
-__date__ = "$Date: 2008-04-18 18:59:53 +0200 (Fr, 18 Apr 2008) $"
-
-import ho.pisa as pisa
+from ho import pisa
 
 
 def helloWorld():
     filename = __file__ + ".pdf"
-    pdf = pisa.CreatePDF("Hello <strong>World</strong>", file(filename, "wb"))
+    with open(filename, "wb") as file:
+        pdf = pisa.CreatePDF("Hello <strong>World</strong>", file)
     if not pdf.err:
         pisa.startViewer(filename)
 

@@ -1,5 +1,5 @@
 Graphs in canvas
-##########################
+################
 
 Canvas in xhtml2pdf have different types of printings, when you have to build graphs you have to
 set `type="graph"`, also it's important set width and height.

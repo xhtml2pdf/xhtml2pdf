@@ -17,11 +17,9 @@ import ssl
 
 class HttpConfig(dict):
     """
-    Configuration settings for httplib
+    Configuration settings for httplib.
 
-    See
-    - python2 : https://docs.python.org/2/library/httplib.html#httplib.HTTPSConnection
-    - python3 : https://docs.python.org/3.4/library/http.client.html#http.client.HTTPSConnection
+    See: https://docs.python.org/3.4/library/http.client.html#http.client.HTTPSConnection
 
     available settings
 
@@ -57,7 +55,7 @@ class HttpConfig(dict):
     def __repr__(self):
         dev = ""
         for key, value in self.items():
-            dev += "%r = %r, " % (key, value)
+            dev += f"{key!r} = {value!r}, "
         return dev
 
 
