@@ -622,3 +622,7 @@ def frag_text_language_check(context, frag_text):
             return detect_language_result
         return None
     return None
+
+
+class ImageWarning(Exception):  # noqa: N818
+    pass

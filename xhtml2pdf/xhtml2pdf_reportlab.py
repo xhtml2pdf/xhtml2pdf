@@ -26,6 +26,7 @@ from typing import TYPE_CHECKING, ClassVar, Iterator
 from uuid import uuid4
 
 from PIL import Image as PILImage
+from PIL import UnidentifiedImageError
 from PIL.Image import Image
 from reportlab.lib.enums import TA_RIGHT
 from reportlab.lib.styles import ParagraphStyle
@@ -49,7 +50,7 @@ from reportlab.rl_config import register_reset
 from xhtml2pdf.builders.watermarks import WaterMarks
 from xhtml2pdf.files import pisaFileObject, pisaTempFile
 from xhtml2pdf.reportlab_paragraph import Paragraph
-from xhtml2pdf.util import getBorderStyle
+from xhtml2pdf.util import ImageWarning, getBorderStyle
 
 if TYPE_CHECKING:
     from reportlab.graphics.shapes import Drawing
@@ -348,18 +349,14 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
                             "Imaging Library not available, unable to import bitmaps"
                             " only jpegs"
                         )
-                        raise RuntimeError(msg) from e
+                        raise ImageWarning(msg) from e
                     self.jpeg_fh = self._jpeg_fh
                     self._data = self.fp.read()
                     self.fp.seek(0)
-            except Exception as e:  # TODO: Kill the catch-all
-                et, ev, tb = sys.exc_info()
-                if hasattr(ev, "args") and isinstance(ev, Exception):
-                    a = f"{ev.args[-1]} fileName={fileName!r}"
-                    ev.args = ev.args[:-1] + (a,)
-                    msg = f"{et} {ev} {tb}"
-                    raise RuntimeError(msg) from e
-                raise
+            # Catch all errors that are known and don't need the stack trace
+            except UnidentifiedImageError as e:
+                msg = "Cannot identify image file"
+                raise ImageWarning(msg) from e
 
     @staticmethod
     def _read_image(fp) -> Image:

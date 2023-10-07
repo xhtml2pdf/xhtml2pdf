@@ -41,7 +41,7 @@ from xhtml2pdf.charts import (
     VerticalBar,
 )
 from xhtml2pdf.paragraph import PageNumberFlowable
-from xhtml2pdf.util import DPI96, getAlign, getColor, getSize
+from xhtml2pdf.util import DPI96, ImageWarning, getAlign, getColor, getSize
 from xhtml2pdf.xhtml2pdf_reportlab import PmlImage, PmlInput, PmlPageTemplate
 
 if TYPE_CHECKING:
@@ -437,8 +437,10 @@ class pisaTagIMG(pisaTag):
                         c.fragList.append(afrag)
                         c.fontSize = img.drawHeight
 
-                except Exception:  # TODO: Kill catch-all
-                    log.warning(c.warning("Error in handling image"), exc_info=True)
+                except ImageWarning as e:
+                    log.warning(c.warning(f"{e}:"))
+                except Exception:
+                    log.warning(c.warning("Error in handling image:"), exc_info=True)
             else:
                 log.warning(
                     c.warning(
