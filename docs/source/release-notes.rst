@@ -56,6 +56,7 @@ Unreleased
 **🐛 Bug-Fixes**
 
 * Fix page number & page count (:issue:`106`) (:pr:`695`)
+* Fix ``ZeroDivisionError`` on broken image files (:pr:`723`)
 
 **📘 Documentation**
 

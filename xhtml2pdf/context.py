@@ -18,6 +18,7 @@ import logging
 import re
 import urllib.parse as urlparse
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from reportlab import rl_settings
 from reportlab.lib.enums import TA_LEFT
@@ -53,6 +54,10 @@ from xhtml2pdf.xhtml2pdf_reportlab import (
     PmlParagraphAndImage,
     PmlTableOfContents,
 )
+
+if TYPE_CHECKING:
+    from xhtml2pdf.xhtml2pdf_reportlab import PmlImage
+
 
 rl_settings.warnOnMissingFontGlyphs = 0
 log = logging.getLogger(__name__)
@@ -573,19 +578,22 @@ class pisaContext:
         self.log: list = []
         self.path: list = []
         self.pisaBackgroundList: list = []
+        self.select_options: list[str] = []
         self.story: list = []
-        self.image = None
+        self.image: PmlImage | None = None
         self.indexing_story = None
         self.keepInFrameIndex = None
         self.node = None
         self.template = None
         self.tableData: TableData = TableData()
         self.err: int = 0
+        self.fontSize: int = 0
         self.listCounter: int = 0
         self.uidctr: int = 0
         self.warn: int = 0
         self.cssDefaultText: str = ""
         self.cssText: str = ""
+        self.language: str = ""
         self.text: str = ""
         self.frameStatic: dict = {}
         self.imageData: dict = {}

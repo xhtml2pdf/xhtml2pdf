@@ -265,7 +265,7 @@ def getSize(value, relative=0, base=None, default=0.0):
             return default  # value = 0
         return max(0, value)
     except Exception:
-        log.warning("getSize %r %r", original, relative, exc_info=1)
+        log.warning("getSize %r %r", original, relative, exc_info=True)
         return default
 
 
