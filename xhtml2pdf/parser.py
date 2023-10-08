@@ -124,7 +124,9 @@ def pisaGetAttributes(c, tag, attributes):
                 # XXX no Unicode! Reportlab fails with template names
                 attrs[str(k)] = str(v)
             except Exception as e:  # noqa: PERF203
-                log.debug("%s during string conversion for %s=%s", e, k, v, exc_info=1)
+                log.debug(
+                    "%s during string conversion for %s=%s", e, k, v, exc_info=True
+                )
                 attrs[k] = v
 
     nattrs = {}
@@ -335,7 +337,7 @@ def CSSCollect(node, c):
             # except LookupError:
             #    pass
             except Exception as e:  # noqa: PERF203
-                log.debug("%r during CSS attr '%s'", e, cssAttrName, exc_info=1)
+                log.debug("%r during CSS attr '%s'", e, cssAttrName, exc_info=True)
 
         CSSAttrCache[key] = node.cssAttrs
     return node.cssAttrs

@@ -22,7 +22,7 @@ import sys
 from hashlib import md5
 from html import escape as html_escape
 from io import BytesIO, StringIO
-from typing import ClassVar, Tuple, cast
+from typing import TYPE_CHECKING, ClassVar, Tuple, cast
 from uuid import uuid4
 
 import PIL.Image as PILImage
@@ -49,6 +49,11 @@ from xhtml2pdf.builders.watermarks import WaterMarks
 from xhtml2pdf.files import pisaTempFile
 from xhtml2pdf.reportlab_paragraph import Paragraph
 from xhtml2pdf.util import getBorderStyle
+
+if TYPE_CHECKING:
+    from reportlab.graphics.shapes import Drawing
+
+    from xhtml2pdf.files import pisaFileObject
 
 try:
     from reportlab.graphics import renderPM
@@ -281,7 +286,7 @@ class PmlPageTemplate(PageTemplate):
                     frame_copy.addFromList(story, canvas)
 
             except Exception:  # TODO: Kill this!
-                log.debug("PmlPageTemplate", exc_info=1)
+                log.debug("PmlPageTemplate", exc_info=True)
         finally:
             canvas.restoreState()
 
@@ -368,15 +373,13 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
 
     @staticmethod
     def _read_image(fp):
-        if sys.platform[0:4] == "java":
+        if sys.platform[:4] == "java":
             from java.io import ByteArrayInputStream
             from javax.imageio import ImageIO
 
             input_stream = ByteArrayInputStream(fp.read())
             return ImageIO.read(input_stream)
-        if PILImage:
-            return PILImage.open(fp)
-        return None
+        return PILImage.open(fp) if PILImage else None
 
     def _jpeg_fh(self):
         fp = self.fp
@@ -389,7 +392,7 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
 
     def getSize(self):
         if self._width is None or self._height is None:
-            if sys.platform[0:4] == "java":
+            if sys.platform[:4] == "java":
                 self._width = self._image.getWidth()
                 self._height = self._image.getHeight()
             else:
@@ -400,7 +403,7 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
         """Return byte array of RGB data as string."""
         if self._data is None:
             self._dataA = None
-            if sys.platform[0:4] == "java":
+            if sys.platform[:4] == "java":
                 import jarray  # TODO: Move to top.
                 from java.awt.image import PixelGrabber
 
@@ -429,11 +432,7 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
                 elif mode not in ("L", "RGB", "CMYK"):
                     im = im.convert("RGB")
                     self.mode = "RGB"
-                if hasattr(im, "tobytes"):
-                    self._data = im.tobytes()
-                else:
-                    # PIL compatibility
-                    self._data = im.tostring()
+                self._data = im.tobytes() if hasattr(im, "tobytes") else im.tostring()
         return self._data
 
     def getImageData(self):
@@ -441,7 +440,7 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
         return width, height, self.getRGBData()
 
     def getTransparent(self):
-        if sys.platform[0:4] == "java":
+        if sys.platform[:4] == "java":
             return None
         if "transparency" in self._image.info:
             transparency = self._image.info["transparency"] * 3
@@ -465,27 +464,30 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
 
     def __str__(self) -> str:
         try:
-            fn = self.fileName.read()
-            if not fn:
-                fn = id(self)
-            return "PmlImageObject_%s" % hash(fn)
+            fn = self.fileName.read() or id(self)
+            return f"PmlImageObject_{hash(fn)}"
         except Exception:
-            fn = self.fileName
-            if not fn:
-                fn = id(self)
-            return fn
+            return str(self.fileName or id(self))
 
 
 class PmlImage(Flowable, PmlMaxHeightMixIn):
     def __init__(
-        self, data, width=None, height=None, mask="auto", mimetype=None, **kw
+        self,
+        data: pisaFileObject,
+        width: int | None = None,
+        height: int | None = None,
+        mask: str = "auto",
+        mimetype: str | None = None,
+        **kw: dict,
     ) -> None:
-        self.kw = kw
-        self.hAlign = "CENTER"
-        self._mask = mask
-        self._imgdata = data.getvalue() if isinstance(data, pisaTempFile) else data
+        self.kw: dict = kw
+        self.hAlign: str = "CENTER"
+        self._mask: str = mask
+        self._imgdata: bytes = (
+            data.getvalue() if isinstance(data, pisaTempFile) else data
+        )
         # print "###", repr(data)
-        self.mimetype = mimetype
+        self.mimetype: str | None = mimetype
 
         # Resolve size
         drawing = self.getDrawing()
@@ -519,7 +521,9 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         # print "imgage result", factor, self.dWidth, self.dHeight
         return self.dWidth, self.dHeight
 
-    def getDrawing(self, width=None, height=None):
+    def getDrawing(
+        self, width: int | None = None, height: int | None = None
+    ) -> Drawing | None:
         """If this image is a vector image and the library is available, returns a ReportLab Drawing."""
         if svg2rlg:
             try:
