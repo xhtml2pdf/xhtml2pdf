@@ -474,6 +474,7 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
     def __init__(
         self,
         data: pisaFileObject,
+        src: str | None = None,
         width: int | None = None,
         height: int | None = None,
         mask: str = "auto",
@@ -486,6 +487,7 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         self._imgdata: bytes = (
             data.getvalue() if isinstance(data, pisaTempFile) else data
         )
+        self.src: str | None = src
         # print "###", repr(data)
         self.mimetype: str | None = mimetype
 

@@ -312,7 +312,7 @@ class pisaTagLI(pisaTag):
             frag.text = ""
             f = frag.listStyleImage
             if f and (not f.notFound()):
-                img = PmlImage(f.getData(), width=None, height=None)
+                img = PmlImage(f.getData(), src=f.uri, width=None, height=None)
                 img.drawHeight *= DPI96
                 img.drawWidth *= DPI96
                 img.pisaZoom = frag.zoom
@@ -364,7 +364,7 @@ class pisaTagIMG(pisaTag):
                     if attr.height:
                         height = attr.height * DPI96
 
-                    img = PmlImage(filedata, width=None, height=None)
+                    img = PmlImage(filedata, src=attr.src.uri, width=None, height=None)
 
                     img.pisaZoom = c.frag.zoom
 
