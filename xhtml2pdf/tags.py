@@ -444,7 +444,7 @@ class pisaTagIMG(pisaTag):
             else:
                 log.warning(
                     c.warning(
-                        f"Could not get image data from src attribute: {attr.src.uri}"
+                        f"Could not get image data from src attribute: {attr.src.uri!r}"
                     )
                 )
         else:

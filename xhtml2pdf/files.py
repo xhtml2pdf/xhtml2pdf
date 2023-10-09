@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import base64
 import gzip
-import http.client as httplib
 import logging
 import mimetypes
 import re
@@ -14,15 +13,10 @@ from abc import abstractmethod
 from io import BytesIO
 from pathlib import Path
 from tempfile import _TemporaryFileWrapper
-from typing import TYPE_CHECKING, Any, Callable, ClassVar
+from typing import Any, Callable, ClassVar
 from urllib import request
 from urllib.parse import unquote as urllib_unquote
-
-from xhtml2pdf.config.httpconfig import httpConfig
-
-if TYPE_CHECKING:
-    from http.client import HTTPResponse
-    from urllib.parse import SplitResult
+from urllib.request import Request, urlopen
 
 log = logging.getLogger(__name__)
 
@@ -227,6 +221,9 @@ class LocalProtocolURI(BaseFile):
 
 
 class NetworkFileUri(BaseFile):
+    #: The request timeout in seconds
+    TIMEOUT = 1
+
     def __init__(self, path: str, basepath: str | None) -> None:
         super().__init__(path, basepath)
         self.attempts: int = 3
@@ -241,37 +238,25 @@ class NetworkFileUri(BaseFile):
                 data = self.extract_data()
             except Exception as e:
                 log.error(  # noqa: TRY400
-                    "%s: %s while extracting data from %s: %r on attempt %d",
+                    "%s: %s (attempt %d) while extracting data from %s: %r",
                     type(e).__name__,
                     e,
+                    self.actual_attempts,
                     type(self).__name__,
                     self.uri,
-                    self.actual_attempts,
                 )
         return data
 
-    def get_httplib(self, uri) -> tuple[bytes | None, bool]:
-        log.debug("Sending request for %r with httplib", uri)
+    def get_urllib(self, uri) -> tuple[bytes | None, bool]:
+        log.debug("Sending request for %r with urllib", uri)
         data: bytes | None = None
         is_gzip: bool = False
-        url_splitted: SplitResult = urlparse.urlsplit(uri)
-        server: str = url_splitted[1]
-        path: str = url_splitted[2]
-        path += f"?{url_splitted[3]}" if url_splitted[3] else ""
-        conn: httplib.HTTPConnection | httplib.HTTPSConnection | None = None
-        if uri.startswith("https://"):
-            conn = httplib.HTTPSConnection(server, **httpConfig)
-        else:
-            conn = httplib.HTTPConnection(server)
-        conn.request("GET", path)
-        r1: HTTPResponse = conn.getresponse()
-        if (r1.status, r1.reason) == (200, "OK"):
-            self.mimetype = r1.getheader("Content-Type", "").split(";")[0]
-            data = r1.read()
-            if r1.getheader("content-encoding") == "gzip":
+        request = Request(uri, headers={"Accept-Encoding": "gzip"})
+        with urlopen(request, timeout=self.TIMEOUT) as response:
+            data = response.read()
+            self.mimetype = response.headers["Content-Type"].split(";")[0]
+            if response.headers["Content-Encoding"] == "gzip":
                 is_gzip = True
-        else:
-            log.debug("Received non-200 status: %d %s", r1.status, r1.reason)
         return data, is_gzip
 
     def extract_data(self) -> bytes | None:
@@ -281,8 +266,9 @@ class NetworkFileUri(BaseFile):
         else:
             uri = self.path
         self.uri = uri
-        data, is_gzip = self.get_httplib(uri)
+        data, is_gzip = self.get_urllib(uri)
         if is_gzip and data:
+            log.debug("Unpacking gzip response %r")
             data = gzip.GzipFile(mode="rb", fileobj=BytesIO(data)).read()
         log.debug("Uri parsed: %r", uri)
         return data

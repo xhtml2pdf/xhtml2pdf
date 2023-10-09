@@ -21,7 +21,6 @@ import sys
 import urllib.parse as urlparse
 
 from xhtml2pdf import __version__
-from xhtml2pdf.config.httpconfig import httpConfig
 from xhtml2pdf.default import DEFAULT_CSS
 from xhtml2pdf.document import pisaDocument
 from xhtml2pdf.files import getFile
@@ -284,9 +283,6 @@ def execute():
 
         elif o in ("--html",):
             xhtml = False
-
-        elif httpConfig.is_http_config(o, a):
-            continue
 
     if not quiet:
         logging.basicConfig(level=log_level, format=log_format)
