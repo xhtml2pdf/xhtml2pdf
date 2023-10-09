@@ -1,24 +1,35 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Iterator, cast
+
 import pypdf
 from PIL import Image
 from reportlab.pdfgen.canvas import Canvas
 
 from xhtml2pdf.files import getFile, pisaFileObject
 
+if TYPE_CHECKING:
+    from io import BytesIO
+
+    from xhtml2pdf.context import pisaContext
+
 
 class WaterMarks:
     @staticmethod
-    def get_size_location(img, context, pagesize, is_portrait):
-        object_position = context.get("object_position", None)
-        cssheight = context.get("height", None)
-        csswidth = context.get("width", None)
+    def get_size_location(
+        img, context: dict, pagesize: tuple[int, int], *, is_portrait: bool
+    ) -> tuple[int, int, int, int]:
+        object_position: tuple[int, int] | None = context.get("object_position")
+        cssheight: int | None = cast(int, context.get("height"))
+        csswidth: int = cast(int, context.get("width"))
         iw, ih = img.getSize()
         pw, ph = pagesize
-        width = pw  # min(iw, pw) # max
-        wfactor = float(width) / iw
-        height = ph  # min(ih, ph) # max
-        hfactor = float(height) / ih
-        factor_min = min(wfactor, hfactor)
-        factor_max = max(wfactor, hfactor)
+        width: int = pw  # min(iw, pw) # max
+        wfactor: float = float(width) / iw
+        height: int = ph  # min(ih, ph) # max
+        hfactor: float = float(height) / ih
+        factor_min: float = min(wfactor, hfactor)
+        factor_max: float = max(wfactor, hfactor)
         if is_portrait:
             height = ih * factor_min
             width = iw * factor_min
@@ -41,11 +52,11 @@ class WaterMarks:
         return x, y, width, height
 
     @staticmethod
-    def get_img_with_opacity(pisafile, context):
-        opacity = context.get("opacity", None)
+    def get_img_with_opacity(pisafile: pisaFileObject, context: dict) -> BytesIO:
+        opacity: float = context.get("opacity", None)
         if opacity:
-            name = pisafile.getNamedFile()
-            img = Image.open(name)
+            name: str | None = pisafile.getNamedFile()
+            img: Image.Image = Image.open(name)
             img = img.convert("RGBA")
             img.putalpha(int(255 * opacity))
             img.save(name, "PNG")
@@ -53,74 +64,66 @@ class WaterMarks:
         return pisafile.getBytesIO()
 
     @staticmethod
-    def generate_pdf_background(pisafile, pagesize, is_portrait, context=None):
+    def generate_pdf_background(
+        pisafile: pisaFileObject,
+        pagesize: tuple[int, int],
+        *,
+        is_portrait: bool,
+        context: dict | None = None,
+    ) -> pisaFileObject:
         """
         Pypdf requires pdf as background so convert image to pdf in temporary file with same page dimensions
         :param pisafile:  Image File
         :param pagesize:  Page size for the new pdf
-        :return: pisaFileObject as tempfile.
         """
         # don't move up, we are preventing circular import
-        if context is None:
-            context = {}
         from xhtml2pdf.xhtml2pdf_reportlab import PmlImageReader
 
-        output = pisaFileObject(None, "application/pdf")  # build temporary file
-        img = PmlImageReader(WaterMarks.get_img_with_opacity(pisafile, context))
+        if context is None:
+            context = {}
+
+        output: pisaFileObject = pisaFileObject(
+            None, "application/pdf"
+        )  # build temporary file
+        img: PmlImageReader = PmlImageReader(
+            WaterMarks.get_img_with_opacity(pisafile, context)
+        )
         x, y, width, height = WaterMarks.get_size_location(
-            img, context, pagesize, is_portrait
+            img, context, pagesize, is_portrait=is_portrait
         )
 
         canvas = Canvas(output.getNamedFile(), pagesize=pagesize)
         canvas.drawImage(img, x, y, width, height, mask="auto")
 
-        """
-        iw, ih = img.getSize()
-        pw, ph = pagesize
-
-        width = pw  # min(iw, pw) # max
-        wfactor = float(width) / iw
-        height = ph  # min(ih, ph) # max
-        hfactor = float(height) / ih
-        factor_min = min(wfactor, hfactor)
-        factor_max = max(wfactor, hfactor)
-
-        if is_portrait:
-            w = iw * factor_min
-            h = ih * factor_min
-            canvas.drawImage(img, 0, ph - h, w, h)
-        else:
-            h = ih * factor_max
-            w = iw * factor_min
-            canvas.drawImage(img, 0, 0, w, h)
-        """
         canvas.save()
 
         return output
 
     @staticmethod
-    def get_watermark(context, max_numpage):
+    def get_watermark(context: pisaContext, max_numpage: int) -> Iterator:
         if context.pisaBackgroundList:
             pages = [x[0] for x in context.pisaBackgroundList] + [max_numpage + 1]
             pages.pop(0)
-            counter = 0
-            for page, bgfile, pgcontext in context.pisaBackgroundList:
+            for counter, (page, bgfile, pgcontext) in enumerate(
+                context.pisaBackgroundList
+            ):
                 if not bgfile.notFound():
                     yield range(page, pages[counter]), bgfile, int(pgcontext["step"])
-                counter += 1
 
     @staticmethod
-    def process_doc(context, istream, output):
-        pdfoutput = pypdf.PdfWriter()
-        input1 = pypdf.PdfReader(istream)
-        has_bg = False
+    def process_doc(
+        context: pisaContext, istream: bytes, output: bytes
+    ) -> tuple[bytes, bool]:
+        pdfoutput: pypdf.PdfWriter = pypdf.PdfWriter()
+        input1: pypdf.PdfReader = pypdf.PdfReader(istream)
+        has_bg: bool = False
         for pages, bgouter, step in WaterMarks.get_watermark(
             context, len(input1.pages)
         ):
             for index, ctr in enumerate(pages):
-                bginput = pypdf.PdfReader(bgouter.getBytesIO())
-                pagebg = bginput.pages[0]
-                page = input1.pages[ctr - 1]
+                bginput: pypdf.PdfReader = pypdf.PdfReader(bgouter.getBytesIO())
+                pagebg: pypdf.PageObject = bginput.pages[0]
+                page: pypdf.PageObject = input1.pages[ctr - 1]
                 if index % step == 0:
                     pagebg.merge_page(page)
                     page = pagebg

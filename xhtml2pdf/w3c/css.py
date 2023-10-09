@@ -29,6 +29,7 @@ Dependencies:
     sets, cssParser, re (via cssParser)
 """
 # ruff: noqa: N802, N803, N815
+from __future__ import annotations
 
 import copy
 from abc import abstractmethod
@@ -392,7 +393,7 @@ class CSSImmutableSelector(CSSSelectorBase):
     def __init__(self, completeName="*", qualifiers=()) -> None:
         # print completeName, qualifiers
         self.qualifiers = tuple(qualifiers)
-        CSSSelectorBase.__init__(self, completeName)
+        super().__init__(completeName)
         self._updateHash()
 
     @classmethod
@@ -822,12 +823,20 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
             return ruleset
         return None
 
-    def atPage(self, page, pseudopage, declarations):
-        """This is overriden by xhtml2pdf.context.pisaCSSBuilder."""
-        return self.ruleset([self.selector("*")], declarations)
+    def atPage(
+        self,
+        name: str,
+        pseudopage: str | None,
+        data: dict,
+        *,
+        isLandscape: bool,
+        pageBorder,
+    ):
+        """This is overridden by xhtml2pdf.context.pisaCSSBuilder."""
+        raise NotImplementedError
 
     def atFontFace(self, declarations):
-        """This is overriden by xhtml2pdf.context.pisaCSSBuilder."""
+        """This is overridden by xhtml2pdf.context.pisaCSSBuilder."""
         return self.ruleset([self.selector("*")], declarations)
 
     @staticmethod
@@ -910,7 +919,7 @@ class CSSParser(cssParser.CSSParser):
         if not cssBuilder and create:
             assert cssBuilder is None
             cssBuilder = self.createCSSBuilder(**kw)
-        cssParser.CSSParser.__init__(self, cssBuilder)
+        super().__init__(cssBuilder)
 
     def createCSSBuilder(self, **kw):
         return self.CSSBuilderFactory(**kw)

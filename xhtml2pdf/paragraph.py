@@ -34,12 +34,15 @@ from __future__ import annotations
 import copy
 import logging
 import re
-from typing import Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from reportlab.lib.colors import Color
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.platypus.flowables import Flowable
+
+if TYPE_CHECKING:
+    from reportlab.pdfgen.canvas import Canvas
 
 logger = logging.getLogger(__name__)
 
@@ -53,25 +56,26 @@ class Style(dict):
     """
 
     DEFAULT: ClassVar[dict[str, Any]] = {
+        "color": Color(0, 0, 0),
+        "fontName": "Times-Roman",
+        "fontSize": 10.0,
+        "height": None,
+        "lineHeight": 1.5,
+        "lineHeightAbsolute": None,
+        "link": None,
+        "pdfLineSpacing": 0,
         "textAlign": TA_LEFT,
         "textIndent": 0.0,
         "width": None,
-        "height": None,
-        "fontName": "Times-Roman",
-        "fontSize": 10.0,
-        "color": Color(0, 0, 0),
-        "lineHeight": 1.5,
-        "lineHeightAbsolute": None,
-        "pdfLineSpacing": 0,
-        "link": None,
     }
 
-    def __init__(self, **kw) -> None:
+    def __init__(self, **kwargs) -> None:
         self.update(self.DEFAULT)
-        self.update(kw)
-        self.spaceBefore = 0
-        self.spaceAfter = 0
-        self.keepWithNext = False
+        self.update(kwargs)
+        self.spaceBefore: int = 0
+        self.spaceAfter: int = 0
+        self.leftIndent: int = 0
+        self.keepWithNext: bool = False
 
 
 class Box(dict):
@@ -97,7 +101,7 @@ class Box(dict):
 
     name: str = "box"
 
-    def drawBox(self, canvas, x, y, w, h):
+    def drawBox(self, canvas: Canvas, x: int, y: int, w: int, h: int):
         canvas.saveState()
 
         # Background
@@ -170,22 +174,22 @@ class Fragment(Box):
     height:     Height of string
     """
 
-    name = "fragment"
-    isSoft = False
-    isText = False
-    isLF = False
+    name: str = "fragment"
+    isSoft: bool = False
+    isText: bool = False
+    isLF: bool = False
 
-    def calc(self):
+    def calc(self) -> None:
         self["width"] = 0
 
 
 class Word(Fragment):
     """A single word."""
 
-    name = "word"
-    isText = True
+    name: str = "word"
+    isText: bool = True
 
-    def calc(self):
+    def calc(self) -> None:
         """XXX Cache stringWith if not accelerated?!."""
         self["width"] = stringWidth(self["text"], self["fontName"], self["fontSize"])
 
@@ -193,25 +197,25 @@ class Word(Fragment):
 class Space(Fragment):
     """A space between fragments that is the usual place for line breaking."""
 
-    name = "space"
-    isSoft = True
+    name: str = "space"
+    isSoft: bool = True
 
-    def calc(self):
+    def calc(self) -> None:
         self["width"] = stringWidth(" ", self["fontName"], self["fontSize"])
 
 
 class LineBreak(Fragment):
     """Line break."""
 
-    name = "br"
-    isSoft = True
-    isLF = True
+    name: str = "br"
+    isSoft: bool = True
+    isLF: bool = True
 
 
 class BoxBegin(Fragment):
-    name = "begin"
+    name: str = "begin"
 
-    def calc(self):
+    def calc(self) -> None:
         self["width"] = self.get("marginLeft", 0) + self.get(
             "paddingLeft", 0
         )  # + border if border
@@ -225,30 +229,30 @@ class BoxBegin(Fragment):
 
 
 class BoxEnd(Fragment):
-    name = "end"
+    name: str = "end"
 
-    def calc(self):
+    def calc(self) -> None:
         self["width"] = self.get("marginRight", 0) + self.get(
             "paddingRight", 0
         )  # + border
 
 
 class Image(Fragment):
-    name = "image"
+    name: str = "image"
 
 
 class Line(list):
     """Container for line fragments."""
 
-    LINEHEIGHT = 1.0
+    LINEHEIGHT: float = 1.0
 
     def __init__(self, style) -> None:
-        self.width = 0
-        self.height = 0
-        self.isLast = False
+        self.width: int = 0
+        self.height: int = 0
+        self.isLast: bool = False
         self.style = style
         self.boxStack: list = []
-        list.__init__(self)
+        super().__init__()
 
     def doAlignment(self, width, alignment):
         # Apply alignment
@@ -314,7 +318,7 @@ class Text(list):
     and positions.
     """
 
-    def __init__(self, data=None, style=None) -> None:
+    def __init__(self, data: list | None = None, style: Style | None = None) -> None:
         # Mutable arguments are a shit idea
         if data is None:
             data = []
@@ -324,10 +328,10 @@ class Text(list):
         self.height: int = 0
         self.maxWidth: int = 0
         self.maxHeight: int = 0
-        self.style: Style = style
+        self.style: Style | None = style
         super().__init__(data)
 
-    def calc(self):
+    def calc(self) -> None:
         """Calculate sizes of fragments."""
         for word in self:
             word.calc()
@@ -341,19 +345,20 @@ class Text(list):
         """
         self.lines = []
         self.height = 0
-        self.maxWidth = self.width = maxWidth
+        self.width = maxWidth
         self.maxHeight = maxHeight
+        self.maxWidth = maxWidth
         boxStack: list = []
 
         style = self.style
-        x = 0
+        x: int = 0
 
         # Start with indent in first line of text
-        if not splitted:
+        if not splitted and style:
             x = style["textIndent"]
 
-        lenText = len(self)
-        pos = 0
+        lenText: int = len(self)
+        pos: int = 0
         while pos < lenText:
             # Reset values for new line
             posBegin = pos
@@ -414,8 +419,9 @@ class Text(list):
 
         # Apply alignment
         self.lines[-1].isLast = True
-        for line in self.lines:
-            line.doAlignment(maxWidth, style["textAlign"])
+        if style:
+            for line in self.lines:
+                line.doAlignment(maxWidth, style["textAlign"])
 
         return None
 
@@ -424,6 +430,12 @@ class Text(list):
         for i, line in enumerate(self.lines):
             logger.debug("Line %d:", i)
             logger.debug(line.dumpFragments())
+
+    def __getitem__(self, key):
+        """Make sure slices return also Text object and not lists"""
+        if isinstance(key, slice):
+            return type(self)(super().__getitem__(key))
+        return super().__getitem__(key)
 
 
 class Paragraph(Flowable):
@@ -440,31 +452,37 @@ class Paragraph(Flowable):
     """
 
     def __init__(
-        self, text, style, debug=False, splitted=False, **kwDict  # noqa: FBT002
+        self,
+        text: Text,
+        style: Style,
+        *,
+        debug: bool = False,
+        splitted: bool = False,
+        **kwDict,
     ) -> None:
-        Flowable.__init__(self)
+        super().__init__()
 
-        self.text = text
+        self.text: Text = text
         self.text.calc()
-        self.style = style
+        self.style: Style = style
         self.text.style = style
 
-        self.debug = debug
-        self.splitted = splitted
+        self.debug: bool = debug
+        self.splitted: bool = splitted
 
         # More attributes
         for k, v in kwDict.items():
             setattr(self, k, v)
 
         # set later...
-        self.splitIndex = None
+        self.splitIndex: int | None = None
 
     # overwritten methods from Flowable class
-    def wrap(self, availWidth, availHeight):
+    def wrap(self, availWidth: int, availHeight: int) -> tuple[int, int]:
         """Determine the rectangle this paragraph really needs."""
         # memorize available space
-        self.avWidth = availWidth
-        self.avHeight = availHeight
+        self.avWidth: int = availWidth
+        self.avHeight: int = availHeight
 
         logger.debug("*** wrap (%f, %f)", availWidth, availHeight)
 
@@ -473,10 +491,11 @@ class Paragraph(Flowable):
             return 0, 0
 
         # Split lines
-        width = availWidth
+        width: int = availWidth
         self.splitIndex = self.text.splitIntoLines(width, availHeight)
 
-        self.width, self.height = availWidth, self.text.height
+        self.width: int = availWidth
+        self.height: int = self.text.height
 
         logger.debug(
             "*** wrap (%f, %f) needed, splitIndex %r",
@@ -487,16 +506,18 @@ class Paragraph(Flowable):
 
         return self.width, self.height
 
-    def split(self, availWidth, availHeight):
+    def split(self, availWidth: int, availHeight: int) -> list[Paragraph]:
         """Split ourselves in two paragraphs."""
         logger.debug("*** split (%f, %f)", availWidth, availHeight)
 
-        splitted = []
+        splitted: list[Paragraph] = []
         if self.splitIndex:
-            text1 = self.text[: self.splitIndex]
-            text2 = self.text[self.splitIndex :]
-            p1 = Paragraph(Text(text1), self.style, debug=self.debug)
-            p2 = Paragraph(Text(text2), self.style, debug=self.debug, splitted=True)
+            text1: Text = self.text[: self.splitIndex]
+            text2: Text = self.text[self.splitIndex :]
+            p1: Paragraph = Paragraph(Text(text1), self.style, debug=self.debug)
+            p2: Paragraph = Paragraph(
+                Text(text2), self.style, debug=self.debug, splitted=True
+            )
             splitted = [p1, p2]
 
             logger.debug("*** text1 %s / text %s", len(text1), len(text2))
@@ -505,30 +526,30 @@ class Paragraph(Flowable):
 
         return splitted
 
-    def draw(self):
+    def draw(self) -> None:
         """Render the content of the paragraph."""
         logger.debug("*** draw")
 
         if not self.text:
             return
 
-        canvas = self.canv
-        style = self.style
+        canvas: Canvas = self.canv
+        style: Style = self.style
 
         canvas.saveState()
 
         # Draw box arround paragraph for debugging
         if self.debug:
-            bw = 0.5
-            bc = Color(1, 1, 0)
-            bg = Color(0.9, 0.9, 0.9)
+            bw: float = 0.5
+            bc: Color = Color(1, 1, 0)
+            bg: Color = Color(0.9, 0.9, 0.9)
             canvas.setStrokeColor(bc)
             canvas.setLineWidth(bw)
             canvas.setFillColor(bg)
             canvas.rect(style.leftIndent, 0, self.width, self.height, fill=1, stroke=1)
 
-        y = 0
-        dy = self.height
+        y: int = 0
+        dy: int = self.height
         for line in self.text.lines:
             y += line.height
             for frag in line:
@@ -543,14 +564,14 @@ class Paragraph(Flowable):
                     canvas.drawString(frag["x"], dy - y + frag["y"], frag["text"])
 
                 # XXX LINK
-                link = frag.get("link", None)
+                link: bytes | str = frag.get("link", None)
                 if link:
                     _scheme_re = re.compile("^[a-zA-Z][-+a-zA-Z0-9]+$")
                     x, y, w, h = frag["x"], dy - y, frag["width"], frag["fontSize"]
                     rect = (x, y, w, h)
-                    if isinstance(link, str):
-                        link = link.encode("utf8")
-                    parts = link.split(":", 1)
+                    if isinstance(link, bytes):
+                        link = link.decode("utf8")
+                    parts = link.split(":", maxsplit=1)
                     scheme = len(parts) == 2 and parts[0].lower() or ""
                     if _scheme_re.match(scheme) and scheme != "document":
                         kind = scheme.lower() == "pdf" and "GoToR" or "URI"
@@ -574,10 +595,10 @@ class Paragraph(Flowable):
 
 class PageNumberFlowable(Flowable):
     def __init__(self) -> None:
-        Flowable.__init__(self)
-        self.page = None
-        self.pagecount = None
+        super().__init__()
+        self.page: str | None = None
+        self.pagecount: str | None = None
 
-    def draw(self):
+    def draw(self) -> None:
         self.page = str(self.canv._doctemplate.page)
         self.pagecount = str(self.canv._doctemplate._page_count)

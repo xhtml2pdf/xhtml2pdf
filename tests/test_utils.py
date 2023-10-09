@@ -192,7 +192,7 @@ class PisaDimensionTestCase(TestCase):
 
     def test_frame_dimensions_for_box_len_eq_4(self):
         dims = {"-pdf-frame-box": ["12pt", "12,pt", "12pt", "12pt"]}
-        expected = [12.0, 12.0, 12.0, 12.0]
+        expected = (12.0, 12.0, 12.0, 12.0)
         result = getFrameDimensions(dims, 100, 200)
         self.assertEqual(result, expected)
 
