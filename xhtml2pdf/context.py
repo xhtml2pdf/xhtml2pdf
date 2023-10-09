@@ -18,7 +18,7 @@ import logging
 import re
 import urllib.parse as urlparse
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 from reportlab import rl_settings
 from reportlab.lib.enums import TA_LEFT
@@ -56,6 +56,8 @@ from xhtml2pdf.xhtml2pdf_reportlab import (
 )
 
 if TYPE_CHECKING:
+    from reportlab.platypus.flowables import Flowable
+
     from xhtml2pdf.xhtml2pdf_reportlab import PmlImage
 
 
@@ -69,7 +71,7 @@ superFraction = 0.4
 NBSP = "\u00a0"
 
 
-def clone(self, **kwargs):
+def clone(self, **kwargs) -> ParaFrag:
     n = ParaFrag(**self.__dict__)
     if kwargs:
         d = n.__dict__
@@ -84,8 +86,8 @@ def clone(self, **kwargs):
 ParaFrag.clone = clone
 
 
-def getParaFrag(style):
-    frag = ParaFrag()
+def getParaFrag(style) -> ParaFrag:
+    frag: ParaFrag = ParaFrag()
 
     set_value(
         frag,
@@ -170,7 +172,7 @@ def getParaFrag(style):
     return frag
 
 
-def getDirName(path):
+def getDirName(path) -> str:
     parts = urlparse.urlparse(path)
     if parts.scheme:
         return path
@@ -178,7 +180,9 @@ def getDirName(path):
 
 
 class pisaCSSBuilder(css.CSSBuilder):
-    def atFontFace(self, declarations):
+    c: pisaContext
+
+    def atFontFace(self, declarations) -> tuple[dict, dict]:
         """Embed fonts."""
         result = self.ruleset([self.selector("*")], declarations)
         data = next(iter(result[0].values()))
@@ -207,13 +211,19 @@ class pisaCSSBuilder(css.CSSBuilder):
 
         for font in fonts:
             src = self.c.getFile(font, relative=self.c.cssParser.rootPath)
-            if not src.notFound():
+            if src and not src.notFound():
                 self.c.loadFont(names, src, bold=bold, italic=italic)
         return {}, {}
 
     def _pisaAddFrame(
-        self, name, data, first=False, border=None, size=(0, 0)  # noqa: FBT002
-    ):
+        self,
+        name: str,
+        data: dict,
+        *,
+        first: bool = False,
+        border=None,
+        size: tuple[float, float] = (0, 0),
+    ) -> tuple[str, str | None, str | None, float, float, float, float, dict]:
         c = self.c
         if not name:
             name = "-pdf-frame-%d" % c.UID()
@@ -238,7 +248,7 @@ class pisaCSSBuilder(css.CSSBuilder):
         )
 
     @staticmethod
-    def _getFromData(data, attr, default=None, func=None):
+    def _getFromData(data, attr, default=None, func: Callable | None = None):
         if not func:
 
             def func(x):
@@ -246,22 +256,17 @@ class pisaCSSBuilder(css.CSSBuilder):
 
         if isinstance(attr, (list, tuple)):
             for a in attr:
-                if a in data:
-                    return func(data[a])
-                return default
+                return func(data[a]) if a in data else default
             return None
-        if attr in data:
-            return func(data[attr])
-        return default
+        return func(data[attr]) if attr in data else default
 
     @staticmethod
-    def get_background_context(data):
-        dev = {}
-        object_position = data.get("background-object-position", None)
-        height = data.get("background-height", None)
-        width = data.get("background-width", None)
-        opacity = data.get("background-opacity", None)
-        dev["step"] = getFloat(data.get("background-page-step", 1))
+    def get_background_context(data: dict) -> dict:
+        object_position = data.get("background-object-position")
+        height = data.get("background-height")
+        width = data.get("background-width")
+        opacity = data.get("background-opacity")
+        dev: dict = {"step": getFloat(data.get("background-page-step", 1))}
         if object_position:
             dev["object_position"] = [
                 getSize(object_position[0]),
@@ -275,7 +280,15 @@ class pisaCSSBuilder(css.CSSBuilder):
             dev["opacity"] = getFloat(opacity)
         return dev
 
-    def atPage(self, name, pseudopage, data, isLandscape, pageBorder):
+    def atPage(
+        self,
+        name: str,
+        pseudopage: str | None,
+        data: dict,
+        *,
+        isLandscape: bool,
+        pageBorder,
+    ) -> tuple[dict, dict]:
         c = self.c
         name = name or "body"
 
@@ -467,7 +480,7 @@ class pisaCSSBuilder(css.CSSBuilder):
 
         return {}, {}
 
-    def atFrame(self, name, declarations):
+    def atFrame(self, name: str, declarations) -> tuple[dict, dict]:
         if declarations:
             result = self.ruleset([self.selector("*")], declarations)
             # print "@BOX", name, declarations, result
@@ -506,22 +519,20 @@ class pisaCSSParser(css.CSSParser):
 
 class PageNumberText:
     def __init__(self, *args, **kwargs) -> None:
-        self.data = ""
+        self.data: str = ""
 
     def __contains__(self, key) -> bool:
         if self.flowable.page is not None:
             self.data = str(self.flowable.page)
         return False
 
-    def split(self, text):
+    def split(self, text: str) -> list[str]:
         return [self.data]
 
-    def __getitem__(self, index):
-        if not self.data:
-            return self.data
-        return self.data[index]
+    def __getitem__(self, index: int) -> str:
+        return self.data[index] if self.data else self.data
 
-    def setFlowable(self, flowable):
+    def setFlowable(self, flowable: Flowable) -> None:
         self.flowable = flowable
 
     def __str__(self) -> str:
@@ -530,7 +541,7 @@ class PageNumberText:
 
 class PageCountText:
     def __init__(self, *args, **kwargs) -> None:
-        self.data = ""
+        self.data: str = ""
 
     def __str__(self) -> str:
         return self.data
@@ -540,20 +551,18 @@ class PageCountText:
             self.data = str(self.flowable.pagecount)
         return False
 
-    def split(self, text):
+    def split(self, text: str) -> list[str]:
         return [self.data]
 
-    def __getitem__(self, index):
-        if not self.data:
-            return self.data
-        return self.data[index]
+    def __getitem__(self, index: int) -> str:
+        return self.data if not self.data else self.data[index]
 
-    def setFlowable(self, flowable):
+    def setFlowable(self, flowable: Flowable) -> None:
         self.flowable = flowable
 
 
-def reverse_sentence(sentence):
-    words = str(sentence).split(" ")
+def reverse_sentence(sentence: str) -> str:
+    words = sentence.split(" ")
     reverse_sentence = " ".join(reversed(words))
     return reverse_sentence[::-1]
 
@@ -581,13 +590,13 @@ class pisaContext:
         self.select_options: list[str] = []
         self.story: list = []
         self.image: PmlImage | None = None
-        self.indexing_story = None
+        self.indexing_story: PmlPageCount | None = None
         self.keepInFrameIndex = None
         self.node = None
         self.template = None
         self.tableData: TableData = TableData()
         self.err: int = 0
-        self.fontSize: int = 0
+        self.fontSize: float = 0.0
         self.listCounter: int = 0
         self.uidctr: int = 0
         self.warn: int = 0
@@ -688,7 +697,7 @@ class pisaContext:
         self.story, story = copy.copy(story), copy.copy(self.story)
         return story
 
-    def toParagraphStyle(self, first):
+    def toParagraphStyle(self, first) -> ParagraphStyle:
         style = ParagraphStyle(
             "default%d" % self.UID(), keepWithNext=first.keepWithNext
         )
@@ -754,7 +763,10 @@ class pisaContext:
 
         return style
 
-    def addTOC(self):
+    def addTOC(self) -> None:
+        if not self.node:
+            return
+
         styles = []
         for i in range(20):
             self.node.attributes["class"] = "pdftoclevel%d" % i
@@ -776,13 +788,13 @@ class pisaContext:
         self.addStory(self.toc)
         self.indexing_story = None
 
-    def addPageCount(self):
+    def addPageCount(self) -> None:
         if not self.multiBuild:
             self.indexing_story = PmlPageCount()
             self.multiBuild = True
 
     @staticmethod
-    def getPageCount(flow):
+    def getPageCount(flow: Flowable) -> PageCountText:
         pc = PageCountText()
         pc.setFlowable(flow)
         return pc
@@ -797,7 +809,7 @@ class pisaContext:
     def dumpPara(_frags, _style):
         return
 
-    def addPara(self, *, force=False):
+    def addPara(self, *, force: bool = False) -> None:
         force = force or self.force
         self.force = False
 
@@ -805,7 +817,7 @@ class pisaContext:
         reversed(self.fragList)
 
         # Find maximum lead
-        maxLeading = 0
+        maxLeading: int = 0
         # fontSize = 0
         for frag in self.fragList:
             leading = getSize(frag.leadingSource, frag.fontSize) + frag.leadingSpace
@@ -883,7 +895,7 @@ class pisaContext:
         self.clearFrag()
 
     # METHODS FOR FRAG
-    def clearFrag(self):
+    def clearFrag(self) -> None:
         self.fragList = []
         self.fragStrip = True
         self.text = ""
@@ -895,7 +907,7 @@ class pisaContext:
         self.frag = self.frag.clone(**kw)
         return self.frag
 
-    def _appendFrag(self, frag):
+    def _appendFrag(self, frag) -> None:
         if frag.link and frag.link.startswith("#"):
             self.anchorFrag.append((frag, frag.link[1:]))
         self.fragList.append(frag)
@@ -973,11 +985,11 @@ class pisaContext:
                     self.text += frag.text
                     self._appendFrag(frag)
 
-    def pushFrag(self):
+    def pushFrag(self) -> None:
         self.fragStack.append(self.frag)
         self.newFrag()
 
-    def pullFrag(self):
+    def pullFrag(self) -> None:
         self.frag = self.fragStack.pop()
 
     # XXX
@@ -988,10 +1000,10 @@ class pisaContext:
             return ""
 
     @staticmethod
-    def _getLineNumber():
+    def _getLineNumber() -> int:
         return 0
 
-    def context(self, msg):
+    def context(self, msg: str) -> str:
         return f"{msg!s}\n{self._getFragment(50)}"
 
     def warning(self, msg, *args):
@@ -1019,7 +1031,7 @@ class pisaContext:
         except Exception:
             return self.context(msg)
 
-    def getFile(self, name, relative=None):
+    def getFile(self, name, relative=None) -> pisaFileObject | None:
         """Returns a file name or None."""
         if name is None:
             return None

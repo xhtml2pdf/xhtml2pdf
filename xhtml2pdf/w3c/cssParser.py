@@ -150,7 +150,15 @@ class CSSBuilderAbstract:
         raise NotImplementedError
 
     @abstractmethod
-    def atPage(self, page, pseudopage, declarations):
+    def atPage(
+        self,
+        name: str,
+        pseudopage: str | None,
+        data: dict,
+        *,
+        isLandscape: bool,
+        pageBorder,
+    ):
         raise NotImplementedError
 
     @abstractmethod
@@ -837,7 +845,9 @@ class CSSParser:
             src = src.lstrip()
 
         result = [
-            self.cssBuilder.atPage(page, pseudopage, data, isLandscape, pageBorder)
+            self.cssBuilder.atPage(
+                page, pseudopage, data, isLandscape=isLandscape, pageBorder=pageBorder
+            )
         ]
 
         return src[1:].lstrip(), result

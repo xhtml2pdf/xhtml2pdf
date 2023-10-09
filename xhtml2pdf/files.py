@@ -10,13 +10,19 @@ import sys
 import tempfile
 import threading
 import urllib.parse as urlparse
+from abc import abstractmethod
 from io import BytesIO
 from pathlib import Path
-from typing import Any, ClassVar
+from tempfile import _TemporaryFileWrapper
+from typing import TYPE_CHECKING, Any, Callable, ClassVar
 from urllib import request
 from urllib.parse import unquote as urllib_unquote
 
 from xhtml2pdf.config.httpconfig import httpConfig
+
+if TYPE_CHECKING:
+    from http.client import HTTPResponse
+    from urllib.parse import SplitResult
 
 log = logging.getLogger(__name__)
 
@@ -27,7 +33,7 @@ STRATEGIES: tuple[type, Any] = (
 
 
 class TmpFiles(threading.local):
-    files: ClassVar[list] = []
+    files: ClassVar[list[_TemporaryFileWrapper[bytes]]] = []
 
     def append(self, file) -> None:
         self.files.append(file)
@@ -38,7 +44,7 @@ class TmpFiles(threading.local):
         self.files.clear()
 
 
-files_tmp = TmpFiles()  # permanent safe file, to prevent file close
+files_tmp: TmpFiles = TmpFiles()  # permanent safe file, to prevent file close
 
 
 class pisaTempFile:
@@ -75,9 +81,9 @@ class pisaTempFile:
         # we must set the file's position for preparing to read
         self.seek(0)
 
-    def makeTempFile(self):
+    def makeTempFile(self) -> None:
         """
-        Switch to next startegy. If an error occured,
+        Switch to next strategy. If an error occurred,
         stay with the first strategy.
         """
         if self.strategy == 0:
@@ -90,12 +96,12 @@ class pisaTempFile:
             except Exception:
                 self.capacity = -1
 
-    def getFileName(self):
+    def getFileName(self) -> str | None:
         """Get a named temporary file."""
         self.makeTempFile()
         return self.name
 
-    def fileno(self):
+    def fileno(self) -> int:
         """
         Forces this buffer to use a temporary file as the underlying.
         object and returns the fileno associated with it.
@@ -103,7 +109,7 @@ class pisaTempFile:
         self.makeTempFile()
         return self._delegate.fileno()
 
-    def getvalue(self):
+    def getvalue(self) -> bytes:
         """
         Get value of file. Work around for second strategy.
         Always returns bytes.
@@ -117,7 +123,7 @@ class pisaTempFile:
             value = value.encode("utf-8")
         return value
 
-    def write(self, value):
+    def write(self, value: bytes | str):
         """If capacity != -1 and length of file > capacity it is time to switch."""
         if self.capacity > 0 and self.strategy == 0:
             len_value = len(value)
@@ -134,7 +140,7 @@ class pisaTempFile:
 
         self._delegate.write(value)
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         try:
             return getattr(self._delegate, name)
         except AttributeError as e:
@@ -143,21 +149,38 @@ class pisaTempFile:
 
 
 class BaseFile:
-    def __init__(self, path, basepath) -> None:
-        self.path = path
-        self.basepath = basepath
-        self.mimetype = None
-        self.suffix = None
-        self.uri = None
+    def __init__(self, path: str, basepath: str | None) -> None:
+        self.path: str = path
+        self.basepath: str | None = basepath
+        self.mimetype: str | None = None
+        self.suffix: str | None = None
+        self.uri: str | Path | None = None
 
-    def get_uri(self):
+    @abstractmethod
+    def extract_data(self) -> bytes | None:
+        raise NotImplementedError
+
+    def get_data(self) -> bytes | None:
+        try:
+            return self.extract_data()
+        except Exception as e:
+            log.error(  # noqa: TRY400
+                "%s: %s while extracting data from %s: %r",
+                type(e).__name__,
+                e,
+                type(self).__name__,
+                self.uri,
+            )
+        return None
+
+    def get_uri(self) -> str | Path | None:
         return self.uri
 
-    def get_mimetype(self):
+    def get_mimetype(self) -> str | None:
         return self.mimetype
 
-    def get_named_tmp_file(self):
-        data = self.get_data()
+    def get_named_tmp_file(self) -> _TemporaryFileWrapper[bytes]:
+        data: bytes | None = self.get_data()
         tmp_file = tempfile.NamedTemporaryFile(suffix=self.suffix)
         # print(tmp_file.name, len(data))
         if data:
@@ -168,8 +191,8 @@ class BaseFile:
             self.path = tmp_file.name
         return tmp_file
 
-    def get_BytesIO(self):
-        data = self.get_data()
+    def get_BytesIO(self) -> BytesIO | None:
+        data: bytes | None = self.get_data()
         if data:
             return BytesIO(data)
         return None
@@ -180,81 +203,68 @@ class B64InlineURI(BaseFile):
         "^data:(?P<mime>[a-z]+/[a-z]+);base64,(?P<data>.*)$", re.M | re.DOTALL
     )
 
-    def get_data(self):
-        try:
-            return self.extract_data()
-        except Exception:
-            log.exception("Error while extracting data form data in tag")
-
-    def extract_data(self):
+    def extract_data(self) -> bytes | None:
         m = self._rx_datauri.match(self.path)
+        if not m:
+            msg = "Inline data could not be parsed"
+            raise RuntimeError(msg)
         self.mimetype = m.group("mime")
 
-        b64 = urllib_unquote(m.group("data"))
-
-        # The data may be incorrectly unescaped... repairs needed
-        b64 = b64.strip("b'").strip("'").encode()
-        b64 = re.sub(b"\\n", b"", b64)
-        b64 = re.sub(b"[^A-Za-z0-9\\+\\/]+", b"", b64)
-
-        # Add padding as needed, to make length into a multiple of 4
-        #
-        b64 += b"=" * ((4 - len(b64) % 4) % 4)
+        # Support URL encoded strings
+        b64: bytes = urllib_unquote(m.group("data")).encode("utf-8")
 
         return base64.b64decode(b64)
 
 
 class LocalProtocolURI(BaseFile):
-    def get_data(self):
-        try:
-            return self.extract_data()
-        except Exception:
-            log.exception(
-                "Error while extracting data form local file based on protocol"
-            )
-
-    def extract_data(self):
+    def extract_data(self) -> bytes | None:
         if self.basepath and self.path.startswith("/"):
-            uri = urlparse.urljoin(self.basepath, self.path[1:])
-            urlResponse = request.urlopen(uri)
+            self.uri = urlparse.urljoin(self.basepath, self.path[1:])
+            urlResponse = request.urlopen(self.uri)
             self.mimetype = urlResponse.info().get("Content-Type", "").split(";")[0]
             return urlResponse.read()
         return None
 
 
 class NetworkFileUri(BaseFile):
-    def __init__(self, path, basepath) -> None:
+    def __init__(self, path: str, basepath: str | None) -> None:
         super().__init__(path, basepath)
-        self.attempts = 3
-        self.actual_attempts = 0
+        self.attempts: int = 3
+        self.actual_attempts: int = 0
 
-    def get_data(self):
+    def get_data(self) -> bytes | None:
         data = None
         # try several attempts if network problems happens
         while self.attempts > self.actual_attempts and data is None:
             self.actual_attempts += 1
             try:
                 data = self.extract_data()
-            except Exception:
-                log.exception(
-                    "Error while extracting data remote trying %d", self.actual_attempts
+            except Exception as e:
+                log.error(  # noqa: TRY400
+                    "%s: %s while extracting data from %s: %r on attempt %d",
+                    type(e).__name__,
+                    e,
+                    type(self).__name__,
+                    self.uri,
+                    self.actual_attempts,
                 )
         return data
 
-    def get_httplib(self, uri):
+    def get_httplib(self, uri) -> tuple[bytes | None, bool]:
         log.debug("Sending request for %r with httplib", uri)
-        data, is_gzip = None, False
-        url_splitted = urlparse.urlsplit(uri)
-        server = url_splitted[1]
-        path = url_splitted[2]
-        path += "?" + url_splitted[3] if url_splitted[3] else ""
-
+        data: bytes | None = None
+        is_gzip: bool = False
+        url_splitted: SplitResult = urlparse.urlsplit(uri)
+        server: str = url_splitted[1]
+        path: str = url_splitted[2]
+        path += f"?{url_splitted[3]}" if url_splitted[3] else ""
+        conn: httplib.HTTPConnection | httplib.HTTPSConnection | None = None
         if uri.startswith("https://"):
             conn = httplib.HTTPSConnection(server, **httpConfig)
         else:
             conn = httplib.HTTPConnection(server)
         conn.request("GET", path)
-        r1 = conn.getresponse()
+        r1: HTTPResponse = conn.getresponse()
         if (r1.status, r1.reason) == (200, "OK"):
             self.mimetype = r1.getheader("Content-Type", "").split(";")[0]
             data = r1.read()
@@ -264,7 +274,7 @@ class NetworkFileUri(BaseFile):
             log.debug("Received non-200 status: %d %s", r1.status, r1.reason)
         return data, is_gzip
 
-    def extract_data(self):
+    def extract_data(self) -> bytes | None:
         # FIXME: When self.path don't start with http
         if self.basepath and not self.path.startswith("http"):
             uri = urlparse.urljoin(self.basepath, self.path)
@@ -272,28 +282,22 @@ class NetworkFileUri(BaseFile):
             uri = self.path
         self.uri = uri
         data, is_gzip = self.get_httplib(uri)
-        if is_gzip:
-            data = gzip.GzipFile(mode="rb", fileobj=BytesIO(data))
+        if is_gzip and data:
+            data = gzip.GzipFile(mode="rb", fileobj=BytesIO(data)).read()
         log.debug("Uri parsed: %r", uri)
         return data
 
 
 class LocalFileURI(BaseFile):
-    def get_data(self):
-        try:
-            return self.extract_data()
-        except Exception:
-            log.exception("Error while extracting data form local file")
-
     @staticmethod
-    def guess_mimetype(name):
+    def guess_mimetype(name) -> str | None:
         """Guess the mime type."""
         mimetype = mimetypes.guess_type(str(name))[0]
         if mimetype is not None:
-            mimetype = mimetypes.guess_type(str(name))[0].split(";")[0]
+            mimetype = mimetype.split(";")[0]
         return mimetype
 
-    def extract_data(self):
+    def extract_data(self) -> bytes | None:
         data = None
         log.debug("Unrecognized scheme, assuming local file path")
         path = Path(self.path)
@@ -307,27 +311,26 @@ class LocalFileURI(BaseFile):
             self.mimetype = self.guess_mimetype(uri)
             if self.mimetype and self.mimetype.startswith("text"):
                 with open(uri) as file_handler:
-                    # removed bytes... lets hope it goes ok :/
-                    data = file_handler.read()
+                    data = file_handler.read().encode("utf-8")
             else:
                 with open(uri, "rb") as file_handler:
-                    # removed bytes... lets hope it goes ok :/
                     data = file_handler.read()
         return data
 
 
 class BytesFileUri(BaseFile):
-    def get_data(self):
-        return self.path
+    def extract_data(self) -> bytes | None:
+        self.uri = self.path
+        return self.path.encode("utf-8")
 
 
 class LocalTmpFile(BaseFile):
     def __init__(self, path, basepath) -> None:
-        self.path = path
-        self.basepath = None
-        self.mimetype = basepath
-        self.suffix = None
-        self.uri = None
+        self.path: str = path
+        self.basepath: str | None = None
+        self.mimetype: str | None = basepath
+        self.suffix: str | None = None
+        self.uri: str | Path | None = None
 
     def get_named_tmp_file(self):
         tmp_file = super().get_named_tmp_file()
@@ -335,9 +338,10 @@ class LocalTmpFile(BaseFile):
             self.path = tmp_file.name
         return tmp_file
 
-    def get_data(self):
+    def extract_data(self) -> bytes | None:
         if self.path is None:
             return None
+        self.uri = self.path
         with open(self.path, "rb") as arch:
             return arch.read()
 
@@ -368,44 +372,43 @@ class FileNetworkManager:
 
 
 class pisaFileObject:
-    def __init__(self, uri, basepath=None, callback=None) -> None:
-        self.uri = uri
-        basepathret = None
-        if callback is not None:
-            basepathret = callback(uri, basepath)
-        if basepathret is not None:
+    def __init__(
+        self,
+        uri: str | Path | None,
+        basepath: str | None = None,
+        callback: Callable | None = None,
+    ) -> None:
+        self.uri: str | Path | None = uri
+        self.basepath: str | None = basepath
+        if callback and (new := callback(uri, basepath)):
+            self.uri = new
             self.basepath = None
-            uri = basepathret
-        else:
-            self.basepath = basepath
-        # uri = uri or str()
-        # if not isinstance(uri, str):
-        #    uri = uri.decode("utf-8")
-        log.debug("FileObject %r, Basepath: %r", uri, basepath)
 
-        self.instance = FileNetworkManager.get_manager(uri, basepath=self.basepath)
+        log.debug("FileObject %r, Basepath: %r", self.uri, self.basepath)
 
-    def getFileContent(self):
+        self.instance: BaseFile = FileNetworkManager.get_manager(
+            self.uri, basepath=self.basepath
+        )
+
+    def getFileContent(self) -> bytes | None:
         return self.instance.get_data()
 
-    def getNamedFile(self):
+    def getNamedFile(self) -> str | None:
         f = self.instance.get_named_tmp_file()
-        if f:
-            return f.name
-        return None
+        return f.name if f else None
 
-    def getData(self):
+    def getData(self) -> bytes | None:
         return self.instance.get_data()
 
-    def getFile(self):
+    def getFile(self) -> BytesIO | _TemporaryFileWrapper | None:
         if GAE:
             return self.instance.get_BytesIO()
         return self.instance.get_named_tmp_file()
 
-    def getMimeType(self):
+    def getMimeType(self) -> str | None:
         return self.instance.get_mimetype()
 
-    def notFound(self):
+    def notFound(self) -> bool:
         return self.getData() is None
 
     def getAbsPath(self):
@@ -415,9 +418,9 @@ class pisaFileObject:
         return self.instance.get_BytesIO()
 
 
-def getFile(*a, **kw):
+def getFile(*a, **kw) -> pisaFileObject:
     return pisaFileObject(*a, **kw)
 
 
-def cleanFiles():
+def cleanFiles() -> None:
     files_tmp.cleanFiles()

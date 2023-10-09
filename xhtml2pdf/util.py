@@ -159,17 +159,17 @@ def getBorderStyle(value, default=None):
     return default
 
 
-MM = cm / 10.0
-DPI96 = 1.0 / 96.0 * inch
+MM: float = cm / 10.0
+DPI96: float = 1.0 / 96.0 * inch
 
-ABSOLUTE_SIZE_TABLE = {
+ABSOLUTE_SIZE_TABLE: dict[str, float] = {
     "1": 50.0 / 100.0,
     "xx-small": 50.0 / 100.0,
     "x-small": 50.0 / 100.0,
     "2": 75.0 / 100.0,
     "small": 75.0 / 100.0,
-    "3": 100.0 / 100.0,
-    "medium": 100.0 / 100.0,
+    "3": 1.0,
+    "medium": 1.0,
     "4": 125.0 / 100.0,
     "large": 125.0 / 100.0,
     "5": 150.0 / 100.0,
@@ -180,7 +180,7 @@ ABSOLUTE_SIZE_TABLE = {
     "xxx-large": 200.0 / 100.0,
 }
 
-RELATIVE_SIZE_TABLE = {
+RELATIVE_SIZE_TABLE: dict[str, float] = {
     "larger": 1.25,
     "smaller": 0.75,
     "+4": 200.0 / 100.0,
@@ -192,11 +192,16 @@ RELATIVE_SIZE_TABLE = {
     "-3": 25.0 / 100.0,
 }
 
-MIN_FONT_SIZE = 1.0
+MIN_FONT_SIZE: float = 1.0
 
 
 @Memoized
-def getSize(value, relative=0, base=None, default=0.0):
+def getSize(
+    value: str | float | list | tuple,
+    relative=0,
+    base: int | None = None,
+    default: float = 0.0,
+) -> float:
     """
     Converts strings to standard sizes.
     That is the function taking a string of CSS size ('12pt', '1cm' and so on)
@@ -218,36 +223,36 @@ def getSize(value, relative=0, base=None, default=0.0):
         if isinstance(value, (tuple, list)):
             value = "".join(value)
         value = str(value).strip().lower().replace(",", ".")
-        if value[-2:] == "cm":
+        if value.endswith("cm"):
             return float(value[:-2].strip()) * cm
-        if value[-2:] == "mm":
+        if value.endswith("mm"):
             return float(value[:-2].strip()) * MM  # 1MM = 0.1cm
-        if value[-2:] == "in":
+        if value.endswith("in"):
             return float(value[:-2].strip()) * inch  # 1pt == 1/72inch
-        if value[-2:] == "pt":
+        if value.endswith("pt"):
             return float(value[:-2].strip())
-        if value[-2:] == "pc":
+        if value.endswith("pc"):
             return float(value[:-2].strip()) * 12.0  # 1pc == 12pt
-        if value[-2:] == "px":
+        if value.endswith("px"):
             # XXX W3C says, use 96pdi
             # http://www.w3.org/TR/CSS21/syndata.html#length-units
             return float(value[:-2].strip()) * DPI96
         if value in ("none", "0", "0.0", "auto"):
             return 0.0
         if relative:
-            if value[-3:] == "rem":  # XXX
+            if value.endswith("rem"):  # XXX
                 # 1rem = 1 * fontSize
                 return float(value[:-3].strip()) * relative
-            if value[-2:] == "em":  # XXX
+            if value.endswith("em"):  # XXX
                 # 1em = 1 * fontSize
                 return float(value[:-2].strip()) * relative
-            if value[-2:] == "ex":  # XXX
+            if value.endswith("ex"):  # XXX
                 # 1ex = 1/2 fontSize
                 return float(value[:-2].strip()) * (relative / 2.0)
-            if value[-1:] == "%":
+            if value.endswith("%"):
                 # 1% = (fontSize * 1) / 100
                 return (relative * float(value[:-1].strip())) / 100.0
-            if value in ("normal", "inherit"):
+            if value in {"normal", "inherit"}:
                 return relative
             if value in RELATIVE_SIZE_TABLE:
                 if base:
@@ -307,7 +312,9 @@ def getBox(box, pagesize):
     return getCoords(x, y, w, h, pagesize)
 
 
-def getFrameDimensions(data, page_width, page_height):
+def getFrameDimensions(
+    data, page_width: float, page_height: float
+) -> tuple[float, float, float, float]:
     """
     Calculate dimensions of a frame.
 
@@ -315,7 +322,7 @@ def getFrameDimensions(data, page_width, page_height):
     """
     box = data.get("-pdf-frame-box", [])
     if len(box) == 4:
-        return [getSize(x) for x in box]
+        return (getSize(box[0]), getSize(box[1]), getSize(box[2]), getSize(box[3]))
     top = getSize(data.get("top", 0))
     left = getSize(data.get("left", 0))
     bottom = getSize(data.get("bottom", 0))
@@ -615,3 +622,7 @@ def frag_text_language_check(context, frag_text):
             return detect_language_result
         return None
     return None
+
+
+class ImageWarning(Exception):  # noqa: N818
+    pass

@@ -41,12 +41,13 @@ from xhtml2pdf.charts import (
     VerticalBar,
 )
 from xhtml2pdf.paragraph import PageNumberFlowable
-from xhtml2pdf.util import DPI96, getAlign, getColor, getSize
+from xhtml2pdf.util import DPI96, ImageWarning, getAlign, getColor, getSize
 from xhtml2pdf.xhtml2pdf_reportlab import PmlImage, PmlInput, PmlPageTemplate
 
 if TYPE_CHECKING:
     from xml.dom.minidom import Element
 
+    from reportlab.pdfgen.canvas import Canvas
     from reportlab.platypus.paraparser import ParaFrag
 
     from xhtml2pdf.context import pisaContext
@@ -287,7 +288,7 @@ class pisaTagUL(pisaTagP):
     def start(self, c: pisaContext) -> None:
         self.counter, c.listCounter = c.listCounter, 0
 
-    def end(self, c):
+    def end(self, c: pisaContext):
         c.addPara()
         # XXX Simulate margin for the moment
         c.addStory(Spacer(width=1, height=c.fragBlock.spaceAfter))
@@ -436,12 +437,18 @@ class pisaTagIMG(pisaTag):
                         c.fragList.append(afrag)
                         c.fontSize = img.drawHeight
 
-                except Exception:  # TODO: Kill catch-all
-                    log.warning(c.warning("Error in handling image"), exc_info=True)
+                except ImageWarning as e:
+                    log.warning(c.warning(f"{e}:"))
+                except Exception:
+                    log.warning(c.warning("Error in handling image:"), exc_info=True)
             else:
-                log.warning(c.warning("Need a valid file name!"))
+                log.warning(
+                    c.warning(
+                        f"Could not get image data from src attribute: {attr.src.uri}"
+                    )
+                )
         else:
-            log.warning(c.warning("Need a valid file name!"))
+            log.warning(c.warning("The src attribute of image tag is empty!"))
 
 
 class pisaTagHR(pisaTag):
@@ -463,9 +470,9 @@ class pisaTagHR(pisaTag):
 
 class pisaTagINPUT(pisaTag):
     @staticmethod
-    def _render(c, attr):
-        width = 10
-        height = 10
+    def _render(c: pisaContext, attr: AttrContainer) -> None:
+        width: int = 10
+        height: int = 10
         if attr.type == "text":
             width = 100
             height = 12
@@ -479,7 +486,7 @@ class pisaTagINPUT(pisaTag):
             )
         )
 
-    def end(self, c):
+    def end(self, c: pisaContext) -> None:
         c.addPara()
         attr = self.attr
         if attr.name:
@@ -489,10 +496,10 @@ class pisaTagINPUT(pisaTag):
 
 class pisaTagTEXTAREA(pisaTagINPUT):
     @staticmethod
-    def _render(c, attr):
-        multiline = 1 if int(attr.rows) > 1 else 0
-        height = int(attr.rows) * 15
-        width = int(attr.cols) * 5
+    def _render(c: pisaContext, attr: AttrContainer) -> None:
+        multiline: int = 1 if int(attr.rows) > 1 else 0
+        height: int = int(attr.rows) * 15
+        width: int = int(attr.cols) * 5
 
         # this does not currently support the ability to pre-populate the text field with data that appeared within the <textarea></textarea> tags
         c.addStory(
@@ -512,7 +519,7 @@ class pisaTagSELECT(pisaTagINPUT):
         c.select_options = ["One", "Two", "Three"]
 
     @staticmethod
-    def _render(c, attr):
+    def _render(c: pisaContext, attr: AttrContainer) -> None:
         c.addStory(
             PmlInput(
                 attr.name,
@@ -523,7 +530,7 @@ class pisaTagSELECT(pisaTagINPUT):
                 height=40,
             )
         )
-        c.select_options = None
+        c.select_options = []
 
 
 class pisaTagOPTION(pisaTag):
@@ -607,7 +614,7 @@ class pisaTagPDFFRAME(pisaTag):
 
         name = attrs["name"]
         if name is None:
-            name = "frame%d" % c.UID()
+            name = f"frame{c.UID()}"
 
         x, y, w, h = attrs.box
         self.frame = Frame(
@@ -631,7 +638,7 @@ class pisaTagPDFFRAME(pisaTag):
         else:
             c.frameList.append(self.frame)
 
-    def end(self, c):
+    def end(self, c: pisaContext):
         if self.static:
             c.addPara()
             self.frame.pisaStaticStory = c.story
@@ -655,7 +662,7 @@ class pisaTagPDFTEMPLATE(pisaTag):
         if name in c.templateList:
             log.warning(c.warning("template '%s' has already been defined", name))
 
-    def end(self, c):
+    def end(self, c: pisaContext):
         attrs = self.attr
         name = attrs["name"]
         if len(c.frameList) <= 0:
@@ -711,11 +718,11 @@ class pisaTagPDFBARCODE(pisaTag):
     class _barcodeWrapper(Flowable):
         """Wrapper for barcode widget."""
 
-        def __init__(self, codeName="Code128", value="", **kw) -> None:
-            self.vertical = kw.get("vertical", 0)
+        def __init__(self, codeName: str = "Code128", value: str = "", **kw) -> None:
+            self.vertical: int = kw.get("vertical", 0)
             self.widget = createBarcodeDrawing(codeName, value=value, **kw)
 
-        def draw(self, canvas, xoffset=0, **kw):
+        def draw(self, canvas: Canvas, xoffset: int = 0, **kw) -> None:
             # NOTE: 'canvas' is mutable, so canvas.restoreState() is a MUST.
             canvas.saveState()
             # NOTE: checking vertical value to rotate the barcode
@@ -735,15 +742,15 @@ class pisaTagPDFBARCODE(pisaTag):
 
     def start(self, c: pisaContext) -> None:
         attr = self.attr
-        codeName = attr.type or "Code128"
+        codeName: str = attr.type or "Code128"
         codeName = pisaTagPDFBARCODE._codeName[codeName.upper().replace("-", "")]
-        humanReadable = int(attr.humanreadable)
-        vertical = int(attr.vertical)
-        checksum = int(attr.checksum)
-        barWidth = attr.barwidth or 0.01 * inch
-        barHeight = attr.barheight or 0.5 * inch
-        fontName = c.getFontName("OCRB10,OCR-B,OCR B,OCRB")  # or "Helvetica"
-        fontSize = attr.fontsize or 2.75 * mm
+        humanReadable: int = int(attr.humanreadable)
+        vertical: int = int(attr.vertical)
+        checksum: int = int(attr.checksum)
+        barWidth: float = attr.barwidth or 0.01 * inch
+        barHeight: float = attr.barheight or 0.5 * inch
+        fontName: str = c.getFontName("OCRB10,OCR-B,OCR B,OCRB")  # or "Helvetica"
+        fontSize: float = attr.fontsize or 2.75 * mm
 
         # Assure minimal size.
         if codeName in ("EAN13", "EAN8"):
@@ -785,7 +792,7 @@ class pisaTagPDFBARCODE(pisaTag):
 
 
 class pisaTagCANVAS(pisaTag):
-    def __init__(self, node, attr) -> None:
+    def __init__(self, node: Element, attr: AttrContainer) -> None:
         super().__init__(node, attr)
         self.chart = None
         self.shapes = {
@@ -800,17 +807,17 @@ class pisaTagCANVAS(pisaTag):
     def start(self, c: pisaContext) -> None:
         pass
 
-    def end(self, c):
+    def end(self, c: pisaContext) -> None:
         data = None
-        width = 350
-        height = 150
+        width: int = 350
+        height: int = 150
 
         try:
             data = json.loads(c.text)
         except json.JSONDecodeError:
             print("JSON Decode Error")
 
-        if data:
+        if data and c.node:
             nodetype = dict(c.node.attributes).get("type")
             nodewidth = dict(c.node.attributes).get("width")
             nodeheight = dict(c.node.attributes).get("height")

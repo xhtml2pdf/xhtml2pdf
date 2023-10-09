@@ -22,10 +22,12 @@ import sys
 from hashlib import md5
 from html import escape as html_escape
 from io import BytesIO, StringIO
-from typing import TYPE_CHECKING, ClassVar, Tuple, cast
+from typing import TYPE_CHECKING, ClassVar, Iterator
 from uuid import uuid4
 
-import PIL.Image as PILImage
+from PIL import Image as PILImage
+from PIL import UnidentifiedImageError
+from PIL.Image import Image
 from reportlab.lib.enums import TA_RIGHT
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.utils import LazyImageReader, flatten, haveImages, open_for_read
@@ -46,14 +48,14 @@ from reportlab.platypus.tables import Table, TableStyle
 from reportlab.rl_config import register_reset
 
 from xhtml2pdf.builders.watermarks import WaterMarks
-from xhtml2pdf.files import pisaTempFile
+from xhtml2pdf.files import pisaFileObject, pisaTempFile
 from xhtml2pdf.reportlab_paragraph import Paragraph
-from xhtml2pdf.util import getBorderStyle
+from xhtml2pdf.util import ImageWarning, getBorderStyle
 
 if TYPE_CHECKING:
     from reportlab.graphics.shapes import Drawing
+    from reportlab.pdfgen.canvas import Canvas
 
-    from xhtml2pdf.files import pisaFileObject
 
 try:
     from reportlab.graphics import renderPM
@@ -64,17 +66,17 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 
-MAX_IMAGE_RATIO = 0.95
-PRODUCER = "xhtml2pdf <https://github.com/xhtml2pdf/xhtml2pdf/>"
+MAX_IMAGE_RATIO: float = 0.95
+PRODUCER: str = "xhtml2pdf <https://github.com/xhtml2pdf/xhtml2pdf/>"
 
 
 class PTCycle(list):
     def __init__(self) -> None:
-        self._restart = 0
-        self._idx = 0
-        list.__init__(self)
+        self._restart: int = 0
+        self._idx: int = 0
+        super().__init__()
 
-    def cyclicIterator(self):
+    def cyclicIterator(self) -> Iterator:
         while 1:
             yield self[self._idx]
             self._idx += 1
@@ -83,33 +85,24 @@ class PTCycle(list):
 
 
 class PmlMaxHeightMixIn:
-    def setMaxHeight(self, availHeight):
-        self.availHeightValue = availHeight
-        if availHeight < 70000:
-            if hasattr(self, "canv"):
-                if not hasattr(self.canv, "maxAvailHeightValue"):
-                    self.canv.maxAvailHeightValue = 0
-                self.availHeightValue = self.canv.maxAvailHeightValue = max(
-                    availHeight, self.canv.maxAvailHeightValue
-                )
-        # TODO: Useless condition
-        else:
-            self.availHeightValue = availHeight
-        # TODO: availHeightValue is set above
-        if not hasattr(self, "availHeightValue"):
-            self.availHeightValue = 0
+    def setMaxHeight(self, availHeight: int) -> int:
+        self.availHeightValue: int = availHeight
+        if availHeight < 70000 and hasattr(self, "canv"):
+            if not hasattr(self.canv, "maxAvailHeightValue"):
+                self.canv.maxAvailHeightValue = 0
+            self.availHeightValue = self.canv.maxAvailHeightValue = max(
+                availHeight, self.canv.maxAvailHeightValue
+            )
         return self.availHeightValue
 
-    def getMaxHeight(self):
-        if not hasattr(self, "availHeightValue"):
-            return 0
-        return self.availHeightValue
+    def getMaxHeight(self) -> int:
+        return self.availHeightValue if hasattr(self, "availHeightValue") else 0
 
 
 class PmlBaseDoc(BaseDocTemplate):
-    """We use our own document template to get access to the canvas and set some informations once."""
+    """We use our own document template to get access to the canvas and set some information once."""
 
-    def beforePage(self):
+    def beforePage(self) -> None:
         self.canv._doc.info.producer = PRODUCER
 
         """
@@ -130,25 +123,25 @@ class PmlBaseDoc(BaseDocTemplate):
             self.canv.setPageDuration(self.pml_data["duration"])
         """
 
-    def afterFlowable(self, flowable):
+    def afterFlowable(self, flowable: Flowable) -> None:
         # Does the flowable contain fragments?
         if getattr(flowable, "outline", False):
             self.notify(
                 "TOCEntry",
                 (
                     flowable.outlineLevel,
-                    html_escape(copy.deepcopy(flowable.text), 1),
+                    html_escape(copy.deepcopy(flowable.text), quote=True),
                     self.page,
                 ),
             )
 
-    def handle_nextPageTemplate(self, pt):
+    def handle_nextPageTemplate(self, pt: str | int | list | tuple) -> None:
         """If pt has also templates for even and odd page convert it to list."""
-        has_left_template = self._has_template_for_name(pt + "_left")
-        has_right_template = self._has_template_for_name(pt + "_right")
+        has_left_template: bool = self._has_template_for_name(f"{pt}_left")
+        has_right_template: bool = self._has_template_for_name(f"{pt}_right")
 
         if has_left_template and has_right_template:
-            pt = [pt + "_left", pt + "_right"]
+            pt = [f"{pt}_left", f"{pt}_right"]
 
         """On endPage change to the page template with name or index pt"""
         if isinstance(pt, str):
@@ -156,9 +149,10 @@ class PmlBaseDoc(BaseDocTemplate):
                 del self._nextPageTemplateCycle
             for t in self.pageTemplates:
                 if t.id == pt:
-                    self._nextPageTemplateIndex = self.pageTemplates.index(t)
+                    self._nextPageTemplateIndex: int = self.pageTemplates.index(t)
                     return
-            raise ValueError("can't find template('%s')" % pt)
+            msg = f"can't find template('{pt}')"
+            raise ValueError(msg)
         if isinstance(pt, int):
             if hasattr(self, "_nextPageTemplateCycle"):
                 del self._nextPageTemplateCycle
@@ -166,13 +160,14 @@ class PmlBaseDoc(BaseDocTemplate):
         elif isinstance(pt, (list, tuple)):
             # used for alternating left/right pages
             # collect the refs to the template objects, complain if any are bad
-            c = PTCycle()
+            c: PTCycle = PTCycle()
             for ptn in pt:
                 # special case name used to short circuit the iteration
                 if ptn == "*":
                     c._restart = len(c)
                     continue
                 for t in self.pageTemplates:
+                    sys.exit()
                     if t.id == ptn.strip():
                         c.append(t)
                         break
@@ -184,26 +179,26 @@ class PmlBaseDoc(BaseDocTemplate):
                 raise ValueError(msg)
 
             # ensure we start on the first one$
-            self._nextPageTemplateCycle = c.cyclicIterator()
+            self._nextPageTemplateCycle: PageTemplate = c.cyclicIterator()
         else:
             msg = "Argument pt should be string or integer or list"
             raise TypeError(msg)
 
-    def _has_template_for_name(self, name):
+    def _has_template_for_name(self, name: str) -> bool:
         return any(template.id == name.strip() for template in self.pageTemplates)
 
 
 class PmlPageTemplate(PageTemplate):
-    PORTRAIT = "portrait"
-    LANDSCAPE = "landscape"
+    PORTRAIT: str = "portrait"
+    LANDSCAPE: str = "landscape"
     # by default portrait
-    pageorientation = PORTRAIT
+    pageorientation: str = PORTRAIT
 
     def __init__(self, **kw) -> None:
         self.pisaStaticList: list = []
-        self.pisaBackgroundList: list = []
+        self.pisaBackgroundList: list[tuple] = []
         self.pisaBackground = None
-        PageTemplate.__init__(self, **kw)
+        super().__init__(**kw)
         self._page_count: int = 0
         self._first_flow: bool = True
 
@@ -213,9 +208,9 @@ class PmlPageTemplate(PageTemplate):
         self.h: int = 0
         self.w: int = 0
 
-        self.backgroundids: list = []
+        self.backgroundids: list[int] = []
 
-    def isFirstFlow(self, canvas):
+    def isFirstFlow(self, canvas: Canvas) -> bool:
         if self._first_flow:
             if canvas.getPageNumber() <= self._page_count:
                 self._first_flow = False
@@ -224,13 +219,13 @@ class PmlPageTemplate(PageTemplate):
                 canvas._doctemplate._page_count = canvas.getPageNumber()
         return self._first_flow
 
-    def isPortrait(self):
+    def isPortrait(self) -> bool:
         return self.pageorientation == self.PORTRAIT
 
-    def isLandscape(self):
+    def isLandscape(self) -> bool:
         return self.pageorientation == self.LANDSCAPE
 
-    def beforeDrawPage(self, canvas, doc):
+    def beforeDrawPage(self, canvas: Canvas, doc):
         canvas.saveState()
         try:
             if doc.pageTemplate.id not in self.backgroundids:
@@ -244,7 +239,7 @@ class PmlPageTemplate(PageTemplate):
                         pisaBackground = WaterMarks.generate_pdf_background(
                             self.pisaBackground,
                             self.pagesize,
-                            self.isPortrait(),
+                            is_portrait=self.isPortrait(),
                             context=self.backgroundContext,
                         )
                     else:
@@ -291,52 +286,49 @@ class PmlPageTemplate(PageTemplate):
             canvas.restoreState()
 
 
-_ctr = 1
+_ctr: int = 1
 
 
 class PmlImageReader:  # TODO We need a factory here, returning either a class for java or a class for PIL
     """Wraps up either PIL or Java to get data from bitmaps."""
 
     _cache: ClassVar[dict] = {}
+    # Experimental features, disabled by default
+    use_cache: bool = False
+    use_lazy_loader: bool = False
+    process_internal_files: bool = False
 
-    def __init__(self, fileName) -> None:
-        if isinstance(fileName, PmlImageReader):
+    def __init__(self, fileName: PmlImage | Image | str) -> None:
+        if isinstance(fileName, PmlImage):
             self.__dict__ = fileName.__dict__  # borgize
             return
             # start wih lots of null private fields, to be populated by
         # the relevant engine.
-        self.fileName = fileName
-        self._image = None
-        self._width = None
-        self._height = None
+        self.fileName: PmlImage | Image | str = fileName or f"PILIMAGE_{id(self)}"
+        self._image: Image = None
+        self._width: int | None = None
+        self._height: int | None = None
         self._transparent = None
-        self._data = None
-        imageReaderFlags = 0
-        if PILImage and isinstance(fileName, PILImage.Image):
+        self._data: bytes | str | None = None
+        self._dataA: PmlImageReader | None = None
+        self.fp: BytesIO | StringIO | None = None
+        if Image and isinstance(fileName, Image):
             self._image = fileName
             self.fp = getattr(fileName, "fp", None)
-            try:
-                self.fileName = fileName
-            except AttributeError:
-                self.fileName = "PILIMAGE_%d" % id(self)
         else:
             try:
                 self.fp = open_for_read(fileName, "b")
-                if isinstance(self.fp, BytesIO().__class__):
-                    # avoid messing with already internal files
-                    imageReaderFlags = 0
-                if imageReaderFlags > 0:  # interning
-                    data = self.fp.read()
-                    if imageReaderFlags & 2:  # autoclose
-                        with contextlib.suppress(Exception):
-                            self.fp.close()
-                    if imageReaderFlags & 4:  # cache the data
+                if self.process_internal_files and isinstance(self.fp, StringIO):
+                    data: str = self.fp.read()
+                    with contextlib.suppress(Exception):
+                        self.fp.close()
+                    if self.use_cache:
                         if not self._cache:
                             register_reset(self._cache.clear)
-
-                        data = self._cache.setdefault(md5(data).digest(), data)
+                        cache_key = md5(data.encode("utf8")).digest()
+                        data = self._cache.setdefault(cache_key, data)
                     self.fp = StringIO(data)
-                elif imageReaderFlags == -1 and isinstance(fileName, str):
+                elif self.use_lazy_loader and isinstance(fileName, str):
                     # try Ralf Schmitt's re-opening technique of avoiding too many open files
                     self.fp.close()
                     del self.fp  # will become a property in the next statement
@@ -357,49 +349,47 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
                             "Imaging Library not available, unable to import bitmaps"
                             " only jpegs"
                         )
-                        raise RuntimeError(msg) from e
+                        raise ImageWarning(msg) from e
                     self.jpeg_fh = self._jpeg_fh
                     self._data = self.fp.read()
-                    self._dataA = None
                     self.fp.seek(0)
-            except Exception as e:  # TODO: Kill the catch-all
-                et, ev, tb = sys.exc_info()
-                if hasattr(ev, "args") and isinstance(ev, Exception):
-                    a = f"{ev.args[-1]} fileName={fileName!r}"
-                    ev.args = ev.args[:-1] + (a,)
-                    msg = f"{et} {ev} {tb}"
-                    raise RuntimeError(msg) from e
-                raise
+            # Catch all errors that are known and don't need the stack trace
+            except UnidentifiedImageError as e:
+                msg = "Cannot identify image file"
+                raise ImageWarning(msg) from e
 
     @staticmethod
-    def _read_image(fp):
+    def _read_image(fp) -> Image:
         if sys.platform[:4] == "java":
             from java.io import ByteArrayInputStream
             from javax.imageio import ImageIO
 
             input_stream = ByteArrayInputStream(fp.read())
             return ImageIO.read(input_stream)
-        return PILImage.open(fp) if PILImage else None
+        return PILImage.open(fp)
 
-    def _jpeg_fh(self):
+    def _jpeg_fh(self) -> BytesIO | StringIO | None:
         fp = self.fp
-        fp.seek(0)
+        if isinstance(fp, (BytesIO, StringIO)):
+            fp.seek(0)
         return fp
 
-    @staticmethod
-    def jpeg_fh():
+    def jpeg_fh(self) -> BytesIO | StringIO | None:  # noqa: PLR6301
+        """Might be replaced with _jpeg_fh in some cases"""
         return None
 
-    def getSize(self):
+    def getSize(self) -> tuple[int, int]:
         if self._width is None or self._height is None:
             if sys.platform[:4] == "java":
                 self._width = self._image.getWidth()
                 self._height = self._image.getHeight()
             else:
                 self._width, self._height = self._image.size
+            if TYPE_CHECKING:
+                assert self._width is not None and self._height is not None
         return self._width, self._height
 
-    def getRGBData(self):
+    def getRGBData(self) -> bytes | str:
         """Return byte array of RGB data as string."""
         if self._data is None:
             self._dataA = None
@@ -409,11 +399,13 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
 
                 width, height = self.getSize()
                 buffer = jarray.zeros(width * height, "i")
-                pg = PixelGrabber(self._image, 0, 0, width, height, buffer, 0, width)
+                pg: PixelGrabber = PixelGrabber(
+                    self._image, 0, 0, width, height, buffer, 0, width
+                )
                 pg.grabPixels()
                 # there must be a way to do this with a cast not a byte-level loop,
                 # I just haven't found it yet...
-                pixels = []
+                pixels: list[str] = []
                 a = pixels.append
                 for rgb in buffer:
                     a(chr((rgb >> 16) & 0xFF))
@@ -463,17 +455,17 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
             return None
 
     def __str__(self) -> str:
-        try:
-            fn = self.fileName.read() or id(self)
-            return f"PmlImageObject_{hash(fn)}"
-        except Exception:
-            return str(self.fileName or id(self))
+        if isinstance(self.fileName, (PmlImage, Image)):
+            with contextlib.suppress(Exception):
+                fn = self.fileName.read() or id(self)
+                return f"PmlImageObject_{hash(fn)}"
+        return str(self.fileName or id(self))
 
 
 class PmlImage(Flowable, PmlMaxHeightMixIn):
     def __init__(
         self,
-        data: pisaFileObject,
+        data: pisaFileObject | pisaTempFile | bytes,
         src: str | None = None,
         width: int | None = None,
         height: int | None = None,
@@ -484,26 +476,35 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         self.kw: dict = kw
         self.hAlign: str = "CENTER"
         self._mask: str = mask
-        self._imgdata: bytes = (
-            data.getvalue() if isinstance(data, pisaTempFile) else data
-        )
+        self._imgdata: bytes = b""
+        if isinstance(data, bytes):
+            self._imgdata = data
+        elif isinstance(data, pisaTempFile):
+            self._imgdata = data.getvalue()
+        elif isinstance(data, pisaFileObject):
+            self._imgdata = data.getData() or b""
         self.src: str | None = src
         # print "###", repr(data)
         self.mimetype: str | None = mimetype
 
         # Resolve size
         drawing = self.getDrawing()
+        self.imageWidth: float = 0.0
+        self.imageHeight: float = 0.0
         if drawing:
-            _, _, self.imageWidth, self.imageHeight = cast(
-                Tuple[int, int, int, int], drawing.getBounds() or (0, 0, 0, 0)
+            _, _, self.imageWidth, self.imageHeight = drawing.getBounds() or (
+                0,
+                0,
+                0,
+                0,
             )
         else:
             img = self.getImage()
             if img:
-                self.imageWidth, self.imageHeight = cast(Tuple[int, int], img.getSize())
+                self.imageWidth, self.imageHeight = img.getSize()
 
-        self.drawWidth: int = width or self.imageWidth
-        self.drawHeight: int = height or self.imageHeight
+        self.drawWidth: float = width or self.imageWidth
+        self.drawHeight: float = height or self.imageHeight
 
     def wrap(self, availWidth, availHeight):
         """
@@ -524,7 +525,7 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         return self.dWidth, self.dHeight
 
     def getDrawing(
-        self, width: int | None = None, height: int | None = None
+        self, width: float | None = None, height: float | None = None
     ) -> Drawing | None:
         """If this image is a vector image and the library is available, returns a ReportLab Drawing."""
         if svg2rlg:
@@ -555,23 +556,23 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
                 return drawing
         return None
 
-    def getDrawingRaster(self):
+    def getDrawingRaster(self) -> BytesIO | None:
         """If this image is a vector image and the libraries are available, returns a PNG raster."""
         if svg2rlg and renderPM:
-            svg = self.getDrawing()
+            svg: Drawing = self.getDrawing()
             if svg:
                 imgdata = BytesIO()
                 renderPM.drawToFile(svg, imgdata, fmt="PNG")
                 return imgdata
         return None
 
-    def getImage(self):
+    def getImage(self) -> PmlImageReader:
         """Return a raster image."""
         vectorRaster = self.getDrawingRaster()
         imgdata = vectorRaster or BytesIO(self._imgdata)
         return PmlImageReader(imgdata)
 
-    def draw(self):
+    def draw(self) -> None:
         # TODO this code should work, but untested
         # drawing = self.getDrawing(self.dWidth, self.dHeight)
         # if drawing and renderPDF:
@@ -860,7 +861,7 @@ class PmlTable(Table, PmlMaxHeightMixIn):
 
 class PmlPageCount(IndexingFlowable):
     def __init__(self) -> None:
-        IndexingFlowable.__init__(self)
+        super().__init__()
         self.second_round = False
 
     def isSatisfied(self):

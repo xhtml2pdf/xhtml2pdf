@@ -175,6 +175,26 @@ class DocumentTest(TestCase):
                 ],
             )
 
+    def test_document_cannot_identify_image(self) -> None:
+        """Test that images which cannot be identified don't cause stack trace to be printed"""
+        image_path = "https://raw.githubusercontent.com/python-pillow/Pillow/7921da54a73dd4a30c23957369b79cda176005c6/Tests/images/zero_width.gif"
+        extra_html = f'<img src="{image_path}">'
+        with open(os.devnull, "wb") as pdf_file, self.assertLogs(
+            "xhtml2pdf.tags", level="WARNING"
+        ) as cm:
+            pisaDocument(
+                src=io.StringIO(HTML_CONTENT.format(head="", extra_html=extra_html)),
+                dest=pdf_file,
+            )
+            self.assertEqual(
+                cm.output,
+                [
+                    "WARNING:xhtml2pdf.tags:Cannot identify image file:\n"
+                    "'<img "
+                    'src="https://raw.githubusercontent.com/python-pillow/Pillow/7921da54a73dd4a30c23957369b79cda176005c6/Tests/images/zero_width.gif"/>\''
+                ],
+            )
+
     def test_document_nested_table(self) -> None:
         """Test that nested tables are being rendered."""
         tests_folder = os.path.dirname(os.path.realpath(__file__))
