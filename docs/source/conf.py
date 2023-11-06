@@ -449,3 +449,5 @@ epub_exclude_files = ["search.html"]
 intersphinx_mapping: dict[str, tuple[str, str | None]] = {
     "python": ("https://docs.python.org/", None)
 }
+
+redirects = {"howto-running-tests": "contributing/development-guide.html#running-tests"}

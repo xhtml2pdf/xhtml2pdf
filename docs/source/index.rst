@@ -29,7 +29,6 @@ Contents
    graphics
    encryption_and_signatures
    watermarks
-   howto-running-tests
    examples
 
 .. toctree::
@@ -41,3 +40,5 @@ Contents
 .. toctree::
    :caption: Contributing
    :maxdepth: 2
+
+   contributing/development-guide
