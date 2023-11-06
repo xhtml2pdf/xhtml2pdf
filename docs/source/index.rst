@@ -34,6 +34,7 @@ Contents
    :maxdepth: 2
 
    reference
+   reference/cli
 
 .. toctree::
    :caption: Contributing

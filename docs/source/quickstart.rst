@@ -70,3 +70,5 @@ You can convert HTML files to PDF documents from the command line:
 .. code:: shell
 
     xhtml2pdf source.html output.pdf
+
+Read more in the :doc:`CLI reference <reference/cli>`.
