@@ -40,6 +40,7 @@ extensions = [
     "sphinx.ext.githubpages",
     "sphinx.ext.extlinks",
     "sphinxcontrib.pdfembed",
+    "sphinx_reredirects",
 ]
 
 
