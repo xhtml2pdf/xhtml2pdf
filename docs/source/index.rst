@@ -13,11 +13,9 @@ Contents
 --------
 
 .. toctree::
-   :caption: Getting started
    :maxdepth: 2
 
-   installation
-   usage
+   quickstart
    release-notes
 
 .. toctree::

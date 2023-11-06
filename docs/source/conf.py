@@ -14,12 +14,16 @@ documentation root, use os.path.abspath to make it absolute, like shown here.
 """
 from __future__ import annotations
 
+import sys
+from os.path import abspath, dirname, join
+
 from build_samples import build_resources
 
 from xhtml2pdf import __version__
 
 build_resources()
 
+sys.path.append(abspath(join(dirname(dirname(__file__)), "_ext")))
 
 # -- General configuration ------------------------------------------------
 
@@ -31,6 +35,7 @@ build_resources()
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    "djangodocs",
     "sphinx.ext.autodoc",
     "sphinx.ext.doctest",
     "sphinx.ext.intersphinx",
@@ -48,6 +53,7 @@ extensions = [
 extlinks = {
     "issue": ("https://github.com/xhtml2pdf/xhtml2pdf/issues/%s", "#%s"),
     "pr": ("https://github.com/xhtml2pdf/xhtml2pdf/pull/%s", "#%s"),
+    "source": ("https://github.com/xhtml2pdf/xhtml2pdf/tree/master/%s", "%s"),
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -447,7 +453,15 @@ epub_exclude_files = ["search.html"]
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping: dict[str, tuple[str, str | None]] = {
-    "python": ("https://docs.python.org/", None)
+    "python": ("https://docs.python.org/3/", None),
+    "django": (
+        "http://docs.djangoproject.com/en/dev/",
+        "http://docs.djangoproject.com/en/dev/_objects/",
+    ),
 }
 
-redirects = {"howto-running-tests": "contributing/development-guide.html#running-tests"}
+redirects = {
+    "howto-running-tests": "contributing/development-guide.html#running-tests",
+    "installation": "quickstart.html#install",
+    "usage": "quickstart.html#use",
+}
