@@ -35,6 +35,7 @@ Contents
 
    reference
    reference/python
+   reference/html
    reference/cli
 
 .. toctree::
