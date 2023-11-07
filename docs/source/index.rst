@@ -34,6 +34,7 @@ Contents
    :maxdepth: 2
 
    reference
+   reference/python
    reference/cli
 
 .. toctree::
