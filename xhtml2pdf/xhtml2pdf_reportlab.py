@@ -827,9 +827,9 @@ class PmlTable(Table, PmlMaxHeightMixIn):
         # IMPORTANT!!! We can not substitute the private value
         # self._colWidths therefore we have to modify list in place
         for i, colWidth in enumerate(newColWidths):
-            if (colWidth is not None) or (colWidth == "*"):
+            if colWidth is not None:
                 newColWidth = self._normWidth(colWidth, totalWidth)
-                remainingWidth -= colWidth
+                remainingWidth -= newColWidth
             else:
                 remainingCols += 1
                 newColWidth = None
