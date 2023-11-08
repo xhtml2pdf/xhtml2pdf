@@ -829,7 +829,7 @@ class PmlTable(Table, PmlMaxHeightMixIn):
         for i, colWidth in enumerate(newColWidths):
             if (colWidth is not None) or (colWidth == "*"):
                 newColWidth = self._normWidth(colWidth, totalWidth)
-                remainingWidth -= colWidth
+                remainingWidth -= newColWidth
             else:
                 remainingCols += 1
                 newColWidth = None
