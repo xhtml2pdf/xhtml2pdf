@@ -50,6 +50,20 @@ Versions >= 0.2
 
     --------------------------------------------
 
+0.2.13
+======
+
+Released: 2023-11-09
+
+**🐛 Bug-Fixes**
+
+* Fix ``TypeError`` on column widths specified as percentages (:issue:`731`)
+* Fix ``TypeError`` when formatting width in debug logging (:issue:`730`)
+
+| Thanks to the following people on GitHub for contributing to this release:
+| *JanEgner*, *timobrembeck*
+
+
 0.2.12
 ======
 
