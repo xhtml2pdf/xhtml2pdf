@@ -25,22 +25,18 @@ from xhtml2pdf.xhtml2pdf_reportlab import PmlKeepInFrame, PmlTable
 log = logging.getLogger(__name__)
 
 
-def _width(value=None):
+def _width(value: str | float | None = None) -> str | float | None:
     if value is None:
         return None
     value = str(value)
-    if value.endswith("%"):
-        return value
-    return getSize(value)
+    return value if value.endswith("%") else getSize(value)
 
 
-def _height(value=None):
+def _height(value: str | float | None = None) -> str | float | None:
     if value is None:
         return None
     value = str(value)
-    if value.endswith("%"):
-        return value
-    return getSize(value)
+    return value if value.endswith("%") else getSize(value)
 
 
 class TableData:
@@ -58,7 +54,7 @@ class TableData:
         self.styles: list[
             tuple[str, tuple[int, int], tuple[int, int], str, str, str]
         ] = []
-        self.width: int = 0
+        self.width: str | float = 0
 
     def add_cell(self, data=None):
         self.col += 1
@@ -350,7 +346,7 @@ class pisaTagTD(pisaTag):
             # If is value, the set it in the right place in the arry
             if width is not None:
                 tdata.colw[col] = _width(width)
-                log.debug("Col %d has width %d", col, width)
+                log.debug("Col %d has width %s", col, width)
             else:
                 # If there are no child nodes, nothing within the column can change the
                 # width.  Set the column width to the sum of the right and left padding
@@ -358,7 +354,7 @@ class pisaTagTD(pisaTag):
                 log.debug(width)
                 if len(self.node.childNodes) == 0:
                     width = c.frag.paddingLeft + c.frag.paddingRight
-                    log.debug("Col %d has width %d", col, width)
+                    log.debug("Col %d has width %s", col, width)
                     if width:
                         tdata.colw[col] = _width(width)
                 else:
