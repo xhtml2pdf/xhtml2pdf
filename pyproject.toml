@@ -86,7 +86,7 @@ xhtml2pdf = "xhtml2pdf.pisa:command"
 version = {attr = "xhtml2pdf.__version__"}
 
 [tool.setuptools.packages.find]
-exclude = ["tests", "tests.*", "manual_test", "manual_test.*"]
+include = ["xhtml2pdf*"]
 
 
 [tool.tox]
