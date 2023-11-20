@@ -28,6 +28,7 @@ Contents
    encryption_and_signatures
    watermarks
    examples
+   Fonts <guide/fonts>
 
 .. toctree::
    :caption: Reference
