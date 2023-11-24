@@ -31,7 +31,7 @@ from reportlab.platypus.frames import Frame, ShowBoundaryValue
 from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
 
 from xhtml2pdf import default, parser
-from xhtml2pdf.files import getFile, pisaFileObject
+from xhtml2pdf.files import getFile, pisaFileObject, B64InlineURI
 from xhtml2pdf.tables import TableData
 from xhtml2pdf.util import (
     arabic_format,
@@ -1078,13 +1078,22 @@ class pisaContext:
 
             # XXX Problems with unicode here
             fontAlias = [str(x) for x in fontAlias]
-
             fontName = fontAlias[0]
-            parts = src.split(".")
-            baseName, suffix = ".".join(parts[:-1]), parts[-1]
-            suffix = suffix.lower()
 
-            if suffix in ["ttc", "ttf"]:
+            font_type = None
+            if isinstance(file.instance, B64InlineURI):
+                if file.getMimeType() == 'font/ttf':
+                    font_type = 'ttf'
+            else:
+                parts = src.split(".")
+                baseName, suffix = ".".join(parts[:-1]), parts[-1]
+                suffix = suffix.lower()
+                if suffix in ('ttf', 'ttc'):
+                    font_type = 'ttf'
+                elif suffix in ('afm', 'pfb'):
+                    font_type = suffix
+
+            if font_type == 'ttf':
                 # determine full font name according to weight and style
                 fullFontName = "%s_%d%d" % (fontName, bold, italic)
 
@@ -1112,8 +1121,8 @@ class pisaContext:
                     # Register "normal" name and the place holder for style
                     self.registerFont(fontName, [*fontAlias, fullFontName])
 
-            elif suffix in ("afm", "pfb"):
-                if suffix == "afm":
+            elif font_type in ('afm', 'pfb'):
+                if font_type == "afm":
                     afm = file.getNamedFile()
                     tfile = pisaFileObject(baseName + ".pfb", basepath=file.basepath)
                     pfb = tfile.getNamedFile()
