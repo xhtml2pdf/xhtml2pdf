@@ -58,6 +58,15 @@ class ParserTest(TestCase):
         r = pisaParser(data, c)
         self.assertEqual(r.warn, 0)
 
+    def test_image_base64_params(self) -> None:
+        c = pisaContext(".")
+        data = (
+            b"<img"
+            b' src="data:image/gif;foo=bar;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=">'
+        )
+        r = pisaParser(data, c)
+        self.assertEqual(r.warn, 0)
+
     def test_image_base64_urlencoded(self) -> None:
         c = pisaContext(".")
         data = (

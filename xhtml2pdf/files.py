@@ -5,7 +5,6 @@ import gzip
 import http.client as httplib
 import logging
 import mimetypes
-import re
 import sys
 import tempfile
 import threading
@@ -199,20 +198,25 @@ class BaseFile:
 
 
 class B64InlineURI(BaseFile):
-    _rx_datauri = re.compile(
-        "^data:(?P<mime>[a-z]+/[a-z]+);base64,(?P<data>.*)$", re.M | re.DOTALL
-    )
+    mime_params: list = []      # not used
 
     def extract_data(self) -> bytes | None:
-        m = self._rx_datauri.match(self.path)
-        if not m:
-            msg = "Inline data could not be parsed"
-            raise RuntimeError(msg)
-        self.mimetype = m.group("mime")
+        # RFC 2397 form: data:[<mediatype>][;base64],<data>
+        # This wrapper object requires base64-encoded data while RFC
+        # defines it as optional. Mediatype may contain optional
+        # params separated with a semicolon.
+        parts = self.path.split('base64,')
+        if not self.path.startswith('data:') or \
+           'base64,' not in self.path or \
+           len(parts) != 2:
+            raise RuntimeError('Base64-encoded data URI is mailformed')
+        data = parts[1]
+        # Strip 'data:' prefix and split mime type with optional params
+        mime = parts[0][len('data:'):].split(';')
+        # mime_params are preserved for future use
+        self.mimetype, self.mime_params = mime[0], mime[1:]
 
-        # Support URL encoded strings
-        b64: bytes = urllib_unquote(m.group("data")).encode("utf-8")
-
+        b64: bytes = urllib_unquote(data).encode("utf-8")
         return base64.b64decode(b64)
 
 
