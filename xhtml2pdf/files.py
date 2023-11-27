@@ -198,21 +198,21 @@ class BaseFile:
 
 
 class B64InlineURI(BaseFile):
-    mime_params: list = []      # not used
+    mime_params: list
 
     def extract_data(self) -> bytes | None:
         # RFC 2397 form: data:[<mediatype>][;base64],<data>
-        # This wrapper object requires base64-encoded data while RFC
-        # defines it as optional. Mediatype may contain optional
-        # params separated with a semicolon.
-        parts = self.path.split('base64,')
-        if not self.path.startswith('data:') or \
-           'base64,' not in self.path or \
-           len(parts) != 2:
-            raise RuntimeError('Base64-encoded data URI is mailformed')
+        parts = self.path.split("base64,")
+        if (
+            not self.path.startswith("data:")
+            or "base64," not in self.path
+            or len(parts) != 2
+        ):
+            msg = "Base64-encoded data URI is mailformed"
+            raise RuntimeError(msg)
         data = parts[1]
         # Strip 'data:' prefix and split mime type with optional params
-        mime = parts[0][len('data:'):].split(';')
+        mime = parts[0][len("data:") :].split(";")
         # mime_params are preserved for future use
         self.mimetype, self.mime_params = mime[0], mime[1:]
 

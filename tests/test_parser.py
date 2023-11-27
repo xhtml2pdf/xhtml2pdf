@@ -1,5 +1,5 @@
-import os
 import base64
+import os
 from unittest import TestCase
 
 from xhtml2pdf.context import pisaContext
@@ -83,10 +83,10 @@ class ParserTest(TestCase):
             "samples",
             "font",
             "Noto_Sans",
-            "NotoSans-Regular.ttf"
+            "NotoSans-Regular.ttf",
         )
-        with open(ttf_path, 'rb') as f:
-            b64_font = base64.b64encode(f.read()).decode('ascii')
+        with open(ttf_path, "rb") as f:
+            b64_font = base64.b64encode(f.read()).decode("ascii")
         c = pisaContext(".")
 
         data = b"""
@@ -96,7 +96,7 @@ class ParserTest(TestCase):
               src: url('data:font/ttf;charset=utf-8;base64,%s');
             }
           </style>
-        """ % b64_font.encode('utf-8')
+        """ % b64_font.encode("utf-8")
 
         r = pisaParser(data, c)
         self.assertEqual(r.warn, 0)
