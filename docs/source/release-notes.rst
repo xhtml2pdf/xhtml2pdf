@@ -50,6 +50,23 @@ Versions >= 0.2
 
     --------------------------------------------
 
+Unreleased
+==========
+
+**⚠️ Important notes**
+
+The ``pyCairo`` dependency has been removed to allow the user to define the desired rendering backend individually.
+If you need to render bitmaps or vector graphic formats, please specify either ``pycairo`` or ``renderpm`` as extra dependency.
+
+**🐛 Bug-Fixes**
+
+* Remove unintentional packages from wheel (:issue:`736`)
+* Make ``pyCairo`` dependency optional (:issue:`741`)
+
+| Thanks to the following people on GitHub for contributing to this release:
+| *carlsmedstad*, *timobrembeck*
+
+
 0.2.13
 ======
 

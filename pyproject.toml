@@ -54,7 +54,7 @@ dependencies = [
     "pyhanko-certvalidator>=0.19.5",
     "pypdf>=3.1.0",
     "python-bidi>=0.4.2",
-    "reportlab[pycairo]>=4.0.4",
+    "reportlab>=4.0.4",
     "svglib>=1.2.1",
 ]
 dynamic = ["version"]
@@ -66,6 +66,12 @@ Documentation = "https://xhtml2pdf.readthedocs.io/"
 Changelog = "https://xhtml2pdf.readthedocs.io/en/latest/release-notes.html"
 
 [project.optional-dependencies]
+pycairo = [
+    "reportlab[pycairo]>=4.0.4",
+]
+renderpm = [
+    "reportlab[renderpm]>=4.0.4",
+]
 test = [
     "tomli>=2.0.1; python_version<'3.11'",
     "tox",
