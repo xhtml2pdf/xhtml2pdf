@@ -1,30 +1,46 @@
-.. xhtml2pdf documentation master file, created by
-   sphinx-quickstart on Thu Nov 17 21:20:59 2016.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+xhtml2pdf documentation
+=======================
 
-Welcome to xhtml2pdf's documentation!
-=====================================
+**xhtml2pdf** is a HTML to PDF converter using Python, the ReportLab Toolkit, html5lib and pypdf. It supports HTML5 and CSS 2.1 (and some of CSS 3). It is completely written in pure Python, so it is platform independent.
 
-**xhtml2pdf** enables users to generate PDF documents from HTML content
-easily and with automated flow control such as pagination and keeping text together.
+The main benefit of this tool is that a user with web skills like HTML and CSS is able to generate PDF templates very quickly without learning new technologies.
+
 The **Python module** can be used in any Python environment, including Django.
 The **Command line tool** is a stand-alone program that can be executed from the command line.
 
 
-Contents:
+Contents
+--------
 
 .. toctree::
    :maxdepth: 2
 
-   installation
-   usage
+   quickstart
+   release-notes
+
+.. toctree::
+   :caption: User guide
+   :maxdepth: 2
+
    format_html
    https_options
    graphics
    encryption_and_signatures
    watermarks
-   howto-running-tests
-   reference
-   release-notes
    examples
+   Fonts <guide/fonts>
+
+.. toctree::
+   :caption: Reference
+   :maxdepth: 2
+
+   reference
+   reference/python
+   reference/html
+   reference/cli
+
+.. toctree::
+   :caption: Contributing
+   :maxdepth: 2
+
+   contributing/development-guide
