@@ -62,6 +62,7 @@ If you need to render bitmaps or vector graphic formats, please specify either `
 
 * Remove unintentional packages from wheel (:issue:`736`)
 * Make ``pyCairo`` dependency optional (:issue:`741`)
+* Fix image rendering with link_callback (:issue:`738`)
 
 | Thanks to the following people on GitHub for contributing to this release:
 | *carlsmedstad*, *timobrembeck*
