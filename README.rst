@@ -56,10 +56,19 @@ Requirements
 
 Only Python 3.8+ is tested and guaranteed to work.
 
-All additional requirements are listed in the ``pyproject.toml`` file and are installed automatically using the ``pip install .`` method.
+All mandatory requirements are listed in the ``pyproject.toml`` file and are installed automatically using the ``pip install xhtml2pdf`` method.
 
-As PDF library we depend on reportlab, which has optional C-extensions for performance optimizations.
-For more information about how to install them, have a look at the `reportlab docs <https://docs.reportlab.com/install/open_source_installation/>`__.
+As PDF library we depend on reportlab, which needs a rendering backend to generate bitmaps and vector graphic formats.
+For more information about this, have a look at the `reportlab docs <https://docs.reportlab.com/install/open_source_installation/>`__.
+
+The recommended choice is the `cairo graphics library <https://cairographics.org/>`__ which has to be installed system-wide e.g. via the OS package manager
+in combination with the ``PyCairo`` extra dependency:
+
+    pip install xhtml2pdf[pycairo]
+
+Alternatively, the legacy ``RenderPM`` can be used by installing:
+
+    pip install xhtml2pdf[renderpm]
 
 
 Alternatives
