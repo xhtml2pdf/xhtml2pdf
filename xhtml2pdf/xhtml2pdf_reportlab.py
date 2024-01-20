@@ -455,10 +455,9 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
             return None
 
     def __str__(self) -> str:
-        if isinstance(self.fileName, (PmlImage, Image)):
-            with contextlib.suppress(Exception):
-                fn = self.fileName.read() or id(self)
-                return f"PmlImageObject_{hash(fn)}"
+        if isinstance(self.fileName, (PmlImage, Image, BytesIO)):
+            fn = self.fileName.read() or id(self)
+            return f"PmlImageObject_{hash(fn)}"
         return str(self.fileName or id(self))
 
 
