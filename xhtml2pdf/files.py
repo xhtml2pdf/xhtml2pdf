@@ -14,14 +14,16 @@ from abc import abstractmethod
 from io import BytesIO
 from pathlib import Path
 from tempfile import _TemporaryFileWrapper
-from typing import TYPE_CHECKING, Any, Callable, ClassVar
+from typing import TYPE_CHECKING
 from urllib import request
 from urllib.parse import unquote as urllib_unquote
 
 from xhtml2pdf.config.httpconfig import httpConfig
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from http.client import HTTPResponse
+    from typing import Any, ClassVar
     from urllib.parse import SplitResult
 
 log = logging.getLogger(__name__)
@@ -35,7 +37,7 @@ STRATEGIES: tuple[type, Any] = (
 class TmpFiles(threading.local):
     files: ClassVar[list[_TemporaryFileWrapper[bytes]]] = []
 
-    def append(self, file) -> None:
+    def append(self, file: _TemporaryFileWrapper[bytes]) -> None:
         self.files.append(file)
 
     def cleanFiles(self) -> None:
@@ -123,7 +125,7 @@ class pisaTempFile:
             value = value.encode("utf-8")
         return value
 
-    def write(self, value: bytes | str):
+    def write(self, value: bytes | str) -> None:
         """If capacity != -1 and length of file > capacity it is time to switch."""
         if self.capacity > 0 and self.strategy == 0:
             len_value = len(value)
@@ -199,8 +201,9 @@ class BaseFile:
 
 
 class B64InlineURI(BaseFile):
-    _rx_datauri = re.compile(
-        "^data:(?P<mime>[a-z]+/[a-z]+);base64,(?P<data>.*)$", re.M | re.DOTALL
+
+    _rx_datauri: re.Pattern = re.compile(
+        "^data:(?P<mime>[a-z]+/[a-z]+);base64,(?P<data>.*)$", re.MULTILINE | re.DOTALL
     )
 
     def extract_data(self) -> bytes | None:
@@ -250,7 +253,7 @@ class NetworkFileUri(BaseFile):
                 )
         return data
 
-    def get_httplib(self, uri) -> tuple[bytes | None, bool]:
+    def get_httplib(self, uri: str) -> tuple[bytes | None, bool]:
         log.debug("Sending request for %r with httplib", uri)
         data: bytes | None = None
         is_gzip: bool = False
@@ -290,7 +293,7 @@ class NetworkFileUri(BaseFile):
 
 class LocalFileURI(BaseFile):
     @staticmethod
-    def guess_mimetype(name) -> str | None:
+    def guess_mimetype(name: str) -> str | None:
         """Guess the mime type."""
         mimetype = mimetypes.guess_type(str(name))[0]
         if mimetype is not None:
@@ -308,9 +311,9 @@ class LocalFileURI(BaseFile):
         if uri.is_file():
             self.uri = uri
             self.suffix = uri.suffix
-            self.mimetype = self.guess_mimetype(uri)
+            self.mimetype = self.guess_mimetype(str(uri))
             if self.mimetype and self.mimetype.startswith("text"):
-                with open(uri) as file_handler:
+                with open(uri, encoding="utf-8") as file_handler:
                     data = file_handler.read().encode("utf-8")
             else:
                 with open(uri, "rb") as file_handler:
@@ -320,19 +323,19 @@ class LocalFileURI(BaseFile):
 
 class BytesFileUri(BaseFile):
     def extract_data(self) -> bytes | None:
-        self.uri = self.path
+        self.uri: str = self.path
         return self.path.encode("utf-8")
 
 
 class LocalTmpFile(BaseFile):
-    def __init__(self, path, basepath) -> None:
-        self.path: str = path
-        self.basepath: str | None = None
-        self.mimetype: str | None = basepath
+    def __init__(self, path: str | None, basepath: str | None) -> None:
+        self.path: str | None = path
+        self.basepath: str | None = basepath
+        self.mimetype: str | None = None
         self.suffix: str | None = None
         self.uri: str | Path | None = None
 
-    def get_named_tmp_file(self):
+    def get_named_tmp_file(self) -> _TemporaryFileWrapper[bytes]:
         tmp_file = super().get_named_tmp_file()
         if self.path is None:
             self.path = tmp_file.name
@@ -348,7 +351,8 @@ class LocalTmpFile(BaseFile):
 
 class FileNetworkManager:
     @staticmethod
-    def get_manager(uri, basepath=None):
+    def get_manager(uri: str | bytes | None, basepath: str | None = None) -> BaseFile:
+        instance: BaseFile
         if uri is None:
             return LocalTmpFile(uri, basepath)
         if isinstance(uri, bytes):
@@ -364,7 +368,7 @@ class FileNetworkManager:
             log.debug("URLParts: %r, %r", urlParts, urlParts.scheme)
             if urlParts.scheme == "file":
                 instance = LocalProtocolURI(uri, basepath)
-            elif urlParts.scheme in ("http", "https"):
+            elif urlParts.scheme in {"http", "https"}:
                 instance = NetworkFileUri(uri, basepath)
             else:
                 instance = LocalFileURI(uri, basepath)
@@ -393,9 +397,9 @@ class pisaFileObject:
     def getFileContent(self) -> bytes | None:
         return self.instance.get_data()
 
-    def getNamedFile(self) -> str | None:
+    def getNamedFile(self) -> str:
         f = self.instance.get_named_tmp_file()
-        return f.name if f else None
+        return f.name
 
     def getData(self) -> bytes | None:
         return self.instance.get_data()
@@ -411,10 +415,10 @@ class pisaFileObject:
     def notFound(self) -> bool:
         return self.getData() is None
 
-    def getAbsPath(self):
+    def getAbsPath(self) -> str:
         return self.instance.get_uri()
 
-    def getBytesIO(self):
+    def getBytesIO(self) -> BytesIO | None:
         return self.instance.get_BytesIO()
 
 

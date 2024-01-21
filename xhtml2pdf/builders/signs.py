@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from pathlib import Path
 
@@ -202,7 +204,7 @@ class PDFSignature:
         return meta
 
     @staticmethod
-    def simple_sign(inputfile, output, config):
+    def simple_sign(inputfile, output, config) -> bool | None:
         signer = PDFSignature.get_signers(config)
         if signer:
             w = IncrementalPdfFileWriter(inputfile)
@@ -218,7 +220,7 @@ class PDFSignature:
         return None
 
     @staticmethod
-    def lta_sign(inputfile, output, config):
+    def lta_sign(inputfile, output, config) -> bool | None:
         signer = PDFSignature.get_signers(config)
         timestamper = PDFSignature.get_timestamps(config)
         w = IncrementalPdfFileWriter(inputfile)

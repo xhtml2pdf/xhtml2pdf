@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
 import os
 import sys
@@ -23,7 +24,7 @@ from xhtml2pdf import pisa
 pisa.showLogging()
 
 
-def dumpErrors(pdf, *, _showLog=True):
+def dumpErrors(pdf, *, _showLog=True) -> None:
     # if showLog and pdf.log:
     #    for mode, line, msg, code in pdf.log:
     #        print "%s in line %d: %s" % (mode, line, msg)
@@ -35,7 +36,7 @@ def dumpErrors(pdf, *, _showLog=True):
 
 def testSimple(
     data="""Hello <b>World</b><br/><img src="img/test.jpg"/>""", dest="test.pdf"
-):
+) -> None:
     """
     Simple test showing how to create a PDF file from
     PML Source String. Also shows errors and tries to start
@@ -50,7 +51,7 @@ def testSimple(
         pisa.startViewer(dest)
 
 
-def testCGI(data="Hello <b>World</b>"):
+def testCGI(data="Hello <b>World</b>") -> None:
     """
     This one shows, how to get the resulting PDF as a
     file object and then send it to STDOUT.
@@ -67,13 +68,15 @@ def testCGI(data="Hello <b>World</b>"):
         sys.stdout.write(result.getvalue())
 
 
-def testBackgroundAndImage(src="test-background.html", dest="test-background.pdf"):
+def testBackgroundAndImage(
+    src="test-background.html", dest="test-background.pdf"
+) -> None:
     """
     Simple test showing how to create a PDF file from
     PML Source String. Also shows errors and tries to start
     the resulting PDF.
     """
-    with open(src) as src_file, open(dest, "wb") as dst_file:
+    with open(src, encoding="utf-8") as src_file, open(dest, "wb") as dst_file:
         pdf = pisa.CreatePDF(
             src_file,
             dst_file,
@@ -87,7 +90,7 @@ def testBackgroundAndImage(src="test-background.html", dest="test-background.pdf
         pisa.startViewer(dest)
 
 
-def testURL(url="http://www.htmltopdf.org", dest="test-website.pdf"):
+def testURL(url="http://www.htmltopdf.org", dest="test-website.pdf") -> None:
     """
     Loading from an URL. We open a file like object for the URL by
     using 'urllib'. If there have to be loaded more data from the web,
@@ -96,11 +99,12 @@ def testURL(url="http://www.htmltopdf.org", dest="test-website.pdf"):
     the Reportlab Toolkit needs real filenames for images and stuff. Then
     we also pass the url as 'path' for relative path calculations.
     """
+    # ruff: noqa: PLC0415
     import urllib
 
     with open(dest, "wb") as file:
         pdf = pisa.CreatePDF(
-            urllib.urlopen(url),
+            urllib.request.urlopen(url),
             file,
             log_warn=1,
             log_err=1,

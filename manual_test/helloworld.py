@@ -11,11 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
 from ho import pisa
 
 
-def helloWorld():
+def helloWorld() -> None:
     filename = __file__ + ".pdf"
     with open(filename, "wb") as file:
         pdf = pisa.CreatePDF("Hello <strong>World</strong>", file)

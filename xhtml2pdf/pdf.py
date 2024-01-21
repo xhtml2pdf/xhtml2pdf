@@ -28,7 +28,7 @@ class pisaPDF:
         self.capacity = capacity
         self.files: list[BytesIO] = []
 
-    def addFromURI(self, url, basepath=None):
+    def addFromURI(self, url, basepath=None) -> None:
         obj = getFile(url, basepath)
         data = obj.getFileContent()
         if data:
@@ -36,18 +36,18 @@ class pisaPDF:
 
     addFromFileName = addFromURI
 
-    def addFromFile(self, f):
+    def addFromFile(self, f) -> None:
         if hasattr(f, "read"):
             self.files.append(f)
         else:
             self.addFromURI(f)
 
-    def addFromString(self, data):
+    def addFromString(self, data) -> None:
         f = getFile(data.encode(), capacity=self.capacity).getFileContent()
         if f:
             self.files.append(f)
 
-    def addDocument(self, doc):
+    def addDocument(self, doc) -> None:
         if hasattr(doc.dest, "read"):
             self.files.append(doc.dest)
 

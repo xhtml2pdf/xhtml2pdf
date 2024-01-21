@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 
 import datetime
 import glob
@@ -8,17 +9,22 @@ import sys
 from optparse import OptionParser
 from pathlib import Path
 from subprocess import PIPE, Popen
+from typing import TYPE_CHECKING
 
 from xhtml2pdf import pisa
 
-do_bytes = ""
+if TYPE_CHECKING:
+    from optparse import Values
+
+
+do_bytes: str = ""
 
 
 class Printer:
-    options = None
-    logs = ""
+    options: Values | None = None
+    logs: str = ""
 
-    def setOptions(self, options):
+    def setOptions(self, options: Values) -> None:
         self.options = options
 
     def __call__(self, *args, **kwargs):
@@ -26,8 +32,8 @@ class Printer:
             print(args[0])
         self.logs += args[0] + "\n"
 
-    def flush(self, *, end=False):
-        if self.options.debug or end:
+    def flush(self, *, end=False) -> None:
+        if (self.options and self.options.debug) or end:
             print(self.logs)
 
         self.logs = ""
@@ -237,7 +243,7 @@ def create_html_file(results, template_file, output_dir, options):
     return htmlfile
 
 
-def main():
+def main() -> None:
     options, args = parser.parse_args()
     pprint.setOptions(options)
     base_dir = os.path.abspath(os.path.join(__file__, os.pardir))
@@ -273,7 +279,11 @@ def main():
         pprint("Rendered %i file%s" % (num, "" if num == 1 else "s"))
         pprint(
             "%i file%s differ%s from reference"
-            % (diff_count, diff_count != 1 and "s" or "", diff_count == 1 and "s" or "")
+            % (
+                diff_count,
+                "s" if diff_count != 1 else "",
+                "s" if diff_count == 1 else "",
+            )
         )
         pprint("Check %s for results" % htmlfile)
         if diff_count:

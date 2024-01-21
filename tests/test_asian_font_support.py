@@ -1,8 +1,12 @@
 # ruff: noqa: RUF001
+from __future__ import annotations
+
 import io
 from unittest import TestCase
 
 from pypdf import PdfReader
+
+# ruff: noqa: PLC2701
 from reportlab.pdfbase import _cidfontdata
 
 from xhtml2pdf.document import pisaDocument
@@ -101,7 +105,7 @@ class AsianFontSupportTests(TestCase):
     </html>
     """
 
-    def test_asian_font_in_pdf(self):
+    def test_asian_font_in_pdf(self) -> None:
         """
         Tests if the asian fonts used in the CSS property "font-family"
         are correctly embeded in the pdf result.
@@ -126,7 +130,7 @@ class AsianFontSupportTests(TestCase):
             "Not all asian fonts detected in the PDF file!",
         )
 
-    def test_get_default_asian_font(self):
+    def test_get_default_asian_font(self) -> None:
         """Tests if we can successfully extract the default asian fonts"""
         DEFAULT_ASIAN_FONT = get_default_asian_font()
 
@@ -139,7 +143,7 @@ class AsianFontSupportTests(TestCase):
             DEFAULT_ASIAN_FONT, {}, "get_default_asian_font return an empty dict!"
         )
 
-    def test_asian_reportlab_fonts(self):
+    def test_asian_reportlab_fonts(self) -> None:
         """
         Tests the asian font list that we're getting from reportlab
         If there is an Error here, ReportLab probably has changed/added new asian fonts

@@ -19,7 +19,7 @@ import logging
 import re
 import string
 import warnings
-from typing import TYPE_CHECKING, Callable, ClassVar
+from typing import TYPE_CHECKING
 
 from reportlab.graphics.barcode import createBarcodeDrawing
 from reportlab.graphics.charts.legends import Legend
@@ -45,6 +45,8 @@ from xhtml2pdf.util import DPI96, ImageWarning, getAlign, getColor, getSize
 from xhtml2pdf.xhtml2pdf_reportlab import PmlImage, PmlInput, PmlPageTemplate
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+    from typing import ClassVar
     from xml.dom.minidom import Element
 
     from reportlab.pdfgen.canvas import Canvas
@@ -57,7 +59,7 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-def deprecation(message):
+def deprecation(message) -> None:
     warnings.warn(f"<{message}> is deprecated!", DeprecationWarning, stacklevel=2)
 
 
@@ -85,7 +87,7 @@ class pisaTagBODY(pisaTag):
 
     def start(self, c: pisaContext) -> None:
         c.baseFontSize = c.frag.fontSize
-        if "dir" in self.attr and self.attr["dir"]:
+        if self.attr.get("dir"):
             c.setDir(self.attr["dir"])
         # print("base font size", c.baseFontSize)
 
@@ -166,7 +168,7 @@ class pisaTagP(pisaTag):
         # save the type of tag; it's used in PmlBaseDoc.afterFlowable()
         # to check if we need to add an outline-entry
         # c.frag.tag = self.tag
-        if "dir" in self.attr and self.attr["dir"]:
+        if self.attr.get("dir"):
             c.setDir(self.attr["dir"])
         if self.attr.align is not None:
             c.frag.alignment = getAlign(self.attr.align)
@@ -288,7 +290,7 @@ class pisaTagUL(pisaTagP):
     def start(self, c: pisaContext) -> None:
         self.counter, c.listCounter = c.listCounter, 0
 
-    def end(self, c: pisaContext):
+    def end(self, c: pisaContext) -> None:
         c.addPara()
         # XXX Simulate margin for the moment
         c.addStory(Spacer(width=1, height=c.fragBlock.spaceAfter))
@@ -404,7 +406,7 @@ class pisaTagIMG(pisaTag):
                     """
 
                     c.force = True
-                    if align in ["left", "right"]:
+                    if align in {"left", "right"}:
                         c.image = img
                         c.imageData = {"align": align}
 
@@ -414,11 +416,11 @@ class pisaTagIMG(pisaTag):
                         # afrag = c.frag.clone()
 
                         valign = align
-                        if valign in ["texttop"]:
+                        if valign == "texttop":
                             valign = "top"
-                        elif valign in ["absmiddle"]:
+                        elif valign == "absmiddle":
                             valign = "middle"
-                        elif valign in ["absbottom", "baseline"]:
+                        elif valign in {"absbottom", "baseline"}:
                             valign = "bottom"
 
                         afrag = c.frag.clone()
@@ -638,7 +640,7 @@ class pisaTagPDFFRAME(pisaTag):
         else:
             c.frameList.append(self.frame)
 
-    def end(self, c: pisaContext):
+    def end(self, c: pisaContext) -> None:
         if self.static:
             c.addPara()
             self.frame.pisaStaticStory = c.story
@@ -662,7 +664,7 @@ class pisaTagPDFTEMPLATE(pisaTag):
         if name in c.templateList:
             log.warning(c.warning("template '%s' has already been defined", name))
 
-    def end(self, c: pisaContext):
+    def end(self, c: pisaContext) -> None:
         attrs = self.attr
         name = attrs["name"]
         if len(c.frameList) <= 0:
@@ -753,7 +755,7 @@ class pisaTagPDFBARCODE(pisaTag):
         fontSize: float = attr.fontsize or 2.75 * mm
 
         # Assure minimal size.
-        if codeName in ("EAN13", "EAN8"):
+        if codeName in {"EAN13", "EAN8"}:
             barWidth = max(barWidth, 0.264 * mm)
             fontSize = max(fontSize, 2.75 * mm)
         else:  # Code39 etc.
@@ -775,11 +777,11 @@ class pisaTagPDFBARCODE(pisaTag):
         c.force = True
 
         valign = attr.align or c.frag.vAlign or "baseline"
-        if valign in ["texttop"]:
+        if valign == "texttop":
             valign = "top"
-        elif valign in ["absmiddle"]:
+        elif valign == "absmiddle":
             valign = "middle"
-        elif valign in ["absbottom", "baseline"]:
+        elif valign in {"absbottom", "baseline"}:
             valign = "bottom"
 
         afrag = c.frag.clone()
@@ -855,7 +857,7 @@ class pisaTagCANVAS(pisaTag):
                 self.chart.set_title_properties(data["title"], title)
                 draw.add(title)
 
-            if "legend" in data and data["legend"]:
+            if data.get("legend"):
                 legend = Legend()
                 self.chart.set_legend(data["legend"], legend)
                 self.chart.load_data_legend(data, legend)

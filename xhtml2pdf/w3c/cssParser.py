@@ -30,7 +30,7 @@ from __future__ import annotations
 
 import re
 from abc import abstractmethod
-from typing import ClassVar
+from typing import ClassVar, NoReturn
 
 from reportlab.lib.pagesizes import landscape
 
@@ -62,27 +62,27 @@ class CSSSelectorAbstract:
     """
 
     @abstractmethod
-    def addHashId(self, hashId):
+    def addHashId(self, hashId) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def addClass(self, class_):
+    def addClass(self, class_) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def addAttribute(self, attrName):
+    def addAttribute(self, attrName) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def addAttributeOperation(self, attrName, op, attr_value):
+    def addAttributeOperation(self, attrName, op, attr_value) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def addPseudo(self, name):
+    def addPseudo(self, name) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def addPseudoFunction(self, name, value):
+    def addPseudoFunction(self, name, value) -> NoReturn:
         raise NotImplementedError
 
 
@@ -98,55 +98,55 @@ class CSSBuilderAbstract:
     # ~ css results ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     @abstractmethod
-    def beginStylesheet(self):
+    def beginStylesheet(self) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def stylesheet(self, elements):
+    def stylesheet(self, elements) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def endStylesheet(self):
+    def endStylesheet(self) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def beginInline(self):
+    def beginInline(self) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def inline(self, declarations):
+    def inline(self, declarations) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def endInline(self):
+    def endInline(self) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def ruleset(self, selectors, declarations):
+    def ruleset(self, selectors, declarations) -> NoReturn:
         raise NotImplementedError
 
     # ~ css namespaces ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     @abstractmethod
-    def resolveNamespacePrefix(self, nsPrefix, name):
+    def resolveNamespacePrefix(self, nsPrefix, name) -> NoReturn:
         raise NotImplementedError
 
     # ~ css @ directives ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     @abstractmethod
-    def atCharset(self, charset):
+    def atCharset(self, charset) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def atImport(self, import_, mediums, cssParser):
+    def atImport(self, import_, mediums, cssParser) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def atNamespace(self, nsPrefix, uri):
+    def atNamespace(self, nsPrefix, uri) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def atMedia(self, mediums, ruleset):
+    def atMedia(self, mediums, ruleset) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
@@ -158,11 +158,11 @@ class CSSBuilderAbstract:
         *,
         isLandscape: bool,
         pageBorder,
-    ):
+    ) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def atFontFace(self, declarations):
+    def atFontFace(self, declarations) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
@@ -172,55 +172,55 @@ class CSSBuilderAbstract:
     # ~ css selectors ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     @abstractmethod
-    def combineSelectors(self, selectorA, combiner, selectorB):
+    def combineSelectors(self, selectorA, combiner, selectorB) -> NoReturn:
         """Return value must implement CSSSelectorAbstract."""
         raise NotImplementedError
 
     @abstractmethod
-    def selector(self, name):
+    def selector(self, name) -> NoReturn:
         """Return value must implement CSSSelectorAbstract."""
         raise NotImplementedError
 
     # ~ css declarations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     @abstractmethod
-    def property(self, name, value, *, important=False):  # noqa: A003
+    def property(self, name, value, *, important=False) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def combineTerms(self, termA, combiner, termB):
+    def combineTerms(self, termA, combiner, termB) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def termIdent(self, value):
+    def termIdent(self, value) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def termNumber(self, value, units=None):
+    def termNumber(self, value, units=None) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def termRGB(self, value):
+    def termRGB(self, value) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def termURI(self, value):
+    def termURI(self, value) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def termString(self, value):
+    def termString(self, value) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def termUnicodeRange(self, value):
+    def termUnicodeRange(self, value) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def termFunction(self, name, value):
+    def termFunction(self, name, value) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def termUnknown(self, _src):
+    def termUnknown(self, _src) -> NoReturn:
         raise NotImplementedError
 
 
@@ -259,7 +259,7 @@ class CSSParseError(Exception):
             )
         return super().__str__() + ":: " + repr(self.src[:40])
 
-    def setFullCSSSource(self, fullsrc, *, inline=False):
+    def setFullCSSSource(self, fullsrc, *, inline=False) -> None:
         self.fullsrc = fullsrc
         if isinstance(self.fullsrc, bytes):
             self.fullsrc = str(self.fullsrc, "utf-8")
@@ -347,7 +347,7 @@ class CSSParser:
     # ~ Regular expressions
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    _reflags = re.I | re.M | re.U
+    _reflags = re.IGNORECASE | re.MULTILINE | re.UNICODE
     i_hex = "[0-9a-fA-F]"
     i_nonascii = "[\200-\377]"
     i_unicode = r"\\(?:%s){1,6}\s?" % i_hex
@@ -424,7 +424,7 @@ class CSSParser:
         """A concrete instance implementing CSSBuilderAbstract."""
         return self._cssBuilder
 
-    def setCSSBuilder(self, cssBuilder):
+    def setCSSBuilder(self, cssBuilder) -> None:
         """A concrete instance implementing CSSBuilderAbstract."""
         self._cssBuilder = cssBuilder
 
@@ -439,7 +439,7 @@ class CSSParser:
         Parses CSS file-like objects using the current cssBuilder.
         Use for external stylesheets.
         """
-        with open(srcFile) as file_handler:
+        with open(srcFile, encoding="utf-8") as file_handler:
             file_content = file_handler.read()
 
         return self.parse(file_content)
@@ -707,7 +707,7 @@ class CSSParser:
         while src and src[0] != "{":
             medium, src = self._getIdent(src)
             # make "and ... {" work
-            if medium in (None, "and"):
+            if medium in {None, "and"}:
                 # default to mediatype "all"
                 if medium is None:
                     mediums.append("all")
@@ -896,10 +896,10 @@ class CSSParser:
                 src = src[blockIdx:]
                 try:
                     # try to parse it as a declarations block
-                    src, declarations = self._parseDeclarationGroup(src)
+                    src, _declarations = self._parseDeclarationGroup(src)
                 except self.ParseError:
                     # try to parse it as a stylesheet block
-                    src, stylesheet = self._parseStylesheet(src)
+                    src, _stylesheet = self._parseStylesheet(src)
             else:
                 msg = "Unable to ignore @-rule block"
                 raise self.ParserError(msg, src, ctxsrc)
@@ -924,7 +924,7 @@ class CSSParser:
 
     def _parseSelectorGroup(self, src):
         selectors = []
-        while src[:1] not in ("{", "}", "]", "(", ")", ";", ""):
+        while src[:1] not in {"{", "}", "]", "(", ")", ";", ""}:
             src, selector = self._parseSelector(src)
             if selector is None:
                 break
@@ -941,7 +941,7 @@ class CSSParser:
         """
         src, selector = self._parseSimpleSelector(src)
         srcLen = len(src)  # XXX
-        while src[:1] not in ("", ",", ";", "{", "}", "[", "]", "(", ")"):
+        while src[:1] not in {"", ",", ";", "{", "}", "[", "]", "(", ")"}:
             for combiner in self.SelectorCombiners:
                 if src.startswith(combiner):
                     src = src[len(combiner) :].lstrip()
@@ -954,7 +954,7 @@ class CSSParser:
             if len(src) >= srcLen:
                 src = src[1:]
                 while src and (
-                    src[:1] not in ("", ",", ";", "{", "}", "[", "]", "(", ")")
+                    src[:1] not in {"", ",", ";", "{", "}", "[", "]", "(", ")"}
                 ):
                     src = src[1:]
                 return src.lstrip(), None
@@ -1064,7 +1064,7 @@ class CSSParser:
         if not src.startswith(":"):
             msg = "Selector Pseudo ':' not found"
             raise self.ParseError(msg, src, ctxsrc)
-        src = re.search("^:{1,2}(.*)", src, re.M | re.S).group(1)
+        src = re.search("^:{1,2}(.*)", src, re.MULTILINE | re.DOTALL).group(1)
 
         name, src = self._getIdent(src)
         if not name:
@@ -1097,7 +1097,7 @@ class CSSParser:
 
         properties = []
         src = src.lstrip()
-        while src[:1] not in ("", ",", "{", "}", "[", "]", "(", ")", "@"):  # XXX @?
+        while src[:1] not in {"", ",", "{", "}", "[", "]", "(", ")", "@"}:  # XXX @?
             src, single_property = self._parseDeclaration(src)
 
             # XXX Workaround for styles like "*font: smaller"
@@ -1135,7 +1135,7 @@ class CSSParser:
         if property_name is not None:
             src = src.lstrip()
             # S* : S*
-            if src[:1] in (":", "="):
+            if src[:1] in {":", "="}:
                 # Note: we are being fairly flexable here...  technically, the
                 # ":" is *required*, but in the name of flexibility we
                 # suppor a null transition, as well as an "=" transition
@@ -1168,7 +1168,7 @@ class CSSParser:
         """
         src, term = self._parseExpressionTerm(src)
         operator = None
-        while src[:1] not in ("", ";", "{", "}", "[", "]", ")"):
+        while src[:1] not in {"", ";", "{", "}", "[", "]", ")"}:
             for operator in self.ExpressionOperators:
                 if src.startswith(operator):
                     src = src[len(operator) :]

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import io
 import os
 import tempfile
@@ -58,7 +60,7 @@ IN_PYPY = find_spec("__pypy__") is not None
 
 
 class DocumentTest(TestCase):
-    def _compare_pdf_metadata(self, pdf_file, assertion):
+    def _compare_pdf_metadata(self, pdf_file, assertion) -> None:
         # Ensure something has been written
         self.assertNotEqual(pdf_file.tell(), 0)
 
@@ -135,10 +137,8 @@ class DocumentTest(TestCase):
         tests_folder = os.path.dirname(os.path.realpath(__file__))
         background_path = os.path.join(tests_folder, "samples", "images.pdf")
 
-        css = """"<style>@page {{background-image: url('{background_location}'); @frame {{left: 10pt}}}}
-              @page two {{@frame {{left: 10 pt}}}}</style>""".format(
-            background_location=background_path
-        )
+        css = f""""<style>@page {{background-image: url('{background_path}'); @frame {{left: 10pt}}}}
+              @page two {{@frame {{left: 10 pt}}}}</style>"""
 
         extra_html = (
             """<pdf:nexttemplate name="two"> <pdf:nextpage> <p>Hello, world!</p>"""
@@ -200,7 +200,7 @@ class DocumentTest(TestCase):
         tests_folder = os.path.dirname(os.path.realpath(__file__))
         html_path = os.path.join(tests_folder, "samples", "nested_table.html")
 
-        with open(html_path) as html_file:
+        with open(html_path, encoding="utf-8") as html_file:
             html = html_file.read()
 
         with tempfile.TemporaryFile() as pdf_file:

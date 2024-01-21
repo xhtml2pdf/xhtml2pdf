@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Iterator, cast
+from typing import TYPE_CHECKING, cast
 
 import pypdf
 from PIL import Image
@@ -10,6 +10,7 @@ from xhtml2pdf.files import getFile, pisaFileObject
 
 if TYPE_CHECKING:
     from io import BytesIO
+    from typing import Iterator
 
     from xhtml2pdf.context import pisaContext
 
@@ -53,7 +54,7 @@ class WaterMarks:
 
     @staticmethod
     def get_img_with_opacity(pisafile: pisaFileObject, context: dict) -> BytesIO:
-        opacity: float = context.get("opacity", None)
+        opacity: float = context.get("opacity")
         if opacity:
             name: str | None = pisafile.getNamedFile()
             img: Image.Image = Image.open(name)
@@ -77,6 +78,7 @@ class WaterMarks:
         :param pagesize:  Page size for the new pdf
         """
         # don't move up, we are preventing circular import
+        # ruff: noqa: PLC0415
         from xhtml2pdf.xhtml2pdf_reportlab import PmlImageReader
 
         if context is None:

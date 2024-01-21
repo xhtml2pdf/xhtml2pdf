@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
 import ssl
 
@@ -34,13 +35,13 @@ class HttpConfig(dict):
         super().__init__(*args, **kwargs)
         self["timeout"] = 5
 
-    def save_keys(self, name, value):
+    def save_keys(self, name, value) -> None:
         if name == "nosslcheck":
             self["context"] = ssl._create_unverified_context()
         else:
             self[name] = value
 
-    def is_http_config(self, name, value):
+    def is_http_config(self, name, value) -> bool:
         if name.startswith("--"):
             name = name[2:]
         elif name.startswith("-"):

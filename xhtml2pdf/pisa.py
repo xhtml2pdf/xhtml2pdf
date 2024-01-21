@@ -19,6 +19,8 @@ import logging
 import os
 import sys
 import urllib.parse as urlparse
+from io import BytesIO
+from typing import TYPE_CHECKING
 
 from xhtml2pdf import __version__
 from xhtml2pdf.config.httpconfig import httpConfig
@@ -26,12 +28,18 @@ from xhtml2pdf.default import DEFAULT_CSS
 from xhtml2pdf.document import pisaDocument
 from xhtml2pdf.files import getFile
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from io import BufferedWriter
+    from typing import TextIO
+
+
 log = logging.getLogger(__name__)
 
 # Backward compatibility
-CreatePDF = pisaDocument
+CreatePDF: Callable = pisaDocument
 
-USAGE = ("""
+USAGE: str = ("""
 
 USAGE: pisa [options] SRC [DEST]
 
@@ -90,7 +98,7 @@ See http.client.HTTPSConnection documentation for this parameters
   --http_timeout
 """).strip()
 
-COPYRIGHT = """
+COPYRIGHT: str = """
 Copyright 2010 Dirk Holtwick, holtwick.it
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -105,11 +113,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License."""
 
-LOG_FORMAT = "%(levelname)s [%(name)s] %(message)s"
-LOG_FORMAT_DEBUG = "%(levelname)s [%(name)s] %(pathname)s line %(lineno)d: %(message)s"
+LOG_FORMAT: str = "%(levelname)s [%(name)s] %(message)s"
+LOG_FORMAT_DEBUG: str = (
+    "%(levelname)s [%(name)s] %(pathname)s line %(lineno)d: %(message)s"
+)
 
 
-def usage():
+def usage() -> None:
     print(USAGE)
 
 
@@ -121,7 +131,7 @@ class pisaLinkLoader:
     it when pisaLinkLoader is unloaded.
     """
 
-    def __init__(self, src, *, quiet=True) -> None:
+    def __init__(self, src, *, quiet: bool = True) -> None:
         self.quiet = quiet
         self.src = src
         self.tfileList: list[str] = []
@@ -130,11 +140,10 @@ class pisaLinkLoader:
         for path in self.tfileList:
             os.remove(path)
 
-    def getFileName(self, name, relative=None):
+    def getFileName(self, name: str, relative: str | None = None):
         url = urlparse.urljoin(relative or self.src, name)
         instance = getFile(url)
-        filetmpdownloaded = instance.getNamedFile()
-        path = filetmpdownloaded.name
+        path = instance.getNamedFile()
         self.tfileList.append(path)
 
         if not self.quiet:
@@ -143,9 +152,10 @@ class pisaLinkLoader:
         return path
 
 
-def command():
+def command() -> None:
     if "--profile" in sys.argv:
         print("*** PROFILING ENABLED")
+        # ruff: noqa: PLC0415
         import cProfile
         import pstats
 
@@ -156,7 +166,7 @@ def command():
         execute()
 
 
-def execute():
+def execute() -> None:
     try:
         opts, args = getopt.getopt(
             sys.argv[1:],
@@ -193,28 +203,28 @@ def execute():
         usage()
         sys.exit(2)
 
-    errors = 0
-    startviewer = 0
-    quiet = 0
-    debug = 0
-    tempdir = None
-    file_format = "pdf"
-    css = None
-    xhtml = None
-    encoding = None
-    xml_output = None
-    base_dir = None
+    errors: int = 0
+    startviewer: int = 0
+    quiet: int = 0
+    debug: int = 0
+    tempdir: str | None = None
+    file_format: str = "pdf"
+    css: str | None = None
+    xhtml: bool | None = None
+    encoding: str | None = None
+    xml_output: TextIO | BytesIO | None = None
+    base_dir: str | None = None
 
-    log_level = logging.ERROR
-    log_format = LOG_FORMAT
+    log_level: int = logging.ERROR
+    log_format: str = LOG_FORMAT
 
     for o, a in opts:
-        if o in ("-h", "--help"):
+        if o in {"-h", "--help"}:
             # Hilfe anzeigen
             usage()
             sys.exit()
 
-        elif o in ("--version",):
+        elif o == "--version":
             print(__version__)
             sys.exit(0)
 
@@ -222,7 +232,7 @@ def execute():
             print(COPYRIGHT)
             sys.exit(0)
 
-        elif o in ("--system",):
+        elif o == "--system":
             print(COPYRIGHT)
             print()
             print("SYSTEM INFORMATIONS")
@@ -235,19 +245,19 @@ def execute():
             print("Reportlab:         %s" % reportlab.Version)
             sys.exit(0)
 
-        elif o in ("-s", "--start-viewer", "--start"):
+        elif o in {"-s", "--start-viewer", "--start"}:
             # Anzeigeprogramm starten
             startviewer = 1
 
-        elif o in ("-q", "--quiet"):
-            # Output unterdr�cken
+        elif o in {"-q", "--quiet"}:
+            # Suppress output
             quiet = 1
 
-        elif o in ("-w", "--warn"):
+        elif o in {"-w", "--warn"}:
             # Warnings
             log_level = min(log_level, logging.WARNING)  # If also -d ignore -w
 
-        elif o in ("-d", "--debug"):
+        elif o in {"-d", "--debug"}:
             # Debug
             log_level = logging.DEBUG
             log_format = LOG_FORMAT_DEBUG
@@ -255,34 +265,34 @@ def execute():
             if a:
                 log_level = int(a)
 
-        elif o in ("-t", "--format"):
+        elif o in {"-t", "--format"}:
             # Format XXX ???
             file_format = a
 
-        elif o in ("-b", "--base"):
+        elif o in {"-b", "--base"}:
             base_dir = a
 
-        elif o in ("--encoding",) and a:
+        elif o == "--encoding" and a:
             # Encoding
             encoding = a
 
-        elif o in ("-c", "--css"):
+        elif o in {"-c", "--css"}:
             # CSS
-            with open(a) as file_handler:
+            with open(a, encoding="utf-8") as file_handler:
                 css = file_handler.read()
 
-        elif o in ("--css-dump",):
+        elif o == "--css-dump":
             # CSS dump
             print(DEFAULT_CSS)
             return
 
-        elif o in ("--xml-dump",):
+        elif o == "--xml-dump":
             xml_output = sys.stdout
 
-        elif o in ("-x", "--xml", "--xhtml"):
+        elif o in {"-x", "--xml", "--xhtml"}:
             xhtml = True
 
-        elif o in ("--html",):
+        elif o == "--html":
             xhtml = False
 
         elif httpConfig.is_http_config(o, a):
@@ -291,7 +301,7 @@ def execute():
     if not quiet:
         logging.basicConfig(level=log_level, format=log_format)
 
-    if len(args) not in (1, 2):
+    if len(args) not in {1, 2}:
         usage()
         sys.exit(2)
 
@@ -301,15 +311,16 @@ def execute():
         a_src = args[0]
         a_dest = None
 
-    a_src = glob.glob(a_src) if "*" in a_src else [a_src]
+    a_src_list = glob.glob(a_src) if "*" in a_src else [a_src]
 
-    for src in a_src:
+    for src in a_src_list:
         # If not forced to parse in a special way have a look
         # at the filename suffix
         if xhtml is None:
             xhtml = src.lower().endswith(".xml")
 
         lc = None
+        fsrc: TextIO | bytes | str | None
 
         if src == "-" or base_dir is not None:
             # Output to console
@@ -323,6 +334,8 @@ def execute():
             src = "".join(urlparse.urlsplit(src)[1:3]).replace("/", "-")
         else:
             fsrc = wpath = os.path.abspath(src)
+            if TYPE_CHECKING:
+                assert isinstance(fsrc, str)
             with open(fsrc, "rb") as file_handler:
                 fsrc = file_handler.read()
 
@@ -344,6 +357,7 @@ def execute():
         else:
             dest = a_dest
 
+        fdest: BufferedWriter | TextIO
         fdestclose = 0
 
         if dest == "-" or base_dir:
@@ -383,7 +397,7 @@ def execute():
             xml_output=xml_output,
         )
 
-        if xml_output:
+        if isinstance(xml_output, BytesIO):
             xml_output.getvalue()
 
         if fdestclose:
@@ -395,17 +409,17 @@ def execute():
             startViewer(dest)
 
 
-def startViewer(filename):
+def startViewer(filename: str) -> None:
     """Helper for opening a PDF file."""
     if filename:
         try:
-            os.startfile(filename)
+            os.startfile(filename)  # type: ignore[attr-defined]
         except Exception:
             # try to opan a la apple
             os.system('open "%s"' % filename)
 
 
-def showLogging(*, debug=False):
+def showLogging(*, debug: bool = False) -> None:
     """Shortcut for enabling log dump."""
     try:
         log_level = logging.WARNING
@@ -421,24 +435,32 @@ def showLogging(*, debug=False):
 # http://en.wikipedia.org/wiki/Data_URI_scheme
 
 
-def makeDataURI(data=None, mimetype=None, filename=None):
+def makeDataURI(
+    data: bytes, mimetype: str | None = None, filename: str | None = None
+) -> str:
     import base64
 
     if not mimetype:
-        if filename:
-            import mimetypes
-
-            mimetype = mimetypes.guess_type(filename)[0].split(";")[0]
-        else:
+        if not filename:
             msg = "You need to provide a mimetype or a filename for makeDataURI"
             raise RuntimeError(msg)
 
-    encoded_data = base64.encodebytes(data).split()
+        import mimetypes
 
-    return "data:" + mimetype + ";base64," + "".join(encoded_data)
+        mimetype, _encoding = mimetypes.guess_type(filename)
+
+        if not mimetype:
+            msg = "The mimetype could not be derived from the filename"
+            raise RuntimeError(msg)
+
+        mimetype = mimetype.split(";")[0]
+
+    encoded_data = base64.encodebytes(data).decode("UTF-8")
+
+    return f"data:{mimetype};base64,{encoded_data}"
 
 
-def makeDataURIFromFile(filename):
+def makeDataURIFromFile(filename: str) -> str:
     with open(filename, "rb") as file_handler:
         data = file_handler.read()
     return makeDataURI(data, filename=filename)

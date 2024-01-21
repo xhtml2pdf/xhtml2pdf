@@ -56,13 +56,14 @@ def pdf(filename=None, content_type="application/pdf"):
 class Root(controllers.RootController):
     @expose()
     @staticmethod
-    def index():
+    def index() -> str:
         return """<a href="pdf">Open PDF...</a>"""
 
     @pdf(filename="test.pdf")
     @expose(template="tgpisa.templates.welcome")
     @staticmethod
     def pdf():
+        # ruff: noqa: PLC0415
         import time
 
         # log.debug("Happy TurboGears Controller Responding For Duty")

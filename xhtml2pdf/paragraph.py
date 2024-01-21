@@ -34,7 +34,7 @@ from __future__ import annotations
 import copy
 import logging
 import re
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING
 
 from reportlab.lib.colors import Color
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
@@ -42,6 +42,8 @@ from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.platypus.flowables import Flowable
 
 if TYPE_CHECKING:
+    from typing import Any, ClassVar
+
     from reportlab.pdfgen.canvas import Canvas
 
 logger = logging.getLogger(__name__)
@@ -101,7 +103,7 @@ class Box(dict):
 
     name: str = "box"
 
-    def drawBox(self, canvas: Canvas, x: int, y: int, w: int, h: int):
+    def drawBox(self, canvas: Canvas, x: int, y: int, w: int, h: int) -> None:
         canvas.saveState()
 
         # Background
@@ -112,7 +114,7 @@ class Box(dict):
             canvas.rect(x, y, w, h, fill=1, stroke=0)
 
         # Borders
-        def _drawBorderLine(bstyle, width, color, x1, y1, x2, y2):
+        def _drawBorderLine(bstyle, width, color, x1, y1, x2, y2) -> None:
             # We need width and border style to be able to draw a border
             if width and bstyle:
                 # If no color for border is given, the text color is used (like defined by W3C)
@@ -220,7 +222,7 @@ class BoxBegin(Fragment):
             "paddingLeft", 0
         )  # + border if border
 
-    def draw(self, canvas, y):
+    def draw(self, canvas, y) -> None:
         # if not self["length"]:
         x = self.get("marginLeft", 0) + self["x"]
         w = self["length"] + self.get("paddingRight", 0)
@@ -254,7 +256,7 @@ class Line(list):
         self.boxStack: list = []
         super().__init__()
 
-    def doAlignment(self, width, alignment):
+    def doAlignment(self, width, alignment) -> None:
         # Apply alignment
         if alignment != TA_LEFT:
             lineWidth = self[-1]["x"] + self[-1]["width"]
@@ -303,7 +305,7 @@ class Line(list):
 
         return self.height
 
-    def dumpFragments(self):
+    def dumpFragments(self) -> None:
         logger.debug("Line")
         logger.debug(40 * "-")
         for frag in self:
@@ -401,7 +403,7 @@ class Text(list):
                 line.append(frag)
 
             # Remove trailing white spaces
-            while line and line[-1].name in ("space", "br"):
+            while line and line[-1].name in {"space", "br"}:
                 line.pop()
 
             # Add line to list
@@ -425,7 +427,7 @@ class Text(list):
 
         return None
 
-    def dumpLines(self):
+    def dumpLines(self) -> None:
         """For debugging dump all line and their content."""
         for i, line in enumerate(self.lines):
             logger.debug("Line %d:", i)
@@ -572,9 +574,9 @@ class Paragraph(Flowable):
                     if isinstance(link, bytes):
                         link = link.decode("utf8")
                     parts = link.split(":", maxsplit=1)
-                    scheme = len(parts) == 2 and parts[0].lower() or ""
+                    scheme = parts[0].lower() if len(parts) == 2 else ""
                     if _scheme_re.match(scheme) and scheme != "document":
-                        kind = scheme.lower() == "pdf" and "GoToR" or "URI"
+                        kind = "GoToR" if scheme.lower() == "pdf" else "URI"
                         if kind == "GoToR":
                             link = parts[1]
 
@@ -585,7 +587,7 @@ class Paragraph(Flowable):
                             scheme = ""
                         canvas.linkRect(
                             "",
-                            scheme != "document" and link or parts[1],
+                            link if scheme != "document" else parts[1],
                             rect,
                             relative=1,
                         )

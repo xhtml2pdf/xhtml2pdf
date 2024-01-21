@@ -9,12 +9,19 @@
 # ruff: noqa: N802, N803, N815, N816, N999
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, ClassVar
+from typing import TYPE_CHECKING
 
 from xhtml2pdf.w3c import css
 
 if TYPE_CHECKING:
-    from typing_extensions import Self
+    import sys
+    from collections.abc import Callable
+    from typing import ClassVar
+
+    if sys.version_info >= (3, 11):
+        from typing import Self
+    else:
+        from typing_extensions import Self
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ~ Definitions
@@ -54,7 +61,7 @@ class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
         if cssParser is not None:
             self.onCSSParserVisit(cssParser)
 
-    def onCSSParserVisit(self, cssParser):
+    def onCSSParserVisit(self, cssParser) -> None:
         styleSrc = self.getStyleAttr()
         if styleSrc:
             style = cssParser.parseInline(styleSrc)
@@ -64,9 +71,9 @@ class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
 
     def matchesNode(self, namespace_tagName):
         namespace, tagName = namespace_tagName
-        if tagName not in ("*", self.domElement.tagName):
+        if tagName not in {"*", self.domElement.tagName}:
             return False
-        if namespace in (None, "", "*"):
+        if namespace in {None, "", "*"}:
             # matches any namespace
             return True
         # full compare
@@ -119,5 +126,5 @@ class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
     def getInlineStyle(self):
         return self.style
 
-    def setInlineStyle(self, style):
+    def setInlineStyle(self, style) -> None:
         self.style = style

@@ -354,16 +354,14 @@ class TableDataTestCase(TestCase):
 class PisaTagTableTestCase(TestCase):
     def setUp(self) -> None:
         self.element = self._getElement("rootElement")
-        self.attrs: Any = AttrContainer(
-            {
-                "border": "",
-                "bordercolor": "",
-                "cellpadding": "",
-                "align": "",
-                "repeat": "",
-                "width": None,
-            }
-        )
+        self.attrs: Any = AttrContainer({
+            "border": "",
+            "bordercolor": "",
+            "cellpadding": "",
+            "align": "",
+            "repeat": "",
+            "width": None,
+        })
 
     @staticmethod
     def _getElement(tagName, body="filler"):
@@ -425,15 +423,13 @@ class PisaTagTDTestCase(TestCase):
     def test_td_tag_doesnt_collapse_when_empty(self) -> None:
         dom = minidom.parseString("<td></td>")
         element = dom.getElementsByTagName("td")[0]
-        attrs = AttrContainer(
-            {
-                "align": None,
-                "colspan": None,
-                "rowspan": None,
-                "width": None,
-                "valign": None,
-            }
-        )
+        attrs = AttrContainer({
+            "align": None,
+            "colspan": None,
+            "rowspan": None,
+            "width": None,
+            "valign": None,
+        })
         context = pisaContext()
         table_data = tables.TableData()
         table_data.col = 0

@@ -11,17 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
 from reportlab.lib.units import inch
 from reportlab.pdfgen.canvas import Canvas
 from reportlab.platypus import Frame
 
 from xhtml2pdf import pisa
+from xhtml2pdf.document import pisaStory
 
 
-def test(filename):
+def test(filename) -> None:
     # Convert HTML to "Reportlab Story" structure
-    story = pisa.pisaStory("""
+    story = pisaStory("""
     <h1>Sample</h1>
     <p>Hello <b>World</b>!</p>
     """ * 20).story

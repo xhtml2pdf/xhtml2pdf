@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from unittest import TestCase
 
 from reportlab.lib.colors import Color
@@ -18,7 +20,7 @@ from xhtml2pdf.util import (
 
 
 class UtilsCoordTestCase(TestCase):
-    def test_get_coordinates_simple(self):
+    def test_get_coordinates_simple(self) -> None:
         res = getCoords(1, 1, 10, 10, (10, 10))
         self.assertEqual(res, (1, -1, 10, 10))
 
@@ -26,29 +28,29 @@ class UtilsCoordTestCase(TestCase):
         res = getCoords(1, 1, 10, 10, (10, 10))
         self.assertEqual(res, (1, -1, 10, 10))
 
-    def test_get_coordinates_x_lt_0(self):
+    def test_get_coordinates_x_lt_0(self) -> None:
         res = getCoords(-1, 1, 10, 10, (10, 10))
         self.assertEqual(res, (9, -1, 10, 10))
 
-    def test_get_coordinates_y_lt_0(self):
+    def test_get_coordinates_y_lt_0(self) -> None:
         res = getCoords(1, -1, 10, 10, (10, 10))
         self.assertEqual(res, (1, -9, 10, 10))
 
-    def test_get_coordinates_w_and_h_none(self):
+    def test_get_coordinates_w_and_h_none(self) -> None:
         res = getCoords(1, 1, None, None, (10, 10))
         self.assertEqual(res, (1, 9))
 
-    def test_get_coordinates_w_lt_0(self):
+    def test_get_coordinates_w_lt_0(self) -> None:
         res = getCoords(1, 1, -1, 10, (10, 10))
         self.assertEqual(res, (1, -1, 8, 10))
 
-    def test_get_coordinates_h_lt_0(self):
+    def test_get_coordinates_h_lt_0(self) -> None:
         res = getCoords(1, 1, 10, -1, (10, 10))
         self.assertEqual(res, (1, 1, 10, 8))
 
 
 class UtilsColorTestCase(TestCase):
-    def test_get_color_simple(self):
+    def test_get_color_simple(self) -> None:
         res = getColor("red")
         self.assertEqual(res, Color(1, 0, 0, 1))
 
@@ -56,31 +58,31 @@ class UtilsColorTestCase(TestCase):
         res = getColor("red")
         self.assertEqual(res, Color(1, 0, 0, 1))
 
-    def test_get_color_from_color(self):
+    def test_get_color_from_color(self) -> None:
         # Noop if argument is already a color
         res = getColor(Color(1, 0, 0, 1))
         self.assertEqual(res, Color(1, 0, 0, 1))
 
-    def test_get_transparent_color(self):
+    def test_get_transparent_color(self) -> None:
         res = getColor("transparent", default="TOKEN")
         self.assertEqual(res, "TOKEN")
 
         res = getColor("none", default="TOKEN")
         self.assertEqual(res, "TOKEN")
 
-    def test_get_color_for_none(self):
+    def test_get_color_for_none(self) -> None:
         res = getColor(None, default="TOKEN")
         self.assertEqual(res, None)
 
-    def test_get_color_for_RGB(self):
+    def test_get_color_for_RGB(self) -> None:
         res = getColor("#FF0000")
         self.assertEqual(res, Color(1, 0, 0, 1))
 
-    def test_get_color_for_RGB_with_len_4(self):
+    def test_get_color_for_RGB_with_len_4(self) -> None:
         res = getColor("#F00")
         self.assertEqual(res, Color(1, 0, 0, 1))
 
-    def test_get_color_for_CSS_RGB_function(self):
+    def test_get_color_for_CSS_RGB_function(self) -> None:
         # It's regexp based, let's try common cases.
         res = getColor("rgb(255,0,0)")
         self.assertEqual(res, Color(1, 0, 0, 1))
@@ -90,7 +92,7 @@ class UtilsColorTestCase(TestCase):
 
 
 class UtilsGetSizeTestCase(TestCase):
-    def test_get_size_simple(self):
+    def test_get_size_simple(self) -> None:
         res = getSize("12pt")
         self.assertEqual(res, 12.00)
 
@@ -98,41 +100,41 @@ class UtilsGetSizeTestCase(TestCase):
         res = getSize("12pt")
         self.assertEqual(res, 12.00)
 
-    def test_get_size_for_none(self):
+    def test_get_size_for_none(self) -> None:
         res = getSize(None, relative="TOKEN")
         self.assertEqual(res, "TOKEN")
 
-    def test_get_size_for_float(self):
+    def test_get_size_for_float(self) -> None:
         res = getSize(12.00)
         self.assertEqual(res, 12.00)
 
-    def test_get_size_for_tuple(self):
+    def test_get_size_for_tuple(self) -> None:
         # TODO: This is a really strange case. Probably should not work this
         # way.
         res = getSize(("12", ".12"))
         self.assertEqual(res, 12.12)
 
-    def test_get_size_for_cm(self):
+    def test_get_size_for_cm(self) -> None:
         res = getSize("1cm")
         self.assertEqual(res, 28.346456692913385)
 
-    def test_get_size_for_mm(self):
+    def test_get_size_for_mm(self) -> None:
         res = getSize("1mm")
         self.assertEqual(res, 2.8346456692913385)
 
-    def test_get_size_for_in(self):
+    def test_get_size_for_in(self) -> None:
         res = getSize("1in")
         self.assertEqual(res, 72.00)
 
-    def test_get_size_for_inch(self):
+    def test_get_size_for_inch(self) -> None:
         res = getSize("1in")
         self.assertEqual(res, 72.00)
 
-    def test_get_size_for_pc(self):
+    def test_get_size_for_pc(self) -> None:
         res = getSize("1pc")
         self.assertEqual(res, 12.00)
 
-    def test_get_size_for_none_str(self):
+    def test_get_size_for_none_str(self) -> None:
         res = getSize("none")
         self.assertEqual(res, 0.0)
         res = getSize("0")
@@ -142,25 +144,25 @@ class UtilsGetSizeTestCase(TestCase):
 
 
 class PisaDimensionTestCase(TestCase):
-    def test_frame_dimensions_left_top_width_height(self):
+    def test_frame_dimensions_left_top_width_height(self) -> None:
         dims = {"left": "10pt", "top": "20pt", "width": "30pt", "height": "40pt"}
         expected = (10.0, 20.0, 30.0, 40.0)
         result = getFrameDimensions(dims, 100, 200)
         self.assertEqual(expected, result)
 
-    def test_frame_dimensions_left_top_bottom_right(self):
+    def test_frame_dimensions_left_top_bottom_right(self) -> None:
         dims = {"left": "10pt", "top": "20pt", "bottom": "30pt", "right": "40pt"}
         expected = (10.0, 20.0, 50.0, 150.0)
         result = getFrameDimensions(dims, 100, 200)
         self.assertEqual(expected, result)
 
-    def test_frame_dimensions_bottom_right_width_height(self):
+    def test_frame_dimensions_bottom_right_width_height(self) -> None:
         dims = {"bottom": "10pt", "right": "20pt", "width": "70pt", "height": "80pt"}
         expected = (10.0, 110.0, 70.0, 80.0)
         result = getFrameDimensions(dims, 100, 200)
         self.assertEqual(expected, result)
 
-    def test_frame_dimensions_left_top_width_height_with_margin(self):
+    def test_frame_dimensions_left_top_width_height_with_margin(self) -> None:
         dims = {
             "left": "10pt",
             "top": "20pt",
@@ -175,7 +177,7 @@ class PisaDimensionTestCase(TestCase):
         result = getFrameDimensions(dims, 100, 200)
         self.assertEqual(expected, result)
 
-    def test_frame_dimensions_bottom_right_width_height_with_margin(self):
+    def test_frame_dimensions_bottom_right_width_height_with_margin(self) -> None:
         dims = {
             "bottom": "10pt",
             "right": "20pt",
@@ -190,13 +192,13 @@ class PisaDimensionTestCase(TestCase):
         result = getFrameDimensions(dims, 100, 200)
         self.assertEqual(expected, result)
 
-    def test_frame_dimensions_for_box_len_eq_4(self):
+    def test_frame_dimensions_for_box_len_eq_4(self) -> None:
         dims = {"-pdf-frame-box": ["12pt", "12,pt", "12pt", "12pt"]}
         expected = (12.0, 12.0, 12.0, 12.0)
         result = getFrameDimensions(dims, 100, 200)
         self.assertEqual(result, expected)
 
-    def test_frame_dimensions_for_height_without_top_or_bottom(self):
+    def test_frame_dimensions_for_height_without_top_or_bottom(self) -> None:
         dims = {
             "left": "10pt",
             # 'top': '20pt',
@@ -207,7 +209,7 @@ class PisaDimensionTestCase(TestCase):
         result = getFrameDimensions(dims, 100, 200)
         self.assertEqual(expected, result)
 
-    def test_frame_dimensions_for_width_without_left_or_right(self):
+    def test_frame_dimensions_for_width_without_left_or_right(self) -> None:
         dims = {
             # 'left': '10pt',
             "top": "20pt",
@@ -220,11 +222,11 @@ class PisaDimensionTestCase(TestCase):
 
 
 class GetPosTestCase(TestCase):
-    def test_get_pos_simple(self):
+    def test_get_pos_simple(self) -> None:
         res = getBox("1pt 1pt 10pt 10pt", (10, 10))
         self.assertEqual(res, (1.0, -1.0, 10, 10))
 
-    def test_get_pos_raising(self):
+    def test_get_pos_raising(self) -> None:
         raised = False
         try:
             getBox("1pt 1pt 10pt", (10, 10))
@@ -234,7 +236,7 @@ class GetPosTestCase(TestCase):
 
 
 class TestTagUtils(TestCase):
-    def test_roman_numeral_conversion(self):
+    def test_roman_numeral_conversion(self) -> None:
         self.assertEqual("I", int_to_roman(1))
         self.assertEqual("L", int_to_roman(50))
         self.assertEqual("XLII", int_to_roman(42))
@@ -242,7 +244,7 @@ class TestTagUtils(TestCase):
 
 
 class TempFileTestCase(TestCase):
-    def test_unicode(self):
+    def test_unicode(self) -> None:
         """Asserts bytes generated by reportlab are returned"""
         src = pisaTempFile()
         value = (
@@ -256,15 +258,19 @@ class TempFileTestCase(TestCase):
 
 
 class GetBorderStyleTestCase(TestCase):
-    def test_will_return_value_if_passed_value_is_not_none_or_hidden(self):
+    def test_will_return_value_if_passed_value_is_not_none_or_hidden(self) -> None:
         style = getBorderStyle("foo", default="blah")
         self.assertEqual(style, "foo")
 
-    def test_will_return_default_if_passed_value_is_non_case_sensitive_none(self):
+    def test_will_return_default_if_passed_value_is_non_case_sensitive_none(
+        self,
+    ) -> None:
         style = getBorderStyle("None", default="blah")
         self.assertEqual(style, "blah")
 
-    def test_will_return_default_if_passed_value_is_non_case_sensitive_hidden(self):
+    def test_will_return_default_if_passed_value_is_non_case_sensitive_hidden(
+        self,
+    ) -> None:
         style = getBorderStyle("hidDen", default="defaultPassedArg")
         self.assertEqual(style, "defaultPassedArg")
 
@@ -275,7 +281,7 @@ class CopyUtils(TestCase):
         attr1 = 10
 
     class B:
-        def __init__(self, a, b):
+        def __init__(self, a, b) -> None:
             self.attr = a
             self.attr1 = b
 
@@ -286,7 +292,7 @@ class CopyUtils(TestCase):
         param1 = 28
         param2 = 1
 
-    def test_set_value(self):
+    def test_set_value(self) -> None:
         a = self.A()
         b = self.B(20, 30)
         c = self.C()
@@ -298,17 +304,17 @@ class CopyUtils(TestCase):
         self.assertEqual(a.attr1, 8)
         self.assertEqual(b.attr, 8)
         self.assertEqual(b.attr1, 8)
-        self.assertEqual(c.attr, 8)
-        self.assertEqual(c.attr1, 8)
+        self.assertEqual(c.attr, 8)  # type: ignore[attr-defined]
+        self.assertEqual(c.attr1, 8)  # type: ignore[attr-defined]
 
-    def test_copy_attrs(self):
+    def test_copy_attrs(self) -> None:
         a = self.A()
         b = self.B(19, 22)
         copy_attrs(a, b, ["attr", "attr1"])
         self.assertEqual(a.attr, 19)
         self.assertEqual(a.attr1, 22)
 
-    def test_transform_attrs(self):
+    def test_transform_attrs(self) -> None:
         obj = self.D()
         container = {"attr": 19, "attr1": 22}
 

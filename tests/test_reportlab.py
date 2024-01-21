@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from unittest import TestCase
 
 from xhtml2pdf import xhtml2pdf_reportlab

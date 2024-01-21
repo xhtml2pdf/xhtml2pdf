@@ -12,6 +12,7 @@ If extensions (or modules to document with autodoc) are in another directory,
 add these directories to sys.path here. If the directory is relative to the
 documentation root, use os.path.abspath to make it absolute, like shown here.
 """
+
 from __future__ import annotations
 
 from build_samples import build_resources
@@ -330,17 +331,15 @@ man_pages: list[tuple[str, str, str, list, int]] = [
 # Grouping the document tree into Texinfo files. List of tuples
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
-texinfo_documents: list[tuple] = [
-    (
-        master_doc,
-        "xhtml2pdf",
-        "xhtml2pdf Documentation",
-        author,
-        "xhtml2pdf",
-        "One line description of project.",
-        "Miscellaneous",
-    )
-]
+texinfo_documents: list[tuple] = [(
+    master_doc,
+    "xhtml2pdf",
+    "xhtml2pdf Documentation",
+    author,
+    "xhtml2pdf",
+    "One line description of project.",
+    "Miscellaneous",
+)]
 
 # Documents to append as an appendix to all manuals.
 #

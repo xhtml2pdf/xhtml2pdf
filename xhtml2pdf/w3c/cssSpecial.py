@@ -18,6 +18,7 @@ limitations under the License.
 """
 
 # ruff: noqa: N802, N803, N815, N816, N999
+from __future__ import annotations
 
 import logging
 
@@ -200,14 +201,12 @@ def parseSpecialRules(declarations, debug=0):
                 left = parts[3]
             else:
                 continue
-            dd.extend(
-                (
-                    ("margin-left", left, last),
-                    ("margin-right", right, last),
-                    ("margin-top", top, last),
-                    ("margin-bottom", bottom, last),
-                )
-            )
+            dd.extend((
+                ("margin-left", left, last),
+                ("margin-right", right, last),
+                ("margin-top", top, last),
+                ("margin-bottom", bottom, last),
+            ))
 
         # PADDING
         elif name == "padding":
@@ -227,14 +226,12 @@ def parseSpecialRules(declarations, debug=0):
                 left = parts[3]
             else:
                 continue
-            dd.extend(
-                (
-                    ("padding-left", left, last),
-                    ("padding-right", right, last),
-                    ("padding-top", top, last),
-                    ("padding-bottom", bottom, last),
-                )
-            )
+            dd.extend((
+                ("padding-left", left, last),
+                ("padding-right", right, last),
+                ("padding-top", top, last),
+                ("padding-bottom", bottom, last),
+            ))
 
         # BORDER WIDTH
         elif name == "border-width":
@@ -254,14 +251,12 @@ def parseSpecialRules(declarations, debug=0):
                 left = parts[3]
             else:
                 continue
-            dd.extend(
-                (
-                    ("border-left-width", left, last),
-                    ("border-right-width", right, last),
-                    ("border-top-width", top, last),
-                    ("border-bottom-width", bottom, last),
-                )
-            )
+            dd.extend((
+                ("border-left-width", left, last),
+                ("border-right-width", right, last),
+                ("border-top-width", top, last),
+                ("border-bottom-width", bottom, last),
+            ))
 
         # BORDER COLOR
         elif name == "border-color":
@@ -281,14 +276,12 @@ def parseSpecialRules(declarations, debug=0):
                 left = parts[3]
             else:
                 continue
-            dd.extend(
-                (
-                    ("border-left-color", left, last),
-                    ("border-right-color", right, last),
-                    ("border-top-color", top, last),
-                    ("border-bottom-color", bottom, last),
-                )
-            )
+            dd.extend((
+                ("border-left-color", left, last),
+                ("border-right-color", right, last),
+                ("border-top-color", top, last),
+                ("border-bottom-color", bottom, last),
+            ))
 
         # BORDER STYLE
         elif name == "border-style":
@@ -308,48 +301,40 @@ def parseSpecialRules(declarations, debug=0):
                 left = parts[3]
             else:
                 continue
-            dd.extend(
-                (
-                    ("border-left-style", left, last),
-                    ("border-right-style", right, last),
-                    ("border-top-style", top, last),
-                    ("border-bottom-style", bottom, last),
-                )
-            )
+            dd.extend((
+                ("border-left-style", left, last),
+                ("border-right-style", right, last),
+                ("border-top-style", top, last),
+                ("border-bottom-style", bottom, last),
+            ))
 
         # BORDER
         elif name == "border":
             width, style, color = splitBorder(parts)
             if width is not None:
-                dd.extend(
-                    (
-                        ("border-left-width", width, last),
-                        ("border-right-width", width, last),
-                        ("border-top-width", width, last),
-                        ("border-bottom-width", width, last),
-                    )
-                )
+                dd.extend((
+                    ("border-left-width", width, last),
+                    ("border-right-width", width, last),
+                    ("border-top-width", width, last),
+                    ("border-bottom-width", width, last),
+                ))
             if style is not None:
-                dd.extend(
-                    (
-                        ("border-left-style", style, last),
-                        ("border-right-style", style, last),
-                        ("border-top-style", style, last),
-                        ("border-bottom-style", style, last),
-                    )
-                )
+                dd.extend((
+                    ("border-left-style", style, last),
+                    ("border-right-style", style, last),
+                    ("border-top-style", style, last),
+                    ("border-bottom-style", style, last),
+                ))
             if color is not None:
-                dd.extend(
-                    (
-                        ("border-left-color", color, last),
-                        ("border-right-color", color, last),
-                        ("border-top-color", color, last),
-                        ("border-bottom-color", color, last),
-                    )
-                )
+                dd.extend((
+                    ("border-left-color", color, last),
+                    ("border-right-color", color, last),
+                    ("border-top-color", color, last),
+                    ("border-bottom-color", color, last),
+                ))
 
         # BORDER TOP, BOTTOM, LEFT, RIGHT
-        elif name in ("border-top", "border-bottom", "border-left", "border-right"):
+        elif name in {"border-top", "border-bottom", "border-left", "border-right"}:
             direction = name[7:]
             width, style, color = splitBorder(parts)
             # print direction, width

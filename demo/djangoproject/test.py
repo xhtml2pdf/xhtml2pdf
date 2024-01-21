@@ -3,6 +3,7 @@ Created on 22/11/2016
 
 @author: luisza
 """
+
 from django.test import RequestFactory, TestCase
 
 from .utils import extract_request_variables
@@ -10,10 +11,10 @@ from .views import render_pdf
 
 
 class Djxhtml2pfdTestCase(TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.factory = RequestFactory()
 
-    def test_var_empty(self):
+    def test_var_empty(self) -> None:
         request = self.factory.post("/download", data={})
 
         data = extract_request_variables(request)
@@ -29,7 +30,7 @@ class Djxhtml2pfdTestCase(TestCase):
 
         self.assertDictEqual(data, default_data, msg="No default data")
 
-    def test_reder_data_as_html(self):
+    def test_reder_data_as_html(self) -> None:
         request = self.factory.post("/download", data={"data": "{% lorem 1 p %}"})
 
         data = extract_request_variables(request)
@@ -38,7 +39,7 @@ class Djxhtml2pfdTestCase(TestCase):
             "Lorem ipsum dolor sit amet", data["data"], msg="Not rendering data as html"
         )
 
-    def test_render_pfd(self):
+    def test_render_pfd(self) -> None:
         for x in range(1, 4):
             for y in ["application/pdf", "application/text"]:
                 data = {"example_number": "%d" % (x), "data": "{% lorem 1 p %}"}

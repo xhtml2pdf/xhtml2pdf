@@ -56,14 +56,14 @@ class TableData:
         ] = []
         self.width: str | float = 0
 
-    def add_cell(self, data=None):
+    def add_cell(self, data=None) -> None:
         self.col += 1
         self.data[len(self.data) - 1].append(data)
 
-    def add_style(self, data):
+    def add_style(self, data) -> None:
         self.styles.append(copy.copy(data))
 
-    def add_empty(self, x, y):
+    def add_empty(self, x, y) -> None:
         self.span.append((x, y))
 
     def get_data(self):
@@ -76,7 +76,7 @@ class TableData:
                 data[y].insert(x, "")
         return data
 
-    def add_cell_styles(self, c, begin, end, mode="td"):
+    def add_cell_styles(self, c, begin, end, mode="td") -> None:
         self.mode = mode.upper()
         if c.frag.backColor and mode != "tr":  # XXX Stimmt das so?
             self.add_style(("BACKGROUND", begin, end, c.frag.backColor))
@@ -107,61 +107,53 @@ class TableData:
             and c.frag.borderTopWidth
             and c.frag.borderTopColor is not None
         ):
-            self.add_style(
-                (
-                    "LINEABOVE",
-                    begin,
-                    (end[0], begin[1]),
-                    c.frag.borderTopWidth,
-                    c.frag.borderTopColor,
-                    "squared",
-                )
-            )
+            self.add_style((
+                "LINEABOVE",
+                begin,
+                (end[0], begin[1]),
+                c.frag.borderTopWidth,
+                c.frag.borderTopColor,
+                "squared",
+            ))
         if (
             getBorderStyle(c.frag.borderLeftStyle)
             and c.frag.borderLeftWidth
             and c.frag.borderLeftColor is not None
         ):
-            self.add_style(
-                (
-                    "LINEBEFORE",
-                    begin,
-                    (begin[0], end[1]),
-                    c.frag.borderLeftWidth,
-                    c.frag.borderLeftColor,
-                    "squared",
-                )
-            )
+            self.add_style((
+                "LINEBEFORE",
+                begin,
+                (begin[0], end[1]),
+                c.frag.borderLeftWidth,
+                c.frag.borderLeftColor,
+                "squared",
+            ))
         if (
             getBorderStyle(c.frag.borderRightStyle)
             and c.frag.borderRightWidth
             and c.frag.borderRightColor is not None
         ):
-            self.add_style(
-                (
-                    "LINEAFTER",
-                    (end[0], begin[1]),
-                    end,
-                    c.frag.borderRightWidth,
-                    c.frag.borderRightColor,
-                    "squared",
-                )
-            )
+            self.add_style((
+                "LINEAFTER",
+                (end[0], begin[1]),
+                end,
+                c.frag.borderRightWidth,
+                c.frag.borderRightColor,
+                "squared",
+            ))
         if (
             getBorderStyle(c.frag.borderBottomStyle)
             and c.frag.borderBottomWidth
             and c.frag.borderBottomColor is not None
         ):
-            self.add_style(
-                (
-                    "LINEBELOW",
-                    (begin[0], end[1]),
-                    end,
-                    c.frag.borderBottomWidth,
-                    c.frag.borderBottomColor,
-                    "squared",
-                )
-            )
+            self.add_style((
+                "LINEBELOW",
+                (begin[0], end[1]),
+                end,
+                c.frag.borderBottomWidth,
+                c.frag.borderBottomColor,
+                "squared",
+            ))
         self.add_style(("LEFTPADDING", begin, end, c.frag.paddingLeft or self.padding))
         self.add_style(
             ("RIGHTPADDING", begin, end, c.frag.paddingRight or self.padding)
@@ -174,7 +166,7 @@ class TableData:
 
 class pisaTagTABLE(pisaTag):
     @staticmethod
-    def set_borders(frag, attrs):
+    def set_borders(frag, attrs) -> None:
         set_value(
             frag,
             (
@@ -207,7 +199,7 @@ class pisaTagTABLE(pisaTag):
             "solid",
         )
 
-    def start(self, c):
+    def start(self, c) -> None:
         c.addPara()
 
         attrs = self.attr
@@ -228,7 +220,7 @@ class pisaTagTABLE(pisaTag):
         tdata.repeat = attrs.repeat
         tdata.width = _width(attrs.width)
 
-    def end(self, c):
+    def end(self, c) -> None:
         tdata = c.tableData
         data = tdata.get_data()
 
@@ -276,7 +268,7 @@ class pisaTagTABLE(pisaTag):
 
 
 class pisaTagTR(pisaTag):
-    def start(self, c):
+    def start(self, c) -> None:
         tdata = c.tableData
         row = tdata.row
         begin = (0, row)
@@ -291,12 +283,12 @@ class pisaTagTR(pisaTag):
         tdata.data.append([])
 
     @staticmethod
-    def end(c):
+    def end(c) -> None:
         c.tableData.row += 1
 
 
 class pisaTagTD(pisaTag):
-    def start(self, c):
+    def start(self, c) -> None:
         if self.attr.align is not None:
             c.frag.alignment = getAlign(self.attr.align)
 
@@ -406,7 +398,7 @@ class pisaTagTD(pisaTag):
             None,
         )
 
-    def end(self, c):
+    def end(self, c) -> None:
         tdata = c.tableData
 
         c.addPara()

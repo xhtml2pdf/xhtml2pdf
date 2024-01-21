@@ -34,16 +34,20 @@ from __future__ import annotations
 import copy
 from abc import abstractmethod
 from pathlib import Path
-from typing import ClassVar
+from typing import TYPE_CHECKING
 
 from xhtml2pdf.w3c import cssParser, cssSpecial
+
+if TYPE_CHECKING:
+    from typing import ClassVar, NoReturn
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ~ To replace any for with list comprehension
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-def stopIter(value):
+def stopIter(value) -> NoReturn:
     raise StopIteration(*value)
 
 
@@ -61,7 +65,7 @@ CSSParseError = cssParser.CSSParseError
 
 class CSSElementInterfaceAbstract:
     @abstractmethod
-    def getAttr(self, name, default=NotImplemented):
+    def getAttr(self, name, default=NotImplemented) -> NoReturn:
         raise NotImplementedError
 
     def getIdAttr(self):
@@ -71,24 +75,24 @@ class CSSElementInterfaceAbstract:
         return self.getAttr("class", "")
 
     @abstractmethod
-    def getInlineStyle(self):
+    def getInlineStyle(self) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def matchesNode(self):
+    def matchesNode(self) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def inPseudoState(self, name, params=()):
+    def inPseudoState(self, name, params=()) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def iterXMLParents(self):
+    def iterXMLParents(self) -> NoReturn:
         """Results must be compatible with CSSElementInterfaceAbstract."""
         raise NotImplementedError
 
     @abstractmethod
-    def getPreviousSibling(self):
+    def getPreviousSibling(self) -> NoReturn:
         raise NotImplementedError
 
 
@@ -239,7 +243,7 @@ class CSSSelectorBase:
             completeName = (None, "*", completeName)
         self.completeName = completeName
 
-    def _updateHash(self):
+    def _updateHash(self) -> None:
         self._hash = hash((self.fullName, self.specificity(), self.qualifiers))
 
     def __hash__(self):
@@ -297,7 +301,7 @@ class CSSSelectorBase:
             elif qualifier.isPseudo():
                 elementCount += 1
             elif qualifier.isCombiner():
-                i, h, q, e = qualifier.selector.specificity()
+                _i, h, q, e = qualifier.selector.specificity()
                 hashCount += h
                 qualifierCount += q
                 elementCount += e
@@ -308,10 +312,10 @@ class CSSSelectorBase:
             return False
 
         # with  CSSDOMElementInterface.matchesNode(self, (namespace, tagName)) replacement:
-        if self.fullName[1] not in ("*", element.domElement.tagName):
+        if self.fullName[1] not in {"*", element.domElement.tagName}:
             return False
         if (
-            self.fullName[0] not in (None, "", "*")
+            self.fullName[0] not in {None, "", "*"}
             and self.fullName[0] != element.domElement.namespaceURI
         ):
             return False
@@ -356,30 +360,30 @@ class CSSMutableSelector(CSSSelectorBase, cssParser.CSSSelectorAbstract):
         selectorB.addCombination(op, selectorA)
         return selectorB
 
-    def addCombination(self, op, other):
+    def addCombination(self, op, other) -> None:
         self._addQualifier(CSSSelectorCombinationQualifier(op, other))
 
-    def addHashId(self, hashId):
+    def addHashId(self, hashId) -> None:
         self._addQualifier(CSSSelectorHashQualifier(hashId))
 
-    def addClass(self, class_):
+    def addClass(self, class_) -> None:
         self._addQualifier(CSSSelectorClassQualifier(class_))
 
-    def addAttribute(self, attrName):
+    def addAttribute(self, attrName) -> None:
         self._addQualifier(CSSSelectorAttributeQualifier(attrName))
 
-    def addAttributeOperation(self, attrName, op, attr_value):
+    def addAttributeOperation(self, attrName, op, attr_value) -> None:
         self._addQualifier(CSSSelectorAttributeQualifier(attrName, op, attr_value))
 
-    def addPseudo(self, name):
+    def addPseudo(self, name) -> None:
         self._addQualifier(CSSSelectorPseudoQualifier(name))
 
-    def addPseudoFunction(self, name, params):
+    def addPseudoFunction(self, name, params) -> None:
         self._addQualifier(CSSSelectorPseudoQualifier(name, params))
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def _addQualifier(self, qualifier):
+    def _addQualifier(self, qualifier) -> None:
         if self.qualifiers:
             self.qualifiers.append(qualifier)
         else:
@@ -410,30 +414,30 @@ class CSSImmutableSelector(CSSSelectorBase):
 
 class CSSSelectorQualifierBase:
     @staticmethod
-    def isHash():
+    def isHash() -> bool:
         return False
 
     @staticmethod
-    def isClass():
+    def isClass() -> bool:
         return False
 
     @staticmethod
-    def isAttr():
+    def isAttr() -> bool:
         return False
 
     @staticmethod
-    def isPseudo():
+    def isPseudo() -> bool:
         return False
 
     @staticmethod
-    def isCombiner():
+    def isCombiner() -> bool:
         return False
 
     def asImmutable(self):
         return self
 
     @abstractmethod
-    def asString(self):
+    def asString(self) -> NoReturn:
         raise NotImplementedError
 
     def __str__(self) -> str:
@@ -445,13 +449,13 @@ class CSSSelectorHashQualifier(CSSSelectorQualifierBase):
         self.hashId = hashId
 
     @staticmethod
-    def isHash():
+    def isHash() -> bool:
         return True
 
     def __hash__(self):
         return hash((self.hashId,))
 
-    def asString(self):
+    def asString(self) -> str:
         return f"#{self.hashId}"
 
     def matches(self, element):
@@ -469,13 +473,13 @@ class CSSSelectorClassQualifier(CSSSelectorQualifierBase):
         self.classId = classId
 
     @staticmethod
-    def isClass():
+    def isClass() -> bool:
         return True
 
     def __hash__(self):
         return hash((self.classId,))
 
-    def asString(self):
+    def asString(self) -> str:
         return f".{self.classId}"
 
     def matches(self, element):
@@ -503,13 +507,13 @@ class CSSSelectorAttributeQualifier(CSSSelectorQualifierBase):
             self.value = attr_value
 
     @staticmethod
-    def isAttr():
+    def isAttr() -> bool:
         return True
 
     def __hash__(self):
         return hash((self.name, self.op, self.value))
 
-    def asString(self):
+    def asString(self) -> str:
         if self.value is NotImplemented:
             return f"[{self.name}]"
         return f"[{self.name}{self.op}{self.value}]"
@@ -536,23 +540,23 @@ class CSSSelectorAttributeQualifier(CSSSelectorQualifierBase):
 
 
 class CSSSelectorPseudoQualifier(CSSSelectorQualifierBase):
-    def __init__(self, attrName, params=()) -> None:
+    def __init__(self, attrName: str, params=()) -> None:
         self.name = attrName
         self.params = tuple(params)
 
     @staticmethod
-    def isPseudo():
+    def isPseudo() -> bool:
         return True
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self.name, self.params))
 
-    def asString(self):
+    def asString(self) -> str:
         if self.params:
             return f":{self.name}"
         return f":{self.name}({self.params})"
 
-    def matches(self, element):
+    def matches(self, element: CSSElementInterfaceAbstract):
         return element.inPseudoState(self.name, self.params)
 
 
@@ -562,16 +566,16 @@ class CSSSelectorCombinationQualifier(CSSSelectorQualifierBase):
         self.selector = selector
 
     @staticmethod
-    def isCombiner():
+    def isCombiner() -> bool:
         return True
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self.op, self.selector))
 
     def asImmutable(self):
         return type(self)(self.op, self.selector.asImmutable())
 
-    def asString(self):
+    def asString(self) -> str:
         return f"{self.selector.asString()}{self.op}"
 
     def matches(self, element):
@@ -620,10 +624,10 @@ class CSSTerminalOperator(tuple):
 
 
 class CSSDeclarations(dict):  # noqa: PLW1641
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return False
 
-    def __lt__(self, other):
+    def __lt__(self, other) -> bool:
         return False
 
 
@@ -642,10 +646,10 @@ class CSSRuleset(dict):
         # whose value evalutates as False"
         return self.findCSSRulesFor(element, attrName)[-1:]
 
-    def mergeStyles(self, styles):
+    def mergeStyles(self, styles) -> None:
         """XXX Bugfix for use in PISA."""
         for k, v in styles.items():
-            if k in self and self[k]:
+            if self.get(k):
                 self[k] = copy.copy(self[k])
                 self[k].update(v)
             else:
@@ -697,27 +701,27 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
     def getMediumSet(self):
         return self.mediumSet
 
-    def setMediumSet(self, mediumSet):
+    def setMediumSet(self, mediumSet) -> None:
         self.mediumSet = self.MediumSetFactory(mediumSet)
 
-    def updateMediumSet(self, mediumSet):
+    def updateMediumSet(self, mediumSet) -> None:
         self.getMediumSet().update(mediumSet)
 
     def getTrackImportance(self):
         return self.trackImportance
 
-    def setTrackImportance(self, *, trackImportance=True):
+    def setTrackImportance(self, *, trackImportance=True) -> None:
         self.trackImportance = trackImportance
 
     # ~ helpers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def _pushState(self):
+    def _pushState(self) -> None:
         _restoreState = self.__dict__
         self.__dict__ = self.__dict__.copy()
         self._restoreState = _restoreState
         self.namespaces = {}
 
-    def _popState(self):
+    def _popState(self) -> None:
         self.__dict__ = self._restoreState
 
     def _declarations(self, declarations, DeclarationsFactory=None):
@@ -738,10 +742,10 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
 
     # ~ css results ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def beginStylesheet(self):
+    def beginStylesheet(self) -> None:
         self._pushState()
 
-    def endStylesheet(self):
+    def endStylesheet(self) -> None:
         self._popState()
 
     def stylesheet(self, stylesheetElements, stylesheetImports):
@@ -763,10 +767,10 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
             result.mergeStyles(styleElement)
         return result
 
-    def beginInline(self):
+    def beginInline(self) -> None:
         self._pushState()
 
-    def endInline(self):
+    def endInline(self) -> None:
         self._popState()
 
     @staticmethod
@@ -807,7 +811,7 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
 
     # ~ css @ directives ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def atCharset(self, charset):
+    def atCharset(self, charset) -> None:
         self.charset = charset
 
     def atImport(self, import_, mediums, cssParser):
@@ -815,7 +819,7 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
             return cssParser.parseExternal(import_)
         return None
 
-    def atNamespace(self, nsprefix, uri):
+    def atNamespace(self, nsprefix, uri) -> None:
         self.namespaces[nsprefix] = uri
 
     def atMedia(self, mediums, ruleset):
@@ -831,7 +835,7 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
         *,
         isLandscape: bool,
         pageBorder,
-    ):
+    ) -> NoReturn:
         """This is overridden by xhtml2pdf.context.pisaCSSBuilder."""
         raise NotImplementedError
 
@@ -853,13 +857,13 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
 
     # ~ css declarations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def property(self, name, value, *, important=False):  # noqa: A003
+    def property(self, name, value, *, important=False):
         if self.trackImportance:
             return (name, value, important)
         return (name, value)
 
     def combineTerms(self, termA, op, termB):
-        if op in (",", " "):
+        if op in {",", " "}:
             if isinstance(termA, list):
                 termA.append(termB)
                 return termA

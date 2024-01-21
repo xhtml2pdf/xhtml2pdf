@@ -17,7 +17,7 @@ import contextlib
 import logging
 import re
 from copy import copy
-from typing import Any
+from typing import TYPE_CHECKING
 
 import arabic_reshaper
 import reportlab
@@ -30,6 +30,11 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 
 import xhtml2pdf.default
+
+if TYPE_CHECKING:
+    from typing import Any, Final
+
+    from xhtml2pdf.context import pisaContext
 
 log = logging.getLogger(__name__)
 
@@ -77,11 +82,14 @@ class Memoized:
 
 
 def toList(value: Any, *, cast_tuple: bool = True) -> list:
-    cls: tuple[type, ...] = (list, tuple) if cast_tuple else (list,)
-    return list(value) if isinstance(value, cls) else [value]
+    if isinstance(value, list):
+        return value
+    if isinstance(value, tuple) and cast_tuple:
+        return list(value)
+    return [value]
 
 
-def transform_attrs(obj, keys, container, func, extras=None):
+def transform_attrs(obj, keys, container, func, extras=None) -> None:
     """
     Allows to apply one function to set of keys cheching if key is in container,
     also trasform ccs key to report lab keys.
@@ -105,7 +113,7 @@ def transform_attrs(obj, keys, container, func, extras=None):
             setattr(obj, reportlab_key, func(*extras))
 
 
-def copy_attrs(obj1, obj2, attrs):
+def copy_attrs(obj1, obj2, attrs) -> None:
     """
     Allows copy a list of attributes from object2 to object1.
     Useful for copy ccs attributes to fragment.
@@ -117,7 +125,7 @@ def copy_attrs(obj1, obj2, attrs):
         setattr(obj1, attr, value)
 
 
-def set_value(obj, attrs, value, *, do_copy=False):
+def set_value(obj, attrs, value, *, do_copy=False) -> None:
     """Allows set the same value to a list of attributes."""
     for attr in attrs:
         if do_copy:
@@ -153,8 +161,8 @@ def getColor(value, default=None):
     return toColor(value, default)  # Calling the reportlab function
 
 
-def getBorderStyle(value, default=None):
-    if value and (str(value).lower() not in ("none", "hidden")):
+def getBorderStyle(value: str, default: str | None = None) -> str | None:
+    if value and (str(value).lower() not in {"none", "hidden"}):
         return value
     return default
 
@@ -237,7 +245,7 @@ def getSize(
             # XXX W3C says, use 96pdi
             # http://www.w3.org/TR/CSS21/syndata.html#length-units
             return float(value[:-2].strip()) * DPI96
-        if value in ("none", "0", "0.0", "auto"):
+        if value in {"none", "0", "0.0", "auto"}:
             return 0.0
         if relative:
             if value.endswith("rem"):  # XXX
@@ -366,7 +374,7 @@ def getPos(position, pagesize):
 
 def getBool(s):
     """Is it a boolean?."""
-    return str(s).lower() in ("y", "yes", "1", "true")
+    return str(s).lower() in {"y", "yes", "1", "true"}
 
 
 def getFloat(s):
@@ -388,10 +396,10 @@ def getAlign(value, default=TA_LEFT):
 
 
 _rx_datauri = re.compile(
-    "^data:(?P<mime>[a-z]+/[a-z]+);base64,(?P<data>.*)$", re.M | re.DOTALL
+    "^data:(?P<mime>[a-z]+/[a-z]+);base64,(?P<data>.*)$", re.MULTILINE | re.DOTALL
 )
 
-COLOR_BY_NAME = {
+COLOR_BY_NAME: Final[dict[str, Color]] = {
     "activeborder": Color(212, 208, 200),
     "activecaption": Color(10, 36, 106),
     "aliceblue": Color(0.941176, 0.972549, 1),
@@ -570,7 +578,7 @@ COLOR_BY_NAME = {
 }
 
 
-def get_default_asian_font():
+def get_default_asian_font() -> dict[str, str]:
     lower_font_list = []
     upper_font_list = []
 
@@ -583,41 +591,40 @@ def get_default_asian_font():
     return {lower_font_list[i]: upper_font_list[i] for i in range(len(lower_font_list))}
 
 
-def set_asian_fonts(fontname):
+def set_asian_fonts(fontname: str) -> None:
     font_dict = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodings)
     fonts = font_dict.keys()
     if fontname in fonts:
         pdfmetrics.registerFont(UnicodeCIDFont(fontname))
 
 
-def detect_language(name):
+def detect_language(name: str) -> str | None:
     asian_language_list = xhtml2pdf.default.DEFAULT_LANGUAGE_LIST
     if name in asian_language_list:
         return name
     return None
 
 
-def arabic_format(text, language):
+def arabic_format(text: str, language: str) -> str | None:
     # Note: right now all of the languages are treated the same way.
     # But maybe in the future we have to for example implement something
     # for "hebrew" that isn't used in "arabic"
-    if detect_language(language) in (
+    if detect_language(language) in {
         "arabic",
         "hebrew",
         "persian",
         "urdu",
         "pashto",
         "sindhi",
-    ):
+    }:
         ar = arabic_reshaper.reshape(text)
         return get_display(ar)
     return None
 
 
-def frag_text_language_check(context, frag_text):
+def frag_text_language_check(context: pisaContext, frag_text: str) -> str | None:
     if hasattr(context, "language"):
-        language = context.__getattribute__("language")
-        detect_language_result = arabic_format(frag_text, language)
+        detect_language_result = arabic_format(frag_text, context.language)
         if detect_language_result:
             return detect_language_result
         return None

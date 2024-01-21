@@ -15,7 +15,7 @@ class ConfigurationError(Exception):
     pass
 
 
-def start():
+def start() -> None:
     """Start the CherryPy application server."""
     setupdir = dirname(dirname(__file__))
     curdir = os.getcwd()
@@ -43,7 +43,7 @@ def start():
             raise ConfigurationError(msg) from e
 
     turbogears.update_config(configfile=configfile, modulename="tgpisa.config")
-
+    # ruff: noqa: PLC0415
     from tgpisa.controllers import Root
 
     turbogears.start_server(Root())

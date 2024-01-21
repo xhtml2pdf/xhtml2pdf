@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from unittest import TestCase
 
 from xhtml2pdf.w3c.cssSpecial import parseSpecialRules, splitBorder
@@ -49,19 +51,17 @@ class FontTest(TestCase):
         self.assertEqual(func_out, expected)
 
     def test_font_style_variant_weight_size_height_family(self) -> None:
-        func_in = [
-            (
-                "font",
-                [
-                    "italic",
-                    "small-caps",
-                    "bold",
-                    (("15", "px"), "/", ("30", "px")),
-                    "Comic Sans",
-                ],
-                None,
-            )
-        ]
+        func_in = [(
+            "font",
+            [
+                "italic",
+                "small-caps",
+                "bold",
+                (("15", "px"), "/", ("30", "px")),
+                "Comic Sans",
+            ],
+            None,
+        )]
         func_out = parseSpecialRules(func_in)
         expected = [
             ("font-style", "italic", None),
@@ -239,13 +239,11 @@ class BorderWidthTest(TestCase):
         self.assertEqual(func_out, expected)
 
     def test_four_border_width_values(self) -> None:
-        func_in = [
-            (
-                "border-width",
-                [("11", "px"), ("22", "px"), ("33", "px"), ("44", "px")],
-                None,
-            )
-        ]
+        func_in = [(
+            "border-width",
+            [("11", "px"), ("22", "px"), ("33", "px"), ("44", "px")],
+            None,
+        )]
         func_out = parseSpecialRules(func_in)
         expected = [
             ("border-left-width", ("44", "px"), None),

@@ -11,27 +11,46 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
 import logging
 from abc import abstractmethod
 from io import StringIO
+from types import TracebackType
+from typing import TYPE_CHECKING, cast
 
 from xhtml2pdf import pisa
+
+if TYPE_CHECKING:
+    import sys
+    from collections.abc import Callable
+
+    if sys.version_info >= (3, 11):
+        from typing import Self
+    else:
+        from typing_extensions import Self
+
 
 log = logging.getLogger(__name__)
 
 
 class Filter:
-    def __init__(self, app) -> None:
+    def __init__(self: Self, app: Callable) -> None:
         self.app = app
 
-    def __call__(self, environ, start_response):
+    def __call__(
+        self: Self, environ: dict[str, str], start_response: Callable
+    ) -> list[str]:
         script_name = environ.get("SCRIPT_NAME", "")
         path_info = environ.get("PATH_INFO", "")
-        sent = []
+        sent: list[str | list[tuple[str, str]] | TracebackType | None] = []
         written_response = StringIO()
 
-        def replacement_start_response(status, headers, exc_info=None):
+        def replacement_start_response(
+            status: str,
+            headers: list[tuple[str, str]],
+            exc_info: TracebackType | None = None,
+        ) -> Callable:
             if not self.should_filter(status, headers):
                 return start_response(status, headers, exc_info)
             sent[:] = [status, headers, exc_info]
@@ -40,7 +59,9 @@ class Filter:
         app_iter = self.app(environ, replacement_start_response)
         if not sent:
             return app_iter
-        status, headers, exc_info = sent
+        status, headers, exc_info = cast(
+            tuple[str, list[tuple[str, str]], TracebackType | None], sent
+        )
         try:
             for chunk in app_iter:
                 written_response.write(chunk)
@@ -55,17 +76,25 @@ class Filter:
         return [body]
 
     @staticmethod
-    def should_filter(_status, headers):
-        print(headers)
+    def should_filter(status: str, headers: list[tuple[str, str]]) -> bool:
+        raise NotImplementedError
 
+    @staticmethod
     @abstractmethod
-    def filter(self, status, headers, body):  # noqa: A003
+    def filter(
+        _script_name: str,
+        _path_info: str,
+        environ: dict[str, str],
+        status: str,
+        headers: list[tuple[str, str]],
+        body: str,
+    ) -> tuple[str, list[tuple[str, str]], str]:
         raise NotImplementedError
 
 
 class HTMLFilter(Filter):
     @staticmethod
-    def should_filter(status, headers):
+    def should_filter(status: str, headers: list[tuple[str, str]]) -> bool:
         if not status.startswith("200"):
             return False
         for name, value in headers:
@@ -76,7 +105,14 @@ class HTMLFilter(Filter):
 
 class PisaMiddleware(HTMLFilter):
     @staticmethod
-    def filter(_script_name, _path_info, environ, status, headers, body):  # noqa: A003
+    def filter(
+        _script_name: str,
+        _path_info: str,
+        environ: dict[str, str],
+        status: str,
+        headers: list[tuple[str, str]],
+        body: str,
+    ) -> tuple[str, list[tuple[str, str]], str]:
         topdf = environ.get("pisa.topdf", "")
         if topdf:
             dst = StringIO()

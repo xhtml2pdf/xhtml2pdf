@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 import re
 import tempfile
@@ -21,7 +23,7 @@ from xhtml2pdf.paragraph import (
 
 class LegacyParagraphTests(TestCase):
     @staticmethod
-    def test_legacy():
+    def test_legacy() -> None:
         """Test function coming from paragraph.__main__"""
         ALIGNMENTS = (TA_LEFT, TA_RIGHT, TA_CENTER, TA_JUSTIFY)
 
@@ -71,7 +73,7 @@ class LegacyParagraphTests(TestCase):
                 "borderBottomStyle": style,
             }
 
-        def test():
+        def test() -> None:
             with tempfile.TemporaryFile() as pdf_file:
                 doc = SimpleDocTemplate(pdf_file)
                 story = []
@@ -150,13 +152,13 @@ class LegacyParagraphTests(TestCase):
                     + sampleText2
                 )
 
-                story.append(Paragraph(copy.copy(text), style, debug=0))
+                story.append(Paragraph(copy.copy(text), style, debug=False))
 
                 for i in range(10):
                     style = copy.deepcopy(style)
                     style["textAlign"] = ALIGNMENTS[i % 4]
                     text = createText(("(%d) " % i) + TEXT, fn, fs)
-                    story.append(Paragraph(copy.copy(text), style, debug=0))
+                    story.append(Paragraph(copy.copy(text), style, debug=False))
                 doc.build(story)
 
         test()

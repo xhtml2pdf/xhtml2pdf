@@ -27,7 +27,7 @@ def link_callback(uri, _rel):
     return str(link.absolute().resolve())
 
 
-def build_resources():
+def build_resources() -> None:
     rst_path = Path("./").absolute().resolve()
     source_path = Path("./_static/html_samples").absolute().resolve()
     pdf_path = Path("./_static/pdf_samples").absolute().resolve()
@@ -57,7 +57,7 @@ Examples
                     name,
                     filename,
                 )
-    with open(rst_path / "examples.rst", "w") as arch:
+    with open(rst_path / "examples.rst", "w", encoding="utf-8") as arch:
         arch.write(text)
 
 

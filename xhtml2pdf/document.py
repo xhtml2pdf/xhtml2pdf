@@ -11,10 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
 import io
 import logging
 from html import escape as html_escape
+from typing import TYPE_CHECKING, TextIO
 
 from reportlab.lib import pdfencrypt
 from reportlab.platypus.flowables import Spacer
@@ -29,10 +31,15 @@ from xhtml2pdf.parser import pisaParser
 from xhtml2pdf.util import getBox
 from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlPageTemplate
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from io import BufferedWriter, BytesIO, StringIO
+    from typing import Any
+
 log = logging.getLogger(__name__)
 
 
-def pisaErrorDocument(dest, c):
+def pisaErrorDocument(dest: TextIO, c: pisaContext):
     out = pisaTempFile(capacity=c.capacity)
     out.write(
         "<p style='background-color:red;'><strong>%d error(s) occured:</strong><p>"
@@ -51,16 +58,16 @@ def pisaErrorDocument(dest, c):
 
 
 def pisaStory(
-    src,
-    path="",
-    link_callback=None,
-    debug=0,
-    default_css=None,
-    xhtml=False,  # noqa: FBT002
-    encoding=None,
-    context=None,
-    xml_output=None,
-    **_kwargs,
+    src: str | StringIO | BytesIO,
+    path: str = "",
+    link_callback: Callable | None = None,
+    debug: int = 0,
+    default_css: str | None = None,
+    xhtml: bool = False,  # noqa: FBT002
+    encoding: str | None = None,
+    context: pisaContext | None = None,
+    xml_output: TextIO | BytesIO | None = None,
+    **_kwargs: Any,
 ):
     # Prepare Context
     if not context:
@@ -88,7 +95,9 @@ def pisaStory(
     return context
 
 
-def get_encrypt_instance(data):
+def get_encrypt_instance(
+    data: pdfencrypt.StandardEncryption | str | None,
+) -> pdfencrypt.StandardEncryption | None:
     if data is None:
         return None
 
@@ -99,23 +108,23 @@ def get_encrypt_instance(data):
 
 
 def pisaDocument(
-    src,
-    dest=None,
-    dest_bytes=False,  # noqa: FBT002
-    path="",
-    link_callback=None,
-    debug=0,
-    default_css=None,
+    src: str | StringIO | BytesIO | TextIO,
+    dest: BytesIO | TextIO | BufferedWriter | None = None,
+    dest_bytes: bool = False,  # noqa: FBT002
+    path: str = "",
+    link_callback: Callable | None = None,
+    debug: int = 0,
+    default_css: str | None = None,
     xhtml=False,  # noqa: FBT002
-    encoding=None,
-    xml_output=None,
-    raise_exception=True,  # noqa: FBT002, ARG001
-    capacity=100 * 1024,
+    encoding: str | None = None,
+    xml_output: TextIO | BytesIO | None = None,
+    raise_exception: bool = True,  # noqa: FBT002, ARG001
+    capacity: int = 100 * 1024,
     context_meta=None,
-    encrypt=None,
+    encrypt: pdfencrypt.StandardEncryption | str | None = None,
     signature=None,
     **_kwargs,
-):
+) -> pisaContext:
     log.debug(
         "pisaDocument options:\n  src = %r\n  dest = %r\n  path = %r\n  link_callback ="
         " %r\n  xhtml = %r\n  context_meta = %r",
@@ -219,7 +228,11 @@ def pisaDocument(
     context.dest = dest
 
     data = output.getvalue()
-    context.dest.write(data)  # TODO: context.dest is a tempfile as well...
+    if isinstance(context.dest, TextIO):
+        # To TextIO we have to write str and not bytes
+        context.dest.write(data.encode("utf-8"))
+    else:
+        context.dest.write(data)  # TODO: context.dest is a tempfile as well...
     cleanFiles()
 
     if dest_bytes:

@@ -19,6 +19,8 @@ Most people know how to write a page with HTML and CSS. Why not using these skil
 dynamically generate PDF documents using it? The "pisa" project
 http://www.htmltopdf.org enables you to to this quite simple.
 """
+from __future__ import annotations
+
 import io
 
 from faker import Faker
@@ -29,7 +31,7 @@ from xhtml2pdf import pisa
 pisa.showLogging()
 
 
-def html2pdf(data, filename, *, open_file=False):
+def html2pdf(data, filename, *, open_file=False) -> bool:
     """
     Simple test showing how to create a PDF file from
     PML Source String. Also shows errors and tries to start
@@ -107,13 +109,11 @@ if __name__ == "__main__":
 
     fake = Faker()
     html = HTMLTEST % (
-        "<br>".join(
-            [
-                '<p>%s  <span style="color: #f00;"><pdf:pagenumber> of <pdf:pagecount>'
-                " </span></p>"
-                % fake.text()
-                for x in range(1)
-            ]
-        )
+        "<br>".join([
+            '<p>%s  <span style="color: #f00;"><pdf:pagenumber> of <pdf:pagecount>'
+            " </span></p>"
+            % fake.text()
+            for x in range(1)
+        ])
     )
     html2pdf(html, "test.pdf", open_file=False)

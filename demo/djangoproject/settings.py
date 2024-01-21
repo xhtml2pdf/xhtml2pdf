@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/1.10/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.10/ref/settings/
 """
+
 from __future__ import annotations
 
 import os
@@ -38,20 +39,18 @@ MIDDLEWARE: list[str] = []
 
 ROOT_URLCONF: str = "urls"
 
-TEMPLATES: list[dict[str, Any]] = [
-    {
-        "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "templates")],
-        "APP_DIRS": True,
-        "OPTIONS": {
-            "context_processors": [
-                "django.template.context_processors.debug",
-                "django.template.context_processors.request",
-                "django.contrib.messages.context_processors.messages",
-            ]
-        },
-    }
-]
+TEMPLATES: list[dict[str, Any]] = [{
+    "BACKEND": "django.template.backends.django.DjangoTemplates",
+    "DIRS": [os.path.join(BASE_DIR, "templates")],
+    "APP_DIRS": True,
+    "OPTIONS": {
+        "context_processors": [
+            "django.template.context_processors.debug",
+            "django.template.context_processors.request",
+            "django.contrib.messages.context_processors.messages",
+        ]
+    },
+}]
 
 WSGI_APPLICATION: str = "wsgi.application"
 

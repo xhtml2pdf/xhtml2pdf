@@ -18,7 +18,7 @@ import logging
 import re
 import urllib.parse as urlparse
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from reportlab import rl_settings
 from reportlab.lib.enums import TA_LEFT
@@ -56,19 +56,30 @@ from xhtml2pdf.xhtml2pdf_reportlab import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+    from typing import TypedDict
+
+    from reportlab.lib.pagesizes import Dimensions
     from reportlab.platypus.flowables import Flowable
 
     from xhtml2pdf.xhtml2pdf_reportlab import PmlImage
 
+    class ContextMeta(TypedDict):
+        author: str
+        title: str
+        subject: str
+        keywords: str
+        pagesize: Dimensions
 
-rl_settings.warnOnMissingFontGlyphs = 0
+
+rl_settings.warnOnMissingFontGlyphs: int = 0
 log = logging.getLogger(__name__)
 
-sizeDelta = 2  # amount to reduce font size by for super and sub script
-subFraction = 0.4  # fraction of font size that a sub script should be lowered
-superFraction = 0.4
+sizeDelta: int = 2  # amount to reduce font size by for super and sub script
+subFraction: float = 0.4  # fraction of font size that a sub script should be lowered
+superFraction: float = 0.4
 
-NBSP = "\u00a0"
+NBSP: str = "\u00a0"
 
 
 def clone(self, **kwargs) -> ParaFrag:
@@ -172,7 +183,7 @@ def getParaFrag(style) -> ParaFrag:
     return frag
 
 
-def getDirName(path) -> str:
+def getDirName(path: str) -> str:
     parts = urlparse.urlparse(path)
     if parts.scheme:
         return path
@@ -193,14 +204,14 @@ class pisaCSSBuilder(css.CSSBuilder):
 
         # Font weight
         fweight = str(data.get("font-weight", "normal")).lower()
-        bold = fweight in ("bold", "bolder", "500", "600", "700", "800", "900")
+        bold = fweight in {"bold", "bolder", "500", "600", "700", "800", "900"}
         if not bold and fweight != "normal":
             log.warning(
                 self.c.warning("@fontface, unknown value font-weight '%s'", fweight)
             )
 
         # Font style
-        italic = str(data.get("font-style", "")).lower() in ("italic", "oblique")
+        italic = str(data.get("font-style", "")).lower() in {"italic", "oblique"}
 
         # The "src" attribute can be a CSS group but in that case
         # ignore everything except the font URI
@@ -238,7 +249,7 @@ class pisaCSSBuilder(css.CSSBuilder):
 
         return (
             name,
-            data.get("-pdf-frame-content", None),
+            data.get("-pdf-frame-content"),
             data.get("-pdf-frame-border", border),
             x,
             y,
@@ -420,7 +431,7 @@ class pisaCSSBuilder(css.CSSBuilder):
             else:
                 frameList.append(frame)
 
-        background = data.get("background-image", None)
+        background = data.get("background-image")
         background_context = self.get_background_context(data)
         if background:
             # should be relative to the css file
@@ -610,13 +621,14 @@ class pisaContext:
         self.capacity: int = capacity
         self.toc: PmlTableOfContents = PmlTableOfContents()
         self.multiBuild: bool = False
-        self.pageSize: tuple[float, float] = A4
+        self.pageSize: Dimensions = A4
         self.baseFontSize: float = getSize("12pt")
         self.frag: ParaFrag = getParaFrag(ParagraphStyle(f"default{self.UID()}"))
         self.fragBlock: ParaFrag = self.frag
         self.fragStrip: bool = True
         self.force: bool = False
         self.dir: str = "ltr"
+        self.cssAttr: dict[str, str | tuple[str, str]] = {}
 
         #: External callback function for path calculations
         self.pathCallback = None
@@ -628,7 +640,7 @@ class pisaContext:
             self.pathDocument = str(Path(self.pathDocument).absolute().resolve())
         self.pathDirectory: str = getDirName(self.pathDocument)
 
-        self.meta: dict[str, str | tuple[float, float]] = {
+        self.meta: ContextMeta = {
             "author": "",
             "title": "",
             "subject": "",
@@ -636,7 +648,7 @@ class pisaContext:
             "pagesize": A4,
         }
 
-    def setDir(self, direction):
+    def setDir(self, direction: str) -> None:
         if direction == "rtl":
             self.frag.rtl = True
         self.dir = direction
@@ -646,7 +658,7 @@ class pisaContext:
         return self.uidctr
 
     # METHODS FOR CSS
-    def addCSS(self, value):
+    def addCSS(self, value: str) -> None:
         value = value.strip()
         if value.startswith("<![CDATA["):
             value = value[9:-3]
@@ -655,7 +667,7 @@ class pisaContext:
         self.cssText += value.strip() + "\n"
 
     # METHODS FOR CSS
-    def addDefaultCSS(self, value):
+    def addDefaultCSS(self, value: str) -> None:
         value = value.strip()
         if value.startswith("<![CDATA["):
             value = value[9:-3]
@@ -663,11 +675,12 @@ class pisaContext:
             value = value[4:-3]
         self.cssDefaultText += value.strip() + "\n"
 
-    def parseCSS(self):
+    def parseCSS(self) -> None:
         # This self-reference really should be refactored. But for now
         # we'll settle for using weak references. This avoids memory
         # leaks because the garbage collector (at least on cPython
         # 2.7.3) isn't aggressive enough.
+        # ruff: noqa: PLC0415
         import weakref
 
         self.cssBuilder = pisaCSSBuilder(mediumSet=["all", "print", "pdf"])
@@ -689,7 +702,7 @@ class pisaContext:
         self.cssCascade.parser = self.cssParser
 
     # METHODS FOR STORY
-    def addStory(self, data):
+    def addStory(self, data) -> None:
         self.story.append(data)
 
     def swapStory(self, story=None):
@@ -800,13 +813,13 @@ class pisaContext:
         return pc
 
     @staticmethod
-    def addPageNumber(flow):
+    def addPageNumber(flow: Flowable) -> PageNumberText:
         pgnumber = PageNumberText()
         pgnumber.setFlowable(flow)
         return pgnumber
 
     @staticmethod
-    def dumpPara(_frags, _style):
+    def dumpPara(_frags: list[ParaFrag], _style: ParagraphStyle) -> None:
         return
 
     def addPara(self, *, force: bool = False) -> None:
@@ -858,8 +871,7 @@ class pisaContext:
 
                 self.dumpPara(self.fragAnchor + self.fragList, style)
                 if hasattr(self, "language"):
-                    language = self.__getattribute__("language")
-                    detect_language_result = arabic_format(self.text, language)
+                    detect_language_result = arabic_format(self.text, self.language)
                     if detect_language_result is not None:
                         self.text = detect_language_result
 
@@ -913,7 +925,7 @@ class pisaContext:
         self.fragList.append(frag)
 
     # XXX Argument frag is useless!
-    def addFrag(self, text="", frag=None):
+    def addFrag(self, text="", frag=None) -> None:
         frag = baseFrag = self.frag.clone()
 
         # if sub and super are both on they will cancel each other out
@@ -1008,20 +1020,18 @@ class pisaContext:
 
     def warning(self, msg, *args):
         self.warn += 1
-        self.log.append(
-            (
-                default.PML_WARNING,
-                self._getLineNumber(),
-                str(msg),
-                self._getFragment(50),
-            )
-        )
+        self.log.append((
+            default.PML_WARNING,
+            self._getLineNumber(),
+            str(msg),
+            self._getFragment(50),
+        ))
         try:
             return self.context(msg % args)
         except Exception:
             return self.context(msg)
 
-    def error(self, msg, *args):
+    def error(self, msg: str, *args):
         self.err += 1
         self.log.append(
             (default.PML_ERROR, self._getLineNumber(), str(msg), self._getFragment(50))
@@ -1037,7 +1047,7 @@ class pisaContext:
             return None
         return getFile(name, relative or self.pathDirectory, callback=self.pathCallback)
 
-    def getFontName(self, names, default="helvetica"):
+    def getFontName(self, names: list[str] | str, default: str = "helvetica"):
         """Name of a font."""
         # print names, self.fontList
         if not isinstance(names, list):
@@ -1055,14 +1065,16 @@ class pisaContext:
                 return font
         return self.fontList.get(default, None)
 
-    def registerFont(self, fontname, alias=None):
+    def registerFont(self, fontname, alias=None) -> None:
         alias = alias if alias is not None else []
         self.fontList[str(fontname).lower()] = str(fontname)
         for a in alias:
             self.fontList[str(a)] = str(fontname)
 
     # TODO: convert to getFile to support remotes fonts
-    def loadFont(self, names, src, encoding="WinAnsiEncoding", bold=0, italic=0):
+    def loadFont(
+        self, names, src, encoding="WinAnsiEncoding", bold: int = 0, italic: int = 0
+    ) -> None:
         # XXX Just works for local filenames!
         if names and src:
             file = src
@@ -1084,7 +1096,7 @@ class pisaContext:
             baseName, suffix = ".".join(parts[:-1]), parts[-1]
             suffix = suffix.lower()
 
-            if suffix in ["ttc", "ttf"]:
+            if suffix in {"ttc", "ttf"}:
                 # determine full font name according to weight and style
                 fullFontName = "%s_%d%d" % (fontName, bold, italic)
 
@@ -1102,17 +1114,19 @@ class pisaContext:
                     pdfmetrics.registerFont(file)
 
                     # Add or replace missing styles
-                    for bold in (0, 1):
-                        for italic in (0, 1):
+                    for bold_choice in (0, 1):
+                        for italic_choice in (0, 1):
                             if (
-                                "%s_%d%d" % (fontName, bold, italic)
+                                "%s_%d%d" % (fontName, bold_choice, italic_choice)
                             ) not in self.fontList:
-                                addMapping(fontName, bold, italic, fullFontName)
+                                addMapping(
+                                    fontName, bold_choice, italic_choice, fullFontName
+                                )
 
                     # Register "normal" name and the place holder for style
                     self.registerFont(fontName, [*fontAlias, fullFontName])
 
-            elif suffix in ("afm", "pfb"):
+            elif suffix in {"afm", "pfb"}:
                 if suffix == "afm":
                     afm = file.getNamedFile()
                     tfile = pisaFileObject(baseName + ".pfb", basepath=file.basepath)
@@ -1142,12 +1156,17 @@ class pisaContext:
                     pdfmetrics.registerFont(justFont)
 
                     # Add or replace missing styles
-                    for bold in (0, 1):
-                        for italic in (0, 1):
+                    for bold_choice in (0, 1):
+                        for italic_choice in (0, 1):
                             if (
-                                "%s_%d%d" % (fontName, bold, italic)
+                                "%s_%d%d" % (fontName, bold_choice, italic_choice)
                             ) not in self.fontList:
-                                addMapping(fontName, bold, italic, fontNameOriginal)
+                                addMapping(
+                                    fontName,
+                                    bold_choice,
+                                    italic_choice,
+                                    fontNameOriginal,
+                                )
 
                     # Register "normal" name and the place holder for style
                     self.registerFont(

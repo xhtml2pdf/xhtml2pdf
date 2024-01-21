@@ -17,6 +17,7 @@ import copy
 import logging
 import re
 import xml.dom.minidom
+from typing import TYPE_CHECKING
 from xml.dom import Node
 
 import html5lib
@@ -101,23 +102,32 @@ from xhtml2pdf.util import (
 from xhtml2pdf.w3c import cssDOMElementInterface
 from xhtml2pdf.xhtml2pdf_reportlab import PmlLeftPageBreak, PmlRightPageBreak
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from io import BytesIO
+    from typing import Any, TextIO
+    from xml.dom.minidom import Element, NamedNodeMap
+
+    # from xml.etree.ElementTree import Element
+    from xhtml2pdf.context import pisaContext
+
 log = logging.getLogger(__name__)
 
 CSSAttrCache: dict[str, dict] = {}
 
-rxhttpstrip = re.compile("https?://[^/]+(.*)", re.M | re.I)
+rxhttpstrip: re.Pattern = re.compile("https?://[^/]+(.*)", re.MULTILINE | re.IGNORECASE)
 
 
 class AttrContainer(dict):
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> str:
         try:
             return dict.__getattr__(self, name)
         except Exception:
             return self[name]
 
 
-def pisaGetAttributes(c, tag, attributes):
-    attrs = {}
+def pisaGetAttributes(c, tag: str, attributes: NamedNodeMap) -> AttrContainer:
+    attrs: dict[str, str] = {}
     if attributes:
         for k, v in attributes.items():
             try:
@@ -131,7 +141,7 @@ def pisaGetAttributes(c, tag, attributes):
 
     nattrs = {}
     if tag in TAGS:
-        block, adef = TAGS[tag]
+        _block, adef = TAGS[tag]
         adef["id"] = STRING
 
         for k, v in adef.items():
@@ -147,7 +157,7 @@ def pisaGetAttributes(c, tag, attributes):
                 dfl = v[1]
                 v = v[0]
             else:
-                nv = attrs.get(k, None)
+                nv = attrs.get(k)
                 dfl = None
 
             if nv is not None:
@@ -166,7 +176,7 @@ def pisaGetAttributes(c, tag, attributes):
 
                 elif v == BOOL:
                     nv = nv.strip().lower()
-                    nv = nv in ("1", "y", "yes", "true", str(k))
+                    nv = nv in {"1", "y", "yes", "true", str(k)}
 
                 elif v == SIZE:
                     try:
@@ -197,7 +207,7 @@ def pisaGetAttributes(c, tag, attributes):
     return AttrContainer(nattrs)
 
 
-attrNames = """
+attrNames: list[str] = """
     color
     font-family
     font-size
@@ -252,7 +262,7 @@ attrNames = """
     """.strip().split()
 
 
-def getCSSAttr(self, cssCascade, attrName, default=NotImplemented):
+def getCSSAttr(self: Element, cssCascade, attrName: str, default=NotImplemented):
     if attrName in self.cssAttrs:
         return self.cssAttrs[attrName]
 
@@ -289,17 +299,17 @@ xml.dom.minidom.Element.getCSSAttr = getCSSAttr  # type: ignore[attr-defined]
 
 # Create an aliasing system.  Many sources use non-standard tags, because browsers allow
 # them to.  This allows us to map a nonstandard name to the standard one.
-nonStandardAttrNames = {"bgcolor": "background-color"}
+nonStandardAttrNames: dict[str, str] = {"bgcolor": "background-color"}
 
 
-def mapNonStandardAttrs(c, _node, attrList):
+def mapNonStandardAttrs(c: pisaContext, _node, attrList):
     for attr in nonStandardAttrNames:
         if attr in attrList and nonStandardAttrNames[attr] not in c:
             c[nonStandardAttrNames[attr]] = attrList[attr]
     return c
 
 
-def getCSSAttrCacheKey(node):
+def getCSSAttrCacheKey(node) -> str:
     _cl = _id = _st = ""
     for k, v in node.attributes.items():
         if k == "class":
@@ -311,7 +321,7 @@ def getCSSAttrCacheKey(node):
     return f"{id(node.parentNode)}#{node.tagName.lower()}#{_cl}#{_id}#{_st}"
 
 
-def CSSCollect(node, c):
+def CSSCollect(node, c: pisaContext) -> dict[str, str]:
     # node.cssAttrs = {}
     # return node.cssAttrs
 
@@ -322,7 +332,7 @@ def CSSCollect(node, c):
             hasattr(node.parentNode, "tagName")
             and node.parentNode.tagName.lower() != "html"
         ):
-            CachedCSSAttr = CSSAttrCache.get(key, None)
+            CachedCSSAttr = CSSAttrCache.get(key)
             if CachedCSSAttr is not None:
                 node.cssAttrs = CachedCSSAttr
                 return CachedCSSAttr
@@ -343,13 +353,13 @@ def CSSCollect(node, c):
     return node.cssAttrs
 
 
-def lower(sequence):
+def lower(sequence: list[str] | str) -> str:
     if isinstance(sequence, str):
         return sequence.lower()
     return sequence[0].lower()
 
 
-def CSS2Frag(c, kw, isBlock):
+def CSS2Frag(c: pisaContext, kw: dict, isBlock: bool) -> None:
     # COLORS
     if "color" in c.cssAttr:
         c.frag.textColor = getColor(c.cssAttr["color"], "#000000")
@@ -377,7 +387,7 @@ def CSS2Frag(c, kw, isBlock):
         # print "line-spacing", c.cssAttr["-pdf-line-spacing"], c.frag.leading
     if "font-weight" in c.cssAttr:
         value = lower(c.cssAttr["font-weight"])
-        if value in ("bold", "bolder", "500", "600", "700", "800", "900"):
+        if value in {"bold", "bolder", "500", "600", "700", "800", "900"}:
             c.frag.bold = 1
         else:
             c.frag.bold = 0
@@ -391,7 +401,7 @@ def CSS2Frag(c, kw, isBlock):
             c.frag.strike = 0
     if "font-style" in c.cssAttr:
         value = lower(c.cssAttr["font-style"])
-        if value in ("italic", "oblique"):
+        if value in {"italic", "oblique"}:
             c.frag.italic = 1
         else:
             c.frag.italic = 0
@@ -411,7 +421,7 @@ def CSS2Frag(c, kw, isBlock):
         except TypeError:
             # sequence item 0: expected string, tuple found
             c.frag.height = "".join(toList(c.cssAttr["height"][0]))
-        if c.frag.height in ("auto",):
+        if c.frag.height == "auto":
             c.frag.height = None
     if "width" in c.cssAttr:
         try:
@@ -419,15 +429,16 @@ def CSS2Frag(c, kw, isBlock):
             c.frag.width = "".join(toList(c.cssAttr["width"]))
         except TypeError:
             c.frag.width = "".join(toList(c.cssAttr["width"][0]))
-        if c.frag.width in ("auto",):
+        if c.frag.width == "auto":
             c.frag.width = None
         # ZOOM
     if "zoom" in c.cssAttr:
         # XXX Relative is not correct!
         zoom = "".join(toList(c.cssAttr["zoom"]))
         if zoom.endswith("%"):
-            zoom = float(zoom[:-1]) / 100.0
-        c.frag.zoom = float(zoom)
+            c.frag.zoom = float(zoom[:-1]) / 100.0
+        else:
+            c.frag.zoom = float(zoom)
         # MARGINS & LIST INDENT, STYLE
     if isBlock:
         transform_attrs(
@@ -508,7 +519,7 @@ def CSS2Frag(c, kw, isBlock):
         )
 
 
-def pisaPreLoop(node, context, *, collect=False):
+def pisaPreLoop(node, context: pisaContext, *, collect=False):
     """Collect all CSS definitions."""
     data = ""
     if node.nodeType == Node.TEXT_NODE and collect:
@@ -517,16 +528,16 @@ def pisaPreLoop(node, context, *, collect=False):
     elif node.nodeType == Node.ELEMENT_NODE:
         name = node.tagName.lower()
 
-        if name in ("style", "link"):
+        if name in {"style", "link"}:
             attr = pisaGetAttributes(context, name, node.attributes)
             media = [x.strip() for x in attr.media.lower().split(",") if x.strip()]
 
-            if attr.get("type", "").lower() in ("", "text/css") and (
+            if attr.get("type", "").lower() in {"", "text/css"} and (
                 not media or "all" in media or "print" in media or "pdf" in media
             ):
                 if name == "style":
-                    for node in node.childNodes:
-                        data += pisaPreLoop(node, context, collect=True)
+                    for child_node in node.childNodes:
+                        data += pisaPreLoop(child_node, context, collect=True)
                     context.addCSS(data)
                     return ""
 
@@ -536,15 +547,15 @@ def pisaPreLoop(node, context, *, collect=False):
                         '\n@import "{}" {};'.format(attr.href, ",".join(media))
                     )
 
-    for node in node.childNodes:
-        result = pisaPreLoop(node, context, collect=collect)
+    for child_node in node.childNodes:
+        result = pisaPreLoop(child_node, context, collect=collect)
         if collect:
             data += result
 
     return data
 
 
-def pisaLoop(node, context, path=None, **kw):
+def pisaLoop(node, context: pisaContext, path=None, **kw) -> None:
     if path is None:
         path = []
 
@@ -566,7 +577,7 @@ def pisaLoop(node, context, path=None, **kw):
     elif node.nodeType == Node.ELEMENT_NODE:
         node.tagName = node.tagName.replace(":", "").lower()
 
-        if node.tagName in ("style", "script"):
+        if node.tagName in {"style", "script"}:
             return
 
         path = [*copy.copy(path), node.tagName]
@@ -664,7 +675,7 @@ def pisaLoop(node, context, path=None, **kw):
         keepInFrameMaxHeight = 0
         if "-pdf-keep-in-frame-mode" in context.cssAttr:
             value = str(context.cssAttr["-pdf-keep-in-frame-mode"]).strip().lower()
-            if value in ("shrink", "error", "overflow", "truncate"):
+            if value in {"shrink", "error", "overflow", "truncate"}:
                 keepInFrameMode = value
             else:
                 keepInFrameMode = "shrink"
@@ -762,18 +773,18 @@ def pisaLoop(node, context, path=None, **kw):
     else:
         # context.debug(1, indent, "???", node, node.nodeType, repr(node))
         # Loop over children
-        for node in node.childNodes:
-            pisaLoop(node, context, path, **kw)
+        for child_node in node.childNodes:
+            pisaLoop(child_node, context, path, **kw)
 
 
 def pisaParser(
-    src,
-    context,
-    default_css="",
-    xhtml=False,  # noqa: FBT002
-    encoding="utf8",
-    xml_output=None,
-):
+    src: str | TextIO | BytesIO | bytes,
+    context: pisaContext,
+    default_css: str = "",
+    xhtml: bool = False,  # noqa: FBT002
+    encoding: str = "utf8",
+    xml_output: TextIO | BytesIO | None = None,
+) -> pisaContext:
     """
     - Parse HTML and get miniDOM
     - Extract CSS informations, add default CSS, parse CSS
@@ -827,12 +838,12 @@ def pisaParser(
 
 # Shortcuts
 
-HTML2PDF = pisaParser
+HTML2PDF: Callable = pisaParser
 
 
-def XHTML2PDF(*a, **kw):
-    kw["xhtml"] = True
-    return HTML2PDF(*a, **kw)
+def XHTML2PDF(*args: Any, **kwargs: Any) -> pisaContext:
+    kwargs["xhtml"] = True
+    return HTML2PDF(*args, **kwargs)
 
 
-XML2PDF = XHTML2PDF
+XML2PDF: Callable = XHTML2PDF

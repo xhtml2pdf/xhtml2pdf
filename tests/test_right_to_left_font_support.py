@@ -1,4 +1,6 @@
 # ruff: noqa: RUF001
+from __future__ import annotations
+
 import io
 import os
 from unittest import TestCase
