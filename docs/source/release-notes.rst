@@ -50,6 +50,19 @@ Versions >= 0.2
 
     --------------------------------------------
 
+Unreleased
+==========
+
+Released: tbd
+
+**🐛 Bug-Fixes**
+
+* Pin ``reportlab>=4.0.4,<4.1`` (:issue:`751`)
+
+| Thanks to the following people on GitHub for contributing to this release:
+| *timobrembeck*
+
+
 0.2.14
 ======
 
