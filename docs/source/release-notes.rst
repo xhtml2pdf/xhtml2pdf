@@ -50,6 +50,19 @@ Versions >= 0.2
 
     --------------------------------------------
 
+0.2.16
+======
+
+Released: 2024-06-08
+
+**🐛 Bug-Fixes**
+
+* Add compatibility for ``reportlab >= 4.1`` (:issue:`751`)
+
+| Thanks to the following people on GitHub for contributing to this release:
+| *stefan6419846*
+
+
 0.2.15
 ======
 
