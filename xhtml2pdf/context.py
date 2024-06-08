@@ -27,7 +27,13 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus.frames import Frame, ShowBoundaryValue
+from reportlab.platypus.frames import Frame
+
+try:
+    from reportlab.pdfgen.canvas import ShowBoundaryValue
+except ImportError:
+    # reportlab < 4.0.9.1
+    from reportlab.platypus.frames import ShowBoundaryValue
 from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
 
 from xhtml2pdf import default, parser
