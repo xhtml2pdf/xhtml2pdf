@@ -22,7 +22,7 @@ from typing import Any
 import arabic_reshaper
 import reportlab
 import reportlab.pdfbase._cidfontdata
-from bidi.algorithm import get_display
+from bidi import get_display
 from reportlab.lib.colors import Color, toColor
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.lib.units import cm, inch
