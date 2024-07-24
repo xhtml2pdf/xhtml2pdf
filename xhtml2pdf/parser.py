@@ -411,7 +411,7 @@ def CSS2Frag(c, kw, isBlock):
         except TypeError:
             # sequence item 0: expected string, tuple found
             c.frag.height = "".join(toList(c.cssAttr["height"][0]))
-        if c.frag.height in {"auto",}:
+        if c.frag.height in {"auto"}:
             c.frag.height = None
     if "width" in c.cssAttr:
         try:
@@ -419,7 +419,7 @@ def CSS2Frag(c, kw, isBlock):
             c.frag.width = "".join(toList(c.cssAttr["width"]))
         except TypeError:
             c.frag.width = "".join(toList(c.cssAttr["width"][0]))
-        if c.frag.width in {"auto",}:
+        if c.frag.width in {"auto"}:
             c.frag.width = None
         # ZOOM
     if "zoom" in c.cssAttr:
