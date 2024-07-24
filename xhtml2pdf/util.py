@@ -78,7 +78,7 @@ class Memoized:
 
 def toList(value: Any, *, cast_tuple: bool = True) -> list:
     cls: tuple[type, ...] = (list, tuple) if cast_tuple else (list,)
-    return list(value) if isinstance(value, cls) else [value]
+    return list(value) if isinstance(value, cls) else [value]  # type: ignore[call-overload]
 
 
 def transform_attrs(obj, keys, container, func, extras=None):

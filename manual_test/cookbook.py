@@ -110,8 +110,7 @@ if __name__ == "__main__":
         "<br>".join(
             [
                 '<p>%s  <span style="color: #f00;"><pdf:pagenumber> of <pdf:pagecount>'
-                " </span></p>"
-                % fake.text()
+                " </span></p>" % fake.text()
                 for x in range(1)
             ]
         )

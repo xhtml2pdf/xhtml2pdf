@@ -31,7 +31,8 @@ log = logging.getLogger(__name__)
 # Backward compatibility
 CreatePDF = pisaDocument
 
-USAGE = ("""
+USAGE = (
+    """
 
 USAGE: pisa [options] SRC [DEST]
 
@@ -88,7 +89,8 @@ See http.client.HTTPSConnection documentation for this parameters
   --http_cert_file
   --http_source_address
   --http_timeout
-""").strip()
+"""
+).strip()
 
 COPYRIGHT = """
 Copyright 2010 Dirk Holtwick, holtwick.it

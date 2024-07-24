@@ -21,10 +21,13 @@ from xhtml2pdf import pisa
 
 def test(filename):
     # Convert HTML to "Reportlab Story" structure
-    story = pisa.pisaStory("""
+    story = pisa.pisaStory(
+        """
     <h1>Sample</h1>
     <p>Hello <b>World</b>!</p>
-    """ * 20).story
+    """
+        * 20
+    ).story
 
     # Draw to Canvas
     c = Canvas(filename)
