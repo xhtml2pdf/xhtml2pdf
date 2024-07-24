@@ -166,7 +166,7 @@ def pisaGetAttributes(c, tag, attributes):
 
                 elif v == BOOL:
                     nv = nv.strip().lower()
-                    nv = nv in ("1", "y", "yes", "true", str(k))
+                    nv = nv in {"1", "y", "yes", "true", str(k)}
 
                 elif v == SIZE:
                     try:
@@ -377,7 +377,7 @@ def CSS2Frag(c, kw, isBlock):
         # print "line-spacing", c.cssAttr["-pdf-line-spacing"], c.frag.leading
     if "font-weight" in c.cssAttr:
         value = lower(c.cssAttr["font-weight"])
-        if value in ("bold", "bolder", "500", "600", "700", "800", "900"):
+        if value in {"bold", "bolder", "500", "600", "700", "800", "900"}:
             c.frag.bold = 1
         else:
             c.frag.bold = 0
@@ -391,7 +391,7 @@ def CSS2Frag(c, kw, isBlock):
             c.frag.strike = 0
     if "font-style" in c.cssAttr:
         value = lower(c.cssAttr["font-style"])
-        if value in ("italic", "oblique"):
+        if value in {"italic", "oblique"}:
             c.frag.italic = 1
         else:
             c.frag.italic = 0
@@ -411,7 +411,7 @@ def CSS2Frag(c, kw, isBlock):
         except TypeError:
             # sequence item 0: expected string, tuple found
             c.frag.height = "".join(toList(c.cssAttr["height"][0]))
-        if c.frag.height in ("auto",):
+        if c.frag.height in {"auto",}:
             c.frag.height = None
     if "width" in c.cssAttr:
         try:
@@ -419,7 +419,7 @@ def CSS2Frag(c, kw, isBlock):
             c.frag.width = "".join(toList(c.cssAttr["width"]))
         except TypeError:
             c.frag.width = "".join(toList(c.cssAttr["width"][0]))
-        if c.frag.width in ("auto",):
+        if c.frag.width in {"auto",}:
             c.frag.width = None
         # ZOOM
     if "zoom" in c.cssAttr:
@@ -517,11 +517,11 @@ def pisaPreLoop(node, context, *, collect=False):
     elif node.nodeType == Node.ELEMENT_NODE:
         name = node.tagName.lower()
 
-        if name in ("style", "link"):
+        if name in {"style", "link"}:
             attr = pisaGetAttributes(context, name, node.attributes)
             media = [x.strip() for x in attr.media.lower().split(",") if x.strip()]
 
-            if attr.get("type", "").lower() in ("", "text/css") and (
+            if attr.get("type", "").lower() in {"", "text/css"} and (
                 not media or "all" in media or "print" in media or "pdf" in media
             ):
                 if name == "style":
@@ -566,7 +566,7 @@ def pisaLoop(node, context, path=None, **kw):
     elif node.nodeType == Node.ELEMENT_NODE:
         node.tagName = node.tagName.replace(":", "").lower()
 
-        if node.tagName in ("style", "script"):
+        if node.tagName in {"style", "script"}:
             return
 
         path = [*copy.copy(path), node.tagName]
@@ -664,7 +664,7 @@ def pisaLoop(node, context, path=None, **kw):
         keepInFrameMaxHeight = 0
         if "-pdf-keep-in-frame-mode" in context.cssAttr:
             value = str(context.cssAttr["-pdf-keep-in-frame-mode"]).strip().lower()
-            if value in ("shrink", "error", "overflow", "truncate"):
+            if value in {"shrink", "error", "overflow", "truncate"}:
                 keepInFrameMode = value
             else:
                 keepInFrameMode = "shrink"

@@ -439,7 +439,7 @@ class CSSParser:
         Parses CSS file-like objects using the current cssBuilder.
         Use for external stylesheets.
         """
-        with open(srcFile) as file_handler:
+        with open(srcFile, encoding="utf-8") as file_handler:
             file_content = file_handler.read()
 
         return self.parse(file_content)
@@ -707,7 +707,7 @@ class CSSParser:
         while src and src[0] != "{":
             medium, src = self._getIdent(src)
             # make "and ... {" work
-            if medium in (None, "and"):
+            if medium in {None, "and"}:
                 # default to mediatype "all"
                 if medium is None:
                     mediums.append("all")
@@ -924,7 +924,7 @@ class CSSParser:
 
     def _parseSelectorGroup(self, src):
         selectors = []
-        while src[:1] not in ("{", "}", "]", "(", ")", ";", ""):
+        while src[:1] not in {"{", "}", "]", "(", ")", ";", ""}:
             src, selector = self._parseSelector(src)
             if selector is None:
                 break
@@ -941,7 +941,7 @@ class CSSParser:
         """
         src, selector = self._parseSimpleSelector(src)
         srcLen = len(src)  # XXX
-        while src[:1] not in ("", ",", ";", "{", "}", "[", "]", "(", ")"):
+        while src[:1] not in {"", ",", ";", "{", "}", "[", "]", "(", ")"}:
             for combiner in self.SelectorCombiners:
                 if src.startswith(combiner):
                     src = src[len(combiner) :].lstrip()
@@ -954,7 +954,7 @@ class CSSParser:
             if len(src) >= srcLen:
                 src = src[1:]
                 while src and (
-                    src[:1] not in ("", ",", ";", "{", "}", "[", "]", "(", ")")
+                    src[:1] not in {"", ",", ";", "{", "}", "[", "]", "(", ")"}
                 ):
                     src = src[1:]
                 return src.lstrip(), None
@@ -1097,7 +1097,7 @@ class CSSParser:
 
         properties = []
         src = src.lstrip()
-        while src[:1] not in ("", ",", "{", "}", "[", "]", "(", ")", "@"):  # XXX @?
+        while src[:1] not in {"", ",", "{", "}", "[", "]", "(", ")", "@"}:  # XXX @?
             src, single_property = self._parseDeclaration(src)
 
             # XXX Workaround for styles like "*font: smaller"
@@ -1135,7 +1135,7 @@ class CSSParser:
         if property_name is not None:
             src = src.lstrip()
             # S* : S*
-            if src[:1] in (":", "="):
+            if src[:1] in {":", "="}:
                 # Note: we are being fairly flexable here...  technically, the
                 # ":" is *required*, but in the name of flexibility we
                 # suppor a null transition, as well as an "=" transition
@@ -1168,7 +1168,7 @@ class CSSParser:
         """
         src, term = self._parseExpressionTerm(src)
         operator = None
-        while src[:1] not in ("", ";", "{", "}", "[", "]", ")"):
+        while src[:1] not in {"", ";", "{", "}", "[", "]", ")"}:
             for operator in self.ExpressionOperators:
                 if src.startswith(operator):
                     src = src[len(operator) :]

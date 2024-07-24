@@ -338,7 +338,7 @@ class pisaTagTD(pisaTag):
         # Calculate widths
         # Add empty placeholders for new columns
         if (col + 1) > len(tdata.colw):
-            tdata.colw = tdata.colw + ((col + 1 - len(tdata.colw)) * [_width()])
+            tdata.colw += (col + 1 - len(tdata.colw)) * [_width()]
 
         # Get value of with, if no spanning
         if not cspan:
@@ -364,7 +364,7 @@ class pisaTagTD(pisaTag):
 
         # Calculate heights
         if row + 1 > len(tdata.rowh):
-            tdata.rowh = tdata.rowh + ((row + 1 - len(tdata.rowh)) * [_width()])
+            tdata.rowh += (row + 1 - len(tdata.rowh)) * [_width()]
         if not rspan:
             height = c.frag.height or self.attr.get("height", None)
             if height is not None:

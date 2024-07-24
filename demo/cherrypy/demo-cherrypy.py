@@ -27,7 +27,7 @@ class PDFDemo:
     @staticmethod
     def index():
         if kid:
-            with open("demo-cherrypy.html") as file:
+            with open("demo-cherrypy.html", encoding="utf-8") as file:
                 return file.read()
 
         return """

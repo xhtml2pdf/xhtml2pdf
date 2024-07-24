@@ -144,11 +144,11 @@ def imgVRange(h, va, fontSize):
     """Return bottom,top offsets relative to baseline(0)."""
     if va == "baseline":
         iyo = 0
-    elif va in ("text-top", "top"):
+    elif va in {"text-top", "top"}:
         iyo = fontSize - h
     elif va == "middle":
         iyo = fontSize - (1.2 * fontSize + h) * 0.5
-    elif va in ("text-bottom", "bottom"):
+    elif va in {"text-bottom", "bottom"}:
         iyo = fontSize - 1.2 * fontSize
     elif va == "super":
         iyo = 0.5 * fontSize
@@ -172,7 +172,7 @@ def _putFragLine(cur_x, tx, line):
     autoLeading = xs.autoLeading
     leading = xs.leading
     cur_x += xs.leftIndent
-    dal = autoLeading in ("min", "max")
+    dal = autoLeading in {"min", "max"}
     if dal:
         if autoLeading == "max":
             ascent = max(_56 * leading, line.ascent)
@@ -608,7 +608,7 @@ def _handleBulletWidth(bulletText, style, maxWidths):
             # it's a list of fragments
             bulletWidth = 0
             for f in bulletText:
-                bulletWidth = bulletWidth + stringWidth(f.text, f.fontName, f.fontSize)
+                bulletWidth += stringWidth(f.text, f.fontName, f.fontSize)
         bulletRight = style.bulletIndent + bulletWidth + 0.6 * style.bulletFontSize
         indent = style.leftIndent + style.firstLineIndent
         if bulletRight > indent:
@@ -664,7 +664,7 @@ def splitLines0(frags, widths):
             w = stringWidth(text[start:j], f.fontName, f.fontSize)
             cLen += w
             if cLen > maxW and line != []:
-                cLen = cLen - w
+                cLen -= w
                 # this is the end of the line
                 while g.text[lim] == " ":
                     lim -= 1
@@ -1076,7 +1076,7 @@ class Paragraph(Flowable):
         self.blPara = blPara
         autoLeading = getattr(self, "autoLeading", getattr(style, "autoLeading", ""))
         leading = style.leading
-        if blPara.kind == 1 and autoLeading not in ("", "off"):
+        if blPara.kind == 1 and autoLeading not in {"", "off"}:
             height = 0
             if autoLeading == "max":
                 for line in blPara.lines:
@@ -1138,7 +1138,7 @@ class Paragraph(Flowable):
         autoLeading = getattr(self, "autoLeading", getattr(style, "autoLeading", ""))
         leading = style.leading
         lines = blPara.lines
-        if blPara.kind == 1 and autoLeading not in ("", "off"):
+        if blPara.kind == 1 and autoLeading not in {"", "off"}:
             s = height = 0
             if autoLeading == "max":
                 for i, line in enumerate(blPara.lines):
@@ -1257,7 +1257,7 @@ class Paragraph(Flowable):
 
         self.height = 0
         autoLeading = getattr(self, "autoLeading", getattr(style, "autoLeading", ""))
-        calcBounds = autoLeading not in ("", "off")
+        calcBounds = autoLeading not in {"", "off"}
         frags = self.frags
         nFrags = len(frags)
         if nFrags == 1 and not hasattr(frags[0], "cbDefn"):
@@ -1278,8 +1278,7 @@ class Paragraph(Flowable):
                     cLine.append(word)
                     currentWidth = newWidth
                 else:
-                    if currentWidth > self.width:
-                        self.width = currentWidth
+                    self.width = max(currentWidth, self.width)
                     # end of line
                     lines.append((maxWidth - currentWidth, cLine))
                     cLine = [word]
@@ -1292,8 +1291,7 @@ class Paragraph(Flowable):
 
             # deal with any leftovers on the final line
             if cLine != []:
-                if currentWidth > self.width:
-                    self.width = currentWidth
+                self.width = max(currentWidth, self.width)
                 lines.append((maxWidth - currentWidth, cLine))
 
             return f.clone(
@@ -1420,8 +1418,7 @@ class Paragraph(Flowable):
                     g = f.clone()
                     words.append(g)
 
-                if currentWidth > self.width:
-                    self.width = currentWidth
+                self.width = max(currentWidth, self.width)
                 # end of line
                 lines.append(
                     FragLine(
@@ -1485,8 +1482,7 @@ class Paragraph(Flowable):
 
         # deal with any leftovers on the final line
         if words != []:
-            if currentWidth > self.width:
-                self.width = currentWidth
+            self.width = max(currentWidth, self.width)
             lines.append(
                 ParaLines(
                     extraSpace=(maxWidth - currentWidth),
@@ -1516,7 +1512,7 @@ class Paragraph(Flowable):
             autoLeading = getattr(
                 self, "autoLeading", getattr(style, "autoLeading", "")
             )
-            calcBounds = autoLeading not in ("", "off")
+            calcBounds = autoLeading not in {"", "off"}
             return cjkFragSplit(self.frags, maxWidths, calcBounds, self.encoding)
 
         if not len(self.frags):
