@@ -4,16 +4,22 @@ jobs:
   python:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
     env:
       PYTHON_VERSION: ${{matrix.python-version}}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up Python ${{matrix.python-version}}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{matrix.python-version}}
+          allow-prereleases: true
+      - if: matrix.python-version == '3.13'  # For lxml...
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes libxml2 libxslt-dev
       - name: Install dependencies
         run: |
           sudo apt-get update
