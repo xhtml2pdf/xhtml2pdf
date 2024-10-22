@@ -130,22 +130,31 @@ def getColor(value, default=None):
     """
     Convert to color value.
     This returns a Color object instance from a text bit.
+    Mitigation for ReDoS attack applied by limiting input length and validating input.
     """
     if value is None:
         return None
     if isinstance(value, Color):
         return value
     value = str(value).strip().lower()
+
+    # Limit the length of the value to prevent excessive input causing ReDoS
+    if len(value) > 100:  # Set a reasonable length limit to avoid extreme inputs
+        return default
+
     if value in {"transparent", "none"}:
         return default
     if value in COLOR_BY_NAME:
         return COLOR_BY_NAME[value]
     if value.startswith("#") and len(value) == 4:
         value = "#" + value[1] + value[1] + value[2] + value[2] + value[3] + value[3]
-    elif rgb_re.search(value):
-        # e.g., value = "<css function: rgb(153, 51, 153)>", go figure:
-        r, g, b = (int(x) for x in rgb_re.search(value).groups())
-        value = f"#{r:02x}{g:02x}{b:02x}"
+    elif rgb_re.match(value):
+        # Use match instead of search to ensure proper regex usage and limit to valid patterns
+        try:
+            r, g, b = (int(x) for x in rgb_re.match(value).groups())
+            value = f"#{r:02x}{g:02x}{b:02x}"
+        except ValueError:
+            pass
     else:
         # Shrug
         pass
