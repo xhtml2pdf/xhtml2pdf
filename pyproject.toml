@@ -53,7 +53,7 @@ dependencies = [
     "pyHanko>=0.12.1",
     "pyhanko-certvalidator>=0.19.5",
     "pypdf>=3.1.0",
-    "python-bidi>=0.4.2",
+    "python-bidi>=0.5.0",
     "reportlab>=4.0.4,<5",
     "svglib>=1.2.1",
 ]
