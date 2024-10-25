@@ -64,9 +64,9 @@ class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
 
     def matchesNode(self, namespace_tagName):
         namespace, tagName = namespace_tagName
-        if tagName not in ("*", self.domElement.tagName):
+        if tagName not in {"*", self.domElement.tagName}:
             return False
-        if namespace in (None, "", "*"):
+        if namespace in {None, "", "*"}:
             # matches any namespace
             return True
         # full compare

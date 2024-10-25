@@ -401,7 +401,7 @@ class Text(list):
                 line.append(frag)
 
             # Remove trailing white spaces
-            while line and line[-1].name in ("space", "br"):
+            while line and line[-1].name in {"space", "br"}:
                 line.pop()
 
             # Add line to list

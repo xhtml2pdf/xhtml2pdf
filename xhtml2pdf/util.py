@@ -154,7 +154,7 @@ def getColor(value, default=None):
 
 
 def getBorderStyle(value, default=None):
-    if value and (str(value).lower() not in ("none", "hidden")):
+    if value and (str(value).lower() not in {"none", "hidden"}):
         return value
     return default
 
@@ -237,7 +237,7 @@ def getSize(
             # XXX W3C says, use 96pdi
             # http://www.w3.org/TR/CSS21/syndata.html#length-units
             return float(value[:-2].strip()) * DPI96
-        if value in ("none", "0", "0.0", "auto"):
+        if value in {"none", "0", "0.0", "auto"}:
             return 0.0
         if relative:
             if value.endswith("rem"):  # XXX
@@ -366,7 +366,7 @@ def getPos(position, pagesize):
 
 def getBool(s):
     """Is it a boolean?."""
-    return str(s).lower() in ("y", "yes", "1", "true")
+    return str(s).lower() in {"y", "yes", "1", "true"}
 
 
 def getFloat(s):
@@ -601,14 +601,14 @@ def arabic_format(text, language):
     # Note: right now all of the languages are treated the same way.
     # But maybe in the future we have to for example implement something
     # for "hebrew" that isn't used in "arabic"
-    if detect_language(language) in (
+    if detect_language(language) in {
         "arabic",
         "hebrew",
         "persian",
         "urdu",
         "pashto",
         "sindhi",
-    ):
+    }:
         ar = arabic_reshaper.reshape(text)
         return get_display(ar)
     return None

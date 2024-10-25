@@ -73,7 +73,7 @@ def testBackgroundAndImage(src="test-background.html", dest="test-background.pdf
     PML Source String. Also shows errors and tries to start
     the resulting PDF.
     """
-    with open(src) as src_file, open(dest, "wb") as dst_file:
+    with open(src, encoding="utf-8") as src_file, open(dest, "wb") as dst_file:
         pdf = pisa.CreatePDF(
             src_file,
             dst_file,

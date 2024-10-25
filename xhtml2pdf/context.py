@@ -199,14 +199,14 @@ class pisaCSSBuilder(css.CSSBuilder):
 
         # Font weight
         fweight = str(data.get("font-weight", "normal")).lower()
-        bold = fweight in ("bold", "bolder", "500", "600", "700", "800", "900")
+        bold = fweight in {"bold", "bolder", "500", "600", "700", "800", "900"}
         if not bold and fweight != "normal":
             log.warning(
                 self.c.warning("@fontface, unknown value font-weight '%s'", fweight)
             )
 
         # Font style
-        italic = str(data.get("font-style", "")).lower() in ("italic", "oblique")
+        italic = str(data.get("font-style", "")).lower() in {"italic", "oblique"}
 
         # The "src" attribute can be a CSS group but in that case
         # ignore everything except the font URI
@@ -1090,7 +1090,7 @@ class pisaContext:
             baseName, suffix = ".".join(parts[:-1]), parts[-1]
             suffix = suffix.lower()
 
-            if suffix in ["ttc", "ttf"]:
+            if suffix in {"ttc", "ttf"}:
                 # determine full font name according to weight and style
                 fullFontName = "%s_%d%d" % (fontName, bold, italic)
 
@@ -1118,7 +1118,7 @@ class pisaContext:
                     # Register "normal" name and the place holder for style
                     self.registerFont(fontName, [*fontAlias, fullFontName])
 
-            elif suffix in ("afm", "pfb"):
+            elif suffix in {"afm", "pfb"}:
                 if suffix == "afm":
                     afm = file.getNamedFile()
                     tfile = pisaFileObject(baseName + ".pfb", basepath=file.basepath)

@@ -421,7 +421,7 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
                     self._dataA = PmlImageReader(im.split()[3])
                     im = im.convert("RGB")
                     self.mode = "RGB"
-                elif mode not in ("L", "RGB", "CMYK"):
+                elif mode not in {"L", "RGB", "CMYK"}:
                     im = im.convert("RGB")
                     self.mode = "RGB"
                 self._data = im.tobytes() if hasattr(im, "tobytes") else im.tostring()
@@ -651,8 +651,8 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
         # self.width = max(1, self.width)
 
         # increase the calculated size by the padding
-        self.width = self.width + self.deltaWidth
-        self.height = self.height + self.deltaHeight
+        self.width += self.deltaWidth
+        self.height += self.deltaHeight
 
         return self.width, self.height
 
@@ -848,7 +848,7 @@ class PmlTable(Table, PmlMaxHeightMixIn):
         if sum(newColWidths) > totalWidth:
             quotient = totalWidth / sum(newColWidths)
             for i in range(len(newColWidths)):
-                newColWidths[i] = newColWidths[i] * quotient
+                newColWidths[i] *= quotient
 
         # To avoid rounding errors adjust one col with the difference
         diff = sum(newColWidths) - totalWidth
