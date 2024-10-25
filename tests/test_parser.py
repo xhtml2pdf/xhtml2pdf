@@ -96,7 +96,9 @@ class ParserTest(TestCase):
               src: url('data:font/ttf;charset=utf-8;base64,%s');
             }
           </style>
-        """ % b64_font.encode("utf-8")
+        """ % b64_font.encode(
+            "utf-8"
+        )
 
         r = pisaParser(data, c)
         self.assertEqual(r.warn, 0)
