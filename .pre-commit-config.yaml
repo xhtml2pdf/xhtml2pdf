@@ -49,4 +49,5 @@ repos:
     rev: v1.11.0
     hooks:
     - id: mypy
+      args: [--config-file pyproject.toml, --ignore-missing-imports, --scripts-are-modules]
       additional_dependencies: [types-setuptools]
