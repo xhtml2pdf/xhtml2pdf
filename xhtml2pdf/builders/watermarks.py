@@ -120,13 +120,12 @@ class WaterMarks:
         for pages, bgouter, step in WaterMarks.get_watermark(
             context, len(input1.pages)
         ):
+            bginput: pypdf.PdfReader = pypdf.PdfReader(bgouter.getBytesIO())
+            pagebg: pypdf.PageObject = bginput.pages[0]
             for index, ctr in enumerate(pages):
-                bginput: pypdf.PdfReader = pypdf.PdfReader(bgouter.getBytesIO())
-                pagebg: pypdf.PageObject = bginput.pages[0]
                 page: pypdf.PageObject = input1.pages[ctr - 1]
                 if index % step == 0:
-                    pagebg.merge_page(page)
-                    page = pagebg
+                    page.merge_page(pagebg, over=False)
                 pdfoutput.add_page(page)
                 has_bg = True
         if has_bg:
