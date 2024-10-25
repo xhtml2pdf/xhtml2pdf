@@ -36,4 +36,4 @@ jobs:
         with:
           python_version: "3.12"
           mypy_flags: '--config-file pyproject.toml --ignore-missing-imports --scripts-are-modules'
-          requirements: "types-pkg_resources"
+          requirements: "types-setuptools"
