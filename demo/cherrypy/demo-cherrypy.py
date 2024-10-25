@@ -45,7 +45,8 @@ class PDFDemo:
     @staticmethod
     def download(data):
         if kid:
-            data = """<?xml version="1.0" encoding="utf-8"?>
+            data = (
+                """<?xml version="1.0" encoding="utf-8"?>
                 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
                   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
                 <html xmlns="http://www.w3.org/1999/xhtml"
@@ -54,7 +55,9 @@ class PDFDemo:
                     <title>PDF Demo</title>
                   </head>
                   <body>%s</body>
-                </html>""" % data
+                </html>"""
+                % data
+            )
             test = kid.Template(source=data)
             data = test.serialize(output="xhtml")
 

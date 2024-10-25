@@ -35,12 +35,10 @@ class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
         "not-first-child": lambda self: bool(self.getPreviousSibling()),
         "last-child": lambda self: not bool(self.getNextSibling()),
         "not-last-child": lambda self: bool(self.getNextSibling()),
-        "middle-child": lambda self: not bool(self.getPreviousSibling()) and not bool(
-            self.getNextSibling()
-        ),
-        "not-middle-child": lambda self: bool(self.getPreviousSibling()) or bool(
-            self.getNextSibling()
-        ),
+        "middle-child": lambda self: not bool(self.getPreviousSibling())
+        and not bool(self.getNextSibling()),
+        "not-middle-child": lambda self: bool(self.getPreviousSibling())
+        or bool(self.getNextSibling()),
         # XXX 'first-line':
     }
 

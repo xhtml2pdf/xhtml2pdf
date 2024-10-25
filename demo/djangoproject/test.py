@@ -3,6 +3,7 @@ Created on 22/11/2016
 
 @author: luisza
 """
+
 from django.test import RequestFactory, TestCase
 
 from .utils import extract_request_variables
