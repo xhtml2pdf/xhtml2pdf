@@ -55,8 +55,7 @@ dependencies = [
     "pypdf>=3.1.0",
     "python-bidi>=0.5.0",
     "reportlab>=4.0.4,<5",
-    "svglib>=1.2.1",
-    "types-setuptools>=75.2.0.20241025"
+    "svglib>=1.2.1"
 ]
 dynamic = ["version"]
 
