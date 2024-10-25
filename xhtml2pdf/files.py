@@ -314,7 +314,7 @@ class LocalFileURI(BaseFile):
             self.suffix = uri.suffix
             self.mimetype = self.guess_mimetype(uri)
             if self.mimetype and self.mimetype.startswith("text"):
-                with open(uri) as file_handler:
+                with open(uri, encoding="utf-8") as file_handler:
                     data = file_handler.read().encode("utf-8")
             else:
                 with open(uri, "rb") as file_handler:
@@ -368,7 +368,7 @@ class FileNetworkManager:
             log.debug("URLParts: %r, %r", urlParts, urlParts.scheme)
             if urlParts.scheme == "file":
                 instance = LocalProtocolURI(uri, basepath)
-            elif urlParts.scheme in ("http", "https"):
+            elif urlParts.scheme in {"http", "https"}:
                 instance = NetworkFileUri(uri, basepath)
             else:
                 instance = LocalFileURI(uri, basepath)

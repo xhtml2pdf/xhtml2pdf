@@ -308,10 +308,10 @@ class CSSSelectorBase:
             return False
 
         # with  CSSDOMElementInterface.matchesNode(self, (namespace, tagName)) replacement:
-        if self.fullName[1] not in ("*", element.domElement.tagName):
+        if self.fullName[1] not in {"*", element.domElement.tagName}:
             return False
         if (
-            self.fullName[0] not in (None, "", "*")
+            self.fullName[0] not in {None, "", "*"}
             and self.fullName[0] != element.domElement.namespaceURI
         ):
             return False
@@ -859,7 +859,7 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
         return (name, value)
 
     def combineTerms(self, termA, op, termB):
-        if op in (",", " "):
+        if op in {",", " "}:
             if isinstance(termA, list):
                 termA.append(termB)
                 return termA

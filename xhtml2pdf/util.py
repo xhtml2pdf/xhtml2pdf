@@ -22,7 +22,7 @@ from typing import Any
 import arabic_reshaper
 import reportlab
 import reportlab.pdfbase._cidfontdata
-from bidi.algorithm import get_display
+from bidi import get_display
 from reportlab.lib.colors import Color, toColor
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.lib.units import cm, inch
@@ -78,7 +78,7 @@ class Memoized:
 
 def toList(value: Any, *, cast_tuple: bool = True) -> list:
     cls: tuple[type, ...] = (list, tuple) if cast_tuple else (list,)
-    return list(value) if isinstance(value, cls) else [value]
+    return list(value) if isinstance(value, cls) else [value]  # type: ignore[call-overload]
 
 
 def transform_attrs(obj, keys, container, func, extras=None):
@@ -130,22 +130,31 @@ def getColor(value, default=None):
     """
     Convert to color value.
     This returns a Color object instance from a text bit.
+    Mitigation for ReDoS attack applied by limiting input length and validating input.
     """
     if value is None:
         return None
     if isinstance(value, Color):
         return value
     value = str(value).strip().lower()
+
+    # Limit the length of the value to prevent excessive input causing ReDoS
+    if len(value) > 100:  # Set a reasonable length limit to avoid extreme inputs
+        return default
+
     if value in {"transparent", "none"}:
         return default
     if value in COLOR_BY_NAME:
         return COLOR_BY_NAME[value]
     if value.startswith("#") and len(value) == 4:
         value = "#" + value[1] + value[1] + value[2] + value[2] + value[3] + value[3]
-    elif rgb_re.search(value):
-        # e.g., value = "<css function: rgb(153, 51, 153)>", go figure:
-        r, g, b = (int(x) for x in rgb_re.search(value).groups())
-        value = f"#{r:02x}{g:02x}{b:02x}"
+    elif rgb_re.match(value):
+        # Use match instead of search to ensure proper regex usage and limit to valid patterns
+        try:
+            r, g, b = (int(x) for x in rgb_re.match(value).groups())
+            value = f"#{r:02x}{g:02x}{b:02x}"
+        except ValueError:
+            pass
     else:
         # Shrug
         pass
@@ -154,7 +163,7 @@ def getColor(value, default=None):
 
 
 def getBorderStyle(value, default=None):
-    if value and (str(value).lower() not in ("none", "hidden")):
+    if value and (str(value).lower() not in {"none", "hidden"}):
         return value
     return default
 
@@ -237,7 +246,7 @@ def getSize(
             # XXX W3C says, use 96pdi
             # http://www.w3.org/TR/CSS21/syndata.html#length-units
             return float(value[:-2].strip()) * DPI96
-        if value in ("none", "0", "0.0", "auto"):
+        if value in {"none", "0", "0.0", "auto"}:
             return 0.0
         if relative:
             if value.endswith("rem"):  # XXX
@@ -366,7 +375,7 @@ def getPos(position, pagesize):
 
 def getBool(s):
     """Is it a boolean?."""
-    return str(s).lower() in ("y", "yes", "1", "true")
+    return str(s).lower() in {"y", "yes", "1", "true"}
 
 
 def getFloat(s):
@@ -601,14 +610,14 @@ def arabic_format(text, language):
     # Note: right now all of the languages are treated the same way.
     # But maybe in the future we have to for example implement something
     # for "hebrew" that isn't used in "arabic"
-    if detect_language(language) in (
+    if detect_language(language) in {
         "arabic",
         "hebrew",
         "persian",
         "urdu",
         "pashto",
         "sindhi",
-    ):
+    }:
         ar = arabic_reshaper.reshape(text)
         return get_display(ar)
     return None

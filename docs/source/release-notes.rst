@@ -50,6 +50,52 @@ Versions >= 0.2
 
     --------------------------------------------
 
+0.2.16
+======
+
+Released: 2024-06-08
+
+**🐛 Bug-Fixes**
+
+* Add compatibility for ``reportlab >= 4.1`` (:issue:`751`)
+
+| Thanks to the following people on GitHub for contributing to this release:
+| *stefan6419846*
+
+
+0.2.15
+======
+
+Released: 2024-02-08
+
+**🐛 Bug-Fixes**
+
+* Pin ``reportlab>=4.0.4,<4.1`` (:issue:`751`)
+
+| Thanks to the following people on GitHub for contributing to this release:
+| *timobrembeck*
+
+
+0.2.14
+======
+
+Released: 2024-01-20
+
+**⚠️ Important notes**
+
+The ``pyCairo`` dependency has been removed to allow the user to define the desired rendering backend individually.
+If you need to render bitmaps or vector graphic formats, please specify either ``pycairo`` or ``renderpm`` as extra dependency.
+
+**🐛 Bug-Fixes**
+
+* Remove unintentional packages from wheel (:issue:`736`)
+* Make ``pyCairo`` dependency optional (:issue:`741`)
+* Fix image rendering with link_callback (:issue:`738`)
+
+| Thanks to the following people on GitHub for contributing to this release:
+| *carlsmedstad*, *timobrembeck*
+
+
 0.2.13
 ======
 

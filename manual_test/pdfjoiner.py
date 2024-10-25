@@ -17,9 +17,11 @@ from sx.pisa3 import pisa, pisa_pdf
 if __name__ == "__main__":
     pdf = pisa_pdf.pisaPDF()
 
-    subPdf = pisa.pisaDocument("""
+    subPdf = pisa.pisaDocument(
+        """
             Hello <strong>World</strong>
-        """)
+        """
+    )
     pdf.addDocument(subPdf)
 
     with open("test-loremipsum.pdf", "rb") as file:

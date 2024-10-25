@@ -57,7 +57,7 @@ Examples
                     name,
                     filename,
                 )
-    with open(rst_path / "examples.rst", "w") as arch:
+    with open(rst_path / "examples.rst", "w", encoding="utf-8") as arch:
         arch.write(text)
 
 

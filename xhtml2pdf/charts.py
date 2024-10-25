@@ -27,7 +27,7 @@ class Props:
             ("width", int),
             ("height", int),
             ("data", lambda x: x),
-            ("labels", lambda x: instance.assign_labels(x)),
+            ("labels", instance.assign_labels),
         ]
         self.prop_map_title = [("x", int), ("y", int), ("_text", str)]
         self.prop_map_legend = [

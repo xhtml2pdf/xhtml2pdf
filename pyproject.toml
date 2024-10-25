@@ -53,8 +53,8 @@ dependencies = [
     "pyHanko>=0.12.1",
     "pyhanko-certvalidator>=0.19.5",
     "pypdf>=3.1.0",
-    "python-bidi>=0.4.2",
-    "reportlab[pycairo]>=4.0.4",
+    "python-bidi>=0.5.0",
+    "reportlab>=4.0.4,<5",
     "svglib>=1.2.1",
 ]
 dynamic = ["version"]
@@ -66,6 +66,12 @@ Documentation = "https://xhtml2pdf.readthedocs.io/"
 Changelog = "https://xhtml2pdf.readthedocs.io/en/latest/release-notes.html"
 
 [project.optional-dependencies]
+pycairo = [
+    "reportlab[pycairo]>=4.0.4,<5",
+]
+renderpm = [
+    "reportlab[renderpm]>=4.0.4,<5",
+]
 test = [
     "tomli>=2.0.1; python_version<'3.11'",
     "tox",
@@ -74,7 +80,8 @@ test = [
 docs = [
     "sphinx>=6",
     "sphinx-rtd-theme>=0.5.0",
-    "sphinxcontrib-pdfembed@git+https://github.com/SuperKogito/sphinxcontrib-pdfembed"
+    "sphinxcontrib-pdfembed@git+https://github.com/SuperKogito/sphinxcontrib-pdfembed",
+    "sphinx_reredirects>=0.1.3"
 ]
 release = ["build", "twine"]
 
@@ -86,7 +93,7 @@ xhtml2pdf = "xhtml2pdf.pisa:command"
 version = {attr = "xhtml2pdf.__version__"}
 
 [tool.setuptools.packages.find]
-exclude = ["tests", "tests.*", "manual_test", "manual_test.*"]
+include = ["xhtml2pdf*"]
 
 
 [tool.tox]

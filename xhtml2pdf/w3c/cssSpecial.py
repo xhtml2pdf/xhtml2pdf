@@ -349,7 +349,7 @@ def parseSpecialRules(declarations, debug=0):
                 )
 
         # BORDER TOP, BOTTOM, LEFT, RIGHT
-        elif name in ("border-top", "border-bottom", "border-left", "border-right"):
+        elif name in {"border-top", "border-bottom", "border-left", "border-right"}:
             direction = name[7:]
             width, style, color = splitBorder(parts)
             # print direction, width

@@ -27,7 +27,13 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus.frames import Frame, ShowBoundaryValue
+from reportlab.platypus.frames import Frame
+
+try:
+    from reportlab.pdfgen.canvas import ShowBoundaryValue
+except ImportError:
+    # reportlab < 4.0.9.1
+    from reportlab.platypus.frames import ShowBoundaryValue
 from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
 
 from xhtml2pdf import default, parser
@@ -193,14 +199,14 @@ class pisaCSSBuilder(css.CSSBuilder):
 
         # Font weight
         fweight = str(data.get("font-weight", "normal")).lower()
-        bold = fweight in ("bold", "bolder", "500", "600", "700", "800", "900")
+        bold = fweight in {"bold", "bolder", "500", "600", "700", "800", "900"}
         if not bold and fweight != "normal":
             log.warning(
                 self.c.warning("@fontface, unknown value font-weight '%s'", fweight)
             )
 
         # Font style
-        italic = str(data.get("font-style", "")).lower() in ("italic", "oblique")
+        italic = str(data.get("font-style", "")).lower() in {"italic", "oblique"}
 
         # The "src" attribute can be a CSS group but in that case
         # ignore everything except the font URI

@@ -404,7 +404,7 @@ class pisaTagIMG(pisaTag):
                     """
 
                     c.force = True
-                    if align in ["left", "right"]:
+                    if align in {"left", "right"}:
                         c.image = img
                         c.imageData = {"align": align}
 
@@ -414,11 +414,11 @@ class pisaTagIMG(pisaTag):
                         # afrag = c.frag.clone()
 
                         valign = align
-                        if valign in ["texttop"]:
+                        if valign in {"texttop"}:
                             valign = "top"
-                        elif valign in ["absmiddle"]:
+                        elif valign in {"absmiddle"}:
                             valign = "middle"
-                        elif valign in ["absbottom", "baseline"]:
+                        elif valign in {"absbottom", "baseline"}:
                             valign = "bottom"
 
                         afrag = c.frag.clone()
@@ -753,7 +753,7 @@ class pisaTagPDFBARCODE(pisaTag):
         fontSize: float = attr.fontsize or 2.75 * mm
 
         # Assure minimal size.
-        if codeName in ("EAN13", "EAN8"):
+        if codeName in {"EAN13", "EAN8"}:
             barWidth = max(barWidth, 0.264 * mm)
             fontSize = max(fontSize, 2.75 * mm)
         else:  # Code39 etc.
@@ -775,11 +775,11 @@ class pisaTagPDFBARCODE(pisaTag):
         c.force = True
 
         valign = attr.align or c.frag.vAlign or "baseline"
-        if valign in ["texttop"]:
+        if valign in {"texttop"}:
             valign = "top"
-        elif valign in ["absmiddle"]:
+        elif valign in {"absmiddle"}:
             valign = "middle"
-        elif valign in ["absbottom", "baseline"]:
+        elif valign in {"absbottom", "baseline"}:
             valign = "bottom"
 
         afrag = c.frag.clone()

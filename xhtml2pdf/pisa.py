@@ -31,7 +31,8 @@ log = logging.getLogger(__name__)
 # Backward compatibility
 CreatePDF = pisaDocument
 
-USAGE = ("""
+USAGE = (
+    """
 
 USAGE: pisa [options] SRC [DEST]
 
@@ -88,7 +89,8 @@ See http.client.HTTPSConnection documentation for this parameters
   --http_cert_file
   --http_source_address
   --http_timeout
-""").strip()
+"""
+).strip()
 
 COPYRIGHT = """
 Copyright 2010 Dirk Holtwick, holtwick.it
@@ -209,12 +211,12 @@ def execute():
     log_format = LOG_FORMAT
 
     for o, a in opts:
-        if o in ("-h", "--help"):
+        if o in {"-h", "--help"}:
             # Hilfe anzeigen
             usage()
             sys.exit()
 
-        elif o in ("--version",):
+        elif o in {"--version"}:
             print(__version__)
             sys.exit(0)
 
@@ -222,7 +224,7 @@ def execute():
             print(COPYRIGHT)
             sys.exit(0)
 
-        elif o in ("--system",):
+        elif o in {"--system"}:
             print(COPYRIGHT)
             print()
             print("SYSTEM INFORMATIONS")
@@ -235,19 +237,19 @@ def execute():
             print("Reportlab:         %s" % reportlab.Version)
             sys.exit(0)
 
-        elif o in ("-s", "--start-viewer", "--start"):
+        elif o in {"-s", "--start-viewer", "--start"}:
             # Anzeigeprogramm starten
             startviewer = 1
 
-        elif o in ("-q", "--quiet"):
+        elif o in {"-q", "--quiet"}:
             # Output unterdr�cken
             quiet = 1
 
-        elif o in ("-w", "--warn"):
+        elif o in {"-w", "--warn"}:
             # Warnings
             log_level = min(log_level, logging.WARNING)  # If also -d ignore -w
 
-        elif o in ("-d", "--debug"):
+        elif o in {"-d", "--debug"}:
             # Debug
             log_level = logging.DEBUG
             log_format = LOG_FORMAT_DEBUG
@@ -255,34 +257,34 @@ def execute():
             if a:
                 log_level = int(a)
 
-        elif o in ("-t", "--format"):
+        elif o in {"-t", "--format"}:
             # Format XXX ???
             file_format = a
 
-        elif o in ("-b", "--base"):
+        elif o in {"-b", "--base"}:
             base_dir = a
 
-        elif o in ("--encoding",) and a:
+        elif o in {"--encoding"} and a:
             # Encoding
             encoding = a
 
-        elif o in ("-c", "--css"):
+        elif o in {"-c", "--css"}:
             # CSS
-            with open(a) as file_handler:
+            with open(a, encoding="utf-8") as file_handler:
                 css = file_handler.read()
 
-        elif o in ("--css-dump",):
+        elif o in {"--css-dump"}:
             # CSS dump
             print(DEFAULT_CSS)
             return
 
-        elif o in ("--xml-dump",):
+        elif o in {"--xml-dump"}:
             xml_output = sys.stdout
 
-        elif o in ("-x", "--xml", "--xhtml"):
+        elif o in {"-x", "--xml", "--xhtml"}:
             xhtml = True
 
-        elif o in ("--html",):
+        elif o in {"--html"}:
             xhtml = False
 
         elif httpConfig.is_http_config(o, a):
@@ -291,7 +293,7 @@ def execute():
     if not quiet:
         logging.basicConfig(level=log_level, format=log_format)
 
-    if len(args) not in (1, 2):
+    if len(args) not in {1, 2}:
         usage()
         sys.exit(2)
 
