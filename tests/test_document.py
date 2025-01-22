@@ -154,6 +154,7 @@ class DocumentTest(TestCase):
 
             self.assertEqual(len(pdf_reader.pages), 2)
 
+    @skipIf(os.env.get('http_proxy'))
     def test_document_with_broken_image(self) -> None:
         """Test that broken images don't cause unhandled exception"""
         # Although this is just html, it will be recognized as svg
@@ -175,6 +176,7 @@ class DocumentTest(TestCase):
                 ],
             )
 
+    @skipIf(os.env.get('http_proxy'))
     def test_document_cannot_identify_image(self) -> None:
         """Test that images which cannot be identified don't cause stack trace to be printed"""
         image_path = "https://raw.githubusercontent.com/python-pillow/Pillow/7921da54a73dd4a30c23957369b79cda176005c6/Tests/images/zero_width.gif"
