@@ -237,3 +237,22 @@ ignore = [
 disable_error_code = [
     "method-assign",
 ]
+
+
+[tool.typos.files]
+# These files have a mix of languages
+extend-exclude = [
+    "manual_test/",
+    "testrender/data/source",
+    "tests/samples/utf8.html",
+    "xhtml2pdf/reportlab_paragraph.py",
+]
+
+[tool.typos.default.extend-identifiers]
+Hink = "Hink"
+myu20 = "myu20"
+opf = "opf"
+PNGs = "PNGs"
+
+[tool.typos.default.extend-words]
+splitted = "splitted"
