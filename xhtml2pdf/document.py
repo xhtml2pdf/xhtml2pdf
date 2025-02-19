@@ -35,14 +35,14 @@ log = logging.getLogger(__name__)
 def pisaErrorDocument(dest, c):
     out = pisaTempFile(capacity=c.capacity)
     out.write(
-        "<p style='background-color:red;'><strong>%d error(s) occured:</strong><p>"
+        "<p style='background-color:red;'><strong>%d error(s) occurred:</strong><p>"
         % c.err
     )
     for mode, line, msg, _ in c.log:
         if mode == "error":
             out.write("<pre>%s in line %d: %s</pre>" % (mode, line, html_escape(msg)))
 
-    out.write("<p><strong>%d warning(s) occured:</strong><p>" % c.warn)
+    out.write("<p><strong>%d warning(s) occurred:</strong><p>" % c.warn)
     for mode, line, msg, _ in c.log:
         if mode == "warning":
             out.write("<p>%s in line %d: %s</p>" % (mode, line, html_escape(msg)))

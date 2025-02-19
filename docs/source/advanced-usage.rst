@@ -29,7 +29,7 @@ the text "To PDF or not to PDF" in the top left of the page:
         )
 
         if pisa_status.err:
-            print("An error occured!")
+            print("An error occurred!")
 
 You can generate files in-memory by writing to a :py:class:`io.StringIO` instance.
 

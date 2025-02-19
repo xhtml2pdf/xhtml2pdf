@@ -172,7 +172,7 @@ class CSSCascadeStrategy:
 
         inline = element.getInlineStyle()
 
-        # Generator are wonderfull but sometime slow...
+        # Generator are wonderful but sometime slow...
         # for ruleset in self.iterCSSRulesets(inline):
         #    rules += ruleset.findCSSRuleFor(element, attrName)
 
@@ -215,7 +215,7 @@ class CSSCascadeStrategy:
     def _extractStyleForRule(rule, attrName, default=NotImplemented):
         if rule:
             # rule is packed in a list to differentiate from "no rule" vs "rule
-            # whose value evalutates as False"
+            # whose value evaluates as False"
             style = rule[-1][1]
             return style[attrName]
         if default is not NotImplemented:
@@ -639,7 +639,7 @@ class CSSRuleset(dict):
 
     def findCSSRuleFor(self, element, attrName):
         # rule is packed in a list to differentiate from "no rule" vs "rule
-        # whose value evalutates as False"
+        # whose value evaluates as False"
         return self.findCSSRulesFor(element, attrName)[-1:]
 
     def mergeStyles(self, styles):
@@ -660,7 +660,7 @@ class CSSInlineRuleset(CSSRuleset, CSSDeclarations):
 
     def findCSSRuleFor(self, *args, **kw):
         # rule is packed in a list to differentiate from "no rule" vs "rule
-        # whose value evalutates as False"
+        # whose value evaluates as False"
         return self.findCSSRulesFor(*args, **kw)[-1:]
 
 

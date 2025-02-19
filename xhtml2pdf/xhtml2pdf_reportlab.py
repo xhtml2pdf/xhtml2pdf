@@ -302,7 +302,7 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
         if isinstance(fileName, PmlImage):
             self.__dict__ = fileName.__dict__  # borgize
             return
-            # start wih lots of null private fields, to be populated by
+            # start with lots of null private fields, to be populated by
         # the relevant engine.
         self.fileName: PmlImage | Image | str = fileName or f"PILIMAGE_{id(self)}"
         self._image: Image = None
@@ -520,7 +520,7 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         factor = min(wfactor, hfactor)
         self.dWidth = self.drawWidth * factor
         self.dHeight = self.drawHeight * factor
-        # print "imgage result", factor, self.dWidth, self.dHeight
+        # print "image result", factor, self.dWidth, self.dHeight
         return self.dWidth, self.dHeight
 
     def getDrawing(
@@ -641,7 +641,7 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
         availWidth -= self.deltaWidth
         availHeight -= self.deltaHeight
 
-        # Modify maxium image sizes
+        # Modify maximum image sizes
         self._calcImageMaxSizes(availWidth, availHeight)
 
         # call the base class to do wrapping and calculate the size

@@ -41,7 +41,7 @@ function.
 
         # Check for errors
         if pisa_status.err:
-            print("An error occured!")
+            print("An error occurred!")
 
 You can generate files in-memory by writing to :py:class:`io.BytesIO` or
 :py:class:`io.StringIO` objects:

@@ -49,7 +49,7 @@ class Memoized:
     Don't pass in too large kwargs, since this turns them into a tuple of
     tuples. Also, avoid mutable types (as usual for memoizers)
 
-    What this does is to create a dictionnary of {(*parameters):return value},
+    What this does is to create a dictionary of {(*parameters):return value},
     and uses it as a cache for subsequent calls to the same method.
     It is especially useful for functions that don't rely on external variables
     and that are called often. It's a perfect match for our getSize etc...
@@ -83,8 +83,8 @@ def toList(value: Any, *, cast_tuple: bool = True) -> list:
 
 def transform_attrs(obj, keys, container, func, extras=None):
     """
-    Allows to apply one function to set of keys cheching if key is in container,
-    also trasform ccs key to report lab keys.
+    Allows to apply one function to set of keys checking if key is in container,
+    also transform ccs key to report lab keys.
 
     extras = Are extra params for func, it will be call like func(*[param1, param2])
 

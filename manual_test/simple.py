@@ -28,9 +28,9 @@ def dumpErrors(pdf, *, _showLog=True):
     #    for mode, line, msg, code in pdf.log:
     #        print "%s in line %d: %s" % (mode, line, msg)
     # if pdf.warn:
-    #    print "*** %d WARNINGS OCCURED" % pdf.warn
+    #    print "*** %d WARNINGS OCCURRED" % pdf.warn
     if pdf.err:
-        print(f"*** {pdf.err} ERRORS OCCURED")
+        print(f"*** {pdf.err} ERRORS OCCURRED")
 
 
 def testSimple(

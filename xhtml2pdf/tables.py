@@ -343,7 +343,7 @@ class pisaTagTD(pisaTag):
         # Get value of with, if no spanning
         if not cspan:
             width = c.frag.width or self.attr.width
-            # If is value, the set it in the right place in the arry
+            # If is value, the set it in the right place in the array
             if width is not None:
                 tdata.colw[col] = _width(width)
                 log.debug("Col %d has width %s", col, width)
