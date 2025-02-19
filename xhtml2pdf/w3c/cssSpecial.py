@@ -1,5 +1,5 @@
 """
-Helper for complex CSS definitons like font, margin, padding and border
+Helper for complex CSS definitions like font, margin, padding and border
 Optimized for use with PISA.
 
 Copyright 2010 Dirk Holtwick, holtwick.it
@@ -59,7 +59,7 @@ _weightTable = {
 #    "x-large": 3./2.,
 #    "xx-large": 2./1.,
 #    "xxx-large": 3./1.,
-#    "larger": 1.25,      # XXX Not totaly CSS conform:
+#    "larger": 1.25,      # XXX Not totally CSS conform:
 #    "smaller": 0.75,     # http://www.w3.org/TR/CSS21/fonts.html#propdef-font-size
 #    }
 
@@ -159,7 +159,7 @@ def parseSpecialRules(declarations, debug=0):
         elif name == "background":
             # [<'background-color'> || <'background-image'> || <'background-repeat'> || <'background-attachment'> || <'background-position'>] | inherit
 
-            # XXX We do not receive url() and parts list, so we go for a dirty work arround
+            # XXX We do not receive url() and parts list, so we go for a dirty work around
             part = getNextPart(parts) or oparts
             if part:
                 if isinstance(part, str) and (("." in part) or ("data:" in part)):

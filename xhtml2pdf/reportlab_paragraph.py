@@ -727,7 +727,7 @@ def _do_post_text(tx):
     """
     Try to find out what the variables mean:
 
-    tx         A structure containing more informations about paragraph ???
+    tx         A structure containing more information about paragraph ???
 
     leading    Height of lines
     ff         1/8 of the font size

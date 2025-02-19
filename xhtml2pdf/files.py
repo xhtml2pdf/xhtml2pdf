@@ -74,7 +74,7 @@ class pisaTempFile:
         try:
             self._delegate = self.STRATEGIES[self.strategy]()
         except IndexError:
-            # Fallback for Google AppEnginge etc.
+            # Fallback for Google AppEngine etc.
             self._delegate = self.STRATEGIES[0]()
         self.write(buffer)
         # we must set the file's position for preparing to read
@@ -208,7 +208,7 @@ class B64InlineURI(BaseFile):
             or "base64," not in self.path
             or len(parts) != 2
         ):
-            msg = "Base64-encoded data URI is mailformed"
+            msg = "Base64-encoded data URI is malformed"
             raise RuntimeError(msg)
         data = parts[1]
         # Strip 'data:' prefix and split mime type with optional params

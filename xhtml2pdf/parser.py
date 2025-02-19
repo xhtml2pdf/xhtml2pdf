@@ -776,7 +776,7 @@ def pisaParser(
 ):
     """
     - Parse HTML and get miniDOM
-    - Extract CSS informations, add default CSS, parse CSS
+    - Extract CSS information, add default CSS, parse CSS
     - Handle the document DOM itself and build reportlab story
     - Return Context object.
     """
