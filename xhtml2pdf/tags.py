@@ -575,10 +575,10 @@ class pisaTagPDFPAGENUMBER(pisaTag):
 
     def start(self, c: pisaContext) -> None:  # noqa: PLR6301
         flow = PageNumberFlowable()
-        pn = c.addPageNumber(flow)
+        pageNumber = c.addPageNumber(flow)
         c.addStory(flow)
         c.frag.pageNumber = True
-        c.addFrag(pn)
+        c.addFrag(pageNumber)
         c.frag.pageNumber = False
 
 
@@ -587,10 +587,10 @@ class pisaTagPDFPAGECOUNT(pisaTag):
 
     def start(self, c: pisaContext) -> None:  # noqa: PLR6301
         flow = PageNumberFlowable()
-        pc = c.getPageCount(flow)
+        pageCount = c.getPageCount(flow)
         c.addStory(flow)
         c.frag.pageCount = True
-        c.addFrag(pc)
+        c.addFrag(pageCount)
         c.frag.pageCount = False
 
     def end(self, c: pisaContext) -> None:  # noqa: PLR6301
