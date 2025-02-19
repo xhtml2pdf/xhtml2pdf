@@ -1,4 +1,8 @@
 repos:
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.29.7
+    hooks:
+      - id: typos
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:
