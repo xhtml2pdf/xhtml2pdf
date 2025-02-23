@@ -126,7 +126,7 @@ Position/ floating
 ------------------
 
 Since Reportlab Toolkit does not yet support the use of images within
-paragraphs, images are always rendered in a seperate paragraph.
+paragraphs, images are always rendered in a separate paragraph.
 Therefore floating is not available yet.
 
 Barcodes
@@ -154,7 +154,7 @@ Custom Tags
 ``xhtml2pdf`` provides some custom tags. They are all prefixed by the
 namespace identifier ``pdf:``. As the HTML5 parser used by xhtml2pdf
 does not know about these specific tags it may be confused if they are
-without a block. To avoid problems you may condsider sourrounding them
+without a block. To avoid problems you may condsider surrounding them
 by ``<div>`` tags, like this:
 
 ::

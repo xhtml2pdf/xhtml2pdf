@@ -538,7 +538,7 @@ class Paragraph(Flowable):
 
         canvas.saveState()
 
-        # Draw box arround paragraph for debugging
+        # Draw box around paragraph for debugging
         if self.debug:
             bw: float = 0.5
             bc: Color = Color(1, 1, 0)

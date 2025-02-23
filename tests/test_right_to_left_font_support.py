@@ -99,7 +99,7 @@ class RightToLeftFontSupportTests(TestCase):
     def test_pdf_language_tag_in_html(self) -> None:
         """
         this function is used to check if the "Custom Tag" <pdf:language/>
-        is located in the HTML file through asssertNotEqual()
+        is located in the HTML file through assertNotEqual()
         """
         text = ""
         language_tag = '<pdf:language name=""/>'

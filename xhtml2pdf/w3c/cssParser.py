@@ -14,7 +14,7 @@ The CSS 2.1 Specification this parser was derived from can be found at http://ww
 Primary Classes:
     * CSSParser
         Parses CSS source forms into results using a Builder Pattern.  Must
-        provide concrete implemenation of CSSBuilderAbstract.
+        provide concrete implementation of CSSBuilderAbstract.
 
     * CSSBuilderAbstract
         Outlines the interface between CSSParser and it's rule-builder.
@@ -389,7 +389,7 @@ class CSSParser:
     # XXX For now
     # i_uri = '(url\\(.*?\\))'
     re_uri = re.compile(i_uri, _reflags)
-    i_num = (  # XXX Added out paranthesis, because e.g. .5em was not parsed correctly
+    i_num = (  # XXX Added out parenthesis, because e.g. .5em was not parsed correctly
         r"(([-+]?[0-9]+(?:\.[0-9]+)?)|([-+]?\.[0-9]+))"
     )
     re_num = re.compile(i_num, _reflags)
@@ -466,7 +466,7 @@ class CSSParser:
     def parseInline(self, src):
         """
         Parses CSS inline source string using the current cssBuilder.
-        Use to parse a tag's 'sytle'-like attribute.
+        Use to parse a tag's 'style'-like attribute.
         """
         self.cssBuilder.beginInline()
         try:
@@ -950,7 +950,7 @@ class CSSParser:
                 combiner = " "
             src, selectorB = self._parseSimpleSelector(src)
 
-            # XXX Fix a bug that occured here e.g. : .1 {...}
+            # XXX Fix a bug that occurred here e.g. : .1 {...}
             if len(src) >= srcLen:
                 src = src[1:]
                 while src and (
@@ -1136,9 +1136,9 @@ class CSSParser:
             src = src.lstrip()
             # S* : S*
             if src[:1] in {":", "="}:
-                # Note: we are being fairly flexable here...  technically, the
+                # Note: we are being fairly flexible here...  technically, the
                 # ":" is *required*, but in the name of flexibility we
-                # suppor a null transition, as well as an "=" transition
+                # support a null transition, as well as an "=" transition
                 src = src[1:].lstrip()
 
             src, single_property = self._parseDeclarationProperty(src, property_name)

@@ -17,7 +17,7 @@ class AsianFontSupportTests(TestCase):
     Adobe asian language pack in Report Lab:
 
     Simplified Chinese = ['STSong-Light']
-    Tradicional Chinese = ['MSung-Light']
+    Traditional Chinese = ['MSung-Light']
     Japanese = ['HeiseiMin-W3', 'HeiseiKakuGo-W5']
     Korean = ['HYSMyeongJo-Medium','HYGothic-Medium']
     """
@@ -104,9 +104,9 @@ class AsianFontSupportTests(TestCase):
     def test_asian_font_in_pdf(self):
         """
         Tests if the asian fonts used in the CSS property "font-family"
-        are correctly embeded in the pdf result.
+        are correctly embedded in the pdf result.
         """
-        # Read the embeded fonts from the finished pdf file
+        # Read the embedded fonts from the finished pdf file
         with io.BytesIO() as pdf_file:
             pisa_doc = pisaDocument(src=self.HTML_CONTENT, dest=pdf_file)
             pdf_file.seek(0)

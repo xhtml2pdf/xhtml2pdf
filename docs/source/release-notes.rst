@@ -326,7 +326,7 @@ Released: 2020-10-08
 * Fixed support for multiple fonts and unicode :issue:`492`
 * Fixed an encoding issue with html5lib :issue:`468`
 * Fixed a problem with the ``border`` property in ``h1`` to ``h6`` heading tags :issue:`466` :issue:`495`
-* Fixed compability with ReportLab 3.5.X :issue:`404` :issue:`463`
+* Fixed compatibility with ReportLab 3.5.X :issue:`404` :issue:`463`
 * Removed default background-image when no background-image is defined :issue:`484`
 * Fixed an issue with different font type that have the same name :issue:`381`
 * Fixed a bug that prevented support for Python 3.X :issue:`513`
@@ -696,7 +696,7 @@ Version 3.0.29, 2008-12-01
 
 - NEW: Warning if Reportlab 2.2 is not installed
 - UPD: Better support for named colors
-- UPD: Modifed frame handling to better support relative values
+- UPD: Modified frame handling to better support relative values
 - FIX: Splitting paragraph threw errors some times; also had problems with line breaks on the second page, fix for RL 2.2 paragraph was needed
 - FIX: Added margins to <blockquote> default CSS
 - FIX: Inline images in static frames did not work
@@ -715,7 +715,7 @@ Version 3.0.28, 2008-11-21
 - NEW: PDF Joiner to concatenate many PDF and pisa documents
 - NEW: Page backgrounds can now be images or PDF
 - NEW: Visual Unittests based on ImageMagick and TortoiseIDiff (for Windows)
-- NEW: Pisa raises execptions now if errors occure; with pisaDocument(..., raise_execeptions=False) you can turn them off
+- NEW: Pisa now raises exceptions if errors occurred; with pisaDocument(..., raise_exception=False) you can turn them off
 - UPD: Paragraphs now use the maximum leading to avoid overlapping text
 - UPD: Removed "Keep with next" from H1 to H6
 - FIX: Sizing of images is now handled better; should better work with PIL
@@ -726,7 +726,7 @@ Version 3.0.28, 2008-11-21
 - FIX: Single <br> between two blocks now creates a new line
 - FIX: Set table attribute "repeat" to "0"
 - FIX: Some <font> attributes did not work as expected
-- FIX: Font sizes reworked to behave like browser implmentations
+- FIX: Font sizes reworked to behave like browser implementations
 - FIX: Like in most HTML browser table cells now have "valign=middle" and table headers have font weight bold
 - FIX: Little fix in CSS parsing
 - FIX: Default of <link media=""> was "screen", changed to "all"
@@ -735,7 +735,7 @@ Version 3.0.28, 2008-11-21
 Version 3.0.27, 2008-10-04
 
 - INF: License changed from Qt to GPLv2
-- INF: Not yet completely combatible with Reportlab 2.2 (&nbsp; errors and borders)
+- INF: Not yet completely compatible with Reportlab 2.2 (&nbsp; errors and borders)
 - NEW: Command line tool called "xhtml" ("pisa" still available but will be deprecated with pisa 3.1)
 - NEW: EGG for Python 2.6
 - NEW: Basic support for Data URI
@@ -873,8 +873,8 @@ Version 3.0.13, 2008-01-22
 - Added a demo using cherrypy web server and kid
 - Added a demo using django framework
 - Modified test-background.html to work with CSS
-- Added suport for bold and italic TTF fonts to the @font-face CSS section (Robert Klep)
-- Added suport for bold and italic Postscript fonts to the @font-face CSS section
+- Added support for bold and italic TTF fonts to the @font-face CSS section (Robert Klep)
+- Added support for bold and italic Postscript fonts to the @font-face CSS section
 - The @-rules are not need a trailing space after ident any more (Robert Klep)
 - Fixed the Windows standalone version to work
 - Made the 'sx' folder more sharable by modifying __init__.py

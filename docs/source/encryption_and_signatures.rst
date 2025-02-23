@@ -32,7 +32,7 @@ The `StandardEncryption` constructor takes the following arguments:
         strength=40):
 
 The userPassword and ownerPassword parameters set the relevant password on the encrypted PDF.
-The boolean flags `canPrint, canModify, canCopy, canAnnotate` determine wether a user can
+The boolean flags `canPrint, canModify, canCopy, canAnnotate` determine whether a user can
 perform the corresponding actions on the PDF when only a user password has been supplied.
 If the user supplies the owner password while opening the PDF, all actions can be performed regardless of the
 flags

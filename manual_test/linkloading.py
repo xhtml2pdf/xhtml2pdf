@@ -44,7 +44,7 @@ def dummyLoader(_name):
 
 class myLinkLoader:
     """
-    This object is just a wrapper to track additional informations
+    This object is just a wrapper to track additional information
     and handle temporary files after they are not needed any more.
     """
 

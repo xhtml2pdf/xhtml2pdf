@@ -57,7 +57,7 @@ DEST
   --css-dump:
     Dumps the default CSS definitions to STDOUT
   --debug, -d:
-    Show debugging informations
+    Show debugging information
   --encoding:
     the character encoding of SRC. If left empty (default) this
     information will be extracted from the HTML header data
@@ -227,7 +227,7 @@ def execute():
         elif o in {"--system"}:
             print(COPYRIGHT)
             print()
-            print("SYSTEM INFORMATIONS")
+            print("SYSTEM INFORMATION")
             print("--------------------------------------------")
             print("OS:                %s" % sys.platform)
             print("Python:            %s" % sys.version)
@@ -419,7 +419,7 @@ def showLogging(*, debug=False):
         logging.basicConfig()
 
 
-# Background informations in data URI here:
+# Background information in data URI here:
 # http://en.wikipedia.org/wiki/Data_URI_scheme
 
 

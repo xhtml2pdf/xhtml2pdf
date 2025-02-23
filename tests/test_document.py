@@ -96,10 +96,10 @@ class DocumentTest(TestCase):
             objects = [xobjects[key] for key in xobjects]
 
             # Identity the 'denker_transparent.png' image by its height and width, and make sure it's there.
-            denker_transparant = [
+            denker_transparent = [
                 obj for obj in objects if obj["/Height"] == 137 and obj["/Width"] == 70
             ]
-            self.assertEqual(len(denker_transparant), 1)
+            self.assertEqual(len(denker_transparent), 1)
 
     def test_document_background_image(self) -> None:
         """Test that a transparent PNG image is rendered properly."""
@@ -125,10 +125,10 @@ class DocumentTest(TestCase):
             objects = [xobjects[key] for key in xobjects]
 
             # Identity the 'denker_transparent.png' image by its height and width, and make sure it's there.
-            denker_transparant = [
+            denker_transparent = [
                 obj for obj in objects if obj["/Height"] == 137 and obj["/Width"] == 70
             ]
-            self.assertEqual(len(denker_transparant), 1)
+            self.assertEqual(len(denker_transparent), 1)
 
     def test_document_background_image_not_on_all_pages(self) -> None:
         """Test that all pages are being rendered, when background is a pdf file and it's applied for the first page only."""
