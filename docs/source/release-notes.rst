@@ -50,6 +50,32 @@ Versions >= 0.2
 
     --------------------------------------------
 
+0.2.17
+====================
+
+Released: 2025-02-23
+
+ 
+**💪🏼 Improvements**
+
+* Reuse background PDF file over multiple pages
+* Improve github actions
+
+**🐛 Bug-Fixes**
+
+* fix reDOS CVE in getColor function
+* Keep GitHub Actions up to date with GitHub's Dependabot 
+
+
+**📘 Documentation**
+
+* Improve documentation and fixed a lot of typos
+
+
+| Thanks to the following people on GitHub for contributing to this release:
+| *Trupal00p*, *cclauss* and *kytta-532-better-docs* 
+
+
 0.2.16
 ======
 
