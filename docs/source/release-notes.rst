@@ -54,7 +54,6 @@ Versions >= 0.2
 ====================
 
 Released: 2025-02-23
-
  
 **💪🏼 Improvements**
 
@@ -66,11 +65,9 @@ Released: 2025-02-23
 * fix reDOS CVE in getColor function
 * Keep GitHub Actions up to date with GitHub's Dependabot 
 
-
 **📘 Documentation**
 
 * Improve documentation and fixed a lot of typos
-
 
 | Thanks to the following people on GitHub for contributing to this release:
 | *Trupal00p*, *cclauss* and *kytta-532-better-docs* 
