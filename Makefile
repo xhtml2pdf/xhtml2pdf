@@ -51,7 +51,7 @@ docs:
 release: clean
 	git tag -a "v`xhtml2pdf --version`" -m "Bump version `xhtml2pdf --version`"
 	git push origin "v`xhtml2pdf --version`"
-	python -m build --sdist
+	python -m build
 	twine upload -s dist/*
 
 sdist: clean
