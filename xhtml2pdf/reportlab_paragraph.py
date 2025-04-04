@@ -1781,7 +1781,7 @@ class Paragraph(Flowable):
         """
         frags = getattr(self, "frags", None)
         if frags:
-            return "".join([frag.text] for frag in frags if hasattr(frag, "text"))
+            return "".join(frag.text for frag in frags if hasattr(frag, "text"))
         if identify:
             text = getattr(self, "text", None)
             if text is None:
