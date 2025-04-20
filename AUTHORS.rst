@@ -18,7 +18,7 @@ Contributors
 ============
 
 In no particular order. Names are taken from git logs, please contact
-the maintainer should theses names be changed to something more relevant.
+the maintainer should these names be changed to something more relevant.
 
 * Kenji Noguschi
 * Pascal Bach

@@ -892,7 +892,7 @@ class CSSParser:
                 # consume the rest of the content since we didn't find a block or a semicolon
                 src = src[-1:-1]
             elif blockIdx is not None:
-                # expecing a block...
+                # expecting a block...
                 src = src[blockIdx:]
                 try:
                     # try to parse it as a declarations block
