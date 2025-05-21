@@ -269,7 +269,7 @@ class NetworkFileUri(BaseFile):
             conn = httplib.HTTPConnection(server)
         conn.request("GET", path)
         r1: HTTPResponse = conn.getresponse()
-        if (r1.status, r1.reason) == (200, "OK"):
+        if r1.status == 200:
             self.mimetype = r1.getheader("Content-Type", "").split(";")[0]
             data = r1.read()
             if r1.getheader("content-encoding") == "gzip":
