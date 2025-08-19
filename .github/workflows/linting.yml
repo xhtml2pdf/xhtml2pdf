@@ -4,7 +4,7 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - uses: actions/setup-python@v5
       with:
         python-version: "3.12"
@@ -14,7 +14,7 @@ jobs:
   black:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -24,15 +24,15 @@ jobs:
   ruff:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: chartboost/ruff-action@v1
         with:
           version: "0.0.292"
   mypy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: jpetrucciani/mypy-check@1.15.0
+      - uses: actions/checkout@v5
+      - uses: jpetrucciani/mypy-check@1.17.1
         with:
           python_version: "3.12"
           mypy_flags: '--config-file pyproject.toml --ignore-missing-imports --scripts-are-modules'
