@@ -8,8 +8,9 @@ from reportlab.pdfgen.canvas import Canvas
 
 from xhtml2pdf.files import getFile, pisaFileObject
 
+from io import BytesIO
+
 if TYPE_CHECKING:
-    from io import BytesIO
 
     from xhtml2pdf.context import pisaContext
 
@@ -55,12 +56,13 @@ class WaterMarks:
     def get_img_with_opacity(pisafile: pisaFileObject, context: dict) -> BytesIO:
         opacity: float = context.get("opacity", None)
         if opacity:
-            name: str | None = pisafile.getNamedFile()
-            img: Image.Image = Image.open(name)
+            file: BytesIO | _TemporaryFileWrapper | None = pisafile.getFile()
+            img: Image.Image = Image.open(file)
             img = img.convert("RGBA")
             img.putalpha(int(255 * opacity))
-            img.save(name, "PNG")
-            return getFile(name).getBytesIO()
+            iobuff = BytesIO()
+            img.save(iobuff, "PNG")
+            return iobuff
         return pisafile.getBytesIO()
 
     @staticmethod
