@@ -8,6 +8,11 @@ from pypdf import PdfReader
 
 from xhtml2pdf.document import pisaDocument
 
+DENKER_TRANSPARENT = os.path.join(
+    os.path.dirname(__file__), "samples", "img", "denker-transparent.png"
+)
+
+
 HTML_CONTENT: str = """<!DOCTYPE html>
 <html>
 <head>
@@ -44,6 +49,13 @@ CSS_TESTS = {
         @frame {left: 10pt}
         }
     </style>""",
+    f"""<style>
+    @page {{
+        size: A4 landscape;
+        background-image: url('{DENKER_TRANSPARENT}');
+        @frame {{left: 10pt}}
+        }}
+    </style>""",
 }
 
 METADATA = {
@@ -78,11 +90,7 @@ class DocumentTest(TestCase):
 
     def test_document_with_transparent_image(self) -> None:
         """Test that a transparent PNG image is rendered properly."""
-        tests_folder = os.path.dirname(os.path.realpath(__file__))
-        image_path = os.path.join(
-            tests_folder, "samples", "img", "denker-transparent.png"
-        )
-        extra_html = f'<img src="{image_path}">'
+        extra_html = f'<img src="{DENKER_TRANSPARENT}">'
 
         with tempfile.TemporaryFile() as pdf_file:
             pisaDocument(
@@ -103,12 +111,7 @@ class DocumentTest(TestCase):
 
     def test_document_background_image(self) -> None:
         """Test that a transparent PNG image is rendered properly."""
-        tests_folder = os.path.dirname(os.path.realpath(__file__))
-        image_path = os.path.join(
-            tests_folder, "samples", "img", "denker-transparent.png"
-        )
-
-        css_background = f"""<style>@page {{background-image: url('{image_path}');
+        css_background = f"""<style>@page {{background-image: url('{DENKER_TRANSPARENT}');
                          @frame {{left: 10pt}}}}</style>"""
 
         with tempfile.TemporaryFile() as pdf_file:
