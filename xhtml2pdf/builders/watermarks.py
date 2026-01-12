@@ -121,7 +121,7 @@ class WaterMarks:
         ):
             bginput: pypdf.PdfReader = pypdf.PdfReader(bgouter.getBytesIO())
             pagebg: pypdf.PageObject = bginput.pages[0]
-            for index, page in enumerate(pages):
+            for index, page in enumerate(pdfoutput.pages):
                 if index % step == 0:
                     page.merge_page(pagebg, over=False)
                 has_bg = True
