@@ -332,30 +332,30 @@ def getFrameDimensions(
     box = data.get("-pdf-frame-box", [])
     if len(box) == 4:
         return (getSize(box[0]), getSize(box[1]), getSize(box[2]), getSize(box[3]))
-    top = getSize(data.get("top", 0))
-    left = getSize(data.get("left", 0))
-    bottom = getSize(data.get("bottom", 0))
-    right = getSize(data.get("right", 0))
+    top = getSize(data.get("top", 0), page_height)
+    left = getSize(data.get("left", 0), page_width)
+    bottom = getSize(data.get("bottom", 0), page_height)
+    right = getSize(data.get("right", 0), page_width)
     if "height" in data:
-        height = getSize(data["height"])
+        height = getSize(data["height"], page_height)
         if "top" in data:
-            top = getSize(data["top"])
+            top = getSize(data["top"], page_height)
             bottom = page_height - (top + height)
         elif "bottom" in data:
-            bottom = getSize(data["bottom"])
+            bottom = getSize(data["bottom"], page_height)
             top = page_height - (bottom + height)
     if "width" in data:
-        width = getSize(data["width"])
+        width = getSize(data["width"], page_width)
         if "left" in data:
-            left = getSize(data["left"])
+            left = getSize(data["left"], page_width)
             right = page_width - (left + width)
         elif "right" in data:
-            right = getSize(data["right"])
+            right = getSize(data["right"], page_width)
             left = page_width - (right + width)
-    top += getSize(data.get("margin-top", 0))
-    left += getSize(data.get("margin-left", 0))
-    bottom += getSize(data.get("margin-bottom", 0))
-    right += getSize(data.get("margin-right", 0))
+    top += getSize(data.get("margin-top", 0), page_height)
+    left += getSize(data.get("margin-left", 0), page_width)
+    bottom += getSize(data.get("margin-bottom", 0), page_height)
+    right += getSize(data.get("margin-right", 0), page_width)
 
     width = page_width - (left + right)
     height = page_height - (top + bottom)
