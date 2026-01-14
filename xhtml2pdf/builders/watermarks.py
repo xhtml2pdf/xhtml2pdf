@@ -114,19 +114,17 @@ class WaterMarks:
     def process_doc(
         context: pisaContext, istream: bytes, output: bytes
     ) -> tuple[bytes, bool]:
-        pdfoutput: pypdf.PdfWriter = pypdf.PdfWriter()
-        input1: pypdf.PdfReader = pypdf.PdfReader(istream)
+        pdfoutput: pypdf.PdfWriter = pypdf.PdfWriter(clone_from=istream)
         has_bg: bool = False
         for pages, bgouter, step in WaterMarks.get_watermark(
-            context, len(input1.pages)
+            context, len(pdfoutput.pages)
         ):
             bginput: pypdf.PdfReader = pypdf.PdfReader(bgouter.getBytesIO())
             pagebg: pypdf.PageObject = bginput.pages[0]
             for index, ctr in enumerate(pages):
-                page: pypdf.PageObject = input1.pages[ctr - 1]
+                page: pypdf.PageObject = pdfoutput.pages[ctr - 1]
                 if index % step == 0:
                     page.merge_page(pagebg, over=False)
-                pdfoutput.add_page(page)
                 has_bg = True
         if has_bg:
             pdfoutput.write(output)
