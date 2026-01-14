@@ -116,12 +116,13 @@ class WaterMarks:
     ) -> tuple[bytes, bool]:
         pdfoutput: pypdf.PdfWriter = pypdf.PdfWriter(clone_from=istream)
         has_bg: bool = False
-        for _pages, bgouter, step in WaterMarks.get_watermark(
+        for pages, bgouter, step in WaterMarks.get_watermark(
             context, len(pdfoutput.pages)
         ):
             bginput: pypdf.PdfReader = pypdf.PdfReader(bgouter.getBytesIO())
             pagebg: pypdf.PageObject = bginput.pages[0]
-            for index, page in enumerate(pdfoutput.pages):
+            for index, ctr in enumerate(pages):
+                page: pypdf.PageObject = pdfoutput.pages[ctr - 1]
                 if index % step == 0:
                     page.merge_page(pagebg, over=False)
                 has_bg = True
