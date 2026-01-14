@@ -148,6 +148,12 @@ class PisaDimensionTestCase(TestCase):
         result = getFrameDimensions(dims, 100, 200)
         self.assertEqual(expected, result)
 
+    def test_frame_dimensions_left_top_width_height_percent(self):
+        dims = {"left": "10%", "top": "10%", "width": "30%", "height": "20%"}
+        expected = (10.0, 20.0, 30.0, 40.0)
+        result = getFrameDimensions(dims, 100, 200)
+        self.assertEqual(expected, result)
+
     def test_frame_dimensions_left_top_bottom_right(self):
         dims = {"left": "10pt", "top": "20pt", "bottom": "30pt", "right": "40pt"}
         expected = (10.0, 20.0, 50.0, 150.0)
