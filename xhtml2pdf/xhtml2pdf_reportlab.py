@@ -245,7 +245,7 @@ class PmlPageTemplate(PageTemplate):
                     else:
                         pisaBackground = self.pisaBackground
                     self.backgroundids.append(doc.pageTemplate.id)
-                if pisaBackground:
+                if hasattr(self, "backgroundContext"):
                     self.pisaBackgroundList.append(
                         (canvas.getPageNumber(), pisaBackground, self.backgroundContext)
                     )
