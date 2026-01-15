@@ -1,16 +1,16 @@
 from __future__ import annotations
 
+from io import BytesIO
 from typing import TYPE_CHECKING, Iterator, cast
 
 import pypdf
 from PIL import Image
 from reportlab.pdfgen.canvas import Canvas
 
-from xhtml2pdf.files import getFile, pisaFileObject
-
-from io import BytesIO
+from xhtml2pdf.files import pisaFileObject
 
 if TYPE_CHECKING:
+    from tempfile import _TemporaryFileWrapper
 
     from xhtml2pdf.context import pisaContext
 
@@ -109,7 +109,7 @@ class WaterMarks:
             for counter, (page, bgfile, pgcontext) in enumerate(
                 context.pisaBackgroundList
             ):
-                if not bgfile.notFound():
+                if bgfile and not bgfile.notFound():
                     yield range(page, pages[counter]), bgfile, int(pgcontext["step"])
 
     @staticmethod

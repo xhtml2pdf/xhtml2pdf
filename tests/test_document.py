@@ -138,7 +138,7 @@ class DocumentTest(TestCase):
         tests_folder = os.path.dirname(os.path.realpath(__file__))
         background_path = os.path.join(tests_folder, "samples", "images.pdf")
 
-        css = """"<style>@page {{background-image: url('{background_location}'); @frame {{left: 10pt}}}}
+        css = """<style>@page {{background-image: url('{background_location}'); @frame {{left: 10pt}}}}
               @page two {{@frame {{left: 10 pt}}}}</style>""".format(
             background_location=background_path
         )
@@ -156,6 +156,11 @@ class DocumentTest(TestCase):
             pdf_reader = PdfReader(pdf_file)
 
             self.assertEqual(len(pdf_reader.pages), 2)
+
+            # Page 1 has a background
+            self.assertIn("/XObject", pdf_reader.pages[0]["/Resources"])
+            # Page 2 does not have a background
+            self.assertNotIn("/XObject", pdf_reader.pages[1]["/Resources"])
 
     @skipIf(os.environ.get("HTTP_PROXY"), reason="Running on proxy")
     def test_document_with_broken_image(self) -> None:
