@@ -47,7 +47,6 @@ from reportlab.platypus.tableofcontents import TableOfContents
 from reportlab.platypus.tables import Table, TableStyle
 from reportlab.rl_config import register_reset
 
-from xhtml2pdf.builders.watermarks import WaterMarks
 from xhtml2pdf.files import pisaFileObject, pisaTempFile
 from xhtml2pdf.reportlab_paragraph import Paragraph
 from xhtml2pdf.util import ImageWarning, getBorderStyle
@@ -101,6 +100,19 @@ class PmlMaxHeightMixIn:
 
 class PmlBaseDoc(BaseDocTemplate):
     """We use our own document template to get access to the canvas and set some information once."""
+
+    # Stores a list of page templates, and the first page from which they're active.
+    pisaTemplateList: list[tuple[int, PmlPageTemplate]]
+
+    def beforeDocument(self) -> None:
+        """
+        This is called before any processing is done on the document.
+
+        In case of multiBuild is used, this will be called before any build, not just the first.
+        """
+        # Clear the list of templates, to ensure the list refers to the *final* rendering, also
+        # in a multiBuild rendering.
+        self.pisaTemplateList = []
 
     def beforePage(self) -> None:
         self.canv._doc.info.producer = PRODUCER
@@ -196,7 +208,6 @@ class PmlPageTemplate(PageTemplate):
 
     def __init__(self, **kw) -> None:
         self.pisaStaticList: list = []
-        self.pisaBackgroundList: list[tuple] = []
         self.pisaBackground = None
         super().__init__(**kw)
         self._page_count: int = 0
@@ -207,8 +218,6 @@ class PmlPageTemplate(PageTemplate):
         self.ph: int = 0
         self.h: int = 0
         self.w: int = 0
-
-        self.backgroundids: list[int] = []
 
     def isFirstFlow(self, canvas: Canvas) -> bool:
         if self._first_flow:
@@ -228,27 +237,12 @@ class PmlPageTemplate(PageTemplate):
     def beforeDrawPage(self, canvas: Canvas, doc):
         canvas.saveState()
         try:
-            if doc.pageTemplate.id not in self.backgroundids:
-                pisaBackground = None
-                if (
-                    hasattr(self, "pisaBackground")
-                    and self.pisaBackground
-                    and (not self.pisaBackground.notFound())
-                ):
-                    if self.pisaBackground.getMimeType().startswith("image/"):
-                        pisaBackground = WaterMarks.generate_pdf_background(
-                            self.pisaBackground,
-                            self.pagesize,
-                            is_portrait=self.isPortrait(),
-                            context=self.backgroundContext,
-                        )
-                    else:
-                        pisaBackground = self.pisaBackground
-                    self.backgroundids.append(doc.pageTemplate.id)
-                if pisaBackground:
-                    self.pisaBackgroundList.append(
-                        (canvas.getPageNumber(), pisaBackground, self.backgroundContext)
-                    )
+            if (
+                # No template was set yet, or the previous template differs from the last
+                not doc.pisaTemplateList
+                or doc.pisaTemplateList[-1][-1] != self
+            ):
+                doc.pisaTemplateList.append((canvas.getPageNumber(), self))
 
             def pageNumbering(objList):
                 for obj in flatten(objList):
