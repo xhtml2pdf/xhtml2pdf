@@ -670,7 +670,6 @@ class pisaTagPDFTEMPLATE(pisaTag):
 
         pt = PmlPageTemplate(id=name, frames=c.frameList, pagesize=A4)
         pt.pisaStaticList = c.frameStaticList
-        pt.pisaBackgroundList = c.pisaBackgroundList
         pt.pisaBackground = self.attr.background
 
         c.templateList[name] = pt

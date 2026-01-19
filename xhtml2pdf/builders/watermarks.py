@@ -1,18 +1,18 @@
 from __future__ import annotations
 
+from io import BytesIO
 from typing import TYPE_CHECKING, Iterator, cast
 
 import pypdf
 from PIL import Image
 from reportlab.pdfgen.canvas import Canvas
 
-from xhtml2pdf.files import getFile, pisaFileObject
-
-from io import BytesIO
+from xhtml2pdf.files import pisaFileObject
 
 if TYPE_CHECKING:
+    from tempfile import _TemporaryFileWrapper
 
-    from xhtml2pdf.context import pisaContext
+    from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc
 
 
 class WaterMarks:
@@ -102,25 +102,34 @@ class WaterMarks:
         return output
 
     @staticmethod
-    def get_watermark(context: pisaContext, max_numpage: int) -> Iterator:
-        if context.pisaBackgroundList:
-            pages = [x[0] for x in context.pisaBackgroundList] + [max_numpage + 1]
+    def get_watermark(doc: PmlBaseDoc, max_numpage: int) -> Iterator:
+        if doc.pisaTemplateList:
+            pages = [x[0] for x in doc.pisaTemplateList] + [max_numpage + 1]
             pages.pop(0)
-            for counter, (page, bgfile, pgcontext) in enumerate(
-                context.pisaBackgroundList
-            ):
-                if not bgfile.notFound():
+            for counter, (page, pagetemplate) in enumerate(doc.pisaTemplateList):
+                bgfile = pagetemplate.pisaBackground
+
+                if bgfile is not None and not bgfile.notFound():
+                    pgcontext = pagetemplate.backgroundContext
+                    if bgfile.getMimeType().startswith("image/"):
+                        # The background is an image, we need to generate a PDF backdrop for this
+                        # image.
+                        bgfile = WaterMarks.generate_pdf_background(
+                            bgfile,
+                            pagetemplate.pagesize,
+                            is_portrait=pagetemplate.isPortrait(),
+                            context=pagetemplate.backgroundContext,
+                        )
+
                     yield range(page, pages[counter]), bgfile, int(pgcontext["step"])
 
     @staticmethod
     def process_doc(
-        context: pisaContext, istream: bytes, output: bytes
+        doc: PmlBaseDoc, istream: bytes, output: bytes
     ) -> tuple[bytes, bool]:
         pdfoutput: pypdf.PdfWriter = pypdf.PdfWriter(clone_from=istream)
         has_bg: bool = False
-        for pages, bgouter, step in WaterMarks.get_watermark(
-            context, len(pdfoutput.pages)
-        ):
+        for pages, bgouter, step in WaterMarks.get_watermark(doc, len(pdfoutput.pages)):
             bginput: pypdf.PdfReader = pypdf.PdfReader(bgouter.getBytesIO())
             pagebg: pypdf.PageObject = bginput.pages[0]
             for index, ctr in enumerate(pages):

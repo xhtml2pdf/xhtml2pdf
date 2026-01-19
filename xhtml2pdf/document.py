@@ -197,7 +197,7 @@ def pisaDocument(
 
     # Add watermarks
     output = io.BytesIO()
-    output, has_bg = WaterMarks.process_doc(context, out, output)
+    output, has_bg = WaterMarks.process_doc(doc, out, output)
 
     if not has_bg:
         output = out

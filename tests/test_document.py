@@ -12,6 +12,7 @@ DENKER_TRANSPARENT = os.path.join(
     os.path.dirname(__file__), "samples", "img", "denker-transparent.png"
 )
 
+TREE = os.path.join(os.path.dirname(__file__), "samples", "img", "tree.jpg")
 
 HTML_CONTENT: str = """<!DOCTYPE html>
 <html>
@@ -156,6 +157,91 @@ class DocumentTest(TestCase):
             pdf_reader = PdfReader(pdf_file)
 
             self.assertEqual(len(pdf_reader.pages), 2)
+
+            self.assertIn("/XObject", pdf_reader.pages[0]["/Resources"])
+            self.assertNotIn("/XObject", pdf_reader.pages[1]["/Resources"])
+
+    def test_document_background_positioning_and_long_toc(self) -> None:
+        """Test that a long toc is taken into account when positioning backgrounds."""
+        css = f"""<style>@page {{@frame {{left: 10pt}}}}
+              @page two {{background-image: url('{DENKER_TRANSPARENT}'); @frame {{left: 10 pt}}}}</style>"""
+        marker_text = "Backgrounds should start from this page onwards."
+        extra_html = (
+            f"""
+                <div>
+                    <pdf:toc>
+                </div>
+                <pdf:nexttemplate name="two">
+                <pdf:nextpage>
+                <h1>Hello, world!</h1>
+                <!-- special text we can test on. -->
+                <p>{marker_text}</p>
+            """
+            + """<h1>Hello, world!</h1>\n""" * 100
+        )
+
+        with tempfile.TemporaryFile() as pdf_file:
+            pisaDocument(
+                src=io.StringIO(HTML_CONTENT.format(head=css, extra_html=extra_html)),
+                dest=pdf_file,
+            )
+            pdf_file.seek(0)
+            pdf_reader = PdfReader(pdf_file)
+
+            seen_marker_text = False
+            for page in pdf_reader.pages:
+                seen_marker_text |= marker_text in page.extract_text()
+                if seen_marker_text:
+                    self.assertIn("/XObject", page["/Resources"])
+                else:
+                    self.assertNotIn("/XObject", page["/Resources"])
+
+            assert seen_marker_text
+
+    def test_document_background_used_when_reusing_templates(self) -> None:
+        """Test that a long toc is taken into account when positioning backgrounds."""
+        css = f"""<style>
+              @page one {{background-image: url('{TREE}'); @frame {{left: 10pt}}}}
+              @page two {{background-image: url('{DENKER_TRANSPARENT}'); @frame {{left: 10 pt}}}}
+        </style>"""
+        extra_html = """
+                <pdf:nexttemplate name="one">
+                <pdf:nextpage>
+                <h1>One</h1>
+                <pdf:nexttemplate name="two">
+                <pdf:nextpage>
+                <h1>Two</h1>
+                <pdf:nexttemplate name="one">
+                <pdf:nextpage>
+                <h1>One</h1>
+                <pdf:nexttemplate name="two">
+                <pdf:nextpage>
+                <h1>Two</h1>
+            """
+
+        with tempfile.TemporaryFile() as pdf_file:
+            pisaDocument(
+                src=io.StringIO(HTML_CONTENT.format(head=css, extra_html=extra_html)),
+                dest=pdf_file,
+            )
+            pdf_file.seek(0)
+            pdf_reader = PdfReader(pdf_file)
+
+            for page in pdf_reader.pages:
+                if "One" in page.extract_text():
+                    objects = page["/Resources"]["/XObject"].get_object().values()
+                    self.assertEqual(len(objects), 1)
+                    (obj,) = objects
+                    # Dimensions of TREE
+                    self.assertEqual(obj["/Height"], 180)
+                    self.assertEqual(obj["/Width"], 240)
+                if "Two" in page.extract_text():
+                    objects = page["/Resources"]["/XObject"].get_object().values()
+                    self.assertEqual(len(objects), 1)
+                    (obj,) = objects
+                    # Dimensions of DENKER_TRANSPARENT
+                    self.assertEqual(obj["/Height"], 137)
+                    self.assertEqual(obj["/Width"], 70)
 
     @skipIf(os.environ.get("HTTP_PROXY"), reason="Running on proxy")
     def test_document_with_broken_image(self) -> None:
