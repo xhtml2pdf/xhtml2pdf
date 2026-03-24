@@ -168,6 +168,24 @@ def getBorderStyle(value, default=None):
     return default
 
 
+def getDashPattern(style, width):
+    """Return a (dash_array, line_cap) tuple for the given CSS border style.
+
+    ``width`` is the border width in points.  The returned ``dash_array``
+    can be passed directly to ``canvas.setDash()``.  ``line_cap`` should be
+    applied via ``canvas.setLineCap()`` — 1 (round) for dotted borders, 0
+    (butt) otherwise.
+    """
+    if not style:
+        return [], 0
+    name = str(style).lower()
+    if name == "dotted":
+        return [width, width * 2], 1
+    if name == "dashed":
+        return [width * 3, width * 2], 0
+    return [], 0
+
+
 MM: float = cm / 10.0
 DPI96: float = 1.0 / 96.0 * inch
 

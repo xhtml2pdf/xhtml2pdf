@@ -19,7 +19,7 @@ import logging
 from reportlab.platypus.tables import TableStyle
 
 from xhtml2pdf.tags import pisaTag
-from xhtml2pdf.util import getAlign, getBorderStyle, getSize, set_value
+from xhtml2pdf.util import getAlign, getBorderStyle, getDashPattern, getSize, set_value
 from xhtml2pdf.xhtml2pdf_reportlab import PmlKeepInFrame, PmlTable
 
 log = logging.getLogger(__name__)
@@ -107,6 +107,7 @@ class TableData:
             and c.frag.borderTopWidth
             and c.frag.borderTopColor is not None
         ):
+            dash, cap = getDashPattern(c.frag.borderTopStyle, c.frag.borderTopWidth)
             self.add_style(
                 (
                     "LINEABOVE",
@@ -114,7 +115,8 @@ class TableData:
                     (end[0], begin[1]),
                     c.frag.borderTopWidth,
                     c.frag.borderTopColor,
-                    "squared",
+                    cap or "squared",
+                    dash or None,
                 )
             )
         if (
@@ -122,6 +124,7 @@ class TableData:
             and c.frag.borderLeftWidth
             and c.frag.borderLeftColor is not None
         ):
+            dash, cap = getDashPattern(c.frag.borderLeftStyle, c.frag.borderLeftWidth)
             self.add_style(
                 (
                     "LINEBEFORE",
@@ -129,7 +132,8 @@ class TableData:
                     (begin[0], end[1]),
                     c.frag.borderLeftWidth,
                     c.frag.borderLeftColor,
-                    "squared",
+                    cap or "squared",
+                    dash or None,
                 )
             )
         if (
@@ -137,6 +141,7 @@ class TableData:
             and c.frag.borderRightWidth
             and c.frag.borderRightColor is not None
         ):
+            dash, cap = getDashPattern(c.frag.borderRightStyle, c.frag.borderRightWidth)
             self.add_style(
                 (
                     "LINEAFTER",
@@ -144,7 +149,8 @@ class TableData:
                     end,
                     c.frag.borderRightWidth,
                     c.frag.borderRightColor,
-                    "squared",
+                    cap or "squared",
+                    dash or None,
                 )
             )
         if (
@@ -152,6 +158,7 @@ class TableData:
             and c.frag.borderBottomWidth
             and c.frag.borderBottomColor is not None
         ):
+            dash, cap = getDashPattern(c.frag.borderBottomStyle, c.frag.borderBottomWidth)
             self.add_style(
                 (
                     "LINEBELOW",
@@ -159,7 +166,8 @@ class TableData:
                     end,
                     c.frag.borderBottomWidth,
                     c.frag.borderBottomColor,
-                    "squared",
+                    cap or "squared",
+                    dash or None,
                 )
             )
         self.add_style(("LEFTPADDING", begin, end, c.frag.paddingLeft or self.padding))

@@ -10,6 +10,7 @@ from xhtml2pdf.util import (
     getBox,
     getColor,
     getCoords,
+    getDashPattern,
     getFrameDimensions,
     getSize,
     set_value,
@@ -273,6 +274,33 @@ class GetBorderStyleTestCase(TestCase):
     def test_will_return_default_if_passed_value_is_non_case_sensitive_hidden(self):
         style = getBorderStyle("hidDen", default="defaultPassedArg")
         self.assertEqual(style, "defaultPassedArg")
+
+
+class GetDashPatternTestCase(TestCase):
+    def test_solid_returns_empty_dash(self):
+        dash, cap = getDashPattern("solid", 2)
+        self.assertEqual(dash, [])
+        self.assertEqual(cap, 0)
+
+    def test_dashed_returns_dash_pattern(self):
+        dash, cap = getDashPattern("dashed", 2)
+        self.assertEqual(dash, [6, 4])
+        self.assertEqual(cap, 0)
+
+    def test_dotted_returns_dot_pattern_with_round_cap(self):
+        dash, cap = getDashPattern("dotted", 3)
+        self.assertEqual(dash, [3, 6])
+        self.assertEqual(cap, 1)
+
+    def test_none_returns_empty_dash(self):
+        dash, cap = getDashPattern(None, 2)
+        self.assertEqual(dash, [])
+        self.assertEqual(cap, 0)
+
+    def test_unknown_style_returns_empty_dash(self):
+        dash, cap = getDashPattern("groove", 2)
+        self.assertEqual(dash, [])
+        self.assertEqual(cap, 0)
 
 
 class CopyUtils(TestCase):

@@ -41,6 +41,8 @@ from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.platypus.flowables import Flowable
 
+from xhtml2pdf.util import getDashPattern
+
 if TYPE_CHECKING:
     from reportlab.pdfgen.canvas import Canvas
 
@@ -121,6 +123,9 @@ class Box(dict):
                 if color is not None:
                     canvas.setStrokeColor(color)
                     canvas.setLineWidth(width)
+                    dash, cap = getDashPattern(bstyle, width)
+                    canvas.setDash(dash)
+                    canvas.setLineCap(cap)
                     canvas.line(x1, y1, x2, y2)
 
         _drawBorderLine(

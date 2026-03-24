@@ -49,7 +49,7 @@ from reportlab.rl_config import register_reset
 
 from xhtml2pdf.files import pisaFileObject, pisaTempFile
 from xhtml2pdf.reportlab_paragraph import Paragraph
-from xhtml2pdf.util import ImageWarning, getBorderStyle
+from xhtml2pdf.util import ImageWarning, getBorderStyle, getDashPattern
 
 if TYPE_CHECKING:
     from reportlab.graphics.shapes import Drawing
@@ -732,10 +732,12 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
                 # If no color for border is given, the text color is used (like defined by W3C)
                 if color is None:
                     color = style.textColor
-                    # print "Border", bstyle, width, color
                 if color is not None:
                     canvas.setStrokeColor(color)
                     canvas.setLineWidth(width)
+                    dash, cap = getDashPattern(bstyle, width)
+                    canvas.setDash(dash)
+                    canvas.setLineCap(cap)
                     canvas.line(x1, y1, x2, y2)
 
         _drawBorderLine(

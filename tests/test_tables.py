@@ -152,7 +152,8 @@ class TableDataTestCase(TestCase):
         instance = self.sut()
         instance.add_cell_styles(context, (0, 1), (3, 5), mode="tr")
         self.assertEqual(
-            instance.styles[0], ("LINEABOVE", (0, 1), (3, 1), "3px", "black", "squared")
+            instance.styles[0],
+            ("LINEABOVE", (0, 1), (3, 1), "3px", "black", "squared", None),
         )
 
     def test_add_cell_styles_will_not_add_lineabove_style_if_bordertop_style_not_set_on_context_frag(
@@ -196,7 +197,7 @@ class TableDataTestCase(TestCase):
         instance.add_cell_styles(context, (0, 1), (3, 5), mode="tr")
         self.assertEqual(
             instance.styles[0],
-            ("LINEBEFORE", (0, 1), (0, 5), "3px", "black", "squared"),
+            ("LINEBEFORE", (0, 1), (0, 5), "3px", "black", "squared", None),
         )
 
     def test_add_cell_styles_will_not_add_linebefore_style_if_borderleft_style_not_set_on_context_frag(
@@ -240,7 +241,8 @@ class TableDataTestCase(TestCase):
         instance = self.sut()
         instance.add_cell_styles(context, (0, 1), (3, 5), mode="tr")
         self.assertEqual(
-            instance.styles[0], ("LINEAFTER", (3, 1), (3, 5), "3px", "black", "squared")
+            instance.styles[0],
+            ("LINEAFTER", (3, 1), (3, 5), "3px", "black", "squared", None),
         )
 
     def test_add_cell_styles_will_not_add_lineafter_style_if_borderright_style_not_set_on_context_frag(
@@ -284,7 +286,8 @@ class TableDataTestCase(TestCase):
         instance = self.sut()
         instance.add_cell_styles(context, (0, 1), (3, 5), mode="tr")
         self.assertEqual(
-            instance.styles[0], ("LINEBELOW", (0, 5), (3, 5), "3px", "black", "squared")
+            instance.styles[0],
+            ("LINEBELOW", (0, 5), (3, 5), "3px", "black", "squared", None),
         )
 
     def test_add_cell_styles_will_not_add_linebelow_style_if_borderbottom_style_not_set_on_context_frag(
@@ -337,17 +340,20 @@ class TableDataTestCase(TestCase):
         instance = self.sut()
         instance.add_cell_styles(context, (0, 1), (3, 5), mode="tr")
         self.assertEqual(
-            instance.styles[0], ("LINEABOVE", (0, 1), (3, 1), "3px", "black", "squared")
+            instance.styles[0],
+            ("LINEABOVE", (0, 1), (3, 1), "3px", "black", "squared", None),
         )
         self.assertEqual(
             instance.styles[1],
-            ("LINEBEFORE", (0, 1), (0, 5), "3px", "black", "squared"),
+            ("LINEBEFORE", (0, 1), (0, 5), "3px", "black", "squared", None),
         )
         self.assertEqual(
-            instance.styles[2], ("LINEAFTER", (3, 1), (3, 5), "3px", "black", "squared")
+            instance.styles[2],
+            ("LINEAFTER", (3, 1), (3, 5), "3px", "black", "squared", None),
         )
         self.assertEqual(
-            instance.styles[3], ("LINEBELOW", (0, 5), (3, 5), "3px", "black", "squared")
+            instance.styles[3],
+            ("LINEBELOW", (0, 5), (3, 5), "3px", "black", "squared", None),
         )
 
 
