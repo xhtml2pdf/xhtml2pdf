@@ -248,6 +248,8 @@ def getSize(
             return float(value[:-2].strip()) * DPI96
         if value in {"none", "0", "0.0", "auto"}:
             return 0.0
+        if value.endswith("%"):
+            return (relative * float(value[:-1].strip())) / 100.0
         if relative:
             if value.endswith("rem"):  # XXX
                 # 1rem = 1 * fontSize
@@ -258,9 +260,6 @@ def getSize(
             if value.endswith("ex"):  # XXX
                 # 1ex = 1/2 fontSize
                 return float(value[:-2].strip()) * (relative / 2.0)
-            if value.endswith("%"):
-                # 1% = (fontSize * 1) / 100
-                return (relative * float(value[:-1].strip())) / 100.0
             if value in {"normal", "inherit"}:
                 return relative
             if value in RELATIVE_SIZE_TABLE:
