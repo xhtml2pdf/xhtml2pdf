@@ -376,6 +376,7 @@ TAGS = {
         {"align": ["left", "center", "right", "justify"], "dir": ["ltr", "rtl"]},
     ),
     "p": (1, {"align": ["left", "center", "right", "justify"], "dir": ["ltr", "rtl"]}),
+    "html": (0, {"lang": (STRING, "")}),
     "body": (1, {"dir": ["ltr", "rtl"]}),
     "br": (0, {}),
     "h1": (

@@ -347,3 +347,39 @@ class DocumentTest(TestCase):
                 dest=in_memory_file,
             )
             self.assertGreater(len(in_memory_file.getvalue()), 0)
+
+    def test_lang_from_html_attribute(self) -> None:
+        """Test that the lang attribute on <html> is written to the PDF catalog."""
+        html = '<!DOCTYPE html><html lang="es"><body><p>Hola</p></body></html>'
+        with io.BytesIO() as pdf_file:
+            pisaDocument(src=io.StringIO(html), dest=pdf_file)
+            pdf_file.seek(0)
+            reader = PdfReader(pdf_file)
+            root = reader.trailer["/Root"]
+            self.assertEqual(root.get("/Lang"), "es")
+
+    def test_lang_from_pdf_language_tag(self) -> None:
+        """Test that <pdf:language name="..."/> sets /Lang in the PDF catalog."""
+        html = (
+            "<!DOCTYPE html><html><body>"
+            '<pdf:language name="fr"/>'
+            "<p>Bonjour</p></body></html>"
+        )
+        with io.BytesIO() as pdf_file:
+            pisaDocument(src=io.StringIO(html), dest=pdf_file)
+            pdf_file.seek(0)
+            reader = PdfReader(pdf_file)
+            root = reader.trailer["/Root"]
+            self.assertEqual(root.get("/Lang"), "fr")
+
+    def test_no_lang_when_omitted(self) -> None:
+        """Test that /Lang is absent when no language is specified."""
+        with io.BytesIO() as pdf_file:
+            pisaDocument(
+                src=io.StringIO(HTML_CONTENT.format(head="", extra_html="")),
+                dest=pdf_file,
+            )
+            pdf_file.seek(0)
+            reader = PdfReader(pdf_file)
+            root = reader.trailer["/Root"]
+            self.assertNotIn("/Lang", root)

@@ -76,6 +76,14 @@ class pisaTag:
         pass
 
 
+class pisaTagHTML(pisaTag):
+    """Extract the lang attribute from the <html> tag."""
+
+    def start(self, c: pisaContext) -> None:
+        if self.attr.lang:
+            c.language = self.attr.lang
+
+
 class pisaTagBODY(pisaTag):
     """
     We can also assume that there is a BODY tag because html5lib

@@ -161,6 +161,7 @@ def pisaDocument(
         showBoundary=0,
         encrypt=get_encrypt_instance(encrypt),
         allowSplitting=1,
+        lang=context.language or None,
     )
 
     # Prepare templates and their frames
