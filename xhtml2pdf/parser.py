@@ -63,6 +63,7 @@ from xhtml2pdf.tags import (  # noqa: F401
     pisaTagH5,
     pisaTagH6,
     pisaTagHR,
+    pisaTagHTML,
     pisaTagIMG,
     pisaTagINPUT,
     pisaTagLI,
