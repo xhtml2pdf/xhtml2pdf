@@ -126,7 +126,7 @@ jobs:
 
       - name: Upload diff images
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: testrender-diff-${{matrix.reference}}-to-${{matrix.render}}
           path: testrender/output
@@ -166,7 +166,7 @@ jobs:
           fc-match "Courier New"
       - name: Compare against the browser
         run: make test-browser
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7.0.1
         if: always()
         with:
           name: browser-compare-report
