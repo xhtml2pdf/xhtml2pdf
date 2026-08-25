@@ -54,7 +54,7 @@ This is a typical Python library and can be installed using pip::
 Requirements
 ============
 
-Only Python 3.8+ is tested and guaranteed to work.
+Only Python 3.10+ is tested and guaranteed to work.
 
 All mandatory requirements are listed in the ``pyproject.toml`` file and are installed automatically using the ``pip install xhtml2pdf`` method.
 
@@ -66,9 +66,8 @@ in combination with the ``PyCairo`` extra dependency:
 
     pip install xhtml2pdf[pycairo]
 
-Alternatively, the legacy ``RenderPM`` can be used by installing:
-
-    pip install xhtml2pdf[renderpm]
+The ``renderpm`` extra is a deprecated alias for ``pycairo``. ReportLab 5 removed
+the C ``RenderPM`` backend, so ``pycairo`` is now the only backend.
 
 
 Alternatives

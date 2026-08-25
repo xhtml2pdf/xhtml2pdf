@@ -18,7 +18,7 @@ import logging
 import re
 import urllib.parse as urlparse
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from reportlab import rl_settings
 from reportlab.lib.enums import TA_LEFT
@@ -31,8 +31,9 @@ from reportlab.platypus.frames import Frame
 
 try:
     from reportlab.pdfgen.canvas import ShowBoundaryValue
-except ImportError:
-    # reportlab < 4.0.9.1
+except ImportError:  # pragma: no cover
+    # reportlab < 4.0.9.1; the class was removed from platypus.frames in
+    # reportlab 5, so this branch only ever runs on the oldest supported 4.x
     from reportlab.platypus.frames import ShowBoundaryValue
 from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
 
@@ -62,6 +63,8 @@ from xhtml2pdf.xhtml2pdf_reportlab import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from reportlab.platypus.flowables import Flowable
 
     from xhtml2pdf.xhtml2pdf_reportlab import PmlImage
@@ -260,7 +263,7 @@ class pisaCSSBuilder(css.CSSBuilder):
             def func(x):
                 return x
 
-        if isinstance(attr, (list, tuple)):
+        if isinstance(attr, list | tuple):
             for a in attr:
                 return func(data[a]) if a in data else default
             return None
@@ -940,7 +943,7 @@ class pisaContext:
         frag.fontName = frag.bulletFontName = tt2ps(
             frag.fontName, frag.bold, frag.italic
         )
-        if isinstance(text, (PageNumberText, PageCountText)):
+        if isinstance(text, PageNumberText | PageCountText):
             frag.text = text
             # self.text += frag.text
             self._appendFrag(frag)

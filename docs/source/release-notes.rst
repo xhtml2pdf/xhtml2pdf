@@ -51,6 +51,104 @@ Versions >= 0.2
     --------------------------------------------
 
 
+0.2.18 (unreleased)
+====================
+
+**🎉 New**
+
+* Support for ReportLab 5. The dependency is now ``reportlab>=4.0.4,<6``; both
+  major versions are covered by the CI matrix.
+* Support for Python 3.14. The CI matrix now covers every supported CPython
+  release (3.10 to 3.14) against both ReportLab majors.
+
+**💪🏼 Improvements**
+
+* ``PmlImageReader`` falls back to xhtml2pdf's own fetcher when ReportLab
+  refuses a resource. ReportLab 5 changed ``rl_config.trustedHosts=None`` from
+  "every host is trusted" to "no host is trusted", so ``open_for_read`` now
+  rejects every URL and ``data:`` URI by default. That default is deliberate
+  SSRF hardening and is left untouched.
+* ``data:`` URIs are parsed per RFC 2397. The percent-encoded form
+  (``data:image/svg+xml,%3Csvg...``), which is the usual way inline SVG is
+  written, was previously rejected outright; only ``;base64,`` was understood.
+* HTTP responses now follow redirects (bounded to 5 hops), accept any 2xx
+  status rather than the literal ``200 OK`` reason phrase, close their
+  connection, and log a warning instead of a debug message on failure.
+* Plain HTTP requests honour the configured ``http_timeout``; it was previously
+  only applied to HTTPS connections, so plain HTTP could hang indefinitely.
+* The memoization cache in ``xhtml2pdf.util`` is bounded (1000 entries, FIFO)
+  and is cleared at the end of each render. Its keys come from CSS in the
+  rendered document, so it grew without limit in long-running servers.
+
+**🐛 Bug-Fixes**
+
+* ``@page name:left`` / ``@page name:right`` work. A stray ``sys.exit()`` in
+  ``PmlBaseDoc.handle_nextPageTemplate`` terminated the calling process, and the
+  vendored ``PTCycle`` predated ReportLab's ``next_value`` protocol, so the
+  alternating left/right page feature had never worked. ReportLab's own
+  ``PTCycle`` is used now.
+* Temporary files are no longer shared between threads. ``TmpFiles`` subclasses
+  ``threading.local`` but declared ``files`` as a class attribute, so one
+  request's ``cleanFiles()`` closed files another request was still reading.
+* ``pisaPDF.addFromString()`` works. It passed an unsupported ``capacity``
+  keyword to ``getFile()`` and appended raw bytes where ``PdfReader`` needs a
+  file-like object.
+* ``pisaFileObject`` accepts ``bytes`` and ``pathlib.Path``, as its type hints
+  always claimed. Both raised ``AttributeError``, which was swallowed into a
+  silent ``None``.
+* The WSGI middleware produces PDFs. ``PisaMiddleware.filter`` wrote PDF bytes
+  into a ``StringIO``, and the response buffer rejected the ``bytes`` chunks
+  that PEP 3333 requires applications to yield.
+* ``Filter.should_filter`` is abstract instead of printing headers to stdout and
+  returning ``None``.
+* ``Paragraph.getPlainText()`` works; a misplaced bracket made it join a
+  sequence of one-element lists and raise ``TypeError`` on every call.
+* ``pisaTempFile(capacity=-1)`` keeps its buffer in memory, as documented.
+  ``len(buffer) > capacity`` is true for any buffer when capacity is negative,
+  so it selected the on-disk strategy immediately -- the opposite of the
+  intended behaviour, and the default for ``pisaPDF`` and ``pisaContext``.
+* Temporary files are registered with the cleanup registry even when the
+  resource is empty. Registration sat inside an ``if data:``, so those files
+  were never closed by ``cleanFiles()`` and survived until garbage collection
+  (surfaced by the new ``ResourceWarning`` in Python 3.14).
+* ``pisaTempFile.getFileName()`` returns the file name instead of ``None``;
+  ``name`` was never assigned when the on-disk strategy kicked in.
+
+**⚠️ Deprecation**
+
+* Python 3.8 and 3.9 are no longer supported; the minimum is now Python 3.10.
+* The ``renderpm`` extra is deprecated and now an alias for ``pycairo``.
+  ReportLab 5 removed the C ``renderPM`` backend together with its ``renderpm``
+  extra, so ``reportlab[renderpm]`` silently installed nothing there. The
+  pure-Python rlPyCairo backend that ``pycairo`` installs is what
+  ``reportlab.graphics.renderPM`` uses now.
+
+**🧹 Cleanup**
+
+* The test suite no longer reaches the public internet; fixtures are served from
+  a local HTTP server. A dedicated CI job runs the suite with no outbound
+  network at all.
+* The rendering comparison in CI is load-bearing. References used to be
+  regenerated from the same commit and ReportLab version immediately before
+  being compared, and ``--nofail`` suppressed the exit code, so the pixel diff
+  could never fail. A cross-version job now builds references with one ReportLab
+  major and renders with the other, in both directions. A missing reference
+  counts as a difference instead of being silently skipped.
+* The tox ``envlist`` matches the CI matrix again; ``TOXENV=py3.13`` previously
+  matched no environment, so that leg ran no tests. CI asserts the match.
+* ``make test-render`` fails with a clear message when the reference set has not
+  been generated yet, instead of reporting every page as a difference. New
+  ``make test-render-all`` target creates the reference and compares in one go.
+* CI patches whichever ``/etc/ImageMagick-*/policy.xml`` exists rather than
+  hardcoding the ImageMagick 6 path.
+* New tests for previously uncovered modules: ``pdf.py``, ``wsgi.py``, the
+  ``pisa`` CLI, ``files.py``, and ``reportlab_paragraph.py``. A contract test
+  pins every private ReportLab symbol the package imports.
+* Removed the dead ``tests/runtests.py`` harness.
+
+--------------------------------------------
+
+
 0.2.17
 ====================
 

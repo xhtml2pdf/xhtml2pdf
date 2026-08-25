@@ -1,14 +1,17 @@
 name: Run Tests
-on: push
+on: [push, pull_request]
 jobs:
   python:
+    name: py${{matrix.python-version}} / reportlab ${{matrix.reportlab}}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        reportlab: ["4", "5"]
     env:
       PYTHON_VERSION: ${{matrix.python-version}}
+      TOXENV: py${{matrix.python-version}}-rl${{matrix.reportlab}}
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{matrix.python-version}}
@@ -16,7 +19,9 @@ jobs:
         with:
           python-version: ${{matrix.python-version}}
           allow-prereleases: true
-      - if: matrix.python-version == '3.13'  # For lxml...
+      # lxml (via svglib) may need to build from source on the newest CPython
+      # before wheels land.
+      - if: contains(fromJSON('["3.13", "3.14"]'), matrix.python-version)
         run: |
           sudo apt-get update
           sudo apt-get install --yes libxml2 libxslt-dev
@@ -24,17 +29,27 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --yes ghostscript imagemagick
-          sudo sed -i 's#<policy domain="coder" rights="none" pattern="PDF" />#<policy domain="coder" rights="read|write" pattern="PDF" />#' /etc/ImageMagick-6/policy.xml
+          # Allow ImageMagick to read PDFs. The path is version dependent, so
+          # patch whichever policy files exist rather than hardcoding -6.
+          for policy in /etc/ImageMagick-*/policy.xml; do
+            [ -f "$policy" ] && sudo sed -i 's#<policy domain="coder" rights="none" pattern="PDF" />#<policy domain="coder" rights="read|write" pattern="PDF" />#' "$policy"
+          done
           python -m pip install --upgrade pip
           python -m pip install .[test]
 
-      - name: run
+      # Guards against the silent gap this matrix used to have: TOXENV was
+      # py3.13, which matched nothing in envlist, so that leg ran no tests.
+      - name: Assert TOXENV exists
+        run: tox -l | grep -qx "$TOXENV"
+
+      # Reference images for the pixel diff below. Note this only makes the diff
+      # a self-consistency check; the real cross-version gate is the separate
+      # job below.
+      - name: Create render references
         run: make test-ref
 
       - name: Test with tox
         run: tox
-        env:
-          TOXENV: py${{matrix.python-version}}
 
       - name: Generate coverage report
         run: coverage xml
@@ -47,3 +62,78 @@ jobs:
           github-token: ${{ github.token }}
           file: "coverage.xml"
           format: "cobertura"
+
+  # The load-bearing rendering gate.
+  #
+  # References are generated with one reportlab major and compared against a
+  # render from the other, on the same runner, so ghostscript, ImageMagick and
+  # the system fonts are held constant and reportlab is the only variable. Both
+  # directions are checked so a one-way drift cannot slip through.
+  reportlab-crossversion:
+    name: render diff, reportlab ${{matrix.reference}} -> ${{matrix.render}}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - reference: "4"
+            reference_spec: "reportlab>=4.0.4,<5"
+            render: "5"
+            render_spec: "reportlab>=5,<6"
+          - reference: "5"
+            reference_spec: "reportlab>=5,<6"
+            render: "4"
+            render_spec: "reportlab>=4.0.4,<5"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ghostscript imagemagick
+          # Allow ImageMagick to read PDFs. The path is version dependent, so
+          # patch whichever policy files exist rather than hardcoding -6.
+          for policy in /etc/ImageMagick-*/policy.xml; do
+            [ -f "$policy" ] && sudo sed -i 's#<policy domain="coder" rights="none" pattern="PDF" />#<policy domain="coder" rights="read|write" pattern="PDF" />#' "$policy"
+          done
+          python -m pip install --upgrade pip
+          python -m pip install .
+
+      - name: Render references with reportlab ${{matrix.reference}}
+        run: |
+          python -m pip install "${{matrix.reference_spec}}"
+          python -c "from reportlab import Version; print('reference built with reportlab', Version)"
+          make test-ref
+
+      - name: Compare against a render with reportlab ${{matrix.render}}
+        run: |
+          python -m pip install "${{matrix.render_spec}}"
+          python -c "from reportlab import Version; print('rendering with reportlab', Version)"
+          make test-render
+
+      - name: Upload diff images
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: testrender-diff-${{matrix.reference}}-to-${{matrix.render}}
+          path: testrender/output
+
+  # The suite must not need the public internet. Everything is served from
+  # tests/httpserver.py on localhost.
+  offline:
+    name: offline test run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade pip && python -m pip install .[test]
+      - name: Run the suite with no outbound network
+        run: |
+          sudo unshare --net --map-root-user sh -c '
+            ip link set lo up
+            python -m unittest discover -t . -s tests
+          '

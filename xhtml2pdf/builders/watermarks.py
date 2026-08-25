@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Iterator, cast
+from typing import TYPE_CHECKING, cast
 
 import pypdf
 from PIL import Image
@@ -9,6 +9,7 @@ from reportlab.pdfgen.canvas import Canvas
 from xhtml2pdf.files import getFile, pisaFileObject
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
     from io import BytesIO
 
     from xhtml2pdf.context import pisaContext

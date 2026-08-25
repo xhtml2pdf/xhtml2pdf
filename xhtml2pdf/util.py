@@ -17,7 +17,7 @@ import contextlib
 import logging
 import re
 from copy import copy
-from typing import Any
+from typing import Any, ClassVar
 
 import arabic_reshaper
 import reportlab
@@ -28,6 +28,7 @@ from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.lib.units import cm, inch
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
+from reportlab.rl_config import register_reset
 
 import xhtml2pdf.default
 
@@ -53,13 +54,38 @@ class Memoized:
     and uses it as a cache for subsequent calls to the same method.
     It is especially useful for functions that don't rely on external variables
     and that are called often. It's a perfect match for our getSize etc...
+
+    The cache is bounded and evicts in FIFO order. Keys are derived from CSS
+    values taken straight out of the rendered document, so an unbounded cache
+    grows without limit in a long-running server process.
+
+    ``functools.lru_cache`` is not a substitute here: the ``TypeError`` fallback
+    below (unhashable arguments, e.g. a list ``pagesize``) is load-bearing, and
+    ``lru_cache`` raises instead.
     """
 
-    def __init__(self, func) -> None:
+    #: Maximum number of memoized results kept per decorated function.
+    DEFAULT_MAXSIZE: int = 1000
+
+    #: Every instance, so the whole memoization layer can be dropped at once.
+    _instances: ClassVar[list[Memoized]] = []
+
+    def __init__(self, func, maxsize: int | None = None) -> None:
         self.cache: dict = {}
+        self.maxsize: int = self.DEFAULT_MAXSIZE if maxsize is None else maxsize
         self.func = func
         self.__doc__ = self.func.__doc__  # To avoid great confusion
         self.__name__ = self.func.__name__  # This also avoids great confusion
+        Memoized._instances.append(self)
+        # NB: must be a bound method of a real object -- reportlab >= 4.5.1
+        # wraps the callback in a WeakMethod, which rejects builtins such as
+        # dict.clear. Older versions store a plain weakref, which would expire
+        # immediately on a temporary bound method, so keep a strong reference.
+        self._reset_callback = self.clear
+        register_reset(self._reset_callback)
+
+    def clear(self) -> None:
+        self.cache.clear()
 
     def __call__(self, *args, **kwargs):
         # Make sure the following line is not actually slower than what you're
@@ -69,11 +95,20 @@ class Memoized:
         try:
             if key not in self.cache:
                 res = self.func(*args, **kwargs)
+                if self.maxsize and len(self.cache) >= self.maxsize:
+                    # dicts are insertion-ordered, so this is FIFO eviction
+                    self.cache.pop(next(iter(self.cache)))
                 self.cache[key] = res
             return self.cache[key]
         except TypeError:
             # happens if any of the parameters is a list
             return self.func(*args, **kwargs)
+
+
+def reset_caches() -> None:
+    """Drop every memoized result. Called at the end of each render."""
+    for memoized in Memoized._instances:
+        memoized.clear()
 
 
 def toList(value: Any, *, cast_tuple: bool = True) -> list:
@@ -229,7 +264,7 @@ def getSize(
             return value
         if isinstance(value, int):
             return float(value)
-        if isinstance(value, (tuple, list)):
+        if isinstance(value, tuple | list):
             value = "".join(value)
         value = str(value).strip().lower().replace(",", ".")
         if value.endswith("cm"):

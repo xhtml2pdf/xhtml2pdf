@@ -22,7 +22,7 @@ def link_callback(uri, _rel):
     """
     result = finders.find(uri)
     if result:
-        if not isinstance(result, (list, tuple)):
+        if not isinstance(result, list | tuple):
             result = [result]
         result = [os.path.realpath(path) for path in result]
         path = result[0]

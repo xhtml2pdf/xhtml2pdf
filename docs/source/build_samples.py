@@ -9,9 +9,10 @@ dir_temp = "/"
 def convert_to_pdf_file(
     inputfile, outputfile, link_callback=None, encrypt=None, signature=None
 ):
-    with open(outputfile, "wb") as arch, open(
-        inputfile, encoding="utf-8", errors="ignore"
-    ) as source:
+    with (
+        open(outputfile, "wb") as arch,
+        open(inputfile, encoding="utf-8", errors="ignore") as source,
+    ):
         return pisa.CreatePDF(
             source,
             arch,

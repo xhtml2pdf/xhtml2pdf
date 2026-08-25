@@ -1,0 +1,59 @@
+<html>
+<head>
+    <title>Alternating left/right page templates</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <style type="text/css">
+    @page book {
+        size: a4 portrait;
+        margin: 2cm;
+        @frame content_frame {
+            left: 2cm; top: 2.5cm; width: 17cm; height: 24cm;
+        }
+        @frame footer_frame {
+            -pdf-frame-content: footer_content;
+            left: 2cm; top: 27cm; width: 17cm; height: 1cm;
+        }
+    }
+    /* Mirrored margins: the inner edge changes side on every page. */
+    @page book:left {
+        @frame content_frame {
+            left: 1.5cm; top: 2.5cm; width: 17cm; height: 24cm;
+        }
+    }
+    @page book:right {
+        @frame content_frame {
+            left: 3.5cm; top: 2.5cm; width: 17cm; height: 24cm;
+        }
+    }
+    h1 { font-size: 1.4em; }
+    </style>
+</head>
+<body>
+<pdf:nexttemplate name="book"/>
+
+<div id="footer_content" style="text-align: center; font-size: 8pt;">
+    page <pdf:pagenumber> of <pdf:pagecount>
+</div>
+
+<h1>Page one</h1>
+<p>This document uses <code>@page book:left</code> and <code>@page book:right</code>
+so that facing pages get mirrored inner margins, the way a printed book is laid out.</p>
+<p>The left/right template pair is expanded into an alternating cycle by
+<code>PmlBaseDoc.handle_nextPageTemplate</code>. A stray <code>sys.exit()</code> in that
+branch used to terminate the calling process outright, so this feature never worked.</p>
+
+<pdf:nextpage/>
+<h1>Page two</h1>
+<p>The content frame on this page starts at a different horizontal offset than the
+previous one. If the templates stop alternating, this page shifts and the rendered
+output changes.</p>
+
+<pdf:nextpage/>
+<h1>Page three</h1>
+<p>Back to the first offset of the cycle.</p>
+
+<pdf:nextpage/>
+<h1>Page four</h1>
+<p>And back to the second. Four pages are enough to show the cycle repeating rather
+than merely being applied once.</p>
+</body></html>

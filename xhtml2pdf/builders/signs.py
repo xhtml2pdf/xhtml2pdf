@@ -35,7 +35,7 @@ class PDFSignature:
             if not isinstance(chain, list):
                 chain = [chain]
             for c in chain:
-                if isinstance(c, (Path, str)):
+                if isinstance(c, Path | str):
                     pisafile = getFile(c)
                     _, _, digicert_ca_bytes = pem.unarmor(pisafile.getData())
                     chains.append(x509.Certificate.load(digicert_ca_bytes))
@@ -134,7 +134,7 @@ class PDFSignature:
     def parse_crls(crls):
         list_crls = []
         for x in crls:
-            if isinstance(x, (Path, str)):
+            if isinstance(x, Path | str):
                 pisafile = getFile(x)
                 cert_list = crl.CertificateList.load(pisafile.getData())
                 list_crls.append(cert_list)

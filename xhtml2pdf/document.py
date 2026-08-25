@@ -26,7 +26,7 @@ from xhtml2pdf.context import pisaContext
 from xhtml2pdf.default import DEFAULT_CSS
 from xhtml2pdf.files import cleanFiles, pisaTempFile
 from xhtml2pdf.parser import pisaParser
-from xhtml2pdf.util import getBox
+from xhtml2pdf.util import getBox, reset_caches
 from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlPageTemplate
 
 log = logging.getLogger(__name__)
@@ -221,6 +221,7 @@ def pisaDocument(
     data = output.getvalue()
     context.dest.write(data)  # TODO: context.dest is a tempfile as well...
     cleanFiles()
+    reset_caches()
 
     if dest_bytes:
         return data

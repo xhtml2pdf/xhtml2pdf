@@ -19,7 +19,7 @@ import logging
 import re
 import string
 import warnings
-from typing import TYPE_CHECKING, Callable, ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 from reportlab.graphics.barcode import createBarcodeDrawing
 from reportlab.graphics.charts.legends import Legend
@@ -45,6 +45,7 @@ from xhtml2pdf.util import DPI96, ImageWarning, getAlign, getColor, getSize
 from xhtml2pdf.xhtml2pdf_reportlab import PmlImage, PmlInput, PmlPageTemplate
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from xml.dom.minidom import Element
 
     from reportlab.pdfgen.canvas import Canvas

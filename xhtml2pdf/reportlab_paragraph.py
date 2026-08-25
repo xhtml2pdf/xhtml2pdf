@@ -9,7 +9,7 @@ import sys
 from copy import deepcopy
 from operator import truth
 from string import whitespace
-from typing import Callable
+from typing import TYPE_CHECKING
 
 from reportlab.graphics import renderPDF
 from reportlab.lib.abag import ABag
@@ -22,6 +22,9 @@ from reportlab.platypus.paraparser import ParaParser
 from reportlab.rl_settings import _FUZZ
 
 from xhtml2pdf.util import getSize
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 PARAGRAPH_DEBUG = False
 LEADING_FACTOR = 1.0
@@ -1245,7 +1248,7 @@ class Paragraph(Flowable):
         if self.debug:
             print(id(self), "breakLines")
 
-        maxWidths = [width] if not isinstance(width, (tuple, list)) else width
+        maxWidths = [width] if not isinstance(width, tuple | list) else width
         lines = []
         lineno = 0
         style = self.style
@@ -1503,7 +1506,7 @@ class Paragraph(Flowable):
         if self.debug:
             print(id(self), "breakLinesCJK")
 
-        maxWidths = width if isinstance(width, (list, tuple)) else [width]
+        maxWidths = width if isinstance(width, list | tuple) else [width]
         style = self.style
 
         # for bullets, work out width and ensure we wrap the right amount onto line one
@@ -1781,7 +1784,9 @@ class Paragraph(Flowable):
         """
         frags = getattr(self, "frags", None)
         if frags:
-            return "".join([frag.text] for frag in frags if hasattr(frag, "text"))
+            # the brackets used to wrap frag.text, so this joined a sequence of
+            # one-element lists and raised TypeError on every call
+            return "".join(frag.text for frag in frags if hasattr(frag, "text"))
         if identify:
             text = getattr(self, "text", None)
             if text is None:

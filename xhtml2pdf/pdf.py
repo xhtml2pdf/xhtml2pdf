@@ -43,9 +43,12 @@ class pisaPDF:
             self.addFromURI(f)
 
     def addFromString(self, data):
-        f = getFile(data.encode(), capacity=self.capacity).getFileContent()
+        if isinstance(data, str):
+            data = data.encode()
+        f = getFile(data).getFileContent()
         if f:
-            self.files.append(f)
+            # join() feeds every entry to PdfReader, which needs a file-like
+            self.files.append(BytesIO(f))
 
     def addDocument(self, doc):
         if hasattr(doc.dest, "read"):
@@ -66,4 +69,3 @@ class pisaPDF:
         return out.getvalue()
 
     getvalue = join
-    __str__ = join

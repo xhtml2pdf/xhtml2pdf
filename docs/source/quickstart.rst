@@ -5,7 +5,7 @@ Quickstart
 Install
 =======
 
-**Prerequisites:** Python v3.8 or newer
+**Prerequisites:** Python v3.10 or newer
 
 This is a typical Python library and is installed using pip
 

@@ -22,7 +22,7 @@ import sys
 from hashlib import md5
 from html import escape as html_escape
 from io import BytesIO, StringIO
-from typing import TYPE_CHECKING, ClassVar, Iterator
+from typing import TYPE_CHECKING, ClassVar
 from uuid import uuid4
 
 from PIL import Image as PILImage
@@ -36,6 +36,7 @@ from reportlab.platypus.doctemplate import (
     BaseDocTemplate,
     IndexingFlowable,
     PageTemplate,
+    PTCycle,
 )
 from reportlab.platypus.flowables import (
     CondPageBreak,
@@ -68,20 +69,6 @@ log = logging.getLogger(__name__)
 
 MAX_IMAGE_RATIO: float = 0.95
 PRODUCER: str = "xhtml2pdf <https://github.com/xhtml2pdf/xhtml2pdf/>"
-
-
-class PTCycle(list):
-    def __init__(self) -> None:
-        self._restart: int = 0
-        self._idx: int = 0
-        super().__init__()
-
-    def cyclicIterator(self) -> Iterator:
-        while 1:
-            yield self[self._idx]
-            self._idx += 1
-            if self._idx >= len(self):
-                self._idx = self._restart
 
 
 class PmlMaxHeightMixIn:
@@ -157,29 +144,31 @@ class PmlBaseDoc(BaseDocTemplate):
             if hasattr(self, "_nextPageTemplateCycle"):
                 del self._nextPageTemplateCycle
             self._nextPageTemplateIndex = pt
-        elif isinstance(pt, (list, tuple)):
+        elif isinstance(pt, list | tuple):
             # used for alternating left/right pages
             # collect the refs to the template objects, complain if any are bad
             c: PTCycle = PTCycle()
             for ptn in pt:
                 # special case name used to short circuit the iteration
                 if ptn == "*":
-                    c._restart = len(c)
+                    c._restart = len(c)  # type: ignore[attr-defined]
                     continue
                 for t in self.pageTemplates:
-                    sys.exit()
                     if t.id == ptn.strip():
                         c.append(t)
                         break
             if not c:
                 msg = "No valid page templates in cycle"
                 raise ValueError(msg)
-            if c._restart > len(c):
+            if c._restart > len(c):  # type: ignore[attr-defined]
                 msg = "Invalid cycle restart position"
                 raise ValueError(msg)
 
-            # ensure we start on the first one$
-            self._nextPageTemplateCycle: PageTemplate = c.cyclicIterator()
+            # ensure we start on the first one
+            # NB: reportlab's BaseDocTemplate._setPageTemplate reads
+            # ``_nextPageTemplateCycle.next_value``, so this must be the PTCycle
+            # itself and not an iterator over it.
+            self._nextPageTemplateCycle: PTCycle = c
         else:
             msg = "Argument pt should be string or integer or list"
             raise TypeError(msg)
@@ -298,6 +287,39 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
     use_lazy_loader: bool = False
     process_internal_files: bool = False
 
+    @classmethod
+    def _clear_cache(cls) -> None:
+        cls._cache.clear()
+
+    @staticmethod
+    def _open(fileName) -> tuple[BytesIO | StringIO, bool]:
+        """
+        Open ``fileName``, falling back to xhtml2pdf's own fetcher.
+
+        reportlab 5 changed ``rl_config.trustedHosts=None`` from "every host is
+        trusted" to "no host is trusted", so ``open_for_read`` now refuses every
+        URL and ``data:`` URI by default. That default is deliberate SSRF
+        hardening and must not be reverted from a library, so remote resources
+        are routed through ``xhtml2pdf.files`` instead, which applies this
+        project's own network policy (timeouts, retries, redirect budget).
+
+        Local paths are unaffected: ``open_for_read`` tries a plain ``open()``
+        first. Returns ``(stream, used_fallback)``.
+        """
+        try:
+            return open_for_read(fileName, "b"), False
+        except OSError:
+            if not isinstance(fileName, str) or not fileName.startswith(
+                ("data:", "http://", "https://")
+            ):
+                raise
+            log.debug("open_for_read refused %r, using xhtml2pdf.files", fileName[:80])
+            stream = pisaFileObject(fileName).getBytesIO()
+            if stream is None:
+                msg = f"Cannot open resource {fileName[:80]!r}"
+                raise OSError(msg) from None
+            return stream, True
+
     def __init__(self, fileName: PmlImage | Image | str) -> None:
         if isinstance(fileName, PmlImage):
             self.__dict__ = fileName.__dict__  # borgize
@@ -317,19 +339,29 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
             self.fp = getattr(fileName, "fp", None)
         else:
             try:
-                self.fp = open_for_read(fileName, "b")
+                self.fp, used_fallback = self._open(fileName)
                 if self.process_internal_files and isinstance(self.fp, StringIO):
                     data: str = self.fp.read()
                     with contextlib.suppress(Exception):
                         self.fp.close()
                     if self.use_cache:
                         if not self._cache:
-                            register_reset(self._cache.clear)
+                            # a bound method, not dict.clear: reportlab wraps
+                            # the callback in a WeakMethod, which rejects
+                            # builtin methods
+                            register_reset(type(self)._clear_cache)
                         cache_key = md5(data.encode("utf8")).digest()
                         data = self._cache.setdefault(cache_key, data)
                     self.fp = StringIO(data)
-                elif self.use_lazy_loader and isinstance(fileName, str):
+                elif (
+                    self.use_lazy_loader
+                    and isinstance(fileName, str)
+                    and not used_fallback
+                ):
                     # try Ralf Schmitt's re-opening technique of avoiding too many open files
+                    # NB: skipped for the fallback below -- LazyImageReader
+                    # re-opens by name via open_for_read on every redraw, which
+                    # is exactly the call that failed in the first place.
                     self.fp.close()
                     del self.fp  # will become a property in the next statement
                     self.__class__ = LazyImageReader
@@ -370,7 +402,7 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
 
     def _jpeg_fh(self) -> BytesIO | StringIO | None:
         fp = self.fp
-        if isinstance(fp, (BytesIO, StringIO)):
+        if isinstance(fp, BytesIO | StringIO):
             fp.seek(0)
         return fp
 
@@ -455,7 +487,7 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
             return None
 
     def __str__(self) -> str:
-        if isinstance(self.fileName, (PmlImage, Image, BytesIO)):
+        if isinstance(self.fileName, PmlImage | Image | BytesIO):
             fn = self.fileName.read() or id(self)
             return f"PmlImageObject_{hash(fn)}"
         return str(self.fileName or id(self))

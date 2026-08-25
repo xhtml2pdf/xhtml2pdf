@@ -1,7 +1,9 @@
 from unittest import TestCase
 
+from reportlab import rl_config
 from reportlab.lib.colors import Color
 
+from xhtml2pdf import util as utils
 from xhtml2pdf.files import pisaTempFile
 from xhtml2pdf.tags import int_to_roman
 from xhtml2pdf.util import (
@@ -316,3 +318,56 @@ class CopyUtils(TestCase):
 
         self.assertEqual(obj.param1, str(19))
         self.assertEqual(obj.param2, str(22))
+
+
+class MemoizedTest(TestCase):
+    def test_cache_is_bounded(self) -> None:
+        """
+        Keys come from CSS in the rendered document, so an unbounded cache
+        grows without limit in a long-running server process.
+        """
+        calls: list[int] = []
+
+        def double(value: int) -> int:
+            calls.append(value)
+            return value * 2
+
+        memoized = utils.Memoized(double, maxsize=2)
+        for value in (1, 2, 3):
+            memoized(value)
+
+        self.assertEqual(2, len(memoized.cache))
+        self.assertEqual([1, 2, 3], calls)
+
+        # 1 was evicted first (FIFO), so it has to be recomputed
+        memoized(1)
+        self.assertEqual([1, 2, 3, 1], calls)
+
+    def test_hit_does_not_recompute(self) -> None:
+        calls: list[int] = []
+        memoized = utils.Memoized(lambda v: calls.append(v))
+        memoized(1)
+        memoized(1)
+        self.assertEqual([1], calls)
+
+    def test_unhashable_arguments_bypass_the_cache(self) -> None:
+        """The TypeError fallback is why this cannot become functools.lru_cache."""
+        memoized = utils.Memoized(sum)
+        self.assertEqual(6, memoized([1, 2, 3]))
+        self.assertEqual({}, memoized.cache)
+
+    def test_reset_caches_clears_every_instance(self) -> None:
+        utils.getSize("1cm")
+        self.assertTrue(utils.getSize.cache)
+        utils.reset_caches()
+        self.assertEqual({}, utils.getSize.cache)
+
+    def test_registered_with_reportlab_reset(self) -> None:
+        """
+        reportlab wraps reset callbacks in a WeakMethod, which rejects builtins
+        such as ``dict.clear``.
+        """
+        utils.getSize("2cm")
+        self.assertTrue(utils.getSize.cache)
+        rl_config._reset()
+        self.assertEqual({}, utils.getSize.cache)
