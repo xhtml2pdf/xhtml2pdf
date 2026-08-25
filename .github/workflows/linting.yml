@@ -33,7 +33,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       # chartboost/ruff-action was archived in 2024; this is Astral's own.
-      - uses: astral-sh/ruff-action@v4
+      # Pinned exactly: this action publishes no floating major tag, so @v4
+      # does not resolve to anything.
+      - uses: astral-sh/ruff-action@v4.1.0
         with:
           version: "0.16.4"
   mypy:
