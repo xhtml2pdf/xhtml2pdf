@@ -58,8 +58,7 @@ Examples
                     name,
                     filename,
                 )
-    with open(rst_path / "examples.rst", "w", encoding="utf-8") as arch:
-        arch.write(text)
+    Path(rst_path / "examples.rst").write_text(text, encoding="utf-8")
 
 
 if __name__ == "__main__":

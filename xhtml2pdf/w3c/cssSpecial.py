@@ -17,7 +17,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-# ruff: noqa: N802, N803, N815, N816, N999
+# ruff: file-ignore[invalid-module-name]
 
 import logging
 import re

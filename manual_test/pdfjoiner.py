@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pathlib
+
 from sx.pisa3 import pisa, pisa_pdf
 
 if __name__ == "__main__":
@@ -39,6 +41,5 @@ if __name__ == "__main__":
     # Write the result to a file and open it
     filename = __file__ + ".pdf"
     result = pdf.getvalue()
-    with open(filename, "wb") as file:
-        file.write(result)
+    pathlib.Path(filename).write_bytes(result)
     pisa.startViewer(filename)

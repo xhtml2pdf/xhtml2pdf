@@ -306,7 +306,11 @@ def main():
         pprint("Rendered %i file%s" % (num, "" if num == 1 else "s"))
         pprint(
             "%i file%s differ%s from reference"
-            % (diff_count, diff_count != 1 and "s" or "", diff_count == 1 and "s" or "")
+            % (
+                diff_count,
+                (diff_count != 1 and "s") or "",
+                (diff_count == 1 and "s") or "",
+            )
         )
         pprint("Check %s for results" % htmlfile)
         if diff_count:

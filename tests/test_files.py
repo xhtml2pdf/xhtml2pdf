@@ -34,7 +34,9 @@ class TmpFilesTest(TestCase):
         class attribute, so every thread shared one list and one request's
         cleanFiles() closed files another request was still reading.
         """
-        tmp_file = tempfile.NamedTemporaryFile()
+        # Kept open on purpose: the point of the test is what cleanFiles()
+        # does with a handle another thread still holds.
+        tmp_file = tempfile.NamedTemporaryFile()  # noqa: SIM115
         files_tmp.append(tmp_file)
 
         seen: list[list] = []
@@ -232,7 +234,7 @@ class PisaTempFileTest(TestCase):
         """``name`` was never assigned, so getFileName() always returned None."""
         tmp = pisaTempFile(capacity=-1)
         # bind at cleanup time: getFileName() swaps the underlying delegate
-        self.addCleanup(lambda: tmp.close())
+        self.addCleanup(lambda: tmp.close())  # noqa: PLW0108
         name = tmp.getFileName()
         self.assertIsNotNone(name)
         self.assertEqual(1, tmp.strategy)

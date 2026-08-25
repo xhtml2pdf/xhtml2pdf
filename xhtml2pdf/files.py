@@ -201,7 +201,9 @@ class BaseFile:
 
     def get_named_tmp_file(self) -> _TemporaryFileWrapper[bytes]:
         data: bytes | None = self.get_data()
-        tmp_file = tempfile.NamedTemporaryFile(suffix=self.suffix)
+        # Not a context manager: the handle outlives this call on purpose,
+        # registered below for cleanFiles() to close.
+        tmp_file = tempfile.NamedTemporaryFile(suffix=self.suffix)  # noqa: SIM115
         # Register unconditionally. Registration used to sit inside the `if
         # data` below, so a temp file created for an empty resource was never
         # closed by cleanFiles() and survived until the garbage collector ran

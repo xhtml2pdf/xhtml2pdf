@@ -72,9 +72,7 @@ class Filter:
         raise NotImplementedError
 
     @abstractmethod
-    def filter(  # noqa: A003
-        self, script_name, path_info, environ, status, headers, body
-    ):
+    def filter(self, script_name, path_info, environ, status, headers, body):
         """Signature must match the call site in ``__call__``."""
         raise NotImplementedError
 
@@ -92,7 +90,7 @@ class HTMLFilter(Filter):
 
 class PisaMiddleware(HTMLFilter):
     @staticmethod
-    def filter(_script_name, _path_info, environ, status, headers, body):  # noqa: A003
+    def filter(_script_name, _path_info, environ, status, headers, body):
         topdf = environ.get("pisa.topdf", "")
         if topdf:
             # a PDF is bytes; this used to be a StringIO, so every conversion

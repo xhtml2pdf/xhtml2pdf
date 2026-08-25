@@ -242,7 +242,7 @@ class pisaCSSBuilder(css.CSSBuilder):
         c = self.c
         if not name:
             name = "-pdf-frame-%d" % c.UID()
-        if data.get("is_landscape", False):
+        if data.get("is_landscape"):
             size = (size[1], size[0])
         x, y, w, h = getFrameDimensions(data, size[0], size[1])
         # print name, x, y, w, h
@@ -253,7 +253,7 @@ class pisaCSSBuilder(css.CSSBuilder):
 
         return (
             name,
-            data.get("-pdf-frame-content", None),
+            data.get("-pdf-frame-content"),
             data.get("-pdf-frame-border", border),
             x,
             y,
@@ -435,7 +435,7 @@ class pisaCSSBuilder(css.CSSBuilder):
             else:
                 frameList.append(frame)
 
-        background = data.get("background-image", None)
+        background = data.get("background-image")
         background_context = self.get_background_context(data)
         if background:
             # should be relative to the css file
@@ -891,7 +891,7 @@ class pisaContext:
 
                 self.dumpPara(self.fragAnchor + self.fragList, style)
                 if hasattr(self, "language"):
-                    language = self.__getattribute__("language")
+                    language = self.language
                     detect_language_result = arabic_format(self.text, language)
                     if detect_language_result is not None:
                         self.text = detect_language_result
@@ -1145,9 +1145,9 @@ class pisaContext:
                 parts = src.split(".")
                 baseName, suffix = ".".join(parts[:-1]), parts[-1]
                 suffix = suffix.lower()
-                if suffix in ("ttf", "ttc"):
+                if suffix in {"ttf", "ttc"}:
                     font_type = "ttf"
-                elif suffix in ("afm", "pfb"):
+                elif suffix in {"afm", "pfb"}:
                     font_type = suffix
 
             if font_type == "ttf":
@@ -1168,17 +1168,17 @@ class pisaContext:
                     pdfmetrics.registerFont(file)
 
                     # Add or replace missing styles
-                    for bold in (0, 1):
-                        for italic in (0, 1):
+                    for is_bold in (0, 1):
+                        for is_italic in (0, 1):
                             if (
-                                "%s_%d%d" % (fontName, bold, italic)
+                                "%s_%d%d" % (fontName, is_bold, is_italic)
                             ) not in self.fontList:
-                                addMapping(fontName, bold, italic, fullFontName)
+                                addMapping(fontName, is_bold, is_italic, fullFontName)
 
                     # Register "normal" name and the place holder for style
                     self.registerFont(fontName, [*fontAlias, fullFontName])
 
-            elif font_type in ("afm", ""):
+            elif font_type in {"afm", ""}:
                 if font_type == "afm":
                     afm = file.getNamedFile()
                     tfile = pisaFileObject(baseName + ".pfb", basepath=file.basepath)
@@ -1208,12 +1208,14 @@ class pisaContext:
                     pdfmetrics.registerFont(justFont)
 
                     # Add or replace missing styles
-                    for bold in (0, 1):
-                        for italic in (0, 1):
+                    for is_bold in (0, 1):
+                        for is_italic in (0, 1):
                             if (
-                                "%s_%d%d" % (fontName, bold, italic)
+                                "%s_%d%d" % (fontName, is_bold, is_italic)
                             ) not in self.fontList:
-                                addMapping(fontName, bold, italic, fontNameOriginal)
+                                addMapping(
+                                    fontName, is_bold, is_italic, fontNameOriginal
+                                )
 
                     # Register "normal" name and the place holder for style
                     self.registerFont(

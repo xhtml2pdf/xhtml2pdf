@@ -6,7 +6,7 @@
 #
 # Modified by Dirk Holtwick <holtwick@web.de>, 2007-2008
 
-# ruff: noqa: N802, N803, N815, N816, N999
+# ruff: file-ignore[invalid-module-name]
 from __future__ import annotations
 
 import re

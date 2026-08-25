@@ -564,15 +564,15 @@ class Paragraph(Flowable):
                 # XXX LINK
                 link: bytes | str = frag.get("link", None)
                 if link:
-                    _scheme_re = re.compile("^[a-zA-Z][-+a-zA-Z0-9]+$")
+                    _scheme_re = re.compile(r"^[a-zA-Z][-+a-zA-Z0-9]+$")
                     x, y, w, h = frag["x"], dy - y, frag["width"], frag["fontSize"]
                     rect = (x, y, w, h)
                     if isinstance(link, bytes):
                         link = link.decode("utf8")
                     parts = link.split(":", maxsplit=1)
-                    scheme = len(parts) == 2 and parts[0].lower() or ""
+                    scheme = (len(parts) == 2 and parts[0].lower()) or ""
                     if _scheme_re.match(scheme) and scheme != "document":
-                        kind = scheme.lower() == "pdf" and "GoToR" or "URI"
+                        kind = (scheme.lower() == "pdf" and "GoToR") or "URI"
                         if kind == "GoToR":
                             link = parts[1]
 
@@ -583,7 +583,7 @@ class Paragraph(Flowable):
                             scheme = ""
                         canvas.linkRect(
                             "",
-                            scheme != "document" and link or parts[1],
+                            (scheme != "document" and link) or parts[1],
                             rect,
                             relative=1,
                         )

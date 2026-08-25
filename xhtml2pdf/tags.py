@@ -94,7 +94,7 @@ class pisaTagBODY(pisaTag):
         # canvas.
         if c.frag.backColor:
             c.pageCanvasBackground = c.frag.backColor
-        if "dir" in self.attr and self.attr["dir"]:
+        if self.attr.get("dir"):
             c.setDir(self.attr["dir"])
         # print("base font size", c.baseFontSize)
 
@@ -175,7 +175,7 @@ class pisaTagP(pisaTag):
         # save the type of tag; it's used in PmlBaseDoc.afterFlowable()
         # to check if we need to add an outline-entry
         # c.frag.tag = self.tag
-        if "dir" in self.attr and self.attr["dir"]:
+        if self.attr.get("dir"):
             c.setDir(self.attr["dir"])
         if self.attr.align is not None:
             c.frag.alignment = getAlign(self.attr.align)
@@ -474,9 +474,9 @@ class pisaTagIMG(pisaTag):
                         # afrag = c.frag.clone()
 
                         valign = align
-                        if valign in {"texttop"}:
+                        if valign == "texttop":
                             valign = "top"
-                        elif valign in {"absmiddle"}:
+                        elif valign == "absmiddle":
                             valign = "middle"
                         elif valign in {"absbottom", "baseline"}:
                             valign = "bottom"
@@ -835,9 +835,9 @@ class pisaTagPDFBARCODE(pisaTag):
         c.force = True
 
         valign = attr.align or c.frag.vAlign or "baseline"
-        if valign in {"texttop"}:
+        if valign == "texttop":
             valign = "top"
-        elif valign in {"absmiddle"}:
+        elif valign == "absmiddle":
             valign = "middle"
         elif valign in {"absbottom", "baseline"}:
             valign = "bottom"
@@ -915,7 +915,7 @@ class pisaTagCANVAS(pisaTag):
                 self.chart.set_title_properties(data["title"], title)
                 draw.add(title)
 
-            if "legend" in data and data["legend"]:
+            if data.get("legend"):
                 legend = Legend()
                 self.chart.set_legend(data["legend"], legend)
                 self.chart.load_data_legend(data, legend)

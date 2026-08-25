@@ -103,7 +103,7 @@ from xhtml2pdf.xhtml2pdf_reportlab import PmlLeftPageBreak, PmlRightPageBreak
 
 log = logging.getLogger(__name__)
 
-rxhttpstrip = re.compile("https?://[^/]+(.*)", re.M | re.I)
+rxhttpstrip = re.compile(r"https?://[^/]+(.*)", re.MULTILINE | re.IGNORECASE)
 
 
 class AttrContainer(dict):
@@ -145,7 +145,7 @@ def pisaGetAttributes(c, tag, attributes):
                 dfl = v[1]
                 v = v[0]
             else:
-                nv = attrs.get(k, None)
+                nv = attrs.get(k)
                 dfl = None
 
             if nv is not None:
@@ -266,9 +266,9 @@ nonStandardAttrNames = {"bgcolor": "background-color"}
 
 
 def mapNonStandardAttrs(c, _node, attrList):
-    for attr in nonStandardAttrNames:
-        if attr in attrList and nonStandardAttrNames[attr] not in c:
-            c[nonStandardAttrNames[attr]] = attrList[attr]
+    for attr, standard in nonStandardAttrNames.items():
+        if attr in attrList and standard not in c:
+            c[standard] = attrList[attr]
     return c
 
 
@@ -477,7 +477,7 @@ def CSS2Frag(c, kw, isBlock):
         except TypeError:
             # sequence item 0: expected string, tuple found
             c.frag.height = "".join(toList(c.cssAttr["height"][0]))
-        if c.frag.height in {"auto"}:
+        if c.frag.height == "auto":
             c.frag.height = None
     if "width" in c.cssAttr:
         try:
@@ -485,7 +485,7 @@ def CSS2Frag(c, kw, isBlock):
             c.frag.width = "".join(toList(c.cssAttr["width"]))
         except TypeError:
             c.frag.width = "".join(toList(c.cssAttr["width"][0]))
-        if c.frag.width in {"auto"}:
+        if c.frag.width == "auto":
             c.frag.width = None
         # ZOOM
     if "zoom" in c.cssAttr:
@@ -551,8 +551,8 @@ def pisaPreLoop(node, context, *, collect=False):
                 not media or "all" in media or "print" in media or "pdf" in media
             ):
                 if name == "style":
-                    for node in node.childNodes:
-                        data += pisaPreLoop(node, context, collect=True)
+                    for child in node.childNodes:
+                        data += pisaPreLoop(child, context, collect=True)
                     context.addCSS(data)
                     return ""
 
@@ -562,8 +562,8 @@ def pisaPreLoop(node, context, *, collect=False):
                         '\n@import "{}" {};'.format(attr.href, ",".join(media))
                     )
 
-    for node in node.childNodes:
-        result = pisaPreLoop(node, context, collect=collect)
+    for child in node.childNodes:
+        result = pisaPreLoop(child, context, collect=collect)
         if collect:
             data += result
 
@@ -783,8 +783,8 @@ def pisaLoop(node, context, path=None, **kw):
     else:
         # context.debug(1, indent, "???", node, node.nodeType, repr(node))
         # Loop over children
-        for node in node.childNodes:
-            pisaLoop(node, context, path, **kw)
+        for child in node.childNodes:
+            pisaLoop(child, context, path, **kw)
 
 
 def pisaParser(

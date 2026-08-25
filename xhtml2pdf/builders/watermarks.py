@@ -21,8 +21,8 @@ class WaterMarks:
         img, context: dict, pagesize: tuple[int, int], *, is_portrait: bool
     ) -> tuple[int, int, int, int]:
         object_position: tuple[int, int] | None = context.get("object_position")
-        cssheight: int | None = cast(int, context.get("height"))
-        csswidth: int = cast(int, context.get("width"))
+        cssheight: int | None = cast("int", context.get("height"))
+        csswidth: int = cast("int", context.get("width"))
         iw, ih = img.getSize()
         pw, ph = pagesize
         width: int = pw  # min(iw, pw) # max
@@ -54,7 +54,7 @@ class WaterMarks:
 
     @staticmethod
     def get_img_with_opacity(pisafile: pisaFileObject, context: dict) -> BytesIO:
-        opacity: float = context.get("opacity", None)
+        opacity: float = context.get("opacity")
         if opacity:
             name: str | None = pisafile.getNamedFile()
             img: Image.Image = Image.open(name)

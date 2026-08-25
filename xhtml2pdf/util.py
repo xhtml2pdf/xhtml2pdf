@@ -21,7 +21,6 @@ from io import BytesIO
 from typing import Any, ClassVar
 
 import arabic_reshaper
-import reportlab
 import reportlab.pdfbase._cidfontdata
 from bidi import get_display
 from reportlab.lib.colors import Color, toColor
@@ -291,7 +290,7 @@ def getBorderTableLine(
     return (width, "squared", getBorderDash(style, width), None, 1, 0)
 
 
-def drawBorderLine(  # noqa: PLR0917
+def drawBorderLine(
     canvas, bstyle, width: float, color, x1: float, y1: float, x2: float, y2: float
 ) -> None:
     """
@@ -537,7 +536,7 @@ def getBackgroundImageReader(file_object):
     if key in _background_image_readers:
         return _background_image_readers[key]
 
-    from reportlab.lib.utils import ImageReader  # noqa: PLC0415
+    from reportlab.lib.utils import ImageReader
 
     try:
         data = file_object.getData()
@@ -559,7 +558,7 @@ def getBackgroundImageSize(reader) -> tuple[float, float]:
     return (width * DPI96, height * DPI96)
 
 
-def drawBackgroundImage(  # noqa: PLR0917
+def drawBackgroundImage(
     canvas,
     reader,
     x: float,
@@ -757,7 +756,7 @@ def getAlign(value, default=TA_LEFT):
 
 
 _rx_datauri = re.compile(
-    "^data:(?P<mime>[a-z]+/[a-z]+);base64,(?P<data>.*)$", re.M | re.DOTALL
+    r"^data:(?P<mime>[a-z]+/[a-z]+);base64,(?P<data>.*)$", re.MULTILINE | re.DOTALL
 )
 
 COLOR_BY_NAME = {
@@ -985,7 +984,7 @@ def arabic_format(text, language):
 
 def frag_text_language_check(context, frag_text):
     if hasattr(context, "language"):
-        language = context.__getattribute__("language")
+        language = context.language
         detect_language_result = arabic_format(frag_text, language)
         if detect_language_result:
             return detect_language_result

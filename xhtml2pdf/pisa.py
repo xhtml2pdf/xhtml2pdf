@@ -216,7 +216,7 @@ def execute():
             usage()
             sys.exit()
 
-        elif o in {"--version"}:
+        elif o == "--version":
             print(__version__)
             sys.exit(0)
 
@@ -224,7 +224,7 @@ def execute():
             print(COPYRIGHT)
             sys.exit(0)
 
-        elif o in {"--system"}:
+        elif o == "--system":
             print(COPYRIGHT)
             print()
             print("SYSTEM INFORMATION")
@@ -264,7 +264,7 @@ def execute():
         elif o in {"-b", "--base"}:
             base_dir = a
 
-        elif o in {"--encoding"} and a:
+        elif o == "--encoding" and a:
             # Encoding
             encoding = a
 
@@ -273,18 +273,18 @@ def execute():
             with open(a, encoding="utf-8") as file_handler:
                 css = file_handler.read()
 
-        elif o in {"--css-dump"}:
+        elif o == "--css-dump":
             # CSS dump
             print(DEFAULT_CSS)
             return
 
-        elif o in {"--xml-dump"}:
+        elif o == "--xml-dump":
             xml_output = sys.stdout
 
         elif o in {"-x", "--xml", "--xhtml"}:
             xhtml = True
 
-        elif o in {"--html"}:
+        elif o == "--html":
             xhtml = False
 
         elif httpConfig.is_http_config(o, a):

@@ -1,4 +1,3 @@
-# ruff: noqa: RUF001
 import io
 from unittest import TestCase
 

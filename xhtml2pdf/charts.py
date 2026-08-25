@@ -14,7 +14,7 @@ def set_properties(obj, data, prop_map):
                 value = fnc(data[key])
 
                 if value is not None:
-                    obj.__setattr__(key, value)
+                    setattr(obj, key, value)
             except Exception:
                 continue
 

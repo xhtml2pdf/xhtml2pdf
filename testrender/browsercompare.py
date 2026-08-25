@@ -42,7 +42,7 @@ if TYPE_CHECKING:
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import testrender  # noqa: E402  (same directory, provides the shared helpers)
+import testrender
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"

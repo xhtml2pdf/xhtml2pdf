@@ -38,7 +38,7 @@ class PTCycleTest(TestCase):
 
     def test_next_value_cycles(self) -> None:
         """
-        reportlab's BaseDocTemplate._setPageTemplate reads ``next_value``.
+        Reportlab's BaseDocTemplate._setPageTemplate reads ``next_value``.
         A PTCycle that only offers ``cyclicIterator`` breaks page cycling.
         """
         ptcycle = xhtml2pdf_reportlab.PTCycle()

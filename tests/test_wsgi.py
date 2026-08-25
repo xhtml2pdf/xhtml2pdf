@@ -9,9 +9,7 @@ HTML = "<html><body><p>hello wsgi</p></body></html>"
 
 def make_app(body: str, status: str = "200 OK", content_type: str = "text/html"):
     def app(environ, start_response):  # noqa: ARG001
-        write = start_response(status, [("content-type", content_type)])
-        if write is not None:
-            pass
+        start_response(status, [("content-type", content_type)])
         return [body]
 
     return app

@@ -35,7 +35,7 @@ class SampleRequestHandler(SimpleHTTPRequestHandler):
     def log_message(self, format: str, *args) -> None:  # noqa: A002
         """Keep the test output quiet."""
 
-    def handle_one_request(self) -> None:  # noqa: PLR6301
+    def handle_one_request(self) -> None:
         # a client that times out mid-response is expected here, not a failure
         with contextlib.suppress(OSError):
             super().handle_one_request()
@@ -108,7 +108,9 @@ class LocalServerMixin:
     def setUpClass(cls) -> None:
         super().setUpClass()
         cls._server_ctx = sample_server()
-        cls.base_url: str = cls._server_ctx.__enter__()
+        # unittest grew enterClassContext in 3.11; this package still
+        # supports 3.10, so the context is entered and exited by hand.
+        cls.base_url: str = cls._server_ctx.__enter__()  # noqa: PLC2801
 
     @classmethod
     def tearDownClass(cls) -> None:

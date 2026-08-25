@@ -409,7 +409,7 @@ class MemoizedTest(TestCase):
 
     def test_hit_does_not_recompute(self) -> None:
         calls: list[int] = []
-        memoized = utils.Memoized(lambda v: calls.append(v))
+        memoized = utils.Memoized(calls.append)
         memoized(1)
         memoized(1)
         self.assertEqual([1], calls)
@@ -428,7 +428,7 @@ class MemoizedTest(TestCase):
 
     def test_registered_with_reportlab_reset(self) -> None:
         """
-        reportlab wraps reset callbacks in a WeakMethod, which rejects builtins
+        Reportlab wraps reset callbacks in a WeakMethod, which rejects builtins
         such as ``dict.clear``.
         """
         utils.getSize("2cm")

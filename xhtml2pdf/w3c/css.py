@@ -28,7 +28,6 @@ Primary classes:
 Dependencies:
     sets, cssParser, re (via cssParser)
 """
-# ruff: noqa: N802, N803, N815
 from __future__ import annotations
 
 import copy
@@ -710,7 +709,7 @@ class CSSRuleset(dict):
     def mergeStyles(self, styles):
         """XXX Bugfix for use in PISA."""
         for k, v in styles.items():
-            if k in self and self[k]:
+            if self.get(k):
                 self[k] = copy.copy(self[k])
                 self[k].update(v)
             else:
@@ -918,7 +917,7 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
 
     # ~ css declarations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def property(self, name, value, *, important=False):  # noqa: A003
+    def property(self, name, value, *, important=False):
         if self.trackImportance:
             return (name, value, important)
         return (name, value)

@@ -25,7 +25,7 @@ Dependencies:
     re
 """
 
-# ruff: noqa: N802, N803, N815, N816, N999
+# ruff: file-ignore[invalid-module-name]
 from __future__ import annotations
 
 import logging
@@ -187,7 +187,7 @@ class CSSBuilderAbstract:
     # ~ css declarations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     @abstractmethod
-    def property(self, name, value, *, important=False):  # noqa: A003
+    def property(self, name, value, *, important=False):
         raise NotImplementedError
 
     @abstractmethod
@@ -350,7 +350,7 @@ class CSSParser:
     # ~ Regular expressions
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    _reflags = re.I | re.M | re.U
+    _reflags = re.IGNORECASE | re.MULTILINE | re.UNICODE
     i_hex = "[0-9a-fA-F]"
     i_nonascii = "[\200-\377]"
     i_unicode = r"\\(?:%s){1,6}\s?" % i_hex
@@ -568,7 +568,7 @@ class CSSParser:
 
     def _parseStylesheet(self, src):
         """
-        stylesheet
+        Stylesheet
         : [ CHARSET_SYM S* STRING S* ';' ]?
             [S|CDO|CDC]* [ import [S|CDO|CDC]* ]*
             [ [ ruleset | media | page | font_face ] [S|CDO|CDC]* ]*
@@ -613,7 +613,7 @@ class CSSParser:
     @staticmethod
     def _parseSCDOCDC(src):
         """[S|CDO|CDC]*."""
-        while 1:
+        while True:
             src = src.lstrip()
             if src.startswith("<!--"):
                 src = src[4:]
@@ -735,7 +735,7 @@ class CSSParser:
 
     def _parseAtMedia(self, src):
         """
-        media
+        Media
         : MEDIA_SYM S* medium [ ',' S* medium ]* '{' S* ruleset* '}' S*
         ;
         """
@@ -750,7 +750,7 @@ class CSSParser:
                 if medium is None:
                     mediums.append("all")
                 # strip up to curly bracket
-                pattern = re.compile(".*?[{]", re.DOTALL)
+                pattern = re.compile(r".*?[{]", re.DOTALL)
 
                 match = re.match(pattern, src)
                 src = src[match.end() - 1 :]
@@ -791,7 +791,7 @@ class CSSParser:
 
     def _parseAtPage(self, src):
         """
-        page
+        Page
         : PAGE_SYM S* IDENT? pseudo_page? S*
             '{' S* declaration [ ';' S* declaration ]* '}' S*
         ;
@@ -947,7 +947,7 @@ class CSSParser:
 
     def _parseRuleset(self, src):
         """
-        ruleset
+        Ruleset
         : selector [ ',' S* selector ]*
             '{' S* declaration [ ';' S* declaration ]* '}' S*
         ;
@@ -972,7 +972,7 @@ class CSSParser:
 
     def _parseSelector(self, src):
         """
-        selector
+        Selector
         : simple_selector [ combinator simple_selector ]*
         ;
         """
@@ -1041,7 +1041,7 @@ class CSSParser:
 
     def _parseSelectorAttribute(self, src, selector):
         """
-        attrib
+        Attrib
         : '[' S* [ namespace_selector ]? IDENT S* [ [ '=' | INCLUDES | DASHMATCH ] S*
             [ IDENT | STRING ] S* ]? ']'
         ;
@@ -1093,7 +1093,7 @@ class CSSParser:
 
     def _parseSelectorPseudo(self, src, selector):
         """
-        pseudo
+        Pseudo
         : ':' [ IDENT | function ]
         ;
         """
@@ -1101,7 +1101,7 @@ class CSSParser:
         if not src.startswith(":"):
             msg = "Selector Pseudo ':' not found"
             raise self.ParseError(msg, src, ctxsrc)
-        src = re.search("^:{1,2}(.*)", src, re.M | re.S).group(1)
+        src = re.search(r"^:{1,2}(.*)", src, re.MULTILINE | re.DOTALL).group(1)
 
         name, src = self._getIdent(src)
         if not name:
@@ -1161,7 +1161,7 @@ class CSSParser:
 
     def _parseDeclaration(self, src):
         """
-        declaration
+        Declaration
         : ident S* ':' S* expr prio?
         | /* empty */
         ;
@@ -1199,7 +1199,7 @@ class CSSParser:
 
     def _parseExpression(self, src, *, return_list=False):
         """
-        expr
+        Expr
         : term [ operator term ]*
         ;
         """
@@ -1224,7 +1224,7 @@ class CSSParser:
 
     def _parseExpressionTerm(self, src):
         """
-        term
+        Term
         : unary_operator?
             [ NUMBER S* | PERCENTAGE S* | LENGTH S* | EMS S* | EXS S* | ANGLE S* |
             TIME S* | FREQ S* | function ]

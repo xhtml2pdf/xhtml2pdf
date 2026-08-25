@@ -282,7 +282,7 @@ class pisaTagTD(pisaTag):
 
         row = tdata.row
         col = tdata.col
-        while 1:
+        while True:
             for x, y in tdata.span:
                 if x == col and y == row:
                     col += 1

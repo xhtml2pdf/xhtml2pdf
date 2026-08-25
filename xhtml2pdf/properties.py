@@ -275,7 +275,7 @@ def apply_uniform_groups(frag, css_attrs, groups: tuple[UniformGroup, ...]) -> N
 _unregistered_seen: set[str] = set()
 
 
-class CSSAttrs(dict):  # noqa: FURB189
+class CSSAttrs(dict):
     # A dict subclass rather than UserDict on purpose: getCSSAttr writes into
     # this mapping once per property per element, and UserDict would put a
     # Python-level __setitem__ in front of every one of those.

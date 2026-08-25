@@ -71,10 +71,9 @@ class DocumentTest(LocalServerMixin, TestCase):
         pdf_info = pdf_reader.metadata
 
         # Check the received metadata matches the expected metadata
-        for original_key in METADATA:
+        for original_key, expected_value in METADATA.items():
             actual_key = f"/{original_key.capitalize()}"
             actual_value = pdf_info[actual_key]
-            expected_value = METADATA[original_key]
 
             assertion(actual_value, expected_value)
 
@@ -137,10 +136,8 @@ class DocumentTest(LocalServerMixin, TestCase):
         tests_folder = os.path.dirname(os.path.realpath(__file__))
         background_path = os.path.join(tests_folder, "samples", "images.pdf")
 
-        css = """"<style>@page {{background-image: url('{background_location}'); @frame {{left: 10pt}}}}
-              @page two {{@frame {{left: 10 pt}}}}</style>""".format(
-            background_location=background_path
-        )
+        css = f""""<style>@page {{background-image: url('{background_path}'); @frame {{left: 10pt}}}}
+              @page two {{@frame {{left: 10 pt}}}}</style>"""
 
         extra_html = (
             """<pdf:nexttemplate name="two"> <pdf:nextpage> <p>Hello, world!</p>"""
@@ -172,8 +169,10 @@ class DocumentTest(LocalServerMixin, TestCase):
             self.assertEqual(
                 cm.output,
                 [
-                    "WARNING:xhtml2pdf.xhtml2pdf_reportlab:SVG drawing could not be"
-                    f" resized: {image_path!r}"
+                    (
+                        "WARNING:xhtml2pdf.xhtml2pdf_reportlab:SVG drawing could not"
+                        f" be resized: {image_path!r}"
+                    )
                 ],
             )
 
@@ -192,8 +191,10 @@ class DocumentTest(LocalServerMixin, TestCase):
             self.assertEqual(
                 cm.output,
                 [
-                    "WARNING:xhtml2pdf.tags:Cannot identify image file:\n"
-                    f"'<img src=\"{image_path}\"/>'"
+                    (
+                        "WARNING:xhtml2pdf.tags:Cannot identify image file:\n"
+                        f"'<img src=\"{image_path}\"/>'"
+                    )
                 ],
             )
 
