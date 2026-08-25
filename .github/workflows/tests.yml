@@ -24,9 +24,9 @@ jobs:
       PYTHON_VERSION: ${{matrix.python-version}}
       TOXENV: py${{matrix.python-version}}-rl${{matrix.reportlab}}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Python ${{matrix.python-version}}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{matrix.python-version}}
           allow-prereleases: true
@@ -96,8 +96,8 @@ jobs:
             render: "4"
             render_spec: "reportlab>=4.0.4,<5"
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - name: Install dependencies
@@ -143,8 +143,8 @@ jobs:
     name: browser comparison
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - name: Install dependencies
@@ -178,14 +178,28 @@ jobs:
     name: offline test run
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - run: python -m pip install --upgrade pip && python -m pip install .[test]
       - name: Run the suite with no outbound network
         run: |
-          sudo unshare --net --map-root-user sh -c '
+          # No --map-root-user. sudo already gives real root; that flag put a
+          # user namespace on top of it, in which the runner's own uid is
+          # unmapped and root loses the right to traverse a home directory that
+          # is not world-executable. unittest resolves the start directory to
+          # an absolute path before stat'ing it, and os.path.isdir reads a stat
+          # that fails as "not a directory", so discovery gave
+          #     ImportError: Start directory is not importable: 'tests'
+          # while the working directory itself was fine -- which is what the
+          # relative 'tests' in that message says.
+          #
+          # The interpreter is passed by path because sudo replaces PATH with
+          # secure_path, which does not have the one setup-python installed the
+          # package into; the system python was running the suite without its
+          # dependencies.
+          sudo unshare --net sh -c "
             ip link set lo up
-            python -m unittest discover -t . -s tests
-          '
+            PYTHONDONTWRITEBYTECODE=1 '$(command -v python)' -m unittest discover -t . -s tests
+          "
