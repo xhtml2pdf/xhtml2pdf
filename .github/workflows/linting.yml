@@ -10,7 +10,10 @@ jobs:
         python-version: "3.12"
     - uses: pre-commit/action@v3.0.1
       env:
-        SKIP: black,ruff,mypy,no-commit-to-branch
+        # These three run as jobs of their own below, for the annotations they
+        # put on a diff. The hook id is ruff-check since ruff v0.13; naming the
+        # old alias here skipped nothing and ran ruff twice.
+        SKIP: black,ruff-check,mypy,no-commit-to-branch
   black:
     runs-on: ubuntu-latest
     steps:
@@ -21,18 +24,23 @@ jobs:
       - uses: psf/black@stable
         with:
           version: "24.4.2"
+  # The versions below have to match the ones pinned in
+  # .pre-commit-config.yaml. They are the same tools run a second way, and when
+  # they drift apart the two disagree: this job pinned ruff 0.0.292 long after
+  # the hook had moved on, and failed to parse a config the hook accepted.
   ruff:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: chartboost/ruff-action@v1
+      # chartboost/ruff-action was archived in 2024; this is Astral's own.
+      - uses: astral-sh/ruff-action@v4
         with:
-          version: "0.0.292"
+          version: "0.16.4"
   mypy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: jpetrucciani/mypy-check@1.14.1
+      - uses: jpetrucciani/mypy-check@2.3.1
         with:
           python_version: "3.12"
           mypy_flags: '--config-file pyproject.toml --ignore-missing-imports --scripts-are-modules'

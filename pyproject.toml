@@ -267,6 +267,9 @@ ignore = [
     # That syntax is preview-only and not stable, and noqa is understood by
     # every other tool, so the conventional spelling stays.
     "RUF105",   # noqa comments preferred over ruff: ignore
+    # Wants every selector in this file spelled as a rule name rather than a
+    # code. Preview-only like RUF105, and the code is the stable identifier.
+    "RUF201",   # rule codes in selectors
     "UP031",    # printf-style formatting
 ]
 
