@@ -1,5 +1,16 @@
 name: Run Tests
-on: [push, pull_request]
+
+# The matrix is five Python versions against two ReportLab majors, plus a
+# cross-version render check and the browser comparison, so it is not run on
+# every pull request. "main" is listed alongside "master" so that renaming the
+# default branch does not silently stop the tests.
+on:
+  push:
+    branches:
+      - master
+      - main
+      - development
+  workflow_dispatch:
 jobs:
   python:
     name: py${{matrix.python-version}} / reportlab ${{matrix.reportlab}}

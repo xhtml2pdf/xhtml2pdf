@@ -234,7 +234,7 @@ def _build_groups(consumer: str, *, block_only: bool) -> tuple[UniformGroup, ...
     """
     grouped: dict[tuple[Callable, bool], list[tuple[str, str]]] = {}
     for prop in CSS_PROPERTIES:
-        if prop.frag is None or prop.consumer != consumer:
+        if prop.frag is None or prop.convert is None or prop.consumer != consumer:
             continue
         if prop.block_only != block_only:
             continue

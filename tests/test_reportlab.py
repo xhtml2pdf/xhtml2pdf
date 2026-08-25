@@ -93,7 +93,7 @@ class PmlBaseDocTest(TestCase):
     def test_nextPageTemplate_bad_type_raises(self) -> None:
         doc = self._doc("body")
         with self.assertRaises(TypeError):
-            doc.handle_nextPageTemplate(3.5)
+            doc.handle_nextPageTemplate(3.5)  # type: ignore[arg-type]
 
     def test_left_right_document_renders(self) -> None:
         """

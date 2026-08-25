@@ -23,10 +23,10 @@ SAMPLES = Path(__file__).parent / "samples"
 HTML = "<html><body><h1>cli</h1><p>hello</p></body></html>"
 
 
-def run_cli(*argv: str) -> tuple[int, str]:
+def run_cli(*argv: str) -> tuple[int | str, str]:
     """Run ``command()`` with ``argv``; returns (exit code, stdout)."""
     out = io.StringIO()
-    code = 0
+    code: int | str = 0
     with mock.patch("sys.argv", ["xhtml2pdf", *argv]), redirect_stdout(out):
         try:
             pisa.command()

@@ -23,10 +23,20 @@ import time
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
+    from contextlib import AbstractContextManager
+    from unittest import TestCase
+
+    # A mixin has no base of its own, so a type checker cannot see that
+    # super().setUpClass() resolves or that the class it is mixed into is a
+    # TestCase. Standing it on TestCase for type checking only says so without
+    # changing the runtime MRO.
+    MixinBase = TestCase
+else:
+    MixinBase = object
 
 SAMPLES_DIR: Path = Path(__file__).parent / "samples"
 
@@ -101,8 +111,13 @@ def sample_server(directory: Path | str = SAMPLES_DIR) -> Iterator[str]:
         thread.join(timeout=5)
 
 
-class LocalServerMixin:
+class LocalServerMixin(MixinBase):
     """Starts a sample server for the whole TestCase; base URL in ``cls.base_url``."""
+
+    #: Filled in by setUpClass. Declared here so that every TestCase mixing
+    #: this in can see them.
+    base_url: ClassVar[str]
+    _server_ctx: ClassVar[AbstractContextManager[str]]
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -110,7 +125,7 @@ class LocalServerMixin:
         cls._server_ctx = sample_server()
         # unittest grew enterClassContext in 3.11; this package still
         # supports 3.10, so the context is entered and exited by hand.
-        cls.base_url: str = cls._server_ctx.__enter__()  # noqa: PLC2801
+        cls.base_url = cls._server_ctx.__enter__()  # noqa: PLC2801
 
     @classmethod
     def tearDownClass(cls) -> None:

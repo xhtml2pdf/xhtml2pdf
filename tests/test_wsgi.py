@@ -37,7 +37,7 @@ class FilterTest(TestCase):
 
     def test_filter_is_abstract(self) -> None:
         with self.assertRaises(NotImplementedError):
-            Filter.filter(None, "", "", {}, "200 OK", [], b"")
+            Filter.filter(None, "", "", {}, "200 OK", [], b"")  # type: ignore[arg-type]
 
 
 class HTMLFilterTest(TestCase):

@@ -21,7 +21,7 @@ import sys
 from hashlib import md5
 from html import escape as html_escape
 from io import BytesIO, StringIO
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 from uuid import uuid4
 
 from PIL import Image as PILImage
@@ -192,7 +192,7 @@ class PmlPageTemplate(PageTemplate):
     def __init__(self, **kw) -> None:
         self.pisaStaticList: list = []
         self.pisaBackgroundList: list[tuple] = []
-        self.pisaBackground = None
+        self.pisaBackground: Any = None
         #: Colour propagated from <body> to the page canvas; see CSS 2.1 14.2.
         self.canvasBackground = None
         super().__init__(**kw)

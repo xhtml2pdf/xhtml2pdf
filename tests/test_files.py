@@ -200,6 +200,7 @@ class PmlImageReaderTest(LocalServerMixin, TestCase):
 
         reader = PmlImageReader(str(SAMPLES / "img" / "denker.png"))
         # PmlImageReader keeps fp open by design (jpeg_fh re-reads it)
+        assert reader.fp is not None
         self.addCleanup(reader.fp.close)
         self.assertEqual((70, 137), reader.getSize())
 
@@ -260,6 +261,7 @@ class NamedTmpFileRegistrationTest(TestCase):
         self.assertIn(tmp_file, files_tmp.files)
 
         cleanFiles()
+        assert isinstance(tmp_file, tempfile._TemporaryFileWrapper)
         self.assertTrue(tmp_file.file.closed)
 
     def test_non_empty_resource_is_registered(self) -> None:

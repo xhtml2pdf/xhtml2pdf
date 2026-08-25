@@ -51,10 +51,12 @@ repos:
     hooks:
       - id: black
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.11.0
+    rev: v2.3.1
     hooks:
     - id: mypy
-      args: ["--config-file pyproject.toml", "--ignore-missing-imports", "--scripts-are-modules"]
+      # "--config-file pyproject.toml" used to be one argument, so mypy read it
+      # as an unknown option, rejected every path that followed and never ran.
+      args: ["--config-file", "pyproject.toml", "--ignore-missing-imports", "--scripts-are-modules"]
       language: python
       'types_or': [ python, pyi ]
       additional_dependencies: [types-setuptools]

@@ -54,7 +54,7 @@ class WaterMarks:
 
     @staticmethod
     def get_img_with_opacity(pisafile: pisaFileObject, context: dict) -> BytesIO:
-        opacity: float = context.get("opacity")
+        opacity: float | None = context.get("opacity")
         if opacity:
             name: str | None = pisafile.getNamedFile()
             img: Image.Image = Image.open(name)

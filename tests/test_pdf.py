@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 from pathlib import Path
+from typing import ClassVar
 from unittest import TestCase
 
 from pypdf import PdfReader
@@ -23,6 +24,9 @@ def _render(text: str) -> bytes:
 
 class PisaPDFTest(TestCase):
     """``xhtml2pdf.pdf`` had no test coverage at all."""
+
+    one: ClassVar[bytes]
+    two: ClassVar[bytes]
 
     @classmethod
     def setUpClass(cls) -> None:

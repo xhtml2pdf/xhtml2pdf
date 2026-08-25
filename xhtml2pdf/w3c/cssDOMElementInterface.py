@@ -10,7 +10,7 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from xhtml2pdf.w3c import css
 
@@ -85,6 +85,9 @@ class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     style = None
+    #: The node this wraps. Assigned in __init__, declared here so the
+    #: pseudo-class handlers below can be read on their own.
+    domElement: Any
 
     #: The not-* and middle-child forms are xhtml2pdf's own, not CSS, and
     #: DEFAULT_CSS uses them; the rest are the standard structural
