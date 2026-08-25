@@ -1,0 +1,97 @@
+<!--
+  Browser equivalent of data/source/test-image-align.html
+
+  Already plain HTML/CSS; only the image path is rewritten.
+
+  Assets are referenced through ../source/ so both sides load byte-identical
+  files. _normalize.css is linked ahead of the document's own styles; it
+  replaces the browser UA stylesheet with xhtml2pdf's DEFAULT_CSS so the two
+  engines start from the same defaults.
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+       "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<link rel="stylesheet" href="_normalize.css">
+<title>Grafiken ausrichten mit CSS</title>
+</head>
+<body>
+
+<p>
+  Denkt der Denker
+  <img src="../source/img/denker.png" alt="Denker">
+  an das Oben?
+</p>
+
+
+<h1>Woran der Denker denkt</h1>
+
+<p>
+  Denkt der <b style="font-size: 102pt">Denker</b>
+  an das Oben?
+</p>
+
+<p>
+  Denkt der <b style="font-size: 102pt">Denker</b>
+  <img src="../source/img/denker.png" align="top" alt="Denker">
+  an das Oben?
+</p>
+
+<hr>
+
+<p>
+  Denkt der Denker
+  <img src="../source/img/denker.png" align="middle" alt="Denker">
+  an die Mitte?
+</p>
+
+<hr>
+
+<p>
+  Denkt der Denker
+  <img src="../source/img/denker.png" align="bottom" alt="Denker">
+  an das Unten?
+</p>
+
+
+<hr>
+
+<h1>Woran der Denker denkt</h1>
+
+<p>
+  Denkt der Denker
+  <img src="../source/img/denker.png" style="vertical-align:text-top" alt="Denker">
+  an das Oben?
+</p>
+
+<hr>
+
+<p>
+  Denkt der Denker
+  <img src="../source/img/denker.png" style="vertical-align:middle" alt="Denker">
+  an die Mitte?
+</p>
+
+<hr>
+
+<p>
+  Denkt der Denker
+  <img src="../source/img/denker.png" style="vertical-align:text-bottom" alt="Denker">
+  an das Unten?
+</p>
+
+<hr>
+
+<h2>
+  <img src="../source/img/denker.png" align="left" style="margin-right:20px;
+  margin-bottom:10px" alt="Text?">Oder denkt er an ...?
+</h2>
+
+<p>
+  Manche Texte erschlie&szlig;en sich nur aus der n&ouml;tigen Distanz. <!-- usw. -->
+  Aber das hier, das ist richtiger Text. Und er flie&szlig;t sogar,
+  n&auml;mlich um die Grafik.<br style="clear:both">
+</p>
+
+</body>
+</html>

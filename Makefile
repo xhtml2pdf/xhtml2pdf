@@ -1,4 +1,4 @@
-.PHONY: help clean clean-pyc clean-build list test test-all test-ref test-render test-render-all docs release sdist
+.PHONY: help clean clean-pyc clean-build list test test-all test-ref test-render test-render-all test-browser test-browser-update docs release sdist
 
 help:
 	@echo "clean-build - remove build artifacts"
@@ -9,6 +9,8 @@ help:
 	@echo "test-ref - create reference directory for testrender"
 	@echo "test-render - compare testrender output against the reference (needs test-ref)"
 	@echo "test-render-all - create the reference and compare in one go"
+	@echo "test-browser - compare output against a browser rendering the same result"
+	@echo "test-browser-update - re-record the browser comparison baseline"
 	@echo "docs - generate Sphinx HTML documentation, including API docs"
 	@echo "release - package and upload a release"
 	@echo "sdist - package"
@@ -40,6 +42,18 @@ test-render:
 # built from the same commit and the same reportlab, so it only catches
 # non-determinism; the real cross-version gate lives in CI.
 test-render-all: test-ref test-render
+
+# Compares against an external reference: a browser rendering the equivalent
+# markup from testrender/data/browser/. The browser runs headless, so no window
+# appears; xvfb-run is used when available purely as a safety net, so that
+# --headed debugging runs land on a virtual display instead of the desktop.
+XVFB := $(shell command -v xvfb-run 2>/dev/null)
+
+test-browser:
+	$(if $(XVFB),$(XVFB) -a,) python testrender/browsercompare.py --report
+
+test-browser-update:
+	$(if $(XVFB),$(XVFB) -a,) python testrender/browsercompare.py --update-baseline
 
 
 test-all:

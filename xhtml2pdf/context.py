@@ -41,6 +41,7 @@ from xhtml2pdf import default, parser
 from xhtml2pdf.files import B64InlineURI, getFile, pisaFileObject
 from xhtml2pdf.tables import TableData
 from xhtml2pdf.util import (
+    apply_text_transform,
     arabic_format,
     copy_attrs,
     frag_text_language_check,
@@ -136,6 +137,7 @@ def getParaFrag(style) -> ParaFrag:
             "borderColor",
             "listStyleType",
             "listStyleImage",
+            "backgroundImage",
             "wordWrap",
             "height",
             "width",
@@ -157,6 +159,10 @@ def getParaFrag(style) -> ParaFrag:
 
     # Extras
     frag.letterSpacing = "normal"
+    frag.wordSpacing = "normal"
+    frag.textTransform = "none"
+    frag.backgroundRepeat = "repeat"
+    frag.backgroundPosition = "0% 0%"
     frag.leadingSource = "150%"
     frag.alignment = TA_LEFT
     frag.borderWidth = 1
@@ -611,6 +617,14 @@ class pisaContext:
         self.warn: int = 0
         self.cssDefaultText: str = ""
         self.cssText: str = ""
+        #: Tags some rule selects by position; see parser.getCSSAttrCacheKey.
+        self.cssPositionalTags: set[str] = set()
+        #: The CSS properties already resolved for an element shape, keyed by
+        #: parser.CSSAttrCacheKey. It belongs to the render rather than to the
+        #: module: as a global it was shared by concurrent renders, and its
+        #: entries outlived the document that filled them, so a parent node id
+        #: reused after a collection could serve one document another's styles.
+        self.cssAttrCache: dict = {}
         self.language: str = ""
         self.text: str = ""
         self.frameStatic: dict = {}
@@ -620,6 +634,9 @@ class pisaContext:
         self.toc: PmlTableOfContents = PmlTableOfContents()
         self.multiBuild: bool = False
         self.pageSize: tuple[float, float] = A4
+        #: Background colour propagated from <body> to the page canvas,
+        #: per CSS 2.1 14.2. None when body declares no background.
+        self.pageCanvasBackground = None
         self.baseFontSize: float = getSize("12pt")
         self.frag: ParaFrag = getParaFrag(ParagraphStyle(f"default{self.UID()}"))
         self.fragBlock: ParaFrag = self.frag
@@ -696,6 +713,9 @@ class pisaContext:
             userAgent=self.cssDefault, user=self.css
         )
         self.cssCascade.parser = self.cssParser
+        # Which tags any rule selects by position; see getCSSAttrCacheKey.
+        self.cssPositionalTags = parser.getPositionalTagNames(self.cssCascade)
+        parser.warnUnsupportedProperties(self.css)
 
     # METHODS FOR STORY
     def addStory(self, data):
@@ -718,7 +738,11 @@ class pisaContext:
                 "fontName",
                 "fontSize",
                 "letterSpacing",
+                "wordSpacing",
                 "backColor",
+                "backgroundImage",
+                "backgroundRepeat",
+                "backgroundPosition",
                 "spaceBefore",
                 "spaceAfter",
                 "leftIndent",
@@ -952,7 +976,29 @@ class pisaContext:
         # Replace &shy; with empty and normalize NBSP
         text = text.replace("\xad", "").replace("\xc2\xa0", NBSP).replace("\xa0", NBSP)
 
-        if frag.whiteSpace == "pre":
+        text = apply_text_transform(text, getattr(frag, "textTransform", "none"))
+
+        # CSS 2.1 16.6. Only `pre` used to have any effect; nowrap, pre-wrap
+        # and pre-line all fell through to the collapsing branch below.
+        #
+        #   pre       newlines kept, spaces kept and unbreakable
+        #   pre-wrap  the same; the spaces a browser would wrap inside are
+        #             kept unbreakable here, which is as close as this gets
+        #   pre-line  newlines kept, runs of spaces collapsed
+        #   nowrap    newlines collapsed, spaces kept so the line cannot break
+        white_space = frag.whiteSpace
+        keeps_newlines = white_space in {"pre", "pre-wrap", "pre-line"}
+        keeps_spaces = white_space in {"pre", "pre-wrap", "nowrap"}
+
+        def append_preserving_spaces(line):
+            # Somehow for Reportlab NBSP have to be inserted
+            # as single character fragments
+            for piece in re.split(r"(\ )", line):
+                frag = baseFrag.clone()
+                frag.text = NBSP if piece == " " else piece
+                self._appendFrag(frag)
+
+        if keeps_newlines:
             # Handle by lines
             for text in re.split(r"(\r\n|\n|\r)", text):
                 # This is an exceptionally expensive piece of code
@@ -966,14 +1012,16 @@ class pisaContext:
                 else:
                     # Handle tabs in a simple way
                     text = text.replace("\t", 8 * " ")
-                    # Somehow for Reportlab NBSP have to be inserted
-                    # as single character fragments
-                    for text in re.split(r"(\ )", text):
+                    if keeps_spaces:
+                        append_preserving_spaces(text)
+                    else:
                         frag = baseFrag.clone()
-                        if text == " ":
-                            text = NBSP
-                        frag.text = text
+                        frag.text = " ".join(text.split())
                         self._appendFrag(frag)
+        elif keeps_spaces:
+            # nowrap: one line, and every space unbreakable so it stays one.
+            self.text += text
+            append_preserving_spaces(" ".join(text.split()))
         else:
             for text in re.split("(" + NBSP + ")", text):
                 frag = baseFrag.clone()

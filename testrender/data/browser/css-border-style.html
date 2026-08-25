@@ -1,0 +1,63 @@
+<!--
+  Browser equivalent of data/source/css-border-style.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+
+  border-spacing is pinned to 0 because xhtml2pdf's <table> defaults
+  cellspacing to 0 (xhtml2pdf/default.py:315) while a browser defaults to 2px.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>css-border-style</title>
+<link rel="stylesheet" href="_normalize.css">
+<style type="text/css">
+p {
+    padding: 0.4em;
+    margin: 0 0 0.6em 0;
+    border-color: #204a87;
+    border-width: 3px;
+}
+.solid  { border-style: solid; }
+.dashed { border-style: dashed; }
+.dotted { border-style: dotted; }
+.double { border-style: double; border-width: 6px; }
+.groove { border-style: groove; border-width: 6px; }
+.ridge  { border-style: ridge;  border-width: 6px; }
+.hidden { border-style: none; }
+.mixed {
+    border-top-style: dotted;
+    border-top-width: 2px;
+    border-top-color: #a40000;
+    border-bottom-style: dashed;
+    border-bottom-width: 5px;
+    border-bottom-color: #4e9a06;
+    border-left-style: none;
+    border-right-style: none;
+}
+table { border-spacing: 0; }
+td {
+    padding: 0.3em;
+    border: 2px dashed #a40000;
+}
+</style>
+</head>
+<body>
+<p class="solid">border-style: solid</p>
+<p class="dashed">border-style: dashed</p>
+<p class="dotted">border-style: dotted</p>
+<p class="double">border-style: double</p>
+<p class="groove">border-style: groove</p>
+<p class="ridge">border-style: ridge</p>
+<p class="hidden">border-style: none, nothing drawn</p>
+<p class="mixed">dotted red above, dashed green below, no sides</p>
+<table cellspacing="0" cellpadding="0" width="100%">
+<tr>
+<td width="50%">dashed cell</td>
+<td width="50%">dashed cell</td>
+</tr>
+</table>
+</body>
+</html>

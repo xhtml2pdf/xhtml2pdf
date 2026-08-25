@@ -1,0 +1,33 @@
+<!--
+  Browser equivalent of data/source/test-background.html
+
+  Reproduces the @frame geometry: top 6cm, left 4cm, right 4cm, bottom 4cm,
+  with -pdf-frame-border: 1.
+
+  @page background-image: url("pdf/background-sample.pdf") has no browser
+  equivalent -- a PDF cannot be a CSS background image -- so the background
+  artwork is absent here and SSIM is correspondingly limited. What this fixture
+  still checks is that the content lands inside the declared frame.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>test-background</title>
+<style>
+/* xhtml2pdf @frame coordinates are measured from the page edge, so the page
+   box must have no margin of its own and the frames are positioned absolutely. */
+@page { size: A4; margin: 0; }
+.frame { position: absolute; box-sizing: border-box; overflow: hidden; }
+/* -pdf-frame-border: 1 */
+.frame.bordered { border: 1px solid black; }
+</style>
+</head>
+<body>
+<div class="frame bordered"
+     style="top: 6cm; left: 4cm; right: 4cm; bottom: 4cm;">
+    Lorem ipsum...
+</div>
+</body>
+</html>

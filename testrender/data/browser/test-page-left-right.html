@@ -1,0 +1,60 @@
+<!--
+  Browser equivalent of data/source/test-page-left-right.html
+
+  Mirrored inner margins on facing pages. @page book:left / book:right map onto
+  the CSS @page :left / :right pseudo-classes, which Chromium supports, so the
+  content shifts horizontally on alternating pages just as the named template
+  pair does.
+
+  <pdf:pagenumber> and <pdf:pagecount> become counter(page) and counter(pages)
+  in an @page margin box. <pdf:nexttemplate> needs no equivalent: :left/:right
+  alternate on their own. <pdf:nextpage/> is a page break.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>Alternating left/right page templates</title>
+<style>
+@page {
+    size: A4;
+    margin: 2.5cm 2cm 3cm 2cm;
+    /* <pdf:pagenumber> of <pdf:pagecount> in the footer frame */
+    @bottom-center {
+        content: "page " counter(page) " of " counter(pages);
+        font-family: Helvetica, "Nimbus Sans", Arial, sans-serif;
+        font-size: 8pt;
+    }
+}
+/* @page book:left  { @frame content_frame { left: 1.5cm } } */
+@page :left  { margin-left: 1.5cm; margin-right: 2.5cm; }
+/* @page book:right { @frame content_frame { left: 3.5cm } } */
+@page :right { margin-left: 3.5cm; margin-right: 0.5cm; }
+h1 { font-size: 1.4em; }
+</style>
+</head>
+<body>
+<h1>Page one</h1>
+<p>This document uses <code>@page book:left</code> and <code>@page book:right</code>
+so that facing pages get mirrored inner margins, the way a printed book is laid out.</p>
+<p>The left/right template pair is expanded into an alternating cycle by
+<code>PmlBaseDoc.handle_nextPageTemplate</code>. A stray <code>sys.exit()</code> in that
+branch used to terminate the calling process outright, so this feature never worked.</p>
+
+<div style="page-break-after: always"></div>
+<h1>Page two</h1>
+<p>The content frame on this page starts at a different horizontal offset than the
+previous one. If the templates stop alternating, this page shifts and the rendered
+output changes.</p>
+
+<div style="page-break-after: always"></div>
+<h1>Page three</h1>
+<p>Back to the first offset of the cycle.</p>
+
+<div style="page-break-after: always"></div>
+<h1>Page four</h1>
+<p>And back to the second. Four pages are enough to show the cycle repeating rather
+than merely being applied once.</p>
+</body>
+</html>

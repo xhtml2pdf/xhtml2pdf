@@ -81,6 +81,14 @@ test = [
     "tox",
     "coverage>=5.3"
 ]
+# Compares xhtml2pdf's output against a browser rendering the equivalent
+# markup; see testrender/browsercompare.py. Needs a Chromium/Chrome install and
+# a matching webdriver on PATH, which is why it is not part of `test`.
+browsertest = [
+    "selenium>=4.15",
+    "numpy>=1.24",
+    "tomli>=2.0.1; python_version<'3.11'"
+]
 docs = [
     "sphinx>=6",
     "sphinx-rtd-theme>=0.5.0",

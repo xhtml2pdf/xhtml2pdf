@@ -113,6 +113,10 @@ Versions >= 0.2
   (surfaced by the new ``ResourceWarning`` in Python 3.14).
 * ``pisaTempFile.getFileName()`` returns the file name instead of ``None``;
   ``name`` was never assigned when the on-disk strategy kicked in.
+* The background of ``<body>`` now covers the whole page, as CSS 2.1 14.2
+  requires when ``html`` declares no background of its own. It previously
+  painted only the area body's boxes occupied, leaving the rest of the page
+  white. Found by the new browser comparison; see below.
 
 **⚠️ Deprecation**
 
@@ -141,6 +145,14 @@ Versions >= 0.2
   ``make test-render-all`` target creates the reference and compares in one go.
 * CI patches whichever ``/etc/ImageMagick-*/policy.xml`` exists rather than
   hardcoding the ImageMagick 6 path.
+* New ``testrender/browsercompare.py`` compares xhtml2pdf's output against a
+  browser rendering equivalent markup, which is the project's first external
+  reference: ``testrender.py`` compares xhtml2pdf against itself and so cannot
+  say whether the output is correct. Every fixture has a plain HTML/CSS
+  equivalent under ``testrender/data/browser/`` in which the xhtml2pdf-only
+  constructs are expressed with ordinary markup -- ``@frame`` as absolute
+  positioning, ``<pdf:toc>`` as a hand-written list, ``<pdf:pagenumber>`` as a
+  ``counter()`` in an ``@page`` margin box. Run it with ``make test-browser``.
 * New tests for previously uncovered modules: ``pdf.py``, ``wsgi.py``, the
   ``pisa`` CLI, ``files.py``, and ``reportlab_paragraph.py``. A contract test
   pins every private ReportLab symbol the package imports.

@@ -1,0 +1,183 @@
+/*
+ * Makes a browser start from the same defaults as xhtml2pdf.
+ *
+ * xhtml2pdf applies DEFAULT_CSS (xhtml2pdf/default.py:445-655) to every
+ * document before the document's own stylesheet. A browser applies its own UA
+ * stylesheet instead, which differs in root font size, line height, heading
+ * sizes, list indentation and block margins. Without this file the two engines
+ * are not being asked to lay out the same thing, and any comparison measures
+ * the mismatch in defaults rather than the quality of xhtml2pdf's layout.
+ *
+ * Every rule below mirrors a rule in DEFAULT_CSS. Keep them in sync: if
+ * DEFAULT_CSS changes, this file has to change with it, and the recorded
+ * baseline moves.
+ *
+ * Rules that exist in DEFAULT_CSS but are deliberately not ported:
+ *   -pdf-outline*        PDF outline metadata, no visual effect
+ *   display: block       matches the browser UA stylesheet already
+ */
+
+/* DEFAULT_CSS: html { ... } */
+html {
+    font-family: Helvetica, "Nimbus Sans", Arial, sans-serif;
+    font-size: 10px;
+    font-weight: normal;
+    color: #000000;
+    margin: 0;
+    padding: 0;
+    line-height: 150%;
+    white-space: normal;
+}
+
+/* xhtml2pdf gives body no margin; browsers default to 8px */
+body {
+    margin: 0;
+    padding: 0;
+}
+
+/* DEFAULT_CSS: a { ... } */
+a {
+    text-decoration: underline;
+    color: blue;
+}
+
+/* DEFAULT_CSS: ins / del */
+ins {
+    color: green;
+    text-decoration: underline;
+}
+
+del {
+    color: red;
+    text-decoration: line-through;
+}
+
+/* DEFAULT_CSS: pre, code, kbd, samp, tt */
+pre,
+code,
+kbd,
+samp,
+tt {
+    font-family: "Courier New", "Liberation Mono", "Nimbus Mono PS", monospace;
+}
+
+/* DEFAULT_CSS sizes h1-h3 only, so h4-h6 stay at 100%; browsers shrink them */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-weight: bold;
+    font-size: 100%;
+}
+
+h1 {
+    font-size: 138.5%;
+}
+
+h2 {
+    font-size: 123.1%;
+}
+
+h3 {
+    font-size: 108%;
+}
+
+/* DEFAULT_CSS: uniform 1em block margin, unlike the browser's per-level values */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+pre,
+hr {
+    margin: 1em 0;
+}
+
+/* DEFAULT_CSS: th */
+th {
+    text-align: center;
+    font-weight: bold;
+}
+
+/* DEFAULT_CSS: tr, th, td */
+tr,
+th,
+td {
+    vertical-align: middle;
+}
+
+/* DEFAULT_CSS: center */
+center {
+    text-align: center;
+}
+
+/* DEFAULT_CSS: big / small */
+big {
+    font-size: 125%;
+}
+
+small {
+    font-size: 75%;
+}
+
+/* DEFAULT_CSS indents lists with margin-left; browsers use padding-left: 40px */
+ul,
+ol {
+    margin-left: 1.5em;
+    padding-left: 0;
+}
+
+ul {
+    list-style-type: disc;
+}
+
+ul ul {
+    list-style-type: circle;
+}
+
+ul ul ul {
+    list-style-type: square;
+}
+
+ol {
+    list-style-type: decimal;
+}
+
+ul li div:first-child {
+    display: inline-block;
+}
+
+/* DEFAULT_CSS: blockquote */
+blockquote {
+    margin-left: 1.5em;
+    margin-right: 1.5em;
+}
+
+/* DEFAULT_CSS: pre */
+pre {
+    white-space: pre;
+}
+
+/* DEFAULT_CSS: noscript */
+noscript {
+    display: none;
+}
+
+/*
+ * Page geometry. When a document declares no @page, xhtml2pdf builds its body
+ * frame from getBox("1cm 1cm -1cm -1cm", pageSize) -- see
+ * xhtml2pdf/document.py:171 -- i.e. A4 with a 1cm margin on all four sides.
+ * The page size itself comes from context.py (A4).
+ *
+ * PrintOptions asks the browser for the same geometry; this rule keeps the CSS
+ * in agreement, and gives fixtures that declare their own @page the same
+ * starting point.
+ */
+@page {
+    size: A4;
+    margin: 1cm;
+}

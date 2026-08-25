@@ -1,9 +1,43 @@
 import base64
 import os
+import re
+from pathlib import Path
 from unittest import TestCase
+from xml.dom import minidom
 
+from xhtml2pdf import properties
 from xhtml2pdf.context import pisaContext
-from xhtml2pdf.parser import pisaParser
+from xhtml2pdf.parser import getCSSAttrCacheKey, pisaParser
+from xhtml2pdf.properties import (
+    CSS_PROPERTIES,
+    FRAG_BLOCK_GROUPS,
+    LOOP_GROUPS,
+    PROPERTY_NAMES,
+    SUPPORTED_PROPERTIES,
+    CSSAttrs,
+)
+
+#: The two literal blocks in the reference documentation that list properties.
+_DOCS = Path(__file__).parent.parent / "docs" / "source" / "reference" / "html.rst"
+_DOC_SECTIONS = (
+    "xhtml2pdf supports the following standard CSS properties",
+    "xhtml2pdf adds the following vendor-specific properties:",
+)
+
+
+def _documented_properties() -> set:
+    """The property names the reference documentation lists."""
+    text = _DOCS.read_text(encoding="utf-8")
+    names = set()
+    for heading in _DOC_SECTIONS:
+        body = text.split(heading, 1)[1].split("::", 1)[1]
+        # The literal block runs until the first line that is not indented.
+        for line in body.splitlines()[1:]:
+            if line.strip() and not line.startswith(" "):
+                break
+            names.update(re.findall(r"[-a-z][-a-z0-9]*", line))
+    return names
+
 
 _data = b"""
 <!doctype html>
@@ -102,3 +136,141 @@ class ParserTest(TestCase):
 
         r = pisaParser(data, c)
         self.assertEqual(r.warn, 0)
+
+
+class PropertyRegistryTest(TestCase):
+    """
+    The registry is the single source of truth for which CSS properties this
+    library reads. It replaced a whitespace-separated string that nothing
+    checked, which is how -pdf-keep-in-frame-max-width came to be read in
+    pisaLoop while never being collected, and how the reference documentation
+    came to list "colordisplay" -- two property names run together.
+    """
+
+    def test_no_duplicate_names(self) -> None:
+        names = list(PROPERTY_NAMES)
+        self.assertEqual(sorted(names), sorted(set(names)))
+
+    def test_registry_drives_collection(self) -> None:
+        self.assertEqual(set(PROPERTY_NAMES), set(SUPPORTED_PROPERTIES))
+        self.assertEqual(len(PROPERTY_NAMES), len(CSS_PROPERTIES))
+
+    def test_a_registry_driven_mapping_is_complete(self) -> None:
+        # frag says "the registry applies this one"; without a converter
+        # transform_attrs would be handed None and fail at render time.
+        for prop in CSS_PROPERTIES:
+            if prop.frag is not None:
+                self.assertIsNotNone(prop.convert, prop.name)
+
+    def test_uniform_groups_cover_every_driven_property(self) -> None:
+        driven = {p.name for p in CSS_PROPERTIES if p.frag is not None}
+        grouped = {
+            name
+            for groups in (FRAG_BLOCK_GROUPS, LOOP_GROUPS)
+            for group in groups
+            for _frag, name in group.pairs
+        }
+        self.assertEqual(driven, grouped)
+
+    def test_documentation_lists_exactly_the_registry(self) -> None:
+        """
+        docs/source/reference/html.rst and the registry must agree.
+
+        The list in the documentation was hand-maintained and had drifted in
+        both directions for years; this is what stops it drifting again.
+        """
+        documented = _documented_properties()
+        registered = set(PROPERTY_NAMES)
+
+        self.assertEqual(
+            registered - documented, set(), "registered but not documented"
+        )
+        self.assertEqual(
+            documented - registered, set(), "documented but not registered"
+        )
+
+
+class CSSAttrsTest(TestCase):
+    def test_reading_a_registered_property_is_quiet(self) -> None:
+        attrs = CSSAttrs({"color": "red"})
+        with self.assertNoLogs("xhtml2pdf.properties", level="WARNING"):
+            self.assertIn("color", attrs)
+            self.assertEqual("red", attrs["color"])
+            self.assertEqual("red", attrs.get("color"))
+
+    def test_reading_an_unregistered_property_says_so(self) -> None:
+        # The failure this makes loud: a branch reads a property nobody
+        # collects, the membership test answers False, and the feature
+        # silently does nothing.
+        properties._unregistered_seen.discard("float")
+        attrs = CSSAttrs()
+        with self.assertLogs("xhtml2pdf.properties", level="WARNING") as logs:
+            self.assertNotIn("float", attrs)
+        self.assertIn("float", logs.output[0])
+
+
+class CSSAttrCacheKeyTest(TestCase):
+    """
+    The key used to be "#".join(parent, tag, class, id, style), which is
+    ambiguous: the separator can appear inside a value.
+    """
+
+    @staticmethod
+    def _element(html: str):
+        return minidom.parseString(html).getElementsByTagName("p")[0]
+
+    def test_the_separator_case_no_longer_collides(self) -> None:
+        # As strings these two built the identical key "…#p##x#color:#fff".
+        a = self._element('<div><p id="x" style="color:#fff">t</p></div>')
+        b = self._element('<div><p id="x#color:" style="fff">t</p></div>')
+
+        self.assertNotEqual(getCSSAttrCacheKey(a), getCSSAttrCacheKey(b))
+
+    def test_same_shape_shares_a_key(self) -> None:
+        document = minidom.parseString(
+            '<div><p class="a">one</p><p class="a">two</p></div>'
+        )
+        first, second = document.getElementsByTagName("p")
+
+        self.assertEqual(getCSSAttrCacheKey(first), getCSSAttrCacheKey(second))
+
+    def test_position_separates_siblings_when_a_rule_asks(self) -> None:
+        document = minidom.parseString(
+            '<div><p class="a">one</p><p class="a">two</p></div>'
+        )
+        first, second = document.getElementsByTagName("p")
+
+        self.assertNotEqual(
+            getCSSAttrCacheKey(first, {"p"}), getCSSAttrCacheKey(second, {"p"})
+        )
+
+
+class CSSAttrCacheTest(TestCase):
+    def test_the_cache_belongs_to_the_render(self) -> None:
+        """
+        It used to be a module global reset with `global` at the top of every
+        parse, so concurrent renders shared it and entries outlived the
+        document that filled them.
+        """
+        first, second = pisaContext("."), pisaContext(".")
+        pisaParser(b"<p>one</p>", first)
+        pisaParser(b"<p>two</p>", second)
+
+        self.assertTrue(first.cssAttrCache)
+        self.assertTrue(second.cssAttrCache)
+        self.assertFalse(set(first.cssAttrCache) & set(second.cssAttrCache))
+
+
+class InlineOnlyPropertyTest(TestCase):
+    def test_a_property_only_ever_declared_inline_still_applies(self) -> None:
+        """
+        CSSCascadeStrategy skips the ruleset search for a property no rule
+        mentions. An inline style is consulted after that search, so it must
+        survive the shortcut.
+        """
+        context = pisaContext(".")
+        # letter-spacing appears in no stylesheet, only in the style attribute.
+        pisaParser(b'<p style="letter-spacing: 3px">spaced</p>', context)
+
+        self.assertNotIn("letter-spacing", context.cssCascade.propertyNames)
+        self.assertEqual("3px", "".join(context.fragList[0].letterSpacing))

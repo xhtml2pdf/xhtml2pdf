@@ -1,0 +1,67 @@
+<!--
+  Browser equivalent of data/source/test-letter.html
+
+  A business letter laid out with six anonymous @frames addressed by
+  -pdf-frame-content. Each becomes an absolutely positioned box at the same
+  coordinates, holding the div that -pdf-frame-content named.
+
+  <pdf:barcode type="code128"> has no browser equivalent, so that region is
+  empty here and the fixture is not compared by SSIM -- see data/manifest.toml.
+  The frame borders are commented out in the source, so none are drawn.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>Letter</title>
+<style>
+@page { size: A4; margin: 0; }
+.frame { position: absolute; box-sizing: border-box; overflow: hidden; }
+h1, h2, h3, h4 { /* Don't add an outline to the document */
+    -pdf-outline: false;
+}
+
+.top_image {
+    zoom: 60%;
+}
+
+.centered {
+    text-align: center;
+}
+</style>
+</head>
+<body>
+<div class="frame" id="company_logo" style="right: 3cm; width: 5cm; top: 1cm; height: 1.5cm">
+  <img src="img/test_logo.jpg" class="top_image" />
+</div>
+<div class="frame" id="address_sender" style="right: 3cm; width: 5cm; top: 5cm; height: 3cm">
+  Beispiel AG<br />
+    Bahnhofstrasse 99<br />
+    CH-8022 Z&uuml;rich<br />
+    Whatever<br />
+</div>
+<div class="frame" id="address_receiver" style="left: 3cm; width: 5cm; top: 5cm; height: 3cm">
+  Beispiel2 AG<br />
+    Bahnhofstrasse 98<br />
+    CH-8022 Z&uuml;rich<br />
+    Whatever<br />
+</div>
+<div class="frame" id="main_text" style="right: 2cm; left: 2cm; top: 9cm; bottom: 6cm">
+  <h3>Lorem Ipsum?</h3>
+    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi pretium dignissim eros, posuere venenatis purus varius vitae. Suspendisse quis elit ligula. Cras vulputate metus vitae lectus iaculis nec adipiscing est fermentum. Praesent ac urna ante. Cras semper malesuada sapien at consectetur. Vivamus arcu sapien, dignissim sit amet mollis quis, scelerisque nec nibh. In hac habitasse platea dictumst. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam rutrum interdum felis, quis suscipit justo malesuada at. Mauris luctus justo id nulla placerat et pharetra mi interdum. Mauris rhoncus augue eu tortor luctus convallis. Nulla facilisi. Morbi ut arcu enim. Nullam in leo arcu, sed ultrices felis. Etiam scelerisque rhoncus ultrices. Nulla in elit ut dolor luctus semper. In eleifend consectetur eros, et pellentesque nulla vehicula non. Nam nec lorem ut dui pellentesque dapibus. Etiam condimentum vulputate lectus.</p>
+    <p>Fusce tempus ullamcorper magna, vitae placerat ligula convallis eget. Phasellus sed ullamcorper felis. Vivamus sit amet purus eu mi pretium tempus. Aenean tristique purus id justo suscipit fringilla. Nam egestas felis non velit luctus volutpat. Aliquam interdum congue elementum. Mauris pulvinar fermentum nisl at dignissim. Ut ornare, dolor vitae consectetur iaculis, augue diam porttitor dolor, ut lobortis lorem sem a tellus. Praesent blandit sem in arcu hendrerit ornare. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Proin non nibh nulla, sed lacinia ante. In viverra congue sapien, ut aliquet justo sagittis vitae. Morbi dictum venenatis eros, et pulvinar enim pretium eu.</p>
+    <p>Fusce tempus ullamcorper magna, vitae placerat ligula convallis eget. Phasellus sed ullamcorper felis. Vivamus sit amet purus eu mi pretium tempus. Aenean tristique purus id justo suscipit fringilla. Nam egestas felis non velit luctus volutpat. Aliquam interdum congue elementum. Mauris pulvinar fermentum nisl at dignissim. Ut ornare, dolor vitae consectetur iaculis, augue diam porttitor dolor, ut lobortis lorem sem a tellus. Praesent blandit sem in arcu hendrerit ornare. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Proin non nibh nulla, sed lacinia ante. In viverra congue sapien, ut aliquet justo sagittis vitae. Morbi dictum venenatis eros, et pulvinar enim pretium eu.</p>
+    <p>Fusce tempus ullamcorper magna, vitae placerat ligula convallis eget. Phasellus sed ullamcorper felis. Vivamus sit amet purus eu mi pretium tempus. Aenean tristique purus id justo suscipit fringilla. Nam egestas felis non velit luctus volutpat. Aliquam interdum congue elementum. Mauris pulvinar fermentum nisl at dignissim. Ut ornare, dolor vitae consectetur iaculis, augue diam porttitor dolor, ut lobortis lorem sem a tellus. Praesent blandit sem in arcu hendrerit ornare. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Proin non nibh nulla, sed lacinia ante. In viverra congue sapien, ut aliquet justo sagittis vitae. Morbi dictum venenatis eros, et pulvinar enim pretium eu.</p>
+    <p>Fusce tempus ullamcorper magna, vitae placerat ligula convallis eget. Phasellus sed ullamcorper felis. Vivamus sit amet purus eu mi pretium tempus. Aenean tristique purus id justo suscipit fringilla. Nam egestas felis non velit luctus volutpat. Aliquam interdum congue elementum. Mauris pulvinar fermentum nisl at dignissim. Ut ornare, dolor vitae consectetur iaculis, augue diam porttitor dolor, ut lobortis lorem sem a tellus. Praesent blandit sem in arcu hendrerit ornare. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Proin non nibh nulla, sed lacinia ante. In viverra congue sapien, ut aliquet justo sagittis vitae. Morbi dictum venenatis eros, et pulvinar enim pretium eu.</p>
+</div>
+<div class="frame" id="barcode" style="left: 2cm; width: 6cm; top: 1cm; height: 3cm">
+  <!-- <pdf:barcode type="code128"> has no browser equivalent -->
+</div>
+<div class="frame" id="signature" style="left: 2cm; width: 10cm; bottom: 3cm; height: 3cm">
+  <p>Name:_____________________________________________________________</p>
+    <br />
+    <p>Datum:________________________ Unterschrift:__________________________</p>
+</div>
+</body>
+</html>

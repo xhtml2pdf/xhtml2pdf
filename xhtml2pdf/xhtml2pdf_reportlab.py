@@ -51,7 +51,14 @@ from reportlab.rl_config import register_reset
 from xhtml2pdf.builders.watermarks import WaterMarks
 from xhtml2pdf.files import pisaFileObject, pisaTempFile
 from xhtml2pdf.reportlab_paragraph import Paragraph
-from xhtml2pdf.util import ImageWarning, getBorderStyle
+from xhtml2pdf.util import (
+    ImageWarning,
+    drawBackgroundImage,
+    drawBorderLine,
+    getBackgroundImageReader,
+    getBackgroundImageSize,
+    getBorderWidth,
+)
 
 if TYPE_CHECKING:
     from reportlab.graphics.shapes import Drawing
@@ -187,6 +194,8 @@ class PmlPageTemplate(PageTemplate):
         self.pisaStaticList: list = []
         self.pisaBackgroundList: list[tuple] = []
         self.pisaBackground = None
+        #: Colour propagated from <body> to the page canvas; see CSS 2.1 14.2.
+        self.canvasBackground = None
         super().__init__(**kw)
         self._page_count: int = 0
         self._first_flow: bool = True
@@ -217,6 +226,13 @@ class PmlPageTemplate(PageTemplate):
     def beforeDrawPage(self, canvas: Canvas, doc):
         canvas.saveState()
         try:
+            # CSS 2.1 14.2: a background propagated from body paints the whole
+            # canvas, underneath everything else including the @page background.
+            if self.canvasBackground is not None:
+                canvas.saveState()
+                canvas.setFillColor(self.canvasBackground)
+                canvas.rect(0, 0, self.pagesize[0], self.pagesize[1], stroke=0, fill=1)
+                canvas.restoreState()
             if doc.pageTemplate.id not in self.backgroundids:
                 pisaBackground = None
                 if (
@@ -655,17 +671,30 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
 
         style = self.style
 
+        # A border only takes up room when its style says it is drawn; see
+        # util.getBorderWidth.
+        self.borderWidthLeft = getBorderWidth(
+            style.borderLeftStyle, style.borderLeftWidth
+        )
+        self.borderWidthRight = getBorderWidth(
+            style.borderRightStyle, style.borderRightWidth
+        )
+        self.borderWidthTop = getBorderWidth(style.borderTopStyle, style.borderTopWidth)
+        self.borderWidthBottom = getBorderWidth(
+            style.borderBottomStyle, style.borderBottomWidth
+        )
+
         self.deltaWidth = (
             style.paddingLeft
             + style.paddingRight
-            + style.borderLeftWidth
-            + style.borderRightWidth
+            + self.borderWidthLeft
+            + self.borderWidthRight
         )
         self.deltaHeight = (
             style.paddingTop
             + style.paddingBottom
-            + style.borderTopWidth
-            + style.borderBottomWidth
+            + self.borderWidthTop
+            + self.borderWidthBottom
         )
 
         # reduce the available width & height by the padding so the wrapping
@@ -744,14 +773,34 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
             canvas.rect(x, y, w, h, fill=1, stroke=0)
             canvas.restoreState()
 
+        # CSS 2.1 14.2: the image goes over the colour and under the content.
+        # Before this, background-image existed only on @page; on an element
+        # the property was parsed, cascaded and then dropped.
+        background_image = getattr(style, "backgroundImage", None)
+        if background_image is not None:
+            reader = getBackgroundImageReader(background_image)
+            if reader is not None:
+                drawBackgroundImage(
+                    canvas,
+                    reader,
+                    x,
+                    y,
+                    w,
+                    h,
+                    natural=getBackgroundImageSize(reader),
+                    repeat=getattr(style, "backgroundRepeat", "repeat"),
+                    position=getattr(style, "backgroundPosition", "0% 0%"),
+                    font_size=style.fontSize,
+                )
+
         # we need to hide the bg color (if any) so Paragraph won't try to draw it again
         style.backColor = None
 
         # offset the origin to compensate for the padding
         canvas.saveState()
         canvas.translate(
-            (style.paddingLeft + style.borderLeftWidth),
-            -1 * (style.paddingTop + style.borderTopWidth),
+            (style.paddingLeft + getattr(self, "borderWidthLeft", 0)),
+            -1 * (style.paddingTop + getattr(self, "borderWidthTop", 0)),
         )  # + (style.leading / 4)))
 
         # Call the base class draw method to finish up
@@ -765,16 +814,11 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
         canvas.saveState()
 
         def _drawBorderLine(bstyle, width, color, x1, y1, x2, y2):
-            # We need width and border style to be able to draw a border
-            if width and getBorderStyle(bstyle):
-                # If no color for border is given, the text color is used (like defined by W3C)
-                if color is None:
-                    color = style.textColor
-                    # print "Border", bstyle, width, color
-                if color is not None:
-                    canvas.setStrokeColor(color)
-                    canvas.setLineWidth(width)
-                    canvas.line(x1, y1, x2, y2)
+            # If no color for border is given, the text color is used (like
+            # defined by W3C)
+            if color is None:
+                color = style.textColor
+            drawBorderLine(canvas, bstyle, width, color, x1, y1, x2, y2)
 
         _drawBorderLine(
             style.borderLeftStyle,

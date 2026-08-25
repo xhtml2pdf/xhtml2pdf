@@ -258,3 +258,60 @@ class DocumentTest(LocalServerMixin, TestCase):
                 dest=in_memory_file,
             )
             self.assertGreater(len(in_memory_file.getvalue()), 0)
+
+
+class CanvasBackgroundTest(TestCase):
+    """
+    CSS 2.1 14.2: when the html element declares no background of its own, the
+    background of body propagates to the canvas, so it covers the whole page
+    rather than only the area body's boxes happen to occupy.
+    """
+
+    @staticmethod
+    def _content(html: str):
+        dest = io.BytesIO()
+        pisaDocument(io.StringIO(html), dest)
+        dest.seek(0)
+        page = PdfReader(dest).pages[0]
+        return page, page.get_contents().get_data().decode("latin-1")
+
+    @staticmethod
+    def _full_page_fill(page, content: str) -> bool:
+        width = round(float(page.mediabox.width), 4)
+        height = round(float(page.mediabox.height), 4)
+        return f"0 0 {width} {height} re" in content
+
+    def test_body_background_covers_the_page(self) -> None:
+        page, content = self._content(
+            '<html><body style="background-color: #ff0000">x</body></html>'
+        )
+        self.assertIn("1 0 0 rg", content, "expected a red fill colour")
+        self.assertTrue(
+            self._full_page_fill(page, content),
+            "body background did not propagate to the canvas",
+        )
+
+    def test_no_body_background_leaves_the_canvas_alone(self) -> None:
+        page, content = self._content("<html><body>x</body></html>")
+        self.assertFalse(
+            self._full_page_fill(page, content),
+            "a page-sized fill appeared without any background declared",
+        )
+
+    def test_background_covers_every_page(self) -> None:
+        dest = io.BytesIO()
+        pisaDocument(
+            io.StringIO(
+                '<html><body style="background-color: #00ff00">one'
+                "<pdf:nextpage/>two</body></html>"
+            ),
+            dest,
+        )
+        dest.seek(0)
+        pages = PdfReader(dest).pages
+        self.assertEqual(2, len(pages))
+        for number, page in enumerate(pages, 1):
+            with self.subTest(page=number):
+                content = page.get_contents().get_data().decode("latin-1")
+                self.assertIn("0 1 0 rg", content)
+                self.assertTrue(self._full_page_fill(page, content))

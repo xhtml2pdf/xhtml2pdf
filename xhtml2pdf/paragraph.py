@@ -41,6 +41,8 @@ from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.platypus.flowables import Flowable
 
+from xhtml2pdf.util import drawBorderLine
+
 if TYPE_CHECKING:
     from reportlab.pdfgen.canvas import Canvas
 
@@ -113,15 +115,11 @@ class Box(dict):
 
         # Borders
         def _drawBorderLine(bstyle, width, color, x1, y1, x2, y2):
-            # We need width and border style to be able to draw a border
-            if width and bstyle:
-                # If no color for border is given, the text color is used (like defined by W3C)
-                if color is None:
-                    color = self.get("textColor", Color(0, 0, 0))
-                if color is not None:
-                    canvas.setStrokeColor(color)
-                    canvas.setLineWidth(width)
-                    canvas.line(x1, y1, x2, y2)
+            # If no color for border is given, the text color is used (like
+            # defined by W3C)
+            if color is None:
+                color = self.get("textColor", Color(0, 0, 0))
+            drawBorderLine(canvas, bstyle, width, color, x1, y1, x2, y2)
 
         _drawBorderLine(
             self.get("borderLeftStyle", None),

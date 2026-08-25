@@ -1,0 +1,40 @@
+<!--
+  Browser equivalent of data/source/css-text.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+
+  white-space: nowrap is deliberately absent. A browser lets a nowrap line
+  overrun the page box while xhtml2pdf has no overflow model for it, so the
+  fixture would score the difference in overflow handling rather than the
+  property itself. It is covered by a unit test instead.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>css-text</title>
+<link rel="stylesheet" href="_normalize.css">
+<style type="text/css">
+p { margin: 0 0 0.5em 0; }
+.upper { text-transform: uppercase; }
+.lower { text-transform: lowercase; }
+.cap   { text-transform: capitalize; }
+.spaced { word-spacing: 1em; }
+.over   { text-decoration: overline; }
+.prewrap { white-space: pre-wrap; background-color: #eeeeec; }
+.preline { white-space: pre-line; background-color: #d3d7cf; }
+</style>
+</head>
+<body>
+<p class="upper">text-transform uppercase</p>
+<p class="lower">TEXT-TRANSFORM LOWERCASE</p>
+<p class="cap">text-transform capitalize</p>
+<p class="spaced">word spacing of one em</p>
+<p class="over">text-decoration overline</p>
+<p class="prewrap">pre-wrap   keeps    runs of spaces
+and keeps this newline</p>
+<p class="preline">pre-line   collapses    runs of spaces
+but keeps this newline</p>
+</body>
+</html>

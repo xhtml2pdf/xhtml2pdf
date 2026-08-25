@@ -17,6 +17,7 @@ import contextlib
 import logging
 import re
 from copy import copy
+from io import BytesIO
 from typing import Any, ClassVar
 
 import arabic_reshaper
@@ -197,10 +198,138 @@ def getColor(value, default=None):
     return toColor(value, default)  # Calling the reportlab function
 
 
+def apply_text_transform(text: str, transform) -> str:
+    """
+    CSS 2.1 16.5 text-transform.
+
+    capitalize is applied per word rather than per typographic word boundary,
+    and a word split across two fragments -- by a nested <b>, say -- has each
+    half capitalised. Neither matters for the usual case of a whole phrase.
+    """
+    transform = str(transform).lower()
+    if transform == "uppercase":
+        return text.upper()
+    if transform == "lowercase":
+        return text.lower()
+    if transform == "capitalize":
+        return re.sub(r"\b[a-z]", lambda m: m.group(0).upper(), text)
+    return text
+
+
 def getBorderStyle(value, default=None):
     if value and (str(value).lower() not in {"none", "hidden"}):
         return value
     return default
+
+
+def getBorderWidth(style, width) -> float:
+    """
+    The width a border actually occupies in the box.
+
+    CSS 2.1 8.5.3: `border-style: none` forces the computed border width to
+    zero whatever border-width says. It is not only that nothing is drawn --
+    the box is that much smaller. DEFAULT_CSS gives every element
+    `border: 1px none`, so treating the declared width as occupied added 2pt
+    of height and 2pt of width to every block on the page.
+    """
+    if not width or not getBorderStyle(style):
+        return 0
+    return width
+
+
+#: On/off lengths of a dashed or dotted border, as multiples of its width.
+#: Measured off Chromium through testrender/browsercompare.py rather than
+#: guessed: a 5px dashed border rasterises to a 15px dash and an 8px gap at
+#: 150dpi, and a 2px dotted one to a 3px dot and a 4px gap.
+BORDER_DASH_PATTERNS: dict[str, tuple[float, float]] = {
+    "dashed": (2.0, 1.0),
+    "dotted": (1.0, 1.0),
+}
+
+
+def _is_double(style: str, width) -> bool:
+    """
+    Whether a border should be drawn as CSS 2.1's two lines with a gap.
+
+    Below three units there is nothing to divide into three bands, so a
+    double border that thin stays a single line, as browsers draw it.
+    """
+    return style == "double" and isinstance(width, int | float) and width >= 3
+
+
+def getBorderDash(style, width: float) -> list[float] | None:
+    """
+    Dash array for a border style, or None when the line is continuous.
+
+    A dash is proportional to the border's width, which is why the pattern
+    cannot be a constant: a 1pt dotted border and a 6pt one are the same
+    figure at different scales.
+    """
+    pattern = BORDER_DASH_PATTERNS.get(str(style).lower())
+    if not pattern or not isinstance(width, int | float) or not width:
+        return None
+    return [max(part * width, 0.1) for part in pattern]
+
+
+def getBorderTableLine(
+    style, width: float
+) -> tuple[float, str, list[float] | None, None, int, float]:
+    """
+    Trailing arguments of a ReportLab LINE* table command for a border style.
+
+    Returns (weight, cap, dashes, join, count, space). A table border is not
+    stroked by xhtml2pdf but described to ReportLab, so the style has to be
+    expressed in those terms: a dash array for dashed and dotted, and for
+    double the `count` parallel lines ReportLab can draw, narrowed to a third
+    of the declared width and set two thirds apart so the three bands add up
+    to the width that was asked for.
+    """
+    style = str(style).lower()
+    if _is_double(style, width):
+        band = width / 3.0
+        return (band, "squared", None, None, 2, 2 * band)
+    return (width, "squared", getBorderDash(style, width), None, 1, 0)
+
+
+def drawBorderLine(  # noqa: PLR0917
+    canvas, bstyle, width: float, color, x1: float, y1: float, x2: float, y2: float
+) -> None:
+    """
+    Draw one edge of a box, honouring its border-style.
+
+    Every caller used to stroke a plain line whatever the style said, so
+    dashed, dotted and double all came out solid. The style is still only
+    consulted for the shape of the line: groove, ridge, inset and outset need
+    two shades of the declared colour and are drawn solid for now.
+    """
+    if not width or not getBorderStyle(bstyle) or color is None:
+        return
+
+    style = str(bstyle).lower()
+    canvas.saveState()
+    canvas.setStrokeColor(color)
+
+    # CSS 2.1 8.5.3: double is two solid lines with a gap, and the three
+    # together are the declared width. Below 3 units there is nothing to
+    # split, so it stays a single line.
+    if _is_double(style, width):
+        band = width / 3.0
+        canvas.setLineWidth(band)
+        if y1 == y2:
+            canvas.line(x1, y1 - band, x2, y2 - band)
+            canvas.line(x1, y1 + band, x2, y2 + band)
+        else:
+            canvas.line(x1 - band, y1, x2 - band, y2)
+            canvas.line(x1 + band, y1, x2 + band, y2)
+        canvas.restoreState()
+        return
+
+    canvas.setLineWidth(width)
+    dash = getBorderDash(style, width)
+    if dash:
+        canvas.setDash(dash)
+    canvas.line(x1, y1, x2, y2)
+    canvas.restoreState()
 
 
 MM: float = cm / 10.0
@@ -237,6 +366,12 @@ RELATIVE_SIZE_TABLE: dict[str, float] = {
 }
 
 MIN_FONT_SIZE: float = 1.0
+
+#: Base for relative lengths in @page and @frame. There is no element in scope
+#: at that point to inherit a font size from, so CSS resolves em, ex and % in
+#: the page context against the initial font size, which DEFAULT_CSS sets with
+#: html { font-size: 10px }.
+DEFAULT_FONT_SIZE: float = 10.0 * DPI96
 
 
 @Memoized
@@ -356,41 +491,231 @@ def getBox(box, pagesize):
     return getCoords(x, y, w, h, pagesize)
 
 
+#: Keywords background-position accepts, as a fraction of the free space.
+BACKGROUND_POSITION_KEYWORDS: dict[str, float] = {
+    "left": 0.0,
+    "top": 0.0,
+    "center": 0.5,
+    "middle": 0.5,
+    "right": 1.0,
+    "bottom": 1.0,
+}
+
+
+def getBackgroundOffset(value, free: float, font_size: float) -> float:
+    """
+    One axis of background-position, in points from the box's near edge.
+
+    CSS 2.1 14.2.1: a percentage places the same point of the image against
+    the same point of the box, so 100% is not "one box away" but "flush with
+    the far edge" -- which is why it is a fraction of the space left over
+    rather than of the box.
+    """
+    text = str(value).strip().lower()
+    if text in BACKGROUND_POSITION_KEYWORDS:
+        return free * BACKGROUND_POSITION_KEYWORDS[text]
+    if text.endswith("%"):
+        try:
+            return free * float(text[:-1]) / 100.0
+        except ValueError:
+            return 0.0
+    return getSize(text, font_size)
+
+
+#: ImageReaders, keyed by the file they were built from. A background is
+#: painted once per paragraph and a tiled one is drawn many times over, so
+#: decoding the file each time would be paid on every page.
+_background_image_readers: dict[str, object] = {}
+
+
+def getBackgroundImageReader(file_object):
+    """An ImageReader for a background image file, or None if unusable."""
+    if file_object is None or file_object.notFound():
+        return None
+
+    key = str(file_object.uri)
+    if key in _background_image_readers:
+        return _background_image_readers[key]
+
+    from reportlab.lib.utils import ImageReader  # noqa: PLC0415
+
+    try:
+        data = file_object.getData()
+        reader = ImageReader(BytesIO(data)) if data else None
+    except Exception:
+        log.warning("Could not read background image %r", key, exc_info=True)
+        reader = None
+
+    _background_image_readers[key] = reader
+    return reader
+
+
+def getBackgroundImageSize(reader) -> tuple[float, float]:
+    """The image's natural size in points, reading its pixels at 96dpi."""
+    try:
+        width, height = reader.getSize()
+    except Exception:
+        return (0.0, 0.0)
+    return (width * DPI96, height * DPI96)
+
+
+def drawBackgroundImage(  # noqa: PLR0917
+    canvas,
+    reader,
+    x: float,
+    y: float,
+    width: float,
+    height: float,
+    natural: tuple[float, float],
+    repeat: str = "repeat",
+    position: str = "0% 0%",
+    font_size: float = DEFAULT_FONT_SIZE,
+) -> None:
+    """
+    Paint a CSS background image into a box, clipped to it.
+
+    Only what CSS 2.1 14.2 describes: the image at its natural size, placed by
+    background-position and tiled along whichever axes background-repeat
+    allows. No background-size, so nothing is ever scaled.
+    """
+    image_width, image_height = natural
+    if image_width <= 0 or image_height <= 0:
+        return
+
+    repeat = str(repeat).strip().lower()
+    tile_x = repeat in {"repeat", "repeat-x"}
+    tile_y = repeat in {"repeat", "repeat-y"}
+
+    parts = str(position).strip().lower().split()
+    if not parts:
+        parts = ["0%"]
+    if len(parts) == 1:
+        # CSS 2.1: a single value sets the horizontal position and centres
+        # the other axis.
+        parts = [parts[0], "center"]
+
+    offset_x = getBackgroundOffset(parts[0], width - image_width, font_size)
+    # The PDF origin is the bottom-left corner and CSS measures from the top,
+    # so the vertical offset is taken from the top edge and turned around.
+    offset_y = getBackgroundOffset(parts[1], height - image_height, font_size)
+
+    start_x = x + offset_x
+    start_y = y + height - image_height - offset_y
+
+    # A tiled axis has to start left of, or above, the box so the run of tiles
+    # covers it from the edge rather than from the placed image.
+    if tile_x:
+        while start_x > x:
+            start_x -= image_width
+    if tile_y:
+        while start_y + image_height < y + height:
+            start_y += image_height
+
+    canvas.saveState()
+    path = canvas.beginPath()
+    path.rect(x, y, width, height)
+    canvas.clipPath(path, stroke=0, fill=0)
+
+    tile_y_position = start_y
+    while True:
+        tile_x_position = start_x
+        while True:
+            canvas.drawImage(
+                reader,
+                tile_x_position,
+                tile_y_position,
+                image_width,
+                image_height,
+                mask="auto",
+            )
+            if not tile_x:
+                break
+            tile_x_position += image_width
+            if tile_x_position >= x + width:
+                break
+        if not tile_y:
+            break
+        tile_y_position -= image_height
+        if tile_y_position + image_height <= y:
+            break
+
+    canvas.restoreState()
+
+
 def getFrameDimensions(
-    data, page_width: float, page_height: float
+    data, page_width: float, page_height: float, font_size: float = DEFAULT_FONT_SIZE
 ) -> tuple[float, float, float, float]:
     """
     Calculate dimensions of a frame.
 
     Returns left, top, width and height of the frame in points.
+
+    font_size is the base for relative lengths. Without it `@page { margin:
+    2em }` resolved to nothing at all: getSize returns its default for a
+    relative unit when it is given no base, so the margin silently became 0.
     """
+
+    def size(value, percent_of: float) -> float:
+        """
+        Resolve one length of the page box.
+
+        A percentage here is a fraction of the page, per CSS 2.1 10.2 and
+        10.5: the page box is the containing block. getSize would read it
+        against the font size instead, which is the right answer for a font
+        size and the wrong one for geometry.
+        """
+        if isinstance(value, list | tuple):
+            value = "".join(value)
+        if isinstance(value, str) and value.strip().endswith("%"):
+            try:
+                return float(value.strip()[:-1]) * percent_of / 100.0
+            except ValueError:
+                log.warning("Not a percentage: %r", value)
+                return 0.0
+        return getSize(value, font_size)
+
+    def horizontal(value) -> float:
+        return size(value, page_width)
+
+    def vertical(value) -> float:
+        return size(value, page_height)
+
     box = data.get("-pdf-frame-box", [])
     if len(box) == 4:
-        return (getSize(box[0]), getSize(box[1]), getSize(box[2]), getSize(box[3]))
-    top = getSize(data.get("top", 0))
-    left = getSize(data.get("left", 0))
-    bottom = getSize(data.get("bottom", 0))
-    right = getSize(data.get("right", 0))
+        # left, top, width, height
+        return (
+            horizontal(box[0]),
+            vertical(box[1]),
+            horizontal(box[2]),
+            vertical(box[3]),
+        )
+    # Margins are folded in before the declared size is honoured, not after.
+    # The frame is derived from the four edge offsets below, so a size has to
+    # be turned into the offset it implies; doing that first and then adding
+    # the margin would push the opposite edge and leave a frame that is
+    # margin-narrower than what was asked for.
+    top = vertical(data.get("top", 0)) + vertical(data.get("margin-top", 0))
+    left = horizontal(data.get("left", 0)) + horizontal(data.get("margin-left", 0))
+    bottom = vertical(data.get("bottom", 0)) + vertical(data.get("margin-bottom", 0))
+    right = horizontal(data.get("right", 0)) + horizontal(data.get("margin-right", 0))
+
+    # A declared height fixes one edge relative to the other. Which edge moves
+    # depends on which one was given: with `bottom` the frame grows upwards,
+    # otherwise it grows down from `top`, whose default of 0 is what makes
+    # `@page { height: 6cm }` mean a 6cm area at the top of the page rather
+    # than -- as it did before -- the whole page.
     if "height" in data:
-        height = getSize(data["height"])
-        if "top" in data:
-            top = getSize(data["top"])
-            bottom = page_height - (top + height)
-        elif "bottom" in data:
-            bottom = getSize(data["bottom"])
+        height = vertical(data["height"])
+        if "bottom" in data and "top" not in data:
             top = page_height - (bottom + height)
+        else:
+            bottom = page_height - (top + height)
     if "width" in data:
-        width = getSize(data["width"])
-        if "left" in data:
-            left = getSize(data["left"])
-            right = page_width - (left + width)
-        elif "right" in data:
-            right = getSize(data["right"])
+        width = horizontal(data["width"])
+        if "right" in data and "left" not in data:
             left = page_width - (right + width)
-    top += getSize(data.get("margin-top", 0))
-    left += getSize(data.get("margin-left", 0))
-    bottom += getSize(data.get("margin-bottom", 0))
-    right += getSize(data.get("margin-right", 0))
+        else:
+            right = page_width - (left + width)
 
     width = page_width - (left + right)
     height = page_height - (top + bottom)

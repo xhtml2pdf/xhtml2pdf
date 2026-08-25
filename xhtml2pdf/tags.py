@@ -86,6 +86,14 @@ class pisaTagBODY(pisaTag):
 
     def start(self, c: pisaContext) -> None:
         c.baseFontSize = c.frag.fontSize
+        # CSS 2.1 14.2: the background of body propagates to the canvas when
+        # html declares none, so it covers the whole page rather than just the
+        # area body's boxes happen to occupy. No separate check for an html
+        # background is needed: html's own background would already have been
+        # inherited into this frag, and by the same rule it also paints the
+        # canvas.
+        if c.frag.backColor:
+            c.pageCanvasBackground = c.frag.backColor
         if "dir" in self.attr and self.attr["dir"]:
             c.setDir(self.attr["dir"])
         # print("base font size", c.baseFontSize)
@@ -206,6 +214,11 @@ def listDecimal(c: pisaContext) -> str:
     return str("%d." % c.listCounter)
 
 
+def listDecimalLeadingZero(c: pisaContext) -> str:
+    c.listCounter += 1
+    return f"{c.listCounter:02d}."
+
+
 roman_numeral_map: tuple[tuple[int, str], ...] = (
     (1000, "M"),
     (900, "CM"),
@@ -259,14 +272,32 @@ def listLowerAlpha(c: pisaContext) -> str:
     return listUpperAlpha(c).lower()
 
 
+#: CSS 2.1 lower-greek: the 24 letters of the alphabet, with no final sigma.
+_greek_alphabet: str = "\u03b1\u03b2\u03b3\u03b4\u03b5\u03b6\u03b7\u03b8"
+_greek_alphabet += "\u03b9\u03ba\u03bb\u03bc\u03bd\u03be\u03bf\u03c0"
+_greek_alphabet += "\u03c1\u03c3\u03c4\u03c5\u03c6\u03c7\u03c8\u03c9"
+
+
+def listLowerGreek(c: pisaContext) -> str:
+    c.listCounter += 1
+    index: int = (c.listCounter - 1) % len(_greek_alphabet)
+    return f"{_greek_alphabet[index]}."
+
+
 _bullet: str = "\u2022"
+#: Black square, which no text font in the base-14 set carries but
+#: ZapfDingbats does.
+_black_square: str = "\u25a0"
+
 _list_style_type: dict[str, str | Callable] = {
     "none": "",
     "disc": _bullet,
-    "circle": _bullet,  # XXX PDF has no equivalent
-    "square": _bullet,  # XXX PDF has no equivalent
+    # No base-14 font has a hollow circle, so circle still borrows the disc
+    # bullet. Everything else here now draws what it says.
+    "circle": _bullet,
+    "square": _black_square,
     "decimal": listDecimal,
-    "decimal-leading-zero": listDecimal,
+    "decimal-leading-zero": listDecimalLeadingZero,
     "lower-roman": listLowerRoman,
     "upper-roman": listUpperRoman,
     "hebrew": listDecimal,
@@ -277,11 +308,31 @@ _list_style_type: dict[str, str | Callable] = {
     "katakana": listDecimal,
     "hiragana-iroha": listDecimal,
     "katakana-iroha": listDecimal,
-    "lower-latin": listDecimal,
+    # CSS 2.1: lower-latin and lower-alpha are the same counter style, as are
+    # upper-latin and upper-alpha. Both latin forms used to number instead.
+    "lower-latin": listLowerAlpha,
     "lower-alpha": listLowerAlpha,
-    "upper-latin": listDecimal,
+    "upper-latin": listUpperAlpha,
     "upper-alpha": listUpperAlpha,
-    "lower-greek": listDecimal,
+    "lower-greek": listLowerGreek,
+}
+
+#: Font to draw a marker with, where the text font cannot.
+#:
+#: Symbol and ZapfDingbats are base-14, so a marker never depends on an
+#: embedded font being available. Symbol is also how the disc bullet stops
+#: being written as U+007F: ReportLab fills seven undefined WinAnsi slots with
+#: `bullet` and its codec picks the lowest, 127, which the PDF then declares
+#: as plain WinAnsiEncoding where 127 means nothing at all. In Symbol the
+#: bullet has one code of its own.
+#: The factor is a fraction of the text size. ZapfDingbats' black square fills
+#: its em, while the marker CSS asks for is a small square: measured against
+#: Chromium it comes out 5px where the unscaled glyph is 11px.
+_list_style_font: dict[str, tuple[str, float]] = {
+    "disc": ("Symbol", 1.0),
+    "circle": ("Symbol", 1.0),
+    "square": ("ZapfDingbats", 0.45),
+    "lower-greek": ("Symbol", 1.0),
 }
 
 
@@ -304,9 +355,8 @@ class pisaTagOL(pisaTagUL):
 
 class pisaTagLI(pisaTag):
     def start(self, c: pisaContext) -> None:
-        lst: str | Callable = _list_style_type.get(
-            c.frag.listStyleType or "disc", _bullet
-        )
+        style_type: str = c.frag.listStyleType or "disc"
+        lst: str | Callable = _list_style_type.get(style_type, _bullet)
         frag: ParaFrag = copy.copy(c.frag)
 
         self.offset: int = 0
@@ -332,6 +382,15 @@ class pisaTagLI(pisaTag):
         frag.fontName = frag.bulletFontName = tt2ps(
             frag.fontName, frag.bold, frag.italic
         )
+
+        # A marker the text font cannot draw is set in the base-14 font that
+        # can. Not for an image marker, which is not text at all.
+        marker = _list_style_font.get(style_type)
+        if marker and frag.listStyleImage is None:
+            marker_font, size_factor = marker
+            frag.fontName = frag.bulletFontName = marker_font
+            frag.fontSize *= size_factor
+
         c.frag.bulletText = [frag]
 
     def end(self, c: pisaContext) -> None:

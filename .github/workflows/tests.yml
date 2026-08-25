@@ -120,6 +120,47 @@ jobs:
           name: testrender-diff-${{matrix.reference}}-to-${{matrix.render}}
           path: testrender/output
 
+  # Compares xhtml2pdf against an external reference: a browser rendering the
+  # equivalent markup. See testrender/browsercompare.py.
+  #
+  # The browser IS the reference, so both it and the fonts have to be pinned:
+  # an upgrade of either moves the scores without xhtml2pdf changing. When the
+  # runner's browser does not match the build the baseline was recorded with,
+  # browsercompare.py reports that and enforces nothing rather than failing for
+  # the wrong reason. The uploaded report is useful either way.
+  browser-compare:
+    name: browser comparison
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ghostscript imagemagick xvfb
+          # Helvetica must resolve to a metric-compatible clone (URW Nimbus
+          # Sans), otherwise line breaking diverges from ReportLab's base-14
+          # metrics and every score collapses for reasons unrelated to layout.
+          sudo apt-get install --yes fonts-urw-base35 fonts-liberation
+          for policy in /etc/ImageMagick-*/policy.xml; do
+            [ -f "$policy" ] && sudo sed -i 's#<policy domain="coder" rights="none" pattern="PDF" />#<policy domain="coder" rights="read|write" pattern="PDF" />#' "$policy"
+          done
+          python -m pip install --upgrade pip
+          python -m pip install '.[browsertest]'
+      - name: Report the resolved reference fonts
+        run: |
+          fc-match Helvetica
+          fc-match "Courier New"
+      - name: Compare against the browser
+        run: make test-browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-compare-report
+          path: testrender/output
+
   # The suite must not need the public internet. Everything is served from
   # tests/httpserver.py on localhost.
   offline:

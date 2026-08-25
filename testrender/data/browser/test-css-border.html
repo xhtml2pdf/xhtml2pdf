@@ -1,0 +1,48 @@
+<!--
+  Browser equivalent of data/source/test-css-border.html
+
+  This fixture is already plain HTML/CSS, so the equivalent is the same markup
+  with _normalize.css linked ahead of the document's own styles. That file
+  replaces the browser's UA stylesheet with xhtml2pdf's DEFAULT_CSS, so both
+  engines start from the same defaults; see data/browser/_normalize.css.
+-->
+<html>
+
+    <head>
+<link rel="stylesheet" href="_normalize.css">
+
+        <style type='text/css'>
+          .a {
+		  	color: green;
+			border: solid;
+			padding: .5em;
+		  }
+		  .b {
+		  	border: solid green;
+		  }
+		  .c {
+		  	border-top: 12px solid blue;
+		  }
+		  .d {
+		      border-color: red;
+		  }
+		  .e {
+		  	border: green;
+		  }
+        </style>
+
+    </head>
+
+	<body>
+
+		<p class="a">green text, green border</p>
+		<p class="b">normal text, green border</p>
+        <p class="b c">normal text, green border, thick blue on top</p>
+		<div class="a">
+		  <p class="d">normal text, green border, thick blue on top</p>
+		</div>
+		<p class="e">normal text, no border</p>
+
+	</body>
+
+</html>

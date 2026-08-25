@@ -19,7 +19,13 @@ import logging
 from reportlab.platypus.tables import TableStyle
 
 from xhtml2pdf.tags import pisaTag
-from xhtml2pdf.util import getAlign, getBorderStyle, getSize, set_value
+from xhtml2pdf.util import (
+    getAlign,
+    getBorderStyle,
+    getBorderTableLine,
+    getSize,
+    set_value,
+)
 from xhtml2pdf.xhtml2pdf_reportlab import PmlKeepInFrame, PmlTable
 
 log = logging.getLogger(__name__)
@@ -102,66 +108,30 @@ class TableData:
                 ),
             )
 
-        if (
-            getBorderStyle(c.frag.borderTopStyle)
-            and c.frag.borderTopWidth
-            and c.frag.borderTopColor is not None
-        ):
-            self.add_style(
-                (
-                    "LINEABOVE",
-                    begin,
-                    (end[0], begin[1]),
-                    c.frag.borderTopWidth,
-                    c.frag.borderTopColor,
-                    "squared",
-                )
-            )
-        if (
-            getBorderStyle(c.frag.borderLeftStyle)
-            and c.frag.borderLeftWidth
-            and c.frag.borderLeftColor is not None
-        ):
-            self.add_style(
-                (
-                    "LINEBEFORE",
-                    begin,
-                    (begin[0], end[1]),
-                    c.frag.borderLeftWidth,
-                    c.frag.borderLeftColor,
-                    "squared",
-                )
-            )
-        if (
-            getBorderStyle(c.frag.borderRightStyle)
-            and c.frag.borderRightWidth
-            and c.frag.borderRightColor is not None
-        ):
-            self.add_style(
-                (
-                    "LINEAFTER",
-                    (end[0], begin[1]),
-                    end,
-                    c.frag.borderRightWidth,
-                    c.frag.borderRightColor,
-                    "squared",
-                )
-            )
-        if (
-            getBorderStyle(c.frag.borderBottomStyle)
-            and c.frag.borderBottomWidth
-            and c.frag.borderBottomColor is not None
-        ):
-            self.add_style(
-                (
-                    "LINEBELOW",
-                    (begin[0], end[1]),
-                    end,
-                    c.frag.borderBottomWidth,
-                    c.frag.borderBottomColor,
-                    "squared",
-                )
-            )
+        # ReportLab takes a table border as a LINE* command rather than
+        # something xhtml2pdf strokes itself, so the border style has to be
+        # expressed in its terms: a dash array, or parallel lines for double.
+        # Cells used to be drawn solid whatever the style said.
+        sides = (
+            ("LINEABOVE", begin, (end[0], begin[1]), "Top"),
+            ("LINEBEFORE", begin, (begin[0], end[1]), "Left"),
+            ("LINEAFTER", (end[0], begin[1]), end, "Right"),
+            ("LINEBELOW", (begin[0], end[1]), end, "Bottom"),
+        )
+        for op, line_begin, line_end, side in sides:
+            style = getattr(c.frag, f"border{side}Style")
+            width = getattr(c.frag, f"border{side}Width")
+            color = getattr(c.frag, f"border{side}Color")
+            if not (getBorderStyle(style) and width and color is not None):
+                continue
+            weight, cap, dashes, join, count, space = getBorderTableLine(style, width)
+            command = [op, line_begin, line_end, weight, color, cap]
+            # ReportLab fills the remaining arguments with these very defaults,
+            # so a plain solid border still emits exactly the command it always
+            # did and only a style that needs more says more.
+            if dashes or count > 1:
+                command += [dashes, join, count, space]
+            self.add_style(tuple(command))
         self.add_style(("LEFTPADDING", begin, end, c.frag.paddingLeft or self.padding))
         self.add_style(
             ("RIGHTPADDING", begin, end, c.frag.paddingRight or self.padding)

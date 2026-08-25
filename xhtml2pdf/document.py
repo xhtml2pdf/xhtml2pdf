@@ -77,6 +77,25 @@ def pisaStory(
     # Avoid empty documents
     if not context.story:
         context.story = [Spacer(1, 1)]
+    else:
+        # Let the first block keep its top margin.
+        #
+        # ReportLab's Frame._add reads a flowable's spaceBefore only when the
+        # frame is not empty, so the first block of a document sat flush
+        # against the top of the frame where a browser pushes it down by its
+        # own margin. The margin is moved onto a spacer ahead of it, which
+        # gets the same result without keeping a copy of _add in step with
+        # ReportLab.
+        #
+        # Only the start of the story. Further pages begin with content
+        # carried over, and neither engine reintroduces a margin at a page
+        # break.
+        first = context.story[0]
+        style = getattr(first, "style", None)
+        space_before = getattr(style, "spaceBefore", 0) or 0
+        if space_before > 0:
+            style.spaceBefore = 0
+            context.story.insert(0, Spacer(1, space_before))
 
     if context.indexing_story:
         context.story.append(context.indexing_story)
@@ -187,7 +206,12 @@ def pisaDocument(
             pagesize=context.pageSize,
         )
 
-    doc.addPageTemplates([body, *list(context.templateList.values())])
+    templates = [body, *list(context.templateList.values())]
+    if context.pageCanvasBackground is not None:
+        # CSS 2.1 14.2: body's background covers the canvas on every page
+        for template in templates:
+            template.canvasBackground = context.pageCanvasBackground
+    doc.addPageTemplates(templates)
 
     # Use multibuild e.g. if a TOC has to be created
     if context.multiBuild:

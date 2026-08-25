@@ -199,9 +199,18 @@ def _putFragLine(cur_x, tx, line):
         tx._olb = cur_y - descent
         tx._oleading = leading
 
-    # Letter spacing
+    # Letter and word spacing. Both are resolved against the font size, so
+    # that an em or a percentage means something; without a base getSize logs
+    # "not a float" and returns 0.
     if xs.style.letterSpacing != "normal":
-        tx.setCharSpace(getSize("".join(xs.style.letterSpacing)))
+        tx.setCharSpace(getSize("".join(xs.style.letterSpacing), xs.style.fontSize))
+
+    # Word spacing is on the same footing as letter spacing: the width
+    # ReportLab measured the line with does not know about it, so a very wide
+    # value can overrun, which is the approximation letter spacing already
+    # makes here.
+    if getattr(xs.style, "wordSpacing", "normal") != "normal":
+        tx.setWordSpace(getSize("".join(xs.style.wordSpacing), xs.style.fontSize))
 
     ws = getattr(tx, "_wordSpace", 0)
     nSpaces = 0

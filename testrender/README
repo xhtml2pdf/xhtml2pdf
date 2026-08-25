@@ -27,3 +27,74 @@ After the images haven been created, you can use your reference dir for
 your test renderings:
 
 $ ./testrender.py --ref-dir <REFDIR>
+
+
+BROWSER COMPARISON
+------------------
+
+testrender.py compares xhtml2pdf against itself: the reference is produced by
+the same library, so it catches changes in the output but never tells you
+whether that output is right.
+
+browsercompare.py adds an external reference. Each case has two sources that
+express the same intended result:
+
+    data/source/<name>.html     fed to xhtml2pdf; may use <pdf:*>, @frame, -pdf-*
+    data/browser/<name>.html    fed to a browser; plain HTML and CSS
+
+xhtml2pdf-only constructs are written with ordinary markup on the browser side:
+@frame becomes absolute positioning, <pdf:toc> a hand-written list,
+<pdf:pagenumber> a counter() in an @page margin box. data/manifest.toml says
+which fixtures participate and what is compared for each.
+
+Both sides are printed to PDF with the same page geometry, rasterised by the
+same ghostscript, then compared on pagination, per-page text, and SSIM. Scores
+land in data/baseline.json and a run fails when one regresses.
+
+    pip install -e '.[browsertest]'      # selenium + numpy
+    make test-browser                    # compare and check the baseline
+    make test-browser-update             # re-record the baseline
+    x-www-browser testrender/output/browser-compare.html
+
+The browser runs headless, so no window appears. Use --headed to watch it while
+debugging an equivalent that does not line up.
+
+Two things the comparison depends on, and why the baseline is machine specific:
+
+  * The browser version. It is the reference, so a browser upgrade moves the
+    scores without xhtml2pdf changing. browsercompare.py refuses to enforce a
+    baseline recorded with a different build, and says so.
+
+  * The fonts. xhtml2pdf uses ReportLab's base-14; the browser uses whatever
+    fontconfig resolves. The comparison only works well when Helvetica resolves
+    to a metric-compatible clone such as URW Nimbus Sans (Debian/Ubuntu package
+    fonts-urw-base35). Without it, line breaking diverges and every score drops.
+
+Absolute scores are not meaningful on their own -- two different engines never
+agree exactly. What matters is that the agreement does not get worse.
+
+
+KNOWN DIFFERENCES FOUND BY THE BROWSER COMPARISON
+-------------------------------------------------
+
+Divergences the comparison has surfaced that are not yet resolved. Each is
+recorded in data/manifest.toml against the fixture that shows it, so the score
+is explained rather than mysterious.
+
+  * text-decoration: overline is not drawn. Underline and strike each carry
+    their own accumulator and drawing pass through
+    xhtml2pdf/reportlab_paragraph.py, and overline needs a third. Shown by
+    css-text.
+
+  * list-style-type: circle draws a filled bullet. No font in the base-14 set
+    has a hollow circle, and a list marker must not depend on an embedded font
+    being present. Shown by css-list-style.
+
+  * list-style-position is not implemented; every marker is drawn outside the
+    box. Shown by css-list-style.
+
+  * The first line of a block sits a little higher than a browser puts it.
+    CSS centres the font's content area inside the line box, so half of the
+    leading falls above the first line; ReportLab starts the ascent at the top
+    of the box instead. Worth about 4pt at a 10px font with 150% line height,
+    the same on every block, so it does not accumulate.

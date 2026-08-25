@@ -1,0 +1,44 @@
+<!--
+  Browser equivalent of data/source/test-helloworld.html
+
+  This fixture is already plain HTML/CSS, so the equivalent is the same markup
+  with _normalize.css linked ahead of the document's own styles. That file
+  replaces the browser's UA stylesheet with xhtml2pdf's DEFAULT_CSS, so both
+  engines start from the same defaults; see data/browser/_normalize.css.
+-->
+<html>
+<head>
+<link rel="stylesheet" href="_normalize.css">
+    <title>HTML to PDF conversion example</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <style type="text/css">
+    td, th {
+        padding: 0.5em;
+    }
+    </style>
+</head>
+<body>
+<p>Hello <strong style="color: #f00;">Wörld</strong>
+<hr>
+<table border="1" style="background-color: #eee;">
+    <tr>
+        <td>Amount</td>
+        <td>Description</td>
+        <td>Total</td>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>Good weather</td>
+        <td>0 EUR</td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td>More sub</td>
+        <td>0 EUR</td>
+    </tr>
+    <tr style="font-weight: bold; background-color: green; color: white;">
+        <td colspan="2" align="right">Sum</td>
+        <td>0 EUR</td>
+    </tr>
+</table>
+</body></html>

@@ -1,0 +1,209 @@
+# What to compare between xhtml2pdf and the browser, per fixture.
+#
+# Each entry needs a matching pair of sources:
+#   data/source/<name>.html    fed to xhtml2pdf
+#   data/browser/<name>.html   fed to the browser, expressing the same result
+#
+# compare:
+#   pages     page counts must match
+#   text      per-page text similarity (worst page is scored)
+#   ssim      per-page structural similarity of the rasterised pages
+#   headings  every string in `headings` must land on the same page in both
+#
+# Scores are recorded in baseline.json; a run fails when one regresses. There
+# are no absolute thresholds: the two engines never agree exactly, so what
+# matters is that the agreement does not get worse.
+
+[fixtures.simple-test]
+compare = ["pages", "text", "ssim"]
+notes = "Inline classes: font size/style, line-height, colour, background, text-align, text-indent, justified margins"
+
+[fixtures.test-align]
+compare = ["pages", "text", "ssim"]
+notes = "align= attribute vs text-align via class/style/id, and which wins"
+
+[fixtures.test-css-border]
+compare = ["pages", "text", "ssim"]
+notes = "border shorthand edge cases: `solid` with no width or colour, border-color alone, `border: green` with no style"
+
+[fixtures.test-helloworld]
+compare = ["pages", "text", "ssim"]
+notes = "Minimal document plus a small bordered table"
+
+[fixtures.test-table-css]
+compare = ["pages", "text", "ssim"]
+notes = "Descendant/ID selector specificity: div#foo #bar-table th must not match #foofoo"
+
+[fixtures.test-blocks]
+compare = ["pages", "text", "ssim"]
+notes = """Nested block boxes, background colours on body/div/p/tr, \
+page-break-before/after, a bordered table. The block structure agrees exactly; \
+the SSIM gap is one known difference: CSS 2.1 14.2 propagates the body \
+background to the canvas when html has none, so the browser paints the whole \
+page red while xhtml2pdf paints only behind body's content box."""
+
+[fixtures.test-image]
+compare = ["pages", "text", "ssim"]
+notes = "Image sizing: oversized width, natural size, zoom, tiny width/height, and a height that overflows the page"
+
+[fixtures.test-image-align]
+compare = ["pages", "text", "ssim"]
+notes = "align= top/middle/bottom/left and vertical-align on inline images"
+
+[fixtures.test-svg]
+compare = ["pages", "text", "ssim"]
+notes = "External SVG plus percent-encoded and base64 data: URIs"
+
+[fixtures.test-list]
+compare = ["pages", "text", "ssim"]
+notes = "Deeply nested ul/li with links"
+
+[fixtures.test-loremipsum]
+compare = ["pages", "text", "ssim"]
+notes = "Largest fixture: a full CSS testsuite page over several pages, driven by an external stylesheet"
+
+[fixtures.test-linespacing]
+compare = ["pages", "text", "ssim"]
+notes = "line-height plus -pdf-line-spacing and -pdf-page-break, translated to calc() and page-break-before"
+
+[fixtures.ttf_file_metadata_same_name]
+compare = ["pages", "text", "ssim"]
+notes = "Two @font-face rules whose TTFs share an internal metadata name; the browser loads the same files"
+
+[fixtures.adobe_asian_lenguage_pack]
+compare = ["pages"]
+notes = """STSong-Light/HeiseiMin-W3/HYSMyeongJo-Medium are ReportLab CID fonts \
+with no browser counterpart, so SSIM is not meaningful. Text is not compared \
+either: without CJK fonts installed the browser draws notdef boxes and its PDF \
+extracts as NUL, while xhtml2pdf extracts the text correctly -- the reference \
+is the deficient side here. Install fonts-noto-cjk to make this fixture worth \
+more than a page count."""
+
+[fixtures.test-background]
+compare = ["pages", "text", "ssim"]
+notes = """The @page background-image is a PDF, which cannot be a CSS background \
+image, so the browser side has no background artwork and SSIM stays low by \
+construction. What is still checked is that the content lands inside the frame \
+declared at top 6cm / left 4cm / right 4cm / bottom 4cm."""
+
+[fixtures.test-collapse]
+compare = ["pages", "text", "ssim"]
+notes = """Margin collapsing between nested blocks in the 4cm-tall content \
+area that @page { height: 4cm } asks for, which both sides now agree on. \
+The page counts differ by construction: the content is taller than 4cm, and \
+where a browser clips the overflow away, xhtml2pdf carries it onto further \
+pages. Only the pages the two have in common are scored, so `text` is the \
+first page and `text_doc` measures four xhtml2pdf pages against the browser's \
+one -- it is low because the browser threw the rest away, not because \
+xhtml2pdf lost it."""
+
+[fixtures.test-keep-in-frame]
+compare = ["pages", "text", "ssim"]
+notes = """Six static frames placed by @frame with -pdf-frame-content, mirrored \
+as absolutely positioned boxes. -pdf-keep-in-frame-mode: shrink has no browser \
+equivalent -- a browser clips instead of scaling content down -- so frames whose \
+content overflows differ."""
+
+[fixtures.test-keep-with-next]
+compare = ["pages", "text", "ssim"]
+notes = "-pdf-keep-with-next true/false, expressed as break-after: avoid/auto"
+
+[fixtures.test-letter]
+compare = ["pages", "text"]
+notes = """Business letter built from six anonymous @frames addressed by \
+-pdf-frame-content. <pdf:barcode type=\"code128\"> has no browser equivalent, so \
+that region is empty on the browser side and SSIM is not compared."""
+
+[fixtures.test-page-left-right]
+compare = ["pages", "text", "ssim"]
+notes = """Mirrored inner margins on facing pages. @page book:left / book:right \
+map onto CSS @page :left / :right; <pdf:pagenumber> and <pdf:pagecount> become \
+counter(page) and counter(pages) in an @page margin box."""
+
+[fixtures.test-table-of-contents]
+compare = ["pages", "headings"]
+headings = ["Table of contents", "Famous Tables", "Famous Chairs", "Other Famous Furniture", "Bookcases", "Beds", "Sofa beds"]
+notes = """<pdf:toc /> builds the table of contents from the h1/h2/h3 outline; \
+the browser side lists the entries by hand. Text is not compared because \
+xhtml2pdf prints a page number beside each entry and Chromium has no \
+target-counter(page) to reproduce them. Instead the headings check asserts that \
+every heading lands on the same page on both sides, which is what the outline \
+is supposed to guarantee."""
+
+[fixtures.test-tables]
+compare = ["pages", "text", "ssim"]
+notes = "Table borders, colspan, valign, cellspacing; <pdf:nextpage> and <pdf:nextframe> become page breaks"
+
+[fixtures.arabic_font_rendering]
+compare = ["pages", "text"]
+notes = """<pdf:language name=\"arabic\"/> runs the text through arabic-reshaper \
+and python-bidi; a browser shapes and reorders Arabic natively, so dir=\"rtl\" is \
+the equivalent. The two shaping implementations are not glyph-identical, so \
+SSIM is not compared."""
+
+# ---------------------------------------------------------------------------
+# Targeted CSS fixtures.
+#
+# The fixtures above are whole documents: each mixes dozens of properties, so a
+# score of 0.85 says the page is roughly right without saying which property is
+# wrong. The css-* fixtures below isolate one area apiece, so a change in the
+# score names its own cause.
+
+[fixtures.css-border-style]
+compare = ["pages", "text", "ssim"]
+notes = """border-style beyond solid. getBorderStyle (xhtml2pdf/util.py) only \
+tells none/hidden apart from everything else, and _drawBorderLine \
+(xhtml2pdf/xhtml2pdf_reportlab.py) strokes an undashed line, so dashed, \
+dotted, double, groove and ridge all come out solid. Covers block borders, \
+per-side styles and a table cell."""
+
+[fixtures.css-list-style]
+compare = ["pages", "text", "ssim"]
+notes = """list-style-type beyond disc. Two divergences are left and both are \
+recorded in testrender's KNOWN DIFFERENCES: circle draws a filled bullet, \
+since no base-14 font has a hollow circle, and list-style-position is not \
+implemented so every marker sits outside the box. Text is compared as well as \
+SSIM because a marker is content: it is how upper-latin numbering by letter \
+rather than by number can be seen at all. Chromium puts no unordered marker in \
+its text stream, so browsercompare.py drops those from both sides; ordered \
+markers it does emit, and those are compared."""
+
+[fixtures.css-text]
+compare = ["pages", "text", "ssim"]
+notes = """text-transform, word-spacing, text-decoration: overline and the \
+wrapping white-space values. None are implemented: the first three are absent \
+from the attrNames whitelist (xhtml2pdf/parser.py), so they are parsed and \
+cascaded and then never read, and only `pre` has an effect on white-space \
+(xhtml2pdf/context.py). Text similarity is compared as well as SSIM because \
+text-transform changes the extracted characters, not just their pixels."""
+
+[fixtures.css-selectors]
+compare = ["pages", "text", "ssim"]
+notes = """Standard selectors, and cascade order between two rules of equal \
+specificity. Every rule in this fixture now selects the same elements the \
+browser selects, checked band by band. The SSIM went down when they started \
+working, 0.9370 to 0.9145, which is not a regression: with nothing matching, \
+the page was plain text and agreed with the browser by having no colour to \
+disagree about. Painting the bands exposes the vertical drift between the two \
+engines that every fixture here carries. The last paragraph is the cascade \
+test, its class names picked so that alphabetical order and source order \
+disagree."""
+
+[fixtures.css-background]
+compare = ["pages", "text", "ssim"]
+notes = """background-image on elements, with repeat, position and the \
+background shorthand, all of which now agree with the browser. The boxes take \
+their height from their content because xhtml2pdf honours neither width nor \
+height on a div, so a declared height would diverge for a reason this fixture \
+is not about. background-size is not implemented, so the image is always \
+drawn at its natural size; nothing here asks for anything else."""
+
+[fixtures.css-page-box]
+compare = ["pages", "text", "ssim"]
+notes = """@page { height } with neither top nor bottom, which \
+getFrameDimensions (xhtml2pdf/util.py) computes and then discards, so the \
+frame comes out full-page. This is the isolated form of what test-collapse \
+shows incidentally: -pdf-frame-border draws the frame, so the rasterised page \
+says exactly where the content area ends. The content fits inside the \
+declared height so that the fixture scores the geometry rather than a \
+difference in overflow handling."""

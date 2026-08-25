@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>css-list-style</title>
+<style type="text/css">
+ul, ol { margin: 0 0 0.5em 1.5em; }
+li { margin: 0; }
+.circle    { list-style-type: circle; }
+.square    { list-style-type: square; }
+.lower-latin { list-style-type: lower-latin; }
+.upper-latin { list-style-type: upper-latin; }
+.lower-greek { list-style-type: lower-greek; }
+.lower-alpha { list-style-type: lower-alpha; }
+.upper-roman { list-style-type: upper-roman; }
+.zero      { list-style-type: decimal-leading-zero; }
+.nostyle   { list-style: none; }
+.inside    { list-style-position: inside; }
+</style>
+</head>
+<body>
+<ul class="circle"><li>circle one</li><li>circle two</li></ul>
+<ul class="square"><li>square one</li><li>square two</li></ul>
+<ul class="nostyle"><li>list-style: none, no marker</li><li>and no marker here</li></ul>
+<ul class="inside"><li>list-style-position: inside</li><li>marker inside the box</li></ul>
+<ol class="lower-latin"><li>lower latin a</li><li>lower latin b</li><li>lower latin c</li></ol>
+<ol class="upper-latin"><li>upper latin A</li><li>upper latin B</li></ol>
+<ol class="lower-greek"><li>lower greek alpha</li><li>lower greek beta</li></ol>
+<ol class="lower-alpha"><li>lower alpha a</li><li>lower alpha b</li></ol>
+<ol class="upper-roman"><li>upper roman I</li><li>upper roman II</li></ol>
+<ol class="zero"><li>leading zero 01</li><li>leading zero 02</li></ol>
+</body>
+</html>

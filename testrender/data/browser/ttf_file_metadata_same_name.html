@@ -1,0 +1,48 @@
+<!--
+  Browser equivalent of data/source/ttf_file_metadata_same_name.html
+
+  The @font-face URLs already resolve from this directory, which sits at
+  the same depth as data/source/, so they are left alone.
+
+  Assets are referenced through ../source/ so both sides load byte-identical
+  files. _normalize.css is linked ahead of the document's own styles; it
+  replaces the browser UA stylesheet with xhtml2pdf's DEFAULT_CSS so the two
+  engines start from the same defaults.
+-->
+<html>
+<head>
+<link rel="stylesheet" href="_normalize.css">
+<title></title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css">
+
+    @font-face {
+        font-family: MYB;
+        src: url('../../../manual_test/font/noto/NotoSans Bold.ttf')
+    }
+
+    @font-face {
+        font-family: '#MY';
+        src: url('../../../manual_test/font/noto/NotoSans.ttf')
+    }
+
+    .regular{
+    font-family: '#MY';
+}
+
+    .mybold{
+    font-family: MYB;
+
+
+}
+
+
+</style>
+</head>
+
+<body>
+<span class="regular">Regular font type</span>
+<span class="mybold">Bold font type</span>
+
+</body>
+</html>

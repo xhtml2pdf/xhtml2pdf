@@ -28,6 +28,7 @@ Dependencies:
 # ruff: noqa: N802, N803, N815, N816, N999
 from __future__ import annotations
 
+import logging
 import re
 from abc import abstractmethod
 from typing import ClassVar
@@ -37,6 +38,8 @@ from reportlab.lib.pagesizes import landscape
 import xhtml2pdf.default
 from xhtml2pdf.util import getSize
 from xhtml2pdf.w3c import cssSpecial
+
+log = logging.getLogger("xhtml2pdf")
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ~ Definitions
@@ -340,7 +343,7 @@ class CSSParser:
 
     AttributeOperators: ClassVar[list[str]] = ["=", "~=", "|=", "&=", "^=", "!=", "<>"]
     SelectorQualifiers: ClassVar[tuple[str, ...]] = ("#", ".", "[", ":")
-    SelectorCombiners: ClassVar[list[str]] = ["+", ">"]
+    SelectorCombiners: ClassVar[list[str]] = ["+", ">", "~"]
     ExpressionOperators: ClassVar[tuple[str, ...]] = ("/", "+", ",")
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -527,6 +530,42 @@ class CSSParser:
     # ~ Internal _parse methods
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    @staticmethod
+    def _skipMalformedRuleset(src):
+        """
+        Discard a ruleset whose selector could not be parsed, and return the
+        rest of the stylesheet.
+
+        CSS 2.1 4.2 requires a malformed selector to invalidate exactly one
+        thing, the ruleset it introduces: "the user agent must ignore the
+        whole rule". Letting the CSSParseError escape instead aborts the
+        entire stylesheet, and with it the document, because neither
+        pisaContext.parseCSS nor pisaParser catches it. One selector the
+        parser happens not to understand then costs the caller every rule in
+        the file.
+        """
+        brace = src.find("{")
+        close = src.find("}")
+        if brace < 0 or (0 <= close < brace):
+            # No declaration block of our own to swallow: the next brace
+            # closes whatever block this ruleset sits in. Hand it back so the
+            # caller can close that block itself.
+            return src[close:].lstrip() if close >= 0 else ""
+        end = src.find("}", brace)
+        if end < 0:
+            return ""
+        return src[end + 1 :].lstrip()
+
+    def _parseRulesetOrSkip(self, src, stylesheetElements):
+        """Parse one ruleset, or drop it if its selector is malformed."""
+        try:
+            src, ruleset = self._parseRuleset(src)
+        except self.ParseError as exc:
+            log.warning("Ignoring CSS rule that could not be parsed: %s", exc)
+            return self._skipMalformedRuleset(src)
+        stylesheetElements.append(ruleset)
+        return src
+
     def _parseStylesheet(self, src):
         """
         stylesheet
@@ -563,8 +602,7 @@ class CSSParser:
                     stylesheetElements.extend(atResults)
             else:
                 # ruleset
-                src, ruleset = self._parseRuleset(src)
-                stylesheetElements.append(ruleset)
+                src = self._parseRulesetOrSkip(src, stylesheetElements)
 
             # [S|CDO|CDC]*
             src = self._parseSCDOCDC(src)
@@ -740,8 +778,7 @@ class CSSParser:
                     stylesheetElements.extend(atResults)
             else:
                 # ruleset
-                src, ruleset = self._parseRuleset(src)
-                stylesheetElements.append(ruleset)
+                src = self._parseRulesetOrSkip(src, stylesheetElements)
             src = src.lstrip()
 
         if not src.startswith("}"):

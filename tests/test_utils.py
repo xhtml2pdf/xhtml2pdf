@@ -7,6 +7,7 @@ from xhtml2pdf import util as utils
 from xhtml2pdf.files import pisaTempFile
 from xhtml2pdf.tags import int_to_roman
 from xhtml2pdf.util import (
+    DEFAULT_FONT_SIZE,
     copy_attrs,
     getBorderStyle,
     getBox,
@@ -173,7 +174,12 @@ class PisaDimensionTestCase(TestCase):
             "margin-bottom": "20pt",
             "margin-right": "25pt",
         }
-        expected = (25.0, 30.0, 30.0, 50.0)
+        # The margin offsets the frame, it does not eat into the declared size:
+        # left 10 + margin-left 15 puts the left edge at 25, and the frame is
+        # the 70x80 that was asked for. A margin outside the box is what the
+        # CSS box model means by margin; the frame used to come back 30x50,
+        # the declared size with the margins subtracted from it.
+        expected = (25.0, 30.0, 70.0, 80.0)
         result = getFrameDimensions(dims, 100, 200)
         self.assertEqual(expected, result)
 
@@ -188,7 +194,60 @@ class PisaDimensionTestCase(TestCase):
             "margin-bottom": "20pt",
             "margin-right": "25pt",
         }
-        expected = (25.0, 120.0, 30.0, 50.0)
+        # As above, anchored to the opposite corner. left comes out negative
+        # because a 70pt-wide frame whose right edge sits 45pt from the right
+        # of a 100pt page does not fit; that is the declaration's own doing,
+        # and _pisaAddFrame warns about the resulting geometry.
+        expected = (-15.0, 90.0, 70.0, 80.0)
+        result = getFrameDimensions(dims, 100, 200)
+        self.assertEqual(expected, result)
+
+    def test_frame_dimensions_page_margin_and_height(self):
+        # @page { margin: 10pt; height: 40pt } asks for a content area 40pt
+        # tall, inset 10pt from every page edge -- the geometry the browser
+        # comparison's css-page-box fixture reproduces.
+        dims = {
+            "margin-top": "10pt",
+            "margin-left": "10pt",
+            "margin-bottom": "10pt",
+            "margin-right": "10pt",
+            "height": "40pt",
+        }
+        expected = (10.0, 10.0, 80.0, 40.0)
+        result = getFrameDimensions(dims, 100, 200)
+        self.assertEqual(expected, result)
+
+    def test_frame_dimensions_relative_margin(self):
+        # A relative length used to resolve to nothing: getSize returns its
+        # default when it is handed a relative unit and no base, so the margin
+        # silently became 0 and the frame filled the page.
+        dims = {
+            "margin-top": "2em",
+            "margin-left": "2em",
+            "margin-bottom": "2em",
+            "margin-right": "2em",
+        }
+        margin = 2 * DEFAULT_FONT_SIZE
+        expected = (margin, margin, 100 - 2 * margin, 200 - 2 * margin)
+        result = getFrameDimensions(dims, 100, 200)
+        self.assertEqual(expected, result)
+
+    def test_frame_dimensions_relative_margin_with_font_size(self):
+        dims = {"margin-top": "2em", "margin-left": "2em"}
+        result = getFrameDimensions(dims, 100, 200, font_size=20.0)
+        self.assertEqual((40.0, 40.0, 60.0, 160.0), result)
+
+    def test_frame_dimensions_percentage_is_of_the_page(self):
+        # CSS 2.1 10.2/10.5: the page box is the containing block, so a
+        # percentage is a fraction of the page and differs per axis. getSize
+        # would read it against the font size.
+        dims = {
+            "margin-top": "10%",
+            "margin-left": "10%",
+            "margin-bottom": "10%",
+            "margin-right": "10%",
+        }
+        expected = (10.0, 20.0, 80.0, 160.0)
         result = getFrameDimensions(dims, 100, 200)
         self.assertEqual(expected, result)
 
@@ -205,7 +264,10 @@ class PisaDimensionTestCase(TestCase):
             "width": "30pt",
             "height": "40pt",
         }
-        expected = (10.0, 0.0, 30.0, 200.0)
+        # top defaults to 0, so the frame is the declared 40pt tall at the top
+        # of the page. It used to come back full-page: the height was computed
+        # and then thrown away, because nothing moved the bottom edge.
+        expected = (10.0, 0.0, 30.0, 40.0)
         result = getFrameDimensions(dims, 100, 200)
         self.assertEqual(expected, result)
 
@@ -216,7 +278,9 @@ class PisaDimensionTestCase(TestCase):
             "width": "30pt",
             "height": "40pt",
         }
-        expected = (0.0, 20.0, 100.0, 40.0)
+        # Likewise for width with neither left nor right: left defaults to 0
+        # and the frame is the declared 30pt wide, not the full 100pt page.
+        expected = (0.0, 20.0, 30.0, 40.0)
         result = getFrameDimensions(dims, 100, 200)
         self.assertEqual(expected, result)
 
