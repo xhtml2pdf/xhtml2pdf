@@ -1,9 +1,13 @@
 name: Spelling
 
 on:
+  # "production" was watched here, and there is no such branch on the remote,
+  # so this only ever ran on pull requests and had no status on any branch.
   push:
     branches:
-    - production
+    - master
+    - main
+    - development
   pull_request: null
   workflow_dispatch: null
 

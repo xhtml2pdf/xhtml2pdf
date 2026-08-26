@@ -9,6 +9,18 @@ XHTML2PDF
     :target: https://www.python.org/downloads
     :alt: Python versions
 
+.. image:: https://img.shields.io/github/actions/workflow/status/xhtml2pdf/xhtml2pdf/tests.yml?branch=master&label=Tests&logo=github&logoColor=white
+    :target: https://github.com/xhtml2pdf/xhtml2pdf/actions/workflows/tests.yml
+    :alt: Tests
+
+.. image:: https://img.shields.io/github/actions/workflow/status/xhtml2pdf/xhtml2pdf/linting.yml?branch=master&label=Linting&logo=github&logoColor=white
+    :target: https://github.com/xhtml2pdf/xhtml2pdf/actions/workflows/linting.yml
+    :alt: Linting
+
+.. image:: https://img.shields.io/github/actions/workflow/status/xhtml2pdf/xhtml2pdf/spelling.yml?branch=master&label=Spelling&logo=github&logoColor=white
+    :target: https://github.com/xhtml2pdf/xhtml2pdf/actions/workflows/spelling.yml
+    :alt: Spelling
+
 .. image:: https://img.shields.io/coveralls/github/xhtml2pdf/xhtml2pdf?label=Coveralls&logo=Coveralls&logoColor=white
     :target: https://coveralls.io/github/xhtml2pdf/xhtml2pdf
     :alt: Coveralls
