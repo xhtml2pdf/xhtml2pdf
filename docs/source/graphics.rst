@@ -59,3 +59,8 @@ For example:
     </canvas>
 
 See more in examples.
+
+Demonstration
+=============
+
+.. include:: /_generated/graphics.rst

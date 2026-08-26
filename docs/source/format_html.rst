@@ -324,3 +324,8 @@ large 5cm margins and regular pages with regular 2cm margins.
         This is a regular page with a regular 2cm margin.
     </body>
     </html>
+
+Demonstration
+-------------
+
+.. include:: /_generated/format_html.rst

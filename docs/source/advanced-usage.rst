@@ -134,3 +134,8 @@ after the conversion:
 .. code:: shell
 
     xhtml2pdf -s test.html
+
+Demonstration
+-------------
+
+.. include:: /_generated/advanced-usage.rst

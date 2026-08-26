@@ -1,0 +1,90 @@
+<html>
+<head>
+    <title>CSS reference</title>
+    <style>
+        @page { size: a4 portrait; margin: 2cm; }
+        body { font-family: Helvetica; font-size: 11pt; }
+        h1 { font-size: 150%; }
+        h2 { font-size: 115%; margin-top: 1.2em; }
+        p, li { margin: 0.3em 0; }
+        .swatch { padding: 4pt; margin-bottom: 4pt; }
+
+        /* text */
+        .upper   { text-transform: uppercase; }
+        .cap     { text-transform: capitalize; }
+        .spaced  { letter-spacing: 2px; }
+        .worded  { word-spacing: 1em; }
+        .struck  { text-decoration: line-through; }
+        .under   { text-decoration: underline; }
+
+        /* box */
+        .solid   { border: 3px solid  #204a87; padding: 4pt; }
+        .dashed  { border: 3px dashed #204a87; padding: 4pt; }
+        .dotted  { border: 3px dotted #204a87; padding: 4pt; }
+        .double  { border: 6px double #204a87; padding: 4pt; }
+
+        /* selectors */
+        li:nth-child(odd)  { background-color: #fce94f; }
+        li:nth-child(even) { background-color: #eeeeec; }
+        h2 + p             { background-color: #d3d7cf; }
+        .zebra             { background-color: #fcaf3e; }
+        .alpha             { background-color: #729fcf; }
+    </style>
+</head>
+<body>
+    <h1>Text properties</h1>
+
+    <p>This paragraph follows a heading, so <code>h2 + p</code> would reach it.</p>
+
+    <p class="upper">text-transform: uppercase</p>
+    <p class="cap">text-transform: capitalize</p>
+    <p class="spaced">letter-spacing: two pixels</p>
+    <p class="worded">word spacing of one em</p>
+    <p class="under">text-decoration: underline</p>
+    <p class="struck">text-decoration: line-through</p>
+
+    <h1>Borders</h1>
+
+    <p>
+        Only <code>none</code> and <code>hidden</code> used to differ from
+        solid. These are four separate styles.
+    </p>
+
+    <div class="swatch solid">border-style: solid</div>
+    <div class="swatch dashed">border-style: dashed</div>
+    <div class="swatch dotted">border-style: dotted</div>
+    <div class="swatch double">border-style: double</div>
+
+    <pdf:nextpage>
+
+    <h1>Lists</h1>
+
+    <h2>Counter styles</h2>
+    <p>Each list below asks for a different <code>list-style-type</code>.</p>
+
+    <ol style="list-style-type: lower-latin"><li>lower latin</li><li>second</li></ol>
+    <ol style="list-style-type: upper-roman"><li>upper roman</li><li>second</li></ol>
+    <ol style="list-style-type: lower-greek"><li>lower greek</li><li>second</li></ol>
+    <ol style="list-style-type: decimal-leading-zero"><li>leading zero</li><li>second</li></ol>
+    <ul style="list-style-type: square"><li>square marker</li><li>second</li></ul>
+
+    <h1>Selectors</h1>
+
+    <h2>Structural pseudo-classes</h2>
+    <p><code>li:nth-child(odd)</code> and <code>li:nth-child(even)</code>:</p>
+
+    <ul style="list-style-type: none">
+        <li>first, odd</li>
+        <li>second, even</li>
+        <li>third, odd</li>
+        <li>fourth, even</li>
+    </ul>
+
+    <h2>Cascade order</h2>
+    <p>
+        Two rules of equal specificity. The one written later in the stylesheet
+        wins, whatever the class names sort like, so this reads blue.
+    </p>
+    <p class="zebra alpha">.zebra then .alpha &mdash; the later rule wins</p>
+</body>
+</html>

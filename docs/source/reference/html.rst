@@ -207,3 +207,8 @@ Used for languages with right-to-left writing like Arabic, Hebrew, Persion etc. 
 ::
 
     <pdf:language name="arabic"/>
+
+Demonstration
+-------------
+
+.. include:: /_generated/reference-html.rst

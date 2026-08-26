@@ -1,0 +1,39 @@
+<html>
+<head>
+    <title>An encrypted document</title>
+    <style>
+        @page { size: a4 portrait; margin: 2.5cm; }
+        body { font-family: Helvetica; }
+        h1 { font-size: 150%; }
+        dt { font-weight: bold; margin-top: 0.8em; }
+    </style>
+</head>
+<body>
+    <h1>This document is encrypted</h1>
+
+    <p>
+        It was produced by passing a
+        <code>reportlab.lib.pdfencrypt.StandardEncryption</code> instance to
+        <code>CreatePDF</code>, exactly as the page above describes.
+    </p>
+
+    <dl>
+        <dt>User password</dt>
+        <dd>Empty, which is why this opens without anyone being asked for one.</dd>
+
+        <dt>Owner password</dt>
+        <dd>Set, and it is what governs the permissions below.</dd>
+
+        <dt>Printing</dt>
+        <dd>Withheld.</dd>
+
+        <dt>Modification</dt>
+        <dd>Withheld.</dd>
+    </dl>
+
+    <p>
+        A reader that honours the permissions will refuse to print this page.
+        Ask your viewer for the document properties to see them.
+    </p>
+</body>
+</html>

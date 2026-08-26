@@ -58,4 +58,6 @@ docs/_build
 .settings/
 xhtml2pdf.sh
 docs/source/_static/pdf_samples/
+docs/source/_generated/*
+!docs/source/_generated/.donotdelete
 docs/source/examples.rst

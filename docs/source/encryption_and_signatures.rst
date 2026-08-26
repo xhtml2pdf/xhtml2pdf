@@ -142,3 +142,8 @@ from `ca_chain` when build pdf signature.
                                'retroactive_revinfo': True,
                                'crls': ['http://your.crl', '/path/to/file.crl']}
     }
+
+Demonstration
+-------------
+
+.. include:: /_generated/encryption_and_signatures.rst

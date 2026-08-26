@@ -1,0 +1,94 @@
+<html>
+<head>
+    <title>Fonts</title>
+    <style>
+        @page { size: a4 portrait; margin: 2cm; }
+        body { font-size: 11pt; }
+        h1 { font-size: 150%; font-family: Helvetica; }
+        h2 { font-size: 115%; font-family: Helvetica; margin-top: 1.2em; }
+        table { width: 100%; }
+        td { padding: 4pt 0; }
+        .name { font-family: Courier; font-size: 9pt; color: #555; width: 35%; }
+        .rtl { font-size: 14pt; }
+    </style>
+</head>
+<body>
+    <h1>The fonts that are always there</h1>
+
+    <p>
+        No font file is installed for any of these. They are the base-14 faces
+        every PDF reader carries, and the aliases beside them are the names
+        this converter also accepts.
+    </p>
+
+    <table>
+        <tr>
+            <td class="name">Times-Roman<br/>Times New Roman, Georgia, serif</td>
+            <td style="font-family: Times-Roman">The quick brown fox jumps over the lazy dog</td>
+        </tr>
+        <tr>
+            <td class="name">Helvetica<br/>Arial, Verdana, sans</td>
+            <td style="font-family: Helvetica">The quick brown fox jumps over the lazy dog</td>
+        </tr>
+        <tr>
+            <td class="name">Courier<br/>Courier New, monospace, mono</td>
+            <td style="font-family: Courier">The quick brown fox jumps over the lazy dog</td>
+        </tr>
+        <tr>
+            <td class="name">Symbol</td>
+            <td style="font-family: Symbol">abgdezhq iklmnxop</td>
+        </tr>
+        <tr>
+            <td class="name">ZapfDingbats</td>
+            <td style="font-family: ZapfDingbats">nlmopqrs</td>
+        </tr>
+    </table>
+
+    <p>
+        The names are case-insensitive, so <code>arial</code> and
+        <code>Arial</code> both reach Helvetica.
+    </p>
+
+    <pdf:nextpage>
+
+    <h1>Asian fonts</h1>
+
+    <p style="font-family: Helvetica">
+        These are CID fonts, also carried by the reader rather than embedded
+        here. Each line below asks for a different one. A reader without the
+        matching font installed shows nothing at all for that line, and a
+        CID font has no glyph for Latin text either, so keep a run to one
+        script.
+    </p>
+
+    <h2>Simplified Chinese &mdash; STSong-Light</h2>
+    <p style="font-family: STSong-Light; font-size: 14pt">
+        我们把一份文件转换成便携文档格式。
+    </p>
+
+    <h2>Japanese &mdash; HeiseiMin-W3</h2>
+    <p style="font-family: HeiseiMin-W3; font-size: 14pt">
+        文書を変換します。
+    </p>
+
+    <h2>Korean &mdash; HYSMyeongJo-Medium</h2>
+    <p style="font-family: HYSMyeongJo-Medium; font-size: 14pt">
+        문서를 변환합니다.
+    </p>
+
+    <pdf:nextpage>
+
+    <h1>Right to left</h1>
+
+    <p style="font-family: Helvetica">
+        <code>&lt;pdf:language&gt;</code> reshapes and reorders the text that
+        follows it, which is what Arabic and Hebrew need in order to read
+        correctly once they are on the page.
+    </p>
+
+    <pdf:language name="arabic"/>
+    <p class="rtl" dir="rtl">
+        نحول المستند إلى ملف PDF.
+    </p>
+</body>
+</html>

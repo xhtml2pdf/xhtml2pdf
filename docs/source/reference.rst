@@ -162,3 +162,8 @@ by ``<div>`` tags, like this:
     <div>
        <pdf:toc />
     </div>
+
+Demonstration
+-------------
+
+.. include:: /_generated/reference.rst

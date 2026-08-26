@@ -1,0 +1,123 @@
+<html>
+<head>
+    <title>Layout reference</title>
+    <style>
+        @page {
+            size: a4 portrait;
+            @frame content_frame { left: 50pt; width: 495pt; top: 50pt; height: 740pt; }
+        }
+        body { font-family: Helvetica; font-size: 11pt; }
+        h1 { font-size: 150%; -pdf-outline: true; -pdf-outline-level: 0; }
+        h2 { font-size: 118%; -pdf-outline: true; -pdf-outline-level: 1; }
+        /* <pdf:nextpage> directly after <pdf:toc /> loses the table of
+           contents; the CSS page break does not. */
+        .page { page-break-after: always; }
+        table.grid { width: 100%; }
+        table.grid td, table.grid th {
+            border: 1px solid #204a87; padding: 4pt;
+        }
+        table.grid th { background-color: #d3d7cf; }
+        .long td { border: 1px solid #a40000; padding: 4pt; }
+    </style>
+</head>
+<body>
+    <div class="page">
+    <h1>Table of contents</h1>
+
+    <p>
+        Built from the outline below. Every heading in this document declares
+        <code>-pdf-outline</code>, so each becomes a bookmark as well as an
+        entry here, with the page it landed on.
+    </p>
+
+    <pdf:toc />
+    </div>
+
+    <div class="page">
+    <h1>Tables</h1>
+
+    <h2>Borders, headers and spans</h2>
+
+    <table class="grid" cellspacing="0">
+        <tr>
+            <th>Feature</th><th>Column A</th><th>Column B</th>
+        </tr>
+        <tr>
+            <td>An ordinary row</td><td>left</td><td>right</td>
+        </tr>
+        <tr>
+            <td colspan="3">One cell spanning all three columns</td>
+        </tr>
+        <tr>
+            <td rowspan="2">Spanning two rows</td><td>first</td><td>row</td>
+        </tr>
+        <tr>
+            <td>second</td><td>row</td>
+        </tr>
+    </table>
+
+    <h2>Cell widths</h2>
+
+    <table class="grid" cellspacing="0">
+        <tr>
+            <td width="20%">20%</td>
+            <td width="30%">30%</td>
+            <td width="50%">50%</td>
+        </tr>
+    </table>
+
+    <h2>A long cell</h2>
+
+    <table class="long" cellspacing="0">
+        <tr>
+            <td>
+                A cell whose content is longer than one line wraps inside the
+                cell rather than pushing the table wider. To PDF or not to PDF,
+                that is the question, and the answer keeps this cell busy for
+                several lines so the wrapping is visible.
+            </td>
+        </tr>
+    </table>
+
+    </div>
+
+    <div class="page">
+    <h1>Images</h1>
+
+    <h2>Size</h2>
+
+    <p>
+        <img src="img/denker.png" width="60"> at 60pt wide, and
+        <img src="img/denker.png" width="120"> at 120pt.
+    </p>
+
+    <h2>Position</h2>
+
+    <p>
+        <img src="img/denker.png" width="50" align="left">
+        An image aligned left has the text flow past it, which is how a figure
+        sits beside its description. The paragraph continues alongside until it
+        clears the image.
+    </p>
+
+    </div>
+
+    <div>
+    <h1>Barcodes</h1>
+
+    <p>Each of these is a <code>&lt;pdf:barcode&gt;</code> with a different type.</p>
+
+    <p>code128</p>
+    <p><pdf:barcode value="xhtml2pdf" type="code128" /></p>
+
+    <p>code39</p>
+    <p><pdf:barcode value="XHTML2PDF" type="code39" /></p>
+
+    <p>qr &mdash; needs an explicit <code>barwidth</code>, which for a QR code
+       is the size of one module; without it the whole symbol comes out too
+       small to scan.</p>
+    <p><pdf:barcode value="https://xhtml2pdf.readthedocs.io" type="qr"
+                    barwidth="15mm" /></p>
+    </div>
+</body>
+</html>

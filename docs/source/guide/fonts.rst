@@ -161,3 +161,8 @@ Please check the following example:
         font-family: '#MY';
         src: url('font/Microsoft YaHei.ttf')
     }
+
+Demonstration
+-------------
+
+.. include:: /_generated/guide-fonts.rst
