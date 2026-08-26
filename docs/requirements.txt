@@ -1,0 +1,15 @@
+# Documentation-only dependencies that cannot live in pyproject.toml.
+#
+# sphinxcontrib-pdfembed is not on PyPI, so it can only be installed from git,
+# and a PEP 508 direct reference in project metadata makes the package itself
+# unpublishable -- PyPI rejects any distribution whose requires_dist names a
+# URL. It was commented out of the docs extra for that reason, which left
+# docs/source/conf.py loading an extension nothing installed and every Read the
+# Docs build failing with:
+#
+#     ExtensionError: Could not import extension sphinxcontrib.pdfembed
+#
+# Read the Docs installs this file alongside the docs extra; see
+# .readthedocs.yaml. The extension provides the :pdfembed: role that
+# docs/source/build_samples.py writes into the generated examples page.
+sphinxcontrib-pdfembed@git+https://github.com/SuperKogito/sphinxcontrib-pdfembed
