@@ -18,13 +18,18 @@ from __future__ import annotations
 import sys
 from os.path import abspath, dirname, join
 
+# Sphinx evaluates this file with the source directory as the working directory
+# but does not put that directory on sys.path, so the modules sitting beside it
+# -- build_samples here, djangodocs under docs/_ext -- have to be made
+# importable before they can be imported or named as an extension.
+sys.path.insert(0, dirname(abspath(__file__)))
+sys.path.append(abspath(join(dirname(dirname(abspath(__file__))), "_ext")))
+
 from build_samples import build_resources
 
 from xhtml2pdf import __version__
 
 build_resources()
-
-sys.path.append(abspath(join(dirname(dirname(__file__)), "_ext")))
 
 # -- General configuration ------------------------------------------------
 
@@ -106,7 +111,17 @@ language = "en"
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns: list[str] = []
+# The generated demonstration fragments are meant to be pulled into the page
+# that owns them with .. include::, never read as documents of their own: on
+# their own they are headingless, unreachable from any toctree, and their
+# embed paths are written for the including page. Excluding them stops Sphinx
+# building those stray pages; .. include:: works on excluded files.
+exclude_patterns: list[str] = ["_generated/*"]
+
+# GitHub builds the ``#L123`` line anchors client side, so they are absent
+# from the HTML linkcheck downloads and every such link reports as broken.
+# The pages themselves are still checked; only their anchors are not.
+linkcheck_anchors_ignore_for_url: list[str] = [r"https://github\.com/.*"]
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
