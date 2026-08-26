@@ -482,7 +482,6 @@ class pisaCSSBuilder(css.CSSBuilder):
         pt = PmlPageTemplate(id=name, frames=frameList, pagesize=c.pageSize)
         pt.pisaStaticList = staticList
         pt.pisaBackground = background
-        pt.pisaBackgroundList = c.pisaBackgroundList
         pt.backgroundContext = background_context
 
         if isLandscape:
@@ -601,7 +600,6 @@ class pisaContext:
         self.frameStatioundList: list = []
         self.log: list = []
         self.path: list = []
-        self.pisaBackgroundList: list = []
         self.select_options: list[str] = []
         self.story: list = []
         self.image: PmlImage | None = None
