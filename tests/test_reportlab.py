@@ -24,6 +24,30 @@ LEFT_RIGHT_HTML = """
 """
 
 
+#: A document that needs two layout passes -- <pdf:pagecount> forces one --
+#: and only switches to the mirrored templates near the end.
+MULTIBUILD_HTML = """
+<html><head><style>
+@page { size: a4 portrait;
+  @frame foot { -pdf-frame-content: foot; left: 2cm; right: 2cm;
+                bottom: 1cm; height: 1cm; }
+  @frame body { left: 2cm; right: 2cm; top: 2cm; bottom: 3cm; } }
+@page book { size: a4 portrait;
+  @frame content { left: 1cm; top: 2cm; width: 12cm; height: 24cm; } }
+@page book:left  { margin-left: 3cm; }
+@page book:right { margin-right: 3cm; }
+</style></head>
+<body>
+<div id="foot"><p>footer <pdf:pagenumber> of <pdf:pagecount></p></div>
+<p>Page one</p><pdf:nextpage/>
+<p>Page two</p><pdf:nextpage/>
+<p>Page three</p>
+<pdf:nextpage name="book"/>
+<p>Page four</p>
+</body></html>
+"""
+
+
 class PTCycleTest(TestCase):
     @staticmethod
     def test_init() -> None:
@@ -111,6 +135,71 @@ class PmlBaseDocTest(TestCase):
             ["Page one", "Page two", "Page three", "Page four"],
             [page.extract_text().strip() for page in pages],
         )
+
+
+class PmlBaseDocMultiBuildTest(TestCase):
+    """
+    beforeDocument runs at the start of every pass and clears what the last
+    one left behind.
+
+    A <pdf:nextpage name="x"/> onto a :left/:right pair leaves a PTCycle on the
+    document, and reportlab never clears it. With a second pass -- which
+    <pdf:pagecount> and <pdf:toc> both force -- every page after the first came
+    out on the mirrored templates whatever the markup said.
+    """
+
+    @staticmethod
+    def _doc(*names: str) -> xhtml2pdf_reportlab.PmlBaseDoc:
+        doc = xhtml2pdf_reportlab.PmlBaseDoc(io.BytesIO(), pagesize=A4)
+        doc.addPageTemplates([_page_template(name) for name in names])
+        return doc
+
+    def test_beforeDocument_drops_a_pending_cycle(self) -> None:
+        doc = self._doc("book_left", "book_right", "body")
+        doc.handle_nextPageTemplate("book")
+        self.assertTrue(hasattr(doc, "_nextPageTemplateCycle"))
+
+        doc.beforeDocument()
+        self.assertFalse(hasattr(doc, "_nextPageTemplateCycle"))
+
+    def test_beforeDocument_drops_a_pending_index(self) -> None:
+        doc = self._doc("body", "other")
+        doc.handle_nextPageTemplate("other")
+        self.assertTrue(hasattr(doc, "_nextPageTemplateIndex"))
+
+        doc.beforeDocument()
+        self.assertFalse(hasattr(doc, "_nextPageTemplateIndex"))
+
+    def test_beforeDocument_keeps_the_cycle_reportlab_just_built(self) -> None:
+        """
+        handle_documentBegin builds the cycle itself when the first template is
+        a list, in the two lines before it calls beforeDocument. That one is
+        not a leftover and has to survive.
+        """
+        doc = self._doc("book_left", "book_right", "body")
+        doc._firstPageTemplateIndex = ["book_left", "book_right"]
+        doc.handle_nextPageTemplate("book")
+
+        doc.beforeDocument()
+        self.assertTrue(hasattr(doc, "_nextPageTemplateCycle"))
+
+    def test_a_second_pass_does_not_move_the_templates(self) -> None:
+        """
+        End-to-end: the footer belongs to the default template, so a page
+        without it is a page that took the mirrored one. Only the last page
+        should be missing it.
+        """
+        dest = io.BytesIO()
+        result = pisa.pisaDocument(io.StringIO(MULTIBUILD_HTML), dest)
+        self.assertEqual(0, result.err)
+
+        dest.seek(0)
+        pages = [page.extract_text() for page in PdfReader(dest).pages]
+        self.assertEqual(4, len(pages))
+        self.assertEqual(
+            [True, True, True, False], ["footer" in text for text in pages]
+        )
+        self.assertIn("footer 1 of 4", pages[0])
 
 
 class PmlMaxHeightMixInTest(TestCase):

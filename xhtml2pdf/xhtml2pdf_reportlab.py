@@ -107,6 +107,21 @@ class PmlBaseDoc(BaseDocTemplate):
         # in a multiBuild rendering.
         self.pisaTemplateList = []
 
+        # And the page template left pending by the previous pass. A
+        # <pdf:nextpage name="x"/> onto a :left/:right pair leaves a cycle on
+        # the document and reportlab never clears it, so on the second pass of
+        # a multiBuild every page after the first came out on the mirrored
+        # templates whatever the markup said. handle_documentBegin has already
+        # chosen this page's template by the time we get here, and the story --
+        # with its NextPageTemplate flowables -- is walked again on every pass,
+        # so the cycle rebuilds itself where it belongs.
+        if not isinstance(self._firstPageTemplateIndex, list):
+            # A list is the one case where reportlab has just built the cycle
+            # itself, in the two lines above this call.
+            for attribute in ("_nextPageTemplateCycle", "_nextPageTemplateIndex"):
+                if hasattr(self, attribute):
+                    delattr(self, attribute)
+
     def beforePage(self) -> None:
         self.canv._doc.info.producer = PRODUCER
 

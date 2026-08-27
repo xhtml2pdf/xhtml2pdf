@@ -57,6 +57,12 @@ class TableData:
         self.row: int = 0
         self.rowh: list = []
         self.span: list = []
+        #: Columns holding a cell with content, which is what can size them.
+        self.col_with_content: set[int] = set()
+        #: The width an empty cell offers for its column, by column. Applied
+        #: only if the column turns out to be empty from top to bottom; see
+        #: pisaTagTABLE.end.
+        self.col_empty_width: dict[int, float] = {}
         self.styles: list[
             tuple[str, tuple[int, int], tuple[int, int], str, str, str]
         ] = []
@@ -214,6 +220,16 @@ class pisaTagTABLE(pisaTag):
         for i, row in enumerate(data):
             data[i] += [""] * (maxcols - len(row))
 
+        # A column whose every cell is empty has nothing that can size it, so
+        # it gets the padding those cells offered. A declared width still wins.
+        for col, padding in tdata.col_empty_width.items():
+            if (
+                padding
+                and col not in tdata.col_with_content
+                and tdata.colw[col] is None
+            ):
+                tdata.colw[col] = _width(padding)
+
         log.debug("Col widths: %r", tdata.colw)
         if tdata.data:
             # log.debug("Table styles %r", tdata.styles)
@@ -317,20 +333,19 @@ class pisaTagTD(pisaTag):
             if width is not None:
                 tdata.colw[col] = _width(width)
                 log.debug("Col %d has width %s", col, width)
+            elif self.node.childNodes:
+                # Something in this column can size it; nothing to decide here.
+                tdata.col_with_content.add(col)
             else:
-                # If there are no child nodes, nothing within the column can change the
-                # width.  Set the column width to the sum of the right and left padding
-                # rather than letting it default.
-                log.debug(width)
-                if len(self.node.childNodes) == 0:
-                    width = c.frag.paddingLeft + c.frag.paddingRight
-                    log.debug("Col %d has width %s", col, width)
-                    if width:
-                        tdata.colw[col] = _width(width)
-                else:
-                    # Child nodes are present, we cannot do anything about the
-                    # width except set it externally.
-                    pass
+                # An empty cell cannot be sized by its content, so it offers
+                # its own padding as the column width instead -- but only if
+                # the whole column turns out to be empty, which is not known
+                # until the table ends. Deciding it here, as this used to, let
+                # a single empty <td> collapse a column that has content in
+                # another row: in a statement with an empty debit or credit
+                # cell on half its rows, those columns came out ten points
+                # wide and their neighbours overlapped them.
+                tdata.col_empty_width[col] = c.frag.paddingLeft + c.frag.paddingRight
 
         # Calculate heights
         if row + 1 > len(tdata.rowh):
