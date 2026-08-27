@@ -5,8 +5,11 @@ from pathlib import Path
 from unittest import TestCase
 from xml.dom import minidom
 
+from reportlab.lib.colors import Color
+
 from xhtml2pdf import properties
 from xhtml2pdf.context import pisaContext, pisaCSSBuilder
+from xhtml2pdf.document import pisaStory
 from xhtml2pdf.parser import getCSSAttrCacheKey, pisaParser
 from xhtml2pdf.properties import (
     CSS_PROPERTIES,
@@ -239,6 +242,62 @@ class FrameBorderDataTest(TestCase):
 
     def test_an_empty_name_list_gives_the_default(self) -> None:
         self.assertEqual(pisaCSSBuilder._getFromData({}, (), "DEFAULT"), "DEFAULT")
+
+
+class FrameBoundaryTest(TestCase):
+    """
+    -pdf-frame-border switches a frame's boundary on; the border-* rules say
+    what it looks like.
+
+    The two used to be exclusive: with the switch on, the declared colour and
+    width were dropped for reportlab's black hairline. And the switch was read
+    with int(), so a non-integer value, or a switch set on the @page rather
+    than on the frame, aborted the conversion.
+    """
+
+    @staticmethod
+    def boundary(border=None, page_border=None, color=None, width=0):
+        return pisaCSSBuilder._frame_boundary(border, page_border, color, width)
+
+    def test_nothing_declared_draws_nothing(self) -> None:
+        """Falsy, and reportlab skips the boundary entirely."""
+        self.assertFalse(self.boundary())
+
+    def test_a_declared_border_draws_without_the_switch(self) -> None:
+        boundary = self.boundary(color=Color(0, 0, 1), width=2)
+        self.assertTrue(boundary)
+        self.assertEqual(Color(0, 0, 1), boundary.color)
+        self.assertEqual(2, boundary.width)
+
+    def test_the_switch_alone_draws_a_black_line(self) -> None:
+        boundary = self.boundary(border="1")
+        self.assertEqual((0, 0, 0), boundary.color)
+        self.assertEqual(1, boundary.width)
+
+    def test_the_switch_keeps_a_declared_colour_and_width(self) -> None:
+        boundary = self.boundary(border="1", color=Color(0.8, 0, 0), width=3)
+        self.assertEqual(Color(0.8, 0, 0), boundary.color)
+        self.assertEqual(3, boundary.width)
+
+    def test_the_switch_may_be_set_on_the_page(self) -> None:
+        """int(None) raised TypeError for a frame that did not set it."""
+        boundary = self.boundary(border=None, page_border="1")
+        self.assertTrue(boundary)
+        self.assertEqual(1, boundary.width)
+
+    def test_the_switch_need_not_be_an_integer(self) -> None:
+        """int("1.5") raised ValueError."""
+        self.assertEqual(1.5, self.boundary(border="1.5").width)
+
+    def test_a_page_wide_switch_converts(self) -> None:
+        """End-to-end: this is the form the documentation describes."""
+        html = (
+            "<html><head><style>"
+            "@page { size: a5 portrait; -pdf-frame-border: 1;"
+            "  @frame f { left: 10mm; right: 10mm; top: 10mm; bottom: 10mm; } }"
+            "</style></head><body><p>x</p></body></html>"
+        )
+        self.assertEqual(0, pisaStory(html).err)
 
 
 class PropertyRegistryTest(TestCase):

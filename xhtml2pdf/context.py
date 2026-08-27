@@ -282,6 +282,37 @@ class pisaCSSBuilder(css.CSSBuilder):
         return func(data[attr]) if attr in data else default
 
     @staticmethod
+    def _frame_boundary(border, page_border, color, width) -> ShowBoundaryValue:
+        """
+        How a frame's boundary should be drawn, if at all.
+
+        -pdf-frame-border is the switch, set on the frame or -- for all of its
+        frames -- on the @page; the border-* declarations say what the line
+        should look like. The two used to be exclusive: whenever the switch was
+        on, the declared colour and width were dropped and reportlab's black
+        hairline drawn instead, so a frame asking for a two-point blue rule got
+        something else entirely.
+
+        The switch was also read with int(), which meant `-pdf-frame-border:
+        1.5` raised ValueError, and setting it on the @page rather than on the
+        frame raised TypeError on the None the frame left behind. Either
+        abandoned the document, for markup the documentation describes.
+        """
+        switch = border or page_border
+        if not switch:
+            # Nothing switched it on, so the border-* declarations are all
+            # there is. With neither a colour nor a width this is falsy and
+            # reportlab skips the boundary altogether.
+            return ShowBoundaryValue(color=color, width=width)
+
+        # Switched on: black hairline unless the declarations say otherwise.
+        # (0, 0, 0) is ShowBoundaryValue's own default colour.
+        return ShowBoundaryValue(
+            color=(0, 0, 0) if color is None else color,
+            width=width or getSize(switch, default=1),
+        )
+
+    @staticmethod
     def get_background_context(data: dict) -> dict:
         object_position = data.get("background-object-position")
         height = data.get("background-height")
@@ -400,15 +431,9 @@ class pisaCSSBuilder(css.CSSBuilder):
                 getSize,
             )
 
-            if border or pageBorder:
-                frame_border = ShowBoundaryValue(
-                    width=int(border)
-                )  # frame_border = ShowBoundaryValue() to
-                # frame_border = ShowBoundaryValue(width=int(border))
-            else:
-                frame_border = ShowBoundaryValue(
-                    color=fborder_color, width=fborder_width
-                )
+            frame_border = self._frame_boundary(
+                border, pageBorder, fborder_color, fborder_width
+            )
 
             # fix frame sizing problem.
             if static:
@@ -465,10 +490,9 @@ class pisaCSSBuilder(css.CSSBuilder):
                     )
                 )
 
-            if border or pageBorder:
-                frame_border = ShowBoundaryValue()
-            else:
-                frame_border = ShowBoundaryValue(color=border_color, width=border_width)
+            frame_border = self._frame_boundary(
+                border, pageBorder, border_color, border_width
+            )
 
             frameList.append(
                 Frame(
