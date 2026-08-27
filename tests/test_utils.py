@@ -18,6 +18,7 @@ from xhtml2pdf.util import (
     set_value,
     transform_attrs,
 )
+from xhtml2pdf.w3c.css import CSSTerminalFunction
 
 
 class UtilsCoordTestCase(TestCase):
@@ -90,6 +91,107 @@ class UtilsColorTestCase(TestCase):
 
         res = getColor("<css function: rgb(255,0,0)>")
         self.assertEqual(res, Color(1, 0, 0, 1))
+
+    def test_get_color_for_rgb_function_object(self):
+        """The parser hands colours over as a function, not as a string."""
+        res = getColor(CSSTerminalFunction("rgb", ["10", "200", "10"]))
+        self.assertEqual(res, getColor("#0ac80a"))
+
+    def test_get_color_for_rgba_function_object(self):
+        """
+        The alpha of an rgba() is not a colour channel.
+
+        Reading the channels off the object's repr with a pattern written for
+        `rgb(` matched from the "a" onwards, so rgba(10, 200, 10, 1) came out
+        as #0ac801: the alpha had landed in the blue channel.
+        """
+        res = getColor(CSSTerminalFunction("rgba", ["10", "200", "10", "1"]))
+        self.assertEqual(res, getColor("#0ac80a"))
+
+        translucent = getColor(CSSTerminalFunction("rgba", ["10", "200", "10", "0.5"]))
+        self.assertEqual(translucent.alpha, 0.5)
+        self.assertEqual(
+            (translucent.red, translucent.green, translucent.blue),
+            (10 / 255.0, 200 / 255.0, 10 / 255.0),
+        )
+
+    def test_get_color_for_rgb_percentages(self):
+        """
+        A percentage argument arrives stringified, as "('50', '%')".
+
+        CSSTerminalFunction turns every argument that is not already a str into
+        one, so the number has to be found rather than parsed off a fixed
+        shape. Before, these resolved to black.
+        """
+        res = getColor(
+            CSSTerminalFunction(
+                "rgb", [str(("50", "%")), str(("20", "%")), str(("10", "%"))]
+            )
+        )
+        self.assertEqual((res.red, res.green, res.blue), (0.5, 0.2, 0.1))
+
+    def test_get_color_clamps_out_of_range_channels(self):
+        res = getColor(CSSTerminalFunction("rgb", ["300", "-5", "10"]))
+        self.assertEqual((res.red, res.green), (1.0, 0.0))
+
+    def test_get_color_for_unreadable_function(self):
+        """An unreadable colour is worth a log line, not an exception."""
+        for params in (["a", "b", "c"], ["10", "200"]):
+            with self.subTest(params=params):
+                res = getColor(CSSTerminalFunction("rgb", params), default="TOKEN")
+                self.assertEqual(res, "TOKEN")
+
+    def test_get_color_for_unreadable_string(self):
+        """
+        reportlab raises rather than returning the default it was given.
+
+        `rgb(nope)` reaches toColor as a string it recognises the shape of but
+        cannot read, and it answered with ValueError -- which abandoned the
+        whole document over one unreadable colour.
+        """
+        res = getColor("rgb(nope)", default="TOKEN")
+        self.assertEqual(res, "TOKEN")
+
+
+class UtilsGetSizeUnreadableTestCase(TestCase):
+    """getSize must answer with its default rather than with a traceback."""
+
+    @staticmethod
+    def unreadable():
+        """
+        What `@page { margin: calc(1cm + 1mm) }` actually hands to getSize.
+
+        A fresh object each time: getSize is memoized, and two tests sharing
+        one value would find the second call answered from the cache with no
+        logging at all.
+        """
+        return CSSTerminalFunction("calc", ["1cm", "+", "1mm"])
+
+    def test_unreadable_value_returns_the_default(self):
+        size = getSize(self.unreadable(), relative=7.5, default="TOKEN")
+        self.assertEqual(size, "TOKEN")
+
+    def test_unreadable_value_logs_one_line(self):
+        """
+        A whole traceback per unreadable length buried the log.
+
+        A stylesheet with a handful of calc() lengths produced ten lines of
+        traceback for each one, at warning level, which made the warnings that
+        mattered impossible to find. The traceback moved to debug.
+        """
+        with self.assertLogs("xhtml2pdf.util", level="WARNING") as captured:
+            getSize(self.unreadable(), relative=7.5, default=0)
+
+        self.assertEqual(len(captured.records), 1)
+        record = captured.records[0]
+        self.assertIsNone(record.exc_info)
+        self.assertIn("cannot read", record.getMessage())
+
+    def test_unreadable_value_keeps_the_traceback_at_debug(self):
+        with self.assertLogs("xhtml2pdf.util", level="DEBUG") as captured:
+            getSize(self.unreadable(), relative=7.5, default=0)
+
+        self.assertTrue(any(r.exc_info for r in captured.records))
 
 
 class UtilsGetSizeTestCase(TestCase):

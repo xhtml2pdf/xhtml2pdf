@@ -270,9 +270,15 @@ class pisaCSSBuilder(css.CSSBuilder):
                 return x
 
         if isinstance(attr, list | tuple):
+            # The first name that was actually declared wins. The `return` used
+            # to sit inside the loop unconditionally, so only attr[0] was ever
+            # consulted: a @frame that set border-left-width and nothing else
+            # got the default and drew no border at all, while the same frame
+            # written with border-top-width drew all four sides.
             for a in attr:
-                return func(data[a]) if a in data else default
-            return None
+                if a in data:
+                    return func(data[a])
+            return default
         return func(data[attr]) if attr in data else default
 
     @staticmethod
@@ -623,6 +629,11 @@ class pisaContext:
         #: entries outlived the document that filled them, so a parent node id
         #: reused after a collection could serve one document another's styles.
         self.cssAttrCache: dict = {}
+        #: Declarations dropped because their value is a CSS function this
+        #: library cannot evaluate, as "property: function()". Filled by
+        #: parser.CSSCollect and reported once when the document is done, the
+        #: way unimplemented property names are.
+        self.cssDroppedFunctions: set[str] = set()
         self.language: str = ""
         self.text: str = ""
         self.frameStatic: dict = {}

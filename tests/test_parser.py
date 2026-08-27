@@ -6,7 +6,7 @@ from unittest import TestCase
 from xml.dom import minidom
 
 from xhtml2pdf import properties
-from xhtml2pdf.context import pisaContext
+from xhtml2pdf.context import pisaContext, pisaCSSBuilder
 from xhtml2pdf.parser import getCSSAttrCacheKey, pisaParser
 from xhtml2pdf.properties import (
     CSS_PROPERTIES,
@@ -136,6 +136,109 @@ class ParserTest(TestCase):
 
         r = pisaParser(data, c)
         self.assertEqual(r.warn, 0)
+
+
+class CSSFunctionValueTest(TestCase):
+    """
+    A CSS function as the value of a property xhtml2pdf implements.
+
+    calc(), the gradients, hsl(), min()/clamp() and var() reach the cascade as
+    a CSSTerminalFunction: neither a string nor a sequence, which is what every
+    consumer in CSS2Frag treats the value as. Each of these aborted the whole
+    conversion -- for CSS a browser renders without complaint -- instead of
+    being ignored like everything else the library does not implement.
+    """
+
+    #: property, declaration, and the name the report should give it.
+    CASES = (
+        ("width", "width: calc(100% - 20pt)", "width: calc()"),
+        ("height", "height: calc(10pt + 2pt)", "height: calc()"),
+        ("zoom", "zoom: calc(1 + 1)", "zoom: calc()"),
+        ("font-size", "font-size: calc(10pt + 2pt)", "font-size: calc()"),
+        ("line-height", "line-height: calc(1em + 2pt)", "line-height: calc()"),
+        ("letter-spacing", "letter-spacing: calc(1pt + 1pt)", "letter-spacing: calc()"),
+        ("word-spacing", "word-spacing: calc(1pt + 1pt)", "word-spacing: calc()"),
+        (
+            "background-image",
+            "background-image: linear-gradient(to right, #000, #fff)",
+            "background-image: linear-gradient()",
+        ),
+        (
+            "list-style-image",
+            "list-style-image: linear-gradient(to right, #000, #fff)",
+            "list-style-image: linear-gradient()",
+        ),
+        ("color", "color: hsl(120, 50%, 50%)", "color: hsl()"),
+        ("color", "color: var(--brand, #000)", "color: var()"),
+        ("width", "width: min(100pt, 50%)", "width: min()"),
+        ("margin-left", "margin-left: clamp(1pt, 2pt, 3pt)", "margin-left: clamp()"),
+    )
+
+    def _parse(self, declaration: str) -> pisaContext:
+        html = (
+            f"<html><head><style>.x{{{declaration};}}</style></head>"
+            "<body><p class='x'>x</p><ul class='x'><li>a</li></ul></body></html>"
+        )
+        return pisaParser(html.encode(), pisaContext("."))
+
+    def test_a_function_value_is_dropped_and_named(self) -> None:
+        for prop, declaration, reported in self.CASES:
+            with self.subTest(declaration=declaration):
+                context = self._parse(declaration)
+                self.assertEqual(context.err, 0)
+                self.assertIn(reported, context.cssDroppedFunctions)
+                self.assertEqual(prop, reported.split(":")[0])
+
+    def test_an_inline_style_is_covered_too(self) -> None:
+        """An inline style="" never reaches the rulesets, only the cascade."""
+        html = b"<html><body><p style='width: calc(100% - 20pt)'>x</p></body></html>"
+        context = pisaParser(html, pisaContext("."))
+        self.assertEqual(context.err, 0)
+        self.assertIn("width: calc()", context.cssDroppedFunctions)
+
+    def test_readable_functions_are_kept(self) -> None:
+        """rgb() and rgba() are read by getColor and must survive the filter."""
+        for declaration in ("color: rgb(10, 200, 10)", "color: rgba(10, 200, 10, .5)"):
+            with self.subTest(declaration=declaration):
+                context = self._parse(declaration)
+                self.assertEqual(context.cssDroppedFunctions, set())
+
+
+class FrameBorderDataTest(TestCase):
+    """
+    _getFromData is asked for a border by its four side names at once.
+
+    The `return` used to sit inside the loop unconditionally, so only the first
+    name was ever consulted: a @frame that declared border-left-width and
+    nothing else got the default and drew no border at all.
+    """
+
+    SIDES = (
+        "border-top-width",
+        "border-bottom-width",
+        "border-left-width",
+        "border-right-width",
+    )
+
+    def test_any_declared_side_is_found(self) -> None:
+        for side in self.SIDES:
+            with self.subTest(side=side):
+                found = pisaCSSBuilder._getFromData(
+                    {side: "3pt"}, self.SIDES, "DEFAULT"
+                )
+                self.assertEqual(found, "3pt")
+
+    def test_the_first_declared_side_wins(self) -> None:
+        data = {"border-bottom-width": "2pt", "border-left-width": "3pt"}
+        found = pisaCSSBuilder._getFromData(data, self.SIDES, "DEFAULT")
+        self.assertEqual(found, "2pt")
+
+    def test_no_declared_side_gives_the_default(self) -> None:
+        found = pisaCSSBuilder._getFromData({}, self.SIDES, "DEFAULT")
+        self.assertEqual(found, "DEFAULT")
+
+    def test_an_empty_name_list_gives_the_default(self) -> None:
+        self.assertEqual(pisaCSSBuilder._getFromData({}, (), "DEFAULT"), "DEFAULT")
 
 
 class PropertyRegistryTest(TestCase):

@@ -99,6 +99,7 @@ from xhtml2pdf.tags import (  # noqa: F401
 )
 from xhtml2pdf.util import getAlign, getBox, getColor, getPos, getSize, toList
 from xhtml2pdf.w3c import cssDOMElementInterface
+from xhtml2pdf.w3c.css import CSSTerminalFunction
 from xhtml2pdf.xhtml2pdf_reportlab import PmlLeftPageBreak, PmlRightPageBreak
 
 log = logging.getLogger(__name__)
@@ -222,6 +223,61 @@ def warnUnsupportedProperties(rulesets) -> None:
         log.warning(
             "Ignoring CSS properties xhtml2pdf does not implement: %s",
             ", ".join(unsupported),
+        )
+
+
+#: The CSS functions the rest of the library can actually read. `url()` never
+#: reaches here as a function -- the parser hands it over as a plain string --
+#: and getColor reads the arguments of rgb() and rgba() off the function
+#: object. Everything else is a value nothing downstream can evaluate.
+READABLE_CSS_FUNCTIONS: frozenset[str] = frozenset({"rgb", "rgba"})
+
+
+def firstUnreadableFunction(value) -> CSSTerminalFunction | None:
+    """Return the first CSS function in `value` this library cannot evaluate."""
+    parts = value if isinstance(value, list | tuple) else (value,)
+    return next(
+        (
+            part
+            for part in parts
+            if isinstance(part, CSSTerminalFunction)
+            and part.name.lower() not in READABLE_CSS_FUNCTIONS
+        ),
+        None,
+    )
+
+
+def dropUnreadableFunctions(cssAttrs, dropped: set[str]) -> None:
+    """
+    Discard declarations whose value is a CSS function we cannot evaluate.
+
+    A function reaches the cascade as a CSSTerminalFunction, which is neither a
+    string nor a sequence, and every consumer in CSS2Frag treats the value as
+    one or the other. `width: calc(100% - 20pt)` therefore raised TypeError and
+    `background-image: linear-gradient(...)` AttributeError, each of them
+    aborting the whole conversion -- for CSS that a browser renders without
+    complaint and that this library would otherwise have ignored.
+
+    Dropping the declaration puts those values back with everything else
+    xhtml2pdf does not implement: ignored, and named once so the author knows
+    which of their declarations did nothing.
+    """
+    unreadable = [
+        (name, function)
+        for name, value in cssAttrs.items()
+        if (function := firstUnreadableFunction(value)) is not None
+    ]
+    for name, function in unreadable:
+        del cssAttrs[name]
+        dropped.add(f"{name}: {function.name}()")
+
+
+def warnDroppedFunctions(dropped: set[str]) -> None:
+    """Say once which declarations were dropped for holding a CSS function."""
+    if dropped:
+        log.warning(
+            "Ignoring CSS declarations whose value xhtml2pdf cannot evaluate: %s",
+            ", ".join(sorted(dropped)),
         )
 
 
@@ -400,6 +456,8 @@ def CSSCollect(node, c):
                 node.getCSSAttr(c.cssCascade, cssAttrName)
             except Exception as e:  # noqa: PERF203
                 log.debug("%r during CSS attr '%s'", e, cssAttrName, exc_info=True)
+
+        dropUnreadableFunctions(node.cssAttrs, c.cssDroppedFunctions)
 
         c.cssAttrCache[key] = node.cssAttrs
     return node.cssAttrs
@@ -840,6 +898,9 @@ def pisaParser(
     pisaPreLoop(document, context)
     context.parseCSS()
     pisaLoop(document, context)
+    # After the walk, not before: an inline style="" reaches the cascade only
+    # while its element is being visited, so the set is not complete until now.
+    warnDroppedFunctions(context.cssDroppedFunctions)
     return context
 
 

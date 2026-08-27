@@ -38,6 +38,12 @@ rgb_re = re.compile(
     r"^.*?rgb[a]?[(]([0-9]+).*?([0-9]+).*?([0-9]+)(?:.*?(?:[01]\.(?:[0-9]+)))?[)].*?[ ]*$"
 )
 
+#: The number in one argument of a colour function. A percentage argument
+#: reaches CSSTerminalFunction as the stringified tuple "('50', '%')", because
+#: that class turns any argument which is not already a str into one, so the
+#: number is found rather than parsed off a known shape.
+color_arg_re = re.compile(r"-?\d*\.?\d+")
+
 # =========================================================================
 # Memoize decorator
 # =========================================================================
@@ -160,6 +166,43 @@ def set_value(obj, attrs, value, *, do_copy=False):
         setattr(obj, attr, value)
 
 
+def _clamp01(number: float) -> float:
+    """Keep a colour channel inside the 0..1 the PDF format allows."""
+    return min(max(number, 0.0), 1.0)
+
+
+def _colorComponent(param, maximum: float) -> float:
+    """One argument of rgb()/rgba(), as a fraction of its maximum."""
+    text = str(param)
+    match = color_arg_re.search(text)
+    if match is None:
+        msg = f"not a colour component: {text!r}"
+        raise ValueError(msg)
+    number = float(match.group())
+    return number / 100.0 if "%" in text else number / maximum
+
+
+def _rgbFunctionColor(function, default):
+    """
+    Read an rgb()/rgba() the parser handed over as a function object.
+
+    Going through str() and a regular expression, as this used to, reads the
+    channels off the object's *repr*: for `rgba(10, 200, 10, 1)` that is
+    "<css function: rgba(10, 200, 10, 1)>", and the pattern -- written for
+    `rgb(` -- matched from the "a" onwards and took the alpha as the blue
+    channel. The arguments are right there on the object, so they are read
+    from there.
+    """
+    channels, rest = function.params[:3], function.params[3:]
+    try:
+        red, green, blue = (_colorComponent(arg, 255.0) for arg in channels)
+        alpha = _colorComponent(rest[0], 1.0) if rest else 1.0
+    except (ValueError, IndexError):
+        log.warning("Cannot read the colour %r", function)
+        return default
+    return Color(_clamp01(red), _clamp01(green), _clamp01(blue), alpha=_clamp01(alpha))
+
+
 @Memoized
 def getColor(value, default=None):
     """
@@ -167,10 +210,19 @@ def getColor(value, default=None):
     This returns a Color object instance from a text bit.
     Mitigation for ReDoS attack applied by limiting input length and validating input.
     """
+    original = value
     if value is None:
         return None
     if isinstance(value, Color):
         return value
+
+    # Imported here and not at module scope: xhtml2pdf.w3c.css reaches this
+    # module through cssParser, so importing it from the top would be circular.
+    from xhtml2pdf.w3c.css import CSSTerminalFunction
+
+    if isinstance(value, CSSTerminalFunction) and value.name.lower() in {"rgb", "rgba"}:
+        return _rgbFunctionColor(value, default)
+
     value = str(value).strip().lower()
 
     # Limit the length of the value to prevent excessive input causing ReDoS
@@ -194,7 +246,14 @@ def getColor(value, default=None):
         # Shrug
         pass
 
-    return toColor(value, default)  # Calling the reportlab function
+    try:
+        return toColor(value, default)  # Calling the reportlab function
+    except ValueError:
+        # reportlab raises rather than handing back the default it was given.
+        # A colour nobody can read is worth a line in the log; it is not worth
+        # abandoning the document.
+        log.warning("Cannot read the colour %r, using %r", original, default)
+        return default
 
 
 def apply_text_transform(text: str, transform) -> str:
@@ -447,8 +506,18 @@ def getSize(
             log.warning("getSize: Not a float %r", value)
             return default  # value = 0
         return max(0, value)
-    except Exception:
-        log.warning("getSize %r %r", original, relative, exc_info=True)
+    except Exception as exc:
+        # One line at warning level, the traceback at debug. A stylesheet with
+        # a handful of lengths this function cannot read -- a calc(), say --
+        # used to bury the log under a ten-line traceback for each one, which
+        # made the warnings that mattered impossible to find.
+        log.warning(
+            "getSize: cannot read %r, using %r (%s)",
+            original,
+            default,
+            type(exc).__name__,
+        )
+        log.debug("getSize %r %r", original, relative, exc_info=True)
         return default
 
 
