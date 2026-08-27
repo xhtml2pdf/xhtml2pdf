@@ -626,6 +626,12 @@ class pisaTagPDFSPACER(pisaTag):
     """<pdf:spacer height="" />."""
 
     def start(self, c: pisaContext) -> None:
+        if self.attr.height is None:
+            # The attribute machinery has already said "Attribute 'height'
+            # must be set!"; building the Spacer anyway raised a TypeError on
+            # None + int and took the document with it.
+            log.warning("Ignoring <pdf:spacer> with no height")
+            return
         c.addPara()
         c.addStory(Spacer(1, self.attr.height))
 
@@ -818,17 +824,25 @@ class pisaTagPDFBARCODE(pisaTag):
         else:  # Code39 etc.
             barWidth = max(barWidth, 0.0075 * inch)
 
-        barcode = pisaTagPDFBARCODE._barcodeWrapper(
-            codeName=codeName,
-            value=attr.value,
-            barWidth=barWidth,
-            barHeight=barHeight,
-            humanReadable=humanReadable,
-            vertical=vertical,
-            checksum=checksum,
-            fontName=fontName,
-            fontSize=fontSize,
-        )
+        try:
+            barcode = pisaTagPDFBARCODE._barcodeWrapper(
+                codeName=codeName,
+                value=attr.value,
+                barWidth=barWidth,
+                barHeight=barHeight,
+                humanReadable=humanReadable,
+                vertical=vertical,
+                checksum=checksum,
+                fontName=fontName,
+                fontSize=fontSize,
+            )
+        except Exception as exc:
+            # Every symbology has its own rules about what it can encode, and
+            # reportlab raises whatever it feels like when they are broken --
+            # AttributeError for EAN, ValueError for the postal codes. A
+            # mistyped barcode used to cost the whole document.
+            log.warning("Cannot draw the %s barcode %r: %s", codeName, attr.value, exc)
+            return
 
         width, height = barcode.wrap(c.frag.width, c.frag.height)
         c.force = True
@@ -873,8 +887,8 @@ class pisaTagCANVAS(pisaTag):
 
         try:
             data = json.loads(c.text)
-        except json.JSONDecodeError:
-            print("JSON Decode Error")
+        except json.JSONDecodeError as exc:
+            log.warning("Cannot read the JSON of a <canvas type=graph>: %s", exc)
 
         if data and c.node:
             nodetype = dict(c.node.attributes).get("type")
@@ -893,7 +907,21 @@ class pisaTagCANVAS(pisaTag):
             if nodeheight:
                 height = int(nodeheight.nodeValue)
 
-            self.chart = self.shapes[data["type"]]()
+            charttype = data.get("type") if isinstance(data, dict) else None
+            if charttype not in self.shapes:
+                # Required by the documentation, and unchecked until now: a
+                # JSON object that parses but names no chart, or names one
+                # that does not exist, raised KeyError and aborted the
+                # document.
+                log.warning(
+                    "Ignoring a <canvas type=graph> with chart type %r."
+                    " Known types: %s",
+                    charttype,
+                    ", ".join(sorted(self.shapes)),
+                )
+                return
+
+            self.chart = self.shapes[charttype]()
             draw = Drawing(width, height)  # CONTAINER
             draw.background = Rect(
                 115,
