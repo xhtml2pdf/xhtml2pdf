@@ -55,6 +55,7 @@ from xhtml2pdf.tables import (  # noqa: F401
     pisaTagTABLE,
     pisaTagTD,
     pisaTagTH,
+    pisaTagTHEAD,
     pisaTagTR,
 )
 from xhtml2pdf.tags import (  # noqa: F401

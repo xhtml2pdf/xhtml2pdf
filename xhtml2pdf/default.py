@@ -326,6 +326,12 @@ TAGS = {
             # "keepmode":             (["error", "overflow", "shrink", "truncate"], "shrink"),
         },
     ),
+    # The row groups. <thead> repeats its rows on every page; the other two
+    # are structure only, and are declared so that they are known tags rather
+    # than unknown ones the parser walks through by accident.
+    "thead": (1, {}),
+    "tbody": (1, {}),
+    "tfoot": (1, {}),
     "tr": (
         1,
         {

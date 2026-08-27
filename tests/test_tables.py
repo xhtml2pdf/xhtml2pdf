@@ -522,3 +522,68 @@ class EmptyCellColumnWidthTestCase(TestCase):
             "<tr><td>x</td><td>y</td><td></td></tr>"
         )
         self.assertEqual([None, None, None], self.widths(rows, "td { padding: 0; }"))
+
+
+class RepeatedHeaderTestCase(TestCase):
+    """
+    <thead> says which rows repeat at the top of every page.
+
+    Repetition used to be available only through the non-standard
+    `<table repeat="N">`, and thead/tbody/tfoot were not tags this library
+    knew: a long table written the standard way printed its header on the
+    first page and nowhere else, silently.
+    """
+
+    @staticmethod
+    def repeat_rows(table_html: str) -> int:
+        """
+        What the parser will hand reportlab as repeatRows.
+
+        Through pisaStory, not pisaParser: the default stylesheet is what makes
+        a <td> a block, and the row bookkeeping depends on it.
+        """
+        html = f"<html><body>{table_html}</body></html>"
+        context = pisaStory(html)
+        table = next(f for f in context.story if isinstance(f, PmlTable))
+        return table.repeatRows
+
+    def test_a_header_row_repeats(self) -> None:
+        self.assertEqual(
+            1,
+            self.repeat_rows(
+                "<table><thead><tr><th>h</th></tr></thead>"
+                "<tbody><tr><td>a</td></tr></tbody></table>"
+            ),
+        )
+
+    def test_a_two_row_header_repeats_both(self) -> None:
+        self.assertEqual(
+            2,
+            self.repeat_rows(
+                "<table><thead><tr><th>h</th></tr><tr><th>sub</th></tr></thead>"
+                "<tbody><tr><td>a</td></tr></tbody></table>"
+            ),
+        )
+
+    def test_the_explicit_attribute_still_works(self) -> None:
+        self.assertEqual(
+            1,
+            self.repeat_rows(
+                '<table repeat="1"><tr><th>h</th></tr><tr><td>a</td></tr></table>'
+            ),
+        )
+
+    def test_the_larger_of_the_two_wins(self) -> None:
+        """Asking for two rows and marking one up should not lose a row."""
+        self.assertEqual(
+            2,
+            self.repeat_rows(
+                '<table repeat="2"><thead><tr><th>h</th></tr></thead>'
+                "<tbody><tr><td>a</td></tr></tbody></table>"
+            ),
+        )
+
+    def test_a_table_without_either_repeats_nothing(self) -> None:
+        self.assertEqual(
+            0, self.repeat_rows("<table><tr><th>h</th></tr><tr><td>a</td></tr></table>")
+        )

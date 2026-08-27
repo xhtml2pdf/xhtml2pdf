@@ -53,7 +53,8 @@ class TableData:
         self.data: list = []
         self.mode: str = ""
         self.padding: int = 0
-        self.repeat: bool = False
+        #: How many rows from the top repeat on every page.
+        self.repeat: int = 0
         self.row: int = 0
         self.rowh: list = []
         self.span: list = []
@@ -259,6 +260,24 @@ class pisaTagTABLE(pisaTag):
         # Cleanup and re-swap table data
         c.clearFrag()
         c.tableData, self.tableData = self.tableData, None
+
+
+class pisaTagTHEAD(pisaTag):
+    """<thead>: the rows that repeat at the top of every page.
+
+    Table headers used to be declared with the non-standard
+    <table repeat="N">, and <thead> was not a tag this library knew at all:
+    a long table written the standard way printed its header on the first
+    page only, and said nothing about it.
+    """
+
+    @staticmethod
+    def end(c) -> None:
+        tdata = c.tableData
+        # Every </tr> has bumped the row counter, so this is the number of rows
+        # the header holds. An explicit repeat="N" still wins if it asks for
+        # more.
+        tdata.repeat = max(tdata.repeat, tdata.row)
 
 
 class pisaTagTR(pisaTag):

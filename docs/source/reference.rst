@@ -90,9 +90,22 @@ table and to the table rows or cells.
 Headers
 -------
 
-It is possible to repeat table rows if a page break occurs within a
-table. The number of repeated rows is passed in the property
-``repeat``. Example:
+Table rows can repeat at the top of every page a table runs over. Mark them
+up as a ``<thead>`` and they all repeat:
+
+::
+
+    <table>
+      <thead>
+        <tr><th>Column 1</th><th>...</th></tr>
+      </thead>
+      <tbody>
+        ...
+      </tbody>
+    </table>
+
+The number of repeated rows can also be given explicitly, with the ``repeat``
+property, which is useful for a header that is not marked up as one:
 
 ::
 
@@ -100,6 +113,8 @@ table. The number of repeated rows is passed in the property
       <tr><th>Column 1</th><th>...</th></tr>
       ...
     </table>
+
+``<tfoot>`` is read as ordinary rows: there is no repeating footer.
 
 Borders
 -------
