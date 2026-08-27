@@ -6,9 +6,11 @@ from unittest import TestCase
 from xml.dom import minidom
 
 from reportlab.lib.colors import Color
+from reportlab.lib.pagesizes import A4, A5
 
 from xhtml2pdf import properties
 from xhtml2pdf.context import pisaContext, pisaCSSBuilder
+from xhtml2pdf.default import DEFAULT_PAGE_NAME
 from xhtml2pdf.document import pisaStory
 from xhtml2pdf.parser import getCSSAttrCacheKey, pisaParser
 from xhtml2pdf.properties import (
@@ -436,3 +438,110 @@ class InlineOnlyPropertyTest(TestCase):
 
         self.assertNotIn("letter-spacing", context.cssCascade.propertyNames)
         self.assertEqual("3px", "".join(context.fragList[0].letterSpacing))
+
+
+class PseudoPageTest(TestCase):
+    """
+    A pseudo page written without a name -- "@page :left", which is how CSS
+    paged media spells it -- belongs to the page a plain @page defines.
+
+    The parser used to build the template name with `page + "_" + pseudopage`,
+    and `page` is None in that form, so every one of :left, :right, :first and
+    :blank aborted the conversion with a TypeError before anything was drawn.
+    """
+
+    @staticmethod
+    def story(css: str):
+        return pisaStory(
+            f"<html><head><style>{css}</style></head><body><p>x</p></body></html>"
+        )
+
+    def test_an_unnamed_pair_converts(self) -> None:
+        context = self.story("@page :left { size: a5; } @page :right { size: a5; }")
+
+        self.assertEqual(0, context.err)
+
+    def test_an_unnamed_pair_belongs_to_the_default_page(self) -> None:
+        context = self.story("@page :left { size: a5; } @page :right { size: a5; }")
+
+        self.assertIn(f"{DEFAULT_PAGE_NAME}_left", context.templateList)
+        self.assertIn(f"{DEFAULT_PAGE_NAME}_right", context.templateList)
+
+    def test_a_named_pair_is_unaffected(self) -> None:
+        context = self.story("@page b:left { size: a5; } @page b:right { size: a5; }")
+
+        self.assertIn("b_left", context.templateList)
+        self.assertIn("b_right", context.templateList)
+
+    def test_an_unsupported_pseudo_says_so(self) -> None:
+        """:first has no equivalent here, and used to crash rather than say it."""
+        with self.assertLogs("xhtml2pdf", level="WARNING") as logged:
+            context = self.story("@page :first { size: a5; }")
+
+        self.assertEqual(0, context.err)
+        self.assertTrue(
+            any("Unsupported pseudo page :first" in line for line in logged.output),
+            logged.output,
+        )
+
+
+class PageSizeTest(TestCase):
+    """
+    An unreadable `size` used to raise RuntimeError, which is the only value in
+    a stylesheet that threw the document away instead of being dropped.
+    """
+
+    @staticmethod
+    def size(css: str):
+        html = f"<html><head><style>{css}</style></head><body><p>x</p></body></html>"
+        return pisaStory(html).pageSize
+
+    def test_an_unknown_size_keeps_the_current_one(self) -> None:
+        with self.assertLogs("xhtml2pdf", level="WARNING") as logged:
+            size = self.size("@page { size: banana; }")
+
+        self.assertEqual(A4, size)
+        self.assertTrue(
+            any("Unknown size value" in line for line in logged.output), logged.output
+        )
+
+    def test_a_known_size_still_wins_over_a_bad_one(self) -> None:
+        with self.assertLogs("xhtml2pdf", level="WARNING"):
+            self.assertEqual(A5, self.size("@page { size: a5 banana; }"))
+
+    def test_a_known_size_warns_about_nothing(self) -> None:
+        with self.assertNoLogs("xhtml2pdf", level="WARNING"):
+            self.assertEqual(A5, self.size("@page { size: a5; }"))
+
+
+class DefaultFrameTest(TestCase):
+    """
+    A @page with no @frame at all gets a default content frame, which is the
+    normal way to write a document. It used to warn about it every time, and
+    the message -- "missing explicit frame definition for content or just
+    static frames" -- describes a different situation: static frames declared
+    with nowhere for the story to go.
+    """
+
+    @staticmethod
+    def story(css: str):
+        return pisaStory(
+            f"<html><head><style>{css}</style></head>"
+            "<body><div id='hd'>h</div><p>x</p></body></html>"
+        )
+
+    def test_no_frames_at_all_is_not_worth_a_warning(self) -> None:
+        with self.assertNoLogs("xhtml2pdf", level="WARNING"):
+            self.story("@page { size: a5; }")
+
+    def test_static_frames_without_a_content_frame_still_warn(self) -> None:
+        with self.assertLogs("xhtml2pdf", level="WARNING") as logged:
+            self.story(
+                "@page { size: a5; @frame h { -pdf-frame-content: hd;"
+                " left: 5mm; right: 5mm; top: 5mm; height: 10mm; } }"
+            )
+
+        self.assertTrue(
+            any("missing explicit frame" in line for line in logged.output),
+            logged.output,
+        )

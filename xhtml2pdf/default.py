@@ -61,6 +61,11 @@ BOOL: int
 MUST: int
 TAGS: dict
 DEFAULT_CSS: str
+#: The name of the page template a plain ``@page`` rule defines. A pseudo-page
+#: written without a name -- ``@page :left`` -- belongs to this one, so both the
+#: parser and the CSS builder need to agree on it.
+DEFAULT_PAGE_NAME: str = "body"
+
 PML_WARNING: str = "warning"
 PML_ERROR: str = "error"
 PML_EXCEPTION: str = "PML Exception"

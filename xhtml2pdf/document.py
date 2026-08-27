@@ -23,7 +23,7 @@ from reportlab.platypus.frames import Frame
 from xhtml2pdf.builders.signs import PDFSignature
 from xhtml2pdf.builders.watermarks import WaterMarks
 from xhtml2pdf.context import pisaContext
-from xhtml2pdf.default import DEFAULT_CSS
+from xhtml2pdf.default import DEFAULT_CSS, DEFAULT_PAGE_NAME
 from xhtml2pdf.files import cleanFiles, pisaTempFile
 from xhtml2pdf.parser import pisaParser
 from xhtml2pdf.util import getBox, reset_caches
@@ -117,6 +117,33 @@ def get_encrypt_instance(data):
     return data
 
 
+def start_on_mirrored_pair(doc, templates, *, declared_body: bool) -> None:
+    """Begin the document on the ``:left`` / ``:right`` pair, if that is all there is.
+
+    A stylesheet whose only page rules are ``@page :left`` and ``@page :right``
+    describes a mirrored document from its very first page. Nothing selected
+    those templates before: the cycle between them is built by
+    ``handle_nextPageTemplate``, which only runs for a <pdf:nextpage>, so the
+    document started on the synthetic body template and the mirrored rules were
+    never used -- silently.
+
+    Handing reportlab a list as the first template index is its own way of
+    saying "start on a cycle": ``handle_documentBegin`` turns it into the
+    PTCycle, which is also the one case ``PmlBaseDoc.beforeDocument`` leaves
+    alone between the passes of a multiBuild.
+    """
+    if declared_body:
+        # An explicit @page wins: it says where the document starts.
+        return
+
+    mirrored = [f"{DEFAULT_PAGE_NAME}_left", f"{DEFAULT_PAGE_NAME}_right"]
+    declared = {template.id for template in templates}
+    if declared.issuperset(mirrored):
+        # Names, not indexes: PmlBaseDoc.handle_nextPageTemplate resolves a
+        # list of template ids into the cycle.
+        doc._firstPageTemplateIndex = mirrored  # noqa: SLF001
+
+
 def pisaDocument(
     src,
     dest=None,
@@ -183,9 +210,10 @@ def pisaDocument(
     )
 
     # Prepare templates and their frames
-    if "body" in context.templateList:
-        body = context.templateList["body"]
-        del context.templateList["body"]
+    declared_body = DEFAULT_PAGE_NAME in context.templateList
+    if declared_body:
+        body = context.templateList[DEFAULT_PAGE_NAME]
+        del context.templateList[DEFAULT_PAGE_NAME]
     else:
         x, y, w, h = getBox("1cm 1cm -1cm -1cm", context.pageSize)
         body = PmlPageTemplate(
@@ -212,6 +240,7 @@ def pisaDocument(
         for template in templates:
             template.canvasBackground = context.pageCanvasBackground
     doc.addPageTemplates(templates)
+    start_on_mirrored_pair(doc, templates, declared_body=declared_body)
 
     # Use multibuild e.g. if a TOC has to be created
     if context.multiBuild:

@@ -473,12 +473,20 @@ class pisaCSSBuilder(css.CSSBuilder):
             background = self.c.getFile(background, relative=self.c.cssParser.rootPath)
 
         if not frameList:
-            log.warning(
-                c.warning(
-                    "missing explicit frame definition for content or just static"
-                    " frames"
+            if staticList:
+                # Static frames but nowhere for the story to go. The frame
+                # built below is a guess, and it may well sit on top of them.
+                log.warning(
+                    c.warning(
+                        "missing explicit frame definition for content or just static"
+                        " frames"
+                    )
                 )
-            )
+            else:
+                # No @frame at all, which is what most documents look like.
+                # The default frame below is the whole point, not a fallback,
+                # so this is not worth a warning.
+                log.debug("No frame declared for @page %r, using the default", name)
             fname, static, border, x, y, w, h, data = self._pisaAddFrame(
                 name, data, first=True, border=pageBorder, size=c.pageSize
             )

@@ -1,4 +1,5 @@
 import io
+import re
 from unittest import TestCase
 
 from pypdf import PdfReader
@@ -6,6 +7,20 @@ from reportlab.lib.pagesizes import A4
 from reportlab.platypus.frames import Frame
 
 from xhtml2pdf import pisa, xhtml2pdf_reportlab
+
+UNNAMED_MIRRORED_HTML = """
+<html><head><style>
+@page :left  { size: a5; @frame l { left: 5mm; right: 35mm; top: 10mm;
+               bottom: 10mm; -pdf-frame-border: 1; } }
+@page :right { size: a5; @frame r { left: 35mm; right: 5mm; top: 10mm;
+               bottom: 10mm; -pdf-frame-border: 1; } }
+</style></head>
+<body>
+<p>one</p><pdf:nextpage/>
+<p>two</p><pdf:nextpage/>
+<p>three</p>
+</body></html>
+"""
 
 LEFT_RIGHT_HTML = """
 <html><head><style>
@@ -200,6 +215,51 @@ class PmlBaseDocMultiBuildTest(TestCase):
             [True, True, True, False], ["footer" in text for text in pages]
         )
         self.assertIn("footer 1 of 4", pages[0])
+
+
+class UnnamedMirroredPairTest(TestCase):
+    """
+    A stylesheet whose only page rules are @page :left and @page :right
+    describes a mirrored document from its first page.
+
+    Nothing used to select those templates: the cycle is built by
+    handle_nextPageTemplate, which only runs for a <pdf:nextpage>, so the
+    document ran on the synthetic body template and the mirrored rules were
+    silently ignored. (Before that, the unnamed form did not even parse.)
+    """
+
+    @staticmethod
+    def frame_origins(html: str) -> list[str]:
+        """The x origin of the frame outline drawn on each page."""
+        dest = io.BytesIO()
+        result = pisa.pisaDocument(io.StringIO(html), dest)
+        assert result.err == 0
+        dest.seek(0)
+        origins = []
+        for page in PdfReader(dest).pages:
+            content = page.get_contents().get_data().decode("latin-1")
+            found = re.findall(r"n ([\d.]+) [\d.]+ [\d.]+ [\d.]+ re S", content)
+            origins.append(found[0] if found else "")
+        return origins
+
+    def test_the_document_starts_on_the_pair(self) -> None:
+        origins = self.frame_origins(UNNAMED_MIRRORED_HTML)
+
+        self.assertEqual(3, len(origins))
+        self.assertTrue(all(origins), origins)
+        self.assertEqual(origins[0], origins[2])
+        self.assertNotEqual(origins[0], origins[1])
+
+    def test_an_explicit_page_still_says_where_to_start(self) -> None:
+        """A declared @page wins; only a document without one starts mirrored."""
+        html = UNNAMED_MIRRORED_HTML.replace(
+            "<style>",
+            "<style>@page { size: a5; @frame b { left: 20mm; right: 20mm;"
+            " top: 10mm; bottom: 10mm; -pdf-frame-border: 1; } }",
+        )
+        origins = self.frame_origins(html)
+
+        self.assertEqual([origins[0]] * 3, origins)
 
 
 class PmlMaxHeightMixInTest(TestCase):

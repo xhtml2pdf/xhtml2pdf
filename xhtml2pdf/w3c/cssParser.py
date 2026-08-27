@@ -345,6 +345,10 @@ class CSSParser:
     SelectorQualifiers: ClassVar[tuple[str, ...]] = ("#", ".", "[", ":")
     SelectorCombiners: ClassVar[list[str]] = ["+", ">", "~"]
     ExpressionOperators: ClassVar[tuple[str, ...]] = ("/", "+", ",")
+    #: The pseudo pages that mean something here. A ``name_left`` /
+    #: ``name_right`` pair is what ``handle_nextPageTemplate`` cycles between;
+    #: :first and :blank have no equivalent in this model.
+    PAGE_PSEUDO_CLASSES: ClassVar[frozenset[str]] = frozenset({"left", "right"})
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # ~ Regular expressions
@@ -805,7 +809,20 @@ class CSSParser:
         page, src = self._getIdent(src)
         if src[:1] == ":":
             pseudopage, src = self._getIdent(src[1:])
-            page = page + "_" + pseudopage
+            # A pseudo-page written without a name -- "@page :left", which is
+            # how CSS paged media spells it -- belongs to the page a plain
+            # "@page" defines. This used to be "page + '_' + pseudopage" and
+            # raised a TypeError on the standard form, aborting the document.
+            page = f"{page or xhtml2pdf.default.DEFAULT_PAGE_NAME}_{pseudopage}"
+            if pseudopage not in self.PAGE_PSEUDO_CLASSES:
+                # Registered all the same, so that any @frame declared inside
+                # is consumed and does not leak into the next @page, but
+                # nothing will ever select it.
+                log.warning(
+                    "Unsupported pseudo page :%s, the rules in it will not be"
+                    " used. Only :left and :right are honoured.",
+                    pseudopage,
+                )
         else:
             pseudopage = None
 
@@ -870,8 +887,16 @@ class CSSParser:
                         elif valueStr in xhtml2pdf.default.PML_PAGESIZES:
                             self.c.pageSize = xhtml2pdf.default.PML_PAGESIZES[valueStr]
                         else:
-                            msg = "Unknown size value for @page"
-                            raise RuntimeError(msg)
+                            # Not a paper name, not an orientation, not a
+                            # length: nothing here can use it. Every other
+                            # unreadable value in a stylesheet is dropped with
+                            # a warning, and this used to be the one that threw
+                            # the whole document away instead.
+                            log.warning(
+                                "Unknown size value for @page: %r, keeping %r",
+                                value,
+                                self.c.pageSize,
+                            )
 
                     if len(sizeList) == 2:
                         self.c.pageSize = tuple(sizeList)
