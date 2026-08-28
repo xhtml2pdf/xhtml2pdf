@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING, ClassVar
 from reportlab.graphics.barcode import createBarcodeDrawing
 from reportlab.graphics.charts.legends import Legend
 from reportlab.graphics.charts.textlabels import Label
-from reportlab.graphics.shapes import Drawing, Rect
+from reportlab.graphics.shapes import Rect
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import inch, mm
 from reportlab.platypus.doctemplate import FrameBreak, NextPageTemplate
@@ -42,7 +42,12 @@ from xhtml2pdf.charts import (
 )
 from xhtml2pdf.paragraph import PageNumberFlowable
 from xhtml2pdf.util import DPI96, ImageWarning, getAlign, getColor, getSize
-from xhtml2pdf.xhtml2pdf_reportlab import PmlImage, PmlInput, PmlPageTemplate
+from xhtml2pdf.xhtml2pdf_reportlab import (
+    PmlDrawing,
+    PmlImage,
+    PmlInput,
+    PmlPageTemplate,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -875,6 +880,15 @@ class pisaTagPDFBARCODE(pisaTag):
 
 
 class pisaTagCANVAS(pisaTag):
+    #: Default size of the box a <canvas> reserves, in points.
+    DEFAULT_WIDTH: int = 350
+    DEFAULT_HEIGHT: int = 150
+    #: Room left around the chart inside that box, for the axis labels and the
+    #: tick marks reportlab draws outside the plot area.
+    CHART_INSET: int = 20
+    #: The keys that mean the JSON is placing the chart itself.
+    GEOMETRY: ClassVar[set[str]] = {"x", "y", "width", "height"}
+
     def __init__(self, node: Element, attr: AttrContainer) -> None:
         super().__init__(node, attr)
         self.chart = None
@@ -890,10 +904,40 @@ class pisaTagCANVAS(pisaTag):
     def start(self, c: pisaContext) -> None:
         pass
 
+    @staticmethod
+    def _length(value, default: float) -> float | None:
+        """A CSS length in points, or None if there is no usable one.
+
+        A percentage is a share of the frame, which is not known while the
+        story is being built, so it is left to the flowable to fit itself.
+        """
+        if value is None or value == "":
+            return None
+        if isinstance(value, str) and value.endswith("%"):
+            return None
+        return getSize(value, default=default)
+
+    def _box(self, c: pisaContext) -> tuple[float, float]:
+        """The size of the box the canvas reserves.
+
+        CSS first, the way an <img> reads it. The width and height attributes
+        used to be the only thing looked at, so a stylesheet had no say in the
+        size of a chart.
+        """
+        attributes = dict(c.node.attributes)
+        sizes = []
+        for prop, default in (
+            ("width", self.DEFAULT_WIDTH),
+            ("height", self.DEFAULT_HEIGHT),
+        ):
+            size = self._length(getattr(c.frag, prop, None), default)
+            if size is None and (declared := attributes.get(prop)):
+                size = self._length(declared.nodeValue, default)
+            sizes.append(size or default)
+        return sizes[0], sizes[1]
+
     def end(self, c: pisaContext) -> None:
         data = None
-        width: int = 350
-        height: int = 150
 
         try:
             data = json.loads(c.text)
@@ -902,8 +946,6 @@ class pisaTagCANVAS(pisaTag):
 
         if data and c.node:
             nodetype = dict(c.node.attributes).get("type")
-            nodewidth = dict(c.node.attributes).get("width")
-            nodeheight = dict(c.node.attributes).get("height")
             canvastype = None
 
             if nodetype is not None:
@@ -912,10 +954,7 @@ class pisaTagCANVAS(pisaTag):
             if canvastype:
                 c.clearFrag()
 
-            if nodewidth:
-                width = int(nodewidth.nodeValue)
-            if nodeheight:
-                height = int(nodeheight.nodeValue)
+            width, height = self._box(c)
 
             charttype = data.get("type") if isinstance(data, dict) else None
             if charttype not in self.shapes:
@@ -932,16 +971,26 @@ class pisaTagCANVAS(pisaTag):
                 return
 
             self.chart = self.shapes[charttype]()
-            draw = Drawing(width, height)  # CONTAINER
-            draw.background = Rect(
-                115,
-                25,
-                width,
-                height,
-                strokeWidth=1,
-                strokeColor="#868686",
-                fillColor="#f8fce8",
-            )
+            draw = PmlDrawing(width, height)  # CONTAINER
+
+            # A chart used to keep reportlab's default geometry -- 180x85 at
+            # (20, 10) -- whatever size the canvas asked for, so it sat small
+            # in a corner of its own box. It now fills the canvas instead,
+            # but only when the JSON places nothing itself: a chart with its
+            # own coordinates is laid out around them, and resizing it under
+            # the author would move everything else out of place.
+            if not self.GEOMETRY & set(data):
+                self.chart.x = self.chart.y = self.CHART_INSET
+                self.chart.width = max(width - 2 * self.CHART_INSET, 1)
+                self.chart.height = max(height - 2 * self.CHART_INSET, 1)
+
+            # No background unless one is asked for. There used to be a pale
+            # rectangle pinned at (115, 25) and the size of the whole canvas,
+            # so it always stuck out to the right and above the drawing and
+            # painted over whatever was next to it.
+            background = data.get("background")
+            if background:
+                draw.background = Rect(0, 0, width, height, **background)
 
             # REQUIRED DATA
             self.chart.set_properties(data)
@@ -960,4 +1009,5 @@ class pisaTagCANVAS(pisaTag):
 
             # ADD CHART TO DRAW OBJECT
             draw.add(self.chart)
+            draw.fit_contents("<canvas type=graph>")
             c.addStory(draw)
