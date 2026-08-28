@@ -119,7 +119,8 @@ def get_encrypt_instance(data):
 
 
 def start_on_mirrored_pair(doc, templates, *, declared_body: bool) -> None:
-    """Begin the document on the ``:left`` / ``:right`` pair, if that is all there is.
+    """
+    Begin the document on the ``:left`` / ``:right`` pair, if that is all there is.
 
     A stylesheet whose only page rules are ``@page :left`` and ``@page :right``
     describes a mirrored document from its very first page. Nothing selected
@@ -142,7 +143,7 @@ def start_on_mirrored_pair(doc, templates, *, declared_body: bool) -> None:
     if declared.issuperset(mirrored):
         # Names, not indexes: PmlBaseDoc.handle_nextPageTemplate resolves a
         # list of template ids into the cycle.
-        doc._firstPageTemplateIndex = mirrored  # noqa: SLF001
+        doc._firstPageTemplateIndex = mirrored
 
 
 def pisaDocument(

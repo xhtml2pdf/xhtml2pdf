@@ -143,7 +143,7 @@ class UtilsColorTestCase(TestCase):
 
     def test_get_color_for_unreadable_string(self):
         """
-        reportlab raises rather than returning the default it was given.
+        Colours reportlab cannot read raise rather than returning the default.
 
         `rgb(nope)` reaches toColor as a string it recognises the shape of but
         cannot read, and it answered with ValueError -- which abandoned the

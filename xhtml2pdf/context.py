@@ -65,6 +65,7 @@ from xhtml2pdf.xhtml2pdf_reportlab import (
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from xml.dom.minidom import Element
 
     from reportlab.platypus.flowables import Flowable
 
@@ -668,7 +669,7 @@ class pisaContext:
         self.image: PmlImage | None = None
         self.indexing_story: PmlPageCount | None = None
         self.keepInFrameIndex = None
-        self.node = None
+        self.node: Element | None = None
         self.template = None
         self.tableData: TableData = TableData()
         self.err: int = 0

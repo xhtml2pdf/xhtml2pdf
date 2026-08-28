@@ -59,7 +59,7 @@ class BadInputKeepsTheDocumentTestCase(TestCase):
         self.assertTrue(any(expected in line for line in logged.output), logged.output)
 
     def test_a_value_the_symbology_cannot_encode(self) -> None:
-        """reportlab raised AttributeError from inside the EAN13 widget."""
+        """The EAN13 widget in reportlab raised AttributeError."""
         self.assert_warns_and_converts(
             '<pdf:barcode value="abc" type="ean13"/>', "Cannot draw the EAN13 barcode"
         )
@@ -350,7 +350,7 @@ class FormFieldTestCase(TestCase):
         self.assertEqual("MER-CLAIM-2026", field.get("/V"))
 
     def test_a_radio_is_drawn_but_says_it_is_not_a_field(self) -> None:
-        """pdfform has no radio group; it used to become a text field."""
+        """A radio has no counterpart in pdfform; it used to become a text field."""
         with self.assertLogs("xhtml2pdf", level="WARNING") as logged:
             fields = self.fields('<input type="radio" name="mode" value="air">')
 

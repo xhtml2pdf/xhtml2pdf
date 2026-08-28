@@ -8,10 +8,9 @@ from pathlib import Path
 from unittest import TestCase
 from xml.dom import minidom
 
+from pypdf import PdfReader
 from reportlab.lib.colors import Color
 from reportlab.lib.pagesizes import A4, A5
-
-from pypdf import PdfReader
 
 from xhtml2pdf import pisa, properties
 from xhtml2pdf.context import PageNumberText, pisaContext, pisaCSSBuilder
@@ -184,7 +183,8 @@ class CSSFunctionValueTest(TestCase):
         ("margin-left", "margin-left: clamp(1pt, 2pt, 3pt)", "margin-left: clamp()"),
     )
 
-    def _parse(self, declaration: str) -> pisaContext:
+    @staticmethod
+    def _parse(declaration: str) -> pisaContext:
         html = (
             f"<html><head><style>.x{{{declaration};}}</style></head>"
             "<body><p class='x'>x</p><ul class='x'><li>a</li></ul></body></html>"

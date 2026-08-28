@@ -263,7 +263,8 @@ class pisaTagTABLE(pisaTag):
 
 
 class pisaTagTHEAD(pisaTag):
-    """<thead>: the rows that repeat at the top of every page.
+    """
+    <thead>: the rows that repeat at the top of every page.
 
     Table headers used to be declared with the non-standard
     <table repeat="N">, and <thead> was not a tag this library knew at all:

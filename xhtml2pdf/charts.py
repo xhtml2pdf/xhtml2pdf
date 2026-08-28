@@ -80,6 +80,15 @@ class Props:
 
 
 class BaseChart:
+    # Every concrete chart mixes this class in with a reportlab widget, and
+    # the widget is what carries the geometry. Declared, not assigned: the
+    # widget's own attributes are left alone, and a caller holding a
+    # BaseChart can still place and size one.
+    x: float
+    y: float
+    width: float
+    height: float
+
     def set_legend(self, data, legend, props=None):
         if props is None:
             props = Props(self)

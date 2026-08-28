@@ -19,8 +19,8 @@ import logging
 import re
 import string
 import warnings
-from xml.dom import Node
 from typing import TYPE_CHECKING, ClassVar
+from xml.dom import Node
 
 from reportlab.graphics.barcode import createBarcodeDrawing
 from reportlab.graphics.charts.legends import Legend
@@ -34,6 +34,7 @@ from reportlab.platypus.frames import Frame
 from reportlab.platypus.paraparser import ABag, tt2ps
 
 from xhtml2pdf.charts import (
+    BaseChart,
     DoughnutChart,
     HorizontalBar,
     HorizontalLine,
@@ -69,7 +70,8 @@ def deprecation(message):
 
 
 def nodeText(node) -> str:
-    """The text an element holds directly, as written.
+    """
+    The text an element holds directly, as written.
 
     Read from the DOM rather than from the context, because the context text
     has been through the transformations that belong to page content -- white
@@ -548,8 +550,9 @@ class pisaTagHR(pisaTag):
 
 
 class pisaTagINPUT(pisaTag):
-    @staticmethod
-    def _render(c: pisaContext, attr: AttrContainer) -> None:
+    # An instance method although this one needs nothing from self: pisaTagFIELD
+    # subclasses read the element they were built with to render their widget.
+    def _render(self, c: pisaContext, attr: AttrContainer) -> None:  # noqa: PLR6301
         width: int = 10
         height: int = 10
         if attr.type == "text":
@@ -581,7 +584,8 @@ class pisaTagINPUT(pisaTag):
 
 
 class pisaTagFIELD(pisaTagINPUT):
-    """A control whose content describes the field rather than the page.
+    """
+    A control whose content describes the field rather than the page.
 
     What a <textarea> holds is the value of its field, and the labels inside a
     <select> are what the reader picks from: neither belongs in the story.
@@ -654,7 +658,8 @@ class pisaTagSELECT(pisaTagFIELD):
         c.addPara()
 
     def options(self) -> tuple[list[str], str]:
-        """The labels of this select, and which one starts out chosen.
+        """
+        The labels of this select, and which one starts out chosen.
 
         A PDF choice field holds one string per option, so the value attribute
         cannot travel beside its label; the label is what the reader picks
@@ -985,7 +990,7 @@ class pisaTagCANVAS(pisaTag):
 
     def __init__(self, node: Element, attr: AttrContainer) -> None:
         super().__init__(node, attr)
-        self.chart = None
+        self.chart: BaseChart | None = None
         self.shapes = {
             "horizontalbar": HorizontalBar,
             "verticalbar": VerticalBar,
@@ -1000,25 +1005,27 @@ class pisaTagCANVAS(pisaTag):
 
     @staticmethod
     def _length(value, default: float) -> float | None:
-        """A CSS length in points, or None if there is no usable one.
+        """
+        A CSS length in points, or None if there is no usable one.
 
         A percentage is a share of the frame, which is not known while the
         story is being built, so it is left to the flowable to fit itself.
         """
-        if value is None or value == "":
+        if value is None:
             return None
-        if isinstance(value, str) and value.endswith("%"):
+        if isinstance(value, str) and (not value or value.endswith("%")):
             return None
         return getSize(value, default=default)
 
     def _box(self, c: pisaContext) -> tuple[float, float]:
-        """The size of the box the canvas reserves.
+        """
+        The size of the box the canvas reserves.
 
         CSS first, the way an <img> reads it. The width and height attributes
         used to be the only thing looked at, so a stylesheet had no say in the
         size of a chart.
         """
-        attributes = dict(c.node.attributes)
+        attributes = dict(c.node.attributes) if c.node else {}
         sizes = []
         for prop, default in (
             ("width", self.DEFAULT_WIDTH),

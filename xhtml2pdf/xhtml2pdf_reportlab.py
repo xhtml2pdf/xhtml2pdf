@@ -60,7 +60,6 @@ from xhtml2pdf.util import (
 )
 
 if TYPE_CHECKING:
-    from reportlab.graphics.shapes import Drawing
     from reportlab.pdfgen.canvas import Canvas
 
 
@@ -1041,7 +1040,8 @@ class PmlLeftPageBreak(CondPageBreak):
 
 
 class PmlDrawing(Drawing):
-    """A drawing that keeps to the box it was given, and to the frame.
+    """
+    A drawing that keeps to the box it was given, and to the frame.
 
     reportlab's Drawing is a fixed-size flowable holding contents of an
     unrelated size: a chart asked to be 400 points wide inside a 200 point
@@ -1054,13 +1054,21 @@ class PmlDrawing(Drawing):
     choosing the scale.
     """
 
+    # Declared, not assigned: reportlab carries these on Drawing through its
+    # own _attrMap, which is untyped, so mypy would otherwise infer them from
+    # the self-referential assignments in fit_contents and give up.
+    width: float
+    height: float
+    renderScale: float
+
     def wrap(self, availWidth: float, availHeight: float):
         if availWidth > 0 and self.width > availWidth:
             self.renderScale = availWidth / self.width
         return super().wrap(availWidth, availHeight)
 
     def fit_contents(self, description: str = "drawing") -> None:
-        """Grow the box to hold whatever ended up in it, and say so.
+        """
+        Grow the box to hold whatever ended up in it, and say so.
 
         Growing rather than clipping: the point is that the layout reserves
         the room the chart actually takes, so the flowable after it is not

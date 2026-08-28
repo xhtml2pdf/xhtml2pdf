@@ -1,4 +1,5 @@
-"""Entry point for ``python -m xhtml2pdf``.
+"""
+Entry point for ``python -m xhtml2pdf``.
 
 The console scripts installed by this package -- ``pisa`` and ``xhtml2pdf`` --
 both resolve to the same function, but running the module was the one form
