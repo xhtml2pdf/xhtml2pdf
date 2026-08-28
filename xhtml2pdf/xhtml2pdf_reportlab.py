@@ -27,6 +27,7 @@ from uuid import uuid4
 from PIL import Image as PILImage
 from PIL import UnidentifiedImageError
 from PIL.Image import Image
+from reportlab.graphics.shapes import Drawing
 from reportlab.lib.enums import TA_RIGHT
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.utils import LazyImageReader, flatten, haveImages, open_for_read
@@ -1039,6 +1040,56 @@ class PmlLeftPageBreak(CondPageBreak):
 # --- Pdf Form
 
 
+class PmlDrawing(Drawing):
+    """A drawing that keeps to the box it was given, and to the frame.
+
+    reportlab's Drawing is a fixed-size flowable holding contents of an
+    unrelated size: a chart asked to be 400 points wide inside a 200 point
+    canvas simply draws past it, over whatever sits alongside, and nothing
+    clips or warns. And a canvas wider than the frame it lands in overflows
+    the same way.
+
+    wrap() already multiplies by renderScale and renderScaledDrawing applies
+    it when the drawing is rendered, so fitting the width is a matter of
+    choosing the scale.
+    """
+
+    def wrap(self, availWidth: float, availHeight: float):
+        if availWidth > 0 and self.width > availWidth:
+            self.renderScale = availWidth / self.width
+        return super().wrap(availWidth, availHeight)
+
+    def fit_contents(self, description: str = "drawing") -> None:
+        """Grow the box to hold whatever ended up in it, and say so.
+
+        Growing rather than clipping: the point is that the layout reserves
+        the room the chart actually takes, so the flowable after it is not
+        drawn over.
+        """
+        try:
+            x1, y1, x2, y2 = self.getBounds()
+        except (ValueError, AttributeError):  # an empty drawing has no bounds
+            return
+
+        if x1 < 0 or y1 < 0:
+            self.shift(max(-x1, 0), max(-y1, 0))
+            x2 += max(-x1, 0)
+            y2 += max(-y1, 0)
+
+        if x2 > self.width or y2 > self.height:
+            log.warning(
+                "The contents of a %s do not fit in its %gx%g box and need"
+                " %gx%g; making room for them",
+                description,
+                self.width,
+                self.height,
+                x2,
+                y2,
+            )
+            self.width = max(self.width, x2)
+            self.height = max(self.height, y2)
+
+
 class PmlInput(Flowable):
     def __init__(
         self,
@@ -1068,9 +1119,26 @@ class PmlInput(Flowable):
         c.setFont("Helvetica", 10)
         if self.type == "text":
             pdfform.textFieldRelative(
-                c, self.name, 0, 0, self.width, self.height, multiline=self.multiline
+                c,
+                self.name,
+                0,
+                0,
+                self.width,
+                self.height,
+                # The value the markup gave the field. It was never passed on,
+                # so <input value="x"> and the contents of a <textarea> came
+                # out as empty fields.
+                value=self.default or "",
+                multiline=self.multiline,
             )
             c.rect(0, 0, self.width, self.height)
+        elif self.type == "hidden":
+            # A field with no size: it holds its value and takes no room,
+            # which is what a hidden input is for. Nothing was drawn at all
+            # before, so the value never reached the form.
+            pdfform.textFieldRelative(
+                c, self.name, 0, 0, 0, 0, value=self.default or ""
+            )
         elif self.type == "radio":
             c.rect(0, 0, self.width, self.height)
         elif self.type == "checkbox":

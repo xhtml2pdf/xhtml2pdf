@@ -26,6 +26,12 @@ alias names:
 
 The names are case-insensitive.
 
+.. warning::
+    Those alias names are taken. Declaring ``@font-face { font-family: sans; }``
+    registers the font but leaves the name resolving to Helvetica, so the text
+    comes out in a base-14 face and nothing says why. Give an embedded family a
+    name of its own.
+
 Asian (CJK) fonts
 ^^^^^^^^^^^^^^^^^
 
@@ -104,6 +110,11 @@ keyword in CSS like this:
       font-family: Example, "Example Font";
       src: url('example.ttf');
     }
+
+.. note::
+    A character the chosen family does not have simply disappears; there is no
+    falling back to another font for a missing glyph. If a symbol or a script
+    is not showing up, look for it in the font before looking anywhere else.
 
 The ``font-family`` property defines the names under which the embedded
 font will be known. ``src`` defines the place of the fonts source file.

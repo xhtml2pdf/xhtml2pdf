@@ -156,11 +156,22 @@ pdf:barcode
 
 Creates a barcode.
 
+A barcode is an inline fragment and the line does not reserve its full height,
+so the paragraph below it will overlap. The reliable way to give one room is a
+table cell with a declared ``height``.
+
+``barwidth`` has a floor of 0.0075 inch, 0.19 mm (0.264 mm for EAN): asking for
+a narrower module does not make the symbol smaller. Shorten what is encoded
+instead.
+
 pdf:pagenumber
 ~~~~~~~~~~~~~~
 
-Prints current page number. The argument "example" defines the space the
-page number will require e.g. "00".
+Prints current page number. The argument ``example`` defines the space the
+page number will require, e.g. ``"00"``: it is what the line is measured with
+until the number is known. It is only read when it is written down, and it is
+what stays on the page in the one place a page number cannot resolve, inside a
+table cell.
 
 pdf:pagecount
 ~~~~~~~~~~~~~

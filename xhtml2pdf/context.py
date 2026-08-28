@@ -188,6 +188,8 @@ def getParaFrag(style) -> ParaFrag:
 
 
 def getDirName(path) -> str:
+    # A resolved local file arrives as a Path, and urlparse only speaks str.
+    path = str(path)
     parts = urlparse.urlparse(path)
     if parts.scheme:
         return path
@@ -552,26 +554,50 @@ class pisaCSSBuilder(css.CSSBuilder):
 
 class pisaCSSParser(css.CSSParser):
     def parseExternal(self, cssResourceName):
-        result = None
         oldRootPath = self.rootPath
         cssFile = self.c.getFile(cssResourceName, relative=self.rootPath)
         if not cssFile:
             return None
-        if self.rootPath and urlparse.urlparse(self.rootPath).scheme:
-            self.rootPath = urlparse.urljoin(self.rootPath, cssResourceName)
-        else:
-            self.rootPath = getDirName(cssFile.uri)
+
         try:
-            result = self.parse(cssFile.getData())
-            self.rootPath = oldRootPath
+            data = cssFile.getData()
+            if data is None:
+                # An unreadable import used to reach the parser as None and
+                # leave a traceback in the log of any document with an @import
+                # that does not resolve, instead of one readable line.
+                log.warning(
+                    "Could not read the imported stylesheet %r", cssResourceName
+                )
+                return None
+
+            # Only now, because reading is what resolves the file: getData()
+            # fills in the absolute uri. This used to be derived from the uri
+            # as written, and Path("fonts.css").parent.resolve() is the
+            # process working directory, so every url() in an imported sheet
+            # -- a @font-face src, above all -- was looked for there.
+            if self.rootPath and urlparse.urlparse(self.rootPath).scheme:
+                self.rootPath = urlparse.urljoin(self.rootPath, cssResourceName)
+            else:
+                self.rootPath = getDirName(cssFile.getAbsPath() or cssFile.uri)
+
+            return self.parse(data)
         except Exception:
             log.exception("Error while parsing CSS file")
-        return result
+            return None
+        finally:
+            # In a finally, because this used to sit inside the try: a sheet
+            # that failed to parse left rootPath pointing at itself, and every
+            # url() that came after was resolved against it.
+            self.rootPath = oldRootPath
 
 
 class PageNumberText:
-    def __init__(self, *args, **kwargs) -> None:
-        self.data: str = ""
+    def __init__(self, placeholder: str = "") -> None:
+        # What the line is measured with until the page is known. A number
+        # four digits wide needs its room reserved, or the line is laid out as
+        # if it were empty and everything around it moves once the number
+        # arrives. It comes from the example attribute of <pdf:pagenumber>.
+        self.data: str = placeholder
 
     def __contains__(self, key) -> bool:
         if self.flowable.page is not None:
@@ -638,7 +664,6 @@ class pisaContext:
         self.frameStatioundList: list = []
         self.log: list = []
         self.path: list = []
-        self.select_options: list[str] = []
         self.story: list = []
         self.image: PmlImage | None = None
         self.indexing_story: PmlPageCount | None = None
@@ -874,8 +899,8 @@ class pisaContext:
         return pc
 
     @staticmethod
-    def addPageNumber(flow):
-        pgnumber = PageNumberText()
+    def addPageNumber(flow, placeholder: str = ""):
+        pgnumber = PageNumberText(placeholder)
         pgnumber.setFlowable(flow)
         return pgnumber
 

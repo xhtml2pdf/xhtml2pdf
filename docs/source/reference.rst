@@ -121,6 +121,23 @@ Borders
 
 Borders are supported. Use corresponding CSS styles.
 
+Backgrounds and borders of a block
+----------------------------------
+
+The background colour and the borders of a block element are painted paragraph
+by paragraph, not once around the block. Two consequences worth knowing before
+they surprise you:
+
+- A ``margin`` between the paragraphs of a block with a background opens a
+  strip of the paper colour inside the box, and a ``border-top`` on the
+  container draws a rule above *every* paragraph. Use ``padding`` on the
+  paragraphs and put a rule in an element of its own.
+- A table inside a block does not inherit that background. Put the colour on
+  the ``<td>``.
+- An empty block draws nothing at all, borders included, because it has no
+  height. A horizontal rule made of a bordered empty ``<div>`` needs something
+  in it, typically a non-breaking space at ``font-size: 1pt``.
+
 Images
 ------
 
@@ -136,6 +153,11 @@ the PDF as in the browser. To adjust this you may want to use the
 ::
 
     img { zoom: 80%; }
+
+The ``width`` and ``height`` attributes are pixels at 96 dpi, so a picture that
+fills the 210 mm of an A4 page is ``width="794"``. Declare both and the
+proportions will be taken from the width if they disagree with the picture's
+own.
 
 Position/ floating
 ------------------
@@ -167,16 +189,54 @@ Custom Tags
 -----------
 
 ``xhtml2pdf`` provides some custom tags. They are all prefixed by the
-namespace identifier ``pdf:``. As the HTML5 parser used by xhtml2pdf
-does not know about these specific tags it may be confused if they are
-without a block. To avoid problems you may condsider surrounding them
-by ``<div>`` tags, like this:
+namespace identifier ``pdf:``. The HTML5 parser does not know them, so it
+ignores the closing slash of ``<pdf:toc />`` and treats the element as still
+open; the tags themselves take that into account, and a closing tag works just
+as well:
 
 ::
 
-    <div>
-       <pdf:toc />
-    </div>
+    <pdf:toc></pdf:toc>
+
+Lists
+-----
+
+The ``type`` attribute of ``<ol>`` and ``<ul>`` chooses the counter:
+``1``, ``a``, ``A``, ``i`` and ``I`` for an ordered list, and ``circle``,
+``disk`` and ``square`` for an unordered one. It is only read when it is
+written down, and CSS ``list-style-type`` is the fuller way to say the same
+thing. No base-14 font has a hollow circle, so ``circle`` draws the same
+bullet as ``disk``.
+
+Forms
+-----
+
+Form controls become PDF form fields:
+
+- ``<input type="text">``, with its ``value`` as the field's contents
+- ``<input type="checkbox">``
+- ``<input type="hidden">``, a field that holds its value and takes no room
+- ``<textarea>``, with what it holds as the field's contents
+- ``<select>``, a drop-down of its ``<option>`` labels, opening on the one
+  marked ``selected``
+
+Every control needs a ``name``: that is the name of the field. Two limitations
+worth knowing: an ``<option>`` cannot carry a ``value`` apart from its label,
+because a PDF choice field holds one string per option; and
+``<input type="radio">`` is drawn but is not a field, as there is no radio
+group in the PDF library underneath.
+
+::
+
+    <form>
+      <input type="text" name="reference" value="MER-4181">
+      <textarea name="notes" cols="40" rows="4">Delivered short</textarea>
+      <select name="claim">
+        <option>Damage</option>
+        <option selected="selected">Delay</option>
+      </select>
+      <input type="hidden" name="form_id" value="MER-CLAIM-2026">
+    </form>
 
 Demonstration
 -------------

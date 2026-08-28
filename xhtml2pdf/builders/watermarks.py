@@ -60,7 +60,12 @@ class WaterMarks:
             file: BytesIO | _TemporaryFileWrapper | None = pisafile.getFile()
             img: Image.Image = Image.open(file)
             img = img.convert("RGBA")
-            img.putalpha(int(255 * opacity))
+            # Scale the alpha channel that is there rather than replacing it.
+            # putalpha with a single number overwrites the whole channel, so
+            # the fully transparent pixels of a cut-out PNG -- black, as a
+            # rule -- became half opaque and the page came out with a grey
+            # rectangle on it instead of the faded figure.
+            img.putalpha(img.getchannel("A").point(lambda a: int(a * opacity)))
             iobuff = BytesIO()
             img.save(iobuff, "PNG")
             return iobuff
@@ -125,10 +130,38 @@ class WaterMarks:
                     yield range(page, pages[counter]), bgfile, int(pgcontext["step"])
 
     @staticmethod
+    def has_backgrounds(doc: PmlBaseDoc) -> bool:
+        """Whether any page template of this document asks for a background."""
+        return any(
+            template.pisaBackground is not None
+            and not template.pisaBackground.notFound()
+            for _, template in getattr(doc, "pisaTemplateList", [])
+        )
+
+    @staticmethod
     def process_doc(
         doc: PmlBaseDoc, istream: bytes, output: bytes
     ) -> tuple[bytes, bool]:
-        pdfoutput: pypdf.PdfWriter = pypdf.PdfWriter(clone_from=istream)
+        if not WaterMarks.has_backgrounds(doc):
+            # Nothing to merge, so the document is not read back at all. It
+            # used to be cloned through pypdf whatever it held, and a document
+            # encrypted with a user password cannot be read without it: the
+            # documented encrypt="password" aborted the conversion here with
+            # FileNotDecryptedError.
+            return output, False
+
+        try:
+            pdfoutput: pypdf.PdfWriter = pypdf.PdfWriter(clone_from=istream)
+        except pypdf.errors.FileNotDecryptedError as exc:
+            msg = (
+                "a background image cannot be merged into a document encrypted"
+                " with a user password: the background is applied after the"
+                " document is built, and the encrypted document cannot be read"
+                " back. Encrypt with an owner password only, or drop the"
+                " background."
+            )
+            raise ValueError(msg) from exc
+
         has_bg: bool = False
         for pages, bgouter, step in WaterMarks.get_watermark(doc, len(pdfoutput.pages)):
             bginput: pypdf.PdfReader = pypdf.PdfReader(bgouter.getBytesIO())

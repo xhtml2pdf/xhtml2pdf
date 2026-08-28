@@ -14,6 +14,7 @@
 
 import io
 import logging
+import warnings
 from html import escape as html_escape
 
 from reportlab.lib import pdfencrypt
@@ -155,13 +156,40 @@ def pisaDocument(
     xhtml=False,  # noqa: FBT002
     encoding=None,
     xml_output=None,
-    raise_exception=True,  # noqa: FBT002, ARG001
+    raise_exception=True,  # noqa: FBT002
     capacity=100 * 1024,
     context_meta=None,
     encrypt=None,
     signature=None,
-    **_kwargs,
+    show_error_as_pdf=False,  # noqa: FBT002
+    **kwargs,
 ):
+    if kwargs:
+        # These used to disappear into **_kwargs. Two of the callers passing
+        # them were this library's own CLI and its WSGI middleware.
+        warnings.warn(
+            f"pisaDocument does not take {', '.join(sorted(kwargs))}",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+    if debug:
+        warnings.warn(
+            "debug does nothing; set the level of the xhtml2pdf logger instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+    if encrypt and signature:
+        # The document is encrypted as it is built and signed after that, so
+        # the signer is handed a PDF it has no password for and fails with
+        # PdfKeyNotAvailableError several steps later. Said here, where the
+        # caller can see which two arguments are the problem.
+        msg = (
+            "encrypt and signature cannot be combined: the document is"
+            " encrypted before it is signed, and the signer cannot open it"
+        )
+        raise ValueError(msg)
+
     log.debug(
         "pisaDocument options:\n  src = %r\n  dest = %r\n  path = %r\n  link_callback ="
         " %r\n  xhtml = %r\n  context_meta = %r",
@@ -174,19 +202,66 @@ def pisaDocument(
     )
 
     # Prepare simple context
-    context = pisaContext(path, debug=debug, capacity=capacity)
+    context = pisaContext(path, capacity=capacity)
 
     if context_meta is not None:
         context.meta.update(context_meta)
 
     context.pathCallback = link_callback
 
+    try:
+        return _build(
+            src,
+            context,
+            dest=dest,
+            dest_bytes=dest_bytes,
+            path=path,
+            link_callback=link_callback,
+            default_css=default_css,
+            xhtml=xhtml,
+            encoding=encoding,
+            xml_output=xml_output,
+            encrypt=encrypt,
+            signature=signature,
+        )
+    except Exception:
+        # raise_exception=False has always been the documented way to ask for
+        # a status object rather than an exception, and it was never read:
+        # the argument was marked unused and every failure propagated.
+        if raise_exception and not show_error_as_pdf:
+            raise
+        log.exception("Error while converting the document")
+        context.err += 1
+        if show_error_as_pdf:
+            # What pisaErrorDocument was written for. Nothing called it.
+            return pisaErrorDocument(
+                dest if dest is not None else io.BytesIO(), context
+            )
+        return context
+
+
+def _build(
+    src,
+    context,
+    *,
+    dest,
+    dest_bytes,
+    path,
+    link_callback,
+    default_css,
+    xhtml,
+    encoding,
+    xml_output,
+    encrypt,
+    signature,
+):
+    """Convert the document; the caller decides what a failure means."""
     # Build story
     context = pisaStory(
         src,
         path,
         link_callback,
-        debug,
+        0,
         default_css,
         xhtml,
         encoding,

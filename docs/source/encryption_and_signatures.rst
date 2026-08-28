@@ -46,6 +46,12 @@ flags
             encrypt=enc,
             dest=resultFile)
 
+.. note::
+    ``encrypt`` and ``signature`` cannot be used in the same call, and asking
+    for both raises ``ValueError``. The document is encrypted while it is
+    built and signed afterwards, so the signer would be handed a PDF it has no
+    password for.
+
 Signing pdf
 ===========
 

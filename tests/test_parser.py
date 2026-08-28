@@ -1,6 +1,9 @@
 import base64
+import io
 import os
 import re
+import shutil
+import tempfile
 from pathlib import Path
 from unittest import TestCase
 from xml.dom import minidom
@@ -8,8 +11,10 @@ from xml.dom import minidom
 from reportlab.lib.colors import Color
 from reportlab.lib.pagesizes import A4, A5
 
-from xhtml2pdf import properties
-from xhtml2pdf.context import pisaContext, pisaCSSBuilder
+from pypdf import PdfReader
+
+from xhtml2pdf import pisa, properties
+from xhtml2pdf.context import PageNumberText, pisaContext, pisaCSSBuilder
 from xhtml2pdf.default import DEFAULT_PAGE_NAME
 from xhtml2pdf.document import pisaStory
 from xhtml2pdf.parser import getCSSAttrCacheKey, pisaParser
@@ -545,3 +550,158 @@ class DefaultFrameTest(TestCase):
             any("missing explicit frame" in line for line in logged.output),
             logged.output,
         )
+
+
+class ImportedStylesheetTest(TestCase):
+    """
+    A url() inside a stylesheet is relative to that stylesheet.
+
+    The root path an imported sheet resolves against used to be derived from
+    the uri as written -- "fonts.css" -- and Path("fonts.css").parent.resolve()
+    is the process working directory, so a @font-face inside an imported sheet
+    never found its file. A sheet reached through <link> has the same problem
+    one level up, because pisaPreLoop turns it into an @import: it only worked
+    when the process happened to run from the directory of the HTML.
+
+    An import that cannot be read used to reach the parser as None and leave a
+    ten-line traceback in the log rather than one readable line.
+    """
+
+    FONT = (
+        Path(__file__).parent
+        / "samples"
+        / "font"
+        / "Noto_Sans"
+        / "NotoSans-Regular.ttf"
+    )
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        (self.root / "css").mkdir()
+        shutil.copy(self.FONT, self.root / "css" / "font.ttf")
+        (self.root / "css" / "fonts.css").write_text(
+            '@font-face { font-family: "Probe"; src: url("font.ttf"); }'
+        )
+        (self.root / "css" / "main.css").write_text(
+            '@import url("fonts.css");\nbody { font-family: "Probe"; }'
+        )
+        (self.root / "css" / "direct.css").write_text(
+            '@font-face { font-family: "Direct"; src: url("font.ttf"); }\n'
+            'body { font-family: "Direct"; }'
+        )
+        # Somewhere that is not the directory holding the document, which is
+        # the whole point: running from there used to hide half of this.
+        self.cwd = os.getcwd()
+        os.chdir(tempfile.gettempdir())
+
+    def tearDown(self) -> None:
+        os.chdir(self.cwd)
+        self.tmp.cleanup()
+
+    def convert(self, sheet: str):
+        page = self.root / "page.html"
+        page.write_text(
+            f'<html><head><link rel="stylesheet" href="css/{sheet}"></head>'
+            "<body><p>x</p></body></html>"
+        )
+        return pisaStory(page.read_text(), path=str(page))
+
+    def test_a_font_face_in_a_linked_sheet_is_found(self) -> None:
+        self.assertIn("direct", self.convert("direct.css").fontList)
+
+    def test_a_font_face_in_an_imported_sheet_is_found(self) -> None:
+        self.assertIn("probe", self.convert("main.css").fontList)
+
+    def test_an_unreadable_import_says_so_once(self) -> None:
+        (self.root / "css" / "broken.css").write_text('@import url("nope.css");')
+
+        with self.assertLogs("xhtml2pdf", level="WARNING") as logged:
+            context = self.convert("broken.css")
+
+        self.assertEqual(0, context.err)
+        self.assertTrue(
+            any(
+                "Could not read the imported stylesheet" in line
+                for line in logged.output
+            ),
+            logged.output,
+        )
+        self.assertFalse(
+            any("Traceback" in line for line in logged.output), logged.output
+        )
+
+
+class ListTypeAttributeTest(TestCase):
+    """
+    <ol type="a"> and <ul type="square"> choose the counter.
+
+    Both attributes were declared in TAGS and parsed, and then nothing read
+    them: only list-style-type in a stylesheet had any effect.
+    """
+
+    @staticmethod
+    def markers(html: str) -> str:
+        dest = io.BytesIO()
+        result = pisa.pisaDocument(
+            io.StringIO(f"<html><body>{html}</body></html>"), dest
+        )
+        assert result.err == 0
+        dest.seek(0)
+        return (PdfReader(dest).pages[0].extract_text() or "").replace("\n", " ")
+
+    ITEMS = "<li>one</li><li>two</li>"
+
+    def test_lower_alpha(self) -> None:
+        self.assertIn("a.", self.markers(f'<ol type="a">{self.ITEMS}</ol>'))
+
+    def test_upper_alpha(self) -> None:
+        """The parsed attribute is lowercased, so the case comes from the DOM."""
+        self.assertIn("A.", self.markers(f'<ol type="A">{self.ITEMS}</ol>'))
+
+    def test_upper_roman(self) -> None:
+        self.assertIn("II.", self.markers(f'<ol type="I">{self.ITEMS}</ol>'))
+
+    def test_a_list_without_the_attribute_is_unchanged(self) -> None:
+        self.assertIn("1.", self.markers(f"<ol>{self.ITEMS}</ol>"))
+
+    def test_a_stylesheet_still_decides_when_nothing_is_declared(self) -> None:
+        self.assertIn(
+            "ii.",
+            self.markers(f'<ol style="list-style-type: lower-roman">{self.ITEMS}</ol>'),
+        )
+
+    def test_a_square_bullet(self) -> None:
+        self.assertIn("■", self.markers(f'<ul type="square">{self.ITEMS}</ul>'))
+
+
+class PageNumberExampleTest(TestCase):
+    """
+    <pdf:pagenumber example=""> is what the line is measured with until the
+    page number is known. The attribute was declared and never read, so the
+    line was laid out as if the number were not there.
+    """
+
+    def test_the_example_is_what_it_starts_with(self) -> None:
+        self.assertEqual("88", PageNumberText("88").data)
+
+    def test_without_one_it_starts_empty(self) -> None:
+        self.assertEqual("", PageNumberText().data)
+
+    def test_the_example_does_not_reach_the_page(self) -> None:
+        html = (
+            "<html><head><style>@page { size: a5;"
+            " @frame f { -pdf-frame-content: foot; left: 10mm; right: 10mm;"
+            " bottom: 10mm; height: 10mm; }"
+            " @frame b { left: 10mm; right: 10mm; top: 10mm; bottom: 25mm; } }"
+            "</style></head><body>"
+            '<div id="foot"><p>page <pdf:pagenumber example="88"></p></div>'
+            "<p>x</p></body></html>"
+        )
+        dest = io.BytesIO()
+        pisa.pisaDocument(io.StringIO(html), dest)
+        dest.seek(0)
+
+        text = PdfReader(dest).pages[0].extract_text() or ""
+        self.assertIn("page 1", text)
+        self.assertNotIn("88", text)

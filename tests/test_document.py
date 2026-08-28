@@ -406,3 +406,107 @@ class CanvasBackgroundTest(TestCase):
                 content = page.get_contents().get_data().decode("latin-1")
                 self.assertIn("0 1 0 rg", content)
                 self.assertTrue(self._full_page_fill(page, content))
+
+
+class EncryptAndSignTest(TestCase):
+    """
+    Asking for both says which two arguments are the problem.
+
+    The document is encrypted while it is built and signed afterwards, so
+    pyHanko was handed a PDF it had no password for and the call failed with
+    PdfKeyNotAvailableError several steps later, from inside a library the
+    caller never named.
+    """
+
+    HTML = "<html><body><p>x</p></body></html>"
+
+    def test_the_two_together_are_refused(self) -> None:
+        with self.assertRaises(ValueError) as raised:
+            pisaDocument(
+                io.StringIO(self.HTML),
+                io.BytesIO(),
+                encrypt="password",
+                signature={"engine": "simple", "type": "simple"},
+            )
+
+        self.assertIn("cannot be combined", str(raised.exception))
+
+    def test_a_user_password_converts(self) -> None:
+        """
+        The simplest form in the documentation, and it aborted the whole
+        conversion: every document was read back through pypdf to apply
+        backgrounds, and a document encrypted with a user password cannot be
+        read without it, so it died with FileNotDecryptedError.
+        """
+        dest = io.BytesIO()
+        result = pisaDocument(io.StringIO(self.HTML), dest, encrypt="password")
+
+        self.assertEqual(0, result.err)
+        dest.seek(0)
+        reader = PdfReader(dest)
+        self.assertTrue(reader.is_encrypted)
+        self.assertTrue(reader.decrypt("password"))
+        self.assertEqual(1, len(reader.pages))
+
+    def test_a_background_on_an_encrypted_document_says_why_not(self) -> None:
+        html = (
+            "<html><head><style>@page { background-image:"
+            ' url("tests/samples/img/tree.jpg"); }</style></head>'
+            "<body><p>x</p></body></html>"
+        )
+
+        with self.assertRaises(ValueError) as raised:
+            pisaDocument(io.StringIO(html), io.BytesIO(), encrypt="password", path=".")
+
+        self.assertIn("cannot be merged", str(raised.exception))
+
+
+class ArgumentsThatDoSomethingTest(TestCase):
+    """
+    Three arguments of pisaDocument promised something and did nothing.
+
+    raise_exception was marked unused and every failure propagated whatever it
+    said; show_error_as_pdf did not exist even though pisaErrorDocument was
+    written for it, and the WSGI middleware in this package passed it on every
+    call; and anything else at all disappeared into **_kwargs, including the
+    errout, tempdir and format that this package's own CLI passed.
+    """
+
+    #: Not a document, not a path: the conversion cannot even start.
+    BROKEN = object()
+
+    def test_a_failure_raises_by_default(self) -> None:
+        with self.assertRaises(TypeError):
+            pisaDocument(self.BROKEN, io.BytesIO())
+
+    def test_raise_exception_false_returns_the_context(self) -> None:
+        context = pisaDocument(self.BROKEN, io.BytesIO(), raise_exception=False)
+
+        self.assertTrue(context.err)
+
+    def test_show_error_as_pdf_writes_the_errors(self) -> None:
+        dest = io.BytesIO()
+        pisaDocument(self.BROKEN, dest, show_error_as_pdf=True)
+
+        dest.seek(0)
+        self.assertIn("error", (PdfReader(dest).pages[0].extract_text() or "").lower())
+
+    def test_an_unknown_argument_is_named(self) -> None:
+        with self.assertWarns(DeprecationWarning) as warned:
+            pisaDocument(
+                io.StringIO(HTML_CONTENT.format(head="", extra_html="")),
+                io.BytesIO(),
+                errout=None,
+            )
+
+        self.assertIn("errout", str(warned.warning))
+
+    def test_debug_says_it_does_nothing(self) -> None:
+        with self.assertWarns(DeprecationWarning) as warned:
+            pisaDocument(
+                io.StringIO(HTML_CONTENT.format(head="", extra_html="")),
+                io.BytesIO(),
+                debug=1,
+            )
+
+        self.assertIn("debug", str(warned.warning))
