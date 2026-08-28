@@ -60,7 +60,12 @@ class WaterMarks:
             file: BytesIO | _TemporaryFileWrapper | None = pisafile.getFile()
             img: Image.Image = Image.open(file)
             img = img.convert("RGBA")
-            img.putalpha(int(255 * opacity))
+            # Scale the alpha channel that is there rather than replacing it.
+            # putalpha with a single number overwrites the whole channel, so
+            # the fully transparent pixels of a cut-out PNG -- black, as a
+            # rule -- became half opaque and the page came out with a grey
+            # rectangle on it instead of the faded figure.
+            img.putalpha(img.getchannel("A").point(lambda a: int(a * opacity)))
             iobuff = BytesIO()
             img.save(iobuff, "PNG")
             return iobuff
