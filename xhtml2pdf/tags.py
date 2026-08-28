@@ -729,9 +729,18 @@ class pisaTagPDFSPACER(pisaTag):
 class pisaTagPDFPAGENUMBER(pisaTag):
     """<pdf:pagenumber example="" />."""
 
-    def start(self, c: pisaContext) -> None:  # noqa: PLR6301
+    def start(self, c: pisaContext) -> None:
         flow = PageNumberFlowable()
-        pageNumber = c.addPageNumber(flow)
+        # The example is what the line is measured with before the page number
+        # is known. It has been a declared attribute all along and nothing
+        # ever read it.
+        #
+        # Only when the author writes it: the attribute carries a default of
+        # "0", and a page number that never resolves -- inside a table cell,
+        # say -- keeps whatever it was measured with, so a default would put a
+        # stray 0 on the page.
+        placeholder = self.attr.example if self.node.hasAttribute("example") else ""
+        pageNumber = c.addPageNumber(flow, placeholder or "")
         c.addStory(flow)
         c.frag.pageNumber = True
         c.addFrag(pageNumber)

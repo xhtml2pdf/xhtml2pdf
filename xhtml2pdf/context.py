@@ -592,8 +592,12 @@ class pisaCSSParser(css.CSSParser):
 
 
 class PageNumberText:
-    def __init__(self, *args, **kwargs) -> None:
-        self.data: str = ""
+    def __init__(self, placeholder: str = "") -> None:
+        # What the line is measured with until the page is known. A number
+        # four digits wide needs its room reserved, or the line is laid out as
+        # if it were empty and everything around it moves once the number
+        # arrives. It comes from the example attribute of <pdf:pagenumber>.
+        self.data: str = placeholder
 
     def __contains__(self, key) -> bool:
         if self.flowable.page is not None:
@@ -895,8 +899,8 @@ class pisaContext:
         return pc
 
     @staticmethod
-    def addPageNumber(flow):
-        pgnumber = PageNumberText()
+    def addPageNumber(flow, placeholder: str = ""):
+        pgnumber = PageNumberText(placeholder)
         pgnumber.setFlowable(flow)
         return pgnumber
 

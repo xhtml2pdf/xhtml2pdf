@@ -322,11 +322,40 @@ xml.dom.minidom.Element.getCSSAttr = getCSSAttr  # type: ignore[attr-defined]
 # them to.  This allows us to map a nonstandard name to the standard one.
 nonStandardAttrNames = {"bgcolor": "background-color"}
 
+#: What the type attribute of a list means in CSS. HTML's "disk" is CSS's
+#: "disc", and the ordered forms name counter styles. The attribute was
+#: declared in TAGS and parsed, and then nothing ever read it: only
+#: list-style-type in a stylesheet did anything.
+LIST_STYLE_TYPES: dict[str, dict[str, str]] = {
+    "ol": {
+        "1": "decimal",
+        "a": "lower-alpha",
+        "A": "upper-alpha",
+        "i": "lower-roman",
+        "I": "upper-roman",
+    },
+    "ul": {"circle": "circle", "disk": "disc", "square": "square"},
+}
 
-def mapNonStandardAttrs(c, _node, attrList):
+
+def mapNonStandardAttrs(c, node, attrList):
     for attr, standard in nonStandardAttrNames.items():
         if attr in attrList and standard not in c:
             c[standard] = attrList[attr]
+
+    styles = LIST_STYLE_TYPES.get(node.tagName)
+    # Only when it is written down: the attribute carries a default even when
+    # the author left it out, and the default stylesheet always sets
+    # list-style-type, so there is no telling a user agent rule from an author
+    # one. A type that was actually typed wins.
+    if styles and node.hasAttribute("type"):
+        # From the DOM and not from attrList: an attribute declared as a list
+        # of allowed values is lowercased when it is parsed, and the type of a
+        # list is case sensitive -- "a" and "A" are different counters.
+        style = styles.get(node.getAttribute("type").strip())
+        if style:
+            c["list-style-type"] = style
+
     return c
 
 

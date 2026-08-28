@@ -1,4 +1,5 @@
 import base64
+import io
 import os
 import re
 import shutil
@@ -10,8 +11,10 @@ from xml.dom import minidom
 from reportlab.lib.colors import Color
 from reportlab.lib.pagesizes import A4, A5
 
-from xhtml2pdf import properties
-from xhtml2pdf.context import pisaContext, pisaCSSBuilder
+from pypdf import PdfReader
+
+from xhtml2pdf import pisa, properties
+from xhtml2pdf.context import PageNumberText, pisaContext, pisaCSSBuilder
 from xhtml2pdf.default import DEFAULT_PAGE_NAME
 from xhtml2pdf.document import pisaStory
 from xhtml2pdf.parser import getCSSAttrCacheKey, pisaParser
@@ -627,3 +630,78 @@ class ImportedStylesheetTest(TestCase):
         self.assertFalse(
             any("Traceback" in line for line in logged.output), logged.output
         )
+
+
+class ListTypeAttributeTest(TestCase):
+    """
+    <ol type="a"> and <ul type="square"> choose the counter.
+
+    Both attributes were declared in TAGS and parsed, and then nothing read
+    them: only list-style-type in a stylesheet had any effect.
+    """
+
+    @staticmethod
+    def markers(html: str) -> str:
+        dest = io.BytesIO()
+        result = pisa.pisaDocument(
+            io.StringIO(f"<html><body>{html}</body></html>"), dest
+        )
+        assert result.err == 0
+        dest.seek(0)
+        return (PdfReader(dest).pages[0].extract_text() or "").replace("\n", " ")
+
+    ITEMS = "<li>one</li><li>two</li>"
+
+    def test_lower_alpha(self) -> None:
+        self.assertIn("a.", self.markers(f'<ol type="a">{self.ITEMS}</ol>'))
+
+    def test_upper_alpha(self) -> None:
+        """The parsed attribute is lowercased, so the case comes from the DOM."""
+        self.assertIn("A.", self.markers(f'<ol type="A">{self.ITEMS}</ol>'))
+
+    def test_upper_roman(self) -> None:
+        self.assertIn("II.", self.markers(f'<ol type="I">{self.ITEMS}</ol>'))
+
+    def test_a_list_without_the_attribute_is_unchanged(self) -> None:
+        self.assertIn("1.", self.markers(f"<ol>{self.ITEMS}</ol>"))
+
+    def test_a_stylesheet_still_decides_when_nothing_is_declared(self) -> None:
+        self.assertIn(
+            "ii.",
+            self.markers(f'<ol style="list-style-type: lower-roman">{self.ITEMS}</ol>'),
+        )
+
+    def test_a_square_bullet(self) -> None:
+        self.assertIn("■", self.markers(f'<ul type="square">{self.ITEMS}</ul>'))
+
+
+class PageNumberExampleTest(TestCase):
+    """
+    <pdf:pagenumber example=""> is what the line is measured with until the
+    page number is known. The attribute was declared and never read, so the
+    line was laid out as if the number were not there.
+    """
+
+    def test_the_example_is_what_it_starts_with(self) -> None:
+        self.assertEqual("88", PageNumberText("88").data)
+
+    def test_without_one_it_starts_empty(self) -> None:
+        self.assertEqual("", PageNumberText().data)
+
+    def test_the_example_does_not_reach_the_page(self) -> None:
+        html = (
+            "<html><head><style>@page { size: a5;"
+            " @frame f { -pdf-frame-content: foot; left: 10mm; right: 10mm;"
+            " bottom: 10mm; height: 10mm; }"
+            " @frame b { left: 10mm; right: 10mm; top: 10mm; bottom: 25mm; } }"
+            "</style></head><body>"
+            '<div id="foot"><p>page <pdf:pagenumber example="88"></p></div>'
+            "<p>x</p></body></html>"
+        )
+        dest = io.BytesIO()
+        pisa.pisaDocument(io.StringIO(html), dest)
+        dest.seek(0)
+
+        text = PdfReader(dest).pages[0].extract_text() or ""
+        self.assertIn("page 1", text)
+        self.assertNotIn("88", text)

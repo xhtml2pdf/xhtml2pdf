@@ -176,6 +176,16 @@ as well:
 
     <pdf:toc></pdf:toc>
 
+Lists
+-----
+
+The ``type`` attribute of ``<ol>`` and ``<ul>`` chooses the counter:
+``1``, ``a``, ``A``, ``i`` and ``I`` for an ordered list, and ``circle``,
+``disk`` and ``square`` for an unordered one. It is only read when it is
+written down, and CSS ``list-style-type`` is the fuller way to say the same
+thing. No base-14 font has a hollow circle, so ``circle`` draws the same
+bullet as ``disk``.
+
 Forms
 -----
 

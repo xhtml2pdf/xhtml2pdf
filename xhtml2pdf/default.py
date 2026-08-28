@@ -84,7 +84,19 @@ POS: int = 10
 # STYLE   = 11
 MUST = 23
 
-#: Definition of all known tags. Also used for building the reference
+#: Definition of all known tags. Also used for building the reference.
+#:
+#: Everything declared here needs a pisaTag class to do anything with it.
+#: Eleven entries had none and never had -- pdf:drawline, drawpoint,
+#: pdf:drawlines, pdf:drawstring, pdf:drawimg, pdf:version, pdf:keeptogether,
+#: pdf:keepinframe and the three pdf:chart tags -- so they parsed and rendered
+#: nothing while reading as supported. They were removed rather than
+#: implemented; the CSS properties -pdf-keep-with-next and
+#: -pdf-keep-in-frame-mode do what the keep tags described, and charts are
+#: drawn by <canvas type="graph">.
+#:
+#: Tags with no class are fine when they are pure structure the stylesheet
+#: composes -- dd, dl, dt, link, tbody, tfoot.
 TAGS = {
     # FORMAT
     # "document": (1, {
@@ -163,84 +175,10 @@ TAGS = {
         },
     ),
     "pdflanguage": (0, {"name": (STRING, "")}),
-    "pdfdrawline": (
-        0,
-        {
-            "from": (POS, MUST),
-            "to": (POS, MUST),
-            "color": (COLOR, "#000000"),
-            "width": (SIZE, 1),
-        },
-    ),
-    "drawpoint": (
-        0,
-        {"pos": (POS, MUST), "color": (COLOR, "#000000"), "width": (SIZE, 1)},
-    ),
-    "pdfdrawlines": (
-        0,
-        {"coords": (STRING, MUST), "color": (COLOR, "#000000"), "width": (SIZE, 1)},
-    ),
-    "pdfdrawstring": (
-        0,
-        {
-            "pos": (POS, MUST),
-            "text": (STRING, MUST),
-            "color": (COLOR, "#000000"),
-            "align": (["left", "center", "right"], "right"),
-            "valign": (["top", "middle", "bottom"], "bottom"),
-            # "class":                CLASS,
-            "rotate": (INT, "0"),
-        },
-    ),
-    "pdfdrawimg": (
-        0,
-        {
-            "pos": (POS, MUST),
-            "src": (FILE, MUST),
-            "width": SIZE,
-            "height": SIZE,
-            "align": (["left", "center", "right"], "right"),
-            "valign": (["top", "middle", "bottom"], "bottom"),
-        },
-    ),
     "pdfspacer": (0, {"height": (SIZE, MUST)}),
     "pdfpagenumber": (0, {"example": (STRING, "0")}),
     "pdfpagecount": (0, {}),
     "pdftoc": (0, {}),
-    "pdfversion": (0, {}),
-    "pdfkeeptogether": (1, {}),
-    "pdfkeepinframe": (
-        1,
-        {
-            "maxwidth": SIZE,
-            "maxheight": SIZE,
-            "mergespace": (INT, 1),
-            "mode": (["error", "overflow", "shrink", "truncate"], "shrink"),
-            "name": (STRING, ""),
-        },
-    ),
-    # The chart example, see pml_charts
-    "pdfchart": (
-        1,
-        {
-            "type": (["spider", "bar"], "bar"),
-            "strokecolor": (COLOR, "#000000"),
-            "width": (SIZE, MUST),
-            "height": (SIZE, MUST),
-        },
-    ),
-    "pdfchartdata": (
-        0,
-        {
-            "set": (STRING, MUST),
-            "value": STRING,
-            # "label":                (STRING),
-            "strokecolor": COLOR,
-            "fillcolor": COLOR,
-            "strokewidth": SIZE,
-        },
-    ),
-    "pdfchartlabel": (0, {"value": (STRING, MUST)}),
     "pdfbarcode": (
         0,
         {
