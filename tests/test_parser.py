@@ -1,6 +1,8 @@
 import base64
 import os
 import re
+import shutil
+import tempfile
 from pathlib import Path
 from unittest import TestCase
 from xml.dom import minidom
@@ -544,4 +546,84 @@ class DefaultFrameTest(TestCase):
         self.assertTrue(
             any("missing explicit frame" in line for line in logged.output),
             logged.output,
+        )
+
+
+class ImportedStylesheetTest(TestCase):
+    """
+    A url() inside a stylesheet is relative to that stylesheet.
+
+    The root path an imported sheet resolves against used to be derived from
+    the uri as written -- "fonts.css" -- and Path("fonts.css").parent.resolve()
+    is the process working directory, so a @font-face inside an imported sheet
+    never found its file. A sheet reached through <link> has the same problem
+    one level up, because pisaPreLoop turns it into an @import: it only worked
+    when the process happened to run from the directory of the HTML.
+
+    An import that cannot be read used to reach the parser as None and leave a
+    ten-line traceback in the log rather than one readable line.
+    """
+
+    FONT = (
+        Path(__file__).parent
+        / "samples"
+        / "font"
+        / "Noto_Sans"
+        / "NotoSans-Regular.ttf"
+    )
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        (self.root / "css").mkdir()
+        shutil.copy(self.FONT, self.root / "css" / "font.ttf")
+        (self.root / "css" / "fonts.css").write_text(
+            '@font-face { font-family: "Probe"; src: url("font.ttf"); }'
+        )
+        (self.root / "css" / "main.css").write_text(
+            '@import url("fonts.css");\nbody { font-family: "Probe"; }'
+        )
+        (self.root / "css" / "direct.css").write_text(
+            '@font-face { font-family: "Direct"; src: url("font.ttf"); }\n'
+            'body { font-family: "Direct"; }'
+        )
+        # Somewhere that is not the directory holding the document, which is
+        # the whole point: running from there used to hide half of this.
+        self.cwd = os.getcwd()
+        os.chdir(tempfile.gettempdir())
+
+    def tearDown(self) -> None:
+        os.chdir(self.cwd)
+        self.tmp.cleanup()
+
+    def convert(self, sheet: str):
+        page = self.root / "page.html"
+        page.write_text(
+            f'<html><head><link rel="stylesheet" href="css/{sheet}"></head>'
+            "<body><p>x</p></body></html>"
+        )
+        return pisaStory(page.read_text(), path=str(page))
+
+    def test_a_font_face_in_a_linked_sheet_is_found(self) -> None:
+        self.assertIn("direct", self.convert("direct.css").fontList)
+
+    def test_a_font_face_in_an_imported_sheet_is_found(self) -> None:
+        self.assertIn("probe", self.convert("main.css").fontList)
+
+    def test_an_unreadable_import_says_so_once(self) -> None:
+        (self.root / "css" / "broken.css").write_text('@import url("nope.css");')
+
+        with self.assertLogs("xhtml2pdf", level="WARNING") as logged:
+            context = self.convert("broken.css")
+
+        self.assertEqual(0, context.err)
+        self.assertTrue(
+            any(
+                "Could not read the imported stylesheet" in line
+                for line in logged.output
+            ),
+            logged.output,
+        )
+        self.assertFalse(
+            any("Traceback" in line for line in logged.output), logged.output
         )
