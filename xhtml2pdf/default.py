@@ -444,12 +444,15 @@ TAGS = {
         {
             "name": STRING,
             "value": STRING,
-            "type": (["text", "hidden", "checkbox"], "text"),
+            # radio has always been drawn by PmlInput and was never accepted
+            # here, so <input type="radio"> silently became a text field.
+            "type": (["text", "hidden", "checkbox", "radio"], "text"),
         },
     ),
     "textarea": (1, {"name": STRING, "cols": (SIZE, 40), "rows": (SIZE, 1)}),
     "select": (1, {"name": STRING, "value": STRING}),
-    "option": (0, {"value": STRING}),
+    # An <option> holds its label, so it is not an empty element.
+    "option": (1, {"value": STRING, "selected": STRING}),
 }
 
 # XXX use "html" not "*" as default!

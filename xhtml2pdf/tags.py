@@ -19,6 +19,7 @@ import logging
 import re
 import string
 import warnings
+from xml.dom import Node
 from typing import TYPE_CHECKING, ClassVar
 
 from reportlab.graphics.barcode import createBarcodeDrawing
@@ -65,6 +66,19 @@ log = logging.getLogger(__name__)
 
 def deprecation(message):
     warnings.warn(f"<{message}> is deprecated!", DeprecationWarning, stacklevel=2)
+
+
+def nodeText(node) -> str:
+    """The text an element holds directly, as written.
+
+    Read from the DOM rather than from the context, because the context text
+    has been through the transformations that belong to page content -- white
+    space collapsing, text-transform -- and the value of a form field is not
+    page content.
+    """
+    return "".join(
+        child.data for child in node.childNodes if child.nodeType == Node.TEXT_NODE
+    )
 
 
 class pisaTag:
@@ -555,23 +569,54 @@ class pisaTagINPUT(pisaTag):
         c.addPara()
         attr = self.attr
         if attr.name:
+            if attr.type == "radio":
+                # reportlab's pdfform has no radio group, so this is a box on
+                # the page and nothing more. Said once, rather than letting
+                # the author work out why the buttons do nothing.
+                log.warning(
+                    "<input type=radio> is drawn but is not a form field: %r", attr.name
+                )
             self._render(c, attr)
         c.addPara()
 
 
-class pisaTagTEXTAREA(pisaTagINPUT):
-    @staticmethod
-    def _render(c: pisaContext, attr: AttrContainer) -> None:
+class pisaTagFIELD(pisaTagINPUT):
+    """A control whose content describes the field rather than the page.
+
+    What a <textarea> holds is the value of its field, and the labels inside a
+    <select> are what the reader picks from: neither belongs in the story.
+    Both used to be typeset as ordinary text alongside the widget.
+    """
+
+    def start(self, c: pisaContext) -> None:
+        c.addPara()
+        self.story = c.swapStory()
+
+    def swallow_content(self, c: pisaContext) -> None:
+        # addPara first, so that anything typeset inside lands in the story
+        # that is about to be thrown away rather than in the real one.
+        c.addPara()
+        c.swapStory(self.story)
+
+
+class pisaTagTEXTAREA(pisaTagFIELD):
+    def end(self, c: pisaContext) -> None:
+        self.swallow_content(c)
+        if self.attr.name:
+            self._render(c, self.attr)
+
+    def _render(self, c: pisaContext, attr: AttrContainer) -> None:
         multiline: int = 1 if int(attr.rows) > 1 else 0
         height: int = int(attr.rows) * 15
         width: int = int(attr.cols) * 5
 
-        # this does not currently support the ability to pre-populate the text field with data that appeared within the <textarea></textarea> tags
         c.addStory(
             PmlInput(
                 attr.name,
                 input_type="text",
-                default="",
+                # What the element holds is what the field starts with. It
+                # used to be dropped, with a comment saying so.
+                default=nodeText(self.node),
                 width=width,
                 height=height,
                 multiline=multiline,
@@ -579,27 +624,67 @@ class pisaTagTEXTAREA(pisaTagINPUT):
         )
 
 
-class pisaTagSELECT(pisaTagINPUT):
-    def start(self, c: pisaContext) -> None:  # noqa: PLR6301
-        c.select_options = ["One", "Two", "Three"]
+class pisaTagSELECT(pisaTagFIELD):
+    """<select name=""><option value="" selected="selected">Label</option></select>."""
 
-    @staticmethod
-    def _render(c: pisaContext, attr: AttrContainer) -> None:
+    def end(self, c: pisaContext) -> None:
+        self.swallow_content(c)
+
+        attr = self.attr
+        if not attr.name:
+            log.warning("Ignoring a <select> with no name: it cannot be a field")
+            return
+
+        options, default = self.options()
+        if not options:
+            log.warning("Ignoring the <select> %r: it has no options", attr.name)
+            return
+
+        c.addPara()
         c.addStory(
             PmlInput(
                 attr.name,
                 input_type="select",
-                default=c.select_options[0],
-                options=c.select_options,
+                default=default,
+                options=options,
                 width=100,
                 height=40,
             )
         )
-        c.select_options = []
+        c.addPara()
 
+    def options(self) -> tuple[list[str], str]:
+        """The labels of this select, and which one starts out chosen.
 
-class pisaTagOPTION(pisaTag):
-    pass
+        A PDF choice field holds one string per option, so the value attribute
+        cannot travel beside its label; the label is what the reader picks
+        from, so the label is what is kept.
+        """
+        options: list[str] = []
+        default: str | None = None
+        renamed = False
+
+        for node in self.node.getElementsByTagName("option"):
+            label = nodeText(node).strip()
+            if not label:
+                continue
+            options.append(label)
+            renamed = renamed or (
+                node.hasAttribute("value") and node.getAttribute("value") != label
+            )
+            if node.hasAttribute("selected"):
+                default = label
+
+        if renamed:
+            log.warning(
+                "A PDF choice field cannot carry an option's value apart from"
+                " its label; using the labels of <select> %r",
+                self.attr.name,
+            )
+
+        return options, (
+            default if default is not None else options[0] if options else ""
+        )
 
 
 class pisaTagPDFNEXTPAGE(pisaTag):

@@ -91,6 +91,7 @@ from xhtml2pdf.tags import (  # noqa: F401
     pisaTagPDFSPACER,
     pisaTagPDFTEMPLATE,
     pisaTagPDFTOC,
+    pisaTagSELECT,
     pisaTagSTYLE,
     pisaTagSUB,
     pisaTagSUP,

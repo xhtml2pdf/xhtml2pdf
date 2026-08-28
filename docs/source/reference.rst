@@ -167,16 +167,44 @@ Custom Tags
 -----------
 
 ``xhtml2pdf`` provides some custom tags. They are all prefixed by the
-namespace identifier ``pdf:``. As the HTML5 parser used by xhtml2pdf
-does not know about these specific tags it may be confused if they are
-without a block. To avoid problems you may condsider surrounding them
-by ``<div>`` tags, like this:
+namespace identifier ``pdf:``. The HTML5 parser does not know them, so it
+ignores the closing slash of ``<pdf:toc />`` and treats the element as still
+open; the tags themselves take that into account, and a closing tag works just
+as well:
 
 ::
 
-    <div>
-       <pdf:toc />
-    </div>
+    <pdf:toc></pdf:toc>
+
+Forms
+-----
+
+Form controls become PDF form fields:
+
+- ``<input type="text">``, with its ``value`` as the field's contents
+- ``<input type="checkbox">``
+- ``<input type="hidden">``, a field that holds its value and takes no room
+- ``<textarea>``, with what it holds as the field's contents
+- ``<select>``, a drop-down of its ``<option>`` labels, opening on the one
+  marked ``selected``
+
+Every control needs a ``name``: that is the name of the field. Two limitations
+worth knowing: an ``<option>`` cannot carry a ``value`` apart from its label,
+because a PDF choice field holds one string per option; and
+``<input type="radio">`` is drawn but is not a field, as there is no radio
+group in the PDF library underneath.
+
+::
+
+    <form>
+      <input type="text" name="reference" value="MER-4181">
+      <textarea name="notes" cols="40" rows="4">Delivered short</textarea>
+      <select name="claim">
+        <option>Damage</option>
+        <option selected="selected">Delay</option>
+      </select>
+      <input type="hidden" name="form_id" value="MER-CLAIM-2026">
+    </form>
 
 Demonstration
 -------------

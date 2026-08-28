@@ -660,7 +660,6 @@ class pisaContext:
         self.frameStatioundList: list = []
         self.log: list = []
         self.path: list = []
-        self.select_options: list[str] = []
         self.story: list = []
         self.image: PmlImage | None = None
         self.indexing_story: PmlPageCount | None = None

@@ -1119,9 +1119,26 @@ class PmlInput(Flowable):
         c.setFont("Helvetica", 10)
         if self.type == "text":
             pdfform.textFieldRelative(
-                c, self.name, 0, 0, self.width, self.height, multiline=self.multiline
+                c,
+                self.name,
+                0,
+                0,
+                self.width,
+                self.height,
+                # The value the markup gave the field. It was never passed on,
+                # so <input value="x"> and the contents of a <textarea> came
+                # out as empty fields.
+                value=self.default or "",
+                multiline=self.multiline,
             )
             c.rect(0, 0, self.width, self.height)
+        elif self.type == "hidden":
+            # A field with no size: it holds its value and takes no room,
+            # which is what a hidden input is for. Nothing was drawn at all
+            # before, so the value never reached the form.
+            pdfform.textFieldRelative(
+                c, self.name, 0, 0, 0, 0, value=self.default or ""
+            )
         elif self.type == "radio":
             c.rect(0, 0, self.width, self.height)
         elif self.type == "checkbox":

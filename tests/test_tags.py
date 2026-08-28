@@ -259,3 +259,108 @@ class CanvasGraphTestCase(TestCase):
 
         self.assertIn("1 0 0 rg", stream)
         self.assertIn("n 0 0 200 100 re", stream)
+
+
+class FormFieldTestCase(TestCase):
+    """
+    A form describes fields; what is written inside the controls is not page
+    content.
+
+    <select> and <option> had classes but were never imported into the parser,
+    so they were never dispatched -- the names sat commented out in the import
+    list from #518 until #716 deleted the comment. The class would not have
+    worked anyway: its options were the literal ["One", "Two", "Three"], its
+    <option> handler did nothing, and the labels were typeset as ordinary text
+    beside the widget.
+
+    Around them, three more: <input value=""> and the contents of a <textarea>
+    never reached the field, and <input type="radio"> was not an accepted type
+    even though PmlInput has always drawn one.
+    """
+
+    @staticmethod
+    def convert(body: str):
+        dest = io.BytesIO()
+        html = f"<html><body><form>{body}</form></body></html>"
+        result = pisa.pisaDocument(io.StringIO(html), dest)
+        dest.seek(0)
+        return result, PdfReader(dest)
+
+    def fields(self, body: str) -> dict:
+        result, reader = self.convert(body)
+        self.assertEqual(0, result.err)
+        return reader.get_fields() or {}
+
+    def page_text(self, body: str) -> str:
+        _, reader = self.convert(body)
+        return reader.pages[0].extract_text() or ""
+
+    SELECT = (
+        '<select name="claim">'
+        "<option>Damage</option>"
+        '<option selected="selected">Delay</option>'
+        "<option>Shortage</option>"
+        "</select>"
+    )
+
+    def test_a_select_becomes_a_choice_field(self) -> None:
+        field = self.fields(self.SELECT)["claim"]
+
+        self.assertEqual("/Ch", field.get("/FT"))
+        self.assertEqual(["Damage", "Delay", "Shortage"], list(field.get("/Opt")))
+
+    def test_the_selected_option_is_the_one_chosen(self) -> None:
+        self.assertEqual("Delay", self.fields(self.SELECT)["claim"].get("/V"))
+
+    def test_the_first_option_is_chosen_by_default(self) -> None:
+        select = self.SELECT.replace(' selected="selected"', "")
+
+        self.assertEqual("Damage", self.fields(select)["claim"].get("/V"))
+
+    def test_the_labels_are_not_typeset_on_the_page(self) -> None:
+        text = self.page_text(f"<p>Claim</p>{self.SELECT}")
+
+        self.assertIn("Claim", text)
+        self.assertNotIn("Damage", text)
+        self.assertNotIn("Delay", text)
+
+    def test_a_select_without_a_name_says_so(self) -> None:
+        with self.assertLogs("xhtml2pdf", level="WARNING") as logged:
+            self.assertEqual({}, self.fields("<select><option>a</option></select>"))
+
+        self.assertTrue(any("no name" in line for line in logged.output), logged.output)
+
+    def test_an_input_keeps_its_value(self) -> None:
+        field = self.fields('<input type="text" name="ref" value="MER-4181">')["ref"]
+
+        self.assertEqual("/Tx", field.get("/FT"))
+        self.assertEqual("MER-4181", field.get("/V"))
+
+    def test_a_textarea_keeps_its_contents(self) -> None:
+        body = '<textarea name="notes" cols="20" rows="3">two lines</textarea>'
+        field = self.fields(body)["notes"]
+
+        self.assertEqual("two lines", field.get("/V"))
+        self.assertNotIn("two lines", self.page_text(body))
+
+    def test_a_hidden_input_is_a_field(self) -> None:
+        body = '<input type="hidden" name="form_id" value="MER-CLAIM-2026">'
+        field = self.fields(body)["form_id"]
+
+        self.assertEqual("MER-CLAIM-2026", field.get("/V"))
+
+    def test_a_radio_is_drawn_but_says_it_is_not_a_field(self) -> None:
+        """pdfform has no radio group; it used to become a text field."""
+        with self.assertLogs("xhtml2pdf", level="WARNING") as logged:
+            fields = self.fields('<input type="radio" name="mode" value="air">')
+
+        self.assertNotIn("mode", fields)
+        self.assertTrue(
+            any("not a form field" in line for line in logged.output), logged.output
+        )
+
+    def test_a_checkbox_still_works(self) -> None:
+        """What already worked has to keep working."""
+        self.assertEqual(
+            "/Btn", self.fields('<input type="checkbox" name="ok">')["ok"].get("/FT")
+        )
