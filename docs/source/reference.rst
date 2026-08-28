@@ -121,6 +121,23 @@ Borders
 
 Borders are supported. Use corresponding CSS styles.
 
+Backgrounds and borders of a block
+----------------------------------
+
+The background colour and the borders of a block element are painted paragraph
+by paragraph, not once around the block. Two consequences worth knowing before
+they surprise you:
+
+- A ``margin`` between the paragraphs of a block with a background opens a
+  strip of the paper colour inside the box, and a ``border-top`` on the
+  container draws a rule above *every* paragraph. Use ``padding`` on the
+  paragraphs and put a rule in an element of its own.
+- A table inside a block does not inherit that background. Put the colour on
+  the ``<td>``.
+- An empty block draws nothing at all, borders included, because it has no
+  height. A horizontal rule made of a bordered empty ``<div>`` needs something
+  in it, typically a non-breaking space at ``font-size: 1pt``.
+
 Images
 ------
 
@@ -136,6 +153,11 @@ the PDF as in the browser. To adjust this you may want to use the
 ::
 
     img { zoom: 80%; }
+
+The ``width`` and ``height`` attributes are pixels at 96 dpi, so a picture that
+fills the 210 mm of an A4 page is ``width="794"``. Declare both and the
+proportions will be taken from the width if they disagree with the picture's
+own.
 
 Position/ floating
 ------------------

@@ -118,6 +118,17 @@ Regular HTML content will not flow through Static Frames.
 Content Frames are @frame objects without this property defined. Regular HTML
 content will flow through Content Frames.
 
+.. warning::
+    A Static Frame drops whatever does not fit in it, without a word. When a
+    header or a footer goes missing, the frame is almost always a millimetre
+    or two shorter than what it holds.
+
+.. note::
+    There is no ``page: name`` property. The page template is chosen with
+    ``<pdf:nextpage name="">`` or with the ``-pdf-next-page`` property; ``page``
+    appears often in stylesheets written for other engines and does nothing
+    here.
+
 Example with 2 Static Frames and 1 Content Frame
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

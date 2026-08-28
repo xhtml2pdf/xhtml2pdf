@@ -156,6 +156,14 @@ pdf:barcode
 
 Creates a barcode.
 
+A barcode is an inline fragment and the line does not reserve its full height,
+so the paragraph below it will overlap. The reliable way to give one room is a
+table cell with a declared ``height``.
+
+``barwidth`` has a floor of 0.0075 inch, 0.19 mm (0.264 mm for EAN): asking for
+a narrower module does not make the symbol smaller. Shorten what is encoded
+instead.
+
 pdf:pagenumber
 ~~~~~~~~~~~~~~
 
