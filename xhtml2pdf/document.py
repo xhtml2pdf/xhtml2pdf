@@ -162,6 +162,17 @@ def pisaDocument(
     signature=None,
     **_kwargs,
 ):
+    if encrypt and signature:
+        # The document is encrypted as it is built and signed after that, so
+        # the signer is handed a PDF it has no password for and fails with
+        # PdfKeyNotAvailableError several steps later. Said here, where the
+        # caller can see which two arguments are the problem.
+        msg = (
+            "encrypt and signature cannot be combined: the document is"
+            " encrypted before it is signed, and the signer cannot open it"
+        )
+        raise ValueError(msg)
+
     log.debug(
         "pisaDocument options:\n  src = %r\n  dest = %r\n  path = %r\n  link_callback ="
         " %r\n  xhtml = %r\n  context_meta = %r",
