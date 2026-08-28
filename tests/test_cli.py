@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import io
 import os
+import subprocess
+import sys
 import tempfile
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -116,3 +118,31 @@ class CommandTest(TestCase):
         self.assertEqual(
             1, sum(1 for name in xobjects if xobjects[name]["/Subtype"] == "/Image")
         )
+
+
+class RunAsAModuleTest(TestCase):
+    """
+    ``python -m xhtml2pdf`` is the form people reach for first, and it was the
+    one that did not work: the package had no __main__.
+    """
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.src = Path(self.tmp.name) / "source.html"
+        self.src.write_text(HTML, encoding="utf-8")
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def test_the_module_converts_a_file(self) -> None:
+        dest = Path(self.tmp.name) / "out.pdf"
+
+        result = subprocess.run(
+            [sys.executable, "-m", "xhtml2pdf", "-q", str(self.src), str(dest)],
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(0, result.returncode, result.stderr.decode())
+        self.assertTrue(dest.is_file())
+        self.assertEqual(1, len(PdfReader(dest).pages))

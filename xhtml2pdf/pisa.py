@@ -172,7 +172,6 @@ def execute():
                 "copyright",
                 "version",
                 "warn",
-                "tempdir=",
                 "format=",
                 "css=",
                 "base=",
@@ -198,8 +197,6 @@ def execute():
     errors = 0
     startviewer = 0
     quiet = 0
-    debug = 0
-    tempdir = None
     file_format = "pdf"
     css = None
     xhtml = None
@@ -373,11 +370,7 @@ def execute():
         pisaDocument(
             fsrc,
             fdest,
-            debug=debug,
             path=wpath,
-            errout=sys.stdout,
-            tempdir=tempdir,
-            format=file_format,
             link_callback=lc,
             default_css=css,
             xhtml=xhtml,

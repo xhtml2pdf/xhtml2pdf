@@ -43,6 +43,10 @@ function.
         if pisa_status.err:
             print("An error occurred!")
 
+A conversion that fails raises. Pass ``raise_exception=False`` to be handed the
+status object with ``err`` set instead, or ``show_error_as_pdf=True`` to render
+a PDF listing the errors and the warnings.
+
 You can generate files in-memory by writing to :py:class:`io.BytesIO` or
 :py:class:`io.StringIO` objects:
 
@@ -70,6 +74,12 @@ You can convert HTML files to PDF documents from the command line:
 .. code:: shell
 
     xhtml2pdf source.html output.pdf
+
+The same tool is installed as ``pisa``, and the package can be run as a module:
+
+.. code:: shell
+
+    python -m xhtml2pdf source.html output.pdf
 
 Read more in the :doc:`CLI reference <reference/cli>`.
 
