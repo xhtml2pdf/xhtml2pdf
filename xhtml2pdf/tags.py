@@ -666,7 +666,17 @@ class pisaTagPDFPAGECOUNT(pisaTag):
 class pisaTagPDFTOC(pisaTag):
     """<pdf:toc />."""
 
-    def end(self, c: pisaContext) -> None:  # noqa: PLR6301
+    def start(self, c: pisaContext) -> None:  # noqa: PLR6301
+        # In start, not in end, like <pdf:nextpage> and <pdf:nextframe>. The
+        # HTML parser ignores the self-closing slash on an element it does not
+        # know, so <pdf:toc /> stays open and takes the rest of the document
+        # with it as children; emitting on the closing tag put the table of
+        # contents at the very end of the PDF. Where the element opens is
+        # where the author wrote it, whichever form they used.
+        #
+        # Closing every tag declared empty in TAGS would be the general fix,
+        # but <pdf:frame static> is declared empty and swaps the story between
+        # its start and its end, so it genuinely needs its children.
         c.multiBuild = True
         c.addTOC()
 

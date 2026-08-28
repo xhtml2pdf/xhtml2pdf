@@ -2,6 +2,8 @@ import io
 from unittest import TestCase
 from xml.dom import minidom
 
+from pypdf import PdfReader
+
 from xhtml2pdf import pisa, tags
 from xhtml2pdf.context import pisaContext
 from xhtml2pdf.parser import AttrContainer, pisaGetAttributes
@@ -108,3 +110,37 @@ class BadInputKeepsTheDocumentTestCase(TestCase):
         self.assert_warns_and_converts(
             "<p>a</p><pdf:spacer/><p>b</p>", "Ignoring <pdf:spacer> with no height"
         )
+
+
+class SelfClosingTocTestCase(TestCase):
+    """
+    <pdf:toc /> puts the table of contents where it is written.
+
+    The HTML parser ignores the self-closing slash on an element it does not
+    know, so the tag stayed open and swallowed the rest of the document; with
+    the contents emitted on the closing tag, they came out at the very end of
+    the PDF. Both examples shipped with this repository are written that way.
+    """
+
+    HTML = "<html><body>{toc}<h1>One</h1><p>body text</p><h1>Two</h1></body></html>"
+
+    def text(self, toc: str) -> str:
+        dest = io.BytesIO()
+        result = pisa.pisaDocument(io.StringIO(self.HTML.format(toc=toc)), dest)
+        self.assertEqual(0, result.err)
+        dest.seek(0)
+        return PdfReader(dest).pages[0].extract_text() or ""
+
+    def assert_contents_come_first(self, toc: str) -> None:
+        text = self.text(toc)
+        # The heading appears twice: once in the contents, once as itself. The
+        # body text sits between them only if the contents came first.
+        self.assertEqual(2, text.count("One"), text)
+        self.assertLess(text.index("One"), text.index("body text"), text)
+        self.assertLess(text.index("Two"), text.index("body text"), text)
+
+    def test_the_self_closing_form(self) -> None:
+        self.assert_contents_come_first("<pdf:toc />")
+
+    def test_the_paired_form(self) -> None:
+        self.assert_contents_come_first("<pdf:toc></pdf:toc>")
