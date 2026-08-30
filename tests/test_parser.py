@@ -11,6 +11,7 @@ from xml.dom import minidom
 from pypdf import PdfReader
 from reportlab.lib.colors import Color
 from reportlab.lib.pagesizes import A4, A5
+from reportlab.platypus.flowables import KeepInFrame
 
 from xhtml2pdf import pisa, properties
 from xhtml2pdf.context import PageNumberText, pisaContext, pisaCSSBuilder
@@ -550,6 +551,44 @@ class DefaultFrameTest(TestCase):
             any("missing explicit frame" in line for line in logged.output),
             logged.output,
         )
+
+
+class StaticFrameKeepInFrameTest(TestCase):
+    """
+    -pdf-keep-in-frame-mode on the element a static frame draws wraps that
+    element's whole content.
+
+    The story index the wrapper is built from used to be taken before the
+    static block swapped the story, so it pointed into the story the block
+    interrupted. With anything ahead of the static div in the body, the first
+    flowables of the header escaped the KeepInFrame.
+    """
+
+    CSS = (
+        "@page { size: a5;"
+        " @frame h { -pdf-frame-content: hd; left: 5mm; right: 5mm;"
+        " top: 5mm; height: 10mm; }"
+        " @frame b { left: 5mm; right: 5mm; top: 20mm; bottom: 5mm; } }"
+    )
+
+    def static_story(self, before: str) -> list:
+        context = pisaStory(
+            f"<html><head><style>{self.CSS}</style></head><body>{before}"
+            "<div id='hd' style='-pdf-keep-in-frame-mode: shrink'>"
+            "<p>one</p><p>two</p><p>three</p></div>"
+            "<p>body</p></body></html>"
+        )
+        [frame] = context.frameStatic["hd"]
+        return frame.pisaStaticStory
+
+    def test_the_whole_static_block_is_wrapped(self) -> None:
+        self.assertEqual(1, len(self.static_story("")))
+
+    def test_content_ahead_of_the_block_does_not_shift_the_wrapper(self) -> None:
+        story = self.static_story("<p>a</p><p>b</p><p>c</p>")
+
+        self.assertEqual(1, len(story))
+        self.assertIsInstance(story[0], KeepInFrame)
 
 
 class ImportedStylesheetTest(TestCase):

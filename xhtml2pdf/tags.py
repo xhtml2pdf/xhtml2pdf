@@ -43,7 +43,14 @@ from xhtml2pdf.charts import (
     VerticalBar,
 )
 from xhtml2pdf.paragraph import PageNumberFlowable
-from xhtml2pdf.util import DPI96, ImageWarning, getAlign, getColor, getSize
+from xhtml2pdf.util import (
+    DPI96,
+    ImageWarning,
+    getAlign,
+    getColor,
+    getKeepInFrameMode,
+    getSize,
+)
 from xhtml2pdf.xhtml2pdf_reportlab import (
     PmlDrawing,
     PmlImage,
@@ -822,6 +829,11 @@ class pisaTagPDFFRAME(pisaTag):
         if self.static:
             c.addPara()
             self.frame.pisaStaticStory = c.story
+            # Same knob the @frame rule offers, so the two ways of declaring a
+            # static frame behave alike when the content outgrows the box.
+            self.frame.pisaStaticOverflowMode = getKeepInFrameMode(
+                c.cssAttr.get("-pdf-keep-in-frame-mode", "shrink")
+            )
             c.frameStaticList.append(self.frame)
             c.swapStory(self.story)
 

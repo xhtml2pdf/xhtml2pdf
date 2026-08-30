@@ -811,6 +811,25 @@ def getFloat(s):
         return float(s)
 
 
+#: The modes reportlab's KeepInFrame understands. "shrink" is the fallback
+#: everywhere xhtml2pdf reads one, because keeping the content is the least
+#: surprising answer to content that is a little too big for its box.
+KEEP_IN_FRAME_MODES: frozenset[str] = frozenset(
+    {"shrink", "error", "overflow", "truncate"}
+)
+
+
+def getKeepInFrameMode(value, default: str = "shrink") -> str:
+    """
+    Read a -pdf-keep-in-frame-mode declaration.
+
+    Anything reportlab would not recognise falls back to ``default`` rather
+    than reaching KeepInFrame, which raises on an unknown mode.
+    """
+    mode = str(value).strip().lower()
+    return mode if mode in KEEP_IN_FRAME_MODES else default
+
+
 ALIGNMENTS = {
     "left": TA_LEFT,
     "center": TA_CENTER,

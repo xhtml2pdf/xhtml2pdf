@@ -50,6 +50,7 @@ from xhtml2pdf.util import (
     getCoords,
     getFloat,
     getFrameDimensions,
+    getKeepInFrameMode,
     getSize,
     set_asian_fonts,
     set_value,
@@ -464,6 +465,13 @@ class pisaCSSBuilder(css.CSSBuilder):
 
             if static:
                 frame.pisaStaticStory = []
+                # What to do with content that outgrows the frame. A static
+                # frame has no continuation, so the default keeps it by
+                # shrinking rather than dropping it; see
+                # PmlPageTemplate._paintStaticFrame.
+                frame.pisaStaticOverflowMode = getKeepInFrameMode(
+                    fdata.get("-pdf-keep-in-frame-mode", "shrink")
+                )
                 c.frameStatic[static] = [frame, *c.frameStatic.get(static, [])]
                 staticList.append(frame)
             else:

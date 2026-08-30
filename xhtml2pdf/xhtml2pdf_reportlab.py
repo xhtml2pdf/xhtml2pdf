@@ -216,6 +216,14 @@ class PmlPageTemplate(PageTemplate):
     # by default portrait
     pageorientation: str = PORTRAIT
 
+    #: How the content of a static frame that outgrows its @frame is painted,
+    #: when the frame itself does not say. See xhtml2pdf.util.getKeepInFrameMode.
+    staticOverflowMode: str = "shrink"
+
+    #: Slack, in points, before a static frame counts as overflowing. Below it
+    #: the two measurements are the same number said in different words.
+    STATIC_OVERFLOW_FUZZ: float = 0.1
+
     def __init__(self, **kw) -> None:
         self.pisaStaticList: list = []
         self.pisaBackground: Any = None
@@ -224,6 +232,9 @@ class PmlPageTemplate(PageTemplate):
         super().__init__(**kw)
         self._page_count: int = 0
         self._first_flow: bool = True
+        #: (complaint, frame id) pairs already logged, so that a hundred-page
+        #: document says each one once and not once per page and layout pass.
+        self._staticFrameWarned: set[tuple[str, str]] = set()
 
         # Background Image
         self.img = None
@@ -279,24 +290,124 @@ class PmlPageTemplate(PageTemplate):
                         ]
                         pageNumbering(flat_cells)
 
-            try:
-                # Paint static frames
-                pagenumber = canvas.getPageNumber()
-                if pagenumber > self._page_count:
-                    self._page_count = canvas.getPageNumber()
-                    canvas._doctemplate._page_count = canvas.getPageNumber()
+            # Paint static frames
+            pagenumber = canvas.getPageNumber()
+            if pagenumber > self._page_count:
+                self._page_count = pagenumber
+                canvas._doctemplate._page_count = pagenumber
 
-                for frame in self.pisaStaticList:
-                    frame_copy = copy.deepcopy(frame)
-                    story = frame_copy.pisaStaticStory
-                    pageNumbering(story)
-
-                    frame_copy.addFromList(story, canvas)
-
-            except Exception:  # TODO: Kill this!
-                log.debug("PmlPageTemplate", exc_info=True)
+            for frame in self.pisaStaticList:
+                self._paintStaticFrame(frame, canvas, pageNumbering)
         finally:
             canvas.restoreState()
+
+    def _firstComplaint(self, complaint: str, frame_id: str) -> bool:
+        """Whether this is the first time a frame draws this complaint."""
+        key = (complaint, frame_id)
+        if key in self._staticFrameWarned:
+            return False
+        self._staticFrameWarned.add(key)
+        return True
+
+    @staticmethod
+    def _storyHeight(story, frame, canvas: Canvas) -> float:
+        """
+        The height a static frame's story takes up in that frame.
+
+        Measured with the very calls ``Frame.add`` is about to make, and not
+        with ``_listWrapOn``: an image is allowed to scale itself down to the
+        height it is offered (see ``PmlParagraph._calcImageMaxSizes``), so
+        measuring against unlimited height would report an overflow for a logo
+        that fits its header perfectly well. Wrapping is idempotent, so the
+        real pass right after this one gets the same numbers.
+        """
+        used = 0.0
+        spaceAfter = 0.0
+        for flowable in story:
+            # reportlab's Frame swallows the space before a flowable into the
+            # space after the one above it; see Frame._add.
+            space = max(flowable.getSpaceBefore() - spaceAfter, 0.0) if used else 0.0
+            height = flowable.wrapOn(
+                canvas, frame._aW, max(frame._aH - used - space, 0.0)
+            )[1]
+            spaceAfter = flowable.getSpaceAfter()
+            used += space + height + spaceAfter
+        # The space after the last flowable is not height the frame has to
+        # find room for.
+        return used - spaceAfter
+
+    def _paintStaticFrame(self, frame, canvas: Canvas, renumber) -> None:
+        """
+        Draw the story of one static frame on the page being started.
+
+        Anything that goes wrong is caught here, per frame: the guard used to
+        sit around the loop over every static frame, so a header that could not
+        be painted took the page's footer with it.
+        """
+        try:
+            self._drawStaticFrame(frame, canvas, renumber)
+        except Exception:
+            frame_id = str(getattr(frame, "id", None))
+            log.debug("static frame %r", frame_id, exc_info=True)
+            if self._firstComplaint("unpainted", frame_id):
+                log.warning("Could not paint the static frame %r", frame_id)
+
+    def _drawStaticFrame(self, frame, canvas: Canvas, renumber) -> None:
+        """
+        Lay the story of one static frame out and draw it.
+
+        Both the frame and its story are deep-copied first: reportlab consumes
+        the list and mutates the flowables and the frame's cursor as it draws,
+        and the originals have to survive for every remaining page.
+        """
+        frame = copy.deepcopy(frame)
+        story = frame.pisaStaticStory
+        renumber(story)
+
+        # A static frame has no continuation frame, so anything that does not
+        # fit is content the page will simply be missing -- most visibly the
+        # logo at the end of a header, which is an inline fragment of the last
+        # paragraph and so the last flowable of the story.
+        needed = self._storyHeight(story, frame, canvas)
+        if needed > frame._aH + self.STATIC_OVERFLOW_FUZZ:
+            mode = (
+                getattr(frame, "pisaStaticOverflowMode", None)
+                or self.staticOverflowMode
+            )
+            if self._firstComplaint("overflow", frame.id):
+                log.warning(
+                    "The content of the static frame %r needs %.1f pt of"
+                    " height and the @frame is %.1f pt tall, so it was fitted"
+                    " with -pdf-keep-in-frame-mode: %s. Give the @frame more"
+                    " height.",
+                    frame.id,
+                    needed,
+                    frame._aH,
+                    mode,
+                )
+            # KeepInFrame is the only thing a Frame will accept here: for
+            # truncate and overflow it reports a height that fits and then
+            # clips or spills on its own, and for shrink it scales the whole
+            # story down. Not PmlKeepInFrame -- that one overrides maxHeight
+            # with the largest height seen on the canvas, which is the body
+            # frame of some earlier page, and would decide nothing is wrong.
+            story = [
+                KeepInFrame(
+                    maxWidth=frame._aW, maxHeight=frame._aH, mode=mode, content=story
+                )
+            ]
+
+        frame.addFromList(story, canvas)
+
+        if story and self._firstComplaint("dropped", frame.id):
+            # addFromList stops at the first flowable that does not fit and
+            # leaves the rest of the list "for later". There is no later here:
+            # whatever is still in it is missing from the page.
+            log.warning(
+                "The static frame %r dropped %d flowable(s) that did not fit.",
+                frame.id,
+                len(story),
+            )
 
 
 _ctr: int = 1

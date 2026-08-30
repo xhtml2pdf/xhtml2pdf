@@ -190,7 +190,10 @@ CSS_PROPERTIES += (
     CSSProperty("-pdf-outline-level", "pdf", consumer=LOOP, note="an int, unguarded"),
     CSSProperty("-pdf-line-spacing", "pdf", note="leadingSpace, added to the leading"),
     CSSProperty(
-        "-pdf-keep-in-frame-mode", "pdf", consumer=LOOP, note="also read in tables.py"
+        "-pdf-keep-in-frame-mode",
+        "pdf",
+        consumer=LOOP,
+        note="also read in tables.py, and from an @frame rule in context.py",
     ),
     CSSProperty("-pdf-keep-in-frame-max-width", "pdf", consumer=LOOP),
     CSSProperty("-pdf-keep-in-frame-max-height", "pdf", consumer=LOOP),

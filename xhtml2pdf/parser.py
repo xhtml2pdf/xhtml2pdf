@@ -99,7 +99,15 @@ from xhtml2pdf.tags import (  # noqa: F401
     pisaTagTITLE,
     pisaTagUL,
 )
-from xhtml2pdf.util import getAlign, getBox, getColor, getPos, getSize, toList
+from xhtml2pdf.util import (
+    getAlign,
+    getBox,
+    getColor,
+    getKeepInFrameMode,
+    getPos,
+    getSize,
+    toList,
+)
 from xhtml2pdf.w3c import cssDOMElementInterface
 from xhtml2pdf.w3c.css import CSSTerminalFunction
 from xhtml2pdf.xhtml2pdf_reportlab import PmlLeftPageBreak, PmlRightPageBreak
@@ -773,12 +781,9 @@ def pisaLoop(node, context, path=None, **kw):
         keepInFrameMaxWidth = 0
         keepInFrameMaxHeight = 0
         if "-pdf-keep-in-frame-mode" in context.cssAttr:
-            value = str(context.cssAttr["-pdf-keep-in-frame-mode"]).strip().lower()
-            if value in {"shrink", "error", "overflow", "truncate"}:
-                keepInFrameMode = value
-            else:
-                keepInFrameMode = "shrink"
-            # Added because we need a default value.
+            keepInFrameMode = getKeepInFrameMode(
+                context.cssAttr["-pdf-keep-in-frame-mode"]
+            )
 
         if "-pdf-keep-in-frame-max-width" in context.cssAttr:
             keepInFrameMaxWidth = getSize(
@@ -788,13 +793,6 @@ def pisaLoop(node, context, path=None, **kw):
             keepInFrameMaxHeight = getSize(
                 "".join(context.cssAttr["-pdf-keep-in-frame-max-height"])
             )
-
-        # ignore nested keep-in-frames, tables have their own KIF handling
-        keepInFrame = keepInFrameMode is not None and context.keepInFrameIndex is None
-        if keepInFrame:
-            # keep track of current story index, so we can wrap everythink
-            # added after this point in a KeepInFrame
-            context.keepInFrameIndex = len(context.story)
 
         # BEGIN tag
         klass = globals().get("pisaTag%s" % node.tagName.replace(":", "").upper(), None)
@@ -806,6 +804,17 @@ def pisaLoop(node, context, path=None, **kw):
         if staticFrame:
             context.frag.insideStaticFrame += 1
             oldStory = context.swapStory()
+
+        # ignore nested keep-in-frames, tables have their own KIF handling
+        keepInFrame = keepInFrameMode is not None and context.keepInFrameIndex is None
+        if keepInFrame:
+            # keep track of current story index, so we can wrap everythink
+            # added after this point in a KeepInFrame. This has to come after
+            # the story swap above: an element that is itself the content of a
+            # static frame starts a story of its own, and an index taken from
+            # the story it interrupted would cut the frame's content in the
+            # wrong place.
+            context.keepInFrameIndex = len(context.story)
 
         # Tag specific operations
         if klass is not None:

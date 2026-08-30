@@ -1,4 +1,5 @@
 import io
+import os
 import re
 from unittest import TestCase
 
@@ -286,3 +287,92 @@ class PmlMaxHeightMixInTest(TestCase):
         self.assertEqual(0, pmlmaxheightmixin.getMaxHeight())
         pmlmaxheightmixin.availHeightValue = 42
         self.assertEqual(42, pmlmaxheightmixin.getMaxHeight())
+
+
+DENKER = os.path.join(os.path.dirname(__file__), "samples", "img", "denker.png")
+
+#: A header frame with text and a logo at the end of it, the shape of every
+#: invoice template. The frame is deliberately too short for its content.
+STATIC_OVERFLOW_HTML = """
+<html><head><style>
+@page {{ size: a4 portrait;
+  @frame header {{ -pdf-frame-content: page-header; left: 2cm; right: 2cm;
+                   top: 1cm; height: {height}; {extra} }}
+  @frame footer {{ -pdf-frame-content: page-footer; left: 2cm; right: 2cm;
+                   bottom: 1cm; height: 1cm; }}
+  @frame body {{ left: 2cm; right: 2cm; top: 8cm; bottom: 3cm; }} }}
+</style></head>
+<body>
+<div id="page-header">
+  <p>EXAMPLE LTD</p><p>one</p><p>two</p><p>three</p><p>four</p>
+  <img src="{image}" style="width: 90px; height: 38px"/>
+</div>
+<div id="page-footer"><p>the footer</p></div>
+<p>the body</p>
+</body></html>
+"""
+
+
+class StaticFrameOverflowTest(TestCase):
+    """
+    A static frame that is too short for its content shrinks it to fit.
+
+    reportlab's Frame.addFromList stops at the first flowable that does not
+    fit and leaves the rest of the list "for later". A static frame has no
+    later: it is re-painted from a fresh copy on every page, so whatever was
+    left behind was dropped without a word. An <img> is an inline fragment of
+    its paragraph, and a logo is usually the last thing in a header, so what
+    went missing was almost always the logo.
+    """
+
+    LOGGER = "xhtml2pdf.xhtml2pdf_reportlab"
+
+    @staticmethod
+    def _render(height: str, extra: str = "") -> bytes:
+        dest = io.BytesIO()
+        html = STATIC_OVERFLOW_HTML.format(height=height, extra=extra, image=DENKER)
+        result = pisa.pisaDocument(io.StringIO(html), dest)
+        assert result.err == 0
+        return dest.getvalue()
+
+    @staticmethod
+    def _images(pdf: bytes) -> list:
+        page = PdfReader(io.BytesIO(pdf)).pages[0]
+        xobjects = page["/Resources"]["/XObject"].get_object()
+        return [
+            xobjects[key]
+            for key in xobjects
+            if xobjects[key].get("/Subtype") == "/Image"
+        ]
+
+    def test_a_short_header_keeps_its_logo(self) -> None:
+        with self.assertLogs(self.LOGGER, "WARNING") as logs:
+            pdf = self._render("4cm")
+
+        self.assertEqual(1, len(self._images(pdf)))
+        self.assertIn("'header'", logs.output[0])
+        self.assertIn("shrink", logs.output[0])
+
+    def test_a_header_with_room_is_left_alone(self) -> None:
+        """The frame that fits must not be touched, warned about, or scaled."""
+        with self.assertNoLogs(self.LOGGER, "WARNING"):
+            pdf = self._render("8cm")
+
+        self.assertEqual(1, len(self._images(pdf)))
+
+    def test_the_mode_comes_from_the_frame(self) -> None:
+        with self.assertLogs(self.LOGGER, "WARNING") as logs:
+            self._render("4cm", extra="-pdf-keep-in-frame-mode: truncate;")
+
+        self.assertIn("truncate", logs.output[0])
+
+    def test_an_unpaintable_frame_does_not_cost_the_page_its_footer(self) -> None:
+        """
+        The guard used to sit around the whole loop over the static frames, so
+        a header that raised took every frame after it with it.
+        """
+        with self.assertLogs(self.LOGGER, "WARNING") as logs:
+            pdf = self._render("4cm", extra="-pdf-keep-in-frame-mode: error;")
+
+        self.assertIn("Could not paint the static frame 'header'", logs.output[-1])
+        self.assertIn("the footer", PdfReader(io.BytesIO(pdf)).pages[0].extract_text())

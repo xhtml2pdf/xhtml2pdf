@@ -14,6 +14,7 @@ from xhtml2pdf.util import (
     getColor,
     getCoords,
     getFrameDimensions,
+    getKeepInFrameMode,
     getSize,
     set_value,
     transform_attrs,
@@ -405,6 +406,18 @@ class GetPosTestCase(TestCase):
         except Exception:
             raised = True
         self.assertTrue(raised)
+
+
+class GetKeepInFrameModeTestCase(TestCase):
+    def test_the_four_modes_are_read_as_written(self):
+        for mode in ("shrink", "error", "overflow", "truncate"):
+            self.assertEqual(mode, getKeepInFrameMode(f"  {mode.upper()} "))
+
+    def test_anything_else_falls_back(self):
+        """KeepInFrame raises on a mode it does not know, so nothing else may reach it."""
+        self.assertEqual("shrink", getKeepInFrameMode("clip"))
+        self.assertEqual("shrink", getKeepInFrameMode(None))
+        self.assertEqual("truncate", getKeepInFrameMode("", default="truncate"))
 
 
 class TestTagUtils(TestCase):

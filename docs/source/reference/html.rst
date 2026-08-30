@@ -50,9 +50,17 @@ Valid @frame properties.
     border-top-color, border-top-width
     background-image
     -pdf-frame-border, -pdf-frame-box, -pdf-frame-content
+    -pdf-keep-in-frame-mode
 
 These are read straight out of the @page or @frame rule, not through the
 property whitelist below, so they only mean anything inside one.
+
+``-pdf-keep-in-frame-mode`` only applies to a static frame, i.e. one that
+declares ``-pdf-frame-content``. It says what to do with content taller than
+the frame, which has nowhere else to go: ``shrink`` (the default) scales the
+whole frame down to fit, ``truncate`` clips it at the boundary, ``overflow``
+draws past it, and ``error`` leaves the frame unpainted. Any of them logs a
+warning naming the frame -- the real fix is a taller ``height``.
 
 To avoid unexpected results, please only specify
 two out of three bottom/top/height properties, and
