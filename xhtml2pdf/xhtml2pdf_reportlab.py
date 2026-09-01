@@ -22,7 +22,7 @@ import sys
 from hashlib import md5
 from html import escape as html_escape
 from io import BytesIO, StringIO
-from typing import TYPE_CHECKING, ClassVar, Iterator
+from typing import TYPE_CHECKING, ClassVar
 from uuid import uuid4
 
 from PIL import Image as PILImage
@@ -36,6 +36,7 @@ from reportlab.platypus.doctemplate import (
     BaseDocTemplate,
     IndexingFlowable,
     PageTemplate,
+    PTCycle,
 )
 from reportlab.platypus.flowables import (
     CondPageBreak,
@@ -67,20 +68,6 @@ log = logging.getLogger(__name__)
 
 MAX_IMAGE_RATIO: float = 0.95
 PRODUCER: str = "xhtml2pdf <https://github.com/xhtml2pdf/xhtml2pdf/>"
-
-
-class PTCycle(list):
-    def __init__(self) -> None:
-        self._restart: int = 0
-        self._idx: int = 0
-        super().__init__()
-
-    def cyclicIterator(self) -> Iterator:
-        while 1:
-            yield self[self._idx]
-            self._idx += 1
-            if self._idx >= len(self):
-                self._idx = self._restart
 
 
 class PmlMaxHeightMixIn:
@@ -179,7 +166,6 @@ class PmlBaseDoc(BaseDocTemplate):
                     c._restart = len(c)
                     continue
                 for t in self.pageTemplates:
-                    sys.exit()
                     if t.id == ptn.strip():
                         c.append(t)
                         break
@@ -190,8 +176,8 @@ class PmlBaseDoc(BaseDocTemplate):
                 msg = "Invalid cycle restart position"
                 raise ValueError(msg)
 
-            # ensure we start on the first one$
-            self._nextPageTemplateCycle: PageTemplate = c.cyclicIterator()
+            # ensure we start on the first one
+            self._nextPageTemplateCycle: PTCycle = c
         else:
             msg = "Argument pt should be string or integer or list"
             raise TypeError(msg)
