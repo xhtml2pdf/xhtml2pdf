@@ -246,6 +246,16 @@ class UtilsGetSizeTestCase(TestCase):
         res = getSize("auto")  # Really?
         self.assertEqual(res, 0.0)
 
+    def test_get_size_for_percentage_without_relative(self):
+        res = getSize("100%")
+        self.assertEqual(res, 0.0)
+
+    def test_get_size_for_percentage_with_relative(self):
+        res = getSize("100%", 200)
+        self.assertEqual(res, 200.0)
+        res = getSize("50%", 200)
+        self.assertEqual(res, 100.0)
+
 
 class PisaDimensionTestCase(TestCase):
     def test_frame_dimensions_left_top_width_height(self):
