@@ -13,13 +13,15 @@ from abc import abstractmethod
 from io import BytesIO
 from pathlib import Path
 from tempfile import _TemporaryFileWrapper
-from typing import TYPE_CHECKING, Any, Callable, ClassVar
+from typing import TYPE_CHECKING, Any
 from urllib import request
 from urllib.parse import unquote as urllib_unquote
+from urllib.parse import unquote_to_bytes
 
 from xhtml2pdf.config.httpconfig import httpConfig
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from http.client import HTTPResponse
     from urllib.parse import SplitResult
 
@@ -32,7 +34,20 @@ STRATEGIES: tuple[type, Any] = (
 
 
 class TmpFiles(threading.local):
-    files: ClassVar[list[_TemporaryFileWrapper[bytes]]] = []
+    """
+    Per-thread registry of temporary files kept alive for the duration of a
+    render.
+
+    ``files`` must be set in ``__init__`` rather than declared as a class
+    attribute: ``threading.local`` re-runs ``__init__`` for each thread that
+    touches the instance, whereas a class attribute would be shared by every
+    thread and let one request's ``cleanFiles()`` close files another request
+    is still reading.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.files: list[_TemporaryFileWrapper[bytes]] = []
 
     def append(self, file) -> None:
         self.files.append(file)
@@ -70,7 +85,11 @@ class pisaTempFile:
         """
         self.name: str | None = None
         self.capacity: int = capacity
-        self.strategy: int = int(len(buffer) > self.capacity)
+        # A negative capacity means "never spill to disk". `len(buffer) >
+        # capacity` is true for any buffer when capacity is -1, so this used to
+        # select the on-disk strategy immediately -- the exact opposite of the
+        # documented behaviour, and of what every caller that passes -1 wants.
+        self.strategy: int = int(self.capacity >= 0 and len(buffer) > self.capacity)
         try:
             self._delegate = self.STRATEGIES[self.strategy]()
         except IndexError:
@@ -91,6 +110,8 @@ class pisaTempFile:
                 new_delegate.write(self.getvalue())
                 self._delegate = new_delegate
                 self.strategy = 1
+                # was never assigned, so getFileName() always returned None
+                self.name = getattr(new_delegate, "name", None)
                 log.warning("Created temporary file %s", self.name)
             except Exception:
                 self.capacity = -1
@@ -180,12 +201,17 @@ class BaseFile:
 
     def get_named_tmp_file(self) -> _TemporaryFileWrapper[bytes]:
         data: bytes | None = self.get_data()
-        tmp_file = tempfile.NamedTemporaryFile(suffix=self.suffix)
-        # print(tmp_file.name, len(data))
+        # Not a context manager: the handle outlives this call on purpose,
+        # registered below for cleanFiles() to close.
+        tmp_file = tempfile.NamedTemporaryFile(suffix=self.suffix)  # noqa: SIM115
+        # Register unconditionally. Registration used to sit inside the `if
+        # data` below, so a temp file created for an empty resource was never
+        # closed by cleanFiles() and survived until the garbage collector ran
+        # (Python 3.14 reports this as a ResourceWarning).
+        files_tmp.append(tmp_file)
         if data:
             tmp_file.write(data)
             tmp_file.flush()
-            files_tmp.append(tmp_file)
         if self.path is None:
             self.path = tmp_file.name
         return tmp_file
@@ -197,27 +223,43 @@ class BaseFile:
         return None
 
 
-class B64InlineURI(BaseFile):
+class InlineDataURI(BaseFile):
+    """
+    RFC 2397 ``data:`` URI.
+
+    Handles both the base64 form (``data:image/png;base64,iVBOR...``) and the
+    percent-encoded form (``data:image/svg+xml,%3Csvg...``); the latter is the
+    usual way inline SVG is written and used to be rejected outright.
+    """
+
     mime_params: list
 
     def extract_data(self) -> bytes | None:
-        # RFC 2397 form: data:[<mediatype>][;base64],<data>
-        parts = self.path.split("base64,")
-        if (
-            not self.path.startswith("data:")
-            or "base64," not in self.path
-            or len(parts) != 2
-        ):
-            msg = "Base64-encoded data URI is malformed"
+        if not self.path.startswith("data:") or "," not in self.path:
+            msg = "Data URI is malformed"
             raise RuntimeError(msg)
-        data = parts[1]
-        # Strip 'data:' prefix and split mime type with optional params
-        mime = parts[0][len("data:") :].split(";")
-        # mime_params are preserved for future use
-        self.mimetype, self.mime_params = mime[0], mime[1:]
 
-        b64: bytes = urllib_unquote(data).encode("utf-8")
-        return base64.b64decode(b64)
+        # data:[<mediatype>][;base64],<data> -- split on the FIRST comma, the
+        # payload may legitimately contain further commas.
+        header, _, data = self.path[len("data:") :].partition(",")
+
+        params = [part for part in header.split(";") if part]
+        is_base64 = bool(params) and params[-1].lower() == "base64"
+        if is_base64:
+            params.pop()
+
+        # RFC 2397: an omitted mediatype means text/plain;charset=US-ASCII
+        self.mimetype = params[0] if params and "/" in params[0] else "text/plain"
+        # mime_params are preserved for future use
+        self.mime_params = params[1:] if params and "/" in params[0] else params
+
+        if is_base64:
+            return base64.b64decode(urllib_unquote(data).encode("utf-8"))
+        return unquote_to_bytes(data)
+
+
+# Backwards-compatible alias: this class was named after the base64 form only.
+B64InlineURI = InlineDataURI
 
 
 class LocalProtocolURI(BaseFile):
@@ -231,6 +273,8 @@ class LocalProtocolURI(BaseFile):
 
 
 class NetworkFileUri(BaseFile):
+    MAX_REDIRECTS: int = 5
+
     def __init__(self, path: str, basepath: str | None) -> None:
         super().__init__(path, basepath)
         self.attempts: int = 3
@@ -254,29 +298,78 @@ class NetworkFileUri(BaseFile):
                 )
         return data
 
-    def get_httplib(self, uri) -> tuple[bytes | None, bool]:
+    def _request(self, uri: str) -> tuple[bytes | None, bool, str | None]:
+        """
+        Perform a single GET.
+
+        Returns ``(data, is_gzip, redirect_target)``; exactly one of ``data``
+        and ``redirect_target`` is set on success.
+        """
         log.debug("Sending request for %r with httplib", uri)
-        data: bytes | None = None
-        is_gzip: bool = False
         url_splitted: SplitResult = urlparse.urlsplit(uri)
         server: str = url_splitted[1]
         path: str = url_splitted[2]
         path += f"?{url_splitted[3]}" if url_splitted[3] else ""
-        conn: httplib.HTTPConnection | httplib.HTTPSConnection | None = None
+        conn: httplib.HTTPConnection | httplib.HTTPSConnection
         if uri.startswith("https://"):
             conn = httplib.HTTPSConnection(server, **httpConfig)
         else:
-            conn = httplib.HTTPConnection(server)
-        conn.request("GET", path)
-        r1: HTTPResponse = conn.getresponse()
-        if r1.status == 200:
-            self.mimetype = r1.getheader("Content-Type", "").split(";")[0]
-            data = r1.read()
-            if r1.getheader("content-encoding") == "gzip":
-                is_gzip = True
-        else:
-            log.debug("Received non-200 status: %d %s", r1.status, r1.reason)
-        return data, is_gzip
+            # HTTPConnection accepts only a subset of the HTTPS keywords, but it
+            # must still get the configured timeout -- plain http requests used
+            # to hang indefinitely.
+            conn = httplib.HTTPConnection(
+                server,
+                **{
+                    key: value
+                    for key, value in httpConfig.items()
+                    if key in {"timeout", "source_address", "blocksize"}
+                },
+            )
+        try:
+            conn.request("GET", path)
+            r1: HTTPResponse = conn.getresponse()
+            if 200 <= r1.status < 300:
+                self.mimetype = r1.getheader("Content-Type", "").split(";")[0]
+                is_gzip = r1.getheader("content-encoding") == "gzip"
+                # the body must be read before the connection is closed
+                return r1.read(), is_gzip, None
+            if 300 <= r1.status < 400:
+                location = r1.getheader("Location")
+                r1.read()  # drain, so the connection can be reused/closed cleanly
+                if location:
+                    return None, False, urlparse.urljoin(uri, location)
+                log.warning(
+                    "Redirect without Location header for %r: %d %s",
+                    uri,
+                    r1.status,
+                    r1.reason,
+                )
+                return None, False, None
+            r1.read()
+            log.warning(
+                "Received non-success status for %r: %d %s", uri, r1.status, r1.reason
+            )
+        finally:
+            # the connection was never closed, leaking a socket per image
+            conn.close()
+        return None, False, None
+
+    def get_httplib(self, uri) -> tuple[bytes | None, bool]:
+        seen: set[str] = set()
+        for _ in range(self.MAX_REDIRECTS + 1):
+            if uri in seen:
+                log.warning("Redirect loop while fetching %r", uri)
+                return None, False
+            seen.add(uri)
+            data, is_gzip, redirect = self._request(uri)
+            if redirect is None:
+                return data, is_gzip
+            log.debug("Following redirect %r -> %r", uri, redirect)
+            uri = redirect
+        log.warning(
+            "Too many redirects (>%d) while fetching %r", self.MAX_REDIRECTS, uri
+        )
+        return None, False
 
     def extract_data(self) -> bytes | None:
         # FIXME: When self.path don't start with http
@@ -324,6 +417,11 @@ class LocalFileURI(BaseFile):
 
 class BytesFileUri(BaseFile):
     def extract_data(self) -> bytes | None:
+        # ``path`` is normally already bytes here; calling .encode() on it
+        # raised AttributeError, which get_data() swallowed into a silent None.
+        if isinstance(self.path, bytes):
+            self.uri = f"<bytes:{len(self.path)}>"
+            return self.path
         self.uri = self.path
         return self.path.encode("utf-8")
 
@@ -356,8 +454,11 @@ class FileNetworkManager:
         if uri is None:
             return LocalTmpFile(uri, basepath)
         if isinstance(uri, bytes):
-            instance = BytesFileUri(uri, basepath)
-        elif uri.startswith("data:"):
+            return BytesFileUri(uri, basepath)
+        if isinstance(uri, Path):
+            # pisaFileObject accepts str | Path; Path has no .startswith()
+            uri = str(uri)
+        if uri.startswith("data:"):
             instance = B64InlineURI(uri, basepath)
         else:
             if basepath and not urlparse.urlparse(uri).scheme:

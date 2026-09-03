@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>css-page-box</title>
+<style type="text/css">
+@page {
+    size: a4;
+    margin: 2cm;
+    height: 6cm;
+    -pdf-frame-border: 1;
+}
+p { margin: 0 0 0.3em 0; background-color: #fce94f; }
+</style>
+</head>
+<body>
+<p>The content area is 6cm tall.</p>
+<p>@page declares a height but neither top nor bottom.</p>
+<p>The frame border shows where the area actually ends.</p>
+<p>line four</p>
+<p>line five</p>
+<p>line six</p>
+<p>line seven</p>
+<p>line eight, and the box ends below this.</p>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<html>
+<head>
+    <title>Pages, frames and static content</title>
+    <style>
+        /* The first page: a static header, a static footer and a content
+           frame between them. Content flows through the content frame only;
+           the static frames repeat unchanged on every page that uses this
+           template. */
+        @page {
+            size: a4 portrait;
+            @frame header_frame {
+                -pdf-frame-content: header_content;
+                left: 50pt; width: 495pt; top: 40pt; height: 40pt;
+            }
+            @frame content_frame {
+                left: 50pt; width: 495pt; top: 90pt; height: 660pt;
+                -pdf-frame-border: 1;      /* draw the frame, to show where it is */
+            }
+            @frame footer_frame {
+                -pdf-frame-content: footer_content;
+                left: 50pt; width: 495pt; top: 772pt; height: 20pt;
+            }
+        }
+
+        /* A second, landscape template, reached with <pdf:nexttemplate>. */
+        @page wide {
+            size: a4 landscape;
+            @frame content_frame {
+                left: 50pt; width: 742pt; top: 50pt; height: 495pt;
+                -pdf-frame-border: 1;
+            }
+        }
+
+        body { font-family: Helvetica; font-size: 11pt; }
+        h1 { font-size: 150%; margin-bottom: 0.4em; }
+        #header_content { border-bottom: 1px solid #888; font-weight: bold; }
+        #footer_content { border-top: 1px solid #888; font-size: 8pt; color: #555; }
+        .filler { color: #666; }
+    </style>
+</head>
+<body>
+    <div id="header_content">Pages and Frames</div>
+    <div id="footer_content">page <pdf:pagenumber> of <pdf:pagecount></div>
+
+    <h1>One frame, filled until it overflows</h1>
+
+    <p>
+        The bordered rectangle is the content frame. Everything on this page is
+        inside it, and the header and footer above and below are separate
+        static frames that this text never enters.
+    </p>
+
+    <p>
+        When the content frame runs out of room the converter starts a new page
+        using the same template, so the header and footer come back with it.
+        The paragraphs below are here to make that happen.
+    </p>
+
+    <p class="filler">
+        To PDF or not to PDF, that is the question. Whether 'tis nobler in the
+        mind to suffer the slings and arrows of outrageous pagination, or to
+        take arms against a sea of frames, and by opposing end them.
+    </p>
+    <p class="filler">
+        To PDF or not to PDF, that is the question. Whether 'tis nobler in the
+        mind to suffer the slings and arrows of outrageous pagination, or to
+        take arms against a sea of frames, and by opposing end them.
+    </p>
+    <p class="filler">
+        To PDF or not to PDF, that is the question. Whether 'tis nobler in the
+        mind to suffer the slings and arrows of outrageous pagination, or to
+        take arms against a sea of frames, and by opposing end them.
+    </p>
+    <p class="filler">
+        To PDF or not to PDF, that is the question. Whether 'tis nobler in the
+        mind to suffer the slings and arrows of outrageous pagination, or to
+        take arms against a sea of frames, and by opposing end them.
+    </p>
+    <p class="filler">
+        To PDF or not to PDF, that is the question. Whether 'tis nobler in the
+        mind to suffer the slings and arrows of outrageous pagination, or to
+        take arms against a sea of frames, and by opposing end them.
+    </p>
+    <p class="filler">
+        To PDF or not to PDF, that is the question. Whether 'tis nobler in the
+        mind to suffer the slings and arrows of outrageous pagination, or to
+        take arms against a sea of frames, and by opposing end them.
+    </p>
+    <p class="filler">
+        To PDF or not to PDF, that is the question. Whether 'tis nobler in the
+        mind to suffer the slings and arrows of outrageous pagination, or to
+        take arms against a sea of frames, and by opposing end them.
+    </p>
+    <p class="filler">
+        To PDF or not to PDF, that is the question. Whether 'tis nobler in the
+        mind to suffer the slings and arrows of outrageous pagination, or to
+        take arms against a sea of frames, and by opposing end them.
+    </p>
+    <p class="filler">
+        To PDF or not to PDF, that is the question. Whether 'tis nobler in the
+        mind to suffer the slings and arrows of outrageous pagination, or to
+        take arms against a sea of frames, and by opposing end them.
+    </p>
+
+    <pdf:nexttemplate name="wide">
+    <pdf:nextpage>
+
+    <h1>A second template</h1>
+
+    <p>
+        This page uses the <code>wide</code> template: landscape, one frame,
+        and no static header or footer, because that template declares none.
+        <code>&lt;pdf:nexttemplate&gt;</code> chose it and
+        <code>&lt;pdf:nextpage&gt;</code> moved here.
+    </p>
+</body>
+</html>

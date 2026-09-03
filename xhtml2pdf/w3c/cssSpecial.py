@@ -17,9 +17,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-# ruff: noqa: N802, N803, N815, N816, N999
+# ruff: file-ignore[invalid-module-name]
 
 import logging
+import re
 
 from xhtml2pdf.util import toList
 
@@ -76,6 +77,50 @@ _borderStyleTable = {
     "outset": 1,
 }
 
+#: CSS 2.1 12.6.2, plus the CSS 3 aliases xhtml2pdf's marker table accepts.
+_listStyleTypeTable = {
+    "disc",
+    "circle",
+    "square",
+    "decimal",
+    "decimal-leading-zero",
+    "lower-roman",
+    "upper-roman",
+    "lower-greek",
+    "lower-latin",
+    "upper-latin",
+    "lower-alpha",
+    "upper-alpha",
+    "hebrew",
+    "georgian",
+    "armenian",
+    "cjk-ideographic",
+    "hiragana",
+    "katakana",
+    "hiragana-iroha",
+    "katakana-iroha",
+}
+
+_listStylePositionTable = {"inside", "outside"}
+
+
+_backgroundRepeatTable = {"repeat", "repeat-x", "repeat-y", "no-repeat"}
+_backgroundAttachmentTable = {"scroll", "fixed", "local"}
+_backgroundPositionTable = {"left", "right", "top", "bottom", "center", "middle"}
+
+_lengthPattern = re.compile(r"^[+-]?\d*\.?\d+(%|em|ex|rem|px|pt|pc|cm|mm|in)?$")
+
+
+def _isLength(text: str) -> bool:
+    return bool(_lengthPattern.match(text))
+
+
+def _joinPart(part) -> str:
+    """One shorthand part as a string; the parser splits "10px" into a pair."""
+    if isinstance(part, tuple | list):
+        return "".join(str(piece) for piece in part)
+    return str(part)
+
 
 def getNextPart(parts):
     return parts.pop(0) if parts else None
@@ -114,6 +159,75 @@ def splitBorder(parts):
     return (width, style, color)
 
 
+def expandBackground(parts, last):
+    """
+    Expand the background shorthand.
+
+    [<'background-color'> || <'background-image'> || <'background-repeat'> ||
+     <'background-attachment'> || <'background-position'>] | inherit
+
+    Every part used to be thrown away but one: the first was read as an image
+    if it contained a dot and as a colour otherwise, so
+    `background: #fcaf3e url(x.png) no-repeat` set the colour and lost both
+    the image and the repeat.
+
+    The parser has already unwrapped url(), so an image is a bare string by
+    the time it arrives and cannot be told from a colour name by syntax alone;
+    the dot-or-data: guess is still how they are separated, only now it is the
+    last resort rather than the first test.
+    """
+    expanded = []
+    position = []
+    for part in parts:
+        text = _joinPart(part)
+        lowered = text.lower()
+        if lowered in _backgroundRepeatTable:
+            expanded.append(("background-repeat", text, last))
+        elif lowered in _backgroundAttachmentTable:
+            # Nothing consumes background-attachment; a PDF page does not
+            # scroll. Recognised so it is not mistaken for a colour, then
+            # dropped.
+            continue
+        elif lowered in _backgroundPositionTable or _isLength(lowered):
+            position.append(text)
+        elif ("." in text) or ("data:" in lowered) or lowered == "none":
+            expanded.append(("background-image", text, last))
+        else:
+            expanded.append(("background-color", text, last))
+
+    if position:
+        expanded.append(("background-position", " ".join(position), last))
+    return expanded
+
+
+def expandListStyle(parts, last):
+    """
+    Expand the list-style shorthand.
+
+    [ <'list-style-type'> || <'list-style-position'> || <'list-style-image'> ]
+
+    Not expanded at all before this, so the whole shorthand was dropped:
+    `list-style: none`, the usual way to ask for a list without markers, did
+    nothing whatsoever.
+    """
+    expanded = []
+    for part in parts:
+        text = str(part).strip().lower()
+        if text == "none":
+            # CSS 2.1 12.6.2: ambiguous between type and image, and sets both.
+            expanded += [
+                ("list-style-type", part, last),
+                ("list-style-image", part, last),
+            ]
+        elif text in _listStylePositionTable:
+            expanded.append(("list-style-position", part, last))
+        elif text in _listStyleTypeTable:
+            expanded.append(("list-style-type", part, last))
+        else:
+            expanded.append(("list-style-image", part, last))
+    return expanded
+
+
 def parseSpecialRules(declarations, debug=0):
     # print selectors, declarations
     # CSS MODIFY!
@@ -124,7 +238,6 @@ def parseSpecialRules(declarations, debug=0):
             log.debug("CSS special  IN: %r", d)
 
         name, parts, last = d
-        oparts = parts
         parts = toList(parts, cast_tuple=False)
 
         # FONT
@@ -153,31 +266,19 @@ def parseSpecialRules(declarations, debug=0):
             else:
                 dd.append(("font-size", part, last))
                 # Face/ Family
-            dd.append(("font-face", parts, last))
+            #
+            # "font-face" is not a property, and nothing reads it: CSSCollect
+            # only asks for the names in attrNames. So `font: 12px Arial` set
+            # the size and dropped the family on the floor.
+            dd.append(("font-family", parts, last))
 
         # BACKGROUND
         elif name == "background":
-            # [<'background-color'> || <'background-image'> || <'background-repeat'> || <'background-attachment'> || <'background-position'>] | inherit
+            dd.extend(expandBackground(parts, last))
 
-            # XXX We do not receive url() and parts list, so we go for a dirty work around
-            part = getNextPart(parts) or oparts
-            if part:
-                if isinstance(part, str) and (("." in part) or ("data:" in part)):
-                    dd.append(("background-image", part, last))
-                else:
-                    dd.append(("background-color", part, last))
-
-            if 0:
-                part = getNextPart(parts) or oparts
-                print("~", part, parts, oparts, declarations)
-                # Color
-                if part and (not part.startswith("url")):
-                    dd.append(("background-color", part, last))
-                    part = getNextPart(parts)
-                    # Background
-                if part:
-                    dd.append(("background-image", part, last))
-                    # XXX Incomplete! Error in url()!
+        # LIST-STYLE
+        elif name == "list-style":
+            dd.extend(expandListStyle(parts, last))
 
         # TODO: We should definitely outsource the "if len() ==" part into a separate function!
         # Because we're repeating the same if-elif-else statement for MARGIN, PADDING,

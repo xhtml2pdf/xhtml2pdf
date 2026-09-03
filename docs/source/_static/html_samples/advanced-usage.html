@@ -1,0 +1,29 @@
+<html>
+<head>
+    <title>Resolving relative references</title>
+    <style>
+        @page { size: a4 portrait; margin: 2cm; }
+        body { font-family: Helvetica; }
+        img { width: 120px; }
+        .note { background-color: #eeeeec; padding: 0.6em; }
+    </style>
+</head>
+<body>
+    <h1>Relative references</h1>
+
+    <p class="note">
+        Neither of the images below is addressed by a path this converter could
+        open on its own. Each is written the way it would be in a template
+        &mdash; <code>img/denker.png</code> &mdash; and turned into a file on
+        disk by the <code>link_callback</code> this page describes. The
+        documentation build passes one in.
+    </p>
+
+    <p><img src="img/denker.png" alt="denker"> <img src="img/beach.jpg" alt="beach"></p>
+
+    <p>
+        Without the callback the converter has nothing to fetch and both images
+        would be missing from this page.
+    </p>
+</body>
+</html>

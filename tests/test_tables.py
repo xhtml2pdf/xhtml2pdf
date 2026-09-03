@@ -6,7 +6,9 @@ from xml.dom import minidom
 
 from xhtml2pdf import tables
 from xhtml2pdf.context import pisaContext
+from xhtml2pdf.document import pisaStory
 from xhtml2pdf.parser import AttrContainer
+from xhtml2pdf.xhtml2pdf_reportlab import PmlTable
 
 
 class TablesWidthTestCase(TestCase):
@@ -61,6 +63,8 @@ class TableDataTestCase(TestCase):
         self.assertEqual(instance.mode, "")
         self.assertEqual(instance.padding, 0)
         self.assertEqual(instance.col, 0)
+        self.assertEqual(instance.col_with_content, set())
+        self.assertEqual(instance.col_empty_width, {})
 
     def test_add_cell_will_increment_col_and_append_data_to_instance_data(self) -> None:
         instance = self.sut()
@@ -448,3 +452,138 @@ class PisaTagTDTestCase(TestCase):
         instance.start(context)
 
         self.assertEqual(context.tableData.colw, [None])
+
+
+class EmptyCellColumnWidthTestCase(TestCase):
+    """
+    An empty <td> must not decide the width of its whole column.
+
+    A cell with no children cannot be sized by its content, so it offers its
+    own padding as the column width. That was applied per cell, before the
+    table had been read to the end, so one empty cell was enough to overwrite
+    the width declared in the header -- and, with no width declared anywhere,
+    to overwrite the "let reportlab share it out" that a cell with content had
+    left. In a statement with an empty debit or credit cell on half its rows,
+    both columns came out ten points wide and their neighbours overlapped them.
+    """
+
+    #: Padding is what makes the offered width non-zero, and so is what makes
+    #: the bug visible at all: with `padding: 0` the column was left alone.
+    STYLE = "td, th { padding: 3pt 5pt; }"
+
+    def widths(self, rows: str, style: str = "") -> list:
+        """
+        The column widths the parser computed, before anything is built.
+
+        Through pisaStory rather than pisaParser: only the former loads
+        DEFAULT_CSS, and without it a <td> is inline, CSS2Frag never applies
+        its padding, and the whole bug is unreachable.
+        """
+        html = (
+            f"<html><head><style>{self.STYLE}{style}</style></head><body>"
+            f'<table width="100%" cellpadding="0">{rows}</table>'
+            "</body></html>"
+        )
+        context = pisaStory(html)
+        table = next(f for f in context.story if isinstance(f, PmlTable))
+        return list(table._colWidths)
+
+    def test_a_declared_width_survives_an_empty_cell(self) -> None:
+        rows = (
+            '<tr><th width="60mm">a</th><th width="30mm">b</th>'
+            '<th width="30mm">c</th></tr>'
+            "<tr><td>x</td><td>y</td><td>z</td></tr>"
+            "<tr><td>x</td><td>y</td><td></td></tr>"
+        )
+        third = self.widths(rows)[2]
+        self.assertAlmostEqual(tables._width("30mm"), third, places=3)
+
+    def test_an_empty_cell_does_not_size_a_column_that_has_content(self) -> None:
+        """With no width declared, the column is reportlab's to share out."""
+        rows = (
+            "<tr><td>a</td><td>b</td><td>c</td></tr>"
+            "<tr><td>x</td><td>y</td><td></td></tr>"
+        )
+        self.assertEqual([None, None, None], self.widths(rows))
+
+    def test_a_column_that_is_empty_throughout_gets_its_padding(self) -> None:
+        """The behaviour the code was reaching for, kept intact."""
+        rows = (
+            "<tr><td>a</td><td>b</td><td></td></tr>"
+            "<tr><td>x</td><td>y</td><td></td></tr>"
+        )
+        widths = self.widths(rows)
+        self.assertEqual([None, None], widths[:2])
+        self.assertAlmostEqual(10.0, widths[2], places=3)  # 5pt + 5pt
+
+    def test_an_empty_cell_without_padding_changes_nothing(self) -> None:
+        rows = (
+            "<tr><td>a</td><td>b</td><td>c</td></tr>"
+            "<tr><td>x</td><td>y</td><td></td></tr>"
+        )
+        self.assertEqual([None, None, None], self.widths(rows, "td { padding: 0; }"))
+
+
+class RepeatedHeaderTestCase(TestCase):
+    """
+    <thead> says which rows repeat at the top of every page.
+
+    Repetition used to be available only through the non-standard
+    `<table repeat="N">`, and thead/tbody/tfoot were not tags this library
+    knew: a long table written the standard way printed its header on the
+    first page and nowhere else, silently.
+    """
+
+    @staticmethod
+    def repeat_rows(table_html: str) -> int:
+        """
+        What the parser will hand reportlab as repeatRows.
+
+        Through pisaStory, not pisaParser: the default stylesheet is what makes
+        a <td> a block, and the row bookkeeping depends on it.
+        """
+        html = f"<html><body>{table_html}</body></html>"
+        context = pisaStory(html)
+        table = next(f for f in context.story if isinstance(f, PmlTable))
+        return table.repeatRows
+
+    def test_a_header_row_repeats(self) -> None:
+        self.assertEqual(
+            1,
+            self.repeat_rows(
+                "<table><thead><tr><th>h</th></tr></thead>"
+                "<tbody><tr><td>a</td></tr></tbody></table>"
+            ),
+        )
+
+    def test_a_two_row_header_repeats_both(self) -> None:
+        self.assertEqual(
+            2,
+            self.repeat_rows(
+                "<table><thead><tr><th>h</th></tr><tr><th>sub</th></tr></thead>"
+                "<tbody><tr><td>a</td></tr></tbody></table>"
+            ),
+        )
+
+    def test_the_explicit_attribute_still_works(self) -> None:
+        self.assertEqual(
+            1,
+            self.repeat_rows(
+                '<table repeat="1"><tr><th>h</th></tr><tr><td>a</td></tr></table>'
+            ),
+        )
+
+    def test_the_larger_of_the_two_wins(self) -> None:
+        """Asking for two rows and marking one up should not lose a row."""
+        self.assertEqual(
+            2,
+            self.repeat_rows(
+                '<table repeat="2"><thead><tr><th>h</th></tr></thead>'
+                "<tbody><tr><td>a</td></tr></tbody></table>"
+            ),
+        )
+
+    def test_a_table_without_either_repeats_nothing(self) -> None:
+        self.assertEqual(
+            0, self.repeat_rows("<table><tr><th>h</th></tr><tr><td>a</td></tr></table>")
+        )

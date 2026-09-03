@@ -1,0 +1,33 @@
+<!--
+  Browser equivalent of data/source/test-table-css.html
+
+  This fixture is already plain HTML/CSS, so the equivalent is the same markup
+  with _normalize.css linked ahead of the document's own styles. That file
+  replaces the browser's UA stylesheet with xhtml2pdf's DEFAULT_CSS, so both
+  engines start from the same defaults; see data/browser/_normalize.css.
+-->
+<html>
+<head>
+<link rel="stylesheet" href="_normalize.css">
+    <title>None</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <style type="text/css">
+        div#foo #bar-table th,
+        div#bar #bar-table th {
+            background-color: #F0F0F0;
+        }
+    </style>
+</head>
+<body>
+<div id="foo">
+    <div id="foo-header">
+        <table id="foofoo">
+            <tr>
+                <th>One</th>
+                <td>Two</td>
+            </tr>
+        </table>
+    </div>
+</div>
+</body>
+</html>

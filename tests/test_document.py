@@ -8,6 +8,8 @@ from pypdf import PdfReader
 
 from xhtml2pdf.document import pisaDocument
 
+from .httpserver import LocalServerMixin
+
 DENKER_TRANSPARENT = os.path.join(
     os.path.dirname(__file__), "samples", "img", "denker-transparent.png"
 )
@@ -70,7 +72,7 @@ METADATA = {
 IN_PYPY = find_spec("__pypy__") is not None
 
 
-class DocumentTest(TestCase):
+class DocumentTest(LocalServerMixin, TestCase):
     def _compare_pdf_metadata(self, pdf_file, assertion):
         # Ensure something has been written
         self.assertNotEqual(pdf_file.tell(), 0)
@@ -82,10 +84,9 @@ class DocumentTest(TestCase):
         pdf_info = pdf_reader.metadata
 
         # Check the received metadata matches the expected metadata
-        for original_key in METADATA:
+        for original_key, expected_value in METADATA.items():
             actual_key = f"/{original_key.capitalize()}"
             actual_value = pdf_info[actual_key]
-            expected_value = METADATA[original_key]
 
             assertion(actual_value, expected_value)
 
@@ -139,10 +140,8 @@ class DocumentTest(TestCase):
         tests_folder = os.path.dirname(os.path.realpath(__file__))
         background_path = os.path.join(tests_folder, "samples", "images.pdf")
 
-        css = """"<style>@page {{background-image: url('{background_location}'); @frame {{left: 10pt}}}}
-              @page two {{@frame {{left: 10 pt}}}}</style>""".format(
-            background_location=background_path
-        )
+        css = f""""<style>@page {{background-image: url('{background_path}'); @frame {{left: 10pt}}}}
+              @page two {{@frame {{left: 10 pt}}}}</style>"""
 
         extra_html = (
             """<pdf:nexttemplate name="two"> <pdf:nextpage> <p>Hello, world!</p>"""
@@ -247,11 +246,12 @@ class DocumentTest(TestCase):
     def test_document_with_broken_image(self) -> None:
         """Test that broken images don't cause unhandled exception"""
         # Although this is just html, it will be recognized as svg
-        image_path = "https://raw.githubusercontent.com/xhtml2pdf/xhtml2pdf/b01b1d8f9497dedd0f2454409d03408bdeea997c/tests/samples/images.html"
+        image_path = f"{self.base_url}/images.html"
         extra_html = f'<img src="{image_path}">'
-        with open(os.devnull, "wb") as pdf_file, self.assertLogs(
-            "xhtml2pdf.xhtml2pdf_reportlab", level="WARNING"
-        ) as cm:
+        with (
+            open(os.devnull, "wb") as pdf_file,
+            self.assertLogs("xhtml2pdf.xhtml2pdf_reportlab", level="WARNING") as cm,
+        ):
             pisaDocument(
                 src=io.StringIO(HTML_CONTENT.format(head="", extra_html=extra_html)),
                 dest=pdf_file,
@@ -259,20 +259,21 @@ class DocumentTest(TestCase):
             self.assertEqual(
                 cm.output,
                 [
-                    "WARNING:xhtml2pdf.xhtml2pdf_reportlab:SVG drawing could not be"
-                    " resized:"
-                    " 'https://raw.githubusercontent.com/xhtml2pdf/xhtml2pdf/b01b1d8f9497dedd0f2454409d03408bdeea997c/tests/samples/images.html'"
+                    (
+                        "WARNING:xhtml2pdf.xhtml2pdf_reportlab:SVG drawing could not"
+                        f" be resized: {image_path!r}"
+                    )
                 ],
             )
 
-    @skipIf(os.environ.get("HTTP_PROXY"), reason="Running on proxy")
     def test_document_cannot_identify_image(self) -> None:
         """Test that images which cannot be identified don't cause stack trace to be printed"""
-        image_path = "https://raw.githubusercontent.com/python-pillow/Pillow/7921da54a73dd4a30c23957369b79cda176005c6/Tests/images/zero_width.gif"
+        image_path = f"{self.base_url}/img/zero_width.gif"
         extra_html = f'<img src="{image_path}">'
-        with open(os.devnull, "wb") as pdf_file, self.assertLogs(
-            "xhtml2pdf.tags", level="WARNING"
-        ) as cm:
+        with (
+            open(os.devnull, "wb") as pdf_file,
+            self.assertLogs("xhtml2pdf.tags", level="WARNING") as cm,
+        ):
             pisaDocument(
                 src=io.StringIO(HTML_CONTENT.format(head="", extra_html=extra_html)),
                 dest=pdf_file,
@@ -280,9 +281,10 @@ class DocumentTest(TestCase):
             self.assertEqual(
                 cm.output,
                 [
-                    "WARNING:xhtml2pdf.tags:Cannot identify image file:\n"
-                    "'<img "
-                    'src="https://raw.githubusercontent.com/python-pillow/Pillow/7921da54a73dd4a30c23957369b79cda176005c6/Tests/images/zero_width.gif"/>\''
+                    (
+                        "WARNING:xhtml2pdf.tags:Cannot identify image file:\n"
+                        f"'<img src=\"{image_path}\"/>'"
+                    )
                 ],
             )
 
@@ -347,3 +349,164 @@ class DocumentTest(TestCase):
                 dest=in_memory_file,
             )
             self.assertGreater(len(in_memory_file.getvalue()), 0)
+
+
+class CanvasBackgroundTest(TestCase):
+    """
+    CSS 2.1 14.2: when the html element declares no background of its own, the
+    background of body propagates to the canvas, so it covers the whole page
+    rather than only the area body's boxes happen to occupy.
+    """
+
+    @staticmethod
+    def _content(html: str):
+        dest = io.BytesIO()
+        pisaDocument(io.StringIO(html), dest)
+        dest.seek(0)
+        page = PdfReader(dest).pages[0]
+        return page, page.get_contents().get_data().decode("latin-1")
+
+    @staticmethod
+    def _full_page_fill(page, content: str) -> bool:
+        width = round(float(page.mediabox.width), 4)
+        height = round(float(page.mediabox.height), 4)
+        return f"0 0 {width} {height} re" in content
+
+    def test_body_background_covers_the_page(self) -> None:
+        page, content = self._content(
+            '<html><body style="background-color: #ff0000">x</body></html>'
+        )
+        self.assertIn("1 0 0 rg", content, "expected a red fill colour")
+        self.assertTrue(
+            self._full_page_fill(page, content),
+            "body background did not propagate to the canvas",
+        )
+
+    def test_no_body_background_leaves_the_canvas_alone(self) -> None:
+        page, content = self._content("<html><body>x</body></html>")
+        self.assertFalse(
+            self._full_page_fill(page, content),
+            "a page-sized fill appeared without any background declared",
+        )
+
+    def test_background_covers_every_page(self) -> None:
+        dest = io.BytesIO()
+        pisaDocument(
+            io.StringIO(
+                '<html><body style="background-color: #00ff00">one'
+                "<pdf:nextpage/>two</body></html>"
+            ),
+            dest,
+        )
+        dest.seek(0)
+        pages = PdfReader(dest).pages
+        self.assertEqual(2, len(pages))
+        for number, page in enumerate(pages, 1):
+            with self.subTest(page=number):
+                content = page.get_contents().get_data().decode("latin-1")
+                self.assertIn("0 1 0 rg", content)
+                self.assertTrue(self._full_page_fill(page, content))
+
+
+class EncryptAndSignTest(TestCase):
+    """
+    Asking for both says which two arguments are the problem.
+
+    The document is encrypted while it is built and signed afterwards, so
+    pyHanko was handed a PDF it had no password for and the call failed with
+    PdfKeyNotAvailableError several steps later, from inside a library the
+    caller never named.
+    """
+
+    HTML = "<html><body><p>x</p></body></html>"
+
+    def test_the_two_together_are_refused(self) -> None:
+        with self.assertRaises(ValueError) as raised:
+            pisaDocument(
+                io.StringIO(self.HTML),
+                io.BytesIO(),
+                encrypt="password",
+                signature={"engine": "simple", "type": "simple"},
+            )
+
+        self.assertIn("cannot be combined", str(raised.exception))
+
+    def test_a_user_password_converts(self) -> None:
+        """
+        The simplest form in the documentation, and it aborted the whole
+        conversion: every document was read back through pypdf to apply
+        backgrounds, and a document encrypted with a user password cannot be
+        read without it, so it died with FileNotDecryptedError.
+        """
+        dest = io.BytesIO()
+        result = pisaDocument(io.StringIO(self.HTML), dest, encrypt="password")
+
+        self.assertEqual(0, result.err)
+        dest.seek(0)
+        reader = PdfReader(dest)
+        self.assertTrue(reader.is_encrypted)
+        self.assertTrue(reader.decrypt("password"))
+        self.assertEqual(1, len(reader.pages))
+
+    def test_a_background_on_an_encrypted_document_says_why_not(self) -> None:
+        html = (
+            "<html><head><style>@page { background-image:"
+            ' url("tests/samples/img/tree.jpg"); }</style></head>'
+            "<body><p>x</p></body></html>"
+        )
+
+        with self.assertRaises(ValueError) as raised:
+            pisaDocument(io.StringIO(html), io.BytesIO(), encrypt="password", path=".")
+
+        self.assertIn("cannot be merged", str(raised.exception))
+
+
+class ArgumentsThatDoSomethingTest(TestCase):
+    """
+    Three arguments of pisaDocument promised something and did nothing.
+
+    raise_exception was marked unused and every failure propagated whatever it
+    said; show_error_as_pdf did not exist even though pisaErrorDocument was
+    written for it, and the WSGI middleware in this package passed it on every
+    call; and anything else at all disappeared into **_kwargs, including the
+    errout, tempdir and format that this package's own CLI passed.
+    """
+
+    #: Not a document, not a path: the conversion cannot even start.
+    BROKEN = object()
+
+    def test_a_failure_raises_by_default(self) -> None:
+        with self.assertRaises(TypeError):
+            pisaDocument(self.BROKEN, io.BytesIO())
+
+    def test_raise_exception_false_returns_the_context(self) -> None:
+        context = pisaDocument(self.BROKEN, io.BytesIO(), raise_exception=False)
+
+        self.assertTrue(context.err)
+
+    def test_show_error_as_pdf_writes_the_errors(self) -> None:
+        dest = io.BytesIO()
+        pisaDocument(self.BROKEN, dest, show_error_as_pdf=True)
+
+        dest.seek(0)
+        self.assertIn("error", (PdfReader(dest).pages[0].extract_text() or "").lower())
+
+    def test_an_unknown_argument_is_named(self) -> None:
+        with self.assertWarns(DeprecationWarning) as warned:
+            pisaDocument(
+                io.StringIO(HTML_CONTENT.format(head="", extra_html="")),
+                io.BytesIO(),
+                errout=None,
+            )
+
+        self.assertIn("errout", str(warned.warning))
+
+    def test_debug_says_it_does_nothing(self) -> None:
+        with self.assertWarns(DeprecationWarning) as warned:
+            pisaDocument(
+                io.StringIO(HTML_CONTENT.format(head="", extra_html="")),
+                io.BytesIO(),
+                debug=1,
+            )
+
+        self.assertIn("debug", str(warned.warning))

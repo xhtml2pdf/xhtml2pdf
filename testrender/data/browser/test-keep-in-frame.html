@@ -1,0 +1,63 @@
+<!--
+  Browser equivalent of data/source/test-keep-in-frame.html
+
+  Six static frames placed by @frame with -pdf-frame-content, reproduced as
+  absolutely positioned boxes at the same coordinates. f5 and f6 declare no
+  -pdf-frame-content and stay empty, as they do in the source.
+
+  -pdf-keep-in-frame-mode: shrink has no browser equivalent: a browser clips
+  overflow rather than scaling the content down to fit. overflow: hidden is the
+  closest honest approximation, so frames whose content overflows will differ.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>test-keep-in-frame</title>
+<style>
+/* xhtml2pdf @frame coordinates are measured from the page edge, so the page
+   box must have no margin of its own and the frames are positioned absolutely. */
+@page { size: A4; margin: 0; }
+.frame { position: absolute; box-sizing: border-box; overflow: hidden; }
+/* -pdf-frame-border: 1 */
+.frame.bordered { border: 1px solid black; }
+</style>
+</head>
+<body>
+<div class="frame bordered" style="top:1cm; left:1cm; width:4cm; height:4cm">STATIC FRAME - Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Donec euismod ante sed mi. Mauris tortor purus, fermentum sit amet, interdum et, rutrum nec, risus. Suspendisse erat nisi, vestibulum a, mattis at, dignissim quis, ante. Ut in dui. Etiam sed elit nec tellus vulputate tincidunt. Nunc tortor risus, dignissim in, tempor a, sodales vel, erat. Aenean metus ipsum, vulputate vel, eleifend sed, tristique sed, nibh. Aliquam erat volutpat. Sed lobortis fringilla mauris. Nullam convallis ullamcorper urna. Integer id justo sed pede suscipit convallis. Cras non purus sed nisi faucibus scelerisque. Donec ullamcorper massa id risus. Vivamus tristique hendrerit neque. Maecenas pulvinar ipsum dictum ante. Cras eleifend lacus. Suspendisse et massa. Vestibulum sit amet lacus. In sed libero. Duis quis enim sit amet lorem ultrices rhoncus.</div>
+<div class="frame bordered" style="top:1cm; left:6cm; width:14cm; height:4cm">STATIC FRAME - Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Donec euismod ante sed mi. Mauris tortor purus, fermentum sit amet, interdum et, rutrum nec, risus. Suspendisse erat nisi, vestibulum a, mattis at, dignissim quis, ante. Ut in dui. Etiam sed elit nec tellus vulputate tincidunt. Nunc tortor risus, dignissim in, tempor a, sodales vel, erat. Aenean metus ipsum, vulputate vel, eleifend sed, tristique sed, nibh. Aliquam erat volutpat. Sed lobortis fringilla mauris. Nullam convallis ullamcorper urna. Integer id justo sed pede suscipit convallis. Cras non purus sed nisi faucibus scelerisque. Donec ullamcorper massa id risus. Vivamus tristique hendrerit neque. Maecenas pulvinar ipsum dictum ante. Cras eleifend lacus. Suspendisse et massa. Vestibulum sit amet lacus. In sed libero. Duis quis enim sit amet lorem ultrices rhoncus.</div>
+<div class="frame bordered" style="top:6cm; left:1cm; width:4cm; height:8cm"><p>STATIC FRAME - Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Donec euismod ante sed mi. Mauris tortor purus, fermentum sit amet, interdum et, rutrum nec, risus. Suspendisse erat nisi, vestibulum a, mattis at, dignissim quis, ante. Ut in dui. Etiam sed elit nec tellus vulputate tincidunt. Nunc tortor risus, dignissim in, tempor a, sodales vel, erat. Aenean metus ipsum, vulputate vel, eleifend sed, tristique sed, nibh. Aliquam erat volutpat. Sed lobortis fringilla mauris. Nullam convallis ullamcorper urna. Integer id justo sed pede suscipit convallis. Cras non purus sed nisi faucibus scelerisque. Donec ullamcorper massa id risus. Vivamus tristique hendrerit neque. Maecenas pulvinar ipsum dictum ante. Cras eleifend lacus. Suspendisse et massa. Vestibulum sit amet lacus. In sed libero. Duis quis enim sit amet lorem ultrices rhoncus.</p>
+  <img src="img/test_logo.jpg"/>
+  <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit.</p>
+  <table>
+    <tr>
+      <td>First Col</td>
+      <td>Second Col</td>
+      <td>Last Col</td>
+    </tr>
+    <tr>
+      <td>First Col</td>
+      <td>Second Col</td>
+      <td>Last Col</td>
+    </tr>
+  </table></div>
+<div class="frame bordered" style="top:6cm; left:6cm; width:14cm; height:8cm"><p>STATIC FRAME - Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Donec euismod ante sed mi. Mauris tortor purus, fermentum sit amet, interdum et, rutrum nec, risus. Suspendisse erat nisi, vestibulum a, mattis at, dignissim quis, ante. Ut in dui. Etiam sed elit nec tellus vulputate tincidunt. Nunc tortor risus, dignissim in, tempor a, sodales vel, erat. Aenean metus ipsum, vulputate vel, eleifend sed, tristique sed, nibh. Aliquam erat volutpat. Sed lobortis fringilla mauris. Nullam convallis ullamcorper urna. Integer id justo sed pede suscipit convallis. Cras non purus sed nisi faucibus scelerisque. Donec ullamcorper massa id risus. Vivamus tristique hendrerit neque. Maecenas pulvinar ipsum dictum ante. Cras eleifend lacus. Suspendisse et massa. Vestibulum sit amet lacus. In sed libero. Duis quis enim sit amet lorem ultrices rhoncus.</p>
+  <img src="img/test_logo.jpg"/>
+  <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit.</p>
+  <table width="100%">
+    <tr>
+      <td>First Col</td>
+      <td>Second Col</td>
+      <td>Last Col</td>
+    </tr>
+    <tr>
+      <td>First Col</td>
+      <td>Second Col</td>
+      <td>Last Col</td>
+    </tr>
+  </table></div>
+<div class="frame bordered" style="top:15cm; left:1cm; width:4cm; height:4cm"></div>
+<div class="frame bordered" style="top:15cm; left:6cm; width:14cm; height:8cm"></div>
+</body>
+</html>

@@ -20,8 +20,7 @@ from xhtml2pdf.paragraph import (
 
 
 class LegacyParagraphTests(TestCase):
-    @staticmethod
-    def test_legacy():
+    def test_legacy(self):
         """Test function coming from paragraph.__main__"""
         ALIGNMENTS = (TA_LEFT, TA_RIGHT, TA_CENTER, TA_JUSTIFY)
 
@@ -157,6 +156,21 @@ class LegacyParagraphTests(TestCase):
                     style["textAlign"] = ALIGNMENTS[i % 4]
                     text = createText(("(%d) " % i) + TEXT, fn, fs)
                     story.append(Paragraph(copy.copy(text), style, debug=0))
-                doc.build(story)
 
-        test()
+                # every paragraph must lay out to a positive height and
+                # produce at least one line -- this test asserted nothing at all
+                for paragraph in story:
+                    width, height = paragraph.wrap(doc.width, doc.height)
+                    self.assertGreater(height, 0)
+                    self.assertGreater(width, 0)
+                    self.assertGreater(len(paragraph.text.lines), 0)
+
+                # doc.build() consumes the list, so count before building
+                paragraph_count = len(story)
+                doc.build(story)
+                pdf_file.seek(0)
+                data = pdf_file.read()
+                self.assertTrue(data.startswith(b"%PDF"))
+                return paragraph_count
+
+        self.assertGreater(test(), 0)

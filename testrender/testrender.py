@@ -97,6 +97,8 @@ def create_diff_image(srcfile1, srcfile2, output_dir, options):
         "-colorspace",
         "RGB",
         outfile,
+        # `compare` exits 1 when the images differ; that is a result, not a crash
+        allowed_returncodes=(0, 1),
     )
     diff_value = int(float(result.strip()))
     if diff_value > 0:
@@ -133,7 +135,12 @@ def render_file(filename, output_dir, ref_dir, options):
         for page in pages:
             refsrc = os.path.join(ref_dir, os.path.basename(page["png"]))
             if not os.path.isfile(refsrc):
+                # Skipping silently made an incomplete reference set look like a
+                # clean run, i.e. "0 files differ" with nothing compared at all.
                 pprint("Reference image for %s not found!" % page["png"])
+                if not options.allow_missing_reference:
+                    page["diff_value"] = "missing reference"
+                    diff_count += 1
                 continue
             page["ref"] = copy_ref_image(refsrc, output_dir, options)
             page["ref_thumb"] = create_thumbnail(page["ref"], options)
@@ -147,14 +154,23 @@ def render_file(filename, output_dir, ref_dir, options):
     return pdf, pages, diff_count
 
 
-def exec_cmd(options, *args):
+def exec_cmd(options, *args, allowed_returncodes=(0,)):
+    """
+    Run a command.
+
+    ``allowed_returncodes`` exists because ImageMagick's ``compare`` exits 1
+    when the images differ and 2 only on a real error. Treating 1 as fatal used
+    to abort the whole run on the first differing page, before the HTML report
+    was written -- which is why ``--nofail`` had to be passed in CI, disabling
+    the comparison entirely.
+    """
     if options.debug:
         pprint("Executing %s" % " ".join(args))
     proc = Popen(args, stdout=PIPE, stderr=PIPE)
     result = proc.communicate()
 
     pprint(f"Compare result: {result[0]!r} {result[1]!r}")
-    if proc.returncode:
+    if proc.returncode not in allowed_returncodes:
         pprint("exec error (%i): %s" % (proc.returncode, result[1]))
         pprint.flush(end=True)
         if not options.nofail:
@@ -249,6 +265,23 @@ def main():
     template_file = os.path.join(base_dir, options.html_template)
     ref_dir = os.path.join(base_dir, options.ref_dir)
 
+    if (
+        options.create_reference is None
+        and not options.no_compare
+        and not os.path.isdir(ref_dir)
+    ):
+        # Without this the run reports every page as a difference, which reads
+        # like a rendering regression rather than a missing reference set.
+        # Written to stderr on purpose: pprint() is silenced by --only-errors.
+        sys.stderr.write(
+            f"Reference directory not found: {ref_dir}\n"
+            "Reference images are generated rather than committed, because they\n"
+            "are ghostscript/ImageMagick rasterisations that depend on the local\n"
+            "toolchain and font versions.\n"
+            "Run `make test-ref` first, or `make test-render-all` to do both.\n"
+        )
+        raise SystemExit(2)
+
     if os.path.isdir(output_dir):
         shutil.rmtree(output_dir)
     os.makedirs(output_dir)
@@ -273,7 +306,11 @@ def main():
         pprint("Rendered %i file%s" % (num, "" if num == 1 else "s"))
         pprint(
             "%i file%s differ%s from reference"
-            % (diff_count, diff_count != 1 and "s" or "", diff_count == 1 and "s" or "")
+            % (
+                diff_count,
+                (diff_count != 1 and "s") or "",
+                (diff_count == 1 and "s") or "",
+            )
         )
         pprint("Check %s for results" % htmlfile)
         if diff_count:
@@ -358,6 +395,16 @@ parser.add_option(
     help="Don't try to remove transparent backgrounds Needed for CI",
 )
 
+parser.add_option(
+    "--allow-missing-reference",
+    dest="allow_missing_reference",
+    action="store_true",
+    default=False,
+    help=(
+        "Treat a missing reference image as a skip instead of a difference. "
+        "Useful for a first local run, never in CI."
+    ),
+)
 parser.add_option(
     "--no-compare",
     dest="no_compare",

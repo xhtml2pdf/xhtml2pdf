@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# ruff: noqa: N802, N803
 from __future__ import annotations
 
 import contextlib
@@ -22,12 +21,13 @@ import sys
 from hashlib import md5
 from html import escape as html_escape
 from io import BytesIO, StringIO
-from typing import TYPE_CHECKING, ClassVar, Iterator
+from typing import TYPE_CHECKING, Any, ClassVar
 from uuid import uuid4
 
 from PIL import Image as PILImage
 from PIL import UnidentifiedImageError
 from PIL.Image import Image
+from reportlab.graphics.shapes import Drawing
 from reportlab.lib.enums import TA_RIGHT
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.utils import LazyImageReader, flatten, haveImages, open_for_read
@@ -36,6 +36,7 @@ from reportlab.platypus.doctemplate import (
     BaseDocTemplate,
     IndexingFlowable,
     PageTemplate,
+    PTCycle,
 )
 from reportlab.platypus.flowables import (
     CondPageBreak,
@@ -49,10 +50,16 @@ from reportlab.rl_config import register_reset
 
 from xhtml2pdf.files import pisaFileObject, pisaTempFile
 from xhtml2pdf.reportlab_paragraph import Paragraph
-from xhtml2pdf.util import ImageWarning, getBorderStyle
+from xhtml2pdf.util import (
+    ImageWarning,
+    drawBackgroundImage,
+    drawBorderLine,
+    getBackgroundImageReader,
+    getBackgroundImageSize,
+    getBorderWidth,
+)
 
 if TYPE_CHECKING:
-    from reportlab.graphics.shapes import Drawing
     from reportlab.pdfgen.canvas import Canvas
 
 
@@ -67,20 +74,6 @@ log = logging.getLogger(__name__)
 
 MAX_IMAGE_RATIO: float = 0.95
 PRODUCER: str = "xhtml2pdf <https://github.com/xhtml2pdf/xhtml2pdf/>"
-
-
-class PTCycle(list):
-    def __init__(self) -> None:
-        self._restart: int = 0
-        self._idx: int = 0
-        super().__init__()
-
-    def cyclicIterator(self) -> Iterator:
-        while 1:
-            yield self[self._idx]
-            self._idx += 1
-            if self._idx >= len(self):
-                self._idx = self._restart
 
 
 class PmlMaxHeightMixIn:
@@ -113,6 +106,21 @@ class PmlBaseDoc(BaseDocTemplate):
         # Clear the list of templates, to ensure the list refers to the *final* rendering, also
         # in a multiBuild rendering.
         self.pisaTemplateList = []
+
+        # And the page template left pending by the previous pass. A
+        # <pdf:nextpage name="x"/> onto a :left/:right pair leaves a cycle on
+        # the document and reportlab never clears it, so on the second pass of
+        # a multiBuild every page after the first came out on the mirrored
+        # templates whatever the markup said. handle_documentBegin has already
+        # chosen this page's template by the time we get here, and the story --
+        # with its NextPageTemplate flowables -- is walked again on every pass,
+        # so the cycle rebuilds itself where it belongs.
+        if not isinstance(self._firstPageTemplateIndex, list):
+            # A list is the one case where reportlab has just built the cycle
+            # itself, in the two lines above this call.
+            for attribute in ("_nextPageTemplateCycle", "_nextPageTemplateIndex"):
+                if hasattr(self, attribute):
+                    delattr(self, attribute)
 
     def beforePage(self) -> None:
         self.canv._doc.info.producer = PRODUCER
@@ -169,29 +177,31 @@ class PmlBaseDoc(BaseDocTemplate):
             if hasattr(self, "_nextPageTemplateCycle"):
                 del self._nextPageTemplateCycle
             self._nextPageTemplateIndex = pt
-        elif isinstance(pt, (list, tuple)):
+        elif isinstance(pt, list | tuple):
             # used for alternating left/right pages
             # collect the refs to the template objects, complain if any are bad
             c: PTCycle = PTCycle()
             for ptn in pt:
                 # special case name used to short circuit the iteration
                 if ptn == "*":
-                    c._restart = len(c)
+                    c._restart = len(c)  # type: ignore[attr-defined]
                     continue
                 for t in self.pageTemplates:
-                    sys.exit()
                     if t.id == ptn.strip():
                         c.append(t)
                         break
             if not c:
                 msg = "No valid page templates in cycle"
                 raise ValueError(msg)
-            if c._restart > len(c):
+            if c._restart > len(c):  # type: ignore[attr-defined]
                 msg = "Invalid cycle restart position"
                 raise ValueError(msg)
 
-            # ensure we start on the first one$
-            self._nextPageTemplateCycle: PageTemplate = c.cyclicIterator()
+            # ensure we start on the first one
+            # NB: reportlab's BaseDocTemplate._setPageTemplate reads
+            # ``_nextPageTemplateCycle.next_value``, so this must be the PTCycle
+            # itself and not an iterator over it.
+            self._nextPageTemplateCycle: PTCycle = c
         else:
             msg = "Argument pt should be string or integer or list"
             raise TypeError(msg)
@@ -206,12 +216,25 @@ class PmlPageTemplate(PageTemplate):
     # by default portrait
     pageorientation: str = PORTRAIT
 
+    #: How the content of a static frame that outgrows its @frame is painted,
+    #: when the frame itself does not say. See xhtml2pdf.util.getKeepInFrameMode.
+    staticOverflowMode: str = "shrink"
+
+    #: Slack, in points, before a static frame counts as overflowing. Below it
+    #: the two measurements are the same number said in different words.
+    STATIC_OVERFLOW_FUZZ: float = 0.1
+
     def __init__(self, **kw) -> None:
         self.pisaStaticList: list = []
-        self.pisaBackground = None
+        self.pisaBackground: Any = None
+        #: Colour propagated from <body> to the page canvas; see CSS 2.1 14.2.
+        self.canvasBackground = None
         super().__init__(**kw)
         self._page_count: int = 0
         self._first_flow: bool = True
+        #: (complaint, frame id) pairs already logged, so that a hundred-page
+        #: document says each one once and not once per page and layout pass.
+        self._staticFrameWarned: set[tuple[str, str]] = set()
 
         # Background Image
         self.img = None
@@ -237,6 +260,13 @@ class PmlPageTemplate(PageTemplate):
     def beforeDrawPage(self, canvas: Canvas, doc):
         canvas.saveState()
         try:
+            # CSS 2.1 14.2: a background propagated from body paints the whole
+            # canvas, underneath everything else including the @page background.
+            if self.canvasBackground is not None:
+                canvas.saveState()
+                canvas.setFillColor(self.canvasBackground)
+                canvas.rect(0, 0, self.pagesize[0], self.pagesize[1], stroke=0, fill=1)
+                canvas.restoreState()
             if (
                 # No template was set yet, or the previous template differs from the last
                 not doc.pisaTemplateList
@@ -260,24 +290,124 @@ class PmlPageTemplate(PageTemplate):
                         ]
                         pageNumbering(flat_cells)
 
-            try:
-                # Paint static frames
-                pagenumber = canvas.getPageNumber()
-                if pagenumber > self._page_count:
-                    self._page_count = canvas.getPageNumber()
-                    canvas._doctemplate._page_count = canvas.getPageNumber()
+            # Paint static frames
+            pagenumber = canvas.getPageNumber()
+            if pagenumber > self._page_count:
+                self._page_count = pagenumber
+                canvas._doctemplate._page_count = pagenumber
 
-                for frame in self.pisaStaticList:
-                    frame_copy = copy.deepcopy(frame)
-                    story = frame_copy.pisaStaticStory
-                    pageNumbering(story)
-
-                    frame_copy.addFromList(story, canvas)
-
-            except Exception:  # TODO: Kill this!
-                log.debug("PmlPageTemplate", exc_info=True)
+            for frame in self.pisaStaticList:
+                self._paintStaticFrame(frame, canvas, pageNumbering)
         finally:
             canvas.restoreState()
+
+    def _firstComplaint(self, complaint: str, frame_id: str) -> bool:
+        """Whether this is the first time a frame draws this complaint."""
+        key = (complaint, frame_id)
+        if key in self._staticFrameWarned:
+            return False
+        self._staticFrameWarned.add(key)
+        return True
+
+    @staticmethod
+    def _storyHeight(story, frame, canvas: Canvas) -> float:
+        """
+        The height a static frame's story takes up in that frame.
+
+        Measured with the very calls ``Frame.add`` is about to make, and not
+        with ``_listWrapOn``: an image is allowed to scale itself down to the
+        height it is offered (see ``PmlParagraph._calcImageMaxSizes``), so
+        measuring against unlimited height would report an overflow for a logo
+        that fits its header perfectly well. Wrapping is idempotent, so the
+        real pass right after this one gets the same numbers.
+        """
+        used = 0.0
+        spaceAfter = 0.0
+        for flowable in story:
+            # reportlab's Frame swallows the space before a flowable into the
+            # space after the one above it; see Frame._add.
+            space = max(flowable.getSpaceBefore() - spaceAfter, 0.0) if used else 0.0
+            height = flowable.wrapOn(
+                canvas, frame._aW, max(frame._aH - used - space, 0.0)
+            )[1]
+            spaceAfter = flowable.getSpaceAfter()
+            used += space + height + spaceAfter
+        # The space after the last flowable is not height the frame has to
+        # find room for.
+        return used - spaceAfter
+
+    def _paintStaticFrame(self, frame, canvas: Canvas, renumber) -> None:
+        """
+        Draw the story of one static frame on the page being started.
+
+        Anything that goes wrong is caught here, per frame: the guard used to
+        sit around the loop over every static frame, so a header that could not
+        be painted took the page's footer with it.
+        """
+        try:
+            self._drawStaticFrame(frame, canvas, renumber)
+        except Exception:
+            frame_id = str(getattr(frame, "id", None))
+            log.debug("static frame %r", frame_id, exc_info=True)
+            if self._firstComplaint("unpainted", frame_id):
+                log.warning("Could not paint the static frame %r", frame_id)
+
+    def _drawStaticFrame(self, frame, canvas: Canvas, renumber) -> None:
+        """
+        Lay the story of one static frame out and draw it.
+
+        Both the frame and its story are deep-copied first: reportlab consumes
+        the list and mutates the flowables and the frame's cursor as it draws,
+        and the originals have to survive for every remaining page.
+        """
+        frame = copy.deepcopy(frame)
+        story = frame.pisaStaticStory
+        renumber(story)
+
+        # A static frame has no continuation frame, so anything that does not
+        # fit is content the page will simply be missing -- most visibly the
+        # logo at the end of a header, which is an inline fragment of the last
+        # paragraph and so the last flowable of the story.
+        needed = self._storyHeight(story, frame, canvas)
+        if needed > frame._aH + self.STATIC_OVERFLOW_FUZZ:
+            mode = (
+                getattr(frame, "pisaStaticOverflowMode", None)
+                or self.staticOverflowMode
+            )
+            if self._firstComplaint("overflow", frame.id):
+                log.warning(
+                    "The content of the static frame %r needs %.1f pt of"
+                    " height and the @frame is %.1f pt tall, so it was fitted"
+                    " with -pdf-keep-in-frame-mode: %s. Give the @frame more"
+                    " height.",
+                    frame.id,
+                    needed,
+                    frame._aH,
+                    mode,
+                )
+            # KeepInFrame is the only thing a Frame will accept here: for
+            # truncate and overflow it reports a height that fits and then
+            # clips or spills on its own, and for shrink it scales the whole
+            # story down. Not PmlKeepInFrame -- that one overrides maxHeight
+            # with the largest height seen on the canvas, which is the body
+            # frame of some earlier page, and would decide nothing is wrong.
+            story = [
+                KeepInFrame(
+                    maxWidth=frame._aW, maxHeight=frame._aH, mode=mode, content=story
+                )
+            ]
+
+        frame.addFromList(story, canvas)
+
+        if story and self._firstComplaint("dropped", frame.id):
+            # addFromList stops at the first flowable that does not fit and
+            # leaves the rest of the list "for later". There is no later here:
+            # whatever is still in it is missing from the page.
+            log.warning(
+                "The static frame %r dropped %d flowable(s) that did not fit.",
+                frame.id,
+                len(story),
+            )
 
 
 _ctr: int = 1
@@ -291,6 +421,39 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
     use_cache: bool = False
     use_lazy_loader: bool = False
     process_internal_files: bool = False
+
+    @classmethod
+    def _clear_cache(cls) -> None:
+        cls._cache.clear()
+
+    @staticmethod
+    def _open(fileName) -> tuple[BytesIO | StringIO, bool]:
+        """
+        Open ``fileName``, falling back to xhtml2pdf's own fetcher.
+
+        reportlab 5 changed ``rl_config.trustedHosts=None`` from "every host is
+        trusted" to "no host is trusted", so ``open_for_read`` now refuses every
+        URL and ``data:`` URI by default. That default is deliberate SSRF
+        hardening and must not be reverted from a library, so remote resources
+        are routed through ``xhtml2pdf.files`` instead, which applies this
+        project's own network policy (timeouts, retries, redirect budget).
+
+        Local paths are unaffected: ``open_for_read`` tries a plain ``open()``
+        first. Returns ``(stream, used_fallback)``.
+        """
+        try:
+            return open_for_read(fileName, "b"), False
+        except OSError:
+            if not isinstance(fileName, str) or not fileName.startswith(
+                ("data:", "http://", "https://")
+            ):
+                raise
+            log.debug("open_for_read refused %r, using xhtml2pdf.files", fileName[:80])
+            stream = pisaFileObject(fileName).getBytesIO()
+            if stream is None:
+                msg = f"Cannot open resource {fileName[:80]!r}"
+                raise OSError(msg) from None
+            return stream, True
 
     def __init__(self, fileName: PmlImage | Image | str) -> None:
         if isinstance(fileName, PmlImage):
@@ -311,19 +474,29 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
             self.fp = getattr(fileName, "fp", None)
         else:
             try:
-                self.fp = open_for_read(fileName, "b")
+                self.fp, used_fallback = self._open(fileName)
                 if self.process_internal_files and isinstance(self.fp, StringIO):
                     data: str = self.fp.read()
                     with contextlib.suppress(Exception):
                         self.fp.close()
                     if self.use_cache:
                         if not self._cache:
-                            register_reset(self._cache.clear)
+                            # a bound method, not dict.clear: reportlab wraps
+                            # the callback in a WeakMethod, which rejects
+                            # builtin methods
+                            register_reset(type(self)._clear_cache)
                         cache_key = md5(data.encode("utf8")).digest()
                         data = self._cache.setdefault(cache_key, data)
                     self.fp = StringIO(data)
-                elif self.use_lazy_loader and isinstance(fileName, str):
+                elif (
+                    self.use_lazy_loader
+                    and isinstance(fileName, str)
+                    and not used_fallback
+                ):
                     # try Ralf Schmitt's re-opening technique of avoiding too many open files
+                    # NB: skipped for the fallback below -- LazyImageReader
+                    # re-opens by name via open_for_read on every redraw, which
+                    # is exactly the call that failed in the first place.
                     self.fp.close()
                     del self.fp  # will become a property in the next statement
                     self.__class__ = LazyImageReader
@@ -364,7 +537,7 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
 
     def _jpeg_fh(self) -> BytesIO | StringIO | None:
         fp = self.fp
-        if isinstance(fp, (BytesIO, StringIO)):
+        if isinstance(fp, BytesIO | StringIO):
             fp.seek(0)
         return fp
 
@@ -449,7 +622,7 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
             return None
 
     def __str__(self) -> str:
-        if isinstance(self.fileName, (PmlImage, Image, BytesIO)):
+        if isinstance(self.fileName, PmlImage | Image | BytesIO):
             fn = self.fileName.read() or id(self)
             return f"PmlImageObject_{hash(fn)}"
         return str(self.fileName or id(self))
@@ -617,17 +790,30 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
 
         style = self.style
 
+        # A border only takes up room when its style says it is drawn; see
+        # util.getBorderWidth.
+        self.borderWidthLeft = getBorderWidth(
+            style.borderLeftStyle, style.borderLeftWidth
+        )
+        self.borderWidthRight = getBorderWidth(
+            style.borderRightStyle, style.borderRightWidth
+        )
+        self.borderWidthTop = getBorderWidth(style.borderTopStyle, style.borderTopWidth)
+        self.borderWidthBottom = getBorderWidth(
+            style.borderBottomStyle, style.borderBottomWidth
+        )
+
         self.deltaWidth = (
             style.paddingLeft
             + style.paddingRight
-            + style.borderLeftWidth
-            + style.borderRightWidth
+            + self.borderWidthLeft
+            + self.borderWidthRight
         )
         self.deltaHeight = (
             style.paddingTop
             + style.paddingBottom
-            + style.borderTopWidth
-            + style.borderBottomWidth
+            + self.borderWidthTop
+            + self.borderWidthBottom
         )
 
         # reduce the available width & height by the padding so the wrapping
@@ -706,14 +892,34 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
             canvas.rect(x, y, w, h, fill=1, stroke=0)
             canvas.restoreState()
 
+        # CSS 2.1 14.2: the image goes over the colour and under the content.
+        # Before this, background-image existed only on @page; on an element
+        # the property was parsed, cascaded and then dropped.
+        background_image = getattr(style, "backgroundImage", None)
+        if background_image is not None:
+            reader = getBackgroundImageReader(background_image)
+            if reader is not None:
+                drawBackgroundImage(
+                    canvas,
+                    reader,
+                    x,
+                    y,
+                    w,
+                    h,
+                    natural=getBackgroundImageSize(reader),
+                    repeat=getattr(style, "backgroundRepeat", "repeat"),
+                    position=getattr(style, "backgroundPosition", "0% 0%"),
+                    font_size=style.fontSize,
+                )
+
         # we need to hide the bg color (if any) so Paragraph won't try to draw it again
         style.backColor = None
 
         # offset the origin to compensate for the padding
         canvas.saveState()
         canvas.translate(
-            (style.paddingLeft + style.borderLeftWidth),
-            -1 * (style.paddingTop + style.borderTopWidth),
+            (style.paddingLeft + getattr(self, "borderWidthLeft", 0)),
+            -1 * (style.paddingTop + getattr(self, "borderWidthTop", 0)),
         )  # + (style.leading / 4)))
 
         # Call the base class draw method to finish up
@@ -727,16 +933,11 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
         canvas.saveState()
 
         def _drawBorderLine(bstyle, width, color, x1, y1, x2, y2):
-            # We need width and border style to be able to draw a border
-            if width and getBorderStyle(bstyle):
-                # If no color for border is given, the text color is used (like defined by W3C)
-                if color is None:
-                    color = style.textColor
-                    # print "Border", bstyle, width, color
-                if color is not None:
-                    canvas.setStrokeColor(color)
-                    canvas.setLineWidth(width)
-                    canvas.line(x1, y1, x2, y2)
+            # If no color for border is given, the text color is used (like
+            # defined by W3C)
+            if color is None:
+                color = style.textColor
+            drawBorderLine(canvas, bstyle, width, color, x1, y1, x2, y2)
 
         _drawBorderLine(
             style.borderLeftStyle,
@@ -949,6 +1150,65 @@ class PmlLeftPageBreak(CondPageBreak):
 # --- Pdf Form
 
 
+class PmlDrawing(Drawing):
+    """
+    A drawing that keeps to the box it was given, and to the frame.
+
+    reportlab's Drawing is a fixed-size flowable holding contents of an
+    unrelated size: a chart asked to be 400 points wide inside a 200 point
+    canvas simply draws past it, over whatever sits alongside, and nothing
+    clips or warns. And a canvas wider than the frame it lands in overflows
+    the same way.
+
+    wrap() already multiplies by renderScale and renderScaledDrawing applies
+    it when the drawing is rendered, so fitting the width is a matter of
+    choosing the scale.
+    """
+
+    # Declared, not assigned: reportlab carries these on Drawing through its
+    # own _attrMap, which is untyped, so mypy would otherwise infer them from
+    # the self-referential assignments in fit_contents and give up.
+    width: float
+    height: float
+    renderScale: float
+
+    def wrap(self, availWidth: float, availHeight: float):
+        if availWidth > 0 and self.width > availWidth:
+            self.renderScale = availWidth / self.width
+        return super().wrap(availWidth, availHeight)
+
+    def fit_contents(self, description: str = "drawing") -> None:
+        """
+        Grow the box to hold whatever ended up in it, and say so.
+
+        Growing rather than clipping: the point is that the layout reserves
+        the room the chart actually takes, so the flowable after it is not
+        drawn over.
+        """
+        try:
+            x1, y1, x2, y2 = self.getBounds()
+        except (ValueError, AttributeError):  # an empty drawing has no bounds
+            return
+
+        if x1 < 0 or y1 < 0:
+            self.shift(max(-x1, 0), max(-y1, 0))
+            x2 += max(-x1, 0)
+            y2 += max(-y1, 0)
+
+        if x2 > self.width or y2 > self.height:
+            log.warning(
+                "The contents of a %s do not fit in its %gx%g box and need"
+                " %gx%g; making room for them",
+                description,
+                self.width,
+                self.height,
+                x2,
+                y2,
+            )
+            self.width = max(self.width, x2)
+            self.height = max(self.height, y2)
+
+
 class PmlInput(Flowable):
     def __init__(
         self,
@@ -978,9 +1238,26 @@ class PmlInput(Flowable):
         c.setFont("Helvetica", 10)
         if self.type == "text":
             pdfform.textFieldRelative(
-                c, self.name, 0, 0, self.width, self.height, multiline=self.multiline
+                c,
+                self.name,
+                0,
+                0,
+                self.width,
+                self.height,
+                # The value the markup gave the field. It was never passed on,
+                # so <input value="x"> and the contents of a <textarea> came
+                # out as empty fields.
+                value=self.default or "",
+                multiline=self.multiline,
             )
             c.rect(0, 0, self.width, self.height)
+        elif self.type == "hidden":
+            # A field with no size: it holds its value and takes no room,
+            # which is what a hidden input is for. Nothing was drawn at all
+            # before, so the value never reached the form.
+            pdfform.textFieldRelative(
+                c, self.name, 0, 0, 0, 0, value=self.default or ""
+            )
         elif self.type == "radio":
             c.rect(0, 0, self.width, self.height)
         elif self.type == "checkbox":

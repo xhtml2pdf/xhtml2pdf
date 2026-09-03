@@ -1,5 +1,10 @@
+import io
 from unittest import TestCase
 
+from pypdf import PdfReader
+
+from xhtml2pdf import pisa
+from xhtml2pdf.util import apply_text_transform
 from xhtml2pdf.w3c.cssSpecial import parseSpecialRules, splitBorder
 
 
@@ -14,7 +19,7 @@ class FontTest(TestCase):
         func_out = parseSpecialRules(func_in)
         expected = [
             ("font-size", ("15", "px"), None),
-            ("font-face", ["Comic Sans"], None),
+            ("font-family", ["Comic Sans"], None),
         ]
         self.assertEqual(func_out, expected)
 
@@ -24,7 +29,7 @@ class FontTest(TestCase):
         expected = [
             ("font-style", "italic", None),
             ("font-size", ("15", "px"), None),
-            ("font-face", ["Comic Sans"], None),
+            ("font-family", ["Comic Sans"], None),
         ]
         self.assertEqual(func_out, expected)
 
@@ -34,7 +39,7 @@ class FontTest(TestCase):
         expected = [
             ("font-variant", "small-caps", None),
             ("font-size", ("15", "px"), None),
-            ("font-face", ["Comic Sans"], None),
+            ("font-family", ["Comic Sans"], None),
         ]
         self.assertEqual(func_out, expected)
 
@@ -44,7 +49,7 @@ class FontTest(TestCase):
         expected = [
             ("font-weight", "bold", None),
             ("font-size", ("15", "px"), None),
-            ("font-face", ["Comic Sans"], None),
+            ("font-family", ["Comic Sans"], None),
         ]
         self.assertEqual(func_out, expected)
 
@@ -69,7 +74,7 @@ class FontTest(TestCase):
             ("font-weight", "bold", None),
             ("font-size", ("15", "px"), None),
             ("line-height", ("30", "px"), None),
-            ("font-face", ["Comic Sans"], None),
+            ("font-family", ["Comic Sans"], None),
         ]
         self.assertEqual(func_out, expected)
 
@@ -547,3 +552,120 @@ class BorderRight(TestCase):
             ("border-right-color", "red", None),
         ]
         self.assertEqual(func_out, expected)
+
+
+class ListStyleShorthandTest(TestCase):
+    """
+    The list-style shorthand was not expanded at all, so the whole declaration
+    was dropped and `list-style: none` did nothing.
+    """
+
+    def test_none_sets_both_type_and_image(self) -> None:
+        # CSS 2.1 12.6.2: a bare `none` is ambiguous and sets both.
+        self.assertEqual(
+            [("list-style-type", "none", None), ("list-style-image", "none", None)],
+            parseSpecialRules([("list-style", ["none"], None)]),
+        )
+
+    def test_type_and_position(self) -> None:
+        self.assertEqual(
+            [
+                ("list-style-type", "square", None),
+                ("list-style-position", "inside", None),
+            ],
+            parseSpecialRules([("list-style", ["square", "inside"], None)]),
+        )
+
+    def test_anything_else_is_the_image(self) -> None:
+        self.assertEqual(
+            [("list-style-image", "bullet.png", None)],
+            parseSpecialRules([("list-style", ["bullet.png"], None)]),
+        )
+
+
+class TextTransformTest(TestCase):
+    def test_transforms(self) -> None:
+        self.assertEqual("ABC DEF", apply_text_transform("abc def", "uppercase"))
+        self.assertEqual("abc def", apply_text_transform("ABC DEF", "lowercase"))
+        self.assertEqual("Abc Def", apply_text_transform("abc def", "capitalize"))
+        self.assertEqual("abc def", apply_text_transform("abc def", "none"))
+        self.assertEqual("abc def", apply_text_transform("abc def", "nonsense"))
+
+
+class WhiteSpaceTest(TestCase):
+    """
+    CSS 2.1 16.6. Only `pre` used to have any effect; nowrap, pre-wrap and
+    pre-line all behaved as `normal`.
+    """
+
+    @staticmethod
+    def _text(value: str) -> str:
+        html = (
+            "<html><body>"
+            f'<p style="white-space: {value}">two   spaces\nand a newline</p>'
+            "</body></html>"
+        )
+        out = io.BytesIO()
+        pisa.pisaDocument(io.StringIO(html), out)
+        return PdfReader(out).pages[0].extract_text()
+
+    def test_normal_collapses_everything(self) -> None:
+        self.assertEqual("two spaces and a newline", self._text("normal").strip())
+
+    def test_pre_line_keeps_the_newline_and_collapses_spaces(self) -> None:
+        self.assertEqual(
+            ["two spaces", "and a newline"], self._text("pre-line").strip().split("\n")
+        )
+
+    def test_pre_wrap_keeps_both(self) -> None:
+        lines = self._text("pre-wrap").strip().split("\n")
+        self.assertEqual(2, len(lines))
+        self.assertIn("two   spaces", lines[0])
+
+    def test_nowrap_keeps_one_line(self) -> None:
+        self.assertEqual("two spaces and a newline", self._text("nowrap").strip())
+
+
+class BackgroundShorthandTest(TestCase):
+    """
+    Every part of the shorthand but one used to be thrown away: the first was
+    read as an image if it contained a dot and as a colour otherwise.
+    """
+
+    def test_colour_image_and_repeat(self) -> None:
+        self.assertEqual(
+            [
+                ("background-color", "#fcaf3e", None),
+                ("background-image", "img/a.png", None),
+                ("background-repeat", "no-repeat", None),
+            ],
+            parseSpecialRules(
+                [("background", ["#fcaf3e", "img/a.png", "no-repeat"], None)]
+            ),
+        )
+
+    def test_position_is_collected(self) -> None:
+        self.assertEqual(
+            [
+                ("background-image", "a.png", None),
+                ("background-repeat", "repeat-x", None),
+                ("background-position", "right top", None),
+            ],
+            parseSpecialRules(
+                [("background", ["a.png", "repeat-x", "right", "top"], None)]
+            ),
+        )
+
+    def test_colour_alone(self) -> None:
+        self.assertEqual(
+            [("background-color", "red", None)],
+            parseSpecialRules([("background", "red", None)]),
+        )
+
+    def test_attachment_is_recognised_and_dropped(self) -> None:
+        # Nothing consumes background-attachment; a PDF page does not scroll.
+        # What matters is that "fixed" is not mistaken for a colour.
+        self.assertEqual(
+            [("background-color", "red", None)],
+            parseSpecialRules([("background", ["red", "fixed"], None)]),
+        )

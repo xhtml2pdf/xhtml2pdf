@@ -75,7 +75,7 @@ class TTFWithSameFaceName(TestCase):
 
                         </body>
                         </html>
-                    """
+                    """  # noqa: RUF027
 
     html = HTML_CONTENT.format(
         ff_R=ff_R,
@@ -92,7 +92,7 @@ class TTFWithSameFaceName(TestCase):
 
     def test_check_updated_face_name(self) -> None:
         """
-        this function help us to check is the font-family value on the pdf and
+        This function help us to check is the font-family value on the pdf and
         the font-family from html element are same.
         """
         # Create the pisaDocument in memory from the HTML

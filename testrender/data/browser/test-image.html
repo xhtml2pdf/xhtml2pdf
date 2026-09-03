@@ -1,0 +1,35 @@
+<!--
+  Browser equivalent of data/source/test-image.html
+
+  Already plain HTML/CSS; only the image paths are rewritten.
+
+  Assets are referenced through ../source/ so both sides load byte-identical
+  files. _normalize.css is linked ahead of the document's own styles; it
+  replaces the browser UA stylesheet with xhtml2pdf's DEFAULT_CSS so the two
+  engines start from the same defaults.
+-->
+
+<link rel="stylesheet" href="_normalize.css"><p>
+Image #0 (BIG!)
+<br>
+<img src="../source/img/beach.jpg" width="1000">
+
+<p>
+Image #1
+<br>
+<img src="../source/img/beach.jpg">
+
+<p>
+Image #2
+<br>
+<img src="../source/img/beach.jpg" style="zoom: 25%;">
+
+<p>
+Image #3
+<br>
+<img src="../source/img/beach.jpg" width="10" height="10">
+
+<p>
+Image #4
+<br>
+<img src="../source/img/denker.png" height="2000">

@@ -41,6 +41,8 @@ from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.platypus.flowables import Flowable
 
+from xhtml2pdf.util import drawBorderLine
+
 if TYPE_CHECKING:
     from reportlab.pdfgen.canvas import Canvas
 
@@ -113,15 +115,11 @@ class Box(dict):
 
         # Borders
         def _drawBorderLine(bstyle, width, color, x1, y1, x2, y2):
-            # We need width and border style to be able to draw a border
-            if width and bstyle:
-                # If no color for border is given, the text color is used (like defined by W3C)
-                if color is None:
-                    color = self.get("textColor", Color(0, 0, 0))
-                if color is not None:
-                    canvas.setStrokeColor(color)
-                    canvas.setLineWidth(width)
-                    canvas.line(x1, y1, x2, y2)
+            # If no color for border is given, the text color is used (like
+            # defined by W3C)
+            if color is None:
+                color = self.get("textColor", Color(0, 0, 0))
+            drawBorderLine(canvas, bstyle, width, color, x1, y1, x2, y2)
 
         _drawBorderLine(
             self.get("borderLeftStyle", None),
@@ -566,15 +564,15 @@ class Paragraph(Flowable):
                 # XXX LINK
                 link: bytes | str = frag.get("link", None)
                 if link:
-                    _scheme_re = re.compile("^[a-zA-Z][-+a-zA-Z0-9]+$")
+                    _scheme_re = re.compile(r"^[a-zA-Z][-+a-zA-Z0-9]+$")
                     x, y, w, h = frag["x"], dy - y, frag["width"], frag["fontSize"]
                     rect = (x, y, w, h)
                     if isinstance(link, bytes):
                         link = link.decode("utf8")
                     parts = link.split(":", maxsplit=1)
-                    scheme = len(parts) == 2 and parts[0].lower() or ""
+                    scheme = (len(parts) == 2 and parts[0].lower()) or ""
                     if _scheme_re.match(scheme) and scheme != "document":
-                        kind = scheme.lower() == "pdf" and "GoToR" or "URI"
+                        kind = (scheme.lower() == "pdf" and "GoToR") or "URI"
                         if kind == "GoToR":
                             link = parts[1]
 
@@ -585,7 +583,7 @@ class Paragraph(Flowable):
                             scheme = ""
                         canvas.linkRect(
                             "",
-                            scheme != "document" and link or parts[1],
+                            (scheme != "document" and link) or parts[1],
                             rect,
                             relative=1,
                         )

@@ -28,11 +28,12 @@ Primary classes:
 Dependencies:
     sets, cssParser, re (via cssParser)
 """
-# ruff: noqa: N802, N803, N815
 from __future__ import annotations
 
 import copy
+import itertools
 from abc import abstractmethod
+from operator import itemgetter
 from pathlib import Path
 from typing import ClassVar
 
@@ -89,6 +90,12 @@ class CSSElementInterfaceAbstract:
 
     @abstractmethod
     def getPreviousSibling(self):
+        """Results must be compatible with CSSElementInterfaceAbstract."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def iterPrecedingSiblings(self):
+        """Results must be compatible with CSSElementInterfaceAbstract."""
         raise NotImplementedError
 
 
@@ -107,6 +114,26 @@ class CSSCascadeStrategy:
             self.user = user
         if userAgent is not None:
             self.userAgenr = userAgent
+        self.propertyNames = self._collectPropertyNames()
+
+    def _collectPropertyNames(self) -> frozenset:
+        """
+        Every property name any of these rulesets declares.
+
+        Searching for a name no rule mentions can only come back empty, and
+        that search walks five rulesets and every selector in them. The
+        rulesets are complete by the time a cascade is built -- mergeStyles is
+        called while the stylesheet is being assembled, and copyWithUpdate
+        builds a new instance -- so this cannot go stale.
+        """
+        names: set[str] = set()
+        for level in (self.userAgenr, self.user, self.author):
+            if level is None:
+                continue
+            for ruleset in level:
+                for declarations in ruleset.values():
+                    names.update(declarations)
+        return frozenset(names)
 
     def copyWithUpdate(self, author=None, user=None, userAgent=None):
         if author is None:
@@ -149,7 +176,13 @@ class CSSCascadeStrategy:
         This is left up to the client app to re-query the CSS in order to
         implement these semantics.
         """
-        rule = self.findCSSRulesFor(element, attrName)
+        # An inline style is consulted by the caller after this returns, so
+        # skipping the search here cannot lose one.
+        rule = (
+            self.findCSSRulesFor(element, attrName)
+            if attrName in self.propertyNames
+            else []
+        )
         return self._extractStyleForRule(rule, attrName, default)
 
     def findStylesForEach(self, element, attrNames, default=NotImplemented):
@@ -168,34 +201,39 @@ class CSSCascadeStrategy:
         ]
 
     def findCSSRulesFor(self, element, attrName):
-        rules = []
-
-        inline = element.getInlineStyle()
-
         # Generator are wonderful but sometime slow...
         # for ruleset in self.iterCSSRulesets(inline):
         #    rules += ruleset.findCSSRuleFor(element, attrName)
 
+        inline = element.getInlineStyle()
+
+        # The cascade levels, weakest first: index 1 of a pair holds its
+        # !important declarations. Which level a rule came from is what
+        # separates rules of equal specificity, so it is carried into the sort
+        # key -- relying on a stable sort to keep it would lose the !important
+        # user declarations at the end, whose selectors were written early and
+        # so sort early by source order.
+        levels = []
         if self.userAgenr is not None:
-            rules += self.userAgenr[0].findCSSRuleFor(element, attrName)
-            rules += self.userAgenr[1].findCSSRuleFor(element, attrName)
-
+            levels += [self.userAgenr[0], self.userAgenr[1]]
         if self.user is not None:
-            rules += self.user[0].findCSSRuleFor(element, attrName)
-
+            levels.append(self.user[0])
         if self.author is not None:
-            rules += self.author[0].findCSSRuleFor(element, attrName)
-            rules += self.author[1].findCSSRuleFor(element, attrName)
-
+            levels += [self.author[0], self.author[1]]
         if inline:
-            rules += inline[0].findCSSRuleFor(element, attrName)
-            rules += inline[1].findCSSRuleFor(element, attrName)
-
+            levels += [inline[0], inline[1]]
         if self.user is not None:
-            rules += self.user[1].findCSSRuleFor(element, attrName)
+            levels.append(self.user[1])
 
-        rules.sort()
-        return rules
+        decorated = []
+        for level, ruleset in enumerate(levels):
+            for rule in ruleset.findCSSRuleFor(element, attrName):
+                selector = rule[0]
+                key = (selector.specificity(), level, selector.order)
+                decorated.append((key, rule))
+
+        decorated.sort(key=itemgetter(0))
+        return [rule for _key, rule in decorated]
 
     def findCSSRulesForEach(self, element, attrNames):
         rules = {name: [] for name in attrNames}
@@ -205,8 +243,8 @@ class CSSCascadeStrategy:
             for attrName, attrRules in rules.items():
                 attrRules += ruleset.findCSSRuleFor(element, attrName)
 
-        for attrRules in rules.items():
-            attrRules.sort()
+        for attrRules in rules.values():
+            attrRules.sort(key=lambda rule: rule[0].sortKey())
         return rules
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -229,6 +267,12 @@ class CSSCascadeStrategy:
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
+#: Hands out a source-order number to each selector as it is built. Parsing
+#: runs in document order, and the user agent stylesheet is parsed before the
+#: document's own, so a later number means later in the cascade.
+_selector_order = itertools.count()
+
+
 class CSSSelectorBase:
     inline = False
     _hash = None
@@ -238,6 +282,19 @@ class CSSSelectorBase:
         if not isinstance(completeName, tuple):
             completeName = (None, "*", completeName)
         self.completeName = completeName
+        self.order = next(_selector_order)
+
+    def sortKey(self):
+        """
+        How two rules that both match an element are ordered.
+
+        CSS 2.1 6.4.1: specificity decides, and where that ties the rule
+        written later wins. Rules used to be sorted by
+        (specificity, fullName, qualifiers) instead, which for equal
+        specificity is alphabetical order of the tag and its qualifiers -- so
+        `.alpha` beat `.zebra` no matter which was written last.
+        """
+        return (self.specificity(), self.order)
 
     def _updateHash(self):
         self._hash = hash((self.fullName, self.specificity(), self.qualifiers))
@@ -398,7 +455,10 @@ class CSSImmutableSelector(CSSSelectorBase):
 
     @classmethod
     def fromSelector(cls, selector):
-        return cls(selector.completeName, selector.qualifiers)
+        immutable = cls(selector.completeName, selector.qualifiers)
+        # Keep where the rule was written, rather than when this copy was made.
+        immutable.order = selector.order
+        return immutable
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -585,6 +645,10 @@ class CSSSelectorCombinationQualifier(CSSSelectorQualifierBase):
             return selector.matches(parent)
         if op == "+":
             return selector.matches(element.getPreviousSibling())
+        if op == "~":
+            return any(
+                selector.matches(sibling) for sibling in element.iterPrecedingSiblings()
+            )
         return None
 
 
@@ -634,7 +698,7 @@ class CSSRuleset(dict):
             for nodeFilter, declarations in self.items()
             if (attrName in declarations) and (nodeFilter.matches(element))
         ]
-        ruleResults.sort()
+        ruleResults.sort(key=lambda rule: rule[0].sortKey())
         return ruleResults
 
     def findCSSRuleFor(self, element, attrName):
@@ -645,7 +709,7 @@ class CSSRuleset(dict):
     def mergeStyles(self, styles):
         """XXX Bugfix for use in PISA."""
         for k, v in styles.items():
-            if k in self and self[k]:
+            if self.get(k):
                 self[k] = copy.copy(self[k])
                 self[k].update(v)
             else:
@@ -853,7 +917,7 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
 
     # ~ css declarations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def property(self, name, value, *, important=False):  # noqa: A003
+    def property(self, name, value, *, important=False):
         if self.trackImportance:
             return (name, value, important)
         return (name, value)

@@ -119,6 +119,38 @@ in both cases:
 You can now happily hack away at the library, without any ghost images.
 
 
+Comparing against a browser
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The suite above compares xhtml2pdf against itself: the reference images are
+produced by the same library, so they catch changes in the output but never
+tell you whether that output is correct.
+
+``testrender/browsercompare.py`` adds an external reference. Every case has two
+sources that express the same intended result — ``data/source/<name>.html`` for
+xhtml2pdf, which may use ``<pdf:*>``, ``@frame`` and ``-pdf-*``, and
+``data/browser/<name>.html`` for the browser, in plain HTML and CSS. The
+xhtml2pdf-only constructs are written with ordinary markup on the browser side:
+``@frame`` becomes absolute positioning, ``<pdf:toc>`` a hand-written list.
+
+.. code:: shell
+
+    pip install -e '.[browsertest]'
+    make test-browser
+    x-www-browser testrender/output/browser-compare.html
+
+Both sides are printed to PDF with the same page geometry, rasterised by the
+same ghostscript, and compared on pagination, per-page text and SSIM. The
+browser runs headless, so no window appears; pass ``--headed`` when you want to
+watch it.
+
+Because two different engines never agree exactly, there is no absolute
+threshold. Scores are recorded in ``testrender/data/baseline.json`` and a run
+fails when one regresses. The baseline is tied to the browser build and to the
+system fonts, so it is machine specific — see ``testrender/README`` for what
+that implies.
+
+
 Running tests with coverage
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

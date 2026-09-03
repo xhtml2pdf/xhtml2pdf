@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>css-background</title>
+<style type="text/css">
+div { margin: 0 0 0.6em 0; padding: 0.5em; }
+.tile {
+    background-image: url("img/denker.png");
+    background-repeat: repeat;
+}
+.once {
+    background-image: url("img/denker.png");
+    background-repeat: no-repeat;
+}
+.right {
+    background-image: url("img/denker.png");
+    background-repeat: no-repeat;
+    background-position: right top;
+}
+.shorthand {
+    background: #fcaf3e url("img/denker.png") no-repeat;
+}
+</style>
+</head>
+<body>
+<div class="tile">background-repeat: repeat<br/>the image tiles across the box<br/>three lines give the box some height</div>
+<div class="once">background-repeat: no-repeat<br/>one image at the top left<br/>three lines give the box some height</div>
+<div class="right">background-position: right top<br/>one image at the top right<br/>three lines give the box some height</div>
+<div class="shorthand">background shorthand: colour, image and no-repeat<br/>orange behind, one image<br/>three lines give the box some height</div>
+</body>
+</html>

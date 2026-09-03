@@ -18,7 +18,7 @@ import logging
 import re
 import urllib.parse as urlparse
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from reportlab import rl_settings
 from reportlab.lib.enums import TA_LEFT
@@ -31,8 +31,9 @@ from reportlab.platypus.frames import Frame
 
 try:
     from reportlab.pdfgen.canvas import ShowBoundaryValue
-except ImportError:
-    # reportlab < 4.0.9.1
+except ImportError:  # pragma: no cover
+    # reportlab < 4.0.9.1; the class was removed from platypus.frames in
+    # reportlab 5, so this branch only ever runs on the oldest supported 4.x
     from reportlab.platypus.frames import ShowBoundaryValue
 from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
 
@@ -40,6 +41,7 @@ from xhtml2pdf import default, parser
 from xhtml2pdf.files import B64InlineURI, getFile, pisaFileObject
 from xhtml2pdf.tables import TableData
 from xhtml2pdf.util import (
+    apply_text_transform,
     arabic_format,
     copy_attrs,
     frag_text_language_check,
@@ -48,6 +50,7 @@ from xhtml2pdf.util import (
     getCoords,
     getFloat,
     getFrameDimensions,
+    getKeepInFrameMode,
     getSize,
     set_asian_fonts,
     set_value,
@@ -62,6 +65,9 @@ from xhtml2pdf.xhtml2pdf_reportlab import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+    from xml.dom.minidom import Element
+
     from reportlab.platypus.flowables import Flowable
 
     from xhtml2pdf.xhtml2pdf_reportlab import PmlImage
@@ -133,6 +139,7 @@ def getParaFrag(style) -> ParaFrag:
             "borderColor",
             "listStyleType",
             "listStyleImage",
+            "backgroundImage",
             "wordWrap",
             "height",
             "width",
@@ -154,6 +161,10 @@ def getParaFrag(style) -> ParaFrag:
 
     # Extras
     frag.letterSpacing = "normal"
+    frag.wordSpacing = "normal"
+    frag.textTransform = "none"
+    frag.backgroundRepeat = "repeat"
+    frag.backgroundPosition = "0% 0%"
     frag.leadingSource = "150%"
     frag.alignment = TA_LEFT
     frag.borderWidth = 1
@@ -179,6 +190,8 @@ def getParaFrag(style) -> ParaFrag:
 
 
 def getDirName(path) -> str:
+    # A resolved local file arrives as a Path, and urlparse only speaks str.
+    path = str(path)
     parts = urlparse.urlparse(path)
     if parts.scheme:
         return path
@@ -233,7 +246,7 @@ class pisaCSSBuilder(css.CSSBuilder):
         c = self.c
         if not name:
             name = "-pdf-frame-%d" % c.UID()
-        if data.get("is_landscape", False):
+        if data.get("is_landscape"):
             size = (size[1], size[0])
         x, y, w, h = getFrameDimensions(data, size[0], size[1])
         # print name, x, y, w, h
@@ -244,7 +257,7 @@ class pisaCSSBuilder(css.CSSBuilder):
 
         return (
             name,
-            data.get("-pdf-frame-content", None),
+            data.get("-pdf-frame-content"),
             data.get("-pdf-frame-border", border),
             x,
             y,
@@ -260,11 +273,48 @@ class pisaCSSBuilder(css.CSSBuilder):
             def func(x):
                 return x
 
-        if isinstance(attr, (list, tuple)):
+        if isinstance(attr, list | tuple):
+            # The first name that was actually declared wins. The `return` used
+            # to sit inside the loop unconditionally, so only attr[0] was ever
+            # consulted: a @frame that set border-left-width and nothing else
+            # got the default and drew no border at all, while the same frame
+            # written with border-top-width drew all four sides.
             for a in attr:
-                return func(data[a]) if a in data else default
-            return None
+                if a in data:
+                    return func(data[a])
+            return default
         return func(data[attr]) if attr in data else default
+
+    @staticmethod
+    def _frame_boundary(border, page_border, color, width) -> ShowBoundaryValue:
+        """
+        How a frame's boundary should be drawn, if at all.
+
+        -pdf-frame-border is the switch, set on the frame or -- for all of its
+        frames -- on the @page; the border-* declarations say what the line
+        should look like. The two used to be exclusive: whenever the switch was
+        on, the declared colour and width were dropped and reportlab's black
+        hairline drawn instead, so a frame asking for a two-point blue rule got
+        something else entirely.
+
+        The switch was also read with int(), which meant `-pdf-frame-border:
+        1.5` raised ValueError, and setting it on the @page rather than on the
+        frame raised TypeError on the None the frame left behind. Either
+        abandoned the document, for markup the documentation describes.
+        """
+        switch = border or page_border
+        if not switch:
+            # Nothing switched it on, so the border-* declarations are all
+            # there is. With neither a colour nor a width this is falsy and
+            # reportlab skips the boundary altogether.
+            return ShowBoundaryValue(color=color, width=width)
+
+        # Switched on: black hairline unless the declarations say otherwise.
+        # (0, 0, 0) is ShowBoundaryValue's own default colour.
+        return ShowBoundaryValue(
+            color=(0, 0, 0) if color is None else color,
+            width=width or getSize(switch, default=1),
+        )
 
     @staticmethod
     def get_background_context(data: dict) -> dict:
@@ -385,15 +435,9 @@ class pisaCSSBuilder(css.CSSBuilder):
                 getSize,
             )
 
-            if border or pageBorder:
-                frame_border = ShowBoundaryValue(
-                    width=int(border)
-                )  # frame_border = ShowBoundaryValue() to
-                # frame_border = ShowBoundaryValue(width=int(border))
-            else:
-                frame_border = ShowBoundaryValue(
-                    color=fborder_color, width=fborder_width
-                )
+            frame_border = self._frame_boundary(
+                border, pageBorder, fborder_color, fborder_width
+            )
 
             # fix frame sizing problem.
             if static:
@@ -421,24 +465,39 @@ class pisaCSSBuilder(css.CSSBuilder):
 
             if static:
                 frame.pisaStaticStory = []
+                # What to do with content that outgrows the frame. A static
+                # frame has no continuation, so the default keeps it by
+                # shrinking rather than dropping it; see
+                # PmlPageTemplate._paintStaticFrame.
+                frame.pisaStaticOverflowMode = getKeepInFrameMode(
+                    fdata.get("-pdf-keep-in-frame-mode", "shrink")
+                )
                 c.frameStatic[static] = [frame, *c.frameStatic.get(static, [])]
                 staticList.append(frame)
             else:
                 frameList.append(frame)
 
-        background = data.get("background-image", None)
+        background = data.get("background-image")
         background_context = self.get_background_context(data)
         if background:
             # should be relative to the css file
             background = self.c.getFile(background, relative=self.c.cssParser.rootPath)
 
         if not frameList:
-            log.warning(
-                c.warning(
-                    "missing explicit frame definition for content or just static"
-                    " frames"
+            if staticList:
+                # Static frames but nowhere for the story to go. The frame
+                # built below is a guess, and it may well sit on top of them.
+                log.warning(
+                    c.warning(
+                        "missing explicit frame definition for content or just static"
+                        " frames"
+                    )
                 )
-            )
+            else:
+                # No @frame at all, which is what most documents look like.
+                # The default frame below is the whole point, not a fallback,
+                # so this is not worth a warning.
+                log.debug("No frame declared for @page %r, using the default", name)
             fname, static, border, x, y, w, h, data = self._pisaAddFrame(
                 name, data, first=True, border=pageBorder, size=c.pageSize
             )
@@ -450,10 +509,9 @@ class pisaCSSBuilder(css.CSSBuilder):
                     )
                 )
 
-            if border or pageBorder:
-                frame_border = ShowBoundaryValue()
-            else:
-                frame_border = ShowBoundaryValue(color=border_color, width=border_width)
+            frame_border = self._frame_boundary(
+                border, pageBorder, border_color, border_width
+            )
 
             frameList.append(
                 Frame(
@@ -505,26 +563,50 @@ class pisaCSSBuilder(css.CSSBuilder):
 
 class pisaCSSParser(css.CSSParser):
     def parseExternal(self, cssResourceName):
-        result = None
         oldRootPath = self.rootPath
         cssFile = self.c.getFile(cssResourceName, relative=self.rootPath)
         if not cssFile:
             return None
-        if self.rootPath and urlparse.urlparse(self.rootPath).scheme:
-            self.rootPath = urlparse.urljoin(self.rootPath, cssResourceName)
-        else:
-            self.rootPath = getDirName(cssFile.uri)
+
         try:
-            result = self.parse(cssFile.getData())
-            self.rootPath = oldRootPath
+            data = cssFile.getData()
+            if data is None:
+                # An unreadable import used to reach the parser as None and
+                # leave a traceback in the log of any document with an @import
+                # that does not resolve, instead of one readable line.
+                log.warning(
+                    "Could not read the imported stylesheet %r", cssResourceName
+                )
+                return None
+
+            # Only now, because reading is what resolves the file: getData()
+            # fills in the absolute uri. This used to be derived from the uri
+            # as written, and Path("fonts.css").parent.resolve() is the
+            # process working directory, so every url() in an imported sheet
+            # -- a @font-face src, above all -- was looked for there.
+            if self.rootPath and urlparse.urlparse(self.rootPath).scheme:
+                self.rootPath = urlparse.urljoin(self.rootPath, cssResourceName)
+            else:
+                self.rootPath = getDirName(cssFile.getAbsPath() or cssFile.uri)
+
+            return self.parse(data)
         except Exception:
             log.exception("Error while parsing CSS file")
-        return result
+            return None
+        finally:
+            # In a finally, because this used to sit inside the try: a sheet
+            # that failed to parse left rootPath pointing at itself, and every
+            # url() that came after was resolved against it.
+            self.rootPath = oldRootPath
 
 
 class PageNumberText:
-    def __init__(self, *args, **kwargs) -> None:
-        self.data: str = ""
+    def __init__(self, placeholder: str = "") -> None:
+        # What the line is measured with until the page is known. A number
+        # four digits wide needs its room reserved, or the line is laid out as
+        # if it were empty and everything around it moves once the number
+        # arrives. It comes from the example attribute of <pdf:pagenumber>.
+        self.data: str = placeholder
 
     def __contains__(self, key) -> bool:
         if self.flowable.page is not None:
@@ -591,12 +673,11 @@ class pisaContext:
         self.frameStatioundList: list = []
         self.log: list = []
         self.path: list = []
-        self.select_options: list[str] = []
         self.story: list = []
         self.image: PmlImage | None = None
         self.indexing_story: PmlPageCount | None = None
         self.keepInFrameIndex = None
-        self.node = None
+        self.node: Element | None = None
         self.template = None
         self.tableData: TableData = TableData()
         self.err: int = 0
@@ -606,6 +687,19 @@ class pisaContext:
         self.warn: int = 0
         self.cssDefaultText: str = ""
         self.cssText: str = ""
+        #: Tags some rule selects by position; see parser.getCSSAttrCacheKey.
+        self.cssPositionalTags: set[str] = set()
+        #: The CSS properties already resolved for an element shape, keyed by
+        #: parser.CSSAttrCacheKey. It belongs to the render rather than to the
+        #: module: as a global it was shared by concurrent renders, and its
+        #: entries outlived the document that filled them, so a parent node id
+        #: reused after a collection could serve one document another's styles.
+        self.cssAttrCache: dict = {}
+        #: Declarations dropped because their value is a CSS function this
+        #: library cannot evaluate, as "property: function()". Filled by
+        #: parser.CSSCollect and reported once when the document is done, the
+        #: way unimplemented property names are.
+        self.cssDroppedFunctions: set[str] = set()
         self.language: str = ""
         self.text: str = ""
         self.frameStatic: dict = {}
@@ -615,6 +709,9 @@ class pisaContext:
         self.toc: PmlTableOfContents = PmlTableOfContents()
         self.multiBuild: bool = False
         self.pageSize: tuple[float, float] = A4
+        #: Background colour propagated from <body> to the page canvas,
+        #: per CSS 2.1 14.2. None when body declares no background.
+        self.pageCanvasBackground = None
         self.baseFontSize: float = getSize("12pt")
         self.frag: ParaFrag = getParaFrag(ParagraphStyle(f"default{self.UID()}"))
         self.fragBlock: ParaFrag = self.frag
@@ -691,6 +788,9 @@ class pisaContext:
             userAgent=self.cssDefault, user=self.css
         )
         self.cssCascade.parser = self.cssParser
+        # Which tags any rule selects by position; see getCSSAttrCacheKey.
+        self.cssPositionalTags = parser.getPositionalTagNames(self.cssCascade)
+        parser.warnUnsupportedProperties(self.css)
 
     # METHODS FOR STORY
     def addStory(self, data):
@@ -713,7 +813,11 @@ class pisaContext:
                 "fontName",
                 "fontSize",
                 "letterSpacing",
+                "wordSpacing",
                 "backColor",
+                "backgroundImage",
+                "backgroundRepeat",
+                "backgroundPosition",
                 "spaceBefore",
                 "spaceAfter",
                 "leftIndent",
@@ -804,8 +908,8 @@ class pisaContext:
         return pc
 
     @staticmethod
-    def addPageNumber(flow):
-        pgnumber = PageNumberText()
+    def addPageNumber(flow, placeholder: str = ""):
+        pgnumber = PageNumberText(placeholder)
         pgnumber.setFlowable(flow)
         return pgnumber
 
@@ -862,7 +966,7 @@ class pisaContext:
 
                 self.dumpPara(self.fragAnchor + self.fragList, style)
                 if hasattr(self, "language"):
-                    language = self.__getattribute__("language")
+                    language = self.language
                     detect_language_result = arabic_format(self.text, language)
                     if detect_language_result is not None:
                         self.text = detect_language_result
@@ -938,7 +1042,7 @@ class pisaContext:
         frag.fontName = frag.bulletFontName = tt2ps(
             frag.fontName, frag.bold, frag.italic
         )
-        if isinstance(text, (PageNumberText, PageCountText)):
+        if isinstance(text, PageNumberText | PageCountText):
             frag.text = text
             # self.text += frag.text
             self._appendFrag(frag)
@@ -947,7 +1051,29 @@ class pisaContext:
         # Replace &shy; with empty and normalize NBSP
         text = text.replace("\xad", "").replace("\xc2\xa0", NBSP).replace("\xa0", NBSP)
 
-        if frag.whiteSpace == "pre":
+        text = apply_text_transform(text, getattr(frag, "textTransform", "none"))
+
+        # CSS 2.1 16.6. Only `pre` used to have any effect; nowrap, pre-wrap
+        # and pre-line all fell through to the collapsing branch below.
+        #
+        #   pre       newlines kept, spaces kept and unbreakable
+        #   pre-wrap  the same; the spaces a browser would wrap inside are
+        #             kept unbreakable here, which is as close as this gets
+        #   pre-line  newlines kept, runs of spaces collapsed
+        #   nowrap    newlines collapsed, spaces kept so the line cannot break
+        white_space = frag.whiteSpace
+        keeps_newlines = white_space in {"pre", "pre-wrap", "pre-line"}
+        keeps_spaces = white_space in {"pre", "pre-wrap", "nowrap"}
+
+        def append_preserving_spaces(line):
+            # Somehow for Reportlab NBSP have to be inserted
+            # as single character fragments
+            for piece in re.split(r"(\ )", line):
+                frag = baseFrag.clone()
+                frag.text = NBSP if piece == " " else piece
+                self._appendFrag(frag)
+
+        if keeps_newlines:
             # Handle by lines
             for text in re.split(r"(\r\n|\n|\r)", text):
                 # This is an exceptionally expensive piece of code
@@ -961,14 +1087,16 @@ class pisaContext:
                 else:
                     # Handle tabs in a simple way
                     text = text.replace("\t", 8 * " ")
-                    # Somehow for Reportlab NBSP have to be inserted
-                    # as single character fragments
-                    for text in re.split(r"(\ )", text):
+                    if keeps_spaces:
+                        append_preserving_spaces(text)
+                    else:
                         frag = baseFrag.clone()
-                        if text == " ":
-                            text = NBSP
-                        frag.text = text
+                        frag.text = " ".join(text.split())
                         self._appendFrag(frag)
+        elif keeps_spaces:
+            # nowrap: one line, and every space unbreakable so it stays one.
+            self.text += text
+            append_preserving_spaces(" ".join(text.split()))
         else:
             for text in re.split("(" + NBSP + ")", text):
                 frag = baseFrag.clone()
@@ -1092,9 +1220,9 @@ class pisaContext:
                 parts = src.split(".")
                 baseName, suffix = ".".join(parts[:-1]), parts[-1]
                 suffix = suffix.lower()
-                if suffix in ("ttf", "ttc"):
+                if suffix in {"ttf", "ttc"}:
                     font_type = "ttf"
-                elif suffix in ("afm", "pfb"):
+                elif suffix in {"afm", "pfb"}:
                     font_type = suffix
 
             if font_type == "ttf":
@@ -1115,17 +1243,17 @@ class pisaContext:
                     pdfmetrics.registerFont(file)
 
                     # Add or replace missing styles
-                    for bold in (0, 1):
-                        for italic in (0, 1):
+                    for is_bold in (0, 1):
+                        for is_italic in (0, 1):
                             if (
-                                "%s_%d%d" % (fontName, bold, italic)
+                                "%s_%d%d" % (fontName, is_bold, is_italic)
                             ) not in self.fontList:
-                                addMapping(fontName, bold, italic, fullFontName)
+                                addMapping(fontName, is_bold, is_italic, fullFontName)
 
                     # Register "normal" name and the place holder for style
                     self.registerFont(fontName, [*fontAlias, fullFontName])
 
-            elif font_type in ("afm", ""):
+            elif font_type in {"afm", ""}:
                 if font_type == "afm":
                     afm = file.getNamedFile()
                     tfile = pisaFileObject(baseName + ".pfb", basepath=file.basepath)
@@ -1155,12 +1283,14 @@ class pisaContext:
                     pdfmetrics.registerFont(justFont)
 
                     # Add or replace missing styles
-                    for bold in (0, 1):
-                        for italic in (0, 1):
+                    for is_bold in (0, 1):
+                        for is_italic in (0, 1):
                             if (
-                                "%s_%d%d" % (fontName, bold, italic)
+                                "%s_%d%d" % (fontName, is_bold, is_italic)
                             ) not in self.fontList:
-                                addMapping(fontName, bold, italic, fontNameOriginal)
+                                addMapping(
+                                    fontName, is_bold, is_italic, fontNameOriginal
+                                )
 
                     # Register "normal" name and the place holder for style
                     self.registerFont(

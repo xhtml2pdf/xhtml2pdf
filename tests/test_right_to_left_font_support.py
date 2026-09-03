@@ -1,4 +1,3 @@
-# ruff: noqa: RUF001
 import io
 import os
 from unittest import TestCase
@@ -98,7 +97,7 @@ class RightToLeftFontSupportTests(TestCase):
 
     def test_pdf_language_tag_in_html(self) -> None:
         """
-        this function is used to check if the "Custom Tag" <pdf:language/>
+        This function is used to check if the "Custom Tag" <pdf:language/>
         is located in the HTML file through assertNotEqual()
         """
         text = ""

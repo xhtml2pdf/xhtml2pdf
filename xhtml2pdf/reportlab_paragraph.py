@@ -9,7 +9,7 @@ import sys
 from copy import deepcopy
 from operator import truth
 from string import whitespace
-from typing import Callable
+from typing import TYPE_CHECKING
 
 from reportlab.graphics import renderPDF
 from reportlab.lib.abag import ABag
@@ -22,6 +22,9 @@ from reportlab.platypus.paraparser import ParaParser
 from reportlab.rl_settings import _FUZZ
 
 from xhtml2pdf.util import getSize
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 PARAGRAPH_DEBUG = False
 LEADING_FACTOR = 1.0
@@ -196,9 +199,18 @@ def _putFragLine(cur_x, tx, line):
         tx._olb = cur_y - descent
         tx._oleading = leading
 
-    # Letter spacing
+    # Letter and word spacing. Both are resolved against the font size, so
+    # that an em or a percentage means something; without a base getSize logs
+    # "not a float" and returns 0.
     if xs.style.letterSpacing != "normal":
-        tx.setCharSpace(getSize("".join(xs.style.letterSpacing)))
+        tx.setCharSpace(getSize("".join(xs.style.letterSpacing), xs.style.fontSize))
+
+    # Word spacing is on the same footing as letter spacing: the width
+    # ReportLab measured the line with does not know about it, so a very wide
+    # value can overrun, which is the approximation letter spacing already
+    # makes here.
+    if getattr(xs.style, "wordSpacing", "normal") != "normal":
+        tx.setWordSpace(getSize("".join(xs.style.wordSpacing), xs.style.fontSize))
 
     ws = getattr(tx, "_wordSpace", 0)
     nSpaces = 0
@@ -468,9 +480,9 @@ def _getFragWords(frags, *, reverse=False):
             S = split(text)
             if reverse:
                 S.reverse()
-            if [] == S:
+            if S == []:
                 S = [""]
-            if [] != W and text[0] in whitespace:
+            if W != [] and text[0] in whitespace:
                 W.insert(0, n)
                 R.append(W)
                 W = []
@@ -495,7 +507,7 @@ def _getFragWords(frags, *, reverse=False):
         elif hasattr(f, "cbDefn"):
             w = getattr(f.cbDefn, "width", 0)
             if w:
-                if [] != W:
+                if W != []:
                     W.insert(0, n)
                     R.append(W)
                     W = []
@@ -505,7 +517,7 @@ def _getFragWords(frags, *, reverse=False):
                 W.append((f, ""))
         elif hasattr(f, "lineBreak"):
             # pass the frag through.  The line breaker will scan for it.
-            if [] != W:
+            if W != []:
                 W.insert(0, n)
                 R.append(W)
                 W = []
@@ -513,7 +525,7 @@ def _getFragWords(frags, *, reverse=False):
             R.append([0, (f, "")])
             hangingStrip = True
 
-    if [] != W:
+    if W != []:
         W.insert(0, n)
         R.append(W)
 
@@ -566,7 +578,7 @@ def _drawBullet(canvas, offset, cur_y, bulletText, style):
     )
     tx2.setFont(style.bulletFontName, style.bulletFontSize)
     tx2.setFillColor(
-        hasattr(style, "bulletColor") and style.bulletColor or style.textColor
+        (hasattr(style, "bulletColor") and style.bulletColor) or style.textColor
     )
     if isinstance(bulletText, str):
         tx2.textOut(bulletText)
@@ -633,7 +645,7 @@ def splitLines0(frags, widths):
     line = len(frags)
     lim = start = 0
     text = frags[0]
-    while 1:
+    while True:
         # find a non whitespace character
         while i < line:
             while start < lim and text[start] == " ":
@@ -693,14 +705,14 @@ def _do_under_line(i, t_off, ws, tx, lm=-0.125):
     tx._canvas.line(t_off, y, t_off + textlen + ws, y)
 
 
-_scheme_re = re.compile("^[a-zA-Z][-+a-zA-Z0-9]+$")
+_scheme_re = re.compile(r"^[a-zA-Z][-+a-zA-Z0-9]+$")
 
 
 def _doLink(tx, link, rect):
     parts = link.split(":", 1)
-    scheme = len(parts) == 2 and parts[0].lower() or ""
+    scheme = (len(parts) == 2 and parts[0].lower()) or ""
     if _scheme_re.match(scheme) and scheme != "document":
-        kind = scheme.lower() == "pdf" and "GoToR" or "URI"
+        kind = (scheme.lower() == "pdf" and "GoToR") or "URI"
         if kind == "GoToR":
             link = parts[1]
         tx._canvas.linkURL(link, rect, relative=1, kind=kind)
@@ -709,7 +721,7 @@ def _doLink(tx, link, rect):
             link = link[1:]
             scheme = ""
         tx._canvas.linkRect(
-            "", scheme != "document" and link or parts[1], rect, relative=1
+            "", (scheme != "document" and link) or parts[1], rect, relative=1
         )
 
 
@@ -924,7 +936,7 @@ def cjkFragSplit(frags, maxWidths, calcBounds, encoding="utf8"):
             # if next character cannot start a line, wrap it up to this line so it hangs
             # in the right margin. We won't do two or more though - that's unlikely and
             # would result in growing ugliness.
-            nextChar = U[i]
+            nextChar = u
             if nextChar in ALL_CANNOT_START:
                 extraSpace -= w
                 i += 1
@@ -1036,9 +1048,7 @@ class Paragraph(Flowable):
             _parser.caseSensitive = self.caseSensitive
             style, frags, bulletTextFrags = _parser.parse(text, style)
             if frags is None:
-                msg = "xml parser error ({}) in paragraph beginning\n'{}'".format(
-                    _parser.errors[0], text[: min(30, len(text))]
-                )
+                msg = f"xml parser error ({_parser.errors[0]}) in paragraph beginning\n'{text[: min(30, len(text))]}'"
                 raise ValueError(msg)
             textTransformFrags(frags, style)
             if bulletTextFrags:
@@ -1106,7 +1116,7 @@ class Paragraph(Flowable):
             f = frags[0]
             fS = f.fontSize
             fN = f.fontName
-            words = hasattr(f, "text") and split(f.text, " ") or f.words
+            words = (hasattr(f, "text") and split(f.text, " ")) or f.words
 
             def func(w: list, fS=fS, fN=fN) -> int:
                 return stringWidth(w, fN, fS)
@@ -1245,7 +1255,7 @@ class Paragraph(Flowable):
         if self.debug:
             print(id(self), "breakLines")
 
-        maxWidths = [width] if not isinstance(width, (tuple, list)) else width
+        maxWidths = [width] if not isinstance(width, tuple | list) else width
         lines = []
         lineno = 0
         style = self.style
@@ -1265,7 +1275,7 @@ class Paragraph(Flowable):
             fontSize = f.fontSize
             fontName = f.fontName
             ascent, descent = getAscentDescent(fontName, fontSize)
-            words = hasattr(f, "text") and split(f.text, " ") or f.words
+            words = (hasattr(f, "text") and split(f.text, " ")) or f.words
             spaceWidth = stringWidth(" ", fontName, fontSize, self.encoding)
             cLine = []
             currentWidth = -spaceWidth  # hack to get around extra space for word 1
@@ -1273,7 +1283,7 @@ class Paragraph(Flowable):
                 # this underscores my feeling that Unicode throughout would be easier!
                 wordWidth = stringWidth(word, fontName, fontSize, self.encoding)
                 newWidth = currentWidth + spaceWidth + wordWidth
-                if newWidth <= maxWidth or not len(cLine):
+                if newWidth <= maxWidth or not cLine:
                     # fit one more on this line
                     cLine.append(word)
                     currentWidth = newWidth
@@ -1503,7 +1513,7 @@ class Paragraph(Flowable):
         if self.debug:
             print(id(self), "breakLinesCJK")
 
-        maxWidths = width if isinstance(width, (list, tuple)) else [width]
+        maxWidths = width if isinstance(width, list | tuple) else [width]
         style = self.style
 
         # for bullets, work out width and ensure we wrap the right amount onto line one
@@ -1781,6 +1791,8 @@ class Paragraph(Flowable):
         """
         frags = getattr(self, "frags", None)
         if frags:
+            # the brackets used to wrap frag.text, so this joined a sequence of
+            # one-element lists and raised TypeError on every call
             return "".join(frag.text for frag in frags if hasattr(frag, "text"))
         if identify:
             text = getattr(self, "text", None)
@@ -1859,21 +1871,19 @@ if __name__ == "__main__":  # NORUNTESTS
             )
             print(f"frag{frag}: '{frags[frag].text}' {detail}")
 
-        fragword = 0
         cum = 0
-        for W in _getFragWords(frags):
+        for fragword, W in enumerate(_getFragWords(frags)):
             cum += W[0]
             print(f"fragword{fragword}: cum={cum:3d} size={W[0]}")
             for w in W[1:]:
                 print(f"({fragDump(w)})")
             print()
-            fragword += 1
 
     from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
     from reportlab.lib.units import cm
 
     TESTS = sys.argv[1:]
-    if [] == TESTS:
+    if TESTS == []:
         TESTS = ["4"]
 
     def flagged(i, TESTS=TESTS):

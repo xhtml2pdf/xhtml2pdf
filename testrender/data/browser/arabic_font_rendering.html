@@ -1,0 +1,117 @@
+<!--
+  Browser equivalent of data/source/arabic_font_rendering.html
+
+  Arabic text with an @font-face DejaVu Sans. The font URL resolves from this
+  directory, which sits at the same depth as data/source/, so it is unchanged.
+
+  <pdf:language name="arabic"/> tells xhtml2pdf to run the text through
+  arabic-reshaper and python-bidi. A browser shapes and reorders Arabic natively
+  from the Unicode bidi algorithm, so the tag has no equivalent and is dropped;
+  dir="rtl" expresses the same intent in HTML.
+
+  The two shaping implementations are not expected to be glyph-identical, so
+  this fixture is compared on pagination and text rather than SSIM.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>Arabic font rendering</title>
+<style type="text/css">
+
+	@font-face {
+        font-family: DejaVuSans;
+        src: url('../../../manual_test/font/dejavu/DejaVuSans.ttf')
+        }
+
+    body {
+    	font-family: DejaVuSans;
+		background-color: red;
+	}
+	p.extra {
+		background-color: yellow;
+		line-height: 200%;
+	}
+	div {
+		background-color: orange;
+	}
+	table {
+		border: 2px solid black;
+	}
+	h1 {
+		page-break-before: always;
+	}
+
+	tr {
+	background-color:red;
+	}
+
+
+</style>
+</head>
+<body dir="rtl">
+<div>
+
+    <span>رقم الغرفة:</span>
+</div>
+
+Test
+<p>
+Block 1
+<br>
+Neue Zeile
+<br><br>
+  Und noch eine!
+<p class="extra">
+Block 2
+
+<div style="page-break-after: always;">
+	DIV 1 BEGIN
+
+	<div class="extra">
+		INNERDIV A
+
+		<p style="background-color: blue;">
+		INNERP
+
+	</div>
+
+	DIV 1 END
+</div>
+
+(NEW PAGE?) AFTERDIV
+
+<h1>Heading 1(NEW PAGE?)</h1>
+
+AFTERH1
+
+<table>
+	<tr>
+		<td>رقم الغرفة:</td>
+		<td>Oben rechts</td>
+	</tr>
+	<tr>
+		<td>Unten links</td>
+		<td>
+
+<table>
+	<tr>
+		<td>xxx links</td>
+		<td>yyy rechts</td>
+	</tr>
+	<tr>
+		<td>xxx links</td>
+		<td>yyy rechts</td>
+	</tr>
+</table>
+
+		</td>
+	</tr>
+</table>
+
+<p>
+ENDE
+</p>
+</body>
+</html>

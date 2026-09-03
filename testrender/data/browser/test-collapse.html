@@ -1,0 +1,78 @@
+<!--
+  Browser equivalent of data/source/test-collapse.html
+
+  Margin collapsing between nested blocks, in a 4cm-tall content area.
+
+  @page { margin: 1cm; height: 4cm } asks for a 4cm content area, so that is
+  what this reproduces. Note xhtml2pdf currently ignores the height: in
+  getFrameDimensions (xhtml2pdf/util.py) a height given without top or bottom is
+  computed and then discarded, so the frame ends up full-page. That difference
+  is expected until the height is honoured; see data/manifest.toml.
+
+  <pdf:spacer height="Ncm"> becomes an empty block of that height.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>test-collapse</title>
+<style>
+/* xhtml2pdf @frame coordinates are measured from the page edge, so the page
+   box must have no margin of its own and the frames are positioned absolutely. */
+@page { size: A4; margin: 0; }
+.frame { position: absolute; box-sizing: border-box; overflow: hidden; }
+/* -pdf-frame-border: 1 */
+.frame.bordered { border: 1px solid black; }
+body { margin: 1cm; }
+/* @page { height: 4cm }: a 4cm-tall content area with the frame border */
+.content { box-sizing: border-box; height: 4cm; border: 1px solid black;
+           overflow: hidden; }
+p { margin: 1em; background-color: red; }
+</style>
+</head>
+<body>
+<div class="content">
+
+	<div style="background-color: yellow; margin: 1em;">
+		<div style="background-color: green; margin: 1em;">yyy
+		</div>
+	</div>
+
+	<table style="margin: 2em;">
+      <tr>
+        <td style="background-color: red;">xxx</td>
+      </tr>
+    </table>
+
+	<div style="background-color: yellow; margin: 1em;">
+		<div style="background-color: green; margin: 1em;">x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x </div>
+		<div style="background-color: green; margin: 1em;">
+		</div>
+		<div style="background-color: green; margin: 1em;">
+			x x
+		</div>
+	</div>
+
+	<hr style="margin: 2em;" />
+
+	<div style="background-color: yellow; margin: 0.5em;">
+		<div style="background-color: green; margin: 1em;">
+			x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x
+		</div>
+		<div style="background-color: green; margin: 1em;">
+			x x
+		</div>
+	</div>
+
+	<div style="height: 2cm"></div>
+	<div style="height: 0.5cm"></div>
+
+	<p>xxx
+	<p>xxx
+	<p>xxx
+	<p>xxx
+	<p>xxx
+</div>
+</body>
+</html>

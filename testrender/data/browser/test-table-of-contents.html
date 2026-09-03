@@ -1,0 +1,61 @@
+<!--
+  Browser equivalent of data/source/test-table-of-contents.html
+
+  <pdf:toc /> builds a table of contents from the h1/h2/h3 outline. A browser
+  has no such element, so the entries are written out by hand, in the order and
+  nesting the outline produces.
+
+  The page numbers xhtml2pdf prints next to each entry are deliberately absent:
+  Chromium does not implement target-counter(page), so there is no way to
+  compute them in CSS. This fixture is therefore compared on pagination and on
+  the `headings` check -- every heading must land on the same page on both
+  sides -- rather than on the TOC text itself. See data/manifest.toml.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>Table of contents test</title>
+<style>
+/* the generated TOC is a flat list indented by outline level */
+.toc { list-style: none; margin: 0; padding: 0; }
+.toc li { margin: 0; }
+.toc .level1 { margin-left: 1em; }
+.toc .level2 { margin-left: 2em; }
+</style>
+</head>
+<body>
+    <div style="page-break-after:always;">
+        <h1>Table of contents</h1>
+        <ul class="toc">
+            <li>Table of contents</li>
+            <li>Famous Tables</li>
+            <li>Famous Chairs</li>
+            <li>Other Famous Furniture</li>
+            <li class="level1">Bookcases</li>
+            <li class="level1">Beds</li>
+            <li class="level2">Sofa beds</li>
+        </ul>
+    </div>
+    <div style="page-break-after:always;">
+        <h1>
+            Famous Tables
+        </h1>
+    </div>
+    <div style="page-break-after:always;">
+        <h1>
+            Famous Chairs
+        </h1>
+    </div>
+    <div style="page-break-after:always;">
+        <h1>
+            Other Famous Furniture
+        </h1>
+        <h2>Bookcases</h2>
+        <h2>Beds</h2>
+        <h3>Sofa beds</h3>
+        <p>TBD: Are sofa beds, beds or chairs?</p>
+    </div>
+</body>
+</html>

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from io import BytesIO
-from typing import TYPE_CHECKING, Iterator, cast
+from typing import TYPE_CHECKING, cast
 
 import pypdf
 from PIL import Image
@@ -10,6 +10,7 @@ from reportlab.pdfgen.canvas import Canvas
 from xhtml2pdf.files import pisaFileObject
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
     from tempfile import _TemporaryFileWrapper
 
     from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc
@@ -21,8 +22,8 @@ class WaterMarks:
         img, context: dict, pagesize: tuple[int, int], *, is_portrait: bool
     ) -> tuple[int, int, int, int]:
         object_position: tuple[int, int] | None = context.get("object_position")
-        cssheight: int | None = cast(int, context.get("height"))
-        csswidth: int = cast(int, context.get("width"))
+        cssheight: int | None = cast("int", context.get("height"))
+        csswidth: int = cast("int", context.get("width"))
         iw, ih = img.getSize()
         pw, ph = pagesize
         width: int = pw  # min(iw, pw) # max
@@ -54,12 +55,17 @@ class WaterMarks:
 
     @staticmethod
     def get_img_with_opacity(pisafile: pisaFileObject, context: dict) -> BytesIO:
-        opacity: float = context.get("opacity", None)
+        opacity: float | None = context.get("opacity")
         if opacity:
             file: BytesIO | _TemporaryFileWrapper | None = pisafile.getFile()
             img: Image.Image = Image.open(file)
             img = img.convert("RGBA")
-            img.putalpha(int(255 * opacity))
+            # Scale the alpha channel that is there rather than replacing it.
+            # putalpha with a single number overwrites the whole channel, so
+            # the fully transparent pixels of a cut-out PNG -- black, as a
+            # rule -- became half opaque and the page came out with a grey
+            # rectangle on it instead of the faded figure.
+            img.putalpha(img.getchannel("A").point(lambda a: int(a * opacity)))
             iobuff = BytesIO()
             img.save(iobuff, "PNG")
             return iobuff
@@ -124,10 +130,38 @@ class WaterMarks:
                     yield range(page, pages[counter]), bgfile, int(pgcontext["step"])
 
     @staticmethod
+    def has_backgrounds(doc: PmlBaseDoc) -> bool:
+        """Whether any page template of this document asks for a background."""
+        return any(
+            template.pisaBackground is not None
+            and not template.pisaBackground.notFound()
+            for _, template in getattr(doc, "pisaTemplateList", [])
+        )
+
+    @staticmethod
     def process_doc(
         doc: PmlBaseDoc, istream: bytes, output: bytes
     ) -> tuple[bytes, bool]:
-        pdfoutput: pypdf.PdfWriter = pypdf.PdfWriter(clone_from=istream)
+        if not WaterMarks.has_backgrounds(doc):
+            # Nothing to merge, so the document is not read back at all. It
+            # used to be cloned through pypdf whatever it held, and a document
+            # encrypted with a user password cannot be read without it: the
+            # documented encrypt="password" aborted the conversion here with
+            # FileNotDecryptedError.
+            return output, False
+
+        try:
+            pdfoutput: pypdf.PdfWriter = pypdf.PdfWriter(clone_from=istream)
+        except pypdf.errors.FileNotDecryptedError as exc:
+            msg = (
+                "a background image cannot be merged into a document encrypted"
+                " with a user password: the background is applied after the"
+                " document is built, and the encrypted document cannot be read"
+                " back. Encrypt with an owner password only, or drop the"
+                " background."
+            )
+            raise ValueError(msg) from exc
+
         has_bg: bool = False
         for pages, bgouter, step in WaterMarks.get_watermark(doc, len(pdfoutput.pages)):
             bginput: pypdf.PdfReader = pypdf.PdfReader(bgouter.getBytesIO())

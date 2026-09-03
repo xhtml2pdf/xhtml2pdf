@@ -44,3 +44,8 @@ Some available configurations when you use images:
 - **background-height:**  height of the image ej 50px
 - **background-width:** width of the image ej 20px
 - **background-page-step:** Use when you want to step pages without watermark, default 1
+
+Demonstration
+-------------
+
+.. include:: /_generated/watermarks.rst

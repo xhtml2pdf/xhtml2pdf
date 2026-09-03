@@ -1,22 +1,38 @@
 name: Run Tests
-on: push
+
+# The matrix is five Python versions against two ReportLab majors, plus a
+# cross-version render check and the browser comparison, so it is not run on
+# every pull request. "main" is listed alongside "master" so that renaming the
+# default branch does not silently stop the tests.
+on:
+  push:
+    branches:
+      - master
+      - main
+      - development
+  workflow_dispatch:
 jobs:
   python:
+    name: py${{matrix.python-version}} / reportlab ${{matrix.reportlab}}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        reportlab: ["4", "5"]
     env:
       PYTHON_VERSION: ${{matrix.python-version}}
+      TOXENV: py${{matrix.python-version}}-rl${{matrix.reportlab}}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Python ${{matrix.python-version}}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{matrix.python-version}}
           allow-prereleases: true
-      - if: matrix.python-version == '3.13'  # For lxml...
+      # lxml (via svglib) may need to build from source on the newest CPython
+      # before wheels land.
+      - if: contains(fromJSON('["3.13", "3.14"]'), matrix.python-version)
         run: |
           sudo apt-get update
           sudo apt-get install --yes libxml2 libxslt-dev
@@ -24,17 +40,27 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --yes ghostscript imagemagick
-          sudo sed -i 's#<policy domain="coder" rights="none" pattern="PDF" />#<policy domain="coder" rights="read|write" pattern="PDF" />#' /etc/ImageMagick-6/policy.xml
+          # Allow ImageMagick to read PDFs. The path is version dependent, so
+          # patch whichever policy files exist rather than hardcoding -6.
+          for policy in /etc/ImageMagick-*/policy.xml; do
+            [ -f "$policy" ] && sudo sed -i 's#<policy domain="coder" rights="none" pattern="PDF" />#<policy domain="coder" rights="read|write" pattern="PDF" />#' "$policy"
+          done
           python -m pip install --upgrade pip
           python -m pip install .[test]
 
-      - name: run
+      # Guards against the silent gap this matrix used to have: TOXENV was
+      # py3.13, which matched nothing in envlist, so that leg ran no tests.
+      - name: Assert TOXENV exists
+        run: tox -l | grep -qx "$TOXENV"
+
+      # Reference images for the pixel diff below. Note this only makes the diff
+      # a self-consistency check; the real cross-version gate is the separate
+      # job below.
+      - name: Create render references
         run: make test-ref
 
       - name: Test with tox
         run: tox
-        env:
-          TOXENV: py${{matrix.python-version}}
 
       - name: Generate coverage report
         run: coverage xml
@@ -47,3 +73,133 @@ jobs:
           github-token: ${{ github.token }}
           file: "coverage.xml"
           format: "cobertura"
+
+  # The load-bearing rendering gate.
+  #
+  # References are generated with one reportlab major and compared against a
+  # render from the other, on the same runner, so ghostscript, ImageMagick and
+  # the system fonts are held constant and reportlab is the only variable. Both
+  # directions are checked so a one-way drift cannot slip through.
+  reportlab-crossversion:
+    name: render diff, reportlab ${{matrix.reference}} -> ${{matrix.render}}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - reference: "4"
+            reference_spec: "reportlab>=4.0.4,<5"
+            render: "5"
+            render_spec: "reportlab>=5,<6"
+          - reference: "5"
+            reference_spec: "reportlab>=5,<6"
+            render: "4"
+            render_spec: "reportlab>=4.0.4,<5"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ghostscript imagemagick
+          # Allow ImageMagick to read PDFs. The path is version dependent, so
+          # patch whichever policy files exist rather than hardcoding -6.
+          for policy in /etc/ImageMagick-*/policy.xml; do
+            [ -f "$policy" ] && sudo sed -i 's#<policy domain="coder" rights="none" pattern="PDF" />#<policy domain="coder" rights="read|write" pattern="PDF" />#' "$policy"
+          done
+          python -m pip install --upgrade pip
+          python -m pip install .
+
+      - name: Render references with reportlab ${{matrix.reference}}
+        run: |
+          python -m pip install "${{matrix.reference_spec}}"
+          python -c "from reportlab import Version; print('reference built with reportlab', Version)"
+          make test-ref
+
+      - name: Compare against a render with reportlab ${{matrix.render}}
+        run: |
+          python -m pip install "${{matrix.render_spec}}"
+          python -c "from reportlab import Version; print('rendering with reportlab', Version)"
+          make test-render
+
+      - name: Upload diff images
+        if: failure()
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: testrender-diff-${{matrix.reference}}-to-${{matrix.render}}
+          path: testrender/output
+
+  # Compares xhtml2pdf against an external reference: a browser rendering the
+  # equivalent markup. See testrender/browsercompare.py.
+  #
+  # The browser IS the reference, so both it and the fonts have to be pinned:
+  # an upgrade of either moves the scores without xhtml2pdf changing. When the
+  # runner's browser does not match the build the baseline was recorded with,
+  # browsercompare.py reports that and enforces nothing rather than failing for
+  # the wrong reason. The uploaded report is useful either way.
+  browser-compare:
+    name: browser comparison
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ghostscript imagemagick xvfb
+          # Helvetica must resolve to a metric-compatible clone (URW Nimbus
+          # Sans), otherwise line breaking diverges from ReportLab's base-14
+          # metrics and every score collapses for reasons unrelated to layout.
+          sudo apt-get install --yes fonts-urw-base35 fonts-liberation
+          for policy in /etc/ImageMagick-*/policy.xml; do
+            [ -f "$policy" ] && sudo sed -i 's#<policy domain="coder" rights="none" pattern="PDF" />#<policy domain="coder" rights="read|write" pattern="PDF" />#' "$policy"
+          done
+          python -m pip install --upgrade pip
+          python -m pip install '.[browsertest]'
+      - name: Report the resolved reference fonts
+        run: |
+          fc-match Helvetica
+          fc-match "Courier New"
+      - name: Compare against the browser
+        run: make test-browser
+      - uses: actions/upload-artifact@v7.0.1
+        if: always()
+        with:
+          name: browser-compare-report
+          path: testrender/output
+
+  # The suite must not need the public internet. Everything is served from
+  # tests/httpserver.py on localhost.
+  offline:
+    name: offline test run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade pip && python -m pip install .[test]
+      - name: Run the suite with no outbound network
+        run: |
+          # No --map-root-user. sudo already gives real root; that flag put a
+          # user namespace on top of it, in which the runner's own uid is
+          # unmapped and root loses the right to traverse a home directory that
+          # is not world-executable. unittest resolves the start directory to
+          # an absolute path before stat'ing it, and os.path.isdir reads a stat
+          # that fails as "not a directory", so discovery gave
+          #     ImportError: Start directory is not importable: 'tests'
+          # while the working directory itself was fine -- which is what the
+          # relative 'tests' in that message says.
+          #
+          # The interpreter is passed by path because sudo replaces PATH with
+          # secure_path, which does not have the one setup-python installed the
+          # package into; the system python was running the suite without its
+          # dependencies.
+          sudo unshare --net sh -c "
+            ip link set lo up
+            PYTHONDONTWRITEBYTECODE=1 '$(command -v python)' -m unittest discover -t . -s tests
+          "

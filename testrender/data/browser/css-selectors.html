@@ -1,0 +1,75 @@
+<!--
+  Browser equivalent of data/source/css-selectors.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+
+  The last pair of rules is the point of the .zebra/.alpha paragraph: two
+  declarations of equal specificity, where CSS says the one written later wins.
+  xhtml2pdf sorts equally specific rules by name (xhtml2pdf/w3c/css.py), so
+  .alpha sorts first and .zebra wins instead. The class names are chosen so
+  that alphabetical order and source order disagree.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>css-selectors</title>
+<link rel="stylesheet" href="_normalize.css">
+<style type="text/css">
+p, li, td { margin: 0; padding: 0.2em; }
+ul, ol { margin: 0 0 0.5em 1.5em; }
+table { margin-bottom: 0.5em; }
+
+li { background-color: #eeeeec; }
+li:nth-child(odd) { background-color: #fce94f; }
+li:nth-child(3) { color: #a40000; }
+.only li:only-child { background-color: #8ae234; }
+
+.items p:first-of-type { font-weight: bold; }
+.items p:last-of-type { font-style: italic; }
+
+td { background-color: #eeeeec; }
+td:empty { background-color: #729fcf; }
+
+h2 { margin: 0 0 0.2em 0; font-size: 100%; }
+h2 + p { background-color: #ad7fa8; }
+h2 ~ p.sib { border-left: 4px solid #f57900; }
+
+/* Equal specificity: the rule written later must win. */
+.zebra { background-color: #fcaf3e; }
+.alpha { background-color: #729fcf; }
+</style>
+</head>
+<body>
+<ul>
+<li>nth-child odd, yellow</li>
+<li>nth-child even, grey</li>
+<li>nth-child 3, yellow and red text</li>
+<li>nth-child even, grey</li>
+</ul>
+
+<ul class="only">
+<li>only-child, green</li>
+</ul>
+
+<div class="items">
+<p>first-of-type, bold</p>
+<p>neither, plain</p>
+<p>last-of-type, italic</p>
+</div>
+
+<table cellspacing="0" cellpadding="0" width="100%">
+<tr>
+<td width="50%">not empty, grey</td>
+<td width="50%"></td>
+</tr>
+</table>
+
+<h2>a heading</h2>
+<p>adjacent sibling of h2, purple</p>
+<p class="sib">general sibling of h2, orange left rule</p>
+
+<p class="zebra alpha">equal specificity, the later rule wins, blue</p>
+</body>
+</html>

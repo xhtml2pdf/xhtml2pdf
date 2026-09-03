@@ -17,3 +17,6 @@ python:
       path: .
       extra_requirements:
         - docs
+    # The one docs dependency that cannot be declared in pyproject.toml; see
+    # the file for why.
+    - requirements: docs/requirements.txt

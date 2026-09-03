@@ -1,0 +1,230 @@
+{
+  "browser": "chrome 151.0.7922.137",
+  "fixtures": {
+    "adobe_asian_lenguage_pack": {
+      "pages": {
+        "xhtml2pdf": 1
+      }
+    },
+    "arabic_font_rendering": {
+      "pages": {
+        "xhtml2pdf": 3
+      },
+      "text": 0.4444,
+      "text_doc": 0.9198
+    },
+    "css-background": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9697,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "css-border-style": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.8527,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "css-list-style": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9715,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "css-page-box": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9447,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "css-selectors": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9524,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "css-text": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9813,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "simple-test": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.8192,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "test-align": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.8474,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "test-background": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9485,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "test-blocks": {
+      "pages": {
+        "xhtml2pdf": 3
+      },
+      "ssim": 0.8785,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "test-collapse": {
+      "pages": {
+        "xhtml2pdf": 4
+      },
+      "ssim": 0.9309,
+      "text": 1.0,
+      "text_doc": 0.6074
+    },
+    "test-css-border": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9073,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "test-helloworld": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9298,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "test-image": {
+      "pages": {
+        "xhtml2pdf": 2
+      },
+      "ssim": 0.7208,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "test-image-align": {
+      "pages": {
+        "xhtml2pdf": 2
+      },
+      "ssim": 0.8243,
+      "text": 0.9302,
+      "text_doc": 1.0
+    },
+    "test-keep-in-frame": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.6961,
+      "text": 0.6607,
+      "text_doc": 0.6607
+    },
+    "test-keep-with-next": {
+      "pages": {
+        "xhtml2pdf": 4
+      },
+      "ssim": 0.3374,
+      "text": 0.7874,
+      "text_doc": 1.0
+    },
+    "test-letter": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "text": 0.9908,
+      "text_doc": 0.9908
+    },
+    "test-linespacing": {
+      "pages": {
+        "xhtml2pdf": 2
+      },
+      "ssim": 0.6411,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "test-list": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9182,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "test-loremipsum": {
+      "pages": {
+        "xhtml2pdf": 7
+      },
+      "ssim": 0.5677,
+      "text": 0.1278,
+      "text_doc": 0.9754
+    },
+    "test-page-left-right": {
+      "pages": {
+        "xhtml2pdf": 4
+      },
+      "ssim": 0.9576,
+      "text": 0.9091,
+      "text_doc": 0.9744
+    },
+    "test-svg": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9801,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "test-table-css": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9984,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "test-table-of-contents": {
+      "pages": {
+        "xhtml2pdf": 4
+      }
+    },
+    "test-tables": {
+      "pages": {
+        "xhtml2pdf": 3
+      },
+      "ssim": 0.755,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "ttf_file_metadata_same_name": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9982,
+      "text": 1.0,
+      "text_doc": 1.0
+    }
+  },
+  "note": "text and ssim are the worst page of a fixture; text_doc is the whole document, so the two differ when content is all present but paginated differently. pages records xhtml2pdf's own page count only. The browser is the reference, so pin its version: a browser upgrade moves these numbers without xhtml2pdf changing."
+}

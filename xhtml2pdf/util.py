@@ -17,10 +17,10 @@ import contextlib
 import logging
 import re
 from copy import copy
-from typing import Any
+from io import BytesIO
+from typing import Any, ClassVar
 
 import arabic_reshaper
-import reportlab
 import reportlab.pdfbase._cidfontdata
 from bidi import get_display
 from reportlab.lib.colors import Color, toColor
@@ -28,6 +28,7 @@ from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.lib.units import cm, inch
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
+from reportlab.rl_config import register_reset
 
 import xhtml2pdf.default
 
@@ -36,6 +37,12 @@ log = logging.getLogger(__name__)
 rgb_re = re.compile(
     r"^.*?rgb[a]?[(]([0-9]+).*?([0-9]+).*?([0-9]+)(?:.*?(?:[01]\.(?:[0-9]+)))?[)].*?[ ]*$"
 )
+
+#: The number in one argument of a colour function. A percentage argument
+#: reaches CSSTerminalFunction as the stringified tuple "('50', '%')", because
+#: that class turns any argument which is not already a str into one, so the
+#: number is found rather than parsed off a known shape.
+color_arg_re = re.compile(r"-?\d*\.?\d+")
 
 # =========================================================================
 # Memoize decorator
@@ -53,13 +60,38 @@ class Memoized:
     and uses it as a cache for subsequent calls to the same method.
     It is especially useful for functions that don't rely on external variables
     and that are called often. It's a perfect match for our getSize etc...
+
+    The cache is bounded and evicts in FIFO order. Keys are derived from CSS
+    values taken straight out of the rendered document, so an unbounded cache
+    grows without limit in a long-running server process.
+
+    ``functools.lru_cache`` is not a substitute here: the ``TypeError`` fallback
+    below (unhashable arguments, e.g. a list ``pagesize``) is load-bearing, and
+    ``lru_cache`` raises instead.
     """
 
-    def __init__(self, func) -> None:
+    #: Maximum number of memoized results kept per decorated function.
+    DEFAULT_MAXSIZE: int = 1000
+
+    #: Every instance, so the whole memoization layer can be dropped at once.
+    _instances: ClassVar[list[Memoized]] = []
+
+    def __init__(self, func, maxsize: int | None = None) -> None:
         self.cache: dict = {}
+        self.maxsize: int = self.DEFAULT_MAXSIZE if maxsize is None else maxsize
         self.func = func
         self.__doc__ = self.func.__doc__  # To avoid great confusion
         self.__name__ = self.func.__name__  # This also avoids great confusion
+        Memoized._instances.append(self)
+        # NB: must be a bound method of a real object -- reportlab >= 4.5.1
+        # wraps the callback in a WeakMethod, which rejects builtins such as
+        # dict.clear. Older versions store a plain weakref, which would expire
+        # immediately on a temporary bound method, so keep a strong reference.
+        self._reset_callback = self.clear
+        register_reset(self._reset_callback)
+
+    def clear(self) -> None:
+        self.cache.clear()
 
     def __call__(self, *args, **kwargs):
         # Make sure the following line is not actually slower than what you're
@@ -69,11 +101,20 @@ class Memoized:
         try:
             if key not in self.cache:
                 res = self.func(*args, **kwargs)
+                if self.maxsize and len(self.cache) >= self.maxsize:
+                    # dicts are insertion-ordered, so this is FIFO eviction
+                    self.cache.pop(next(iter(self.cache)))
                 self.cache[key] = res
             return self.cache[key]
         except TypeError:
             # happens if any of the parameters is a list
             return self.func(*args, **kwargs)
+
+
+def reset_caches() -> None:
+    """Drop every memoized result. Called at the end of each render."""
+    for memoized in Memoized._instances:
+        memoized.clear()
 
 
 def toList(value: Any, *, cast_tuple: bool = True) -> list:
@@ -125,6 +166,43 @@ def set_value(obj, attrs, value, *, do_copy=False):
         setattr(obj, attr, value)
 
 
+def _clamp01(number: float) -> float:
+    """Keep a colour channel inside the 0..1 the PDF format allows."""
+    return min(max(number, 0.0), 1.0)
+
+
+def _colorComponent(param, maximum: float) -> float:
+    """One argument of rgb()/rgba(), as a fraction of its maximum."""
+    text = str(param)
+    match = color_arg_re.search(text)
+    if match is None:
+        msg = f"not a colour component: {text!r}"
+        raise ValueError(msg)
+    number = float(match.group())
+    return number / 100.0 if "%" in text else number / maximum
+
+
+def _rgbFunctionColor(function, default):
+    """
+    Read an rgb()/rgba() the parser handed over as a function object.
+
+    Going through str() and a regular expression, as this used to, reads the
+    channels off the object's *repr*: for `rgba(10, 200, 10, 1)` that is
+    "<css function: rgba(10, 200, 10, 1)>", and the pattern -- written for
+    `rgb(` -- matched from the "a" onwards and took the alpha as the blue
+    channel. The arguments are right there on the object, so they are read
+    from there.
+    """
+    channels, rest = function.params[:3], function.params[3:]
+    try:
+        red, green, blue = (_colorComponent(arg, 255.0) for arg in channels)
+        alpha = _colorComponent(rest[0], 1.0) if rest else 1.0
+    except (ValueError, IndexError):
+        log.warning("Cannot read the colour %r", function)
+        return default
+    return Color(_clamp01(red), _clamp01(green), _clamp01(blue), alpha=_clamp01(alpha))
+
+
 @Memoized
 def getColor(value, default=None):
     """
@@ -132,10 +210,19 @@ def getColor(value, default=None):
     This returns a Color object instance from a text bit.
     Mitigation for ReDoS attack applied by limiting input length and validating input.
     """
+    original = value
     if value is None:
         return None
     if isinstance(value, Color):
         return value
+
+    # Imported here and not at module scope: xhtml2pdf.w3c.css reaches this
+    # module through cssParser, so importing it from the top would be circular.
+    from xhtml2pdf.w3c.css import CSSTerminalFunction
+
+    if isinstance(value, CSSTerminalFunction) and value.name.lower() in {"rgb", "rgba"}:
+        return _rgbFunctionColor(value, default)
+
     value = str(value).strip().lower()
 
     # Limit the length of the value to prevent excessive input causing ReDoS
@@ -159,13 +246,148 @@ def getColor(value, default=None):
         # Shrug
         pass
 
-    return toColor(value, default)  # Calling the reportlab function
+    try:
+        return toColor(value, default)  # Calling the reportlab function
+    except ValueError:
+        # reportlab raises rather than handing back the default it was given.
+        # A colour nobody can read is worth a line in the log; it is not worth
+        # abandoning the document.
+        log.warning("Cannot read the colour %r, using %r", original, default)
+        return default
+
+
+def apply_text_transform(text: str, transform) -> str:
+    """
+    CSS 2.1 16.5 text-transform.
+
+    capitalize is applied per word rather than per typographic word boundary,
+    and a word split across two fragments -- by a nested <b>, say -- has each
+    half capitalised. Neither matters for the usual case of a whole phrase.
+    """
+    transform = str(transform).lower()
+    if transform == "uppercase":
+        return text.upper()
+    if transform == "lowercase":
+        return text.lower()
+    if transform == "capitalize":
+        return re.sub(r"\b[a-z]", lambda m: m.group(0).upper(), text)
+    return text
 
 
 def getBorderStyle(value, default=None):
     if value and (str(value).lower() not in {"none", "hidden"}):
         return value
     return default
+
+
+def getBorderWidth(style, width) -> float:
+    """
+    The width a border actually occupies in the box.
+
+    CSS 2.1 8.5.3: `border-style: none` forces the computed border width to
+    zero whatever border-width says. It is not only that nothing is drawn --
+    the box is that much smaller. DEFAULT_CSS gives every element
+    `border: 1px none`, so treating the declared width as occupied added 2pt
+    of height and 2pt of width to every block on the page.
+    """
+    if not width or not getBorderStyle(style):
+        return 0
+    return width
+
+
+#: On/off lengths of a dashed or dotted border, as multiples of its width.
+#: Measured off Chromium through testrender/browsercompare.py rather than
+#: guessed: a 5px dashed border rasterises to a 15px dash and an 8px gap at
+#: 150dpi, and a 2px dotted one to a 3px dot and a 4px gap.
+BORDER_DASH_PATTERNS: dict[str, tuple[float, float]] = {
+    "dashed": (2.0, 1.0),
+    "dotted": (1.0, 1.0),
+}
+
+
+def _is_double(style: str, width) -> bool:
+    """
+    Whether a border should be drawn as CSS 2.1's two lines with a gap.
+
+    Below three units there is nothing to divide into three bands, so a
+    double border that thin stays a single line, as browsers draw it.
+    """
+    return style == "double" and isinstance(width, int | float) and width >= 3
+
+
+def getBorderDash(style, width: float) -> list[float] | None:
+    """
+    Dash array for a border style, or None when the line is continuous.
+
+    A dash is proportional to the border's width, which is why the pattern
+    cannot be a constant: a 1pt dotted border and a 6pt one are the same
+    figure at different scales.
+    """
+    pattern = BORDER_DASH_PATTERNS.get(str(style).lower())
+    if not pattern or not isinstance(width, int | float) or not width:
+        return None
+    return [max(part * width, 0.1) for part in pattern]
+
+
+def getBorderTableLine(
+    style, width: float
+) -> tuple[float, str, list[float] | None, None, int, float]:
+    """
+    Trailing arguments of a ReportLab LINE* table command for a border style.
+
+    Returns (weight, cap, dashes, join, count, space). A table border is not
+    stroked by xhtml2pdf but described to ReportLab, so the style has to be
+    expressed in those terms: a dash array for dashed and dotted, and for
+    double the `count` parallel lines ReportLab can draw, narrowed to a third
+    of the declared width and set two thirds apart so the three bands add up
+    to the width that was asked for.
+    """
+    style = str(style).lower()
+    if _is_double(style, width):
+        band = width / 3.0
+        return (band, "squared", None, None, 2, 2 * band)
+    return (width, "squared", getBorderDash(style, width), None, 1, 0)
+
+
+def drawBorderLine(
+    canvas, bstyle, width: float, color, x1: float, y1: float, x2: float, y2: float
+) -> None:
+    """
+    Draw one edge of a box, honouring its border-style.
+
+    Every caller used to stroke a plain line whatever the style said, so
+    dashed, dotted and double all came out solid. The style is still only
+    consulted for the shape of the line: groove, ridge, inset and outset need
+    two shades of the declared colour and are drawn solid for now.
+    """
+    if not width or not getBorderStyle(bstyle) or color is None:
+        return
+
+    style = str(bstyle).lower()
+    canvas.saveState()
+    canvas.setStrokeColor(color)
+
+    # CSS 2.1 8.5.3: double is two solid lines with a gap, and the three
+    # together are the declared width. Below 3 units there is nothing to
+    # split, so it stays a single line.
+    if _is_double(style, width):
+        band = width / 3.0
+        canvas.setLineWidth(band)
+        if y1 == y2:
+            canvas.line(x1, y1 - band, x2, y2 - band)
+            canvas.line(x1, y1 + band, x2, y2 + band)
+        else:
+            canvas.line(x1 - band, y1, x2 - band, y2)
+            canvas.line(x1 + band, y1, x2 + band, y2)
+        canvas.restoreState()
+        return
+
+    canvas.setLineWidth(width)
+    dash = getBorderDash(style, width)
+    if dash:
+        canvas.setDash(dash)
+    canvas.line(x1, y1, x2, y2)
+    canvas.restoreState()
 
 
 MM: float = cm / 10.0
@@ -203,6 +425,12 @@ RELATIVE_SIZE_TABLE: dict[str, float] = {
 
 MIN_FONT_SIZE: float = 1.0
 
+#: Base for relative lengths in @page and @frame. There is no element in scope
+#: at that point to inherit a font size from, so CSS resolves em, ex and % in
+#: the page context against the initial font size, which DEFAULT_CSS sets with
+#: html { font-size: 10px }.
+DEFAULT_FONT_SIZE: float = 10.0 * DPI96
+
 
 @Memoized
 def getSize(
@@ -229,7 +457,7 @@ def getSize(
             return value
         if isinstance(value, int):
             return float(value)
-        if isinstance(value, (tuple, list)):
+        if isinstance(value, tuple | list):
             value = "".join(value)
         value = str(value).strip().lower().replace(",", ".")
         if value.endswith("cm"):
@@ -278,8 +506,18 @@ def getSize(
             log.warning("getSize: Not a float %r", value)
             return default  # value = 0
         return max(0, value)
-    except Exception:
-        log.warning("getSize %r %r", original, relative, exc_info=True)
+    except Exception as exc:
+        # One line at warning level, the traceback at debug. A stylesheet with
+        # a handful of lengths this function cannot read -- a calc(), say --
+        # used to bury the log under a ten-line traceback for each one, which
+        # made the warnings that mattered impossible to find.
+        log.warning(
+            "getSize: cannot read %r, using %r (%s)",
+            original,
+            default,
+            type(exc).__name__,
+        )
+        log.debug("getSize %r %r", original, relative, exc_info=True)
         return default
 
 
@@ -321,41 +559,231 @@ def getBox(box, pagesize):
     return getCoords(x, y, w, h, pagesize)
 
 
+#: Keywords background-position accepts, as a fraction of the free space.
+BACKGROUND_POSITION_KEYWORDS: dict[str, float] = {
+    "left": 0.0,
+    "top": 0.0,
+    "center": 0.5,
+    "middle": 0.5,
+    "right": 1.0,
+    "bottom": 1.0,
+}
+
+
+def getBackgroundOffset(value, free: float, font_size: float) -> float:
+    """
+    One axis of background-position, in points from the box's near edge.
+
+    CSS 2.1 14.2.1: a percentage places the same point of the image against
+    the same point of the box, so 100% is not "one box away" but "flush with
+    the far edge" -- which is why it is a fraction of the space left over
+    rather than of the box.
+    """
+    text = str(value).strip().lower()
+    if text in BACKGROUND_POSITION_KEYWORDS:
+        return free * BACKGROUND_POSITION_KEYWORDS[text]
+    if text.endswith("%"):
+        try:
+            return free * float(text[:-1]) / 100.0
+        except ValueError:
+            return 0.0
+    return getSize(text, font_size)
+
+
+#: ImageReaders, keyed by the file they were built from. A background is
+#: painted once per paragraph and a tiled one is drawn many times over, so
+#: decoding the file each time would be paid on every page.
+_background_image_readers: dict[str, object] = {}
+
+
+def getBackgroundImageReader(file_object):
+    """An ImageReader for a background image file, or None if unusable."""
+    if file_object is None or file_object.notFound():
+        return None
+
+    key = str(file_object.uri)
+    if key in _background_image_readers:
+        return _background_image_readers[key]
+
+    from reportlab.lib.utils import ImageReader
+
+    try:
+        data = file_object.getData()
+        reader = ImageReader(BytesIO(data)) if data else None
+    except Exception:
+        log.warning("Could not read background image %r", key, exc_info=True)
+        reader = None
+
+    _background_image_readers[key] = reader
+    return reader
+
+
+def getBackgroundImageSize(reader) -> tuple[float, float]:
+    """The image's natural size in points, reading its pixels at 96dpi."""
+    try:
+        width, height = reader.getSize()
+    except Exception:
+        return (0.0, 0.0)
+    return (width * DPI96, height * DPI96)
+
+
+def drawBackgroundImage(
+    canvas,
+    reader,
+    x: float,
+    y: float,
+    width: float,
+    height: float,
+    natural: tuple[float, float],
+    repeat: str = "repeat",
+    position: str = "0% 0%",
+    font_size: float = DEFAULT_FONT_SIZE,
+) -> None:
+    """
+    Paint a CSS background image into a box, clipped to it.
+
+    Only what CSS 2.1 14.2 describes: the image at its natural size, placed by
+    background-position and tiled along whichever axes background-repeat
+    allows. No background-size, so nothing is ever scaled.
+    """
+    image_width, image_height = natural
+    if image_width <= 0 or image_height <= 0:
+        return
+
+    repeat = str(repeat).strip().lower()
+    tile_x = repeat in {"repeat", "repeat-x"}
+    tile_y = repeat in {"repeat", "repeat-y"}
+
+    parts = str(position).strip().lower().split()
+    if not parts:
+        parts = ["0%"]
+    if len(parts) == 1:
+        # CSS 2.1: a single value sets the horizontal position and centres
+        # the other axis.
+        parts = [parts[0], "center"]
+
+    offset_x = getBackgroundOffset(parts[0], width - image_width, font_size)
+    # The PDF origin is the bottom-left corner and CSS measures from the top,
+    # so the vertical offset is taken from the top edge and turned around.
+    offset_y = getBackgroundOffset(parts[1], height - image_height, font_size)
+
+    start_x = x + offset_x
+    start_y = y + height - image_height - offset_y
+
+    # A tiled axis has to start left of, or above, the box so the run of tiles
+    # covers it from the edge rather than from the placed image.
+    if tile_x:
+        while start_x > x:
+            start_x -= image_width
+    if tile_y:
+        while start_y + image_height < y + height:
+            start_y += image_height
+
+    canvas.saveState()
+    path = canvas.beginPath()
+    path.rect(x, y, width, height)
+    canvas.clipPath(path, stroke=0, fill=0)
+
+    tile_y_position = start_y
+    while True:
+        tile_x_position = start_x
+        while True:
+            canvas.drawImage(
+                reader,
+                tile_x_position,
+                tile_y_position,
+                image_width,
+                image_height,
+                mask="auto",
+            )
+            if not tile_x:
+                break
+            tile_x_position += image_width
+            if tile_x_position >= x + width:
+                break
+        if not tile_y:
+            break
+        tile_y_position -= image_height
+        if tile_y_position + image_height <= y:
+            break
+
+    canvas.restoreState()
+
+
 def getFrameDimensions(
-    data, page_width: float, page_height: float
+    data, page_width: float, page_height: float, font_size: float = DEFAULT_FONT_SIZE
 ) -> tuple[float, float, float, float]:
     """
     Calculate dimensions of a frame.
 
     Returns left, top, width and height of the frame in points.
+
+    font_size is the base for relative lengths. Without it `@page { margin:
+    2em }` resolved to nothing at all: getSize returns its default for a
+    relative unit when it is given no base, so the margin silently became 0.
     """
+
+    def size(value, percent_of: float) -> float:
+        """
+        Resolve one length of the page box.
+
+        A percentage here is a fraction of the page, per CSS 2.1 10.2 and
+        10.5: the page box is the containing block. getSize would read it
+        against the font size instead, which is the right answer for a font
+        size and the wrong one for geometry.
+        """
+        if isinstance(value, list | tuple):
+            value = "".join(value)
+        if isinstance(value, str) and value.strip().endswith("%"):
+            try:
+                return float(value.strip()[:-1]) * percent_of / 100.0
+            except ValueError:
+                log.warning("Not a percentage: %r", value)
+                return 0.0
+        return getSize(value, font_size)
+
+    def horizontal(value) -> float:
+        return size(value, page_width)
+
+    def vertical(value) -> float:
+        return size(value, page_height)
+
     box = data.get("-pdf-frame-box", [])
     if len(box) == 4:
-        return (getSize(box[0]), getSize(box[1]), getSize(box[2]), getSize(box[3]))
-    top = getSize(data.get("top", 0), page_height)
-    left = getSize(data.get("left", 0), page_width)
-    bottom = getSize(data.get("bottom", 0), page_height)
-    right = getSize(data.get("right", 0), page_width)
+        # left, top, width, height
+        return (
+            horizontal(box[0]),
+            vertical(box[1]),
+            horizontal(box[2]),
+            vertical(box[3]),
+        )
+    # Margins are folded in before the declared size is honoured, not after.
+    # The frame is derived from the four edge offsets below, so a size has to
+    # be turned into the offset it implies; doing that first and then adding
+    # the margin would push the opposite edge and leave a frame that is
+    # margin-narrower than what was asked for.
+    top = vertical(data.get("top", 0)) + vertical(data.get("margin-top", 0))
+    left = horizontal(data.get("left", 0)) + horizontal(data.get("margin-left", 0))
+    bottom = vertical(data.get("bottom", 0)) + vertical(data.get("margin-bottom", 0))
+    right = horizontal(data.get("right", 0)) + horizontal(data.get("margin-right", 0))
+
+    # A declared height fixes one edge relative to the other. Which edge moves
+    # depends on which one was given: with `bottom` the frame grows upwards,
+    # otherwise it grows down from `top`, whose default of 0 is what makes
+    # `@page { height: 6cm }` mean a 6cm area at the top of the page rather
+    # than -- as it did before -- the whole page.
     if "height" in data:
-        height = getSize(data["height"], page_height)
-        if "top" in data:
-            top = getSize(data["top"], page_height)
-            bottom = page_height - (top + height)
-        elif "bottom" in data:
-            bottom = getSize(data["bottom"], page_height)
+        height = vertical(data["height"])
+        if "bottom" in data and "top" not in data:
             top = page_height - (bottom + height)
+        else:
+            bottom = page_height - (top + height)
     if "width" in data:
-        width = getSize(data["width"], page_width)
-        if "left" in data:
-            left = getSize(data["left"], page_width)
-            right = page_width - (left + width)
-        elif "right" in data:
-            right = getSize(data["right"], page_width)
+        width = horizontal(data["width"])
+        if "right" in data and "left" not in data:
             left = page_width - (right + width)
-    top += getSize(data.get("margin-top", 0), page_height)
-    left += getSize(data.get("margin-left", 0), page_width)
-    bottom += getSize(data.get("margin-bottom", 0), page_height)
-    right += getSize(data.get("margin-right", 0), page_width)
+        else:
+            right = page_width - (left + width)
 
     width = page_width - (left + right)
     height = page_height - (top + bottom)
@@ -383,6 +811,25 @@ def getFloat(s):
         return float(s)
 
 
+#: The modes reportlab's KeepInFrame understands. "shrink" is the fallback
+#: everywhere xhtml2pdf reads one, because keeping the content is the least
+#: surprising answer to content that is a little too big for its box.
+KEEP_IN_FRAME_MODES: frozenset[str] = frozenset(
+    {"shrink", "error", "overflow", "truncate"}
+)
+
+
+def getKeepInFrameMode(value, default: str = "shrink") -> str:
+    """
+    Read a -pdf-keep-in-frame-mode declaration.
+
+    Anything reportlab would not recognise falls back to ``default`` rather
+    than reaching KeepInFrame, which raises on an unknown mode.
+    """
+    mode = str(value).strip().lower()
+    return mode if mode in KEEP_IN_FRAME_MODES else default
+
+
 ALIGNMENTS = {
     "left": TA_LEFT,
     "center": TA_CENTER,
@@ -397,7 +844,7 @@ def getAlign(value, default=TA_LEFT):
 
 
 _rx_datauri = re.compile(
-    "^data:(?P<mime>[a-z]+/[a-z]+);base64,(?P<data>.*)$", re.M | re.DOTALL
+    r"^data:(?P<mime>[a-z]+/[a-z]+);base64,(?P<data>.*)$", re.MULTILINE | re.DOTALL
 )
 
 COLOR_BY_NAME = {
@@ -625,7 +1072,7 @@ def arabic_format(text, language):
 
 def frag_text_language_check(context, frag_text):
     if hasattr(context, "language"):
-        language = context.__getattribute__("language")
+        language = context.language
         detect_language_result = arabic_format(frag_text, language)
         if detect_language_result:
             return detect_language_result

@@ -26,11 +26,11 @@ classifiers = [
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Documentation",
     "Topic :: Multimedia",
     "Topic :: Office/Business",
@@ -45,7 +45,7 @@ classifiers = [
     "Topic :: Text Processing :: Markup :: XML",
     "Topic :: Utilities",
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dependencies = [
     "arabic-reshaper>=3.0.0",
     "html5lib>=1.1",
@@ -54,7 +54,7 @@ dependencies = [
     "pyhanko-certvalidator>=0.19.5",
     "pypdf>=3.1.0",
     "python-bidi>=0.5.0",
-    "reportlab>=4.0.4,<5",
+    "reportlab>=4.0.4,<6",
     "svglib>=1.2.1"
 ]
 dynamic = ["version"]
@@ -67,20 +67,34 @@ Changelog = "https://xhtml2pdf.readthedocs.io/en/latest/release-notes.html"
 
 [project.optional-dependencies]
 pycairo = [
-    "reportlab[pycairo]>=4.0.4,<5",
+    "reportlab[pycairo]>=4.0.4,<6",
 ]
+# Deprecated alias. reportlab 5 dropped the C renderPM backend along with its
+# "renderpm" extra, so requesting it there resolves to nothing at all; the
+# pure-Python rlPyCairo backend that "pycairo" installs is what
+# reportlab.graphics.renderPM uses now.
 renderpm = [
-    "reportlab[renderpm]>=4.0.4,<5",
+    "xhtml2pdf[pycairo]",
 ]
 test = [
     "tomli>=2.0.1; python_version<'3.11'",
     "tox",
     "coverage>=5.3"
 ]
+# Compares xhtml2pdf's output against a browser rendering the equivalent
+# markup; see testrender/browsercompare.py. Needs a Chromium/Chrome install and
+# a matching webdriver on PATH, which is why it is not part of `test`.
+browsertest = [
+    "selenium>=4.15",
+    "numpy>=1.24",
+    "tomli>=2.0.1; python_version<'3.11'"
+]
 docs = [
     "sphinx>=6",
     "sphinx-rtd-theme>=0.5.0",
-    "sphinxcontrib-pdfembed@git+https://github.com/SuperKogito/sphinxcontrib-pdfembed",
+    # sphinxcontrib-pdfembed is needed too, but it is only on GitHub and a
+    # direct URL here would make this package unpublishable. It lives in
+    # docs/requirements.txt, which Read the Docs installs as well.
     "sphinx_reredirects>=0.1.3"
 ]
 release = ["build", "twine"]
@@ -99,15 +113,18 @@ include = ["xhtml2pdf*"]
 [tool.tox]
 legacy_tox_ini = """
     [tox]
-    envlist = py{3.8,3.9,3.10,3.11,3.12}
+    envlist = py{3.10,3.11,3.12,3.13,3.14}-rl{4,5}
 
     [testenv]
-    deps = coverage[toml]
+    deps =
+        coverage[toml]
+        rl4: reportlab>=4.0.4,<5
+        rl5: reportlab>=5,<6
     commands =
         python3 -c 'import sys;print(sys.version_info)'
         python3 -c "from reportlab import Version; print('%s %s' % ('Reportlab Version', Version))"
-        coverage run -m unittest discover tests
-        coverage run -a testrender/testrender.py  --nofail --only-errors
+        coverage run -m unittest discover -t . -s tests
+        coverage run -a testrender/testrender.py --only-errors
 """
 
 
@@ -147,6 +164,8 @@ preview = true
 
 [tool.ruff]
 preview = true
+
+[tool.ruff.lint]
 select = [
     "A",        # flake8-builtins
     "ARG",      # flake8-unused-arguments
@@ -230,6 +249,30 @@ ignore = [
     "PLR2004",  # Magic value used in comparison
     "PLW2901",  # `for` loop variable overwritten by assignment target
     "SLF001",   # Private member accessed
+
+    # Reported by ruff >= 0.1 against code that predates it. Each is a real
+    # observation about the older modules -- mostly reportlab_paragraph.py,
+    # pisa.py and xhtml2pdf_reportlab.py -- and none is mechanical enough to
+    # fix without reading what the code does, so they are named here rather
+    # than left to fail the hook.
+    "FURB101",  # open().read() instead of Path.read_text
+    "FURB189",  # Subclassing dict; deliberate where a hot path needs it
+    "PLC0415",  # Import outside top-level; often deliberate, to defer a cost
+    "PLC2701",  # Private name imported from reportlab
+    "PLR0914",  # Too many locals
+    "PLR0917",  # Too many positional arguments
+    "PLR1702",  # Too many nested blocks
+    "PLW0717",  # Too many statements in a try clause
+    "RUF052",   # Dummy variable accessed
+    "RUF059",   # Unused unpacked variable
+    # Would rewrite every "# noqa: CODE" in the tree as "# ruff: ignore[name]".
+    # That syntax is preview-only and not stable, and noqa is understood by
+    # every other tool, so the conventional spelling stays.
+    "RUF105",   # noqa comments preferred over ruff: ignore
+    # Wants every selector in this file spelled as a rule name rather than a
+    # code. Preview-only like RUF105, and the code is the stable identifier.
+    "RUF201",   # rule codes in selectors
+    "UP031",    # printf-style formatting
 ]
 
 
@@ -239,16 +282,31 @@ disable_error_code = [
 ]
 
 
+[tool.ruff.lint.per-file-ignores]
+# These two carry CJK and right-to-left text on purpose. RUF001 reads their
+# punctuation -- fullwidth comma, fullwidth question mark -- as Latin
+# punctuation typed wrong, which is the whole point of the fixtures.
+"tests/test_asian_font_support.py" = ["RUF001"]
+"tests/test_right_to_left_font_support.py" = ["RUF001"]
+
+
 [tool.typos.files]
 # These files have a mix of languages
 extend-exclude = [
     "manual_test/",
+    # The browser side of each testrender fixture is the same document as its
+    # data/source counterpart, so it carries the same German and Latin.
+    "testrender/data/browser",
     "testrender/data/source",
     "tests/samples/utf8.html",
     "xhtml2pdf/reportlab_paragraph.py",
 ]
 
 [tool.typos.default.extend-identifiers]
+# The name of a testrender fixture, misspelled since it was added. It is the
+# name of the two files on disk, and data/manifest.toml and data/baseline.json
+# have to spell it the same way or the pair stops being found.
+adobe_asian_lenguage_pack = "adobe_asian_lenguage_pack"
 Hink = "Hink"
 myu20 = "myu20"
 opf = "opf"

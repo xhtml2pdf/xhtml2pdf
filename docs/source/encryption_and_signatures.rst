@@ -46,6 +46,12 @@ flags
             encrypt=enc,
             dest=resultFile)
 
+.. note::
+    ``encrypt`` and ``signature`` cannot be used in the same call, and asking
+    for both raises ``ValueError``. The document is encrypted while it is
+    built and signed afterwards, so the signer would be handed a PDF it has no
+    password for.
+
 Signing pdf
 ===========
 
@@ -111,7 +117,7 @@ Must of the above settings are form
 - `pades signatures <https://pyhanko.readthedocs.io/en/latest/lib-guide/signing.html#creating-pades-signatures>`__
 - `PKCS11Signer <https://github.com/MatthiasValvekens/pyHanko/blob/042d6c70e74df34faeaa3eebc5843b5fc4856224/pyhanko/sign/pkcs11.py#L139>`__
 - `ValidationContext <https://github.com/MatthiasValvekens/certvalidator/blob/0c67ec0eda36908dfcf35c4be58ffd9961253718/pyhanko_certvalidator/context.py#L53>`__
-- `PdfSignatureMetadata <https://pyhanko.readthedocs.io/en/latest/api-docs/pyhanko.sign.signers.pdf_signer.html?highlight=PdfSignatureMetadata#pyhanko.sign.signers.pdf_signer.PdfSignatureMetadata>`__
+- `PdfSignatureMetadata <https://docs.pyhanko.eu/en/latest/api-docs/pyhanko.sign.signers.html#pyhanko.sign.signers.pdf_signer.PdfSignatureMetadata>`__
 
 You configure `PdfSignatureMetadata` using `meta` keyword, and `ValidationContext` using `validation_context`.  In my test
 use of `ca_chain` append root certificates to signature, and `other_certs` allow to append chain certificates that are ignored
@@ -142,3 +148,8 @@ from `ca_chain` when build pdf signature.
                                'retroactive_revinfo': True,
                                'crls': ['http://your.crl', '/path/to/file.crl']}
     }
+
+Demonstration
+-------------
+
+.. include:: /_generated/encryption_and_signatures.rst

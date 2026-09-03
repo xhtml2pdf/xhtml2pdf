@@ -6,7 +6,7 @@ Python API
 
 The main function of xhtml2pdf is :py:func:`CreatePDF`.
 
-.. py:function:: CreatePDF(src, dest=None, dest_bytes=False, path="", link_callback=None, debug=0, default_css=None, xhtml=False, encoding=None, xml_output=None, raise_exception=True, capacity=100 * 1024, context_meta=None, encrypt=None, signature=None, **_kwargs)
+.. py:function:: CreatePDF(src, dest=None, dest_bytes=False, path="", link_callback=None, debug=0, default_css=None, xhtml=False, encoding=None, xml_output=None, raise_exception=True, capacity=100 * 1024, context_meta=None, encrypt=None, signature=None, show_error_as_pdf=False)
 
    Create PDF.
 
@@ -28,7 +28,9 @@ The main function of xhtml2pdf is :py:func:`CreatePDF`.
       Handler for special file paths (see below).
 
    :param int debug:
-      :deprecated: this parameter is unused
+      :deprecated: does nothing; set the level of the ``xhtml2pdf`` logger
+      instead. Any other unknown argument is now named in a
+      ``DeprecationWarning`` rather than being ignored.
 
    :param str default_css:
       The default CSS definition. If ``None``, the predefined CSS of xhtml2pdf
@@ -49,7 +51,8 @@ The main function of xhtml2pdf is :py:func:`CreatePDF`.
       will be written to this file/buffer.
 
    :param bool raise_exception:
-      :deprecated: this parameter is unused
+      Whether a failed conversion raises. If false, the exception is logged and
+      the context is returned with ``err`` set.
 
    :param int capacity:
       The capacity of the internal buffer, in bytes. If the document is bigger
@@ -66,7 +69,12 @@ The main function of xhtml2pdf is :py:func:`CreatePDF`.
 
    :param dict[str, typing.Any] signature:
        Signature parameters. Should contain at least ``engine`` with the values
-       of ``"pkcs12"``, ``"pkcs11"``, or ``"simple"``.
+       of ``"pkcs12"``, ``"pkcs11"``, or ``"simple"``. Cannot be combined with
+       ``encrypt``.
+
+   :param bool show_error_as_pdf:
+       If true, a failed conversion produces a PDF listing the errors and the
+       warnings instead of raising.
 
    :return:
    :rtype: xhtml2pdf.document.pisaStory|bytes

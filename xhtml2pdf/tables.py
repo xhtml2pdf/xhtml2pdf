@@ -19,7 +19,14 @@ import logging
 from reportlab.platypus.tables import TableStyle
 
 from xhtml2pdf.tags import pisaTag
-from xhtml2pdf.util import getAlign, getBorderStyle, getSize, set_value
+from xhtml2pdf.util import (
+    getAlign,
+    getBorderStyle,
+    getBorderTableLine,
+    getKeepInFrameMode,
+    getSize,
+    set_value,
+)
 from xhtml2pdf.xhtml2pdf_reportlab import PmlKeepInFrame, PmlTable
 
 log = logging.getLogger(__name__)
@@ -47,10 +54,17 @@ class TableData:
         self.data: list = []
         self.mode: str = ""
         self.padding: int = 0
-        self.repeat: bool = False
+        #: How many rows from the top repeat on every page.
+        self.repeat: int = 0
         self.row: int = 0
         self.rowh: list = []
         self.span: list = []
+        #: Columns holding a cell with content, which is what can size them.
+        self.col_with_content: set[int] = set()
+        #: The width an empty cell offers for its column, by column. Applied
+        #: only if the column turns out to be empty from top to bottom; see
+        #: pisaTagTABLE.end.
+        self.col_empty_width: dict[int, float] = {}
         self.styles: list[
             tuple[str, tuple[int, int], tuple[int, int], str, str, str]
         ] = []
@@ -102,66 +116,30 @@ class TableData:
                 ),
             )
 
-        if (
-            getBorderStyle(c.frag.borderTopStyle)
-            and c.frag.borderTopWidth
-            and c.frag.borderTopColor is not None
-        ):
-            self.add_style(
-                (
-                    "LINEABOVE",
-                    begin,
-                    (end[0], begin[1]),
-                    c.frag.borderTopWidth,
-                    c.frag.borderTopColor,
-                    "squared",
-                )
-            )
-        if (
-            getBorderStyle(c.frag.borderLeftStyle)
-            and c.frag.borderLeftWidth
-            and c.frag.borderLeftColor is not None
-        ):
-            self.add_style(
-                (
-                    "LINEBEFORE",
-                    begin,
-                    (begin[0], end[1]),
-                    c.frag.borderLeftWidth,
-                    c.frag.borderLeftColor,
-                    "squared",
-                )
-            )
-        if (
-            getBorderStyle(c.frag.borderRightStyle)
-            and c.frag.borderRightWidth
-            and c.frag.borderRightColor is not None
-        ):
-            self.add_style(
-                (
-                    "LINEAFTER",
-                    (end[0], begin[1]),
-                    end,
-                    c.frag.borderRightWidth,
-                    c.frag.borderRightColor,
-                    "squared",
-                )
-            )
-        if (
-            getBorderStyle(c.frag.borderBottomStyle)
-            and c.frag.borderBottomWidth
-            and c.frag.borderBottomColor is not None
-        ):
-            self.add_style(
-                (
-                    "LINEBELOW",
-                    (begin[0], end[1]),
-                    end,
-                    c.frag.borderBottomWidth,
-                    c.frag.borderBottomColor,
-                    "squared",
-                )
-            )
+        # ReportLab takes a table border as a LINE* command rather than
+        # something xhtml2pdf strokes itself, so the border style has to be
+        # expressed in its terms: a dash array, or parallel lines for double.
+        # Cells used to be drawn solid whatever the style said.
+        sides = (
+            ("LINEABOVE", begin, (end[0], begin[1]), "Top"),
+            ("LINEBEFORE", begin, (begin[0], end[1]), "Left"),
+            ("LINEAFTER", (end[0], begin[1]), end, "Right"),
+            ("LINEBELOW", (begin[0], end[1]), end, "Bottom"),
+        )
+        for op, line_begin, line_end, side in sides:
+            style = getattr(c.frag, f"border{side}Style")
+            width = getattr(c.frag, f"border{side}Width")
+            color = getattr(c.frag, f"border{side}Color")
+            if not (getBorderStyle(style) and width and color is not None):
+                continue
+            weight, cap, dashes, join, count, space = getBorderTableLine(style, width)
+            command = [op, line_begin, line_end, weight, color, cap]
+            # ReportLab fills the remaining arguments with these very defaults,
+            # so a plain solid border still emits exactly the command it always
+            # did and only a style that needs more says more.
+            if dashes or count > 1:
+                command += [dashes, join, count, space]
+            self.add_style(tuple(command))
         self.add_style(("LEFTPADDING", begin, end, c.frag.paddingLeft or self.padding))
         self.add_style(
             ("RIGHTPADDING", begin, end, c.frag.paddingRight or self.padding)
@@ -244,6 +222,16 @@ class pisaTagTABLE(pisaTag):
         for i, row in enumerate(data):
             data[i] += [""] * (maxcols - len(row))
 
+        # A column whose every cell is empty has nothing that can size it, so
+        # it gets the padding those cells offered. A declared width still wins.
+        for col, padding in tdata.col_empty_width.items():
+            if (
+                padding
+                and col not in tdata.col_with_content
+                and tdata.colw[col] is None
+            ):
+                tdata.colw[col] = _width(padding)
+
         log.debug("Col widths: %r", tdata.colw)
         if tdata.data:
             # log.debug("Table styles %r", tdata.styles)
@@ -273,6 +261,25 @@ class pisaTagTABLE(pisaTag):
         # Cleanup and re-swap table data
         c.clearFrag()
         c.tableData, self.tableData = self.tableData, None
+
+
+class pisaTagTHEAD(pisaTag):
+    """
+    <thead>: the rows that repeat at the top of every page.
+
+    Table headers used to be declared with the non-standard
+    <table repeat="N">, and <thead> was not a tag this library knew at all:
+    a long table written the standard way printed its header on the first
+    page only, and said nothing about it.
+    """
+
+    @staticmethod
+    def end(c) -> None:
+        tdata = c.tableData
+        # Every </tr> has bumped the row counter, so this is the number of rows
+        # the header holds. An explicit repeat="N" still wins if it asks for
+        # more.
+        tdata.repeat = max(tdata.repeat, tdata.row)
 
 
 class pisaTagTR(pisaTag):
@@ -312,7 +319,7 @@ class pisaTagTD(pisaTag):
 
         row = tdata.row
         col = tdata.col
-        while 1:
+        while True:
             for x, y in tdata.span:
                 if x == col and y == row:
                     col += 1
@@ -347,20 +354,19 @@ class pisaTagTD(pisaTag):
             if width is not None:
                 tdata.colw[col] = _width(width)
                 log.debug("Col %d has width %s", col, width)
+            elif self.node.childNodes:
+                # Something in this column can size it; nothing to decide here.
+                tdata.col_with_content.add(col)
             else:
-                # If there are no child nodes, nothing within the column can change the
-                # width.  Set the column width to the sum of the right and left padding
-                # rather than letting it default.
-                log.debug(width)
-                if len(self.node.childNodes) == 0:
-                    width = c.frag.paddingLeft + c.frag.paddingRight
-                    log.debug("Col %d has width %s", col, width)
-                    if width:
-                        tdata.colw[col] = _width(width)
-                else:
-                    # Child nodes are present, we cannot do anything about the
-                    # width except set it externally.
-                    pass
+                # An empty cell cannot be sized by its content, so it offers
+                # its own padding as the column width instead -- but only if
+                # the whole column turns out to be empty, which is not known
+                # until the table ends. Deciding it here, as this used to, let
+                # a single empty <td> collapse a column that has content in
+                # another row: in a statement with an empty debit or credit
+                # cell on half its rows, those columns came out ten points
+                # wide and their neighbours overlapped them.
+                tdata.col_empty_width[col] = c.frag.paddingLeft + c.frag.paddingRight
 
         # Calculate heights
         if row + 1 > len(tdata.rowh):
@@ -415,7 +421,9 @@ class pisaTagTD(pisaTag):
         # Keep in frame if needed since Reportlab does no split inside of cells
         if not c.frag.insideStaticFrame:
             # tdata.keepinframe["content"] = cell
-            mode = c.cssAttr.get("-pdf-keep-in-frame-mode", "shrink")
+            mode = getKeepInFrameMode(
+                c.cssAttr.get("-pdf-keep-in-frame-mode", "shrink")
+            )
             # keepInFrame mode is passed to Platypus for rendering
             cell = PmlKeepInFrame(maxWidth=0, maxHeight=0, mode=mode, content=cell)
 

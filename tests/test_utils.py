@@ -1,20 +1,25 @@
 from unittest import TestCase
 
+from reportlab import rl_config
 from reportlab.lib.colors import Color
 
+from xhtml2pdf import util as utils
 from xhtml2pdf.files import pisaTempFile
 from xhtml2pdf.tags import int_to_roman
 from xhtml2pdf.util import (
+    DEFAULT_FONT_SIZE,
     copy_attrs,
     getBorderStyle,
     getBox,
     getColor,
     getCoords,
     getFrameDimensions,
+    getKeepInFrameMode,
     getSize,
     set_value,
     transform_attrs,
 )
+from xhtml2pdf.w3c.css import CSSTerminalFunction
 
 
 class UtilsCoordTestCase(TestCase):
@@ -87,6 +92,107 @@ class UtilsColorTestCase(TestCase):
 
         res = getColor("<css function: rgb(255,0,0)>")
         self.assertEqual(res, Color(1, 0, 0, 1))
+
+    def test_get_color_for_rgb_function_object(self):
+        """The parser hands colours over as a function, not as a string."""
+        res = getColor(CSSTerminalFunction("rgb", ["10", "200", "10"]))
+        self.assertEqual(res, getColor("#0ac80a"))
+
+    def test_get_color_for_rgba_function_object(self):
+        """
+        The alpha of an rgba() is not a colour channel.
+
+        Reading the channels off the object's repr with a pattern written for
+        `rgb(` matched from the "a" onwards, so rgba(10, 200, 10, 1) came out
+        as #0ac801: the alpha had landed in the blue channel.
+        """
+        res = getColor(CSSTerminalFunction("rgba", ["10", "200", "10", "1"]))
+        self.assertEqual(res, getColor("#0ac80a"))
+
+        translucent = getColor(CSSTerminalFunction("rgba", ["10", "200", "10", "0.5"]))
+        self.assertEqual(translucent.alpha, 0.5)
+        self.assertEqual(
+            (translucent.red, translucent.green, translucent.blue),
+            (10 / 255.0, 200 / 255.0, 10 / 255.0),
+        )
+
+    def test_get_color_for_rgb_percentages(self):
+        """
+        A percentage argument arrives stringified, as "('50', '%')".
+
+        CSSTerminalFunction turns every argument that is not already a str into
+        one, so the number has to be found rather than parsed off a fixed
+        shape. Before, these resolved to black.
+        """
+        res = getColor(
+            CSSTerminalFunction(
+                "rgb", [str(("50", "%")), str(("20", "%")), str(("10", "%"))]
+            )
+        )
+        self.assertEqual((res.red, res.green, res.blue), (0.5, 0.2, 0.1))
+
+    def test_get_color_clamps_out_of_range_channels(self):
+        res = getColor(CSSTerminalFunction("rgb", ["300", "-5", "10"]))
+        self.assertEqual((res.red, res.green), (1.0, 0.0))
+
+    def test_get_color_for_unreadable_function(self):
+        """An unreadable colour is worth a log line, not an exception."""
+        for params in (["a", "b", "c"], ["10", "200"]):
+            with self.subTest(params=params):
+                res = getColor(CSSTerminalFunction("rgb", params), default="TOKEN")
+                self.assertEqual(res, "TOKEN")
+
+    def test_get_color_for_unreadable_string(self):
+        """
+        Colours reportlab cannot read raise rather than returning the default.
+
+        `rgb(nope)` reaches toColor as a string it recognises the shape of but
+        cannot read, and it answered with ValueError -- which abandoned the
+        whole document over one unreadable colour.
+        """
+        res = getColor("rgb(nope)", default="TOKEN")
+        self.assertEqual(res, "TOKEN")
+
+
+class UtilsGetSizeUnreadableTestCase(TestCase):
+    """getSize must answer with its default rather than with a traceback."""
+
+    @staticmethod
+    def unreadable():
+        """
+        What `@page { margin: calc(1cm + 1mm) }` actually hands to getSize.
+
+        A fresh object each time: getSize is memoized, and two tests sharing
+        one value would find the second call answered from the cache with no
+        logging at all.
+        """
+        return CSSTerminalFunction("calc", ["1cm", "+", "1mm"])
+
+    def test_unreadable_value_returns_the_default(self):
+        size = getSize(self.unreadable(), relative=7.5, default="TOKEN")
+        self.assertEqual(size, "TOKEN")
+
+    def test_unreadable_value_logs_one_line(self):
+        """
+        A whole traceback per unreadable length buried the log.
+
+        A stylesheet with a handful of calc() lengths produced ten lines of
+        traceback for each one, at warning level, which made the warnings that
+        mattered impossible to find. The traceback moved to debug.
+        """
+        with self.assertLogs("xhtml2pdf.util", level="WARNING") as captured:
+            getSize(self.unreadable(), relative=7.5, default=0)
+
+        self.assertEqual(len(captured.records), 1)
+        record = captured.records[0]
+        self.assertIsNone(record.exc_info)
+        self.assertIn("cannot read", record.getMessage())
+
+    def test_unreadable_value_keeps_the_traceback_at_debug(self):
+        with self.assertLogs("xhtml2pdf.util", level="DEBUG") as captured:
+            getSize(self.unreadable(), relative=7.5, default=0)
+
+        self.assertTrue(any(r.exc_info for r in captured.records))
 
 
 class UtilsGetSizeTestCase(TestCase):
@@ -177,7 +283,12 @@ class PisaDimensionTestCase(TestCase):
             "margin-bottom": "20pt",
             "margin-right": "25pt",
         }
-        expected = (25.0, 30.0, 30.0, 50.0)
+        # The margin offsets the frame, it does not eat into the declared size:
+        # left 10 + margin-left 15 puts the left edge at 25, and the frame is
+        # the 70x80 that was asked for. A margin outside the box is what the
+        # CSS box model means by margin; the frame used to come back 30x50,
+        # the declared size with the margins subtracted from it.
+        expected = (25.0, 30.0, 70.0, 80.0)
         result = getFrameDimensions(dims, 100, 200)
         self.assertEqual(expected, result)
 
@@ -192,7 +303,60 @@ class PisaDimensionTestCase(TestCase):
             "margin-bottom": "20pt",
             "margin-right": "25pt",
         }
-        expected = (25.0, 120.0, 30.0, 50.0)
+        # As above, anchored to the opposite corner. left comes out negative
+        # because a 70pt-wide frame whose right edge sits 45pt from the right
+        # of a 100pt page does not fit; that is the declaration's own doing,
+        # and _pisaAddFrame warns about the resulting geometry.
+        expected = (-15.0, 90.0, 70.0, 80.0)
+        result = getFrameDimensions(dims, 100, 200)
+        self.assertEqual(expected, result)
+
+    def test_frame_dimensions_page_margin_and_height(self):
+        # @page { margin: 10pt; height: 40pt } asks for a content area 40pt
+        # tall, inset 10pt from every page edge -- the geometry the browser
+        # comparison's css-page-box fixture reproduces.
+        dims = {
+            "margin-top": "10pt",
+            "margin-left": "10pt",
+            "margin-bottom": "10pt",
+            "margin-right": "10pt",
+            "height": "40pt",
+        }
+        expected = (10.0, 10.0, 80.0, 40.0)
+        result = getFrameDimensions(dims, 100, 200)
+        self.assertEqual(expected, result)
+
+    def test_frame_dimensions_relative_margin(self):
+        # A relative length used to resolve to nothing: getSize returns its
+        # default when it is handed a relative unit and no base, so the margin
+        # silently became 0 and the frame filled the page.
+        dims = {
+            "margin-top": "2em",
+            "margin-left": "2em",
+            "margin-bottom": "2em",
+            "margin-right": "2em",
+        }
+        margin = 2 * DEFAULT_FONT_SIZE
+        expected = (margin, margin, 100 - 2 * margin, 200 - 2 * margin)
+        result = getFrameDimensions(dims, 100, 200)
+        self.assertEqual(expected, result)
+
+    def test_frame_dimensions_relative_margin_with_font_size(self):
+        dims = {"margin-top": "2em", "margin-left": "2em"}
+        result = getFrameDimensions(dims, 100, 200, font_size=20.0)
+        self.assertEqual((40.0, 40.0, 60.0, 160.0), result)
+
+    def test_frame_dimensions_percentage_is_of_the_page(self):
+        # CSS 2.1 10.2/10.5: the page box is the containing block, so a
+        # percentage is a fraction of the page and differs per axis. getSize
+        # would read it against the font size.
+        dims = {
+            "margin-top": "10%",
+            "margin-left": "10%",
+            "margin-bottom": "10%",
+            "margin-right": "10%",
+        }
+        expected = (10.0, 20.0, 80.0, 160.0)
         result = getFrameDimensions(dims, 100, 200)
         self.assertEqual(expected, result)
 
@@ -209,7 +373,10 @@ class PisaDimensionTestCase(TestCase):
             "width": "30pt",
             "height": "40pt",
         }
-        expected = (10.0, 0.0, 30.0, 200.0)
+        # top defaults to 0, so the frame is the declared 40pt tall at the top
+        # of the page. It used to come back full-page: the height was computed
+        # and then thrown away, because nothing moved the bottom edge.
+        expected = (10.0, 0.0, 30.0, 40.0)
         result = getFrameDimensions(dims, 100, 200)
         self.assertEqual(expected, result)
 
@@ -220,7 +387,9 @@ class PisaDimensionTestCase(TestCase):
             "width": "30pt",
             "height": "40pt",
         }
-        expected = (0.0, 20.0, 100.0, 40.0)
+        # Likewise for width with neither left nor right: left defaults to 0
+        # and the frame is the declared 30pt wide, not the full 100pt page.
+        expected = (0.0, 20.0, 30.0, 40.0)
         result = getFrameDimensions(dims, 100, 200)
         self.assertEqual(expected, result)
 
@@ -237,6 +406,18 @@ class GetPosTestCase(TestCase):
         except Exception:
             raised = True
         self.assertTrue(raised)
+
+
+class GetKeepInFrameModeTestCase(TestCase):
+    def test_the_four_modes_are_read_as_written(self):
+        for mode in ("shrink", "error", "overflow", "truncate"):
+            self.assertEqual(mode, getKeepInFrameMode(f"  {mode.upper()} "))
+
+    def test_anything_else_falls_back(self):
+        """KeepInFrame raises on a mode it does not know, so nothing else may reach it."""
+        self.assertEqual("shrink", getKeepInFrameMode("clip"))
+        self.assertEqual("shrink", getKeepInFrameMode(None))
+        self.assertEqual("truncate", getKeepInFrameMode("", default="truncate"))
 
 
 class TestTagUtils(TestCase):
@@ -322,3 +503,56 @@ class CopyUtils(TestCase):
 
         self.assertEqual(obj.param1, str(19))
         self.assertEqual(obj.param2, str(22))
+
+
+class MemoizedTest(TestCase):
+    def test_cache_is_bounded(self) -> None:
+        """
+        Keys come from CSS in the rendered document, so an unbounded cache
+        grows without limit in a long-running server process.
+        """
+        calls: list[int] = []
+
+        def double(value: int) -> int:
+            calls.append(value)
+            return value * 2
+
+        memoized = utils.Memoized(double, maxsize=2)
+        for value in (1, 2, 3):
+            memoized(value)
+
+        self.assertEqual(2, len(memoized.cache))
+        self.assertEqual([1, 2, 3], calls)
+
+        # 1 was evicted first (FIFO), so it has to be recomputed
+        memoized(1)
+        self.assertEqual([1, 2, 3, 1], calls)
+
+    def test_hit_does_not_recompute(self) -> None:
+        calls: list[int] = []
+        memoized = utils.Memoized(calls.append)
+        memoized(1)
+        memoized(1)
+        self.assertEqual([1], calls)
+
+    def test_unhashable_arguments_bypass_the_cache(self) -> None:
+        """The TypeError fallback is why this cannot become functools.lru_cache."""
+        memoized = utils.Memoized(sum)
+        self.assertEqual(6, memoized([1, 2, 3]))
+        self.assertEqual({}, memoized.cache)
+
+    def test_reset_caches_clears_every_instance(self) -> None:
+        utils.getSize("1cm")
+        self.assertTrue(utils.getSize.cache)
+        utils.reset_caches()
+        self.assertEqual({}, utils.getSize.cache)
+
+    def test_registered_with_reportlab_reset(self) -> None:
+        """
+        Reportlab wraps reset callbacks in a WeakMethod, which rejects builtins
+        such as ``dict.clear``.
+        """
+        utils.getSize("2cm")
+        self.assertTrue(utils.getSize.cache)
+        rl_config._reset()
+        self.assertEqual({}, utils.getSize.cache)

@@ -25,9 +25,10 @@ Dependencies:
     re
 """
 
-# ruff: noqa: N802, N803, N815, N816, N999
+# ruff: file-ignore[invalid-module-name]
 from __future__ import annotations
 
+import logging
 import re
 from abc import abstractmethod
 from typing import ClassVar
@@ -37,6 +38,8 @@ from reportlab.lib.pagesizes import landscape
 import xhtml2pdf.default
 from xhtml2pdf.util import getSize
 from xhtml2pdf.w3c import cssSpecial
+
+log = logging.getLogger("xhtml2pdf")
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ~ Definitions
@@ -184,7 +187,7 @@ class CSSBuilderAbstract:
     # ~ css declarations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     @abstractmethod
-    def property(self, name, value, *, important=False):  # noqa: A003
+    def property(self, name, value, *, important=False):
         raise NotImplementedError
 
     @abstractmethod
@@ -340,14 +343,18 @@ class CSSParser:
 
     AttributeOperators: ClassVar[list[str]] = ["=", "~=", "|=", "&=", "^=", "!=", "<>"]
     SelectorQualifiers: ClassVar[tuple[str, ...]] = ("#", ".", "[", ":")
-    SelectorCombiners: ClassVar[list[str]] = ["+", ">"]
+    SelectorCombiners: ClassVar[list[str]] = ["+", ">", "~"]
     ExpressionOperators: ClassVar[tuple[str, ...]] = ("/", "+", ",")
+    #: The pseudo pages that mean something here. A ``name_left`` /
+    #: ``name_right`` pair is what ``handle_nextPageTemplate`` cycles between;
+    #: :first and :blank have no equivalent in this model.
+    PAGE_PSEUDO_CLASSES: ClassVar[frozenset[str]] = frozenset({"left", "right"})
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # ~ Regular expressions
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    _reflags = re.I | re.M | re.U
+    _reflags = re.IGNORECASE | re.MULTILINE | re.UNICODE
     i_hex = "[0-9a-fA-F]"
     i_nonascii = "[\200-\377]"
     i_unicode = r"\\(?:%s){1,6}\s?" % i_hex
@@ -527,9 +534,45 @@ class CSSParser:
     # ~ Internal _parse methods
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    @staticmethod
+    def _skipMalformedRuleset(src):
+        """
+        Discard a ruleset whose selector could not be parsed, and return the
+        rest of the stylesheet.
+
+        CSS 2.1 4.2 requires a malformed selector to invalidate exactly one
+        thing, the ruleset it introduces: "the user agent must ignore the
+        whole rule". Letting the CSSParseError escape instead aborts the
+        entire stylesheet, and with it the document, because neither
+        pisaContext.parseCSS nor pisaParser catches it. One selector the
+        parser happens not to understand then costs the caller every rule in
+        the file.
+        """
+        brace = src.find("{")
+        close = src.find("}")
+        if brace < 0 or (0 <= close < brace):
+            # No declaration block of our own to swallow: the next brace
+            # closes whatever block this ruleset sits in. Hand it back so the
+            # caller can close that block itself.
+            return src[close:].lstrip() if close >= 0 else ""
+        end = src.find("}", brace)
+        if end < 0:
+            return ""
+        return src[end + 1 :].lstrip()
+
+    def _parseRulesetOrSkip(self, src, stylesheetElements):
+        """Parse one ruleset, or drop it if its selector is malformed."""
+        try:
+            src, ruleset = self._parseRuleset(src)
+        except self.ParseError as exc:
+            log.warning("Ignoring CSS rule that could not be parsed: %s", exc)
+            return self._skipMalformedRuleset(src)
+        stylesheetElements.append(ruleset)
+        return src
+
     def _parseStylesheet(self, src):
         """
-        stylesheet
+        Stylesheet
         : [ CHARSET_SYM S* STRING S* ';' ]?
             [S|CDO|CDC]* [ import [S|CDO|CDC]* ]*
             [ [ ruleset | media | page | font_face ] [S|CDO|CDC]* ]*
@@ -563,8 +606,7 @@ class CSSParser:
                     stylesheetElements.extend(atResults)
             else:
                 # ruleset
-                src, ruleset = self._parseRuleset(src)
-                stylesheetElements.append(ruleset)
+                src = self._parseRulesetOrSkip(src, stylesheetElements)
 
             # [S|CDO|CDC]*
             src = self._parseSCDOCDC(src)
@@ -575,7 +617,7 @@ class CSSParser:
     @staticmethod
     def _parseSCDOCDC(src):
         """[S|CDO|CDC]*."""
-        while 1:
+        while True:
             src = src.lstrip()
             if src.startswith("<!--"):
                 src = src[4:]
@@ -697,7 +739,7 @@ class CSSParser:
 
     def _parseAtMedia(self, src):
         """
-        media
+        Media
         : MEDIA_SYM S* medium [ ',' S* medium ]* '{' S* ruleset* '}' S*
         ;
         """
@@ -712,7 +754,7 @@ class CSSParser:
                 if medium is None:
                     mediums.append("all")
                 # strip up to curly bracket
-                pattern = re.compile(".*?[{]", re.DOTALL)
+                pattern = re.compile(r".*?[{]", re.DOTALL)
 
                 match = re.match(pattern, src)
                 src = src[match.end() - 1 :]
@@ -740,8 +782,7 @@ class CSSParser:
                     stylesheetElements.extend(atResults)
             else:
                 # ruleset
-                src, ruleset = self._parseRuleset(src)
-                stylesheetElements.append(ruleset)
+                src = self._parseRulesetOrSkip(src, stylesheetElements)
             src = src.lstrip()
 
         if not src.startswith("}"):
@@ -754,7 +795,7 @@ class CSSParser:
 
     def _parseAtPage(self, src):
         """
-        page
+        Page
         : PAGE_SYM S* IDENT? pseudo_page? S*
             '{' S* declaration [ ';' S* declaration ]* '}' S*
         ;
@@ -768,7 +809,20 @@ class CSSParser:
         page, src = self._getIdent(src)
         if src[:1] == ":":
             pseudopage, src = self._getIdent(src[1:])
-            page = page + "_" + pseudopage
+            # A pseudo-page written without a name -- "@page :left", which is
+            # how CSS paged media spells it -- belongs to the page a plain
+            # "@page" defines. This used to be "page + '_' + pseudopage" and
+            # raised a TypeError on the standard form, aborting the document.
+            page = f"{page or xhtml2pdf.default.DEFAULT_PAGE_NAME}_{pseudopage}"
+            if pseudopage not in self.PAGE_PSEUDO_CLASSES:
+                # Registered all the same, so that any @frame declared inside
+                # is consumed and does not leak into the next @page, but
+                # nothing will ever select it.
+                log.warning(
+                    "Unsupported pseudo page :%s, the rules in it will not be"
+                    " used. Only :left and :right are honoured.",
+                    pseudopage,
+                )
         else:
             pseudopage = None
 
@@ -833,8 +887,16 @@ class CSSParser:
                         elif valueStr in xhtml2pdf.default.PML_PAGESIZES:
                             self.c.pageSize = xhtml2pdf.default.PML_PAGESIZES[valueStr]
                         else:
-                            msg = "Unknown size value for @page"
-                            raise RuntimeError(msg)
+                            # Not a paper name, not an orientation, not a
+                            # length: nothing here can use it. Every other
+                            # unreadable value in a stylesheet is dropped with
+                            # a warning, and this used to be the one that threw
+                            # the whole document away instead.
+                            log.warning(
+                                "Unknown size value for @page: %r, keeping %r",
+                                value,
+                                self.c.pageSize,
+                            )
 
                     if len(sizeList) == 2:
                         self.c.pageSize = tuple(sizeList)
@@ -910,7 +972,7 @@ class CSSParser:
 
     def _parseRuleset(self, src):
         """
-        ruleset
+        Ruleset
         : selector [ ',' S* selector ]*
             '{' S* declaration [ ';' S* declaration ]* '}' S*
         ;
@@ -935,7 +997,7 @@ class CSSParser:
 
     def _parseSelector(self, src):
         """
-        selector
+        Selector
         : simple_selector [ combinator simple_selector ]*
         ;
         """
@@ -1004,7 +1066,7 @@ class CSSParser:
 
     def _parseSelectorAttribute(self, src, selector):
         """
-        attrib
+        Attrib
         : '[' S* [ namespace_selector ]? IDENT S* [ [ '=' | INCLUDES | DASHMATCH ] S*
             [ IDENT | STRING ] S* ]? ']'
         ;
@@ -1056,7 +1118,7 @@ class CSSParser:
 
     def _parseSelectorPseudo(self, src, selector):
         """
-        pseudo
+        Pseudo
         : ':' [ IDENT | function ]
         ;
         """
@@ -1064,7 +1126,7 @@ class CSSParser:
         if not src.startswith(":"):
             msg = "Selector Pseudo ':' not found"
             raise self.ParseError(msg, src, ctxsrc)
-        src = re.search("^:{1,2}(.*)", src, re.M | re.S).group(1)
+        src = re.search(r"^:{1,2}(.*)", src, re.MULTILINE | re.DOTALL).group(1)
 
         name, src = self._getIdent(src)
         if not name:
@@ -1124,7 +1186,7 @@ class CSSParser:
 
     def _parseDeclaration(self, src):
         """
-        declaration
+        Declaration
         : ident S* ':' S* expr prio?
         | /* empty */
         ;
@@ -1162,7 +1224,7 @@ class CSSParser:
 
     def _parseExpression(self, src, *, return_list=False):
         """
-        expr
+        Expr
         : term [ operator term ]*
         ;
         """
@@ -1187,7 +1249,7 @@ class CSSParser:
 
     def _parseExpressionTerm(self, src):
         """
-        term
+        Term
         : unary_operator?
             [ NUMBER S* | PERCENTAGE S* | LENGTH S* | EMS S* | EXS S* | ANGLE S* |
             TIME S* | FREQ S* | function ]

@@ -43,6 +43,24 @@ Valid @frame properties.
     bottom, top, height
     left, right, width
     margin, margin-bottom, margin-left, margin-right, margin-top
+    padding, padding-bottom, padding-left, padding-right, padding-top
+    border-bottom-color, border-bottom-width
+    border-left-color, border-left-width
+    border-right-color, border-right-width
+    border-top-color, border-top-width
+    background-image
+    -pdf-frame-border, -pdf-frame-box, -pdf-frame-content
+    -pdf-keep-in-frame-mode
+
+These are read straight out of the @page or @frame rule, not through the
+property whitelist below, so they only mean anything inside one.
+
+``-pdf-keep-in-frame-mode`` only applies to a static frame, i.e. one that
+declares ``-pdf-frame-content``. It says what to do with content taller than
+the frame, which has nowhere else to go: ``shrink`` (the default) scales the
+whole frame down to fit, ``truncate`` clips it at the boundary, ``overflow``
+draws past it, and ``error`` leaves the frame unpainted. Any of them logs a
+warning naming the frame -- the real fix is a taller ``height``.
 
 To avoid unexpected results, please only specify
 two out of three bottom/top/height properties, and
@@ -56,37 +74,80 @@ xhtml2pdf supports the following standard CSS properties
 ::
 
     background-color
+    background-image, background-position, background-repeat
     border-bottom-color, border-bottom-style, border-bottom-width
     border-left-color, border-left-style, border-left-width
     border-right-color, border-right-style, border-right-width
     border-top-color, border-top-style, border-top-width
-    colordisplay
+    color
+    display
     font-family, font-size, font-style, font-weight
     height
-    line-height, list-style-type
+    letter-spacing, word-spacing
+    line-height
+    list-style-image, list-style-type
     margin-bottom, margin-left, margin-right, margin-top
     padding-bottom, padding-left, padding-right, padding-top
     page-break-after, page-break-before
-    size
-    text-align, text-decoration, text-indent
+    text-align, text-decoration, text-indent, text-transform
     vertical-align
     white-space
     width
     zoom
 
+The shorthands ``background``, ``border``, ``border-color``,
+``border-style``, ``border-width``, ``border-top`` (and its three
+siblings), ``font``, ``list-style``, ``margin`` and ``padding`` are
+expanded into the properties above.
+
+A property that is not on this list is parsed and then ignored. Each
+document logs the ones its stylesheet declares, by name, at warning
+level, so a rule that does nothing says so rather than looking broken.
+
+Known limitations of the properties above:
+
+-  ``border-style``: ``groove``, ``ridge``, ``inset`` and ``outset`` are
+   drawn as a solid line. ``dashed``, ``dotted`` and ``double`` are drawn
+   as themselves.
+-  ``list-style-type``: ``circle`` draws a filled bullet, because no font
+   in the base-14 set has a hollow circle.
+-  ``text-decoration``: ``overline`` is not drawn.
+-  ``white-space``: ``pre-wrap`` keeps its spaces unbreakable, so a line
+   will not wrap inside a run of them.
+-  ``width`` and ``height`` apply to images, table cells and barcodes
+   only, not to blocks.
+
+Selectors
+---------
+
+Type, class, id, descendant, child (``>``), adjacent sibling (``+``),
+general sibling (``~``), grouping, attribute selectors and namespaces are
+supported, along with the structural pseudo-classes ``:first-child``,
+``:last-child``, ``:only-child``, ``:only-of-type``, ``:first-of-type``,
+``:last-of-type``, ``:empty``, ``:root`` and the ``:nth-child()``,
+``:nth-last-child()``, ``:nth-of-type()`` and ``:nth-last-of-type()``
+functions. Any other pseudo-class parses and matches nothing.
+
+``@media`` is honoured for the media *types* ``all``, ``print`` and
+``pdf``; a media query's conditions are ignored, so ``@media
+(max-width: 500px)`` applies unconditionally.
+
 xhtml2pdf adds the following vendor-specific properties:
 
 ::
 
-     -pdf-frame-border
      -pdf-frame-break
-     -pdf-frame-content
+     -pdf-keep-in-frame-max-height
+     -pdf-keep-in-frame-max-width
+     -pdf-keep-in-frame-mode
      -pdf-keep-with-next
+     -pdf-line-spacing
      -pdf-next-page
      -pdf-outline
      -pdf-outline-level
      -pdf-outline-open
      -pdf-page-break
+     -pdf-word-wrap
 
 Defaults
 --------
@@ -103,11 +164,22 @@ pdf:barcode
 
 Creates a barcode.
 
+A barcode is an inline fragment and the line does not reserve its full height,
+so the paragraph below it will overlap. The reliable way to give one room is a
+table cell with a declared ``height``.
+
+``barwidth`` has a floor of 0.0075 inch, 0.19 mm (0.264 mm for EAN): asking for
+a narrower module does not make the symbol smaller. Shorten what is encoded
+instead.
+
 pdf:pagenumber
 ~~~~~~~~~~~~~~
 
-Prints current page number. The argument "example" defines the space the
-page number will require e.g. "00".
+Prints current page number. The argument ``example`` defines the space the
+page number will require, e.g. ``"00"``: it is what the line is measured with
+until the number is known. It is only read when it is written down, and it is
+what stays on the page in the one place a page number cannot resolve, inside a
+table cell.
 
 pdf:pagecount
 ~~~~~~~~~~~~~
@@ -154,3 +226,8 @@ Used for languages with right-to-left writing like Arabic, Hebrew, Persion etc. 
 ::
 
     <pdf:language name="arabic"/>
+
+Demonstration
+-------------
+
+.. include:: /_generated/reference-html.rst

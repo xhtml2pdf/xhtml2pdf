@@ -118,6 +118,31 @@ Regular HTML content will not flow through Static Frames.
 Content Frames are @frame objects without this property defined. Regular HTML
 content will flow through Content Frames.
 
+.. note::
+    A Static Frame is repainted from scratch on every page and has no
+    continuation, so content taller than the frame has nowhere to go. Rather
+    than dropping it -- which used to lose the logo at the end of a header
+    without a word -- xhtml2pdf scales the whole frame down to fit and logs a
+    warning naming the frame:
+
+    ::
+
+        The content of the static frame 'header_frame' needs 122.3 pt of
+        height and the @frame is 113.4 pt tall, so it was fitted with
+        -pdf-keep-in-frame-mode: shrink. Give the @frame more height.
+
+    Shrinking is a rescue, not a layout tool: a frame that warns is a frame
+    whose declared ``height`` is too small. Declare
+    ``-pdf-keep-in-frame-mode`` on the @frame to ask for something else --
+    ``truncate`` clips at the frame boundary, ``overflow`` draws past it, and
+    ``error`` leaves the frame unpainted.
+
+.. note::
+    There is no ``page: name`` property. The page template is chosen with
+    ``<pdf:nextpage name="">`` or with the ``-pdf-next-page`` property; ``page``
+    appears often in stylesheets written for other engines and does nothing
+    here.
+
 Example with 2 Static Frames and 1 Content Frame
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -324,3 +349,8 @@ large 5cm margins and regular pages with regular 2cm margins.
         This is a regular page with a regular 2cm margin.
     </body>
     </html>
+
+Demonstration
+-------------
+
+.. include:: /_generated/format_html.rst

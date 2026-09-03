@@ -1,0 +1,44 @@
+<!--
+  Browser equivalent of data/source/css-background.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles, and the image
+  paths rewritten to reach out of data/browser/ into data/source/img/.
+
+  The boxes are sized by their content rather than by a declared height:
+  xhtml2pdf honours neither width nor height on a div, so a declared height
+  would diverge for a reason this fixture is not about.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>css-background</title>
+<link rel="stylesheet" href="_normalize.css">
+<style type="text/css">
+div { margin: 0 0 0.6em 0; padding: 0.5em; }
+.tile {
+    background-image: url("../source/img/denker.png");
+    background-repeat: repeat;
+}
+.once {
+    background-image: url("../source/img/denker.png");
+    background-repeat: no-repeat;
+}
+.right {
+    background-image: url("../source/img/denker.png");
+    background-repeat: no-repeat;
+    background-position: right top;
+}
+.shorthand {
+    background: #fcaf3e url("../source/img/denker.png") no-repeat;
+}
+</style>
+</head>
+<body>
+<div class="tile">background-repeat: repeat<br/>the image tiles across the box<br/>three lines give the box some height</div>
+<div class="once">background-repeat: no-repeat<br/>one image at the top left<br/>three lines give the box some height</div>
+<div class="right">background-position: right top<br/>one image at the top right<br/>three lines give the box some height</div>
+<div class="shorthand">background shorthand: colour, image and no-repeat<br/>orange behind, one image<br/>three lines give the box some height</div>
+</body>
+</html>

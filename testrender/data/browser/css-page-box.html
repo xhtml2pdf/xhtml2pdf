@@ -1,0 +1,47 @@
+<!--
+  Browser equivalent of data/source/css-page-box.html
+
+  @page { margin: 2cm; height: 6cm } asks for a content area 6cm tall, inset
+  2cm from every page edge. A browser has no height inside @page, so the area
+  is reproduced with a fixed-height box: the page box carries no margin of its
+  own, body supplies the 2cm inset, and .content is the 6cm frame.
+
+  -pdf-frame-border: 1 draws a 1px rule around the frame, so the box carries
+  the same border. That border is the whole point of the fixture -- it is what
+  makes the height of the content area visible in the rasterised page.
+
+  The content deliberately fits inside 6cm. If it overflowed, xhtml2pdf would
+  carry the remainder to a second page while the browser clipped it, and the
+  fixture would score that difference instead of the height.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>css-page-box</title>
+<style type="text/css">
+@page { size: A4; margin: 0; }
+body { margin: 2cm; }
+.content {
+    box-sizing: border-box;
+    height: 6cm;
+    border: 1px solid black;
+    overflow: hidden;
+}
+p { margin: 0 0 0.3em 0; background-color: #fce94f; }
+</style>
+</head>
+<body>
+<div class="content">
+<p>The content area is 6cm tall.</p>
+<p>@page declares a height but neither top nor bottom.</p>
+<p>The frame border shows where the area actually ends.</p>
+<p>line four</p>
+<p>line five</p>
+<p>line six</p>
+<p>line seven</p>
+<p>line eight, and the box ends below this.</p>
+</div>
+</body>
+</html>

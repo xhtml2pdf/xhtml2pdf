@@ -1,7 +1,7 @@
-# ruff: noqa: RUF001
 import io
 from unittest import TestCase
 
+import reportlab
 from pypdf import PdfReader
 from reportlab.pdfbase import _cidfontdata
 
@@ -141,8 +141,11 @@ class AsianFontSupportTests(TestCase):
 
     def test_asian_reportlab_fonts(self):
         """
-        Tests the asian font list that we're getting from reportlab
-        If there is an Error here, ReportLab probably has changed/added new asian fonts
+        Test the asian fonts xhtml2pdf relies on are still provided by reportlab.
+
+        This asserts a subset rather than equality on purpose: reportlab *adding*
+        a CJK face is not a breaking change for us, whereas removing or
+        re-encoding one of these six is.
         """
         reference = {
             "HeiseiMin-W3": ("jpn", "UniJIS-UCS2-H"),
@@ -155,11 +158,16 @@ class AsianFontSupportTests(TestCase):
 
         reportlab_fonts = _cidfontdata.defaultUnicodeEncodings
 
-        # Test if equal to reference
+        missing = {
+            name: encoding
+            for name, encoding in reference.items()
+            if reportlab_fonts.get(name) != encoding
+        }
         self.assertEqual(
-            reference,
-            reportlab_fonts,
-            "New asian fonts added or changed by ReportLab !",
+            {},
+            missing,
+            "Asian fonts removed or re-encoded by ReportLab "
+            f"{reportlab.Version}: {missing}",
         )
 
 

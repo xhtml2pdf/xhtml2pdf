@@ -14,7 +14,7 @@
 
 import logging
 from abc import abstractmethod
-from io import StringIO
+from io import BytesIO
 
 from xhtml2pdf import pisa
 
@@ -29,13 +29,19 @@ class Filter:
         script_name = environ.get("SCRIPT_NAME", "")
         path_info = environ.get("PATH_INFO", "")
         sent = []
-        written_response = StringIO()
+        # PEP 3333: application output is bytes, so the buffer must be too.
+        written_response = BytesIO()
+
+        def write(chunk) -> None:
+            written_response.write(
+                chunk.encode("utf-8") if isinstance(chunk, str) else chunk
+            )
 
         def replacement_start_response(status, headers, exc_info=None):
             if not self.should_filter(status, headers):
                 return start_response(status, headers, exc_info)
             sent[:] = [status, headers, exc_info]
-            return written_response.write
+            return write
 
         app_iter = self.app(environ, replacement_start_response)
         if not sent:
@@ -43,7 +49,7 @@ class Filter:
         status, headers, exc_info = sent
         try:
             for chunk in app_iter:
-                written_response.write(chunk)
+                write(chunk)
         finally:
             if hasattr(app_iter, "close"):
                 app_iter.close()
@@ -55,11 +61,19 @@ class Filter:
         return [body]
 
     @staticmethod
-    def should_filter(_status, headers):
-        print(headers)
+    @abstractmethod
+    def should_filter(status, headers):
+        """
+        Whether ``filter`` should run for this response.
+
+        The base implementation used to ``print(headers)`` to stdout and return
+        None, i.e. it silently disabled filtering while spamming the server log.
+        """
+        raise NotImplementedError
 
     @abstractmethod
-    def filter(self, status, headers, body):  # noqa: A003
+    def filter(self, script_name, path_info, environ, status, headers, body):
+        """Signature must match the call site in ``__call__``."""
         raise NotImplementedError
 
 
@@ -76,10 +90,12 @@ class HTMLFilter(Filter):
 
 class PisaMiddleware(HTMLFilter):
     @staticmethod
-    def filter(_script_name, _path_info, environ, status, headers, body):  # noqa: A003
+    def filter(_script_name, _path_info, environ, status, headers, body):
         topdf = environ.get("pisa.topdf", "")
         if topdf:
-            dst = StringIO()
+            # a PDF is bytes; this used to be a StringIO, so every conversion
+            # raised TypeError
+            dst = BytesIO()
             pisa.CreatePDF(body, dst, show_error_as_pdf=True)
             headers = [
                 ("content-type", "application/pdf"),

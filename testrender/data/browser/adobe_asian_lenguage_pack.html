@@ -1,0 +1,47 @@
+<!--
+  Browser equivalent of data/source/adobe_asian_lenguage_pack.html
+
+  The source asks for STSong-Light, HeiseiMin-W3 and HYSMyeongJo-Medium. Those
+  are ReportLab CID font names, not system fonts: they exist so xhtml2pdf can
+  embed the Adobe Asian language packs. A browser has no such families and
+  would fall back silently, so the equivalent names a real CJK family per
+  script instead.
+
+  Consequently only pagination and text are compared for this fixture, not
+  SSIM: the glyphs legitimately come from different fonts. What is being
+  checked is that xhtml2pdf emits the CJK text at all, on the same page, in
+  the same order -- see data/manifest.toml.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="_normalize.css">
+<title></title>
+<style type="text/css">
+
+/* STSong-Light in the source: simplified Chinese */
+.chi {
+    font-family: "Noto Sans CJK SC", "Noto Sans SC", "Source Han Sans SC", sans-serif;
+}
+
+/* HeiseiMin-W3 in the source: Japanese */
+.jap {
+    font-family: "Noto Sans CJK JP", "Noto Sans JP", "Source Han Sans JP", sans-serif;
+}
+
+/* HYSMyeongJo-Medium in the source: Korean */
+.kor {
+    font-family: "Noto Sans CJK KR", "Noto Sans KR", "Source Han Sans KR", sans-serif;
+}
+
+</style>
+</head>
+
+<body>
+<p class="jap">目提要四部類敘</p>
+<p class="jap">円鬱イ</p>
+<p class="kor">모든 사람은 교육을 받을 권리를 가진다</p>
+
+</body>
+</html>
