@@ -17,6 +17,7 @@ import getopt
 import glob
 import logging
 import os
+import subprocess
 import sys
 import urllib.parse as urlparse
 
@@ -396,8 +397,10 @@ def startViewer(filename):
         try:
             os.startfile(filename)
         except Exception:
-            # try to opan a la apple
-            os.system('open "%s"' % filename)
+            if sys.platform == "darwin":
+                subprocess.run(["open", filename], check=False)
+            elif sys.platform.startswith("linux"):
+                subprocess.run(["xdg-open", filename], check=False)
 
 
 def showLogging(*, debug=False):
