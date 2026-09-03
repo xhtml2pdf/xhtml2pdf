@@ -586,7 +586,10 @@ ol {
     margin-left: 1.5em;
 }
 
-ul li div:first-child {
+ul li div:first-child,
+ol li div:first-child,
+ul li p:first-child,
+ol li p:first-child {
     display: inline-block;
 }
 

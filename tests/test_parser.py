@@ -121,6 +121,54 @@ class ParserTest(TestCase):
         r = pisaParser(data, c)
         self.assertEqual(r.warn, 0)
 
+    def test_ol_li_with_nested_paragraph(self) -> None:
+        """Verify that <li><p>...</p></li> retains the list number."""
+        import io
+
+        from pypdf import PdfReader
+
+        from xhtml2pdf.document import pisaDocument
+
+        html = """<!DOCTYPE html>
+        <html><body>
+        <ol>
+            <li><p>First item</p></li>
+            <li><p>Second item</p></li>
+        </ol>
+        </body></html>"""
+        pdf_file = io.BytesIO()
+        pisaDocument(io.StringIO(html), pdf_file)
+        pdf_file.seek(0)
+        text = PdfReader(pdf_file).pages[0].extract_text()
+        self.assertIn("1.", text)
+        self.assertIn("2.", text)
+
+    def test_ul_li_with_nested_paragraph(self) -> None:
+        """Verify that <li><p>...</p></li> retains the bullet in unordered lists."""
+        import io
+
+        from pypdf import PdfReader
+
+        from xhtml2pdf.document import pisaDocument
+
+        html = """<!DOCTYPE html>
+        <html><body>
+        <ul>
+            <li><p>First item</p></li>
+            <li><p>Second item</p></li>
+        </ul>
+        </body></html>"""
+        pdf_file = io.BytesIO()
+        pisaDocument(io.StringIO(html), pdf_file)
+        pdf_file.seek(0)
+        text = PdfReader(pdf_file).pages[0].extract_text()
+        # Both items should appear in the output (with some bullet character)
+        self.assertIn("First item", text)
+        self.assertIn("Second item", text)
+        # The bullet character (unicode bullet \x7f or similar) should appear twice
+        lines = [l for l in text.strip().split("\n") if l.strip()]
+        self.assertEqual(len(lines), 2, f"Expected 2 list items, got: {lines}")
+
     def test_font_base64(self) -> None:
         ttf_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
