@@ -1,6 +1,13 @@
-.PHONY: help clean clean-pyc clean-build list test test-all test-ref test-render test-render-all test-browser test-browser-update docs release sdist
+.PHONY: help setup devsetup clean clean-pyc clean-build list test test-all test-ref test-render test-render-all test-browser test-browser-update perf perf-scaling perf-golden perf-golden-update docs release sdist
+
+# Virtualenv used by setup/devsetup. Override with e.g. `make setup VENV=.venv312`.
+VENV ?= .venv
+PYTHON := $(VENV)/bin/python
+PIP := $(VENV)/bin/pip
 
 help:
+	@echo "setup - create a venv and install xhtml2pdf in editable mode"
+	@echo "devsetup - setup, plus test/docs/release extras (build, twine, ...) and pre-commit hooks"
 	@echo "clean-build - remove build artifacts"
 	@echo "clean-pyc - remove Python file artifacts"
 	@echo "lint - check style with flake8"
@@ -11,9 +18,31 @@ help:
 	@echo "test-render-all - create the reference and compare in one go"
 	@echo "test-browser - compare output against a browser rendering the same result"
 	@echo "test-browser-update - re-record the browser comparison baseline"
+	@echo "perf - time the render of the benchmark corpus, phase by phase"
+	@echo "perf-scaling - time the synthetic ladder that shows how cost grows"
+	@echo "perf-golden - check the corpus still renders byte for byte"
+	@echo "perf-golden-update - record the current render as that reference"
 	@echo "docs - generate Sphinx HTML documentation, including API docs"
 	@echo "release - package and upload a release"
 	@echo "sdist - package"
+
+$(VENV)/bin/python:
+	python3 -m venv $(VENV)
+
+# Base install: just the package itself, editable, for running/using xhtml2pdf.
+setup: $(VENV)/bin/python
+	$(PIP) install --upgrade pip
+	$(PIP) install -e .
+	@echo "Virtualenv ready. Activate it with: source $(VENV)/bin/activate"
+
+# Full development environment: test/docs/release extras (release pulls in
+# build + twine) plus the pre-commit hooks declared in .pre-commit-config.yaml.
+devsetup: $(VENV)/bin/python
+	$(PIP) install --upgrade pip
+	$(PIP) install -e .[test,docs,release]
+	$(PIP) install pre-commit
+	$(VENV)/bin/pre-commit install
+	@echo "Dev virtualenv ready. Activate it with: source $(VENV)/bin/activate"
 
 clean: clean-build clean-pyc
 
@@ -55,6 +84,21 @@ test-browser:
 test-browser-update:
 	$(if $(XVFB),$(XVFB) -a,) python testrender/browsercompare.py --update-baseline
 
+
+# Deliberately not wired into `test` or into CI: a timing on a shared runner
+# says more about the runner than about the change, and perf-golden only means
+# anything next to a reference recorded before the change.
+perf:
+	python tools/perf/bench.py
+
+perf-scaling:
+	python tools/perf/bench.py --scaling
+
+perf-golden:
+	python tools/perf/golden.py
+
+perf-golden-update:
+	python tools/perf/golden.py --update
 
 test-all:
 	tox

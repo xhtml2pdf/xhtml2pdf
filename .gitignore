@@ -61,3 +61,9 @@ docs/source/_static/pdf_samples/
 docs/source/_generated/*
 !docs/source/_generated/.donotdelete
 docs/source/examples.rst
+
+# The reference tools/perf/golden.py compares against. Specific to the
+# machine that recorded it -- the fonts installed and the ReportLab version
+# both change the bytes -- and meaningful only next to the change it was
+# recorded before, so it is not shared.
+tools/perf/golden.json

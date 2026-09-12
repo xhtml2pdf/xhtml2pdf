@@ -35,7 +35,7 @@ import itertools
 from abc import abstractmethod
 from operator import itemgetter
 from pathlib import Path
-from typing import ClassVar
+from typing import ClassVar, NamedTuple
 
 from xhtml2pdf.w3c import cssParser, cssSpecial
 
@@ -187,32 +187,41 @@ class CSSCascadeStrategy:
 
     def findStylesForEach(self, element, attrNames, default=NotImplemented):
         """
-        Attempts to find the style setting for attrName in the CSSRulesets.
+        The winning value of each of attrNames, as (name, value) pairs.
 
         Note: This method does not attempt to resolve rules that return
         "inherited", "default", or values that have units (including "%").
         This is left up to the client app to re-query the CSS in order to
         implement these semantics.
         """
-        rules = self.findCSSRulesForEach(element, attrNames)
+        resolved = self.findStylesForElement(element, attrNames)
         return [
-            (attrName, self._extractStyleForRule(rule, attrName, default))
-            for attrName, rule in rules.items()
+            (
+                attrName,
+                (
+                    resolved[attrName]
+                    if attrName in resolved
+                    else self._noStyleFound(attrName, default)
+                ),
+            )
+            for attrName in attrNames
         ]
 
-    def findCSSRulesFor(self, element, attrName):
-        # Generator are wonderful but sometime slow...
-        # for ruleset in self.iterCSSRulesets(inline):
-        #    rules += ruleset.findCSSRuleFor(element, attrName)
+    def _levels(self, element):
+        """
+        The rulesets that apply to `element`, weakest first.
 
+        A pair's index 1 holds its !important declarations. Which level a rule
+        came from is what separates rules of equal specificity, so it is
+        carried into the sort key -- relying on a stable sort to keep it would
+        lose the !important user declarations at the end, whose selectors were
+        written early and so sort early by source order.
+
+        Every way of reading this cascade goes through here, so the order is
+        defined once rather than once per method.
+        """
         inline = element.getInlineStyle()
 
-        # The cascade levels, weakest first: index 1 of a pair holds its
-        # !important declarations. Which level a rule came from is what
-        # separates rules of equal specificity, so it is carried into the sort
-        # key -- relying on a stable sort to keep it would lose the !important
-        # user declarations at the end, whose selectors were written early and
-        # so sort early by source order.
         levels = []
         if self.userAgenr is not None:
             levels += [self.userAgenr[0], self.userAgenr[1]]
@@ -224,9 +233,11 @@ class CSSCascadeStrategy:
             levels += [inline[0], inline[1]]
         if self.user is not None:
             levels.append(self.user[1])
+        return levels
 
+    def findCSSRulesFor(self, element, attrName):
         decorated = []
-        for level, ruleset in enumerate(levels):
+        for level, ruleset in enumerate(self._levels(element)):
             for rule in ruleset.findCSSRuleFor(element, attrName):
                 selector = rule[0]
                 key = (selector.specificity(), level, selector.order)
@@ -235,31 +246,56 @@ class CSSCascadeStrategy:
         decorated.sort(key=itemgetter(0))
         return [rule for _key, rule in decorated]
 
-    def findCSSRulesForEach(self, element, attrNames):
-        rules = {name: [] for name in attrNames}
+    def findStylesForElement(self, element, attrNames):
+        """
+        The winning value of every name in attrNames, in one pass.
 
-        inline = element.getInlineStyle()
-        for ruleset in self.iterCSSRulesets(inline):
-            for attrName, attrRules in rules.items():
-                attrRules += ruleset.findCSSRuleFor(element, attrName)
+        Each candidate selector is evaluated once and the rules it brings are
+        spread across whichever of the wanted names they declare, rather than
+        walking the whole cascade once per name.
 
-        for attrRules in rules.values():
-            attrRules.sort(key=lambda rule: rule[0].sortKey())
-        return rules
+        The winner is the same (specificity, level, order) key findCSSRulesFor
+        sorts by. Keeping the maximum is equivalent to sorting and taking the
+        last, because `order` is unique per selector and so the key is a total
+        order.
+
+        A name no rule gives a value to is absent from the result, which is how
+        the caller tells "nothing said anything" from "something said None".
+        """
+        wanted = self.propertyNames.intersection(attrNames)
+        if not wanted:
+            return {}
+
+        best: dict[str, tuple[tuple, object]] = {}
+        for level, ruleset in enumerate(self._levels(element)):
+            for selector, declarations in ruleset.findMatchingRules(element):
+                declared = wanted.intersection(declarations)
+                if not declared:
+                    continue
+                key = (selector.specificity(), level, selector.order)
+                for name in declared:
+                    previous = best.get(name)
+                    if previous is None or previous[0] < key:
+                        best[name] = (key, declarations[name])
+        return {name: value for name, (_key, value) in best.items()}
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     @staticmethod
-    def _extractStyleForRule(rule, attrName, default=NotImplemented):
+    def _noStyleFound(attrName, default=NotImplemented):
+        if default is not NotImplemented:
+            return default
+        msg = f"Could not find style for '{attrName}'"
+        raise LookupError(msg)
+
+    @classmethod
+    def _extractStyleForRule(cls, rule, attrName, default=NotImplemented):
         if rule:
             # rule is packed in a list to differentiate from "no rule" vs "rule
             # whose value evaluates as False"
             style = rule[-1][1]
             return style[attrName]
-        if default is not NotImplemented:
-            return default
-        msg = f"Could not find style for '{attrName}' in {rule!r}"
-        raise LookupError(msg)
+        return cls._noStyleFound(attrName, default)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -691,15 +727,147 @@ class CSSDeclarations(dict):  # noqa: PLW1641
         return False
 
 
+#: Shared empty bucket, so a miss does not allocate one per lookup.
+_NO_RULES: list = []
+
+
+def _bucketFor(selector):
+    """
+    The condition to file `selector` under, as (field of _RulesetIndex, key).
+
+    The most selective part of the selector that constrains the element it
+    applies to: an id, failing that a class, failing that a tag name. Only the
+    subject's own qualifiers count -- a combinator like `#main .x p` carries
+    `#main` as a constraint on an *ancestor*, so what it says about the element
+    itself is only `p`. (None, None) means nothing can be required in advance.
+
+    The tag is used exactly as written, without lowercasing, because that is
+    how CSSSelectorBase.matches compares it.
+    """
+    qualifiers = getattr(selector, "qualifiers", ())
+    for qualifier in qualifiers:
+        if qualifier.isHash():
+            return "byId", qualifier.hashId
+    for qualifier in qualifiers:
+        if qualifier.isClass():
+            return "byClass", qualifier.classId
+    name = getattr(selector, "name", "*")
+    if name != "*":
+        return "byTag", name
+    return None, None
+
+
+class _RulesetIndex(NamedTuple):
+    """
+    A ruleset's rules, filed under a condition the element has to meet.
+
+    A selector matches only an element that satisfies every part of it, so any
+    one part is enough to rule it out without evaluating it. An element is
+    then resolved against the rules in its own few buckets, plus `universal`
+    for the rules that can apply to anything, rather than against the whole
+    stylesheet.
+
+    `attrNames` is every property name the ruleset declares anywhere, which
+    answers the more common question -- does this stylesheet say anything at
+    all about `orphans`? -- without touching a bucket.
+    """
+
+    byId: dict[str, list]
+    byClass: dict[str, list]
+    byTag: dict[str, list]
+    universal: list
+    attrNames: frozenset[str]
+
+
 class CSSRuleset(dict):
+    #: Rebuilt on demand after any change. See _buildIndex.
+    _index: _RulesetIndex | None = None
+
+    def _buildIndex(self) -> _RulesetIndex:
+        """
+        File every rule under a condition its element has to meet.
+
+        Read out of self.items() rather than accumulated as rules arrive: a
+        dict keeps the key object it was given first, so a selector written
+        twice keeps the source order of the first. Reading the mapping back
+        inherits that; watching insertions would not.
+        """
+        index = _RulesetIndex({}, {}, {}, [], frozenset())
+        attrNames: set[str] = set()
+        for selector, declarations in self.items():
+            attrNames.update(declarations)
+            kind, key = _bucketFor(selector)
+            if kind is None:
+                index.universal.append((selector, declarations))
+            else:
+                getattr(index, kind).setdefault(key, []).append(
+                    (selector, declarations)
+                )
+        index = index._replace(attrNames=frozenset(attrNames))
+        self._index = index
+        return index
+
+    def _candidatesFor(self, element):
+        """Every rule that could match `element`, and possibly some that cannot."""
+        index = self._index
+        if index is None:
+            index = self._buildIndex()
+
+        # Gathered as buckets and flattened at the end. Appending to
+        # `candidates` instead would append to whichever bucket it started out
+        # as -- index.universal, which belongs to the index.
+        buckets = [index.universal]
+        if index.byTag:
+            buckets.append(index.byTag.get(element.domElement.tagName, _NO_RULES))
+        if index.byId:
+            buckets.append(index.byId.get(element.getIdAttr(), _NO_RULES))
+        if index.byClass:
+            attr = element.domElement.attributes.get("class")
+            if attr is not None:
+                for name in attr.value.split():
+                    bucket = index.byClass.get(name)
+                    if bucket:
+                        buckets.append(bucket)
+        if len(buckets) == 1:
+            return buckets[0]
+        return [rule for bucket in buckets for rule in bucket]
+
     def findCSSRulesFor(self, element, attrName):
+        """
+        Every rule of this ruleset that gives `element` a value for `attrName`.
+
+        The index only narrows the field; selector.matches still decides. Nor
+        does the result depend on the order the candidates were gathered in:
+        sortKey is (specificity, order) and `order` is unique per selector, so
+        the sort below is total.
+        """
+        index = self._index
+        if index is None:
+            index = self._buildIndex()
+        if attrName not in index.attrNames:
+            return []
+
         ruleResults = [
             (nodeFilter, declarations)
-            for nodeFilter, declarations in self.items()
+            for nodeFilter, declarations in self._candidatesFor(element)
             if (attrName in declarations) and (nodeFilter.matches(element))
         ]
         ruleResults.sort(key=lambda rule: rule[0].sortKey())
         return ruleResults
+
+    def findMatchingRules(self, element):
+        """
+        Every rule of this ruleset whose selector matches `element`.
+
+        Unsorted and unfiltered by property: the caller resolving a whole
+        element at once wants each matching rule exactly once, and does its
+        own ordering across the levels of the cascade.
+        """
+        return [
+            (nodeFilter, declarations)
+            for nodeFilter, declarations in self._candidatesFor(element)
+            if nodeFilter.matches(element)
+        ]
 
     def findCSSRuleFor(self, element, attrName):
         # rule is packed in a list to differentiate from "no rule" vs "rule
@@ -714,13 +882,51 @@ class CSSRuleset(dict):
                 self[k].update(v)
             else:
                 self[k] = v
+        # The update above reaches into a declarations dict this ruleset
+        # already holds, so what is declared changes without __setitem__ ever
+        # seeing it.
+        self._index = None
+
+    # Anything that changes the mapping invalidates the index.
+    def __setitem__(self, key, value) -> None:
+        self._index = None
+        super().__setitem__(key, value)
+
+    def __delitem__(self, key) -> None:
+        self._index = None
+        super().__delitem__(key)
+
+    def update(self, *args, **kwargs) -> None:
+        self._index = None
+        super().update(*args, **kwargs)
+
+    def setdefault(self, key, default=None):
+        self._index = None
+        return super().setdefault(key, default)
+
+    def pop(self, *args):
+        self._index = None
+        return super().pop(*args)
+
+    def popitem(self):
+        self._index = None
+        return super().popitem()
+
+    def clear(self) -> None:
+        self._index = None
+        super().clear()
 
 
 class CSSInlineRuleset(CSSRuleset, CSSDeclarations):
+    # Keyed by property name rather than by selector, so both lookups are
+    # answered directly and the index is never built.
     def findCSSRulesFor(self, element, attrName):
         if attrName in self:
             return [(CSSInlineSelector(), self)]
         return []
+
+    def findMatchingRules(self, element):
+        return [(CSSInlineSelector(), self)] if self else []
 
     def findCSSRuleFor(self, *args, **kw):
         # rule is packed in a list to differentiate from "no rule" vs "rule

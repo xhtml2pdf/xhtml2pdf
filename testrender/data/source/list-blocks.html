@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>list-blocks</title>
+<style type="text/css">
+/* Sized so the whole fixture fits on one page: this scores markers and
+   indentation, and a page break would turn every score into a measure of
+   where the split landed instead. */
+body { font-size: 9pt; }
+h2 { font-size: 10pt; margin: 0.6em 0 0.1em 0; }
+p { margin: 0.4em 0; }
+h3 { font-size: 9pt; margin: 0.4em 0; }
+</style>
+</head>
+<body>
+
+<h2>Block as the only child</h2>
+<ol><li><p>a paragraph is the whole item</p></li><li><div>a div is the whole item</div></li></ol>
+<ul><li><p>a paragraph is the whole item</p></li><li><div>a div is the whole item</div></li></ul>
+
+<h2>Block followed by a nested list</h2>
+<ol>
+  <li><p>parent with a paragraph</p>
+    <ol><li>first child</li></ol>
+  </li>
+  <li>plain sibling</li>
+</ol>
+<ul>
+  <li><p>parent with a paragraph</p>
+    <ul><li>first child</li></ul>
+  </li>
+  <li>plain sibling</li>
+</ul>
+
+<h2>Inline followed by a nested list</h2>
+<ol>
+  <li><span>parent wrapped in a span</span>
+    <ol><li>child of the span parent</li></ol>
+  </li>
+</ol>
+
+<h2>Two sibling blocks in one item</h2>
+<ol><li><p>first block of the item</p><p>second block of the item</p></li></ol>
+
+<h2>Text followed by a block</h2>
+<ol><li>text of the item<p>a block after the text</p></li></ol>
+<ul><li>text of the item<p>a block after the text</p></li></ul>
+
+<h2>Heading inside the item</h2>
+<ol><li><h3>a heading as the item</h3></li></ol>
+
+<h2>Long item, wrapped over several lines</h2>
+<ol>
+  <li>A deliberately long list item, written so that the text wraps over
+  several lines and the hanging indent of the continuation lines can be seen
+  next to the marker.</li>
+</ol>
+<ul>
+  <li><p>The same long item wrapped in a paragraph, so that the wrapping and
+  the hanging indent are measured for a block inside the item too.</p></li>
+</ul>
+
+<h2>Four levels deep, wrapped in p and in div</h2>
+<ol>
+  <li><p>ordered level one</p>
+    <ol><li><div>ordered level two</div>
+      <ol><li><p>ordered level three</p>
+        <ol><li><div>ordered level four</div></li></ol>
+      </li></ol>
+    </li></ol>
+  </li>
+</ol>
+<ul>
+  <li><p>unordered level one</p>
+    <ul><li><div>unordered level two</div>
+      <ul><li><p>unordered level three</p>
+        <ul><li><div>unordered level four</div></li></ul>
+      </li></ul>
+    </li></ul>
+  </li>
+</ul>
+
+</body>
+</html>

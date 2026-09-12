@@ -13,17 +13,23 @@ fixtures for the redirect/error handling in ``xhtml2pdf.files.NetworkFileUri``:
 ``/redirect-no-location``  a 302 with no ``Location`` header
 ``/status/<code>``         responds with that status and an empty body
 ``/slow/<seconds>``        sleeps before responding
+``/large/<n>``             n bytes of body, with a Content-Length to match
+``/gzip-bomb/<n>``         n bytes of zeroes, gzipped -- a few hundred bytes
+                           on the wire
 """
 
 from __future__ import annotations
 
 import contextlib
+import gzip
 import threading
 import time
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar
+
+from xhtml2pdf.config.resources import ResourceAccessPolicy
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -82,6 +88,25 @@ class SampleRequestHandler(SimpleHTTPRequestHandler):
             self.end_headers()
             return
 
+        if path.startswith("/large/"):
+            body = b"\0" * int(path[len("/large/") :])
+            self.send_response(200)
+            self.send_header("Content-Type", "application/octet-stream")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+
+        if path.startswith("/gzip-bomb/"):
+            body = gzip.compress(b"\0" * int(path[len("/gzip-bomb/") :]))
+            self.send_response(200)
+            self.send_header("Content-Type", "application/octet-stream")
+            self.send_header("Content-Encoding", "gzip")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+
         if path.startswith("/slow/"):
             time.sleep(float(path[len("/slow/") :]))
             # the client has usually timed out and hung up by now
@@ -118,6 +143,14 @@ class LocalServerMixin(MixinBase):
     #: this in can see them.
     base_url: ClassVar[str]
     _server_ctx: ClassVar[AbstractContextManager[str]]
+
+    #: The sample server runs on 127.0.0.1, which the default policy refuses as
+    #: an internal address -- that refusal is the SSRF protection working. A
+    #: test fetching from this server has to say so, the same way a caller with
+    #: a real service on the LAN would.
+    policy: ClassVar[ResourceAccessPolicy] = ResourceAccessPolicy(
+        allow_private_networks=True, allow_local_outside_base=True
+    )
 
     @classmethod
     def setUpClass(cls) -> None:

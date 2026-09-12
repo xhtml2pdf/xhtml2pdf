@@ -107,6 +107,16 @@ Development environment
 
 #. We will recommend using ``venv`` for development.
 
+#. ``make devsetup`` automates the steps below: it creates ``.venv``, installs
+   xhtml2pdf in editable mode with the ``test``, ``docs`` and ``release``
+   extras (the latter brings in ``build`` and ``twine``), and installs the
+   pre-commit hooks. Run it and skip to activating the environment::
+
+    make devsetup
+    source .venv/bin/activate
+
+   Or do it by hand:
+
 #. Create a virtual environment for the project. This can be inside the project directory, but cannot be under version control::
 
     python -m venv .venv
@@ -121,7 +131,7 @@ Development environment
 
 #. The next step will be to install/upgrade dependencies from the ``pyproject.toml`` file::
 
-    pip install -e .[test,docs,build]
+    pip install -e .[test,docs,release]
 
 #. Run tests to check your configuration::
 

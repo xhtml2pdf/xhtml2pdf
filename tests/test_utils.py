@@ -1,3 +1,4 @@
+import time
 from unittest import TestCase
 
 from reportlab import rl_config
@@ -16,6 +17,7 @@ from xhtml2pdf.util import (
     getFrameDimensions,
     getKeepInFrameMode,
     getSize,
+    reset_caches,
     set_value,
     transform_attrs,
 )
@@ -92,6 +94,23 @@ class UtilsColorTestCase(TestCase):
 
         res = getColor("<css function: rgb(255,0,0)>")
         self.assertEqual(res, Color(1, 0, 0, 1))
+
+    def test_get_color_for_CSS_RGB_function_variants(self):
+        """Separators other than a comma, and an alpha, still read."""
+        self.assertEqual(getColor("rgb(255 0 0)"), Color(1, 0, 0, 1))
+        self.assertEqual(getColor("rgba(255, 0, 0, 0.5)"), Color(1, 0, 0, 1))
+        self.assertEqual(getColor("rgb(300,0,0)"), Color(1, 0, 0, 1))
+        self.assertEqual(getColor("rgb(1,2)", "no"), "no")
+
+    def test_get_color_does_not_backtrack_on_an_unclosed_rgb(self):
+        """
+        `rgb(` and nothing to close it used to cost 23 seconds of CPU: the
+        pattern had three unanchored `.*?`, each free to divide the digits a
+        different way. One `<td bgcolor>` was enough to hold a worker.
+        """
+        start = time.monotonic()
+        getColor("rgb(" + "1" * 90, "default")
+        self.assertLess(time.monotonic() - start, 1)
 
     def test_get_color_for_rgb_function_object(self):
         """The parser hands colours over as a function, not as a string."""
@@ -245,6 +264,42 @@ class UtilsGetSizeTestCase(TestCase):
         self.assertEqual(res, 0.0)
         res = getSize("auto")  # Really?
         self.assertEqual(res, 0.0)
+
+
+class PercentageSizeTestCase(TestCase):
+    """
+    A percentage is read whether or not there is a base to apply it to.
+
+    The percentage branch used to sit inside `if relative:`, so getSize("100%")
+    fell through to float("100%") and logged `getSize: Not a float '100%'`.
+    The answer was 0.0 either way -- the warning read like a stylesheet error
+    and was not one.
+    """
+
+    def setUp(self):
+        # getSize is memoized, so a value another test already asked for would
+        # answer from the cache and log nothing whatever the code does.
+        super().setUp()
+        reset_caches()
+
+    def test_a_percentage_of_nothing_is_zero(self):
+        self.assertEqual(0.0, getSize("100%"))
+
+    def test_it_says_nothing_about_a_percentage(self):
+        with self.assertNoLogs("xhtml2pdf.util", level="WARNING"):
+            getSize("100%")
+
+    def test_a_relative_base_is_still_applied(self):
+        self.assertEqual(5.0, getSize("50%", 10))
+
+    def test_whitespace_is_tolerated(self):
+        self.assertEqual(2.5, getSize(" 25 % ", 10))
+
+    def test_a_real_stylesheet_error_is_still_reported(self):
+        with self.assertLogs("xhtml2pdf.util", level="WARNING") as logs:
+            self.assertEqual(0.0, getSize("nonsense"))
+
+        self.assertIn("Not a float", logs.output[0])
 
 
 class PisaDimensionTestCase(TestCase):

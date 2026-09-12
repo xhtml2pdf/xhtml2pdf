@@ -178,7 +178,7 @@ TAGS = {
     "pdfspacer": (0, {"height": (SIZE, MUST)}),
     "pdfpagenumber": (0, {"example": (STRING, "0")}),
     "pdfpagecount": (0, {}),
-    "pdftoc": (0, {}),
+    "pdftoc": (0, {"leader": (STRING, ""), "name": (STRING, "")}),
     "pdfbarcode": (
         0,
         {
@@ -325,6 +325,9 @@ TAGS = {
         {"align": ["left", "center", "right", "justify"], "dir": ["ltr", "rtl"]},
     ),
     "p": (1, {"align": ["left", "center", "right", "justify"], "dir": ["ltr", "rtl"]}),
+    # Not a block. Declared so that `lang` is parsed at all: it is where the
+    # /Lang written to the PDF catalog comes from.
+    "html": (0, {"lang": (STRING, "")}),
     "body": (1, {"dir": ["ltr", "rtl"]}),
     "br": (0, {}),
     "h1": (
@@ -539,6 +542,30 @@ pdftoc {
     display: block;
 }
 
+/* A generated table of contents is indented by outline level. Absolute and
+   not cumulative: pisaContext.addTOC runs the cascade from scratch for each
+   .pdftoclevelN, so margin-left starts at zero every time. The selector
+   carries the type because addTOC puts the class on the pdftoc node itself. */
+pdftoc.pdftoclevel1 {
+    margin-left: 1.5em;
+}
+
+pdftoc.pdftoclevel2 {
+    margin-left: 3em;
+}
+
+pdftoc.pdftoclevel3 {
+    margin-left: 4.5em;
+}
+
+pdftoc.pdftoclevel4 {
+    margin-left: 6em;
+}
+
+pdftoc.pdftoclevel5 {
+    margin-left: 7.5em;
+}
+
 table {
 }
 
@@ -584,10 +611,6 @@ ul ul ul {
 ol {
     list-style-type: decimal;
     margin-left: 1.5em;
-}
-
-ul li div:first-child {
-    display: inline-block;
 }
 
 pre {

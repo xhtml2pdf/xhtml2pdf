@@ -225,3 +225,222 @@ class CascadeOrderTest(TestCase):
             "orange",
             self._color(".zebra { color: orange !important } .alpha { color: blue }"),
         )
+
+
+class RulesetIndexTest(TestCase):
+    """
+    CSSRuleset files its rules under a condition the element must meet, so a
+    lookup evaluates a handful of selectors instead of the whole stylesheet.
+    The index is allowed to narrow the field; it is not allowed to decide.
+    """
+
+    MEDIUM_SET: ClassVar[list[str]] = ["all", "print", "pdf"]
+
+    def _ruleset(self, css: str):
+        return CSSParser(CSSBuilder(mediumSet=self.MEDIUM_SET)).parse(css)[0]
+
+    @staticmethod
+    def _element(html: str, tag: str | None = None):
+        document = minidom.parseString(html)
+        node = (
+            document.getElementsByTagName(tag)[0] if tag else document.documentElement
+        )
+        return CSSDOMElementInterface(node)
+
+    @staticmethod
+    def _scan(ruleset, element, attrName):
+        """Every rule, scanned and matched directly: the oracle for the index."""
+        results = [
+            rule
+            for rule in ruleset.items()
+            if attrName in rule[1] and rule[0].matches(element)
+        ]
+        results.sort(key=lambda rule: rule[0].sortKey())
+        return results
+
+    def _assertSameAsScan(self, css: str, html: str, tag: str | None = None) -> None:
+        ruleset = self._ruleset(css)
+        element = self._element(html, tag)
+        for attrName in ("color", "margin-left", "orphans"):
+            self.assertEqual(
+                self._scan(ruleset, element, attrName),
+                ruleset.findCSSRulesFor(element, attrName),
+                f"{attrName} in {css!r} against {html!r}",
+            )
+
+    def test_a_second_class_is_still_required(self) -> None:
+        # ".a.b" can only be filed under one of its classes; the other is left
+        # for matches() to insist on.
+        self._assertSameAsScan(".a.b { color: red }", "<p class='a'>x</p>")
+        self._assertSameAsScan(".a.b { color: red }", "<p class='a b'>x</p>")
+
+    def test_a_hash_on_an_ancestor_is_not_a_hash_on_the_element(self) -> None:
+        # "#main .x p" constrains an ancestor. Filing it under id "main" would
+        # look for a <p id="main">, and the rule would never be found.
+        self._assertSameAsScan(
+            "#main .x p { color: red }",
+            "<div id='main'><div class='x'><p>hit</p></div></div>",
+            tag="p",
+        )
+
+    def test_a_descendant_of_something_else_still_misses(self) -> None:
+        self._assertSameAsScan(
+            "#main .x p { color: red }",
+            "<div id='other'><div class='x'><p>miss</p></div></div>",
+            tag="p",
+        )
+
+    def test_the_universal_selector_reaches_everything(self) -> None:
+        self._assertSameAsScan("* { color: red }", "<p class='a' id='b'>x</p>")
+
+    def test_a_tag_is_matched_as_written(self) -> None:
+        # Neither the parser nor matches() lowercases a tag name, so "DIV"
+        # does not match <div> -- and the index must not quietly make it, or
+        # stop it, matching. Recorded as it is rather than as it should be:
+        # changing it is a matcher decision, not an indexing one.
+        ruleset = self._ruleset("DIV { color: red }")
+        element = self._element("<div>x</div>")
+        self.assertEqual([], ruleset.findCSSRulesFor(element, "color"))
+        self.assertEqual(
+            self._scan(ruleset, element, "color"),
+            ruleset.findCSSRulesFor(element, "color"),
+        )
+
+    def test_an_id_selector_finds_its_element(self) -> None:
+        self._assertSameAsScan("#here { color: red }", "<p id='here'>x</p>")
+        self._assertSameAsScan("#here { color: red }", "<p id='elsewhere'>x</p>")
+
+    def test_an_unmentioned_property_is_answered_without_matching(self) -> None:
+        ruleset = self._ruleset("p { color: red }")
+        element = self._element("<p>x</p>")
+        self.assertEqual([], ruleset.findCSSRulesFor(element, "orphans"))
+
+    def test_merging_styles_invalidates_the_index(self) -> None:
+        # mergeStyles reaches into a declarations dict the ruleset already
+        # held, which does not go through __setitem__.
+        ruleset = self._ruleset("p { color: red }")
+        element = self._element("<p>x</p>")
+        self.assertEqual([], ruleset.findCSSRulesFor(element, "margin-left"))
+
+        ruleset.mergeStyles(self._ruleset("p { margin-left: 5px }"))
+        self.assertEqual(
+            self._scan(ruleset, element, "margin-left"),
+            ruleset.findCSSRulesFor(element, "margin-left"),
+        )
+
+    def test_adding_a_rule_invalidates_the_index(self) -> None:
+        ruleset = self._ruleset("p { color: red }")
+        element = self._element("<p class='late'>x</p>")
+        ruleset.findCSSRulesFor(element, "color")
+
+        ruleset.update(self._ruleset(".late { color: blue }"))
+        self.assertEqual(
+            self._scan(ruleset, element, "color"),
+            ruleset.findCSSRulesFor(element, "color"),
+        )
+
+    def test_findMatchingRules_agrees_with_the_selectors(self) -> None:
+        css = "p { color: red } .a { color: blue } #z { color: green } div { x: y }"
+        ruleset = self._ruleset(css)
+        element = self._element("<p class='a' id='z'>x</p>")
+        self.assertEqual(
+            sorted((s for s in ruleset if s.matches(element)), key=lambda s: s.order),
+            sorted(
+                (s for s, _ in ruleset.findMatchingRules(element)),
+                key=lambda s: s.order,
+            ),
+        )
+
+    def test_a_rule_appears_once_even_with_two_matching_classes(self) -> None:
+        ruleset = self._ruleset(".a.b { color: red }")
+        element = self._element("<p class='a b'>x</p>")
+        self.assertEqual(1, len(ruleset.findMatchingRules(element)))
+
+
+class BatchAgreesWithPerPropertyTest(TestCase):
+    """
+    findStylesForElement resolves a whole element in one walk of the cascade
+    and has to agree with findStyleFor, which walks it once per property --
+    including where the winner is decided by the cascade level rather than by
+    specificity or source order.
+    """
+
+    MEDIUM_SET: ClassVar[list[str]] = ["all", "print", "pdf"]
+
+    NAMES: ClassVar[tuple[str, ...]] = (
+        "color",
+        "background-color",
+        "margin-left",
+        "font-size",
+        "orphans",
+    )
+
+    def _cascade(self, *, author=None, user=None, userAgent=None):
+        parser = CSSParser(CSSBuilder(mediumSet=self.MEDIUM_SET))
+        return CSSCascadeStrategy(
+            author=parser.parse(author) if author else None,
+            user=parser.parse(user) if user else None,
+            userAgent=parser.parse(userAgent) if userAgent else None,
+        )
+
+    def _assertAgrees(self, cascade, html: str) -> None:
+        node = minidom.parseString(html).documentElement
+        element = CSSDOMElementInterface(node)
+        batch = cascade.findStylesForElement(element, self.NAMES)
+        for name in self.NAMES:
+            one = cascade.findStyleFor(element, name, None)
+            self.assertEqual(one, batch.get(name), f"{name} in {html!r}")
+
+    def test_specificity_and_source_order(self) -> None:
+        self._assertAgrees(
+            self._cascade(
+                author=".zebra { color: orange } .alpha { color: blue }"
+                " p.alpha { margin-left: 5px } .zebra { margin-left: 9px }"
+            ),
+            "<p class='zebra alpha'>x</p>",
+        )
+
+    def test_important_from_the_user_level(self) -> None:
+        # The case the level in the sort key exists for: a user !important
+        # declaration is applied last although its selector was written first.
+        self._assertAgrees(
+            self._cascade(
+                user=".zebra { color: orange !important }",
+                author=".alpha { color: blue }",
+            ),
+            "<p class='zebra alpha'>x</p>",
+        )
+
+    def test_across_every_level(self) -> None:
+        self._assertAgrees(
+            self._cascade(
+                userAgent="p { color: black; margin-left: 1px }",
+                user="p { color: grey !important; font-size: 9px }",
+                author="p { color: red; margin-left: 2px }",
+            ),
+            "<p class='a' id='b'>x</p>",
+        )
+
+    def test_an_inline_style(self) -> None:
+        self._assertAgrees(
+            self._cascade(author="p { color: red }"),
+            "<p style='color: green; margin-left: 3px'>x</p>",
+        )
+
+    def test_a_property_nobody_declares_is_absent(self) -> None:
+        cascade = self._cascade(author="p { color: red }")
+        node = minidom.parseString("<p>x</p>").documentElement
+        batch = cascade.findStylesForElement(CSSDOMElementInterface(node), self.NAMES)
+        self.assertNotIn("orphans", batch)
+        self.assertEqual({"color"}, set(batch))
+
+    def test_findStylesForEach_agrees_too(self) -> None:
+        cascade = self._cascade(
+            user=".zebra { color: orange !important }", author=".alpha { color: blue }"
+        )
+        node = minidom.parseString("<p class='zebra alpha'>x</p>").documentElement
+        element = CSSDOMElementInterface(node)
+        self.assertEqual(
+            [(name, cascade.findStyleFor(element, name, None)) for name in self.NAMES],
+            cascade.findStylesForEach(element, self.NAMES, None),
+        )

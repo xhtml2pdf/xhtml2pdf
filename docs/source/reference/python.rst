@@ -6,7 +6,7 @@ Python API
 
 The main function of xhtml2pdf is :py:func:`CreatePDF`.
 
-.. py:function:: CreatePDF(src, dest=None, dest_bytes=False, path="", link_callback=None, debug=0, default_css=None, xhtml=False, encoding=None, xml_output=None, raise_exception=True, capacity=100 * 1024, context_meta=None, encrypt=None, signature=None, show_error_as_pdf=False)
+.. py:function:: CreatePDF(src, dest=None, dest_bytes=False, path="", link_callback=None, debug=0, default_css=None, xhtml=False, encoding=None, xml_output=None, raise_exception=True, capacity=100 * 1024, context_meta=None, encrypt=None, signature=None, show_error_as_pdf=False, resource_policy=None)
 
    Create PDF.
 
@@ -28,9 +28,10 @@ The main function of xhtml2pdf is :py:func:`CreatePDF`.
       Handler for special file paths (see below).
 
    :param int debug:
+
       :deprecated: does nothing; set the level of the ``xhtml2pdf`` logger
-      instead. Any other unknown argument is now named in a
-      ``DeprecationWarning`` rather than being ignored.
+         instead. Any other unknown argument is now named in a
+         ``DeprecationWarning`` rather than being ignored.
 
    :param str default_css:
       The default CSS definition. If ``None``, the predefined CSS of xhtml2pdf
@@ -76,6 +77,12 @@ The main function of xhtml2pdf is :py:func:`CreatePDF`.
        If true, a failed conversion produces a PDF listing the errors and the
        warnings instead of raising.
 
+   :param xhtml2pdf.config.resources.ResourceAccessPolicy resource_policy:
+       What this document may fetch. Falls back to a policy set around the
+       call with ``use_policy``, then to a default that refuses internal
+       network addresses and confines local reads to the document's own
+       directory. See :doc:`/security`.
+
    :return:
    :rtype: xhtml2pdf.document.pisaStory|bytes
 
@@ -93,3 +100,10 @@ The link callback accepts two parameters:
 1. ``uri`` --- the URI that needs to be transformed
 2. (optionally) ``basepath`` --- the path of the resource where the URI
    originates from (useful for relative path calculations)
+
+.. note::
+
+   A ``link_callback`` rewrites a URI; it does not authorise one. Its result
+   goes through the resource policy, so a callback that resolves paths outside
+   the document's own directory needs those directories named in the policy.
+   See :doc:`/security`.

@@ -19,6 +19,11 @@ from urllib.parse import unquote as urllib_unquote
 from urllib.parse import unquote_to_bytes
 
 from xhtml2pdf.config.httpconfig import httpConfig
+from xhtml2pdf.config.resources import (
+    ResourceAccessError,
+    ResourceAccessPolicy,
+    current_policy,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -169,12 +174,20 @@ class pisaTempFile:
 
 
 class BaseFile:
-    def __init__(self, path: str, basepath: str | None) -> None:
+    def __init__(
+        self,
+        path: str,
+        basepath: str | None,
+        policy: ResourceAccessPolicy | None = None,
+    ) -> None:
         self.path: str = path
         self.basepath: str | None = basepath
         self.mimetype: str | None = None
         self.suffix: str | None = None
         self.uri: str | Path | None = None
+        #: What this document is allowed to fetch. Resolved once, here, so
+        #: every subclass consults the same policy for the whole fetch.
+        self.policy: ResourceAccessPolicy = policy or current_policy()
 
     @abstractmethod
     def extract_data(self) -> bytes | None:
@@ -183,6 +196,12 @@ class BaseFile:
     def get_data(self) -> bytes | None:
         try:
             return self.extract_data()
+        except ResourceAccessError as e:
+            # A refusal is a decision, not a failure: log it as its own thing
+            # and carry on with the resource missing, the same way an
+            # unreachable one is handled. A blocked image must not abort a
+            # render.
+            log.warning("Blocked by the resource policy: %s", e)
         except Exception as e:
             log.error(  # noqa: TRY400
                 "%s: %s while extracting data from %s: %r",
@@ -263,20 +282,46 @@ B64InlineURI = InlineDataURI
 
 
 class LocalProtocolURI(BaseFile):
+    """
+    A ``file:`` URI.
+
+    The body used to go through ``urllib.request.urlopen``, which resolves
+    whatever scheme the ``urljoin`` happened to produce -- so a ``file:``
+    basepath joined with an absolute URL fetched over the network under the
+    guise of a local read. The path is now taken apart and read directly, and
+    the policy sees it as the local read it is.
+    """
+
     def extract_data(self) -> bytes | None:
         if self.basepath and self.path.startswith("/"):
             self.uri = urlparse.urljoin(self.basepath, self.path[1:])
-            urlResponse = request.urlopen(self.uri)
-            self.mimetype = urlResponse.info().get("Content-Type", "").split(";")[0]
-            return urlResponse.read()
-        return None
+        elif self.path.startswith("file:"):
+            self.uri = self.path
+        else:
+            return None
+        parts = urlparse.urlsplit(str(self.uri))
+        if parts.scheme and parts.scheme != "file":
+            msg = f"{self.uri!r} is not a local file"
+            raise ResourceAccessError(msg)
+        path = Path(request.url2pathname(parts.path))
+        self.policy.check_path(path)
+        if not path.is_file():
+            return None
+        self.suffix = path.suffix
+        self.mimetype = LocalFileURI.guess_mimetype(path)
+        return path.read_bytes()
 
 
 class NetworkFileUri(BaseFile):
     MAX_REDIRECTS: int = 5
 
-    def __init__(self, path: str, basepath: str | None) -> None:
-        super().__init__(path, basepath)
+    def __init__(
+        self,
+        path: str,
+        basepath: str | None,
+        policy: ResourceAccessPolicy | None = None,
+    ) -> None:
+        super().__init__(path, basepath, policy)
         self.attempts: int = 3
         self.actual_attempts: int = 0
 
@@ -287,6 +332,10 @@ class NetworkFileUri(BaseFile):
             self.actual_attempts += 1
             try:
                 data = self.extract_data()
+            except ResourceAccessError as e:
+                # Retrying a refusal would only repeat it three times over.
+                log.warning("Blocked by the resource policy: %s", e)
+                break
             except Exception as e:
                 log.error(  # noqa: TRY400
                     "%s: %s while extracting data from %s: %r on attempt %d",
@@ -332,7 +381,7 @@ class NetworkFileUri(BaseFile):
                 self.mimetype = r1.getheader("Content-Type", "").split(";")[0]
                 is_gzip = r1.getheader("content-encoding") == "gzip"
                 # the body must be read before the connection is closed
-                return r1.read(), is_gzip, None
+                return self._read_capped(r1, uri), is_gzip, None
             if 300 <= r1.status < 400:
                 location = r1.getheader("Location")
                 r1.read()  # drain, so the connection can be reused/closed cleanly
@@ -361,6 +410,9 @@ class NetworkFileUri(BaseFile):
                 log.warning("Redirect loop while fetching %r", uri)
                 return None, False
             seen.add(uri)
+            # Checked per hop: a 302 to http://169.254.169.254/ would
+            # otherwise walk straight past a check made only on the first URL.
+            self.policy.check_url(uri)
             data, is_gzip, redirect = self._request(uri)
             if redirect is None:
                 return data, is_gzip
@@ -371,6 +423,42 @@ class NetworkFileUri(BaseFile):
         )
         return None, False
 
+    def _read_capped(self, response: HTTPResponse, uri: str) -> bytes:
+        """
+        Read the body, refusing one larger than the policy allows.
+
+        ``read()`` with no argument read whatever the server chose to send,
+        which is the server the document picked. Reading one byte past the
+        limit is what tells a body at the limit from one over it.
+        """
+        limit = self.policy.max_resource_bytes
+        if limit is None:
+            return response.read()
+        declared = response.getheader("Content-Length")
+        if declared is not None and declared.isdigit():
+            # Refused before a byte of it is read, when the server says so.
+            self.policy.check_size(int(declared), uri)
+        body = response.read(limit + 1)
+        self.policy.check_size(len(body), uri)
+        return body
+
+    def _gunzip_capped(self, data: bytes, uri: str) -> bytes:
+        """
+        Decompress, refusing an expansion larger than the policy allows.
+
+        A gzip stream says nothing about what it expands to, and the ratio is
+        the attacker's to choose: 203KB of response reached 209MB of memory.
+        GzipFile decompresses as it is read, so a capped read never builds the
+        whole thing.
+        """
+        limit = self.policy.max_resource_bytes
+        with gzip.GzipFile(mode="rb", fileobj=BytesIO(data)) as gz:
+            if limit is None:
+                return gz.read()
+            expanded = gz.read(limit + 1)
+        self.policy.check_size(len(expanded), uri)
+        return expanded
+
     def extract_data(self) -> bytes | None:
         # FIXME: When self.path don't start with http
         if self.basepath and not self.path.startswith("http"):
@@ -380,7 +468,7 @@ class NetworkFileUri(BaseFile):
         self.uri = uri
         data, is_gzip = self.get_httplib(uri)
         if is_gzip and data:
-            data = gzip.GzipFile(mode="rb", fileobj=BytesIO(data)).read()
+            data = self._gunzip_capped(data, uri)
         log.debug("Uri parsed: %r", uri)
         return data
 
@@ -402,6 +490,11 @@ class LocalFileURI(BaseFile):
         uri = Path(self.basepath) / path if self.basepath is not None else Path() / path
         if path.exists() and not uri.exists():
             uri = path
+        # Before the open, not after: this is the check that stops
+        # <img src="/etc/passwd"> and its ../ spellings. Note that joining an
+        # absolute path onto the basepath above discards the basepath, which is
+        # exactly why the resolved result has to be vetted.
+        self.policy.check_path(uri)
         if uri.is_file():
             self.uri = uri
             self.suffix = uri.suffix
@@ -427,12 +520,14 @@ class BytesFileUri(BaseFile):
 
 
 class LocalTmpFile(BaseFile):
-    def __init__(self, path, basepath) -> None:
+    def __init__(self, path, basepath, policy=None) -> None:
         self.path: str = path
         self.basepath: str | None = None
+        # a LocalTmpFile is handed its mimetype where the others get a basepath
         self.mimetype: str | None = basepath
         self.suffix: str | None = None
         self.uri: str | Path | None = None
+        self.policy: ResourceAccessPolicy = policy or current_policy()
 
     def get_named_tmp_file(self):
         tmp_file = super().get_named_tmp_file()
@@ -450,16 +545,16 @@ class LocalTmpFile(BaseFile):
 
 class FileNetworkManager:
     @staticmethod
-    def get_manager(uri, basepath=None):
+    def get_manager(uri, basepath=None, policy=None):
         if uri is None:
-            return LocalTmpFile(uri, basepath)
+            return LocalTmpFile(uri, basepath, policy)
         if isinstance(uri, bytes):
-            return BytesFileUri(uri, basepath)
+            return BytesFileUri(uri, basepath, policy)
         if isinstance(uri, Path):
             # pisaFileObject accepts str | Path; Path has no .startswith()
             uri = str(uri)
         if uri.startswith("data:"):
-            instance = B64InlineURI(uri, basepath)
+            instance = B64InlineURI(uri, basepath, policy)
         else:
             if basepath and not urlparse.urlparse(uri).scheme:
                 urlParts = urlparse.urlparse(basepath)
@@ -468,11 +563,11 @@ class FileNetworkManager:
 
             log.debug("URLParts: %r, %r", urlParts, urlParts.scheme)
             if urlParts.scheme == "file":
-                instance = LocalProtocolURI(uri, basepath)
+                instance = LocalProtocolURI(uri, basepath, policy)
             elif urlParts.scheme in {"http", "https"}:
-                instance = NetworkFileUri(uri, basepath)
+                instance = NetworkFileUri(uri, basepath, policy)
             else:
-                instance = LocalFileURI(uri, basepath)
+                instance = LocalFileURI(uri, basepath, policy)
         return instance
 
 
@@ -482,6 +577,7 @@ class pisaFileObject:
         uri: str | Path | None,
         basepath: str | None = None,
         callback: Callable | None = None,
+        policy: ResourceAccessPolicy | None = None,
     ) -> None:
         self.uri: str | Path | None = uri
         self.basepath: str | None = basepath
@@ -491,8 +587,12 @@ class pisaFileObject:
 
         log.debug("FileObject %r, Basepath: %r", self.uri, self.basepath)
 
+        # Resolved here rather than left to each BaseFile so that a link_callback
+        # rewrite above is still subject to it: rewriting a URL is not the same
+        # as authorising it.
+        self.policy: ResourceAccessPolicy = policy or current_policy()
         self.instance: BaseFile = FileNetworkManager.get_manager(
-            self.uri, basepath=self.basepath
+            self.uri, basepath=self.basepath, policy=self.policy
         )
 
     def getFileContent(self) -> bytes | None:

@@ -4,6 +4,7 @@ import os
 import re
 import shutil
 import tempfile
+from itertools import pairwise
 from pathlib import Path
 from unittest import TestCase
 from xml.dom import minidom
@@ -361,8 +362,13 @@ class PropertyRegistryTest(TestCase):
 
 
 class CSSAttrsTest(TestCase):
+    """
+    The runtime guard, which renders only under an environment variable. The
+    static check below is what runs for every name written as a literal.
+    """
+
     def test_reading_a_registered_property_is_quiet(self) -> None:
-        attrs = CSSAttrs({"color": "red"})
+        attrs = properties._CheckedCSSAttrs({"color": "red"})
         with self.assertNoLogs("xhtml2pdf.properties", level="WARNING"):
             self.assertIn("color", attrs)
             self.assertEqual("red", attrs["color"])
@@ -373,10 +379,74 @@ class CSSAttrsTest(TestCase):
         # collects, the membership test answers False, and the feature
         # silently does nothing.
         properties._unregistered_seen.discard("float")
-        attrs = CSSAttrs()
+        attrs = properties._CheckedCSSAttrs()
         with self.assertLogs("xhtml2pdf.properties", level="WARNING") as logs:
             self.assertNotIn("float", attrs)
         self.assertIn("float", logs.output[0])
+
+    def test_the_plain_class_costs_nothing(self) -> None:
+        # CSSAttrs is read several times per property per element, so it
+        # carries no Python-level method in front of a lookup. If one comes
+        # back, the render slows down for every document.
+        for name in ("__contains__", "__getitem__", "get"):
+            self.assertIs(
+                getattr(CSSAttrs, name),
+                getattr(dict, name),
+                f"CSSAttrs.{name} is no longer dict's",
+            )
+
+
+class CSSPropertiesAreReachableTest(TestCase):
+    """
+    Every CSS property this package reads is one CSSCollect collects.
+
+    A name that is not in the registry is never collected, so the branch
+    reading it can never fire and nothing says why -- the way
+    -pdf-keep-in-frame-max-width stayed dead. Reading the names out of the
+    source catches that without needing a document to reach the branch.
+    """
+
+    #: c.cssAttr["x"], c.cssAttr.get("x"), "x" in c.cssAttr, and the same
+    #: against the local name CSS2Frag and the tag handlers use.
+    _READS = re.compile(
+        r"""cssAttr(?:s)?\s*(?:\[\s*(['"])(?P<sub>[^'"]+)\1
+          | \.get\(\s*(['"])(?P<get>[^'"]+)\3)
+        | (['"])(?P<contains>[^'"]+)\5\s+in\s+\w*\.?cssAttr(?:s)?\b""",
+        re.VERBOSE,
+    )
+
+    def test_every_property_read_is_registered(self) -> None:
+        package = Path(properties.__file__).parent
+        unregistered: dict[str, str] = {}
+        for source in sorted(package.rglob("*.py")):
+            text = source.read_text(encoding="utf-8")
+            for match in self._READS.finditer(text):
+                name = (
+                    match.group("sub") or match.group("get") or match.group("contains")
+                )
+                if name not in properties.SUPPORTED_PROPERTIES:
+                    unregistered.setdefault(name, source.name)
+        self.assertEqual(
+            {},
+            unregistered,
+            "read from cssAttr but not registered in xhtml2pdf.properties, "
+            "so CSSCollect never collects them",
+        )
+
+    def test_the_pattern_finds_the_reads_it_is_meant_to(self) -> None:
+        # A regex that matched nothing would pass the test above forever.
+        found = {
+            m.group("sub") or m.group("get") or m.group("contains")
+            for m in self._READS.finditer(
+                """
+                c.cssAttr["color"]
+                c.cssAttr.get("display", "inline")
+                if "background-color" in c.cssAttr:
+                node.cssAttrs["font-size"]
+                """
+            )
+        }
+        self.assertEqual({"color", "display", "background-color", "font-size"}, found)
 
 
 class CSSAttrCacheKeyTest(TestCase):
@@ -671,6 +741,59 @@ class ImportedStylesheetTest(TestCase):
         )
 
 
+def render_bytes(html: str) -> bytes:
+    """Render ``html`` as a whole document and return the PDF."""
+    dest = io.BytesIO()
+    result = pisa.pisaDocument(io.StringIO(f"<html><body>{html}</body></html>"), dest)
+    assert result.err == 0
+    return dest.getvalue()
+
+
+def list_markers(html: str) -> str:
+    """Render ``html`` and return the text of the first page, markers included."""
+    return (
+        PdfReader(io.BytesIO(render_bytes(html))).pages[0].extract_text() or ""
+    ).replace("\n", " ")
+
+
+def page_texts(html: str) -> list[str]:
+    """Render ``html`` and return the text of every page."""
+    return [
+        page.extract_text() or ""
+        for page in PdfReader(io.BytesIO(render_bytes(html))).pages
+    ]
+
+
+def text_positions(html: str, page: int = 0) -> list[tuple[float, float, str]]:
+    """
+    Every text chunk drawn on ``page``, as ``(x, y, text)``, top-down.
+
+    Extracted text alone cannot answer where a marker sits, so it cannot tell a
+    bulleted item from one whose bullet is drawn in the wrong place. ``tm[4]``
+    is the x the chunk is drawn at, which is what makes the hanging indent of a
+    wrapped item measurable: the marker to the left of the first line, and the
+    continuation lines starting where that first line starts.
+    """
+    out: list[tuple[float, float, str]] = []
+
+    def visit(text, cm, tm, font_dict, font_size) -> None:  # noqa: ARG001
+        if text and text.strip():
+            out.append((round(tm[4], 1), round(tm[5], 1), text.strip()))
+
+    PdfReader(io.BytesIO(render_bytes(html))).pages[page].extract_text(
+        visitor_text=visit
+    )
+    return sorted(out, key=lambda chunk: (-chunk[1], chunk[0]))
+
+
+#: A list item long enough to wrap over several lines.
+LONG_ITEM = (
+    "A deliberately long list item, written so that its text has to wrap over "
+    "several lines and the hanging indent of the continuation lines can be "
+    "seen next to the marker that starts the item."
+)
+
+
 class ListTypeAttributeTest(TestCase):
     """
     <ol type="a"> and <ul type="square"> choose the counter.
@@ -679,15 +802,7 @@ class ListTypeAttributeTest(TestCase):
     them: only list-style-type in a stylesheet had any effect.
     """
 
-    @staticmethod
-    def markers(html: str) -> str:
-        dest = io.BytesIO()
-        result = pisa.pisaDocument(
-            io.StringIO(f"<html><body>{html}</body></html>"), dest
-        )
-        assert result.err == 0
-        dest.seek(0)
-        return (PdfReader(dest).pages[0].extract_text() or "").replace("\n", " ")
+    markers = staticmethod(list_markers)
 
     ITEMS = "<li>one</li><li>two</li>"
 
@@ -712,6 +827,150 @@ class ListTypeAttributeTest(TestCase):
 
     def test_a_square_bullet(self) -> None:
         self.assertIn("■", self.markers(f'<ul type="square">{self.ITEMS}</ul>'))
+
+
+class BlockInsideAListItemTest(TestCase):
+    """
+    A list item whose content is wrapped in a block keeps its marker.
+
+    Rich-text editors emit <li><p>...</p></li>, and the marker disappeared.
+    The marker used to be set on the current frag, and pushFrag clones while
+    clone drops bulletText, so no block inside the item ever saw it; the
+    paragraph the block emitted came out unmarked. DEFAULT_CSS papered over
+    the single-block case by flattening the first child to inline-block, which
+    covered p and div and nothing else.
+
+    The marker is now pending on the context and claimed by the first
+    paragraph the item actually emits, so the block can be anything and there
+    can be more than one.
+    """
+
+    markers = staticmethod(list_markers)
+
+    def test_a_paragraph_in_an_ordered_item(self) -> None:
+        markers = self.markers("<ol><li><p>one</p></li><li><p>two</p></li></ol>")
+
+        self.assertIn("1.", markers)
+        self.assertIn("2.", markers)
+
+    def test_a_paragraph_in_an_unordered_item(self) -> None:
+        self.assertIn("•", self.markers("<ul><li><p>one</p></li></ul>"))
+
+    def test_a_div_in_an_ordered_item(self) -> None:
+        """The ol counterpart of the rule that already existed for ul."""
+        self.assertIn("1.", self.markers("<ol><li><div>one</div></li></ol>"))
+
+    def test_a_div_in_an_unordered_item(self) -> None:
+        self.assertIn("•", self.markers("<ul><li><div>one</div></li></ul>"))
+
+    def test_a_paragraph_does_not_disturb_the_counter(self) -> None:
+        markers = self.markers(
+            '<ol type="a"><li><p>one</p></li><li><p>two</p></li></ol>'
+        )
+
+        self.assertIn("a.", markers)
+        self.assertIn("b.", markers)
+
+    def test_a_block_followed_by_a_nested_list(self) -> None:
+        """
+        The case the inline-block rule could not reach: the nested list is a
+        second block in the item, and it used to flush the item's text against
+        the first block's frag, which never carried the marker.
+        """
+        markers = self.markers("<ul><li><p>a</p><ul><li>b</li></ul></li></ul>")
+
+        self.assertEqual(2, markers.count("\u2022"))
+
+    def test_a_div_followed_by_a_nested_list(self) -> None:
+        markers = self.markers("<ul><li><div>a</div><ul><li>b</li></ul></li></ul>")
+
+        self.assertEqual(2, markers.count("\u2022"))
+
+    def test_an_ordered_block_followed_by_a_nested_list(self) -> None:
+        markers = self.markers("<ol><li><p>a</p><ol><li>b</li></ol></li></ol>")
+
+        self.assertIn("1. a", markers)
+        self.assertIn("1. b", markers)
+
+    def test_an_inline_followed_by_a_nested_list(self) -> None:
+        """Any child element did this, not only a block: the span counts too."""
+        markers = self.markers("<ul><li><span>a</span><ul><li>b</li></ul></li></ul>")
+
+        self.assertEqual(2, markers.count("\u2022"))
+
+    def test_two_sibling_blocks_in_one_item(self) -> None:
+        """No nested list involved; a second block is enough to lose it."""
+        markers = self.markers("<ul><li><p>a</p><p>c</p></li></ul>")
+
+        self.assertIn("\u2022 a", markers)
+        self.assertEqual(1, markers.count("\u2022"))
+
+    def test_text_followed_by_a_block(self) -> None:
+        """
+        The block belongs on its own line. The inline-block rule flattened it
+        into the item's first line, because :first-child ignores text nodes so
+        that p really is the first element child.
+        """
+        markers = self.markers("<ul><li>a<p>c</p></li></ul>")
+
+        self.assertIn("\u2022 a", markers)
+        self.assertNotIn("ac", markers)
+
+    def test_a_heading_in_an_item(self) -> None:
+        """The old rule named p and div only; every other block was lost."""
+        self.assertIn("\u2022", self.markers("<ul><li><h3>a</h3></li></ul>"))
+
+    def test_a_table_in_an_item(self) -> None:
+        self.assertIn(
+            "\u2022",
+            self.markers("<ul><li><table><tr><td>a</td></tr></table></li></ul>"),
+        )
+
+    def test_three_levels_stay_marked(self) -> None:
+        markers = self.markers(
+            "<ul><li><p>a</p><ul><li><p>b</p>"
+            "<ul><li><p>c</p></li></ul></li></ul></li></ul>"
+        )
+
+        # disc, circle and square; circle has no hollow glyph in a base-14
+        # font and is drawn as a disc, which testrender records as a known
+        # difference.
+        self.assertEqual(2, markers.count("\u2022"))
+        self.assertEqual(1, markers.count("\u25a0"))
+
+    def test_a_sibling_item_after_a_nested_list(self) -> None:
+        markers = self.markers(
+            "<ul><li><p>a</p><ul><li>b</li></ul></li><li>z</li></ul>"
+        )
+
+        self.assertEqual(3, markers.count("\u2022"))
+
+    def test_a_square_marker_survives_a_block(self) -> None:
+        """
+        The marker font has to come from the item as well: square is drawn in
+        ZapfDingbats, which the paragraph's own frag knows nothing about.
+        """
+        self.assertIn(
+            "\u25a0", self.markers('<ul type="square"><li><p>one</p></li></ul>')
+        )
+
+    def test_a_greek_marker_survives_a_block(self) -> None:
+        self.assertIn(
+            "\u03b1.",
+            self.markers(
+                '<ol style="list-style-type: lower-greek"><li><p>one</p></li></ol>'
+            ),
+        )
+
+    def test_an_empty_item_does_not_lend_its_marker_to_what_follows(self) -> None:
+        """A marker nobody claimed is dropped at the end of the list."""
+        markers = self.markers("<ul><li></li></ul><p>after</p>")
+
+        self.assertNotIn("\u2022 after", markers)
+
+    def test_a_plain_list_is_unchanged(self) -> None:
+        self.assertIn("1. one", self.markers("<ol><li>one</li><li>two</li></ol>"))
+        self.assertIn("\u2022 one", self.markers("<ul><li>one</li></ul>"))
 
 
 class PageNumberExampleTest(TestCase):
@@ -744,3 +1003,233 @@ class PageNumberExampleTest(TestCase):
         text = PdfReader(dest).pages[0].extract_text() or ""
         self.assertIn("page 1", text)
         self.assertNotIn("88", text)
+
+
+class WrappedListItemTest(TestCase):
+    """
+    Where the marker of a multi-line item is drawn, not merely whether the
+    extracted text contains one.
+
+    Text extraction cannot tell a correctly bulleted item from one whose
+    bullet is drawn at the wrong indent, and that is exactly what goes wrong
+    when the marker is taken from the block emitting the text instead of from
+    the item: the bullet moves right to that block's own left indent, the
+    first line is pushed out past it, and the continuation lines stay where
+    they were. Only a wrapped item shows it.
+    """
+
+    BULLET = "•"
+
+    def geometry(self, html: str) -> tuple[float, float, list[float]]:
+        """``(bullet x, first line x, x of every following line)``."""
+        chunks = text_positions(html)
+        bullets = [x for x, _, text in chunks if text == self.BULLET]
+        self.assertEqual(1, len(bullets), f"expected one marker, got {chunks}")
+        text_xs = [x for x, _, text in chunks if text != self.BULLET]
+        self.assertGreater(len(text_xs), 1, "the item did not wrap")
+        return bullets[0], text_xs[0], text_xs[1:]
+
+    def test_a_wrapped_item_hangs_under_its_first_line(self) -> None:
+        bullet_x, first_x, rest_x = self.geometry(f"<ul><li>{LONG_ITEM}</li></ul>")
+
+        self.assertLess(bullet_x, first_x)
+        for x in rest_x:
+            self.assertEqual(first_x, x)
+
+    def test_a_wrapped_item_in_a_block_is_laid_out_the_same(self) -> None:
+        """
+        The regression guard for the marker's indent. Taking bulletIndent from
+        the paragraph rather than from the item moved the bullet from 0 to the
+        item's left indent and pushed the first line out past it, while the
+        continuation lines stayed put -- the hanging indent inverted.
+        """
+        bare = self.geometry(f"<ul><li>{LONG_ITEM}</li></ul>")
+        in_block = self.geometry(f"<ul><li><p>{LONG_ITEM}</p></li></ul>")
+
+        self.assertEqual(bare, in_block)
+
+    def test_a_nested_wrapped_item_is_indented_one_level_further(self) -> None:
+        chunks = text_positions(
+            f"<ul><li><p>{LONG_ITEM}</p><ul><li>{LONG_ITEM}</li></ul></li></ul>"
+        )
+        bullets = sorted(x for x, _, text in chunks if text == self.BULLET)
+        text_xs = sorted({x for x, _, text in chunks if text != self.BULLET})
+
+        self.assertEqual(2, len(bullets))
+        self.assertEqual(2, len(text_xs))
+        outer_bullet, inner_bullet = bullets
+        outer_text, inner_text = text_xs
+
+        # each marker sits left of the text of its own level ...
+        self.assertLess(outer_bullet, outer_text)
+        self.assertLess(inner_bullet, inner_text)
+        # ... and the nested level is indented from the outer one by the same
+        # step for its marker as for its text, so the two stay aligned
+        self.assertLess(outer_bullet, inner_bullet)
+        # delta because the positions are rounded to a tenth of a point
+        self.assertAlmostEqual(
+            inner_bullet - outer_bullet, inner_text - outer_text, delta=0.2
+        )
+
+    def test_an_item_split_across_a_page_is_marked_once(self) -> None:
+        """ReportLab keeps the bullet on the first half of a split paragraph."""
+        huge = " ".join(f"word{index}" for index in range(1200))
+        pages = page_texts(f"<ul><li><p>{huge}</p></li></ul>")
+
+        self.assertGreater(len(pages), 1, "the item did not split")
+        self.assertEqual(1, pages[0].count(self.BULLET))
+        self.assertEqual(0, sum(page.count(self.BULLET) for page in pages[1:]))
+
+    def test_every_item_of_a_list_that_spans_pages_is_marked(self) -> None:
+        count = 120
+        items = "".join(f"<li>item {index}</li>" for index in range(count))
+        pages = page_texts(f"<ul>{items}</ul>")
+
+        self.assertGreater(len(pages), 1, "the list did not span pages")
+        self.assertEqual(count, sum(page.count(self.BULLET) for page in pages))
+
+    def test_a_wrapped_item_carries_one_marker_only(self) -> None:
+        """A wrapped item must not repeat its marker on each line."""
+        markers = list_markers(f"<ul><li>{LONG_ITEM}</li></ul>")
+
+        self.assertEqual(1, markers.count(self.BULLET))
+
+
+#: A list marker as it is drawn: one of the bullet glyphs, or an ordered
+#: counter with its trailing dot: "1.", "iv.", "a." and the like.
+_MARKER = re.compile(r"^([•■▪◦○●]|[^\s.]{1,6}\.)$")
+
+
+def marker_columns(html: str) -> tuple[list[str], list[float], list[float]]:
+    """
+    ``(marker of each item, x of each marker, x of each item's text)``.
+
+    Outermost item first. Splitting the page's chunks into the two columns is
+    what makes a nested list measurable: a marker belongs one indent step left
+    of its own item's text, and one step right of its parent's marker.
+    """
+    markers: list[tuple[str, float]] = []
+    texts: list[float] = []
+    for x, _, text in text_positions(html):
+        if _MARKER.match(text):
+            markers.append((text, x))
+        else:
+            texts.append(x)
+    return [text for text, _ in markers], [x for _, x in markers], texts
+
+
+def nested_lists(tag: str, wrapper: str = "", depth: int = 4) -> str:
+    """``depth`` lists inside one another, each item's content in ``wrapper``."""
+    html = ""
+    for level in range(depth, 0, -1):
+        content = f"level {level}"
+        if wrapper:
+            content = f"<{wrapper}>{content}</{wrapper}>"
+        html = f"<{tag}><li>{content}{html}</li></{tag}>"
+    return html
+
+
+class DeeplyNestedListTest(TestCase):
+    """
+    Four levels deep, with and without a block wrapping each item's content.
+
+    Wrapping an item's content in a block is what used to lose the marker, and
+    a two-level list hides the interesting part: whether the loss compounds
+    with depth, and whether the wrapper shifts the level's indentation. The
+    claim here is the strong one -- a block wrapper changes *nothing*, at any
+    depth -- so the wrapped forms are compared against the bare one rather
+    than against numbers of their own.
+    """
+
+    DEPTH = 4
+    DISC = "•"
+    SQUARE = "■"
+    WRAPPERS = ("", "p", "div")
+
+    def test_every_level_of_a_four_deep_list_is_marked(self) -> None:
+        for tag in ("ul", "ol"):
+            for wrapper in self.WRAPPERS:
+                with self.subTest(tag=tag, wrapper=wrapper):
+                    markers, _, texts = marker_columns(
+                        nested_lists(tag, wrapper, self.DEPTH)
+                    )
+
+                    self.assertEqual(self.DEPTH, len(markers), markers)
+                    self.assertEqual(self.DEPTH, len(texts))
+
+    def test_a_block_wrapper_changes_nothing_at_any_level(self) -> None:
+        """
+        The whole point: <p> and <div> inside the item are laid out exactly as
+        bare text is, marker positions included, four levels down.
+        """
+        for tag in ("ul", "ol"):
+            bare = marker_columns(nested_lists(tag, "", self.DEPTH))
+            for wrapper in ("p", "div"):
+                with self.subTest(tag=tag, wrapper=wrapper):
+                    self.assertEqual(
+                        bare, marker_columns(nested_lists(tag, wrapper, self.DEPTH))
+                    )
+
+    def test_each_level_steps_in_by_the_same_amount(self) -> None:
+        for wrapper in self.WRAPPERS:
+            with self.subTest(wrapper=wrapper):
+                _, marker_xs, text_xs = marker_columns(
+                    nested_lists("ul", wrapper, self.DEPTH)
+                )
+
+                steps = [right - left for left, right in pairwise(marker_xs)]
+                for step in steps:
+                    # delta because positions are rounded to a tenth of a point
+                    self.assertAlmostEqual(steps[0], step, delta=0.2)
+                # a level's marker sits at the text indent of the level above
+                self.assertEqual(marker_xs[1:], text_xs[:-1])
+                # and left of its own text
+                for marker_x, text_x in zip(marker_xs, text_xs, strict=True):
+                    self.assertLess(marker_x, text_x)
+
+    def test_the_marker_follows_the_nesting_level(self) -> None:
+        """
+        DEFAULT_CSS carries the same three rules a browser's UA stylesheet
+        does -- disc, circle, square -- so the fourth level stays square, as
+        it does in Chrome. Circle has no hollow glyph in a base-14 font and is
+        drawn as a disc, which testrender records as a known difference.
+        """
+        for wrapper in self.WRAPPERS:
+            with self.subTest(wrapper=wrapper):
+                markers, _, _ = marker_columns(nested_lists("ul", wrapper, self.DEPTH))
+
+                self.assertEqual(
+                    [self.DISC, self.DISC, self.SQUARE, self.SQUARE], markers
+                )
+
+    def test_ordered_and_unordered_levels_can_alternate(self) -> None:
+        """Mixed nesting, with a different wrapper at each level."""
+        markers, marker_xs, text_xs = marker_columns(
+            "<ol><li><p>one</p>"
+            "<ul><li><div>two</div>"
+            "<ol><li>three"
+            "<ul><li><p>four</p></li></ul>"
+            "</li></ol></li></ul></li></ol>"
+        )
+
+        self.assertEqual(["1.", self.DISC, "1.", self.DISC], markers)
+        self.assertEqual(marker_xs[1:], text_xs[:-1])
+
+    def test_a_counter_restarts_and_resumes_at_every_level(self) -> None:
+        """
+        Two items per level, four levels down: each nested list starts again
+        at 1, and its parent picks up at 2 once the nesting closes.
+        """
+        markers = list_markers(
+            "<ol>"
+            "<li><p>a1</p><ol>"
+            "<li><p>b1</p><ol>"
+            "<li><p>c1</p><ol><li><p>d1</p></li><li><p>d2</p></li></ol></li>"
+            "<li><p>c2</p></li></ol></li>"
+            "<li><p>b2</p></li></ol></li>"
+            "<li><p>a2</p></li></ol>"
+        )
+
+        self.assertEqual(
+            "1. a1 1. b1 1. c1 1. d1 2. d2 2. c2 2. b2 2. a2", markers.strip()
+        )

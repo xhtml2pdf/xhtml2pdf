@@ -39,6 +39,7 @@ from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
 
 from xhtml2pdf import default, parser
 from xhtml2pdf.files import B64InlineURI, getFile, pisaFileObject
+from xhtml2pdf.properties import CSSAttrs
 from xhtml2pdf.tables import TableData
 from xhtml2pdf.util import (
     apply_text_transform,
@@ -52,6 +53,9 @@ from xhtml2pdf.util import (
     getFrameDimensions,
     getKeepInFrameMode,
     getSize,
+    getTocLeader,
+    getTocName,
+    getTocNameClass,
     set_asian_fonts,
     set_value,
 )
@@ -62,6 +66,7 @@ from xhtml2pdf.xhtml2pdf_reportlab import (
     PmlParagraph,
     PmlParagraphAndImage,
     PmlTableOfContents,
+    tocNotifyKind,
 )
 
 if TYPE_CHECKING:
@@ -70,6 +75,7 @@ if TYPE_CHECKING:
 
     from reportlab.platypus.flowables import Flowable
 
+    from xhtml2pdf.config.resources import ResourceAccessPolicy
     from xhtml2pdf.xhtml2pdf_reportlab import PmlImage
 
 
@@ -81,6 +87,10 @@ subFraction = 0.4  # fraction of font size that a sub script should be lowered
 superFraction = 0.4
 
 NBSP = "\u00a0"
+
+_SPACES = re.compile(r"(\ )")
+_NEWLINES = re.compile(r"(\r\n|\n|\r)")
+_NBSP = re.compile("(" + NBSP + ")")
 
 
 def clone(self, **kwargs) -> ParaFrag:
@@ -96,6 +106,26 @@ def clone(self, **kwargs) -> ParaFrag:
 
 
 ParaFrag.clone = clone
+
+
+def registerTTFont(fullFontName: str, file) -> None:
+    """
+    Make an embedded TrueType font available to ReportLab under fullFontName.
+
+    Not a cache: registerFont keeps whichever object is already in
+    pdfmetrics._fonts under a dynamic font's name, so from the second document
+    of a process onwards the TTFont built here was discarded on arrival. This
+    builds the object that gets used and skips the ones that never did --
+    which matters because building one reads and parses the whole font file,
+    7 ms for a Latin face and 70 ms for a CJK one, per weight.
+
+    The name is all that is consulted, so a second document declaring the same
+    font-family from a different file keeps the face the first one embedded.
+    That predates this and is unchanged by it.
+    """
+    if fullFontName in pdfmetrics._fonts:
+        return
+    pdfmetrics.registerFont(TTFont(fullFontName, file.getNamedFile()))
 
 
 def getParaFrag(style) -> ParaFrag:
@@ -147,6 +177,12 @@ def getParaFrag(style) -> ParaFrag:
         ),
         None,
     )
+    #: What a table of contents repeats between an entry and its page number.
+    #: Empty means no fill; the number is still flush right.
+    frag.tocLeader = ""
+    #: Which table of contents an outline entry belongs to. Empty is the
+    #: unnamed one, which is every entry in a document that never says.
+    frag.tocName = ""
     set_value(
         frag,
         ("pageNumber", "pageCount", "outline", "outlineOpen", "keepWithNext", "rtl"),
@@ -694,19 +730,39 @@ class pisaContext:
         #: module: as a global it was shared by concurrent renders, and its
         #: entries outlived the document that filled them, so a parent node id
         #: reused after a collection could serve one document another's styles.
+        #: The resolved CSS of the element being visited. Written by
+        #: parser.CSSCollect on every element and read all over the parser;
+        #: declared here because addTOC reads it before the walk has set it.
+        self.cssAttr: CSSAttrs = CSSAttrs()
         self.cssAttrCache: dict = {}
         #: Declarations dropped because their value is a CSS function this
         #: library cannot evaluate, as "property: function()". Filled by
         #: parser.CSSCollect and reported once when the document is done, the
         #: way unimplemented property names are.
         self.cssDroppedFunctions: set[str] = set()
+        #: The RTL language *name* ("arabic", "hebrew", ...) that drives text
+        #: reshaping. Not a BCP 47 tag, so it is not what goes in /Lang.
         self.language: str = ""
+        #: The document's language tag ("es-CR"), written to the PDF catalog as
+        #: /Lang. Kept apart from `language` above: the two are different
+        #: things that happen to share a word.
+        self.lang_tag: str = ""
         self.text: str = ""
         self.frameStatic: dict = {}
         self.imageData: dict = {}
         self.templateList: dict = {}
         self.capacity: int = capacity
-        self.toc: PmlTableOfContents = PmlTableOfContents()
+        #: Every table of contents in the document, by name; the unnamed one
+        #: is under "". One instance per <pdf:toc>, because ReportLab keeps
+        #: each index's state on the flowable itself and registers every
+        #: appearance of it in the story: one instance shared by two tags is
+        #: put in the story twice, runs beforeBuild twice a pass and never
+        #: reaches a settled state, failing the whole render with "Index
+        #: entries not resolved after 10 passes".
+        self.tocs: dict[str, PmlTableOfContents] = {}
+        #: Names entries asked for, so a name no <pdf:toc> declares can be
+        #: reported once the document has been walked.
+        self.tocNamesUsed: set[str] = set()
         self.multiBuild: bool = False
         self.pageSize: tuple[float, float] = A4
         #: Background colour propagated from <body> to the page canvas,
@@ -715,6 +771,11 @@ class pisaContext:
         self.baseFontSize: float = getSize("12pt")
         self.frag: ParaFrag = getParaFrag(ParagraphStyle(f"default{self.UID()}"))
         self.fragBlock: ParaFrag = self.frag
+        #: The marker of the list item being built, waiting for the first
+        #: paragraph that item actually emits, together with the item's own
+        #: frag. It cannot live on a frag: pushFrag clones, clone drops
+        #: bulletText, so a block inside the <li> would never see it.
+        self.pendingBullet: tuple[list, ParaFrag] | None = None
         self.fragStrip: bool = True
         self.force: bool = False
         self.dir: str = "ltr"
@@ -728,6 +789,9 @@ class pisaContext:
         if not parts.scheme:
             self.pathDocument = str(Path(self.pathDocument).absolute().resolve())
         self.pathDirectory: str = getDirName(self.pathDocument)
+        #: What this document may fetch; see xhtml2pdf.config.resources.
+        #: Set by pisaStory/pisaDocument, None outside a build.
+        self.resource_policy: ResourceAccessPolicy | None = None
 
         self.meta: dict[str, str | tuple[float, float]] = {
             "author": "",
@@ -736,6 +800,28 @@ class pisaContext:
             "keywords": "",
             "pagesize": A4,
         }
+
+    @property
+    def toc(self) -> PmlTableOfContents:
+        """
+        The document's table of contents, for callers that assume just one.
+
+        `toc` was a plain attribute for the whole life of the library, always
+        present and never None, and it is public enough to keep working. With
+        several indexes there is still only one it can sensibly mean: the
+        unnamed one, or failing that the first declared. Reading it before any
+        <pdf:toc> is parsed creates the unnamed index rather than answering
+        None, which is what the attribute promised.
+        """
+        if "" not in self.tocs:
+            if self.tocs:
+                return next(iter(self.tocs.values()))
+            self.tocs[""] = PmlTableOfContents(notifyKind=tocNotifyKind())
+        return self.tocs[""]
+
+    @toc.setter
+    def toc(self, value: PmlTableOfContents) -> None:
+        self.tocs[""] = value
 
     def setDir(self, direction):
         if direction == "rtl":
@@ -844,6 +930,8 @@ class pisaContext:
                 "paddingLeft",
                 "paddingRight",
                 "borderPadding",
+                # carried so PmlTableOfContents can read it off the level style
+                "tocLeader",
             ),
         )
 
@@ -871,29 +959,84 @@ class pisaContext:
 
         return style
 
-    def addTOC(self) -> None:
+    def addTOC(self, leader: str = "", name: str = "") -> None:
         if not self.node:
             return
 
-        styles = []
-        for i in range(20):
-            self.node.attributes["class"] = "pdftoclevel%d" % i
-            self.cssAttr = parser.CSSCollect(self.node, self)
-            parser.CSS2Frag(
-                self,
-                {
-                    "margin-top": 0,
-                    "margin-bottom": 0,
-                    "margin-left": 0,
-                    "margin-right": 0,
-                },
-                isBlock=True,
+        name = getTocName(name)
+        if name in self.tocs:
+            # Two indexes under one name cannot both be filled: an entry
+            # carries a single name and ReportLab routes it by that alone.
+            # Dropping the second is what keeps the document renderable:
+            # the same flowable in the story twice exhausts the multiBuild
+            # passes and fails the render.
+            log.warning(
+                "Ignoring a second <pdf:toc> for %s; a document can only have"
+                " one table of contents per name.",
+                f"name={name!r}" if name else "the unnamed table of contents",
             )
-            pstyle = self.toParagraphStyle(self.frag)
-            styles.append(pstyle)
+            return
 
-        self.toc.levelStyles = styles
-        self.addStory(self.toc)
+        toc = PmlTableOfContents(notifyKind=tocNotifyKind(name))
+        # The tag's own leader is the fallback for a level whose stylesheet
+        # says nothing; per-level CSS wins over it.
+        toc.defaultLeader = getTocLeader(leader) if leader else ""
+
+        # The author's own classes, kept. This loop is the only way author CSS
+        # reaches a table of contents, and it rewrites the node's class once
+        # per level: a <pdf:toc class="compact"> whose class is not carried
+        # through here never sees its own rule. Carrying them through is also
+        # what makes one index of several selectable, as
+        # `pdftoc.idx-figures.pdftoclevel0`.
+        # getAttribute, not attributes["class"]: the map hands back a minidom
+        # Attr node, and str() of one is its repr.
+        hadClass = self.node.hasAttribute("class")
+        authorClass = self.node.getAttribute("class") if hadClass else ""
+        prefix = [c for c in (*authorClass.split(), getTocNameClass(name)) if c]
+
+        # CSS2Frag writes into c.frag in place, and the HTML parser leaves
+        # <pdf:toc /> open (see pisaTagPDFTOC.start), so the rest of the
+        # document are its children and would inherit whatever level 19 left
+        # behind. Not pushFrag: that calls newFrag, which would throw away
+        # what <body> set. Restoring per level is wrong too -- a level that
+        # declares nothing keeping what the level before it had is documented
+        # behaviour, so the cascade across the twenty must stay cumulative.
+        savedFrag, savedCssAttr = self.frag, self.cssAttr
+        self.frag = savedFrag.clone()
+
+        styles = []
+        try:
+            for i in range(20):
+                self.node.setAttribute(
+                    "class", " ".join([*prefix, "pdftoclevel%d" % i])
+                )
+                self.cssAttr = parser.CSSCollect(self.node, self)
+                parser.CSS2Frag(
+                    self,
+                    {
+                        "margin-top": 0,
+                        "margin-bottom": 0,
+                        "margin-left": 0,
+                        "margin-right": 0,
+                    },
+                    isBlock=True,
+                )
+                pstyle = self.toParagraphStyle(self.frag)
+                styles.append(pstyle)
+        finally:
+            # In a finally because CSS2Frag, unlike CSSCollect, does not
+            # swallow what a stylesheet throws: a failure mid-loop would
+            # otherwise leave "pdftoclevel13" on the node and poison the CSS
+            # cache for everything keyed alongside it.
+            if hadClass:
+                self.node.setAttribute("class", authorClass)
+            else:
+                self.node.removeAttribute("class")
+            self.frag, self.cssAttr = savedFrag, savedCssAttr
+
+        toc.levelStyles = styles
+        self.tocs[name] = toc
+        self.addStory(toc)
         self.indexing_story = None
 
     def addPageCount(self) -> None:
@@ -921,9 +1064,6 @@ class pisaContext:
         force = force or self.force
         self.force = False
 
-        # Cleanup the trail
-        reversed(self.fragList)
-
         # Find maximum lead
         maxLeading: int = 0
         # fontSize = 0
@@ -933,6 +1073,23 @@ class pisaContext:
             frag.leading = leading
 
         if force or (self.text.strip() and self.fragList):
+            # A list item's marker belongs to the item, not to whichever frag
+            # happens to be current, and it is claimed here -- by the first
+            # paragraph the item really emits, which may well come from a
+            # block nested inside the <li>. Inside this branch on purpose: an
+            # addPara that emits nothing must not swallow the marker.
+            if self.pendingBullet is not None and not self.fragBlock.bulletText:
+                bullet, item_frag = self.pendingBullet
+                self.fragBlock.bulletText = bullet
+                # The indent and the font come from the item too. Taking them
+                # from the emitting block would draw the marker at that block's
+                # own left indent, pushing the first line right and breaking
+                # the hanging indent, and would lose the base-14 font a square
+                # or lower-greek marker has to be drawn in.
+                self.fragBlock.bulletIndent = item_frag.bulletIndent
+                self.fragBlock.bulletFontName = item_frag.bulletFontName
+                self.pendingBullet = None
+
             # Update paragraph style by style of first fragment
             first = self.fragBlock
             style = self.toParagraphStyle(first)
@@ -948,7 +1105,7 @@ class pisaContext:
             first.bulletText = None
 
             # Add paragraph to story
-            if force or len(self.fragAnchor + self.fragList) > 0:
+            if force or self.fragAnchor or self.fragList:
                 # We need this empty fragment to work around problems in
                 # Reportlab paragraphs regarding backGround etc.
                 if self.fragList:
@@ -964,7 +1121,11 @@ class pisaContext:
                     blank.text = ""
                     self.fragList.append(blank)
 
-                self.dumpPara(self.fragAnchor + self.fragList, style)
+                # Built here and not earlier: the block above is the last
+                # thing to append to fragList.
+                frags = self.fragAnchor + self.fragList
+
+                self.dumpPara(frags, style)
                 if hasattr(self, "language"):
                     language = self.language
                     detect_language_result = arabic_format(self.text, language)
@@ -972,16 +1133,17 @@ class pisaContext:
                         self.text = detect_language_result
 
                 para = PmlParagraph(
-                    self.text,
-                    style,
-                    frags=self.fragAnchor + self.fragList,
-                    bulletText=bulletText,
-                    dir=self.dir,
+                    self.text, style, frags=frags, bulletText=bulletText, dir=self.dir
                 )
 
                 para.outline = first.outline
                 para.outlineLevel = first.outlineLevel
                 para.outlineOpen = first.outlineOpen
+                para.tocName = first.tocName
+                if para.outline and para.tocName:
+                    # Recorded so a name no <pdf:toc> declares can be
+                    # reported; the entry itself is simply never heard.
+                    self.tocNamesUsed.add(para.tocName)
                 para.keepWithNext = first.keepWithNext
                 para.autoLeading = "max"
 
@@ -1019,6 +1181,18 @@ class pisaContext:
         if frag.link and frag.link.startswith("#"):
             self.anchorFrag.append((frag, frag.link[1:]))
         self.fragList.append(frag)
+
+    def _appendPreservingSpaces(self, line, baseFrag) -> None:
+        """
+        Append `line` with its spaces intact and unbreakable.
+
+        Reportlab will not keep a run of spaces inside one fragment, so each
+        space becomes an NBSP in a fragment of its own.
+        """
+        for piece in _SPACES.split(line):
+            frag = baseFrag.clone()
+            frag.text = NBSP if piece == " " else piece
+            self._appendFrag(frag)
 
     # XXX Argument frag is useless!
     def addFrag(self, text="", frag=None):
@@ -1065,17 +1239,9 @@ class pisaContext:
         keeps_newlines = white_space in {"pre", "pre-wrap", "pre-line"}
         keeps_spaces = white_space in {"pre", "pre-wrap", "nowrap"}
 
-        def append_preserving_spaces(line):
-            # Somehow for Reportlab NBSP have to be inserted
-            # as single character fragments
-            for piece in re.split(r"(\ )", line):
-                frag = baseFrag.clone()
-                frag.text = NBSP if piece == " " else piece
-                self._appendFrag(frag)
-
         if keeps_newlines:
             # Handle by lines
-            for text in re.split(r"(\r\n|\n|\r)", text):
+            for text in _NEWLINES.split(text):
                 # This is an exceptionally expensive piece of code
                 self.text += text
                 if ("\n" in text) or ("\r" in text):
@@ -1088,7 +1254,7 @@ class pisaContext:
                     # Handle tabs in a simple way
                     text = text.replace("\t", 8 * " ")
                     if keeps_spaces:
-                        append_preserving_spaces(text)
+                        self._appendPreservingSpaces(text, baseFrag)
                     else:
                         frag = baseFrag.clone()
                         frag.text = " ".join(text.split())
@@ -1096,9 +1262,9 @@ class pisaContext:
         elif keeps_spaces:
             # nowrap: one line, and every space unbreakable so it stays one.
             self.text += text
-            append_preserving_spaces(" ".join(text.split()))
+            self._appendPreservingSpaces(" ".join(text.split()), baseFrag)
         else:
-            for text in re.split("(" + NBSP + ")", text):
+            for text in _NBSP.split(text):
                 frag = baseFrag.clone()
                 if text == NBSP:
                     self.force = True
@@ -1167,7 +1333,12 @@ class pisaContext:
         """Returns a file name or None."""
         if name is None:
             return None
-        return getFile(name, relative or self.pathDirectory, callback=self.pathCallback)
+        return getFile(
+            name,
+            relative or self.pathDirectory,
+            callback=self.pathCallback,
+            policy=self.resource_policy,
+        )
 
     def getFontName(self, names, default="helvetica"):
         """Name of a font."""
@@ -1238,9 +1409,7 @@ class pisaContext:
                     )
                 else:
                     # Register TTF font and special name
-                    filename = file.getNamedFile()
-                    file = TTFont(fullFontName, filename)
-                    pdfmetrics.registerFont(file)
+                    registerTTFont(fullFontName, file)
 
                     # Add or replace missing styles
                     for is_bold in (0, 1):

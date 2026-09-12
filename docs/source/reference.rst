@@ -57,6 +57,16 @@ simple example for a nice looking CSS:
         font-style: italic;
     }
 
+The default stylesheet already indents ``.pdftoclevel1`` through
+``.pdftoclevel5``, so a table of contents you leave alone is not flat.
+
+Two further properties are documented with the tag in
+:doc:`reference/html`: ``-pdf-toc-leader``, which fills the gap between an
+entry and its page number, and ``-pdf-toc-name``, which sends an entry to one
+named table of contents among several -- a list of figures beside the general
+contents, say. A named one also carries a class of its own, so
+``pdftoc.idx-figures.pdftoclevel0`` styles that index alone.
+
 Tables
 ------
 

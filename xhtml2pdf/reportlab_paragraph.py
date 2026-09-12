@@ -256,11 +256,29 @@ def _putFragLine(cur_x, tx, line):
                 if kind == "anchor":
                     tx._canvas.bookmarkHorizontal(name, cur_x, cur_y + leading)
                 else:
-                    func = getattr(tx._canvas, name, None)
+                    # setNamedCB is how ReportLab has registered these since
+                    # long before this copy was taken; the plain attribute is
+                    # the older form and is kept as a fallback.
+                    func = tx._canvas.getNamedCB(name) or getattr(
+                        tx._canvas, name, None
+                    )
                     if not func:
                         msg = f"Missing {kind} callback attribute '{name}'"
                         raise AttributeError(msg)
-                    func(tx._canvas, kind, cbDefn.label)
+                    # Where the text has reached, which is what a callback
+                    # that fills the rest of the line needs -- the table of
+                    # contents draws its leader and page number from here.
+                    tx._canvas._curr_tx_info = {
+                        "tx": tx,
+                        "cur_x": cur_x,
+                        "cur_y": cur_y,
+                        "leading": leading,
+                        "xs": tx.XtraState,
+                    }
+                    try:
+                        func(tx._canvas, kind, cbDefn.label)
+                    finally:
+                        del tx._canvas._curr_tx_info
             if f is words[-1]:
                 if not tx._fontname:
                     tx.setFont(xs.style.fontName, xs.style.fontSize)

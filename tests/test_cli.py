@@ -119,6 +119,38 @@ class CommandTest(TestCase):
             1, sum(1 for name in xobjects if xobjects[name]["/Subtype"] == "/Image")
         )
 
+    def test_resource_root_confines_local_reads(self) -> None:
+        """
+        The command line does not confine local reads by default -- the
+        document is the operator's own -- but --resource-root asks for it, for
+        converting HTML that came from somewhere else.
+        """
+        src = Path(self.tmp.name) / "with-image.html"
+        src.write_text(
+            f'<html><body><img src="{SAMPLES / "img" / "denker.png"}"></body></html>',
+            encoding="utf-8",
+        )
+        dest = Path(self.tmp.name) / "img.pdf"
+
+        code, _ = run_cli("-q", "--resource-root", self.tmp.name, str(src), str(dest))
+
+        self.assertEqual(0, code)
+        self.assertNotIn("/XObject", PdfReader(dest).pages[0]["/Resources"])
+
+    def test_no_remote_refuses_a_remote_image(self) -> None:
+        src = Path(self.tmp.name) / "remote.html"
+        src.write_text(
+            '<html><body><img src="https://example.com/x.png"></body></html>',
+            encoding="utf-8",
+        )
+        dest = Path(self.tmp.name) / "remote.pdf"
+
+        with mock.patch("xhtml2pdf.files.NetworkFileUri._request") as request:
+            code, _ = run_cli("-q", "--no-remote", str(src), str(dest))
+
+        self.assertEqual(0, code)
+        self.assertEqual([], request.call_args_list)
+
 
 class RunAsAModuleTest(TestCase):
     """
@@ -146,3 +178,62 @@ class RunAsAModuleTest(TestCase):
         self.assertEqual(0, result.returncode, result.stderr.decode())
         self.assertTrue(dest.is_file())
         self.assertEqual(1, len(PdfReader(dest).pages))
+
+
+class StartViewerTest(TestCase):
+    """
+    ``startViewer`` used to build a shell command by string interpolation
+    (``os.system('open "%s"' % filename)``), so a destination carrying shell
+    metacharacters ran as a command. The name must reach the opener as one
+    argument, with no shell in between.
+    """
+
+    hostile = '/tmp/report"; touch /tmp/pwned; #.pdf'
+
+    def test_no_shell_is_used(self) -> None:
+        with (
+            mock.patch("os.system") as system,
+            mock.patch("subprocess.run") as run,
+            mock.patch.object(sys, "platform", "linux"),
+        ):
+            pisa.startViewer(self.hostile)
+
+        system.assert_not_called()
+        run.assert_called_once()
+        self.assertEqual(["xdg-open", self.hostile], run.call_args.args[0])
+
+    def test_macos_uses_open(self) -> None:
+        with (
+            mock.patch("subprocess.run") as run,
+            mock.patch.object(sys, "platform", "darwin"),
+        ):
+            pisa.startViewer("/tmp/report.pdf")
+
+        self.assertEqual(["open", "/tmp/report.pdf"], run.call_args.args[0])
+
+    def test_windows_uses_startfile(self) -> None:
+        with (
+            mock.patch.object(sys, "platform", "win32"),
+            mock.patch.object(os, "startfile", create=True) as startfile,
+            mock.patch("subprocess.run") as run,
+        ):
+            pisa.startViewer("C:\\report.pdf")
+
+        self.assertEqual([mock.call("C:\\report.pdf")], startfile.call_args_list)
+        self.assertEqual([], run.call_args_list)
+
+    def test_a_missing_opener_is_only_logged(self) -> None:
+        with (
+            mock.patch("subprocess.run", side_effect=OSError("no xdg-open")),
+            mock.patch.object(sys, "platform", "linux"),
+            self.assertLogs("xhtml2pdf.pisa", level="WARNING") as logs,
+        ):
+            pisa.startViewer("/tmp/report.pdf")
+
+        self.assertIn("Could not start a viewer", logs.output[0])
+
+    def test_no_file_name_does_nothing(self) -> None:
+        with mock.patch("subprocess.run") as run:
+            pisa.startViewer("")
+
+        self.assertEqual([], run.call_args_list)

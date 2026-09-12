@@ -73,6 +73,7 @@ from xhtml2pdf.tags import (  # noqa: F401
     pisaTagH5,
     pisaTagH6,
     pisaTagHR,
+    pisaTagHTML,
     pisaTagIMG,
     pisaTagINPUT,
     pisaTagLI,
@@ -291,6 +292,17 @@ def warnDroppedFunctions(dropped: set[str]) -> None:
         )
 
 
+def warnUnknownTocNames(context) -> None:
+    """Say once which entries named a table of contents that never appeared."""
+    unknown = context.tocNamesUsed - set(context.tocs)
+    if unknown:
+        log.warning(
+            "Ignoring -pdf-toc-name entries for tables of contents the"
+            " document never declares: %s",
+            ", ".join(sorted(unknown)),
+        )
+
+
 def getCSSAttr(self, cssCascade, attrName, default=NotImplemented):
     if attrName in self.cssAttrs:
         return self.cssAttrs[attrName]
@@ -325,6 +337,47 @@ def getCSSAttr(self, cssCascade, attrName, default=NotImplemented):
 
 # TODO: Monkeypatching standard lib should go away.
 xml.dom.minidom.Element.getCSSAttr = getCSSAttr  # type: ignore[attr-defined]
+
+
+def collectCSSAttrs(node, cssCascade, attrNames) -> None:
+    """
+    Resolve every name in attrNames for `node`, walking the cascade once.
+
+    The same thing getCSSAttr does one property at a time -- inline style over
+    the cascade, "inherit" sent up to the parent, a value kept only if there is
+    one -- but asking the cascade for every name at once, so each candidate
+    selector is evaluated once per element rather than once per property.
+
+    Names are resolved in the order given, which is the registry order, so that
+    node.cssAttrs is ordered the same way anything iterating it expects.
+    """
+    resolved = cssCascade.findStylesForElement(node.cssElement, attrNames)
+
+    # XXX Workaround for inline styles
+    try:
+        style = node.cssStyle
+    except AttributeError:
+        style = node.cssStyle = cssCascade.parser.parseInline(
+            node.cssElement.getStyleAttr() or ""
+        )[0]
+
+    attrs = node.cssAttrs
+    for attrName in attrNames:
+        result = style[attrName] if attrName in style else resolved.get(attrName)
+        if result is None:
+            continue
+        if result == "inherit":
+            # Inheritance recurses into the parent element and, as
+            # getCSSAttr stands, always ends in a LookupError that is logged
+            # and stepped over. Delegated rather than reimplemented so there
+            # is one account of that, whatever it becomes.
+            try:
+                node.getCSSAttr(cssCascade, attrName)
+            except Exception as e:
+                log.debug("%r during CSS attr '%s'", e, attrName, exc_info=True)
+            continue
+        attrs[attrName] = result
+
 
 # Create an aliasing system.  Many sources use non-standard tags, because browsers allow
 # them to.  This allows us to map a nonstandard name to the standard one.
@@ -486,15 +539,8 @@ def CSSCollect(node, c):
             return cached
 
         node.cssElement = cssDOMElementInterface.CSSDOMElementInterface(node)
-        # getCSSAttr writes what it resolves straight into this mapping; the
-        # loop's own return value was collected into a dict that nothing ever
-        # read, which made the loop look like it built the result.
         node.cssAttrs = CSSAttrs()
-        for cssAttrName in PROPERTY_NAMES:
-            try:
-                node.getCSSAttr(c.cssCascade, cssAttrName)
-            except Exception as e:  # noqa: PERF203
-                log.debug("%r during CSS attr '%s'", e, cssAttrName, exc_info=True)
+        collectCSSAttrs(node, c.cssCascade, PROPERTY_NAMES)
 
         dropUnreadableFunctions(node.cssAttrs, c.cssDroppedFunctions)
 
@@ -667,17 +713,12 @@ def pisaPreLoop(node, context, *, collect=False):
     return data
 
 
-def pisaLoop(node, context, path=None, **kw):
-    if path is None:
-        path = []
-
-    # Initialize KW
+def pisaLoop(node, context, **kw):
+    # Initialize KW. The copy keeps a child's margins out of its siblings'.
     if not kw:
         kw = {"margin-top": 0, "margin-bottom": 0, "margin-left": 0, "margin-right": 0}
     else:
-        kw = copy.copy(kw)
-
-    # indent = len(path) * "  " # only used for debug print statements
+        kw = dict(kw)
 
     # TEXT
     if node.nodeType == Node.TEXT_NODE:
@@ -692,12 +733,8 @@ def pisaLoop(node, context, path=None, **kw):
         if node.tagName in {"style", "script"}:
             return
 
-        path = [*copy.copy(path), node.tagName]
-
         # Prepare attributes
         attr = pisaGetAttributes(context, node.tagName, node.attributes)
-        # log.debug(indent + "<%s %s>" % (node.tagName, attr) +
-        # repr(node.attributes.items())) #, path
 
         # Calculate styles
         context.cssAttr = CSSCollect(node, context)
@@ -824,7 +861,7 @@ def pisaLoop(node, context, path=None, **kw):
         # Visit child nodes
         context.fragBlock = fragBlock = copy.copy(context.frag)
         for nnode in node.childNodes:
-            pisaLoop(nnode, context, path, **kw)
+            pisaLoop(nnode, context, **kw)
         context.fragBlock = fragBlock
 
         # END tag
@@ -882,7 +919,7 @@ def pisaLoop(node, context, path=None, **kw):
         # context.debug(1, indent, "???", node, node.nodeType, repr(node))
         # Loop over children
         for child in node.childNodes:
-            pisaLoop(child, context, path, **kw)
+            pisaLoop(child, context, **kw)
 
 
 def pisaParser(
@@ -941,6 +978,13 @@ def pisaParser(
     # After the walk, not before: an inline style="" reaches the cascade only
     # while its element is being visited, so the set is not complete until now.
     warnDroppedFunctions(context.cssDroppedFunctions)
+    # Same reason, the other way round: a <pdf:toc> may legitimately be
+    # written after the entries that feed it, so neither side of the binding
+    # is complete until the walk is over. An entry naming an index that never
+    # appears is simply never heard -- ReportLab's notify is a broadcast, and
+    # a kind nobody listens for goes nowhere -- so this warning is its only
+    # trace. The bookmark and the link destination still happen.
+    warnUnknownTocNames(context)
     return context
 
 
