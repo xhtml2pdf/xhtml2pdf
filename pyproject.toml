@@ -307,6 +307,9 @@ extend-exclude = [
 # name of the two files on disk, and data/manifest.toml and data/baseline.json
 # have to spell it the same way or the pair stops being found.
 adobe_asian_lenguage_pack = "adobe_asian_lenguage_pack"
+# Google App Engine, whose presence files.py detects to pick an in-memory
+# temporary file. typos reads it as a misspelling of GAME.
+GAE = "GAE"
 Hink = "Hink"
 myu20 = "myu20"
 opf = "opf"

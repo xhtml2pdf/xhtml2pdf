@@ -134,7 +134,7 @@ from `ca_chain` when build pdf signature.
         'slot_no': 0,
         #'token_label': 'ChipDoc',
         'user_pin': '000000',
-        'cert_label':  'cetificate label on smartcard',
+        'cert_label':  'certificate label on smartcard',
         'key_label': 'key label label on smartcard',
         'meta': {
             'use_pades_lta': True,

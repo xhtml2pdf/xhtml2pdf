@@ -50,7 +50,7 @@ DEST
   to send the result to stdout. Take care that the
   destination file is not already opened by an other
   application like the Adobe Reader. If the destination is
-  not writeable a similar name will be calculated automatically.
+  not writable a similar name will be calculated automatically.
 
 [options]
   --base, -b:
