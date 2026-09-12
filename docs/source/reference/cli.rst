@@ -99,6 +99,35 @@ These are used when the source is a webpage.
 
    :deprecated: Removed in Python 3.12 and not used anymore.
 
+Resource access
+"""""""""""""""
+
+What the document being converted may fetch. By default it may not reach
+internal network addresses; local reads are not confined here, because the
+document you name is your own. See :doc:`/security`.
+
+.. option:: --resource-root <dir>
+
+   Confine local reads to this directory. Repeatable: the first is the base,
+   the rest additional roots. Use it for HTML you did not write.
+
+.. option:: --allow-host <host>
+
+   Fetch only from this host, whatever address it resolves to. Repeatable.
+   Every other remote destination is refused.
+
+.. option:: --allow-private-networks
+
+   Permit internal addresses, for assets on the LAN or on localhost.
+
+.. option:: --no-remote
+
+   Refuse http and https altogether; only local files and ``data:`` URIs.
+
+.. option:: --unsafe-resources
+
+   Fetch anything, as versions before 0.2.19 did.
+
 Styling
 ^^^^^^^
 
@@ -124,7 +153,8 @@ Output
 
 .. option:: --start-viewer, -s
 
-   Start the default PDF viewer after conversion.
+   Start the default PDF viewer after conversion. Works on Linux as well as
+   on Windows and macOS since 0.2.19.
 
 .. option:: --quiet, -q
 

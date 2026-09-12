@@ -23,6 +23,7 @@ from reportlab.platypus.frames import Frame
 
 from xhtml2pdf.builders.signs import PDFSignature
 from xhtml2pdf.builders.watermarks import WaterMarks
+from xhtml2pdf.config.resources import active_policy, default_policy, use_policy
 from xhtml2pdf.context import pisaContext
 from xhtml2pdf.default import DEFAULT_CSS, DEFAULT_PAGE_NAME
 from xhtml2pdf.files import cleanFiles, pisaTempFile
@@ -61,6 +62,7 @@ def pisaStory(
     encoding=None,
     context=None,
     xml_output=None,
+    resource_policy=None,
     **_kwargs,
 ):
     # Prepare Context
@@ -72,8 +74,18 @@ def pisaStory(
     if default_css is None:
         default_css = DEFAULT_CSS
 
-    # Parse and fill the story
-    pisaParser(src, context, default_css, xhtml, encoding, xml_output)
+    if resource_policy is not None:
+        context.resource_policy = resource_policy
+    if context.resource_policy is None:
+        context.resource_policy = active_policy() or default_policy(
+            context.pathDirectory
+        )
+
+    # Parse and fill the story. Everything the markup asks the renderer to
+    # fetch happens inside this block, including the paths that do not go
+    # through link_callback.
+    with use_policy(context.resource_policy):
+        pisaParser(src, context, default_css, xhtml, encoding, xml_output)
 
     # Avoid empty documents
     if not context.story:
@@ -163,6 +175,7 @@ def pisaDocument(
     encrypt=None,
     signature=None,
     show_error_as_pdf=False,  # noqa: FBT002
+    resource_policy=None,
     **kwargs,
 ):
     if kwargs:
@@ -209,22 +222,32 @@ def pisaDocument(
         context.meta.update(context_meta)
 
     context.pathCallback = link_callback
+    # Chosen here rather than in pisaStory so that the ReportLab build phase --
+    # where images are actually read -- runs under the same policy as the parse.
+    # pathDirectory, not path: `path` names the document, and its directory is
+    # what relative resources resolve against. A policy a caller put in force
+    # around the call is honoured before falling back to that default --
+    # otherwise `with use_policy(...)` around a build would do nothing.
+    context.resource_policy = (
+        resource_policy or active_policy() or default_policy(context.pathDirectory)
+    )
 
     try:
-        return _build(
-            src,
-            context,
-            dest=dest,
-            dest_bytes=dest_bytes,
-            path=path,
-            link_callback=link_callback,
-            default_css=default_css,
-            xhtml=xhtml,
-            encoding=encoding,
-            xml_output=xml_output,
-            encrypt=encrypt,
-            signature=signature,
-        )
+        with use_policy(context.resource_policy):
+            return _build(
+                src,
+                context,
+                dest=dest,
+                dest_bytes=dest_bytes,
+                path=path,
+                link_callback=link_callback,
+                default_css=default_css,
+                xhtml=xhtml,
+                encoding=encoding,
+                xml_output=xml_output,
+                encrypt=encrypt,
+                signature=signature,
+            )
     except Exception:
         # raise_exception=False has always been the documented way to ask for
         # a status object rather than an exception, and it was never read:
@@ -239,6 +262,15 @@ def pisaDocument(
                 dest if dest is not None else io.BytesIO(), context
             )
         return context
+    finally:
+        # Every resource read during the build registers a NamedTemporaryFile
+        # in a per-thread list, and a build which raised has registered as
+        # many as one which finished. In a finally for that reason: a render
+        # that skips these leaves a file descriptor and a deleted-but-open
+        # inode behind for the life of the thread, so documents that fail to
+        # convert walk a long-running server towards EMFILE.
+        cleanFiles()
+        reset_caches()
 
 
 def _build(
@@ -283,6 +315,9 @@ def _build(
         showBoundary=0,
         encrypt=get_encrypt_instance(encrypt),
         allowSplitting=1,
+        # ReportLab writes this to the catalog as /Lang, which is what a
+        # screen reader and PDF/UA read the document's language from.
+        lang=context.lang_tag or None,
     )
 
     # Prepare templates and their frames
@@ -349,8 +384,6 @@ def _build(
 
     data = output.getvalue()
     context.dest.write(data)  # TODO: context.dest is a tempfile as well...
-    cleanFiles()
-    reset_caches()
 
     if dest_bytes:
         return data

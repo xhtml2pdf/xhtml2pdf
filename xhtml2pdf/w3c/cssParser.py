@@ -357,8 +357,23 @@ class CSSParser:
     _reflags = re.IGNORECASE | re.MULTILINE | re.UNICODE
     i_hex = "[0-9a-fA-F]"
     i_nonascii = "[\200-\377]"
-    i_unicode = r"\\(?:%s){1,6}\s?" % i_hex
-    i_escape = regex_or(i_unicode, r"\\[ -~\200-\377]")
+    # Both the digit count and the trailing space are pinned down rather than
+    # left for the engine to try every way round. `{1,6}` next to a literal
+    # class that also accepts hex digits, and a `\s?` next to a class that also
+    # accepts a space, each give the engine a second way to divide the same
+    # text; inside the starred body of i_string that multiplies out into
+    # catastrophic backtracking. A seventh hex digit is a literal character per
+    # CSS 2.1 4.1.3, so refusing to stop short of six loses nothing, and the
+    # whitespace the spec swallows after an escape is exactly this set.
+    i_unicode = (
+        rf"\\(?:{i_hex}{{6}}|{i_hex}{{1,5}}(?!{i_hex}))"
+        # "consume the space if there is one", not "try it both ways": the
+        # plain `?` of a `\s?` is what `\1 ` repeated 24 times exploits.
+        r"(?:[ \t\r\n\f]|(?![ \t\r\n\f]))"
+    )
+    # A backslash followed by a hex digit is i_unicode's alone; without this
+    # lookahead both branches match it and every escape doubles the work.
+    i_escape = regex_or(i_unicode, r"\\(?![0-9a-fA-F])[ -~\200-\377]")
     # i_nmstart = regex_or('[A-Za-z_]', i_nonascii, i_escape)
     i_nmstart = regex_or(
         r"\-[^0-9]|[A-Za-z_]", i_nonascii, i_escape
@@ -385,13 +400,18 @@ class CSSParser:
     re_rgbcolor = re.compile(i_rgbcolor, _reflags)
     i_nl = "\n|\r\n|\r|\f"
     i_escape_nl = r"\\(?:%s)" % i_nl
-    i_string_content = regex_or("[\t !#$%&(-~]", i_escape_nl, i_nonascii, i_escape)
+    # The literal class stops short of 0x5C and picks up after it, so a
+    # backslash is i_escape_nl's and i_escape's alone. A class that spans it
+    # gives the engine two ways to match every backslash, and inside a `*`
+    # that costs exponential time on a string nobody closed: 40 backslashes
+    # in a <style> hold a worker for three minutes.
+    i_string_content = regex_or("[\t !#$%&(-[\\]-~]", i_escape_nl, i_nonascii, i_escape)
     i_string1 = '"((?:%s|\')*)"' % i_string_content
     i_string2 = "'((?:%s|\")*)'" % i_string_content
     i_string = regex_or(i_string1, i_string2)
     re_string = re.compile(i_string, _reflags)
     i_uri = r"url\(\s*(?:(?:{})|((?:{})+))\s*\)".format(
-        i_string, regex_or("[!#$%&*-~]", i_nonascii, i_escape)
+        i_string, regex_or("[!#$%&*-[\\]-~]", i_nonascii, i_escape)
     )
     # XXX For now
     # i_uri = '(url\\(.*?\\))'

@@ -27,9 +27,17 @@ page-break properties emit flowables rather than touching the frag at all.
 from __future__ import annotations
 
 import logging
+import os
 from typing import TYPE_CHECKING, NamedTuple
 
-from xhtml2pdf.util import getBool, getColor, getSize, transform_attrs
+from xhtml2pdf.util import (
+    getBool,
+    getColor,
+    getSize,
+    getTocLeader,
+    getTocName,
+    transform_attrs,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -190,6 +198,33 @@ CSS_PROPERTIES += (
     CSSProperty("-pdf-outline-level", "pdf", consumer=LOOP, note="an int, unguarded"),
     CSSProperty("-pdf-line-spacing", "pdf", note="leadingSpace, added to the leading"),
     CSSProperty(
+        "-pdf-toc-leader",
+        "pdf",
+        frag="tocLeader",
+        convert=getTocLeader,
+        block_only=True,
+        note=(
+            "FRAG on purpose: addTOC calls CSS2Frag for the .pdftoclevelN"
+            " styles, which is the only way author CSS reaches a table of"
+            " contents. block_only because that is the only FRAG set anything"
+            " applies, and addTOC passes isBlock=True"
+        ),
+    ),
+    CSSProperty(
+        "-pdf-toc-name",
+        "pdf",
+        consumer=LOOP,
+        frag="tocName",
+        convert=getTocName,
+        note=(
+            "which table of contents the entry belongs to; LOOP, unlike its"
+            " -pdf-toc-leader neighbour, because leader is read off the"
+            " .pdftoclevelN styles addTOC builds and this one off the entry,"
+            " and CSS2Frag must not be able to hand an index a name out of"
+            " its own level styles"
+        ),
+    ),
+    CSSProperty(
         "-pdf-keep-in-frame-mode",
         "pdf",
         consumer=LOOP,
@@ -279,9 +314,6 @@ _unregistered_seen: set[str] = set()
 
 
 class CSSAttrs(dict):
-    # A dict subclass rather than UserDict on purpose: getCSSAttr writes into
-    # this mapping once per property per element, and UserDict would put a
-    # Python-level __setitem__ in front of every one of those.
     """
     The CSS properties collected for one element, by CSSCollect.
 
@@ -290,8 +322,24 @@ class CSSAttrs(dict):
     registered names, so the answer is always "absent" and the code that asked
     quietly does nothing. That is precisely how -pdf-keep-in-frame-max-width
     stayed unreachable -- the branch was written, the `in` test said False, and
-    nothing anywhere said why. Every lookup is checked so that the next one
-    says so out loud.
+    nothing anywhere said why.
+
+    Guarding against that is tests/test_parser.py, which reads the names this
+    package asks for out of its own source and checks each against the
+    registry. Not this class: it is looked up several times per property per
+    element, so it stays a bare dict -- no Python-level method in front of a
+    lookup, and not UserDict either. _CheckedCSSAttrs is the same guard at
+    runtime, for a name only a computed lookup could produce.
+    """
+
+
+class _CheckedCSSAttrs(CSSAttrs):
+    """
+    CSSAttrs that says out loud when it is asked for an unregistered name.
+
+    Set XHTML2PDF_CHECK_CSS_PROPERTIES to render with this in place. The
+    static check in the test suite covers every name written as a literal, so
+    this is only needed to catch a name built at runtime.
     """
 
     @staticmethod
@@ -317,3 +365,7 @@ class CSSAttrs(dict):
     def get(self, key, default=None):
         self._check(key)
         return super().get(key, default)
+
+
+if os.environ.get("XHTML2PDF_CHECK_CSS_PROPERTIES"):
+    CSSAttrs = _CheckedCSSAttrs  # type: ignore[misc]

@@ -147,6 +147,8 @@ xhtml2pdf adds the following vendor-specific properties:
      -pdf-outline-level
      -pdf-outline-open
      -pdf-page-break
+     -pdf-toc-leader
+     -pdf-toc-name
      -pdf-word-wrap
 
 Defaults
@@ -216,16 +218,116 @@ Creates an object of a specific size.
 pdf:toc
 ~~~~~~~
 
-Creates a Table of Contents.
+Creates a Table of Contents. Entries come from the headings, whose page
+numbers are set flush right; the page number links to the heading it names.
+
+``-pdf-toc-leader`` fills the gap between an entry and its page number. Give
+it one of the names below, or any other string to repeat as it is:
+
+=============  ==============================================
+``none``       no fill; the page number is still flush right
+``space``      spaces, so copied text keeps the two apart
+``dots``       ``.``
+``dashes``     ``-``
+``line``       ``_``, which joins up into a continuous rule
+``"· "``       any other pattern, repeated as written
+=============  ==============================================
+
+The default is ``none``. ``<pdf:toc leader="dots" />`` sets it for the whole
+table; a ``.pdftoclevelN`` rule sets it for one level and wins over the
+attribute. A level that declares nothing keeps what the level before it had,
+as with every other property of a table of contents.
+
+::
+
+    <style>
+        pdftoc.pdftoclevel0 { -pdf-toc-leader: dots; font-weight: bold; }
+        pdftoc.pdftoclevel1 { -pdf-toc-leader: dots; }
+    </style>
+    <pdf:toc />
+
+Several tables of contents
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Name a table of contents with ``name=""`` and it takes only the entries that
+ask for it by that name with ``-pdf-toc-name``. A document can have as many as
+it needs -- a list of figures, a list of tables -- each with its own fill and
+its own typography::
+
+    <style>
+        p.figcaption { -pdf-outline: true; -pdf-outline-level: 0;
+                       -pdf-toc-name: figures; }
+        pdftoc.idx-figures.pdftoclevel0 { -pdf-toc-leader: dashes; }
+    </style>
+
+    <pdf:toc leader="dots" />
+    <pdf:toc name="figures" />
+
+An entry belongs to exactly one table of contents: the one it names, or the
+unnamed one when it names none. So a figure caption listed among the figures
+does not also appear in the general contents, which is what a document with
+both usually wants.
+
+A named table of contents also carries the class ``idx-`` plus its name, which
+is how a stylesheet reaches one of several: ``pdftoc.idx-figures.pdftoclevel0``.
+The plain ``pdftoc.pdftoclevelN`` rules still apply to every one of them, and
+the classes written on the tag itself are kept, so ``<pdf:toc class="compact">``
+can be styled with ``pdftoc.compact.pdftoclevel0``.
+
+The name is matched case-insensitively and trimmed, so ``name="Figures"`` and
+``-pdf-toc-name: figures`` do meet. A second ``<pdf:toc>`` under a name
+already used is ignored with a warning, and so is an entry naming a table of
+contents the document never declares -- though that entry still gets its
+bookmark and its link destination.
+
+Three limits worth knowing:
+
+* ``-pdf-outline: true`` is what makes something an entry at all;
+  ``-pdf-toc-name`` only says which table of contents it goes to. An element
+  that is not an outline entry is not an entry.
+* Only paragraphs become entries. An image or a table never does, so a list of
+  figures is built from the **caption**, which is a ``<p>``.
+* Like ``-pdf-outline``, ``-pdf-toc-name`` inherits, so setting it on a
+  wrapping ``<div>`` routes every outline entry inside it.
+
+A ``<pdf:toc>`` inside a ``<pdf:frame static>`` or a table cell produces
+nothing: only the top level of the document is searched for the tables of
+contents to fill.
 
 pdf:language
 ~~~~~~~~~~~~
 
-Used for languages with right-to-left writing like Arabic, Hebrew, Persion etc. Right-to-left writing can be defined by passing the name via the ``name=""`` property.
+Turns on right-to-left shaping. Pass the language through ``name=""``:
 
 ::
 
     <pdf:language name="arabic"/>
+
+The names that mean right-to-left are ``arabic``, ``hebrew``, ``persian``,
+``pashto``, ``sindhi`` and ``urdu``. Any other name is read as a language tag
+and sets the document language instead, as described below.
+
+The document language
+---------------------
+
+The language a document declares is written to the PDF catalog as ``/Lang``,
+which is where a screen reader and a PDF/UA checker read it from. Declare it
+the way you would in HTML::
+
+    <html lang="es-CR">
+
+or, in the ``<pdf:*>`` dialect::
+
+    <pdf:language name="fr"/>
+
+The value is a BCP 47 tag and is written through unchanged. If a document
+gives both, the last one parsed wins -- ``<pdf:language>`` in the head comes
+after ``<html>``, so it is the one that counts.
+
+A document that declares nothing gets no ``/Lang`` entry. The six
+right-to-left names listed under ``pdf:language`` are not language tags, so
+``<pdf:language name="arabic"/>`` shapes the text without setting one; write
+``<html lang="ar">`` as well when you want both.
 
 Demonstration
 -------------

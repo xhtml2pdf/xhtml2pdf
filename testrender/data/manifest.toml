@@ -207,3 +207,22 @@ shows incidentally: -pdf-frame-border draws the frame, so the rasterised page \
 says exactly where the content area ends. The content fits inside the \
 declared height so that the fixture scores the geometry rather than a \
 difference in overflow handling."""
+
+[fixtures.list-blocks]
+compare = ["pages", "text", "ssim"]
+notes = """A list item whose content is wrapped in a block, which is what \
+rich-text editors emit and what a marker used to be lost to: the marker lived \
+on a frag, pushFrag clones and clone drops it, so any block inside the <li> \
+emitted its paragraph without one. Both list kinds are here on purpose. \
+Chromium puts no unordered marker in its text stream, so browsercompare.py \
+drops those from both sides and only SSIM sees a missing bullet; an ordered \
+marker it does emit, so the <ol> half of every case scores a missing number as \
+a text difference. The long items are what makes the hanging indent visible: \
+the marker sits left of the first line and the continuation lines align with \
+that first line, not under the marker. The four-level section wraps every \
+item in a p or a div and lands each level's text on exactly the same point as \
+Chrome does -- 13.5, 27, 40.5 and 54 -- so a wrapper that shifted a level \
+would show up as a text position, not only as a blur in the SSIM. The SSIM \
+that remains is mostly the circle marker, which no base-14 font has a hollow \
+glyph for and which xhtml2pdf draws as a disc; the deep unordered tree meets \
+it at every second level."""

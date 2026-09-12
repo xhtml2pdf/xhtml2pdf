@@ -42,6 +42,7 @@ from xhtml2pdf.charts import (
     PieChart,
     VerticalBar,
 )
+from xhtml2pdf.default import DEFAULT_LANGUAGE_LIST
 from xhtml2pdf.paragraph import PageNumberFlowable
 from xhtml2pdf.util import (
     DPI96,
@@ -370,6 +371,12 @@ class pisaTagUL(pisaTagP):
 
     def end(self, c: pisaContext):
         c.addPara()
+        # An empty <li> leaves a marker nobody claimed; drop it so the next
+        # paragraph after the list does not inherit one. This belongs to the
+        # list and not to pisaTagLI.end, which pisaLoop calls *before* the
+        # item's own closing addPara -- clearing it there would strip the
+        # marker from every ordinary item.
+        c.pendingBullet = None
         # XXX Simulate margin for the moment
         c.addStory(Spacer(width=1, height=c.fragBlock.spaceAfter))
         c.listCounter = self.counter
@@ -419,7 +426,11 @@ class pisaTagLI(pisaTag):
             frag.fontName = frag.bulletFontName = marker_font
             frag.fontSize *= size_factor
 
-        c.frag.bulletText = [frag]
+        # Left pending on the context rather than set on the frag: the frag is
+        # cloned for every child of the <li> and clone drops bulletText, so a
+        # marker put here would never reach a paragraph produced by a block
+        # inside the item. addPara claims it.
+        c.pendingBullet = ([frag], copy.copy(c.frag))
 
     def end(self, c: pisaContext) -> None:
         c.fragBlock.spaceBefore += self.offset
@@ -777,7 +788,7 @@ class pisaTagPDFPAGECOUNT(pisaTag):
 class pisaTagPDFTOC(pisaTag):
     """<pdf:toc />."""
 
-    def start(self, c: pisaContext) -> None:  # noqa: PLR6301
+    def start(self, c: pisaContext) -> None:
         # In start, not in end, like <pdf:nextpage> and <pdf:nextframe>. The
         # HTML parser ignores the self-closing slash on an element it does not
         # know, so <pdf:toc /> stays open and takes the rest of the document
@@ -789,7 +800,7 @@ class pisaTagPDFTOC(pisaTag):
         # but <pdf:frame static> is declared empty and swaps the story between
         # its start and its end, so it genuinely needs its children.
         c.multiBuild = True
-        c.addTOC()
+        c.addTOC(leader=self.attr.leader, name=self.attr.name)
 
 
 class pisaTagPDFFRAME(pisaTag):
@@ -870,11 +881,24 @@ class pisaTagPDFTEMPLATE(pisaTag):
         c.frameStaticList = []
 
 
+class pisaTagHTML(pisaTag):
+    """<html lang="">."""
+
+    def start(self, c: pisaContext) -> None:
+        if self.attr.lang:
+            c.lang_tag = self.attr.lang
+
+
 class pisaTagPDFLANGUAGE(pisaTag):
     """<pdf:language name=""/>."""
 
     def start(self, c: pisaContext) -> None:
         c.language = self.attr.name
+        # This tag names an RTL language for reshaping ("arabic"), which is not
+        # a language tag and must not reach /Lang. Anything else is one, and a
+        # document that declares its language this way should still get it.
+        if self.attr.name and self.attr.name.lower() not in DEFAULT_LANGUAGE_LIST:
+            c.lang_tag = self.attr.name
 
 
 class pisaTagPDFFONT(pisaTag):

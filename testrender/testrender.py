@@ -10,8 +10,16 @@ from pathlib import Path
 from subprocess import PIPE, Popen
 
 from xhtml2pdf import pisa
+from xhtml2pdf.config.resources import ResourceAccessPolicy
 
 do_bytes = ""
+
+#: Some fixtures load fonts from manual_test/font on purpose, which is outside
+#: their own directory and so outside what the default resource policy lets a
+#: document read. Naming that one directory keeps the rest of the policy --
+#: every other fixture stays confined to its own directory, as a document
+#: rendered by an application would be.
+FONT_ROOT = Path(__file__).resolve().parent.parent / "manual_test" / "font"
 
 
 class Printer:
@@ -42,7 +50,14 @@ def render_pdf(filename, output_dir, _options):
     output_path = os.path.join(output_dir, outname)
 
     with open(filename, "rb") as input_file, open(output_path, "wb") as output_file:
-        result = pisa.pisaDocument(input_file, output_file, path=filename)
+        result = pisa.pisaDocument(
+            input_file,
+            output_file,
+            path=filename,
+            resource_policy=ResourceAccessPolicy(
+                base_dir=Path(filename).resolve().parent, extra_roots=(FONT_ROOT,)
+            ),
+        )
 
     if result.err:
         pprint(f"Error rendering {filename}: {result.err}")

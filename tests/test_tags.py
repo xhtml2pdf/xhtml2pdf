@@ -9,6 +9,7 @@ from pypdf.generic import ArrayObject
 from xhtml2pdf import pisa, tags
 from xhtml2pdf.context import pisaContext
 from xhtml2pdf.parser import AttrContainer, pisaGetAttributes
+from xhtml2pdf.xhtml2pdf_reportlab import tocNotifyKind
 
 
 class PisaTagTestCase(TestCase):
@@ -364,3 +365,391 @@ class FormFieldTestCase(TestCase):
         self.assertEqual(
             "/Btn", self.fields('<input type="checkbox" name="ok">')["ok"].get("/FT")
         )
+
+
+def toc_chunks(html: str, page: int = 0) -> list[tuple[float, str]]:
+    """
+    ``(x, text)`` for every chunk drawn on ``page``, left to right, top down.
+
+    A table of contents is judged by where things land, not only by what the
+    text says: whether the page number reaches the margin and whether a fill
+    covers the gap are both positions, and extracted text alone shows neither.
+    """
+    dest = io.BytesIO()
+    result = pisa.pisaDocument(io.StringIO(html), dest)
+    assert result.err == 0
+    out: list[tuple[float, float, str]] = []
+
+    def visit(text, cm, tm, font_dict, font_size) -> None:  # noqa: ARG001
+        if text and text.strip():
+            out.append((round(tm[4] * cm[0], 1), round(tm[5], 1), text.strip()))
+
+    dest.seek(0)
+    reader = PdfReader(dest)
+    reader.pages[page].extract_text(visitor_text=visit)
+    return [(x, text) for x, _, text in sorted(out, key=lambda c: (-c[1], c[0]))]
+
+
+class TocLeaderTestCase(TestCase):
+    """
+    The fill between a table of contents entry and its page number.
+
+    The entry used to be one cell of a two-column table and the number
+    another, of ReportLab's default 72pt, so the number stopped an inch short
+    of the margin, nothing could sit between the two, and a long entry ran
+    into the number. There is one column now, and ReportLab's own
+    drawPageNumbers measures the gap and fills it.
+    """
+
+    BODY = (
+        '<div style="page-break-after:always"><pdf:toc {attr}/></div>'
+        "<h1>One</h1><h2>Sub</h2>"
+    )
+
+    def render(self, attr: str = "", css: str = "") -> list[tuple[float, str]]:
+        return toc_chunks(
+            "<html><head><style>%s</style></head><body>%s</body></html>"
+            % (css, self.BODY.format(attr=attr))
+        )
+
+    #: The right edge of the default frame: A4 less a 1cm margin each side.
+    RIGHT_EDGE = 555.3
+
+    @staticmethod
+    def numbers(chunks: list[tuple[float, str]]) -> list[tuple[float, str]]:
+        return [(x, text) for x, text in chunks if text and text[-1].isdigit()]
+
+    def test_the_page_number_reaches_the_margin(self) -> None:
+        """It used to stop an inch short, at the two-column boundary."""
+        numbers = self.numbers(self.render())
+
+        self.assertTrue(numbers)
+        for x, text in numbers:
+            self.assertGreater(x + len(text) * 2, self.RIGHT_EDGE - 40, numbers)
+
+    def test_nothing_is_drawn_between_by_default(self) -> None:
+        entries = [text for _, text in self.render()]
+
+        self.assertNotIn(".", "".join(entries))
+
+    def test_each_named_fill(self) -> None:
+        for name, glyph in (("dots", "."), ("dashes", "-"), ("line", "_")):
+            with self.subTest(leader=name):
+                drawn = "".join(
+                    text for _, text in self.render(attr=f'leader="{name}"')
+                )
+
+                self.assertIn(glyph * 8, drawn)
+
+    def test_space_leaves_no_mark(self) -> None:
+        drawn = "".join(text for _, text in self.render(attr='leader="space"'))
+
+        self.assertNotIn("..", drawn)
+        self.assertTrue(self.numbers(self.render(attr='leader="space"')))
+
+    def test_a_stylesheet_can_set_it(self) -> None:
+        drawn = "".join(
+            text for _, text in self.render(css="pdftoc { -pdf-toc-leader: dots }")
+        )
+
+        self.assertIn("........", drawn)
+
+    def test_a_stylesheet_beats_the_attribute(self) -> None:
+        drawn = "".join(
+            text
+            for _, text in self.render(
+                attr='leader="dashes"', css="pdftoc { -pdf-toc-leader: dots }"
+            )
+        )
+
+        self.assertIn("........", drawn)
+        self.assertNotIn("--------", drawn)
+
+    def test_a_level_can_differ_from_another(self) -> None:
+        chunks = self.render(
+            css=(
+                "pdftoc.pdftoclevel0 { -pdf-toc-leader: none }"
+                "pdftoc.pdftoclevel1 { -pdf-toc-leader: dots }"
+            )
+        )
+        filled = [text for _, text in chunks if "...." in text]
+
+        self.assertEqual(1, len(filled), chunks)
+
+    def test_an_arbitrary_pattern_keeps_its_spacing(self) -> None:
+        """
+        The CSS engine strips the quotes before the value is converted, so a
+        pattern arrives looking like a keyword; anything unrecognised is used
+        as the fill, spacing included.
+        """
+        drawn = "".join(
+            text for _, text in self.render(css='pdftoc { -pdf-toc-leader: "* " }')
+        )
+
+        self.assertIn("* * * * ", drawn)
+
+    def test_a_level_is_indented_under_the_one_above(self) -> None:
+        """DEFAULT_CSS indents .pdftoclevelN; there was no such rule at all."""
+        chunks = self.render()
+        entries = {text: x for x, text in chunks}
+
+        self.assertLess(entries["One"], entries["Sub"])
+
+    def test_a_long_entry_does_not_collide_with_its_number(self) -> None:
+        """
+        The two-column layout let a title run into the number. Here the number
+        is placed from the right, after whatever the title left free.
+        """
+        title = "A heading long enough to reach across the whole line by itself"
+        chunks = toc_chunks(
+            "<html><body>"
+            f'<div style="page-break-after:always"><pdf:toc leader="dots"/></div>'
+            f"<h1>{title}</h1></body></html>"
+        )
+        joined = "".join(text for _, text in chunks)
+
+        # the fill separates them; the number is never glued to the title
+        self.assertNotIn(title + "1", joined)
+        self.assertIn("..", joined)
+
+    def test_the_page_number_links_to_its_heading(self) -> None:
+        """
+        The fourth element of a TOCEntry. It also guards the bookmark key:
+        a key that differs between multiBuild passes leaves the link dangling
+        and ReportLab refuses to save the document at all.
+        """
+        dest = io.BytesIO()
+        result = pisa.pisaDocument(
+            io.StringIO(
+                "<html><body>"
+                '<div style="page-break-after:always"><pdf:toc /></div>'
+                "<h1>One</h1><h2>Sub</h2></body></html>"
+            ),
+            dest,
+        )
+        self.assertEqual(0, result.err)
+
+        dest.seek(0)
+        annotations = PdfReader(dest).pages[0].get("/Annots")
+
+        self.assertEqual(2, len(annotations or []))
+        for annotation in annotations:
+            self.assertEqual("/Link", annotation.get_object()["/Subtype"])
+
+
+class NamedTocTestCase(TestCase):
+    """
+    More than one table of contents in a document.
+
+    ReportLab has always been able to route several: notify broadcasts to
+    every indexing flowable and each keeps what matches its own notifyKind.
+    xhtml2pdf kept a single shared PmlTableOfContents and put that same object
+    in the story once per tag, so two <pdf:toc> did not merely duplicate their
+    entries -- beforeBuild ran twice a pass, the entries never settled, and
+    the render failed with "Index entries not resolved after 10 passes".
+    """
+
+    CSS = "p.cap { -pdf-outline: true; -pdf-outline-level: 0; %s }"
+    BODY = (
+        '<div style="page-break-after:always"><pdf:toc {general}/></div>'
+        '<div style="page-break-after:always"><pdf:toc name="figures" {figures}/></div>'
+        "<h1>One</h1><h2>Sub</h2>"
+        '<p class="cap">Figure 1. A diagram</p>'
+        '<p class="cap">Figure 2. Another</p>'
+    )
+
+    def html(self, css: str = "", general: str = "", figures: str = "") -> str:
+        return "<html><head><style>%s%s</style></head><body>%s</body></html>" % (
+            self.CSS % "-pdf-toc-name: figures;",
+            css,
+            self.BODY.format(general=general, figures=figures),
+        )
+
+    def render(self, page: int, **kwargs) -> list[tuple[float, str]]:
+        return toc_chunks(self.html(**kwargs), page=page)
+
+    @staticmethod
+    def texts(chunks: list[tuple[float, str]]) -> str:
+        return "".join(text for _, text in chunks)
+
+    def test_two_indexes_no_longer_exhaust_the_passes(self) -> None:
+        """This document used to raise IndexError instead of rendering."""
+        dest = io.BytesIO()
+
+        result = pisa.pisaDocument(io.StringIO(self.html()), dest)
+
+        self.assertEqual(0, result.err)
+
+    def test_an_entry_goes_only_to_the_index_it_names(self) -> None:
+        general = self.texts(self.render(0))
+        figures = self.texts(self.render(1))
+
+        self.assertIn("One", general)
+        self.assertIn("Sub", general)
+        self.assertNotIn("Figure 1", general)
+
+        self.assertIn("Figure 1", figures)
+        self.assertIn("Figure 2", figures)
+        self.assertNotIn("Sub", figures)
+
+    def test_each_index_keeps_its_own_fill(self) -> None:
+        """
+        The fill was a class attribute: with one index per document that never
+        showed, but with two the last <pdf:toc> parsed set the fill for every
+        index in the document.
+        """
+        kwargs = {"general": 'leader="dots"', "figures": 'leader="dashes"'}
+        general = self.texts(self.render(0, **kwargs))
+        figures = self.texts(self.render(1, **kwargs))
+
+        self.assertIn("........", general)
+        self.assertNotIn("--------", general)
+        self.assertIn("--------", figures)
+        self.assertNotIn("........", figures)
+
+    def test_an_index_can_be_styled_by_its_name(self) -> None:
+        """The idx-<name> class is the only handle a stylesheet has on one."""
+        css = "pdftoc.idx-figures.pdftoclevel0 { margin-left: 4cm }"
+        moved = {text: x for x, text in self.render(1, css=css)}
+        plain = {text: x for x, text in self.render(1)}
+
+        self.assertGreater(moved["Figure 1. A diagram"], plain["Figure 1. A diagram"])
+        self.assertEqual(
+            {text: x for x, text in self.render(0, css=css)}["One"],
+            {text: x for x, text in self.render(0)}["One"],
+        )
+
+    def test_a_name_is_matched_whatever_its_case(self) -> None:
+        chunks = toc_chunks(
+            "<html><head><style>"
+            "p.cap { -pdf-outline: true; -pdf-toc-name: FIGURES; }"
+            "</style></head><body>"
+            '<div style="page-break-after:always"><pdf:toc name="Figures"/></div>'
+            '<p class="cap">Figure 1</p></body></html>'
+        )
+
+        self.assertIn("Figure 1", self.texts(chunks))
+
+    def test_an_entry_naming_no_index_is_reported(self) -> None:
+        """It is dropped -- but its bookmark and destination still happen."""
+        dest = io.BytesIO()
+
+        with self.assertLogs("xhtml2pdf.parser", level="WARNING") as logs:
+            result = pisa.pisaDocument(
+                io.StringIO(
+                    "<html><head><style>h1 { -pdf-toc-name: nowhere }</style>"
+                    "</head><body><pdf:toc /><h1>One</h1></body></html>"
+                ),
+                dest,
+            )
+
+        self.assertEqual(0, result.err)
+        self.assertIn("nowhere", "".join(logs.output))
+        dest.seek(0)
+        self.assertTrue(PdfReader(dest).outline)
+
+    def test_a_second_index_with_the_same_name_is_dropped(self) -> None:
+        dest = io.BytesIO()
+
+        with self.assertLogs("xhtml2pdf.context", level="WARNING") as logs:
+            result = pisa.pisaDocument(
+                io.StringIO(
+                    "<html><body><pdf:toc /><pdf:toc />"
+                    '<div style="page-break-after:always"></div>'
+                    "<h1>One</h1></body></html>"
+                ),
+                dest,
+            )
+
+        self.assertEqual(0, result.err)
+        self.assertIn("second <pdf:toc>", "".join(logs.output))
+        dest.seek(0)
+        text = PdfReader(dest).pages[0].extract_text()
+        self.assertEqual(1, text.count("One"), text)
+
+    def test_the_unnamed_kind_is_what_reportlab_expects(self) -> None:
+        """A third party calling doc.notify("TOCEntry", ...) must still land."""
+        self.assertEqual("TOCEntry", tocNotifyKind())
+        self.assertEqual("TOCEntry", tocNotifyKind(""))
+        self.assertNotEqual("TOCEntry", tocNotifyKind("figures"))
+
+
+class TocWithoutEntriesTestCase(TestCase):
+    """
+    ReportLab's placeholder row is scaffolding for the pass that has no page
+    numbers yet. Nothing stopped the build settling while it was still on the
+    page, so a table of contents nobody wrote to shipped the words
+    "Placeholder for table of contents" to the reader -- a failure that named
+    indexes make easy to hit.
+    """
+
+    def text(self, html: str) -> str:
+        dest = io.BytesIO()
+        result = pisa.pisaDocument(io.StringIO(html), dest)
+        self.assertEqual(0, result.err)
+        dest.seek(0)
+        return "".join(page.extract_text() for page in PdfReader(dest).pages)
+
+    def test_an_index_nobody_writes_to_prints_nothing(self) -> None:
+        text = self.text("<html><body><pdf:toc /><p>Body</p></body></html>")
+
+        self.assertNotIn("Placeholder", text)
+        self.assertIn("Body", text)
+
+    def test_a_named_index_nobody_writes_to_prints_nothing(self) -> None:
+        text = self.text(
+            '<html><body><pdf:toc /><pdf:toc name="figures" />'
+            "<h1>One</h1></body></html>"
+        )
+
+        self.assertNotIn("Placeholder", text)
+        self.assertIn("One", text)
+
+
+class TocLevelStylesTestCase(TestCase):
+    """
+    addTOC reads the .pdftoclevelN styles by rewriting the class of the
+    <pdf:toc> node twenty times and running the cascade again for each.
+    """
+
+    @staticmethod
+    def positions(html: str, page: int = 1) -> dict[str, float]:
+        return {text: x for x, text in toc_chunks(html, page=page)}
+
+    def test_the_author_class_survives(self) -> None:
+        """
+        The loop used to overwrite the class outright, so <pdf:toc
+        class="compact"> never saw its own rule -- and the leftover
+        "pdftoclevel19" stayed on the node afterwards, where CSSCollect keys
+        its cache on it.
+        """
+        body = (
+            '<div style="page-break-after:always"><pdf:toc class="compact"/></div>'
+            "<h1>One</h1>"
+        )
+        styled = self.positions(
+            "<html><head><style>"
+            "pdftoc.compact.pdftoclevel0 { margin-left: 3cm }"
+            f"</style></head><body>{body}</body></html>",
+            page=0,
+        )
+        plain = self.positions(f"<html><body>{body}</body></html>", page=0)
+
+        self.assertGreater(styled["One"], plain["One"])
+
+    def test_the_levels_do_not_leak_past_the_index(self) -> None:
+        """
+        CSS2Frag writes into c.frag in place, and the HTML parser leaves
+        <pdf:toc /> open, so the rest of the document are its children and
+        inherited whatever the twentieth level left behind.
+        """
+        body = "<pdf:toc /><h1>One</h1><p>Body text</p>"
+        leaked = self.positions(
+            "<html><head><style>"
+            "pdftoc.pdftoclevel19 { margin-left: 6cm; color: #ff0000 }"
+            f"</style></head><body>{body}</body></html>",
+            page=0,
+        )
+        plain = self.positions(f"<html><body>{body}</body></html>", page=0)
+
+        self.assertEqual(plain["Body text"], leaked["Body text"])

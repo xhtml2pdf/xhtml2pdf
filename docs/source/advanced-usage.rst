@@ -36,8 +36,8 @@ You can generate files in-memory by writing to a :py:class:`io.StringIO` instanc
 Usage in Django apps
 --------------------
 
-To allow URL references to be resolved using Django's :django:setting:`STATIC_URL`
-and :django:setting:`MEDIA_URL` settings, xhtml2pdf allows users to specify
+To allow URL references to be resolved using Django's :setting:`STATIC_URL`
+and :setting:`MEDIA_URL` settings, xhtml2pdf allows users to specify
 a ``link_callback`` parameter to point to a function that converts relative URLs
 to absolute system paths.
 
@@ -113,6 +113,34 @@ Then, in your Django view:
         return response
 
 You can see it in action in :source:`demo/djangoproject` folder.
+
+.. warning::
+
+   Since 0.2.19 this example needs one more argument. ``STATIC_ROOT`` and
+   ``MEDIA_ROOT`` are outside the directory of the document being rendered, so
+   the resource policy refuses what the callback resolves and every image is
+   dropped. Name those directories:
+
+   .. code:: python
+
+       from pathlib import Path
+
+       from xhtml2pdf.config.resources import ResourceAccessPolicy
+
+       POLICY = ResourceAccessPolicy(
+           base_dir=Path(settings.STATIC_ROOT),
+           extra_roots=(Path(settings.MEDIA_ROOT),),
+       )
+
+       pisa_status = pisa.CreatePDF(
+           html,
+           dest=response,
+           link_callback=link_callback,
+           resource_policy=POLICY,
+       )
+
+   A view that renders a template containing anything a user wrote is the case
+   the policy exists for; see :doc:`security` before widening it.
 
 Usage as a command line tool
 ----------------------------

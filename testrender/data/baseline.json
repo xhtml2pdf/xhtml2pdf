@@ -61,6 +61,14 @@
       "text": 1.0,
       "text_doc": 1.0
     },
+    "list-blocks": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9002,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
     "simple-test": {
       "pages": {
         "xhtml2pdf": 1
@@ -168,7 +176,7 @@
       "pages": {
         "xhtml2pdf": 1
       },
-      "ssim": 0.9182,
+      "ssim": 0.9181,
       "text": 1.0,
       "text_doc": 1.0
     },
@@ -177,8 +185,8 @@
         "xhtml2pdf": 7
       },
       "ssim": 0.5677,
-      "text": 0.1278,
-      "text_doc": 0.9754
+      "text": 0.1377,
+      "text_doc": 0.9689
     },
     "test-page-left-right": {
       "pages": {

@@ -5,7 +5,13 @@ Development guide
 Setting up
 ----------
 
-**Prerequisites:** Python v3.8 or newer
+**Prerequisites:** Python v3.10 or newer. The test matrix covers 3.10 to
+3.14 against both supported ReportLab majors.
+
+``make devsetup`` does everything in this section in one step: it creates
+``.venv``, installs xhtml2pdf in editable mode with the ``test``, ``docs`` and
+``release`` extras, and installs the pre-commit hooks. Run it and skip to
+activating the environment. The steps below are the same thing by hand.
 
 #. Your Python installation should have ``pip`` pre-installed. If, for some
    reason, it doesn't, follow `the installation instructions <https://pip.pypa.io/en/stable/installation/>`_.
@@ -150,6 +156,19 @@ fails when one regresses. The baseline is tied to the browser build and to the
 system fonts, so it is machine specific — see ``testrender/README`` for what
 that implies.
 
+
+Measuring performance
+^^^^^^^^^^^^^^^^^^^^^
+
+``tools/perf`` holds a phase-by-phase benchmark over a corpus of fixtures
+(``make perf``), a synthetic ladder that shows how cost grows with the size of
+a document (``make perf-scaling``), and a check that the corpus still renders
+byte for byte (``make perf-golden``, recorded with ``make perf-golden-update``).
+
+None of it runs in CI: a timing taken on a shared runner says more about the
+runner than about the change, and the golden check only means anything next to
+a reference you recorded before your change. ``tools/perf/README.md`` explains
+what each one measures and how to read it.
 
 Running tests with coverage
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^

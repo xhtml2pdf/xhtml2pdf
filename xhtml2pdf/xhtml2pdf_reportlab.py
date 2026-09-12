@@ -28,8 +28,6 @@ from PIL import Image as PILImage
 from PIL import UnidentifiedImageError
 from PIL.Image import Image
 from reportlab.graphics.shapes import Drawing
-from reportlab.lib.enums import TA_RIGHT
-from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.utils import LazyImageReader, flatten, haveImages, open_for_read
 from reportlab.pdfbase import pdfform
 from reportlab.platypus.doctemplate import (
@@ -44,7 +42,7 @@ from reportlab.platypus.flowables import (
     KeepInFrame,
     ParagraphAndImage,
 )
-from reportlab.platypus.tableofcontents import TableOfContents
+from reportlab.platypus.tableofcontents import TableOfContents, drawPageNumbers
 from reportlab.platypus.tables import Table, TableStyle
 from reportlab.rl_config import register_reset
 
@@ -147,11 +145,18 @@ class PmlBaseDoc(BaseDocTemplate):
         # Does the flowable contain fragments?
         if getattr(flowable, "outline", False):
             self.notify(
-                "TOCEntry",
+                # Which table of contents the entry is for. getattr with a
+                # default because not every flowable carrying `outline` is a
+                # PmlParagraph -- PmlParagraphAndImage wraps one.
+                tocNotifyKind(getattr(flowable, "tocName", "")),
                 (
                     flowable.outlineLevel,
                     html_escape(copy.deepcopy(flowable.text), quote=True),
                     self.page,
+                    # The fourth element ReportLab documents: the destination
+                    # the entry links to. PmlParagraph.draw has bookmarked it
+                    # by now, this being called after the flowable is drawn.
+                    getattr(flowable, "tocKey", None),
                 ),
             )
 
@@ -852,21 +857,30 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
     def draw(self):
         # Create outline
         if getattr(self, "outline", False):
+            # Once per flowable, not once per drawing. multiBuild draws the
+            # story twice: the table of contents is built from the entries the
+            # first pass notified, so the key it links to has to be the one the
+            # final pass bookmarks. A fresh uuid per draw leaves the link
+            # dangling and ReportLab refuses to save the document at all
+            # ("undefined destination target"). The story holds the same
+            # flowable objects across passes, so this persists.
+            if not getattr(self, "tocKey", None):
+                self.tocKey = uuid4().hex
+
             # Check level and add all levels
             last = getattr(self.canv, "outlineLast", -1) + 1
             while last < self.outlineLevel:
-                # print "(OUTLINE",  last, self.text
+                # Filler entries for levels the document skipped. Nothing links
+                # to these, so their keys need not be stable.
                 key = uuid4().hex
                 self.canv.bookmarkPage(key)
                 self.canv.addOutlineEntry(self.text, key, last, not self.outlineOpen)
                 last += 1
             self.canv.outlineLast = self.outlineLevel
 
-            key = uuid4().hex
-
-            self.canv.bookmarkPage(key)
+            self.canv.bookmarkPage(self.tocKey)
             self.canv.addOutlineEntry(
-                self.text, key, self.outlineLevel, not self.outlineOpen
+                self.text, self.tocKey, self.outlineLevel, not self.outlineOpen
             )
             last += 1
 
@@ -1067,19 +1081,120 @@ class PmlPageCount(IndexingFlowable):
         pass
 
 
+def tocNotifyKind(name: str = "") -> str:
+    """
+    The ReportLab notification kind an entry bound for ``name`` travels as.
+
+    ReportLab already routes several tables of contents in one document, and
+    the whole of its mechanism is this string: ``BaseDocTemplate.notify``
+    broadcasts to every indexing flowable and each one keeps what matches its
+    own ``notifyKind``. Naming an index is therefore nothing more than giving
+    it a kind of its own.
+
+    An unnamed index keeps plain ``TOCEntry``, which is what ReportLab
+    documents and what a third party calling ``doc.notify("TOCEntry", ...)``
+    expects to reach. Both the emitter and the constructor come through here
+    on purpose: two f-strings that drifted apart would route every entry into
+    a kind nobody listens for, and an index that simply comes out empty is a
+    bug with no symptom to follow.
+    """
+    return f"TOCEntry:{name}" if name else "TOCEntry"
+
+
 class PmlTableOfContents(TableOfContents):
+    """
+    A table of contents whose page numbers are flush right, with an optional
+    fill between them and the entry.
+
+    This used to lay each entry out as a two-column table, the title in one
+    cell and the page number right-aligned in another of ``rightColumnWidth``
+    -- ReportLab's default 72pt, never overridden, which is why the number
+    stopped an inch short of the margin. A title in its own cell also cannot
+    be followed by anything, so there was nowhere for a fill to go, and a long
+    title ran into the number.
+
+    ReportLab already solves all of this, and the old wrap threw it away:
+    one column, an ``<onDraw>`` marker at the end of each entry, and
+    ``drawPageNumbers`` measuring from wherever the text left off to the right
+    margin. It repeats the fill string to cover the gap, sets the number flush
+    right, shrinks it rather than colliding when the title fills the line, and
+    links it to the entry's destination.
+    """
+
+    def __init__(self, **kwds) -> None:
+        # notifyKind travels through here into ReportLab, and is what makes
+        # one index of several keep only its own entries.
+        super().__init__(**kwds)
+
+        #: Fill used for a level whose stylesheet does not name one; set from
+        #: ``<pdf:toc leader="...">``. Empty means no fill.
+        #:
+        #: Per instance, not per class: a class attribute is invisible while
+        #: a document has a single index, but with two it lets the last
+        #: <pdf:toc> parsed set the fill for every index in the document.
+        self.defaultLeader: str = ""
+
+        #: Which multiBuild pass is being laid out. See wrap: the first pass
+        #: has no entries to draw yet, and what it draws instead must not be
+        #: what the reader ends up with.
+        self._buildPass: int = 0
+
+    def beforeBuild(self) -> None:
+        self._buildPass += 1
+        super().beforeBuild()
+
+    def isSatisfied(self) -> bool:
+        # A second pass even when the first settled it. An index nobody
+        # writes to has _entries == _lastEntries == [] as soon as pass one
+        # ends, so ReportLab stops there and saves the placeholder that wrap
+        # draws while it waits for real entries -- the words "Placeholder for
+        # table of contents", in the finished document. A document with a
+        # table of contents builds twice anyway; this only makes sure the
+        # empty one gets its second pass too, where it draws nothing.
+        return super().isSatisfied() and self._buildPass > 1
+
+    def leaderFor(self, style) -> str:
+        """The string repeated to fill the gap before the page number."""
+        # The level's own stylesheet wins over the tag's attribute.
+        return getattr(style, "tocLeader", None) or self.defaultLeader
+
     def wrap(self, availWidth, availHeight):
         """All table properties should be known by now."""
-        widths = (availWidth - self.rightColumnWidth, self.rightColumnWidth)
-
-        # makes an internal table which does all the work.
         # we draw the LAST RUN's entries!  If there are
         # none, we make some dummy data to keep the table
         # from complaining
         if len(self._lastEntries) == 0:
-            _tempEntries = [(0, "Placeholder for table of contents", 0)]
+            # ReportLab's placeholder is scaffolding for the pass that has no
+            # entries yet: it holds a row's worth of space so the page count
+            # the next pass measures is close. Past that pass it is just text
+            # nobody wrote, and an index no entry names -- easy to end up with
+            # now that indexes have names -- would print it in the finished
+            # document. Table([]) raises "must have at least a row and
+            # column", so an empty index cannot be an empty table; it has to
+            # be no table at all, which is what _table = None means to the
+            # split and drawOn below.
+            if self._buildPass > 1:
+                self._table = None
+                self.width = self.height = 0
+                return 0, 0
+            _tempEntries = [(0, "Placeholder for table of contents", 0, None)]
         else:
             _tempEntries = self._lastEntries
+
+        def drawTOCEntryEnd(canvas, kind, label):  # noqa: ARG001
+            """Draw the fill and the page number after an entry's text."""
+            page, level, key = label.split(",", 2)
+            style = self.levelStyles[int(level)]
+            drawPageNumbers(
+                canvas,
+                style,
+                [(int(page), None if key == "None" else key)],
+                availWidth,
+                availHeight,
+                self.leaderFor(style),
+            )
+
+        self.canv.setNamedCB("drawTOCEntryEnd", drawTOCEntryEnd)
 
         lastMargin = 0
         tableData = []
@@ -1092,33 +1207,48 @@ class PmlTableOfContents(TableOfContents):
         ]
         for i, entry in enumerate(_tempEntries):
             level, text, pageNum = entry[:3]
-            leftColStyle = self.levelStyles[level]
+            key = entry[3] if len(entry) > 3 else None
+            style = self.levelStyles[level]
             if i:  # Not for first element
                 tableStyle.append(
-                    (
-                        "TOPPADDING",
-                        (0, i),
-                        (-1, i),
-                        max(lastMargin, leftColStyle.spaceBefore),
-                    )
+                    ("TOPPADDING", (0, i), (-1, i), max(lastMargin, style.spaceBefore))
                 )
-                # print leftColStyle.leftIndent
-            lastMargin = leftColStyle.spaceAfter
-            # right col style is right aligned
-            rightColStyle = ParagraphStyle(
-                name="leftColLevel%d" % level,
-                parent=leftColStyle,
-                leftIndent=0,
-                alignment=TA_RIGHT,
+            lastMargin = style.spaceAfter
+            # Vertical space as padding on the row, not as ReportLab's
+            # Spacer rows: adopting those would move the vertical rhythm of
+            # every table of contents that already renders.
+            # ReportLab also wraps the title in <a href="#key">, which this
+            # copy of its paragraph renderer cannot take: its link plumbing
+            # predates the (n, link) pairs paraparser now produces for <a>,
+            # and _doLink would be handed a list. The page number carries the
+            # link instead -- drawPageNumbers emits it as a canvas linkRect,
+            # clear of the paragraph entirely.
+            marker = '<onDraw name="drawTOCEntryEnd" label="%d,%d,%s"/>' % (
+                pageNum,
+                level,
+                key,
             )
-            leftPara = Paragraph(text, leftColStyle)
-            rightPara = Paragraph(str(pageNum), rightColStyle)
-            tableData.append([leftPara, rightPara])
+            tableData.append([Paragraph(text + marker, style)])
 
-        self._table = Table(tableData, colWidths=widths, style=TableStyle(tableStyle))
+        self._table = Table(
+            tableData, colWidths=(availWidth,), style=TableStyle(tableStyle)
+        )
 
         self.width, self.height = self._table.wrapOn(self.canv, availWidth, availHeight)
         return self.width, self.height
+
+    # Both of ReportLab's delegate straight to self._table, which wrap above
+    # leaves as None for an index with nothing to show.
+
+    def split(self, availWidth, availHeight):
+        if self._table is None:
+            return []
+        return super().split(availWidth, availHeight)
+
+    def drawOn(self, canvas, x, y, _sW=0) -> None:
+        if self._table is None:
+            return
+        super().drawOn(canvas, x, y, _sW)
 
 
 class PmlRightPageBreak(CondPageBreak):

@@ -7,6 +7,7 @@ from unittest import TestCase, skipIf
 from pypdf import PdfReader
 
 from xhtml2pdf.document import pisaDocument
+from xhtml2pdf.files import files_tmp
 
 from .httpserver import LocalServerMixin
 
@@ -255,6 +256,7 @@ class DocumentTest(LocalServerMixin, TestCase):
             pisaDocument(
                 src=io.StringIO(HTML_CONTENT.format(head="", extra_html=extra_html)),
                 dest=pdf_file,
+                resource_policy=self.policy,
             )
             self.assertEqual(
                 cm.output,
@@ -277,6 +279,7 @@ class DocumentTest(LocalServerMixin, TestCase):
             pisaDocument(
                 src=io.StringIO(HTML_CONTENT.format(head="", extra_html=extra_html)),
                 dest=pdf_file,
+                resource_policy=self.policy,
             )
             self.assertEqual(
                 cm.output,
@@ -510,3 +513,101 @@ class ArgumentsThatDoSomethingTest(TestCase):
             )
 
         self.assertIn("debug", str(warned.warning))
+
+
+class TemporaryFileCleanupTest(TestCase):
+    """
+    Every resource read during a build registers a NamedTemporaryFile in a
+    per-thread list, and cleanFiles() used to run at the end of _build, where
+    an exception skipped it. Each failed render then left a file descriptor
+    and a deleted-but-open inode behind for the life of the thread.
+    """
+
+    FONT = os.path.join(
+        os.path.dirname(__file__),
+        "samples",
+        "font",
+        "Noto_Sans",
+        "NotoSans-Regular.ttf",
+    )
+
+    #: Reportlab cannot lay out a line this tall, so the build raises after
+    #: the font above has been read and its temporary file registered.
+    HTML = """<html><head><style>
+        @font-face {{ font-family: probe; src: url("{font}"); }}
+        body {{ font-family: probe; }}
+        </style></head>
+        <body><p>text</p><div style="font-size:99999999pt">too tall</div></body>
+        </html>"""
+
+    def test_a_failed_build_leaves_no_temporary_file_open(self) -> None:
+        registered = []
+        original = files_tmp.append
+
+        def record(file) -> None:
+            registered.append(file)
+            original(file)
+
+        files_tmp.append = record
+        try:
+            context = pisaDocument(
+                self.HTML.format(font=self.FONT).encode(),
+                io.BytesIO(),
+                raise_exception=False,
+            )
+        finally:
+            files_tmp.append = original
+
+        self.assertTrue(context.err, "the build was meant to fail")
+        self.assertTrue(registered, "no temporary file was registered to leak")
+        self.assertEqual([], files_tmp.files)
+        for file in registered:
+            self.assertTrue(file.file.closed)
+
+
+class DocumentLanguageTest(TestCase):
+    """
+    The document's language reaches the PDF catalog as /Lang.
+
+    <html lang=""> was never even parsed -- html had no entry in TAGS -- and
+    <pdf:language> only ever fed the RTL text reshaper. Neither reached
+    ReportLab, so every document came out with no declared language, which a
+    screen reader and PDF/UA both need.
+    """
+
+    @staticmethod
+    def render(html: str):
+        dest = io.BytesIO()
+        context = pisaDocument(io.StringIO(html), dest)
+        dest.seek(0)
+        return context, PdfReader(dest).trailer["/Root"]
+
+    def test_the_html_lang_attribute(self) -> None:
+        _, root = self.render('<html lang="es-CR"><body><p>x</p></body></html>')
+
+        self.assertEqual("es-CR", root["/Lang"])
+
+    def test_the_pdf_language_tag(self) -> None:
+        _, root = self.render(
+            '<html><body><pdf:language name="fr"/><p>x</p></body></html>'
+        )
+
+        self.assertEqual("fr", root["/Lang"])
+
+    def test_a_reshaping_language_name_is_not_a_language_tag(self) -> None:
+        """
+        <pdf:language name="arabic"> selects the reshaper. "arabic" is not a
+        BCP 47 tag, so it must not be written to /Lang -- but it must still
+        reach the reshaper.
+        """
+        context, root = self.render(
+            '<html><body><pdf:language name="arabic"/><p>x</p></body></html>'
+        )
+
+        self.assertNotIn("/Lang", root)
+        self.assertEqual("arabic", context.language)
+
+    def test_no_language_declares_none(self) -> None:
+        _, root = self.render("<html><body><p>x</p></body></html>")
+
+        self.assertNotIn("/Lang", root)

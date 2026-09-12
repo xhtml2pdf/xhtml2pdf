@@ -1,10 +1,12 @@
 import io
+import time
 from unittest import TestCase
 
 from pypdf import PdfReader
 
 from xhtml2pdf import pisa
 from xhtml2pdf.util import apply_text_transform
+from xhtml2pdf.w3c.cssParser import CSSParser
 from xhtml2pdf.w3c.cssSpecial import parseSpecialRules, splitBorder
 
 
@@ -669,3 +671,47 @@ class BackgroundShorthandTest(TestCase):
             [("background-color", "red", None)],
             parseSpecialRules([("background", ["red", "fixed"], None)]),
         )
+
+
+class StringPatternBacktrackingTest(TestCase):
+    """
+    The string and escape patterns used to give the engine two ways to match
+    the same character, and inside a `*` that costs exponential time on a
+    string nobody closed: 40 backslashes in a <style> held a worker for three
+    minutes, and each further four multiplied it by eight. The three shapes
+    below are the ones that overlapped -- a bare backslash, a run of hex
+    digits after one, and the space an escape may swallow.
+    """
+
+    #: Well under what any of these costs once it backtracks, and far above
+    #: the cost of matching them once each way round.
+    BUDGET_SECONDS = 5
+
+    def assertMatchesQuickly(self, text: str) -> None:
+        start = time.monotonic()
+        CSSParser.re_string.match(text)
+        self.assertLess(time.monotonic() - start, self.BUDGET_SECONDS)
+
+    def test_an_unclosed_string_of_backslashes(self) -> None:
+        self.assertMatchesQuickly('"' + "\\" * 64)
+
+    def test_an_unclosed_string_of_hex_escapes(self) -> None:
+        self.assertMatchesQuickly('"' + "\\aaaaaaa" * 64)
+
+    def test_an_unclosed_string_of_spaced_escapes(self) -> None:
+        self.assertMatchesQuickly('"' + "\\1 " * 64)
+
+    def test_what_the_pattern_still_reads(self) -> None:
+        """The escapes above are not rejected, only matched the one way."""
+        for text, content in (
+            ('"plain"', "plain"),
+            (r'"a\41 b"', r"a\41 b"),
+            (r'"a\000041b"', r"a\000041b"),
+            (r'"back\\slash"', r"back\\slash"),
+            ("'single'", "single"),
+        ):
+            with self.subTest(text=text):
+                match = CSSParser.re_string.match(text)
+                if match is None:
+                    self.fail(f"{text} no longer reads as a string")
+                self.assertEqual(content, next(g for g in match.groups() if g))

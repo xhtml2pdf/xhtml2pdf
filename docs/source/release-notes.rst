@@ -51,6 +51,163 @@ Versions >= 0.2
     --------------------------------------------
 
 
+0.2.19
+====================
+
+Released: 2026-09-12
+
+This is primarily a security release. Read :doc:`security` before upgrading if
+you convert HTML that anyone but you wrote: the defaults changed, and an
+application that resolves its assets through ``link_callback`` will have to
+say where they live.
+
+**🔐 Security**
+
+* **A rendered document can no longer reach internal network addresses.**
+  ``<img src="http://169.254.169.254/latest/meta-data/">`` returned cloud
+  instance credentials from inside the VPC. Loopback, private, link-local,
+  multicast and reserved addresses are refused by default, on every hop of a
+  redirect chain, and a host is judged by the address it resolves to.
+* **A rendered document can no longer read arbitrary files.**
+  ``<img src="/etc/passwd">`` worked; local reads are now confined to the
+  document's own directory, symlinks and ``..`` included.
+* **The PDF viewer is no longer started through a shell.** A destination whose
+  name contained shell metacharacters was executed rather than opened
+  (CWE-78). ``startViewer`` is public API and reachable from the ``-d``
+  argument of the command line tool.
+
+  Public HTTP(S) is unaffected by any of this, and a refused resource is
+  logged rather than fatal. Callers choose their own policy with the
+  ``resource_policy`` argument of ``pisaDocument``, with ``use_policy`` around
+  a build, or on the command line with ``--resource-root``, ``--allow-host``,
+  ``--allow-private-networks``, ``--no-remote`` and ``--unsafe-resources``.
+  See :doc:`security`.
+
+* **A stylesheet can no longer hold a worker with a handful of characters.**
+  The CSS string and escape patterns each gave the regular expression engine
+  two ways to match the same character, so a string nobody closed backtracked
+  catastrophically: ``<style>a{content:"`` followed by 40 backslashes cost
+  three minutes of CPU, and every further four characters multiplied that by
+  eight.
+* **The same for a colour written as an HTML attribute.**
+  ``<td bgcolor="rgb(`` and 90 digits cost 23 seconds per attribute; the
+  pattern's three unanchored ``.*?`` are gone, and it is matched once rather
+  than twice. A channel above 255 is now clamped, as it already was for a
+  colour the parser hands over as a function.
+* **A conversion that fails no longer leaks a file descriptor.**
+  Temporary files were closed at the end of the build, where an exception
+  skipped it, so every document that failed to convert left a descriptor and
+  a deleted-but-open inode behind for the life of the thread.
+* **A fetched resource now has a size limit**, 20 MiB by default and
+  ``max_resource_bytes`` on the policy. A rendered document names the server
+  it downloads from, and nothing looked at what came back: a 203 KB response
+  declaring ``Content-Encoding: gzip`` expanded to 209 MB of resident memory,
+  and twenty ``<img>`` like it took the worker. The limit is checked against
+  the declared ``Content-Length``, against the body as it is read, and again
+  against what a gzipped body expands to.
+* **A policy built by hand no longer opens the filesystem.**
+  ``ResourceAccessPolicy``'s ``base_dir`` defaulted to ``None`` and ``None``
+  meant no confinement, so ``ResourceAccessPolicy(allowed_hosts=...)`` --
+  tightening the network rules -- silently allowed a document to read any file
+  the process could. ``base_dir`` now defaults to the working directory, as
+  ``default_policy()`` always did, and ``base_dir=None`` denies local reads
+  rather than allowing all of them. ``allow_local_outside_base=True`` is how
+  the confinement is lifted, and ``PERMISSIVE_POLICY`` and the command line
+  are unchanged.
+
+**🎉 New**
+
+* The document's language is written to the PDF catalog as ``/Lang``, from
+  ``<html lang="es-CR">`` or ``<pdf:language name="fr"/>``. Screen readers and
+  PDF/UA read the document language from there, and xhtml2pdf never declared
+  it.
+* A table of contents can fill the gap between an entry and its page number.
+  ``-pdf-toc-leader`` takes ``none`` (the default), ``space``, ``dots``,
+  ``dashes``, ``line``, or any other string to repeat; ``<pdf:toc
+  leader="dots" />`` sets it for the whole table and a ``.pdftoclevelN`` rule
+  for one level. See :doc:`reference/html`.
+* A document can have more than one table of contents. ``<pdf:toc
+  name="figures" />`` takes only the entries that name it with
+  ``-pdf-toc-name: figures``, so a list of figures or of tables can sit beside
+  the general contents, each with its own fill and typography. An entry
+  belongs to exactly one of them. A second ``<pdf:toc>`` used to fail the
+  whole render. See :doc:`reference/html`.
+
+**🐛 Bug-Fixes**
+
+* A table of contents with no entries printed ReportLab's internal
+  ``Placeholder for table of contents`` into the finished document.
+* ``--start-viewer`` works on Linux. It ran the macOS ``open`` everywhere
+  that was not Windows, so it had never done anything there.
+* A list item whose content is wrapped in a block keeps its marker.
+  ``<li><p>text</p></li>``, which is what rich-text editors emit, lost its
+  bullet or number, and so did every other shape a block inside an item can
+  take: two blocks in one item, an item followed by a nested list, and an item
+  wrapping its text in anything other than ``<p>`` or ``<div>``. A wrapped
+  item still hangs under its first line, and ``<li>text<p>block</p></li>`` now
+  puts the block on its own line as a browser does.
+* ``getSize`` no longer warns ``Not a float '100%'`` for a perfectly valid
+  percentage. The value it returned was already correct.
+* A table of contents lays its page numbers out flush right, links each one
+  to the heading it names, and indents each level. The numbers used to stop an
+  inch short of the margin, and a long entry ran into its own page number.
+
+**💪🏼 Improvements**
+
+* **Resolving CSS no longer scans every rule for every property.** Dressing an
+  element cost O(elements x properties x rules), which was 30-48% of a render
+  and grew with the size of the stylesheet. Rules are now filed under the
+  condition an element has to meet, the whole cascade is resolved in one walk
+  per element, and the warning that ran on every attribute lookup moved behind
+  ``XHTML2PDF_CHECK_CSS_PROPERTIES``. A document of 800 elements against 800
+  rules went from 3649 to 392 ms; ``test-loremipsum`` from 408 to 224 ms. What
+  comes out is unchanged.
+* **An embedded font is parsed once per process rather than once per
+  document.** Building a ReportLab ``TTFont`` reads and parses the whole file --
+  7 ms for a Latin face, 70 ms for a CJK one, once per declared weight -- and
+  ReportLab discarded the result when the name was already registered, so from
+  the second document onwards the work was thrown away on arrival. Across a
+  gallery of 40 real documents rendered in one process, time inside ``TTFont``
+  went from 3.23s to 0s. A process that converts a single file still parses
+  each font once, because it has to.
+* ``use_policy`` around a build is honoured, so a renderer with several entry
+  points can set a resource policy once instead of passing it to every call.
+  The order is the ``resource_policy`` argument, then the surrounding block,
+  then the default.
+* ``<pdf:toc class="...">`` keeps its own classes, so the tag can be styled
+  with ``pdftoc.compact.pdftoclevel0``. The level classes no longer leak into
+  the rest of the document either.
+* The vendored copy of ReportLab's paragraph renderer understands ``<onDraw>``
+  again.
+
+**📘 Documentation**
+
+* New :doc:`security` page: what to think about when the markup is not yours,
+  the policy options, and how to report a vulnerability.
+* The Django example in :doc:`advanced-usage` shows the policy that names
+  ``STATIC_ROOT`` and ``MEDIA_ROOT``. Without it that example loses every
+  image.
+* The Python reference documents ``resource_policy``; the CLI reference
+  documents the five resource flags.
+* :doc:`reference/html` documents the document language -- what ``<html
+  lang>`` and ``<pdf:language>`` each do, and which of the two reaches
+  ``/Lang``. :doc:`security` documents the two ready-made policies,
+  ``default_policy()`` and ``PERMISSIVE_POLICY``, and what a refused resource
+  does to a render.
+* ``make devsetup`` builds the development environment in one step: a
+  virtualenv, an editable install with the ``test``, ``docs`` and ``release``
+  extras, and the pre-commit hooks. The README told contributors to ask for a
+  ``build`` extra, which does not exist; the one that brings in ``build`` and
+  ``twine`` is ``release``.
+
+**🧹 Cleanup**
+
+* ``pisaContext.cssAttr`` is declared in ``__init__`` rather than appearing
+  from the first ``CSSCollect``.
+
+--------------------------------------------
+
+
 0.2.18
 ====================
 
@@ -279,7 +436,7 @@ Released: 2023-11-08
 
 
 0.2.11
-=======
+======
 
 Released: 2023-06-07
 

@@ -16,6 +16,7 @@ Contents
    :maxdepth: 2
 
    quickstart
+   security
    release-notes
 
 .. toctree::
@@ -23,6 +24,7 @@ Contents
    :maxdepth: 2
 
    format_html
+   advanced-usage
    https_options
    graphics
    encryption_and_signatures

@@ -34,8 +34,22 @@ import xhtml2pdf.default
 
 log = logging.getLogger(__name__)
 
+#: An rgb()/rgba() written out as text, as an HTML attribute delivers it
+#: (`<td bgcolor="rgb(1, 2, 3)">`); the parser hands a CSS one over as a
+#: function object, which :func:`_rgbFunctionColor` reads instead.
+#:
+#: Anchored at both ends, with separators that cannot also match a channel.
+#: Both matter: an unanchored `.*?` beside a class that accepts the same
+#: characters can divide one value many ways, and a value with no closing
+#: paren then backtracks catastrophically -- `rgb(` followed by 90 digits
+#: costs tens of seconds of CPU, well inside the 100-character limit below.
 rgb_re = re.compile(
-    r"^.*?rgb[a]?[(]([0-9]+).*?([0-9]+).*?([0-9]+)(?:.*?(?:[01]\.(?:[0-9]+)))?[)].*?[ ]*$"
+    # `[^(]*` rather than `.*?`: the leading text is still tolerated -- a
+    # function object's repr, "<css function: rgb(255,0,0)>", reaches here as
+    # a string -- but it cannot cross the opening paren, so there is only one
+    # place it can end.
+    r"^[^(]*rgba?\(\s*(\d{1,3})[\s,]+(\d{1,3})[\s,]+(\d{1,3})"
+    r"(?:[\s,/]+[\d.]+%?)?\s*\).*$"
 )
 
 #: The number in one argument of a colour function. A percentage argument
@@ -235,13 +249,9 @@ def getColor(value, default=None):
         return COLOR_BY_NAME[value]
     if value.startswith("#") and len(value) == 4:
         value = "#" + value[1] + value[1] + value[2] + value[2] + value[3] + value[3]
-    elif rgb_re.match(value):
-        # Use match instead of search to ensure proper regex usage and limit to valid patterns
-        try:
-            r, g, b = (int(x) for x in rgb_re.match(value).groups())
-            value = f"#{r:02x}{g:02x}{b:02x}"
-        except ValueError:
-            pass
+    elif rgb_match := rgb_re.match(value):
+        r, g, b = (min(255, int(x)) for x in rgb_match.groups())
+        value = f"#{r:02x}{g:02x}{b:02x}"
     else:
         # Shrug
         pass
@@ -476,6 +486,12 @@ def getSize(
             return float(value[:-2].strip()) * DPI96
         if value in {"none", "0", "0.0", "auto"}:
             return 0.0
+        if value.endswith("%"):
+            # 1% = (relative * 1) / 100. Outside the `if relative:` block
+            # below: with no base to be a percentage of the answer is 0.0
+            # either way, but reaching float("100%") logged "getSize: Not a
+            # float '100%'", which reads like a stylesheet error and is not one.
+            return (relative * float(value[:-1].strip())) / 100.0
         if relative:
             if value.endswith("rem"):  # XXX
                 # 1rem = 1 * fontSize
@@ -486,9 +502,6 @@ def getSize(
             if value.endswith("ex"):  # XXX
                 # 1ex = 1/2 fontSize
                 return float(value[:-2].strip()) * (relative / 2.0)
-            if value.endswith("%"):
-                # 1% = (fontSize * 1) / 100
-                return (relative * float(value[:-1].strip())) / 100.0
             if value in {"normal", "inherit"}:
                 return relative
             if value in RELATIVE_SIZE_TABLE:
@@ -809,6 +822,79 @@ def getBool(s):
 def getFloat(s):
     with contextlib.suppress(Exception):
         return float(s)
+
+
+#: The named fill patterns a table of contents can draw between an entry and
+#: its page number, mapped to the string that is repeated to draw them. The
+#: names are LibreOffice's ("carácter de relleno": none, dots, dashes, lines).
+#: `dots` is a solid run rather than ReportLab's spaced " . " default, because
+#: that is what a printed table of contents looks like.
+TOC_LEADERS: dict[str, str] = {
+    "none": "",
+    "space": " ",
+    "dots": ".",
+    "dashes": "-",
+    "line": "_",
+}
+
+
+def getTocLeader(value) -> str:
+    """
+    The string a table of contents repeats to fill the gap before a page number.
+
+    One of the names in TOC_LEADERS, or any other string to repeat as it is,
+    so a document can ask for a fill the names do not cover::
+
+        -pdf-toc-leader: dots;
+        -pdf-toc-leader: "\u00b7 ";
+
+    Anything unrecognised is the fill rather than an error: the CSS engine has
+    already stripped the quotes by the time this runs, so a pattern and a
+    misspelt keyword arrive looking exactly alike, and refusing both would
+    make the quoted form unreachable. A typo shows up as itself on the page.
+    """
+    raw = str(value)
+    # A quoted value should not reach here, but an inline style might not go
+    # through the same parsing, so unwrap one rather than fill with quotes.
+    stripped = raw.strip()
+    if len(stripped) > 1 and stripped[0] == stripped[-1] and stripped[0] in {'"', "'"}:
+        return stripped[1:-1]
+    named = TOC_LEADERS.get(stripped.lower())
+    # Returned unstripped: a pattern's own spacing is the point of writing
+    # one, and "\u00b7 " must not come back as "\u00b7".
+    return raw if named is None else named
+
+
+def getTocName(value) -> str:
+    """
+    The name that binds an entry to one table of contents.
+
+    Read from both sides of the binding -- ``<pdf:toc name="Figures">`` and
+    ``-pdf-toc-name: figures`` -- so that the two cannot fail to meet over a
+    capital letter or a stray space. There is no diagnostic for a name that
+    almost matches: the entry simply goes nowhere.
+    """
+    if value is None:
+        return ""
+    stripped = str(value).strip()
+    # As in getTocLeader: the CSS engine strips the quotes, an inline style
+    # may not, and a name is never meant to contain them.
+    if len(stripped) > 1 and stripped[0] == stripped[-1] and stripped[0] in {'"', "'"}:
+        stripped = stripped[1:-1].strip()
+    return stripped.lower()
+
+
+def getTocNameClass(name: str) -> str:
+    """
+    The class ``addTOC`` adds to a named table of contents, for author CSS.
+
+    ``figures`` becomes ``idx-figures``, so a stylesheet can reach one index
+    of several with ``pdftoc.idx-figures.pdftoclevel0``. Anything a selector
+    cannot carry collapses to a dash, which keeps a name with a space in it
+    styleable rather than silently unreachable.
+    """
+    slug = re.sub(r"[^a-z0-9_-]+", "-", name.lower()).strip("-")
+    return f"idx-{slug}" if slug else ""
 
 
 #: The modes reportlab's KeepInFrame understands. "shrink" is the fallback
