@@ -436,13 +436,19 @@ def drawBoxBackground(canvas, x: float, y: float, w: float, h: float, style) -> 
             )
 
 
-def drawBoxBorders(canvas, x: float, y: float, w: float, h: float, style) -> None:
+_BOX_SIDES = ("Left", "Right", "Top", "Bottom")
+
+
+def drawBoxBorders(
+    canvas, x: float, y: float, w: float, h: float, style, sides=_BOX_SIDES
+) -> None:
     """
-    Stroke the four borders of a box, each with its own style, width and colour.
+    Stroke the borders of a box, each side with its own style, width and colour.
 
     ReportLab only knows a uniform border, so every side is drawn by hand. A
     side with no colour takes the text colour, as W3C defines. `style` is read
-    by attribute name like drawBoxBackground's.
+    by attribute name like drawBoxBackground's. `sides` names the edges to
+    draw: a box cut by a line or page break has none at the cut.
     """
     text_color = getattr(style, "textColor", None)
     canvas.saveState()
@@ -452,6 +458,8 @@ def drawBoxBorders(canvas, x: float, y: float, w: float, h: float, style) -> Non
         ("Top", (x, y + h, x + w, y + h)),
         ("Bottom", (x, y, x + w, y)),
     ):
+        if side not in sides:
+            continue
         color = getattr(style, f"border{side}Color", None)
         if color is None:
             color = text_color

@@ -25,7 +25,13 @@ from html5lib import treebuilders
 from reportlab.platypus.doctemplate import FrameBreak, NextPageTemplate
 from reportlab.platypus.flowables import KeepInFrame, PageBreak
 
-from xhtml2pdf.builders.flex import FlexData, InlineBoxData, clear_box
+from xhtml2pdf.builders.flex import (
+    BoxStyle,
+    FlexData,
+    InlineBoxData,
+    clear_box,
+    inline_box_markers,
+)
 from xhtml2pdf.default import (
     BOOL,
     BOX,
@@ -46,6 +52,7 @@ from xhtml2pdf.properties import (
     PROPERTY_NAMES,
     SUPPORTED_PROPERTIES,
     CSSAttrs,
+    UniformGroup,
     apply_uniform_groups,
     reset_non_inherited,
 )
@@ -109,6 +116,7 @@ from xhtml2pdf.util import (
     getColor,
     getDisplay,
     getKeepInFrameMode,
+    getLengthOrAuto,
     getPos,
     getSize,
     toList,
@@ -681,6 +689,107 @@ def CSS2Frag(c, kw, isBlock):
             )
 
 
+#: The declarations that give an inline element a box of its own. Written
+#: out in full so the registry check in the tests can see each name.
+_INLINE_BOX_PROPERTIES = (
+    "padding-left",
+    "padding-right",
+    "padding-top",
+    "padding-bottom",
+    "border-left-style",
+    "border-right-style",
+    "border-top-style",
+    "border-bottom-style",
+    "background-image",
+    "margin-left",
+    "margin-right",
+)
+
+
+#: Inline elements that are not text: an image or a barcode is one word of
+#: its own height, and a box drawn to the line's ascent and descent would
+#: not fit it. They keep ignoring padding, borders and side margins.
+_REPLACED_INLINE_TAGS = frozenset({"img", "br", "hr", "pdfbarcode"})
+
+
+def declaresInlineBox(context, tagName: str) -> bool:
+    if tagName in _REPLACED_INLINE_TAGS:
+        return False
+    return any(name in context.cssAttr for name in _INLINE_BOX_PROPERTIES)
+
+
+#: The block groups that make an element's box: padding and borders, without
+#: the text-indent and vertical margins that travel with them for a block.
+_INLINE_BOX_GROUPS = tuple(
+    UniformGroup(group.convert, group.relative_to_font_size, pairs)
+    for group in FRAG_BLOCK_GROUPS
+    if (
+        pairs := tuple(
+            pair for pair in group.pairs if pair[0].startswith(("padding", "border"))
+        )
+    )
+)
+
+
+def _stripInlineBox(frag) -> None:
+    """Take the padding and borders off an inline element's frag again."""
+    for side in ("Left", "Right", "Top", "Bottom"):
+        setattr(frag, f"padding{side}", 0)
+        setattr(frag, f"border{side}Width", 0)
+        setattr(frag, f"border{side}Style", None)
+        setattr(frag, f"border{side}Color", None)
+
+
+def inlineBoxMarkers(context):
+    """
+    The pair of frags that carry an inline element's box, or None.
+
+    CSS2Frag reads padding, borders and background images for blocks only.
+    An inline element that declares them gets them applied here, taken off
+    its frag again so that its text does not paint them, and carried by a
+    marker on either side of the content instead. A declaration that adds
+    up to nothing -- a reset such as `* { padding: 0 }` -- is no box: the
+    text goes on painting its own background colour, as before.
+    """
+    frag = context.frag
+    cssAttr = context.cssAttr
+    backColor = frag.backColor
+    apply_uniform_groups(frag, cssAttr, _INLINE_BOX_GROUPS)
+    style = BoxStyle(frag)
+    _stripInlineBox(frag)
+    # The frag is a clone of its parent's: only the element's own image counts.
+    style.backgroundImage = None
+    if "background-image" in cssAttr:
+        # `none` is a keyword, not a filename.
+        image = cssAttr["background-image"]
+        style.backgroundImage = (
+            None if str(image).strip().lower() == "none" else context.getFile(image)
+        )
+    if "background-repeat" in cssAttr:
+        style.backgroundRepeat = lower(cssAttr["background-repeat"])
+    if "background-position" in cssAttr:
+        style.backgroundPosition = " ".join(
+            str(part) for part in toList(cssAttr["background-position"])
+        )
+    size = frag.fontSize
+    margins = tuple(
+        (
+            getLengthOrAuto(cssAttr[name], size).resolve(None) or 0.0
+            if name in cssAttr
+            else 0.0
+        )
+        for name in ("margin-left", "margin-right")
+    )
+    if not (
+        style.horizontal or style.vertical or style.backgroundImage or any(margins)
+    ):
+        return None
+    # The box paints the background; the words inside it must not.
+    frag.backColor = None
+    style.backColor = backColor
+    return inline_box_markers(frag, style, margins)
+
+
 def pisaPreLoop(node, context, *, collect=False):
     """Collect all CSS definitions."""
     data = ""
@@ -895,6 +1004,20 @@ def pisaLoop(node, context, **kw):
             inlineBox = InlineBoxData(context, context.frag, context.cssAttr)
             kw["margin-left"] = kw["margin-right"] = 0
 
+        # An inline element with a box of its own: padding, borders, a
+        # background image or side margins, carried by a marker frag on
+        # either side of the content.
+        inlineBoxClose = None
+        if (
+            display == Display.INLINE
+            and not isBlock
+            and declaresInlineBox(context, node.tagName)
+        ):
+            markers = inlineBoxMarkers(context)
+            if markers is not None:
+                inlineBoxOpen, inlineBoxClose = markers
+                context.fragList.append(inlineBoxOpen)
+
         # Tag specific operations
         if klass is not None:
             obj = klass(node, attr)
@@ -924,6 +1047,9 @@ def pisaLoop(node, context, **kw):
 
         if inlineBox is not None:
             inlineBox.close(context)
+
+        if inlineBoxClose is not None:
+            context.fragList.append(inlineBoxClose)
 
         # Block?
         if isBlock:

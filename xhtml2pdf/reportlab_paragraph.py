@@ -21,7 +21,7 @@ from reportlab.platypus.flowables import Flowable
 from reportlab.platypus.paraparser import ParaParser
 from reportlab.rl_settings import _FUZZ
 
-from xhtml2pdf.util import getSize
+from xhtml2pdf.util import drawBoxBackground, drawBoxBorders, getSize
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -168,6 +168,30 @@ _56 = 5.0 / 6
 _16 = 1.0 / 6
 
 
+def _flush_text_object(tx, x0, cur_y):
+    """
+    Write what the text object holds so far to the canvas, and start it again.
+
+    PDFTextObject buffers its operators until canvas.drawText, so anything
+    drawn on the canvas mid-line would land in the stream *before* the
+    line's text. Closing the block here (BT ... ET) and opening a new one
+    keeps the stream in reading order. Only the text matrix has to be set
+    again: font, spacing, rise and colour are part of the graphics state and
+    survive an ET.
+    """
+    if not any(" Tj" in op or " TJ" in op for op in tx._code):
+        # Nothing shown yet: the text object can go on as it is, and what it
+        # shows later lands after the canvas drawing anyway.
+        return
+    tx._code.append("ET")
+    tx._canvas._code.append(" ".join(tx._code))
+    tx._code = ["BT"]
+    tx.setTextOrigin(x0, cur_y)
+    # The decorations _do_post_text paints between two blocks set the fill
+    # colour without restoring it; the next run of text must say its own.
+    tx.XtraState.textColor = None
+
+
 def _putFragLine(cur_x, tx, line):
     xs = tx.XtraState
     cur_y = xs.cur_y
@@ -215,6 +239,19 @@ def _putFragLine(cur_x, tx, line):
     ws = getattr(tx, "_wordSpace", 0)
     nSpaces = 0
     words = line.words
+
+    # Where this line begins in the page's stream. Its decorations are
+    # painted once the line is done, and go in here, under its text.
+    xs.lineCodeStart = len(tx._canvas._code)
+
+    # An inline box left open by the previous line carries on from the start
+    # of this one, without a left edge: CSS box-decoration-break: slice.
+    xs.lineAscent = getattr(line, "ascent", xs.style.fontSize)
+    xs.lineDescent = getattr(line, "descent", -0.2 * xs.style.fontSize)
+    for box in xs.inlineBoxes:
+        box.x = cur_x
+        box.first = False
+
     for f in words:
         if hasattr(f, "cbDefn"):
             cbDefn = f.cbDefn
@@ -253,10 +290,9 @@ def _putFragLine(cur_x, tx, line):
                 setXPos(tx, cur_x_s - tx._x0)
             elif kind == "box":
                 # An inline-block: a flowable that is one word of the line.
-                # Drawing on the canvas while the text object is open is
-                # safe -- PDFTextObject buffers its operators until drawText,
-                # so the box's own text lands before this line's, not inside
-                # it -- and the two do not overlap.
+                # The text so far goes to the canvas first, then the box,
+                # then the line carries on in a fresh text object, so the
+                # box's own text sits between its neighbours in the stream.
                 w = cbDefn.width
                 h = cbDefn.height
                 txfs = tx._fontsize
@@ -264,9 +300,32 @@ def _putFragLine(cur_x, tx, line):
                     txfs = xs.style.fontSize
                 iy0, iy1 = imgVRange(h, cbDefn.valign, txfs)
                 cur_x_s = cur_x + nSpaces * ws
+                _flush_text_object(tx, x0, cur_y)
                 cbDefn.flowable.drawOn(tx._canvas, cur_x_s, cur_y + iy0)
                 cur_x += w
                 cur_x_s += w
+                setXPos(tx, cur_x_s - tx._x0)
+            elif kind == "inlineBox":
+                # The edge of an inline element with a box of its own. The
+                # open edge notes where the box starts; the close edge turns
+                # it into a span for _do_post_text to paint. Both advance the
+                # line by the padding and border they carry.
+                cur_x_s = cur_x + nSpaces * ws
+                if cbDefn.edge == "open":
+                    # A box reopened after a page break has no left edge.
+                    xs.inlineBoxes.append(
+                        ABag(
+                            style=cbDefn.style,
+                            x=cur_x_s + cbDefn.inset,
+                            first=not getattr(cbDefn, "continued", False),
+                        )
+                    )
+                elif xs.inlineBoxes:
+                    box = xs.inlineBoxes.pop()
+                    x2 = cur_x_s + cbDefn.advance - cbDefn.inset
+                    xs.inlineBoxSpans.append((box.x, x2, box.style, box.first, True))
+                cur_x += cbDefn.advance
+                cur_x_s += cbDefn.advance
                 setXPos(tx, cur_x_s - tx._x0)
             else:
                 name = cbDefn.name
@@ -417,6 +476,11 @@ def _putFragLine(cur_x, tx, line):
 
     if xs.link:
         xs.links.append((xs.link_x, cur_x_s, xs.link, xs.linkColor))
+
+    # Boxes still open run to the end of the line, without a right edge.
+    for box in xs.inlineBoxes:
+        xs.inlineBoxSpans.append((box.x, cur_x_s, box.style, box.first, False))
+
     if tx._x0 != x0:
         setXPos(tx, x0 - tx._x0)
 
@@ -549,7 +613,11 @@ def _getFragWords(frags, *, reverse=False):
                     n = 0
                 R.append([w, (f, "")])
             else:
+                # A marker rides along with the word it sits in. An inline
+                # box's edge brings its padding and border with it: no word of
+                # its own, but width the line breaker has to count.
                 W.append((f, ""))
+                n += getattr(f.cbDefn, "advance", 0)
         elif hasattr(f, "lineBreak"):
             # pass the frag through.  The line breaker will scan for it.
             if W != []:
@@ -604,6 +672,45 @@ def _split_blParaHard(blPara, start: int, stop: int) -> list:
                     if g.text[-1] != " ":
                         g.text += " "
     return f
+
+
+def _reopen_inline_boxes(lines) -> list:
+    """
+    Open markers for the inline boxes `lines` leave unclosed.
+
+    When a paragraph is split between pages, the marker that opened a box
+    stays in the first part and its close marker goes to the second, so the
+    second part would paint no box until the close marker popped an empty
+    stack. These lead the second part's frags instead: the same box, with
+    no left edge and nothing to advance the line by, since the padding and
+    border of the open edge were paid on the first page.
+    """
+    unclosed = []
+    for line in lines:
+        for word in getattr(line, "words", ()):
+            cbDefn = getattr(word, "cbDefn", None)
+            if cbDefn is None or getattr(cbDefn, "kind", None) != "inlineBox":
+                continue
+            if cbDefn.edge == "open":
+                unclosed.append(word)
+            elif unclosed:
+                unclosed.pop()
+    reopened = []
+    for marker in unclosed:
+        # clone() without arguments keeps the cbDefn object itself, and the
+        # first page's marker must go on carrying its edge.
+        carrier = marker.clone()
+        carrier.text = ""
+        carrier.cbDefn = ABag(
+            kind="inlineBox",
+            edge="open",
+            style=marker.cbDefn.style,
+            advance=0.0,
+            inset=0.0,
+            continued=True,
+        )
+        reopened.append(carrier)
+    return reopened
 
 
 def _drawBullet(canvas, offset, cur_y, bulletText, style):
@@ -793,6 +900,30 @@ def _do_post_text(tx):
     ff = 0.125 * f.fontSize
     y0 = xs.cur_y
     y = y0 - ff
+    canvas_code = tx._canvas._code
+    mark = len(canvas_code)
+
+    # Inline boxes: padding, border and background around the line's
+    # ascent and descent. CSS 2.1 10.8: they do not change the line's
+    # height, so a tall padding overlaps the neighbouring lines, as in a
+    # browser. A box cut by a line break has no edge at the cut.
+    for x1, x2, box_style, first, last in getattr(xs, "inlineBoxSpans", ()):
+        top = y0 + xs.lineAscent + box_style.paddingTop + box_style.border("Top")
+        bottom = (
+            y0 + xs.lineDescent - box_style.paddingBottom - box_style.border("Bottom")
+        )
+        sides = ["Top", "Bottom"]
+        if first:
+            sides.append("Left")
+        if last:
+            sides.append("Right")
+        if box_style.backColor or box_style.backgroundImage:
+            drawBoxBackground(tx._canvas, x1, bottom, x2 - x1, top - bottom, box_style)
+        if any(box_style.border(side) for side in sides):
+            drawBoxBorders(
+                tx._canvas, x1, bottom, x2 - x1, top - bottom, box_style, sides=sides
+            )
+    xs.inlineBoxSpans = []
 
     # Background
     for x1, x2, c, fs in xs.backgrounds:
@@ -838,6 +969,16 @@ def _do_post_text(tx):
     xs.links = []
     xs.link = None
     xs.linkColor = None
+
+    # Everything painted here goes under the line's text. The text object is
+    # written to the stream in blocks -- one more each time something is
+    # drawn in the middle of a line -- so the decorations, which are known
+    # only now, are moved back to where the line began.
+    start = getattr(xs, "lineCodeStart", None)
+    if start is not None and start < mark < len(canvas_code):
+        painted = canvas_code[mark:]
+        del canvas_code[mark:]
+        canvas_code[start:start] = painted
     xs.cur_y -= leading
 
 
@@ -1241,7 +1382,11 @@ class Paragraph(Flowable):
         if style.firstLineIndent != 0:
             style = deepcopy(style)
             style.firstLineIndent = 0
-        P2 = type(self)(None, style, bulletText=None, frags=func(blPara, s, n))
+        frags = func(blPara, s, n)
+        if blPara.kind == 1:
+            # XXX Modified for XHTML2PDF: inline boxes open at the cut
+            frags = _reopen_inline_boxes(blPara.lines[:s]) + frags
+        P2 = type(self)(None, style, bulletText=None, frags=frags)
         for a in (
             "autoLeading",  # possible attributes that might be directly on self.
         ):
@@ -1420,8 +1565,9 @@ class Paragraph(Flowable):
                                 if cbDefn and not getattr(cbDefn, "width", 0):
                                     i -= 1
                                     continue
-                                if not wi.text.endswith(" "):
-                                    wi.text += " "
+                                space = " " if isinstance(wi.text, str) else b" "
+                                if not wi.text.endswith(space):
+                                    wi.text += space
                                 break
                         else:
                             space = " " if isinstance(g.text, str) else b" "
@@ -1797,6 +1943,11 @@ class Paragraph(Flowable):
                 xs.strikeFontSize = None
                 xs.links = []
                 xs.link = None
+                # XXX Modified for XHTML2PDF: inline boxes, open across lines
+                xs.inlineBoxes = []
+                xs.inlineBoxSpans = []
+                xs.lineAscent = 0
+                xs.lineDescent = 0
                 xs.leading = style.leading
                 xs.leftIndent = leftIndent
                 tx._leading = None

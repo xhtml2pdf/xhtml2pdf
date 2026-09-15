@@ -119,8 +119,8 @@
         "xhtml2pdf": 1
       },
       "ssim": 0.9563,
-      "text": 0.7236,
-      "text_doc": 0.7236
+      "text": 1.0,
+      "text_doc": 1.0
     },
     "inline-block-nested": {
       "pages": {
@@ -129,6 +129,19 @@
       "ssim": 0.9792,
       "text": 1.0,
       "text_doc": 1.0
+    },
+    "inline-box": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9054,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "inline-box-pagebreak": {
+      "pages": {
+        "xhtml2pdf": 2
+      }
     },
     "list-blocks": {
       "pages": {
@@ -182,7 +195,7 @@
       "pages": {
         "xhtml2pdf": 1
       },
-      "ssim": 0.9073,
+      "ssim": 0.9207,
       "text": 1.0,
       "text_doc": 1.0
     },

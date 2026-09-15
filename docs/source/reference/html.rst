@@ -192,6 +192,28 @@ Differences from a browser:
    block around a ``display: flex`` element.
 -  An inline block does not work as a list marker.
 
+.. _inline-box:
+
+Inline boxes
+------------
+
+An inline element -- a ``<span>``, an ``<a>``, a ``<b>`` -- with
+``padding``, a ``border``, a ``background-image`` or a ``margin-left``/
+``margin-right`` of its own is drawn as a box around its text, in the
+line, the way a browser draws it: the padding and the border widen the
+line, the box is painted under the text, and a box cut by a line break
+or a page break goes on from the start of the next line with no edge at
+the cut (``box-decoration-break: slice``). A ``background-color`` alone
+is still painted behind each word, as before.
+
+Differences from a browser:
+
+-  Vertical padding and borders do not change the height of the line, as
+   CSS 2.1 section 10.8 says; a tall padding overlaps the lines above
+   and below.
+-  ``margin-top`` and ``margin-bottom`` do nothing on an inline element,
+   as in a browser.
+
 Selectors
 ---------
 

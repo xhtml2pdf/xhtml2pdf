@@ -1080,6 +1080,34 @@ def inline_box_frag(frag, box: InlineBox, valign="baseline"):
     return carrier
 
 
+def inline_box_markers(frag, style: BoxStyle, margins=(0.0, 0.0)):
+    """
+    The two frags that mark where an inline element's box opens and closes.
+
+    An inline element with padding, borders or a background of its own is
+    not a box the paragraph knows about: its text is frags like any other.
+    These markers ride along with the words on either side (zero width in
+    _getFragWords, plus the `advance` they carry) and _putFragLine turns the
+    stretch between them, line by line, into a box for _do_post_text to
+    paint. `inset` is the margin: it advances the line but is outside the
+    box. Built like inline_box_frag, with a clone that keeps its cbDefn.
+    """
+    left, right = margins
+
+    def marker(edge: str, advance: float, inset: float):
+        carrier = frag.clone()
+        carrier.text = ""
+        carrier.cbDefn = ABag(
+            kind="inlineBox", edge=edge, style=style, advance=advance, inset=inset
+        )
+        return carrier
+
+    return (
+        marker("open", left + style.content_left, left),
+        marker("close", style.paddingRight + style.border("Right") + right, right),
+    )
+
+
 #: The vertical-align keywords imgVRange understands; anything else is a
 #: length, which it takes as a raise in points.
 _VALIGN_KEYWORDS = frozenset(

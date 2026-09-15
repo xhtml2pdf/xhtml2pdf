@@ -206,19 +206,31 @@ class InlineBlockRenderTest(TestCase):
         for word in ("ALPHA", "BETA", "GAMMA"):
             self.assertIn(word, text)
 
+    def test_the_box_text_is_written_between_its_neighbours(self) -> None:
+        # The paragraph's text object used to be written whole at the end of
+        # the paragraph, after everything drawn inside the line, so a box's
+        # text came first in the stream and text extraction read it first.
+        page = self._render(f"<p>ALPHA <span style='{BOX}'>BETA</span> GAMMA</p>")
+        content = page.get_contents().get_data().decode("latin-1")
+        shown = [t for t in re.findall(r"\((.*?)\)\s*Tj", content) if t.strip()]
+        order = [next(w for w in ("ALPHA", "BETA", "GAMMA") if w in t) for t in shown]
+        self.assertEqual(["ALPHA", "BETA", "GAMMA"], order)
+
     def test_form_controls_share_the_line(self) -> None:
         page = self._render(
             "<p>Name: <input type='text' name='n'/> Pick: <select name='s'>"
             "<option value='a' selected='selected'>A</option></select> end</p>"
         )
-        lines = []
+        runs = []
 
-        def visitor(text, _cm, _tm, _font, _size) -> None:
+        def visitor(text, cm, tm, _font, _size) -> None:
             if text.strip():
-                lines.append(text.strip())
+                runs.append((text.strip(), round(cm[5] + tm[5], 1)))
 
         page.extract_text(visitor_text=visitor)
-        # pypdf hands over one run per line: the whole thing is one run.
-        (line,) = lines
-        self.assertTrue(line.startswith("Name:"))
-        self.assertTrue(line.endswith("end"))
+        # The line is several runs, one on each side of a control, and they
+        # all sit on the same baseline.
+        self.assertEqual(1, len({y for _text, y in runs}))
+        joined = " ".join(text for text, _y in runs)
+        self.assertTrue(joined.startswith("Name:"))
+        self.assertTrue(joined.endswith("end"))

@@ -73,6 +73,12 @@ Unreleased.
   ``vertical-align`` like an inline image. Form controls -- ``<input>``,
   ``<select>``, ``<textarea>`` -- are inline blocks by default and sit in
   the line instead of each closing the paragraph it was in.
+* **Inline boxes.** An inline element with ``padding``, a ``border``, a
+  ``background-image`` or side margins is drawn as a box around its text,
+  in the line: the padding widens the line, the box is painted under the
+  words, and one cut by a line break or a page break goes on from the
+  next line without an edge at the cut. Before this, padding and borders
+  on a ``<span>`` were ignored.
 
 **💪🏼 Improvements**
 

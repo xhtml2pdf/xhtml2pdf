@@ -273,13 +273,25 @@ does (text_doc is recorded at 1.0)."""
 compare = ["pages", "text", "ssim"]
 notes = """display: inline-block inside paragraphs: badges with padding and a \
 background, a fixed-width box, a tall empty box with vertical-align: bottom, and \
-a badge near a line end. Known differences: the box's baseline is its bottom \
-edge in xhtml2pdf, its last line's baseline in a browser; and the text score is \
-low because a box's text is written to the page before its line's text -- the \
-paragraph's text object is buffered until the line is done -- so the reading \
-order of the extracted text is not the document's."""
+a badge near a line end. Known difference: the box's baseline is its bottom \
+edge in xhtml2pdf, its last line's baseline in a browser."""
 
 [fixtures.inline-block-nested]
 compare = ["pages", "text", "ssim"]
 notes = """A flex row inside an inline-block, which is how xhtml2pdf writes \
 inline-flex: the container always takes the full width of the box it is in."""
+
+[fixtures.inline-box]
+compare = ["pages", "text", "ssim"]
+notes = """display: inline with a box of its own: spans with padding, border \
+and background inside a line, one with side margins, one nested in another, and \
+one cut by a line break, which continues on the next line with no edge at the \
+cut (box-decoration-break: slice)."""
+
+[fixtures.inline-box-pagebreak]
+compare = ["pages"]
+notes = """A padded, bordered span of a page and a half: the box is open at \
+the bottom of page 1 and carries on, without a left edge, at the top of page 2. \
+line-height is pinned so both engines fit about the same number of lines on a \
+page. Only the page count is compared: where exactly the paragraph breaks still \
+depends on the engine's line breaking, so the per-page text does not line up."""
