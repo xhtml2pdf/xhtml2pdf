@@ -969,7 +969,9 @@ class pisaTagPDFBARCODE(pisaTag):
         checksum: int = int(attr.checksum)
         barWidth: float = attr.barwidth or 0.01 * inch
         barHeight: float = attr.barheight or 0.5 * inch
-        fontName: str = c.getFontName("OCRB10,OCR-B,OCR B,OCRB")  # or "Helvetica"
+        # Asked for on the chance the document embedded it; Helvetica is the
+        # intended answer when it did not, so this one does not warn.
+        fontName: str = c.getFontName("OCRB10,OCR-B,OCR B,OCRB", warn=False)
         fontSize: float = attr.fontsize or 2.75 * mm
 
         # Assure minimal size.

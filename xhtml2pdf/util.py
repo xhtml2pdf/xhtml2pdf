@@ -1443,14 +1443,34 @@ def get_default_asian_font():
 
 
 def set_asian_fonts(fontname):
+    """Register one of ReportLab's CJK faces, if that is what this name is."""
     font_dict = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodings)
     fonts = font_dict.keys()
     if fontname in fonts:
         pdfmetrics.registerFont(UnicodeCIDFont(fontname))
+        return
+    # Reached only from getFontName, which looked the name up in the CJK
+    # table first, so a miss here means ReportLab and that table disagree.
+    # It used to be a silent no-op and the document drew with a font that
+    # had never been registered.
+    _warn_value(
+        "font-family",
+        str(fontname),
+        f"is not one of ReportLab's CJK faces ({', '.join(sorted(fonts))})",
+    )
 
 
 def detect_language(name):
+    """
+    The RTL language this name stands for, or None.
+
+    Lowercased because DEFAULT_LANGUAGE_LIST is, while the name comes
+    straight from the markup: <pdf:language name="Arabic"/> reshaped
+    nothing, and was excluded from /Lang for being a language name, so it
+    did neither job.
+    """
     asian_language_list = xhtml2pdf.default.DEFAULT_LANGUAGE_LIST
+    name = str(name).strip().lower() if name else ""
     if name in asian_language_list:
         return name
     return None

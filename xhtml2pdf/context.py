@@ -109,6 +109,11 @@ def clone(self, **kwargs) -> ParaFrag:
 ParaFrag.clone = clone
 
 
+#: The file each embedded face was built from, by its ReportLab name. Process
+#: wide, like pdfmetrics._fonts, so that the two can be compared at all.
+_embedded_font_source: dict[str, str] = {}
+
+
 def registerTTFont(fullFontName: str, file) -> None:
     """
     Make an embedded TrueType font available to ReportLab under fullFontName.
@@ -122,11 +127,30 @@ def registerTTFont(fullFontName: str, file) -> None:
 
     The name is all that is consulted, so a second document declaring the same
     font-family from a different file keeps the face the first one embedded.
-    That predates this and is unchanged by it.
+    That predates this; what is new is that it says so.
     """
-    if fullFontName in pdfmetrics._fonts:
+    name = file.getNamedFile()
+    registered = pdfmetrics._fonts.get(fullFontName)
+    if registered is not None:
+        # Same name, different file: the document is going to be drawn with
+        # the other one's glyphs, and until now nothing said a word. Whether
+        # the file is the same cannot be asked of a TTFont, which does not
+        # keep its source, so the filename this render resolved is recorded
+        # alongside and compared.
+        previous = _embedded_font_source.get(fullFontName)
+        if previous is not None and name is not None and previous != name:
+            log.warning(
+                "Font %r is already embedded in this process from %r, so %r is "
+                "ignored and the text is drawn with the first one. Give the two "
+                "families different names.",
+                fullFontName,
+                previous,
+                name,
+            )
         return
-    pdfmetrics.registerFont(TTFont(fullFontName, file.getNamedFile()))
+    if name is not None:
+        _embedded_font_source[fullFontName] = name
+    pdfmetrics.registerFont(TTFont(fullFontName, name))
 
 
 def getParaFrag(style) -> ParaFrag:
@@ -270,6 +294,19 @@ class pisaCSSBuilder(css.CSSBuilder):
             src = self.c.getFile(font, relative=self.c.cssParser.rootPath)
             if src and not src.notFound():
                 self.c.loadFont(names, src, bold=bold, italic=italic)
+            else:
+                # Dropped without a word until now. The document then drew
+                # with whatever the family name happened to mean -- a base-14
+                # face, if the name was one of the aliases -- and the author
+                # saw missing glyphs with nothing to connect them to.
+                log.warning(
+                    self.c.warning(
+                        "@font-face for %r could not read %r, so the family is "
+                        "not embedded and the text will use another font.",
+                        names,
+                        font,
+                    )
+                )
         return {}, {}
 
     def _pisaAddFrame(
@@ -699,6 +736,9 @@ class pisaContext:
     """
 
     def __init__(self, path: str = "", debug: int = 0, capacity: int = -1) -> None:
+        #: font-family lists already reported as unknown, so a stylesheet
+        #: that names a missing font on every element says it once.
+        self._font_warned: set[tuple[str, ...]] = set()
         self.fontList: dict[str, str] = copy.copy(default.DEFAULT_FONT)
         self.asianFontList: dict[str, str] = copy.copy(get_default_asian_font())
         self.anchorFrag: list = []
@@ -1344,23 +1384,51 @@ class pisaContext:
             policy=self.resource_policy,
         )
 
-    def getFontName(self, names, default="helvetica"):
-        """Name of a font."""
+    def getFontName(self, names, default="helvetica", *, warn: bool = True):
+        """
+        The face to draw with, for the first family this document knows.
+
+        A family nobody registered used to fall through to Helvetica without
+        a word, which is the single commonest reason for "my font was
+        ignored": a misspelling, a @font-face whose src never arrived, or a
+        system font that was never embedded all look the same from here, and
+        all of them look like nothing at all.
+        """
         # print names, self.fontList
         if not isinstance(names, list):
             names = str(names)
             names = names.strip().split(",")
+        tried: list[str] = []
         for name in names:
-            name = str(name)
-            font = name.strip().lower()
-            if font in self.asianFontList:
-                font = self.asianFontList.get(font, None)
+            family = str(name).strip().lower()
+            tried.append(family)
+            if family in self.asianFontList:
+                font = self.asianFontList.get(family)
                 set_asian_fonts(font)
             else:
-                font = self.fontList.get(font, None)
+                font = self.fontList.get(family)
             if font is not None:
                 return font
-        return self.fontList.get(default, None)
+        fallback = self.fontList.get(default, None)
+        if warn:
+            self._warn_unknown_font(tried, fallback)
+        return fallback
+
+    def _warn_unknown_font(self, tried, fallback) -> None:
+        """Say once per document that a font-family reached nothing."""
+        key = tuple(tried)
+        if not key or key in self._font_warned:
+            return
+        self._font_warned.add(key)
+        log.warning(
+            self.warning(
+                "None of the font families %s is known to this document, so %r "
+                "is used instead. Embed the family with @font-face, or use one "
+                "of the built-in names.",
+                ", ".join(repr(name) for name in tried),
+                fallback,
+            )
+        )
 
     def registerFont(self, fontname, alias=None):
         alias = alias if alias is not None else []

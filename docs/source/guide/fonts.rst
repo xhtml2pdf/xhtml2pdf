@@ -26,11 +26,15 @@ alias names:
 
 The names are case-insensitive.
 
-.. warning::
-    Those alias names are taken. Declaring ``@font-face { font-family: sans; }``
-    registers the font but leaves the name resolving to Helvetica, so the text
-    comes out in a base-14 face and nothing says why. Give an embedded family a
-    name of its own.
+A family the document embeds with ``@font-face`` wins over the alias of the
+same name: declaring ``@font-face { font-family: Arial; }`` gives you your
+file, not Helvetica. A name of its own is still clearer to read.
+
+If a ``font-family`` names nothing this document knows -- a misspelling, a
+system font that was never embedded, or a ``@font-face`` whose ``src`` could
+not be read -- the text is drawn in Helvetica and a warning says so, naming
+every family it tried. Before, that substitution was silent, and a missing
+font and a missing glyph looked exactly alike.
 
 Asian (CJK) fonts
 ^^^^^^^^^^^^^^^^^

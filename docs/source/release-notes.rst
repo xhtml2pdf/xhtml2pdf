@@ -106,6 +106,16 @@ Unreleased.
 
 **🐛 Bug-Fixes**
 
+* Choosing a font no longer fails in silence. A ``font-family`` that names
+  nothing the document knows, a ``@font-face`` whose ``src`` could not be
+  read, a CJK name ReportLab does not have, and a second ``@font-face``
+  reusing a family name already embedded in the process from another file
+  each now say so, naming the family and what was used instead. All four
+  used to end in Helvetica with nothing in the log, which made a missing
+  font indistinguishable from a missing glyph.
+* ``<pdf:language name="Arabic"/>`` did nothing when it was not spelled in
+  lower case: it reshaped no text, and was excluded from ``/Lang`` for being
+  a language name, so it did neither job.
 * On Windows, a document with any ``@font-face`` could not be converted:
   ReportLab's open of the font raised ``PermissionError``/``TTFError``.
   xhtml2pdf wrote the font to a ``NamedTemporaryFile``, kept the handle
