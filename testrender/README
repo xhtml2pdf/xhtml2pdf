@@ -98,3 +98,15 @@ is explained rather than mysterious.
     leading falls above the first line; ReportLab starts the ascent at the top
     of the box instead. Worth about 4pt at a 10px font with 150% line height,
     the same on every block, so it does not accumulate.
+
+  * A table with no column widths gets equal columns, where a browser sizes
+    each column to its content, so the table comes out wider. As a block it
+    also takes the whole frame width rather than shrink-wrapping. Shown by
+    test-tables, and inherited by flex-item-content, whose flex item is only
+    as wide as the table it holds.
+
+  * dir="rtl" reverses the characters of a run instead of running the Unicode
+    bidirectional algorithm over it, so Latin text in a right-to-left document
+    comes out backwards. <pdf:language name="arabic"/> goes through
+    arabic-reshaper and python-bidi instead and does not have this problem.
+    Shown by flex-rtl, whose boxes match the browser while its words do not.

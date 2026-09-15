@@ -882,11 +882,16 @@ class pisaTagPDFTEMPLATE(pisaTag):
 
 
 class pisaTagHTML(pisaTag):
-    """<html lang="">."""
+    """<html lang="" dir="">."""
 
     def start(self, c: pisaContext) -> None:
         if self.attr.lang:
             c.lang_tag = self.attr.lang
+        # The root element is where a document usually declares its direction,
+        # and it has to be read here: <body dir> and <div dir> were honoured
+        # but <html dir> was not, so the most common spelling did nothing.
+        if self.attr.get("dir"):
+            c.setDir(self.attr["dir"])
 
 
 class pisaTagPDFLANGUAGE(pisaTag):

@@ -267,6 +267,15 @@ class FlexNestingTest(TestCase):
         )
         self.assertEqual("row-reverse", container.direction)
 
+    def test_the_direction_is_read_from_the_html_element_too(self) -> None:
+        # <body dir> and <div dir> were honoured but <html dir> was not, and
+        # the root element is where a document usually declares it.
+        container = _container(
+            "<html dir='rtl'><body><div style='display:flex'><div>a</div></div>"
+            "</body></html>"
+        )
+        self.assertEqual("row-reverse", container.direction)
+
 
 class FlexRenderTest(TestCase):
     """End to end: the PDF comes out, and the items share a line."""

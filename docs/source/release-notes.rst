@@ -117,6 +117,13 @@ Unreleased.
   container's own width and height as its own, which made the item's
   cross size definite and stopped ``align-items: stretch`` from ever
   sizing an item to its line.
+* ``dir`` on the ``<html>`` element was ignored. It was read on ``<body>``,
+  ``<div>`` and ``<p>``, but the root element is where a document usually
+  declares its direction, and a flex row in such a document laid out from
+  the left instead of the right. Note that ``dir="rtl"`` reverses the
+  characters of a run rather than applying the Unicode bidirectional
+  algorithm, so a right-to-left document with Latin text in it now shows
+  that; ``<pdf:language name="arabic"/>`` reshapes properly and does not.
 * A percentage ``row-gap`` was resolved against the container's width.
   css-align 8.3 resolves a gap against the container's own content box
   in that gap's axis, so a percentage ``row-gap`` goes against the

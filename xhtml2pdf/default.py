@@ -325,9 +325,10 @@ TAGS = {
         {"align": ["left", "center", "right", "justify"], "dir": ["ltr", "rtl"]},
     ),
     "p": (1, {"align": ["left", "center", "right", "justify"], "dir": ["ltr", "rtl"]}),
-    # Not a block. Declared so that `lang` is parsed at all: it is where the
-    # /Lang written to the PDF catalog comes from.
-    "html": (0, {"lang": (STRING, "")}),
+    # Not a block. Declared so that `lang` and `dir` are parsed at all: the
+    # first is where the /Lang written to the PDF catalog comes from, and the
+    # second is where a document usually declares its direction.
+    "html": (0, {"lang": (STRING, ""), "dir": ["ltr", "rtl"]}),
     "body": (1, {"dir": ["ltr", "rtl"]}),
     "br": (0, {}),
     "h1": (

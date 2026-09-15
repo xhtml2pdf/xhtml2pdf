@@ -181,7 +181,11 @@ differences:
    line that no frame can hold and that cannot be cut is shrunk to fit.
 -  Within a container the text direction of the document decides where
    the row starts: a ``dir="rtl"`` document lays ``row`` out from the
-   right.
+   right. The direction is read from ``dir`` on ``<html>``, ``<body>``,
+   ``<div>`` or ``<p>``. Bear in mind that ``dir="rtl"`` reverses the
+   characters of a run rather than applying the Unicode bidirectional
+   algorithm, so Latin text in a right-to-left document comes out
+   backwards; ``<pdf:language name="arabic"/>`` reshapes properly.
 
 .. _inline-block:
 
