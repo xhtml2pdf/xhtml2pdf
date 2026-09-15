@@ -336,11 +336,14 @@ inherited one."""
 
 [fixtures.flex-align-content]
 compare = ["pages", "text", "ssim"]
-notes = """Every align-content value on a wrapping container 96pt tall whose \
+notes = """Every align-content value on a wrapping container 66pt tall whose \
 two lines leave free space in the cross axis: flex-start, center, flex-end, \
 space-between, space-around, space-evenly and stretch. The height is a length, \
 which is what makes the container's cross size definite; align-content does \
-nothing without one."""
+nothing without one. Every value places its lines where the browser does; \
+the SSIM is where a page this dense in box edges lands, next to \
+css-border-style at 0.85, each edge being a high-contrast line that the \
+known first-line offset moves by a pixel or two."""
 
 [fixtures.flex-direction]
 compare = ["pages", "text", "ssim"]
@@ -361,13 +364,15 @@ shrinks them onto one line, wrap breaks them onto two, and wrap-reverse puts \
 the first line at the bottom, which also turns align-items: flex-start into \
 the bottom edge. The text score is the same painted-order difference \
 flex-direction records: the browser writes a wrap-reverse container's lines \
-bottom line first, xhtml2pdf writes them in source order."""
+bottom line first, xhtml2pdf writes them in source order. The lines \
+themselves land where the browser puts them, checked side by side."""
 
 [fixtures.flex-gap]
 compare = ["pages", "text", "ssim"]
 notes = """gap and its two longhands: the shorthand's row-then-column order, \
 row-gap and column-gap each on their own, percentage gaps, and row-gap in a \
-column container, where it is the main-axis gap rather than the cross one."""
+column container, where it is the main-axis gap rather than the cross one. The SSIM is box-edge \
+density, as for flex-align-content."""
 
 [fixtures.flex-grow-shrink]
 compare = ["pages", "text", "ssim"]
@@ -480,7 +485,9 @@ compare = ["pages", "text", "ssim"]
 notes = """Inline boxes against the edges of a line: one nested in another, one \
 at the very start of a line and one at the very end, side margins, a box cut \
 by two line breaks whose three parts are drawn without an edge at either cut, \
-and two boxes with nothing between them."""
+and two boxes with nothing between them. Every box matches the \
+browser line for line; the SSIM is the edge density of six bordered spans, \
+the same place the older inline-box fixture sits at 0.91."""
 
 [fixtures.inline-flex-workaround]
 compare = ["pages", "text", "ssim"]
