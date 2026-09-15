@@ -877,21 +877,53 @@ class pisaContext:
 
     @property
     def is_rtl(self) -> bool:
-        """Whether this document is written right to left."""
-        return self.dir == "rtl"
+        """Whether the element being walked is written right to left."""
+        return bool(getattr(self.frag, "rtl", False))
 
     def setDir(self, direction):
         """
-        The document's writing direction, and what follows from it.
+        The writing direction of the element being walked.
+
+        On the frag rather than on the context, because direction is
+        inherited and bounded like any other inherited property: pisaLoop
+        pushes a frag for each element and pops it when the element closes,
+        so a dir on a <div> reaches what is inside it and stops there. It
+        used to be one value for the whole document, set by whichever
+        element declared it last and never put back, so a single
+        `<p dir="rtl">` left every table after it with its columns reversed.
 
         A right-to-left line is laid out by aligning it to the right, not by
         turning its words around: the bidirectional algorithm has already put
         the characters in the order they are drawn in. An explicit text-align
-        still wins, since CSS2Frag applies it after this.
+        on the same element still wins.
         """
         self.dir = direction
-        if direction == "rtl":
-            self.frag.alignment = TA_RIGHT
+        self._applyDir(self.frag, direction)
+
+    def setDirForRest(self, direction) -> None:
+        """
+        The direction for the rest of the element this one is inside.
+
+        <pdf:language> is a declaration, not a box: it is empty, so a
+        direction put on its own frag would be popped again the moment the
+        tag closed and reach nothing at all. It goes on the enclosing frag
+        instead, where it lasts until that element closes -- which is what
+        "from here on" means for a document that declares a language
+        halfway down.
+        """
+        self.dir = direction
+        self._applyDir(self.frag, direction)
+        if self.fragStack:
+            self._applyDir(self.fragStack[-1], direction)
+
+    def _applyDir(self, frag, direction) -> None:
+        frag.rtl = direction == "rtl"
+        if direction == "rtl" and "text-align" not in self.cssAttr:
+            frag.alignment = TA_RIGHT
+        elif direction != "rtl" and frag.alignment == TA_RIGHT:
+            # Put the alignment back with the direction; a document that
+            # turns a language off is not asking to stay right-aligned.
+            frag.alignment = TA_LEFT
 
     def UID(self):
         self.uidctr += 1

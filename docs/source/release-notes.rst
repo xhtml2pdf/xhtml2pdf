@@ -106,6 +106,14 @@ Unreleased.
 
 **🐛 Bug-Fixes**
 
+* The writing direction had no end. ``dir="rtl"`` on a ``<div>`` or a
+  ``<p>``, or a ``<pdf:language>`` naming a right-to-left language, was one
+  value for the whole file, set by whichever element declared it last and
+  never put back -- so a single right-to-left paragraph left every table
+  after it with its columns reversed and every paragraph right-aligned with
+  its full stop moved to the front. It is bounded by the element that
+  declares it now, and ``<pdf:language name=""/>`` ends it where it says it
+  does.
 * **Right-to-left documents.** ``<pdf:language name="arabic"/>`` set the
   text reshaper going and nothing else, so paragraphs were still laid out
   left to right with the table columns beside them in left-to-right order.

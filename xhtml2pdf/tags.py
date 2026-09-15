@@ -905,12 +905,16 @@ class pisaTagPDFLANGUAGE(pisaTag):
         if self.attr.name and self.attr.name.lower() not in DEFAULT_LANGUAGE_LIST:
             c.lang_tag = self.attr.name
         elif self.attr.name:
-            # Naming a right-to-left language is naming a right-to-left
-            # document. This used to set the reshaper going and nothing else,
-            # so the text was shaped and reordered inside paragraphs that were
-            # still laid out left to right, with the table columns in
-            # left-to-right order beside them.
-            c.setDir("rtl")
+            # Naming a right-to-left language is naming right-to-left text.
+            # This used to set the reshaper going and nothing else, so the
+            # text was shaped and reordered inside paragraphs that were still
+            # laid out left to right, with the table columns in left-to-right
+            # order beside them.
+            c.setDirForRest("rtl")
+        else:
+            # <pdf:language name=""/> is how a document says it is done with
+            # the language, and it has to put the direction back with it.
+            c.setDirForRest("ltr")
 
 
 class pisaTagPDFFONT(pisaTag):

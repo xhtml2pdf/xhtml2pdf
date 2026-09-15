@@ -388,11 +388,30 @@ class RightToLeftLayoutTests(TestCase):
             f'<pdf:language name="Arabic"/>{self.TABLE}</body></html>'
         )
         output = io.BytesIO()
-        context = pisaDocument(html.encode(), output)
+        pisaDocument(html.encode(), output)
         text = PdfReader(io.BytesIO(output.getvalue())).pages[0].extract_text()
 
-        self.assertTrue(context.is_rtl)
         self.assertLess(text.index("Three"), text.index("One"), text)
+
+    def test_a_direction_declared_inside_the_document_ends_with_it(self) -> None:
+        # dir was one value for the whole document, set by whichever element
+        # declared it last and never put back, so a single <p dir="rtl"> left
+        # every table after it with its columns reversed.
+        text = self.render(f'<p dir="rtl">{self.ARABIC}</p><p>after.</p>{self.TABLE}')
+
+        self.assertLess(text.index("One"), text.index("Three"), text)
+        self.assertIn("after.", text)
+
+    def test_the_language_tag_can_be_turned_off_again(self) -> None:
+        # <pdf:language name=""/> is how a document says it is done with the
+        # language, and it has to put the direction back with it.
+        text = self.render(
+            f'<pdf:language name="arabic"/><p>{self.ARABIC}</p>'
+            f'<pdf:language name=""/><p>after.</p>{self.TABLE}'
+        )
+
+        self.assertLess(text.index("One"), text.index("Three"), text)
+        self.assertIn("after.", text)
 
     def test_the_arabic_is_put_in_visual_order(self) -> None:
         # get_display returns the order the characters are drawn in, so the

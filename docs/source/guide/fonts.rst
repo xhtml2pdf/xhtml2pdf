@@ -89,8 +89,10 @@ Usage example:
    <p>بعض النصوص العربية هنا</p>
    <p>Some English text here</p>
 
-Naming a right-to-left language makes the whole document right to left, the
-same as ``dir="rtl"`` on ``<html>``, ``<body>``, ``<div>`` or ``<p>``. Either
+Naming a right-to-left language makes the rest of the element it is in right
+to left, the same as ``dir="rtl"`` on that element. Declared just inside
+``<body>`` it covers the document; declared inside a ``<div>`` it stops at the
+``</div>``, and ``<pdf:language name=""/>`` ends it earlier still. Either
 one turns three things around: the text runs through the Unicode
 bidirectional algorithm, so the Arabic letters read right to left while Latin
 words inside them keep their own direction; paragraphs are aligned to the
