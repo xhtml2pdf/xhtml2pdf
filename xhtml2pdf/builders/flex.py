@@ -24,7 +24,7 @@ Two things here are easy to get wrong and are worth knowing about:
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from itertools import pairwise
 from operator import itemgetter
 from typing import TYPE_CHECKING, Any
@@ -39,6 +39,7 @@ from xhtml2pdf.builders.flex_layout import (
     ContainerSpec,
     FlexLayout,
     ItemSpec,
+    PlacedItem,
     resolve_flex_layout,
 )
 from xhtml2pdf.reportlab_paragraph import Paragraph, _getFragWords
@@ -232,6 +233,43 @@ def draw_stack(
         cursor -= entry.after
 
 
+def split_stack(
+    entries: Sequence[StackEntry], at: float, width: float, canv
+) -> tuple[list[Flowable], list[Flowable]]:
+    """
+    Cut stacked entries `at` points below their top: (head, tail) flowables.
+
+    Entries wholly above the cut go to the head. The one the cut falls in is
+    asked to split at the room above it, the way a frame asks, and what it
+    cannot fit goes to the tail with everything below it. `width` is the
+    width the entries were stacked at, so split sees what wrap saw.
+    """
+    head: list[Flowable] = []
+    cursor = 0.0
+    for n, entry in enumerate(entries):
+        top = cursor + entry.before
+        bottom = top + entry.height
+        if bottom <= at + _FUZZ:
+            head.append(entry.flowable)
+            cursor = bottom + entry.after
+            continue
+        rest = [e.flowable for e in entries[n + 1 :]]
+        pieces: list = []
+        if top < at - _FUZZ:
+            pieces = entry.flowable.splitOn(canv, width, at - top)
+        # An empty answer is "nothing fits"; itself is "it all fits", which
+        # contradicts the measurement; a frame action is nothing to draw.
+        if (
+            not pieces
+            or pieces[0] is entry.flowable
+            or hasattr(pieces[0], "frameAction")
+        ):
+            return head, [entry.flowable, *rest]
+        head.append(pieces[0])
+        return head, [*pieces[1:], *rest]
+    return head, []
+
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ~ Baselines
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -326,6 +364,23 @@ def stack_baseline(entries: Sequence[StackEntry]) -> float | None:
     return None
 
 
+def _frag_with_text(frag):
+    """
+    A frag _getFragWords can read.
+
+    The second half of a single-frag paragraph split between pages carries
+    its words already broken, as `words`, and no text (_split_blParaSimple);
+    its widths are the same words' widths.
+    """
+    if hasattr(frag, "text") or not hasattr(frag, "words"):
+        return frag
+    carrier = frag.clone()
+    carrier.text = " ".join(
+        word if isinstance(word, str) else word.decode("utf8") for word in frag.words
+    )
+    return carrier
+
+
 def _paragraph_widths(paragraph, style) -> tuple[float, float]:
     """
     (min-content, max-content) of a paragraph, from its words.
@@ -334,7 +389,7 @@ def _paragraph_widths(paragraph, style) -> tuple[float, float]:
     wrapping; ReportLab does not offer it, because Paragraph.wrap assigns
     itself the available width whatever its text needs.
     """
-    frags = paragraph.frags
+    frags = [_frag_with_text(frag) for frag in paragraph.frags]
     if not frags:
         return 0.0, 0.0
     longest_word = 0.0
@@ -466,6 +521,9 @@ class FlexItem:
     margin_right: CSSLength = ZERO
     margin_top: CSSLength = ZERO
     margin_bottom: CSSLength = ZERO
+    #: The main size the item had before a page cut, in points; the
+    #: continuation keeps it so the line it is in keeps its geometry.
+    pinned_main: float | None = None
 
     @classmethod
     def from_frag(
@@ -698,7 +756,7 @@ class FlexContainer(Flowable, PmlMaxHeightMixIn):
         else:
             flex_basis = resolved(item.flex_basis, main_basis, main_extra)
 
-        return ItemSpec(
+        spec = ItemSpec(
             flex_basis=flex_basis,
             specified=resolved(size, main_basis, main_extra),
             min_content=main_min_content,
@@ -725,6 +783,18 @@ class FlexContainer(Flowable, PmlMaxHeightMixIn):
             max_cross=resolved(max_cross, cross_basis, cross_extra),
             order=item.order,
         )
+        if item.pinned_main is not None:
+            pinned = item.pinned_main
+            spec = replace(
+                spec,
+                flex_basis=pinned,
+                specified=pinned,
+                min_main=pinned,
+                max_main=pinned,
+                grow=0.0,
+                shrink=0.0,
+            )
+        return spec
 
     def wrap(self, availWidth: float, availHeight: float) -> tuple[float, float]:
         availHeight = self.setMaxHeight(availHeight)
@@ -810,25 +880,28 @@ class FlexContainer(Flowable, PmlMaxHeightMixIn):
 
     def split(self, availWidth: float, availHeight: float) -> list:
         """
-        Cut between flex lines, never inside one.
+        Cut at the page edge, through the line and the items it falls in.
 
-        A row container breaks between its lines (flex-wrap: wrap); a column
-        container between its items, which stack the same way. Whatever
-        does not fit the room left here moves whole to the next frame, and
-        a piece taller than any frame is shrunk rather than lost.
+        As a browser fragments a flex container: each item of the cut line
+        is cut where the page ends and goes on at the top of the next one
+        (box-decoration-break: slice); an item whose content cannot break
+        there moves whole. A line with nothing to show above the cut moves
+        whole, so a row of one-line tiles still breaks between its lines. A
+        line that no frame can hold and cannot be cut is shrunk rather than
+        lost.
         """
         self.wrap(availWidth, availHeight)
         if self.height <= availHeight + _FUZZ:
             return [self]
 
         bands = self._bands()
-        room = availHeight - self.style.content_top
-        fitting = [band for band in bands if band[0] <= room + _FUZZ]
-        if fitting and len(fitting) < len(bands):
-            head = {i for band in fitting for i in band[1]}
-            return self._split_items(head)
+        cut = availHeight - self.style.content_top
+        if cut > _FUZZ:
+            fragments = self._cut(cut, bands)
+            if fragments is not None:
+                return fragments
 
-        # Nothing fits the room left here, or all of it does but the box
+        # Nothing to show above the cut, or all of it does but the box
         # around it does not. Whether to wait for the next frame depends on
         # the first band alone: if a whole frame holds it, the rest is cut
         # there in turn. Only a band no frame can hold is shrunk -- an empty
@@ -866,18 +939,254 @@ class FlexContainer(Flowable, PmlMaxHeightMixIn):
             bands[key] = (max(edge, bottom), [*indices, placed.index])
         return sorted(bands.values(), key=itemgetter(0))
 
-    def _split_items(self, head: set[int]) -> list[FlexContainer]:
-        """Two containers holding the head items and the rest, in order."""
-        first = [item for i, item in enumerate(self.items) if i in head]
-        rest = [item for i, item in enumerate(self.items) if i not in head]
-        top = BoxStyle(self.style, paddingBottom=0.0, spaceAfter=0.0)
-        top.borderBottomStyle = None
-        bottom = BoxStyle(self.style, paddingTop=0.0, spaceBefore=0.0)
-        bottom.borderTopStyle = None
-        return [self._like(first, top), self._like(rest, bottom)]
+    # ~ Cutting ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    def _cut(self, cut: float, bands) -> list[Flowable] | None:
+        """
+        The container in two at `cut` points below its content top, or None.
+
+        Only the tail is laid out again: Platypus places the head at once,
+        in the frame it was cut for, so the head keeps the layout it has
+        (_FlexFragment). Bands wholly above the cut go to it as they are.
+        The band the cut falls in is sliced item by item: what an item has
+        above the cut stays, the rest goes on in the tail with the item's
+        main size pinned so that the line keeps its geometry; a band with
+        nothing to show above the cut moves whole instead. A declared height
+        is shared: the head takes what it shows, the tail the rest. None
+        when nothing would be left in the head; the caller then decides
+        whether to wait for the next frame or to shrink.
+        """
+        canv = getattr(self, "canv", None)
+        fitting = [band for band in bands if band[0] <= cut + _FUZZ]
+        rest = bands[len(fitting) :]
+        #: Head items by original index, with the size the cut leaves them.
+        head_items: dict[int, tuple[FlexItem, float | None]] = {}
+        tail_items: dict[int, FlexItem] = {}
+        probed: list[int] = []
+        for _edge, indices in fitting:
+            for i in indices:
+                head_items[i] = (self.items[i], None)
+        head_inner = fitting[-1][0] if fitting else 0.0
+        if rest:
+            edge, indices = rest[0]
+            slices = [self._slice_item(i, cut, canv) for i in indices]
+            probed = [
+                i for i, piece in zip(indices, slices, strict=True) if piece.probed
+            ]
+            if any(piece.progress for piece in slices):
+                head_inner = cut
+                for i, piece in zip(indices, slices, strict=True):
+                    if piece.head is not None:
+                        head_items[i] = (piece.head, piece.head_size)
+                    if piece.tail is not None:
+                        tail_items[i] = piece.tail
+            else:
+                for i in indices:
+                    tail_items[i] = self.items[i]
+            for _edge, indices in rest[1:]:
+                for i in indices:
+                    tail_items[i] = self.items[i]
+        elif self.css_height.resolve(None) is not None:
+            # Every band fits and the declared height is what overflows.
+            head_inner = cut
+        else:
+            self._not_cut(probed)
+            return None
+        if not head_items:
+            self._not_cut(probed)
+            return None
+
+        head_style = BoxStyle(self.style, paddingBottom=0.0, spaceAfter=0.0)
+        head_style.borderBottomStyle = None
+        tail_style = BoxStyle(self.style, paddingTop=0.0, spaceBefore=0.0)
+        tail_style.borderTopStyle = None
+
+        placed_by_index = {p.index: p for p in self.layout.placed}
+        items: list[FlexItem] = []
+        placed: list[PlacedItem] = []
+        stacks: dict[int, tuple[float, list[StackEntry], float]] = {}
+        for new_index, i in enumerate(sorted(head_items)):
+            item, size = head_items[i]
+            p = placed_by_index[i]
+            if size is not None:
+                p = (
+                    replace(p, cross_size=size)
+                    if self.is_row
+                    else replace(p, main_size=size)
+                )
+            placed.append(replace(p, index=new_index))
+            items.append(item)
+            width, entries, height = self._stacks[i]
+            if size is not None:
+                entries, height = stack_flowables(item.content, width, canv)
+            stacks[new_index] = (width, entries, height)
+        head = self._fragment(items, placed, stacks, head_style, head_inner)
+
+        declared = self.css_height.resolve(None)
+        tail_height = (
+            AUTO
+            if declared is None
+            else CSSLength("length", max(declared - head_inner, 0.0))
+        )
+        tail = self._like(
+            [tail_items[i] for i in sorted(tail_items)], tail_style, height=tail_height
+        )
+        return [head, tail]
+
+    def _not_cut(self, probed: Sequence[int]) -> None:
+        """
+        Forget what a refused cut measured.
+
+        Paragraph.split drops the lines it broke when it refuses (an orphan,
+        a widow), and the stacked entries that hold that paragraph would be
+        reused by the next wrap at the same width and drawn without them.
+        """
+        for i in probed:
+            self._stacks.pop(i, None)
+        if probed:
+            self._cache_key = None
+
+    def _slice_item(self, i: int, cut: float, canv) -> _Slice:
+        """One item of the band the cut falls in, in its two parts."""
+        item = self.items[i]
+        placed = next(p for p in self.layout.placed if p.index == i)
+        top = placed.cross_pos if self.is_row else placed.main_pos
+        size = placed.cross_size if self.is_row else placed.main_size
+        if top + size <= cut + _FUZZ:
+            # Ends above the cut: whole in the head. In a row a ghost keeps
+            # its place in the tail's line, so the others do not move.
+            ghost = self._ghost(item, placed) if self.is_row else None
+            return _Slice(item, None, ghost, progress=bool(item.content), probed=False)
+        if top >= cut - _FUZZ:
+            # Starts below the cut: whole in the tail, as far down as it was.
+            tail = self._continued(
+                item, placed, item.content, item.style, offset=top - cut
+            )
+            return _Slice(None, None, tail, progress=False, probed=False)
+        width, entries, _height = self._stacks[i]
+        head_content, tail_content = split_stack(
+            entries, cut - top - item.style.content_top, width, canv
+        )
+        head_style = BoxStyle(item.style, paddingBottom=0.0, spaceAfter=0.0)
+        head_style.borderBottomStyle = None
+        tail_style = BoxStyle(item.style, paddingTop=0.0, spaceBefore=0.0)
+        tail_style.borderTopStyle = None
+        head = replace(item, content=head_content, style=head_style)
+        tail = self._continued(
+            item, placed, tail_content, tail_style, remaining=top + size - cut
+        )
+        return _Slice(head, cut - top, tail, progress=bool(head_content), probed=True)
+
+    @property
+    def _continued_align(self) -> str:
+        """Where a continued item goes in the tail's line: cross-start."""
+        return "flex-end" if self.flex_wrap == "wrap-reverse" else "flex-start"
+
+    def _continued(
+        self,
+        item: FlexItem,
+        placed: PlacedItem,
+        content: Sequence[Flowable],
+        style: BoxStyle,
+        *,
+        offset: float = 0.0,
+        remaining: float | None = None,
+    ) -> FlexItem:
+        """
+        The item as it goes on in the tail.
+
+        `remaining` is the height its box had below the cut, kept when the
+        height was the item's own (declared, or a box with nothing left in
+        it) and left to the content otherwise; `offset` is how far below the
+        cut a whole item started.
+        """
+        if remaining is None:
+            height, min_height, max_height = (
+                item.height,
+                item.min_height,
+                item.max_height,
+            )
+        else:
+            definite = (
+                item.height.resolve(None) is not None
+                or item.min_height.resolve(None) is not None
+                or not content
+            )
+            height = (
+                CSSLength("length", max(remaining - style.vertical, 0.0))
+                if definite
+                else AUTO
+            )
+            min_height, max_height = AUTO, NONE_LENGTH
+        if self.is_row:
+            return replace(
+                item,
+                content=list(content),
+                style=style,
+                pinned_main=placed.main_size,
+                align_self=self._continued_align,
+                margin_top=CSSLength("length", offset),
+                height=height,
+                min_height=min_height,
+                max_height=max_height,
+            )
+        return replace(
+            item,
+            content=list(content),
+            style=style,
+            flex_basis=AUTO,
+            margin_top=ZERO,
+            height=height,
+            min_height=min_height,
+            max_height=max_height,
+        )
+
+    def _ghost(self, item: FlexItem, placed: PlacedItem) -> FlexItem:
+        """An item that is done, holding its place in the tail's line."""
+        return FlexItem(
+            content=[],
+            style=BoxStyle(),
+            pinned_main=placed.main_size,
+            align_self=self._continued_align,
+            order=item.order,
+            margin_left=item.margin_left,
+            margin_right=item.margin_right,
+        )
+
+    def _fragment(
+        self,
+        items: Sequence[FlexItem],
+        placed: Sequence[PlacedItem],
+        stacks: dict[int, tuple[float, list[StackEntry], float]],
+        style: BoxStyle,
+        inner_height: float,
+    ) -> _FlexFragment:
+        """The head of a cut: `items` drawn as `placed` says, never laid out again."""
+        assert self._box is not None
+        fragment = self._like(items, style, cls=_FlexFragment)
+        fragment.layout = FlexLayout(
+            placed=list(placed),
+            main_size=self.layout.main_size,
+            cross_size=self.layout.cross_size,
+        )
+        fragment._stacks = stacks
+        fragment._box = ABag(
+            outer_width=self._box.outer_width,
+            inner_width=self._box.inner_width,
+            inner_height=inner_height,
+        )
+        fragment._cache_key = self._cache_key
+        fragment.width = self.width
+        fragment.height = inner_height + style.vertical
+        fragment.setMaxHeight(self.getMaxHeight())
+        return fragment
 
     def _like(
-        self, items: Sequence[FlexItem], style: BoxStyle, cls: type | None = None
+        self,
+        items: Sequence[FlexItem],
+        style: BoxStyle,
+        cls: type | None = None,
+        height: CSSLength | None = None,
     ) -> FlexContainer:
         """A container with these items and the same properties as this one."""
         return (cls or type(self))(
@@ -891,7 +1200,7 @@ class FlexContainer(Flowable, PmlMaxHeightMixIn):
             row_gap=self.row_gap,
             column_gap=self.column_gap,
             width=self.css_width,
-            height=self.css_height,
+            height=self.css_height if height is None else height,
         )
 
     def _unsplittable(self) -> FlexContainer:
@@ -944,6 +1253,38 @@ class _UnsplittableFlexContainer(FlexContainer):
 
     def split(self, availWidth: float, availHeight: float) -> list:
         return [self]
+
+
+class _FlexFragment(FlexContainer):
+    """
+    The part of a container above a page cut: laid out already, never again.
+
+    Platypus places it at once, in the frame it was cut for and at the width
+    it was cut at, so wrap answers with the size it was built with and split
+    never cuts it.
+    """
+
+    def wrap(self, availWidth: float, availHeight: float) -> tuple[float, float]:
+        self.setMaxHeight(availHeight)
+        return self.width, self.height
+
+    def split(self, availWidth: float, availHeight: float) -> list:
+        return [self]
+
+
+@dataclass
+class _Slice:
+    """One item of a cut band: what stays in the head, what goes on."""
+
+    head: FlexItem | None
+    head_size: float | None
+    tail: FlexItem | None
+    #: Whether the item shows content above the cut. A band where no item
+    #: does moves whole.
+    progress: bool
+    #: Whether the item's content was asked to split, which can leave a
+    #: paragraph without its lines.
+    probed: bool
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

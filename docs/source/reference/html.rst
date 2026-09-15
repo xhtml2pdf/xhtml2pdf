@@ -162,9 +162,18 @@ differences:
    one it does nothing, as the specification says.
 -  A ``flex-direction: column`` container without a ``height`` never
    wraps and never distributes free space: its height is its content's.
--  A container is not split inside an item. One that does not fit the
-   room left in a frame moves to the next; one taller than a whole frame
-   is shrunk to fit.
+-  A container that does not fit the room left on a page is cut where
+   the page ends, through the flex line and the items the cut falls in,
+   as a browser fragments it: each item goes on at the top of the next
+   page with no edge at the cut (``box-decoration-break: slice``), and an
+   item whose content cannot break there -- a one-line paragraph, an
+   image -- moves whole. A line with nothing to show above the cut moves
+   whole too, so a row of tiles still breaks between its lines. The
+   continuation keeps the widths of the cut line when the next frame is
+   as wide as the one it left; a declared ``height`` is shared between
+   the two parts, and ``align-content`` places the remaining lines in
+   what is left of it; ``wrap-reverse`` continues at the cross start. A
+   line that no frame can hold and that cannot be cut is shrunk to fit.
 -  Within a container the text direction of the document decides where
    the row starts: a ``dir="rtl"`` document lays ``row`` out from the
    right.

@@ -73,6 +73,13 @@ Unreleased.
   ``vertical-align`` like an inline image. Form controls -- ``<input>``,
   ``<select>``, ``<textarea>`` -- are inline blocks by default and sit in
   the line instead of each closing the paragraph it was in.
+* **Flex containers break across pages.** A container that does not fit
+  the room left on a page is cut where the page ends, through its line
+  and its items, the way a browser fragments it: each item goes on at
+  the top of the next page without an edge at the cut, an item whose
+  content cannot break there moves whole, and a line with nothing to
+  show above the cut moves whole. Before this a container was only cut
+  between its lines, and a line taller than a page was shrunk to fit.
 * **Inline boxes.** An inline element with ``padding``, a ``border``, a
   ``background-image`` or side margins is drawn as a box around its text,
   in the line: the padding widens the line, the box is painted under the
@@ -99,6 +106,10 @@ Unreleased.
 
 **🐛 Bug-Fixes**
 
+* A flex container with a declared ``height`` that was cut between pages
+  gave both parts the whole height, so the first part no longer fit the
+  room it was cut for. The height is now shared: the first part takes
+  what it shows, the second the rest.
 * An inline image measured more than once came out smaller each time: the
   paragraph scaled the size it found instead of the image's natural size,
   so ``-pdf-keep-in-frame-mode: shrink`` -- which measures its content

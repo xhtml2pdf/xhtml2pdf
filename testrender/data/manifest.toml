@@ -264,10 +264,11 @@ xhtml2pdf's max-content of a paragraph carries a 1pt allowance."""
 [fixtures.flex-pagebreak]
 compare = ["pages"]
 notes = """Forty wrapped tiles of 60pt, more than a page: the container is cut \
-between its lines. Only the page count is compared: where each cut falls \
-depends on the engine's page box and line metrics, so neither the rasterised \
-pages nor the per-page text line up, though the document's text as a whole \
-does (text_doc is recorded at 1.0)."""
+at the page edge, slicing the tile the cut falls in (its one-line text stays \
+above the cut, its box goes on below). Only the page count is compared: where \
+each cut falls depends on the engine's page box and line metrics, so neither \
+the rasterised pages nor the per-page text line up, though the document's \
+text as a whole does (text_doc is recorded at 1.0)."""
 
 [fixtures.inline-block-badges]
 compare = ["pages", "text", "ssim"]
@@ -301,3 +302,13 @@ notes = """align-items: baseline on a row of items with different font sizes, \
 one with padding-top and one whose first line is a nested flex row; then a \
 paragraph with inline-blocks of one and two lines on vertical-align: baseline, \
 which hang from their last line."""
+
+[fixtures.flex-cut-item]
+compare = ["pages"]
+notes = """A fixed sidebar card beside two columns of prose, together taller than \
+a page: the row is cut where the page ends, each column goes on at the top of \
+page 2 with its box open at the cut, and the sidebar, done on page 1, holds its \
+place in the continued line. line-height is pinned so both engines fit about \
+the same number of lines on a page, and only the page count is compared: the \
+exact line of the cut differs, so the per-page text does not line up (the \
+document's text as a whole scores 0.88, the rest being line-break spacing)."""

@@ -93,6 +93,11 @@
       "text": 0.9759,
       "text_doc": 0.9759
     },
+    "flex-cut-item": {
+      "pages": {
+        "xhtml2pdf": 2
+      }
+    },
     "flex-header": {
       "pages": {
         "xhtml2pdf": 1

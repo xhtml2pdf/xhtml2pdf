@@ -20,9 +20,11 @@ from xhtml2pdf.builders.flex import (
     BoxStyle,
     FlexContainer,
     FlexItem,
+    _FlexFragment,
     content_widths,
     flowable_baseline,
     flowable_last_baseline,
+    split_stack,
     stack_flowables,
 )
 from xhtml2pdf.reportlab_paragraph import Paragraph
@@ -47,6 +49,25 @@ class _Probe(Flowable):
 
     def drawOn(self, canvas, x, y, _sW=0):
         self.drawn.append((round(x, 3), round(y, 3)))
+
+
+class _SplitProbe(_Probe):
+    """A probe that splits at multiples of `step`, and remembers the room asked."""
+
+    def __init__(self, width: float, height: float, step: float) -> None:
+        super().__init__(width, height)
+        self.step = step
+        self.asked: list[float] = []
+
+    def split(self, availWidth, availHeight):
+        self.asked.append(availHeight)
+        fits = int(availHeight / self.step + 1e-6) * self.step
+        if fits <= 0:
+            return []
+        return [
+            _Probe(self.fixed[0], fits),
+            _SplitProbe(self.fixed[0], self.fixed[1] - fits, self.step),
+        ]
 
 
 def _paragraph(text: str = "x") -> Paragraph:
@@ -220,6 +241,237 @@ class FlexContainerWrapTest(TestCase):
     def test_min_width_is_the_min_content_of_the_row(self) -> None:
         container = self._container([([_Probe(30, 5)], {}), ([_Probe(80, 5)], {})])
         self.assertEqual(110, container.minWidth())
+
+
+class SplitStackTest(TestCase):
+    def setUp(self) -> None:
+        self.canv = Canvas(BytesIO())
+
+    def _entries(self, *flowables):
+        entries, _height = stack_flowables(flowables, 100, self.canv)
+        return entries
+
+    def test_entries_above_the_cut_go_to_the_head_and_the_rest_to_the_tail(self):
+        first, second = _Probe(50, 30), _Probe(50, 30)
+        head, tail = split_stack(self._entries(first, second), 30, 100, self.canv)
+        self.assertEqual(([first], [second]), (head, tail))
+
+    def test_the_crossing_flowable_is_asked_for_the_room_below_its_top(self) -> None:
+        first, second = _Probe(50, 30), _SplitProbe(50, 100, 10)
+        head, tail = split_stack(self._entries(first, second), 45, 100, self.canv)
+        self.assertEqual([15], second.asked)
+        self.assertEqual([first, 10], [head[0], head[1].fixed[1]])
+        self.assertEqual([90], [f.fixed[1] for f in tail])
+
+    def test_a_flowable_that_refuses_goes_whole_to_the_tail_with_what_follows(
+        self,
+    ) -> None:
+        first, second = _SplitProbe(50, 100, 10), _Probe(50, 30)
+        head, tail = split_stack(self._entries(first, second), 5, 100, self.canv)
+        self.assertEqual(([], [first, second]), (head, tail))
+
+    def test_nothing_above_the_first_flowable_gives_an_empty_head(self) -> None:
+        first = _SplitProbe(50, 100, 10)
+        head, tail = split_stack(self._entries(first), 0, 100, self.canv)
+        self.assertEqual(([], [first]), (head, tail))
+        self.assertEqual([], first.asked)
+
+
+class FlexContainerCutTest(TestCase):
+    """A page cut inside a flex line, through its items."""
+
+    def setUp(self) -> None:
+        self.canv = Canvas(BytesIO())
+
+    def _cut(self, container, room, width=300):
+        container.wrapOn(self.canv, width, 800)
+        head, tail = container.splitOn(self.canv, width, room)
+        return head, tail
+
+    def test_a_line_is_cut_at_the_page_edge(self) -> None:
+        container = FlexContainer([FlexItem(content=[_SplitProbe(200, 100, 10)])])
+        head, tail = self._cut(container, 45)
+        self.assertEqual(45, head.height)
+        self.assertEqual((300, 60), tail.wrapOn(self.canv, 300, 800))
+
+    def test_the_head_is_a_fragment_that_keeps_its_size_and_never_splits(self):
+        container = FlexContainer([FlexItem(content=[_SplitProbe(200, 100, 10)])])
+        head, _tail = self._cut(container, 45)
+        self.assertIsInstance(head, _FlexFragment)
+        self.assertEqual((300, 45), head.wrapOn(self.canv, 300, 45))
+        self.assertEqual([head], head.splitOn(self.canv, 300, 45))
+
+    def test_the_cut_item_loses_its_bottom_edge_and_the_tail_its_top(self) -> None:
+        style = BoxStyle(
+            paddingTop=3,
+            paddingBottom=4,
+            borderTopStyle="solid",
+            borderTopWidth=1,
+            borderBottomStyle="solid",
+            borderBottomWidth=1,
+        )
+        container = FlexContainer(
+            [FlexItem(content=[_SplitProbe(200, 100, 10)], style=style)]
+        )
+        head, tail = self._cut(container, 45)
+        (top,) = head.items
+        (bottom,) = tail.items
+        self.assertEqual(
+            (3, 0, None),
+            (
+                top.style.paddingTop,
+                top.style.paddingBottom,
+                top.style.borderBottomStyle,
+            ),
+        )
+        self.assertEqual("solid", top.style.borderTopStyle)
+        self.assertEqual(
+            (0, 4, None),
+            (
+                bottom.style.paddingTop,
+                bottom.style.paddingBottom,
+                bottom.style.borderTopStyle,
+            ),
+        )
+        self.assertEqual("solid", bottom.style.borderBottomStyle)
+
+    def test_the_tail_line_keeps_the_main_sizes_of_the_cut_line(self) -> None:
+        container = FlexContainer(
+            [
+                FlexItem(
+                    content=[_SplitProbe(10, 100, 10)],
+                    flex_grow=1,
+                    flex_basis=_length(0),
+                ),
+                FlexItem(content=[_Probe(10, 20)], flex_grow=3, flex_basis=_length(0)),
+            ]
+        )
+        _head, tail = self._cut(container, 45, width=400)
+        self.assertEqual(2, len(tail.items))
+        self.assertEqual([], tail.items[1].content)  # a ghost, holding its place
+        tail.wrapOn(self.canv, 400, 800)
+        self.assertEqual([100, 300], [p.main_size for p in tail.layout.placed])
+
+    def test_an_item_that_ends_above_the_cut_is_drawn_whole_in_the_head(self):
+        short = _Probe(100, 20)
+        container = FlexContainer(
+            [FlexItem(content=[_SplitProbe(100, 100, 10)]), FlexItem(content=[short])]
+        )
+        head, _tail = self._cut(container, 45)
+        head.drawOn(self.canv, 0, 0)
+        self.assertEqual(1, len(short.drawn))
+
+    def test_an_item_that_starts_below_the_cut_goes_to_the_tail_with_its_offset(
+        self,
+    ) -> None:
+        short = _Probe(100, 20)
+        container = FlexContainer(
+            [FlexItem(content=[_SplitProbe(100, 100, 10)]), FlexItem(content=[short])],
+            align_items="flex-end",
+        )
+        _head, tail = self._cut(container, 45)
+        moved = tail.items[1]
+        self.assertEqual([short], moved.content)
+        self.assertEqual(35, moved.margin_top.value)
+
+    def test_lines_that_fit_join_the_cut_line_in_the_head(self) -> None:
+        items = [
+            FlexItem(content=[_SplitProbe(200, 30, 10)], flex_shrink=0)
+            for _ in range(3)
+        ]
+        container = FlexContainer(items, wrap="wrap")
+        head, tail = self._cut(container, 75)
+        self.assertEqual(75, head.height)
+        self.assertEqual((3, 1), (len(head.items), len(tail.items)))
+        self.assertEqual(200, tail.items[0].pinned_main)
+        self.assertEqual([20], [f.fixed[1] for f in tail.items[0].content])
+
+    def test_a_column_item_is_cut(self) -> None:
+        container = FlexContainer(
+            [
+                FlexItem(content=[_Probe(50, 30)]),
+                FlexItem(content=[_SplitProbe(50, 100, 10)]),
+            ],
+            direction="column",
+        )
+        head, tail = self._cut(container, 65)
+        self.assertEqual(65, head.height)
+        self.assertEqual((300, 70), tail.wrapOn(self.canv, 300, 800))
+
+    def test_a_paragraph_is_cut_between_its_lines(self) -> None:
+        para = _paragraph("word " * 200)
+        container = FlexContainer([FlexItem(content=[para])])
+        container.wrapOn(self.canv, 100, 800)
+        total = len(para.blPara.lines)
+        self.assertGreater(total, 20)
+        head, tail = container.splitOn(self.canv, 100, 100)
+        # leading 12: eight lines fit in 100.
+        (first,) = head.items[0].content
+        self.assertEqual(8, len(first.blPara.lines))
+        tail.wrapOn(self.canv, 100, 800)
+        (second,) = tail.items[0].content
+        self.assertEqual(total - 8, len(second.blPara.lines))
+
+    def test_a_declared_height_is_shared_by_the_halves(self) -> None:
+        container = FlexContainer(
+            [FlexItem(content=[_Probe(50, 100)])], height=_length(500)
+        )
+        head, tail = self._cut(container, 300)
+        self.assertEqual(300, head.height)
+        self.assertEqual(200, tail.css_height.value)
+        self.assertEqual((300, 200), tail.wrapOn(self.canv, 300, 800))
+
+    def test_a_declared_height_container_no_longer_overflows_after_the_cut(self):
+        # The bug this guards: both halves took the whole declared height,
+        # and the head then did not fit the room it was cut for.
+        items = [FlexItem(content=[_Probe(200, 30)], flex_shrink=0) for _ in range(3)]
+        container = FlexContainer(
+            items, wrap="wrap", align_content="stretch", height=_length(500)
+        )
+        head, tail = self._cut(container, 300)
+        self.assertLessEqual(head.wrapOn(self.canv, 300, 300)[1], 300)
+        self.assertEqual(200, tail.css_height.value)
+
+    def test_the_cut_items_background_reaches_the_edge(self) -> None:
+        container = FlexContainer(
+            [
+                FlexItem(
+                    content=[_SplitProbe(200, 100, 10)],
+                    style=BoxStyle(backColor="#eee"),
+                )
+            ]
+        )
+        head, _tail = self._cut(container, 45)
+        rects = []
+        with patch.object(
+            flex, "drawBoxBackground", lambda _c, _x, y, _w, h, _s: rects.append((y, h))
+        ):
+            head.drawOn(self.canv, 0, 0)
+        self.assertIn((0, 45), [(round(y, 3), round(h, 3)) for y, h in rects])
+
+    def test_a_nested_container_is_cut_through(self) -> None:
+        inner = FlexContainer([FlexItem(content=[_SplitProbe(200, 100, 10)])])
+        outer = FlexContainer([FlexItem(content=[inner])])
+        head, tail = self._cut(outer, 45)
+        (inner_head,) = head.items[0].content
+        (inner_tail,) = tail.items[0].content
+        self.assertIsInstance(inner_head, _FlexFragment)
+        self.assertEqual(45, inner_head.height)
+        self.assertIsInstance(inner_tail, FlexContainer)
+        self.assertEqual((300, 60), tail.wrapOn(self.canv, 300, 800))
+
+    def test_a_refused_paragraph_is_wrapped_again_before_drawing(self) -> None:
+        # Two lines: an orphan rule refuses to split, and Paragraph.split
+        # drops the lines it broke on the way out. The container must not
+        # draw from what it measured before that.
+        para = _paragraph("word " * 12)
+        container = FlexContainer([FlexItem(content=[para])])
+        container.wrapOn(self.canv, 100, 800)
+        self.assertGreaterEqual(len(para.blPara.lines), 2)
+        # 15 of room holds one line, which the orphan rule refuses.
+        self.assertEqual([], container.splitOn(self.canv, 100, 15))
+        container.wrapOn(self.canv, 100, 800)
+        container.drawOn(self.canv, 0, 0)
 
 
 class FlexContainerBaselineTest(TestCase):
@@ -444,10 +696,11 @@ class FlexContainerLineSplitTest(TestCase):
         self.assertEqual("wrap", tail.flex_wrap)
         self.assertEqual(4, tail.column_gap.value)
 
-    def test_it_never_cuts_inside_a_line(self) -> None:
+    def test_a_line_with_nothing_to_show_above_the_cut_moves_whole(self) -> None:
         container = self._three_rows()
         container.wrapOn(self.canv, 300, 800)
-        # 20 of room: not even the first line fits, so nothing is cut.
+        # 20 of room inside a line of probes that cannot split: nothing to
+        # show above the cut, so the line waits for the next frame.
         self.assertEqual([], container.splitOn(self.canv, 300, 20))
 
     def test_a_tail_that_fits_a_frame_waits_for_one_rather_than_shrinking(self) -> None:
