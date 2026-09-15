@@ -1,8 +1,10 @@
+import base64
 import io
 import os
 import tempfile
 from importlib.util import find_spec
 from io import BytesIO
+from pathlib import Path
 from unittest import TestCase, skipIf
 
 from pypdf import PdfReader
@@ -535,12 +537,20 @@ class TemporaryFileCleanupTest(TestCase):
 
     #: Reportlab cannot lay out a line this tall, so the build raises after
     #: the font above has been read and its temporary file registered.
+    #:
+    #: The font goes in as a data URI rather than by path on purpose: a local
+    #: file is now read where it lies, so a path would register no temporary
+    #: file at all and leave this test with nothing to leak.
     HTML = """<html><head><style>
-        @font-face {{ font-family: probe; src: url("{font}"); }}
+        @font-face {{ font-family: probe; src: url("data:font/ttf;base64,{font}"); }}
         body {{ font-family: probe; }}
         </style></head>
         <body><p>text</p><div style="font-size:99999999pt">too tall</div></body>
         </html>"""
+
+    @classmethod
+    def font_data_uri(cls) -> str:
+        return base64.b64encode(Path(cls.FONT).read_bytes()).decode("ascii")
 
     def test_a_failed_build_leaves_no_temporary_file_open(self) -> None:
         registered = []
@@ -553,7 +563,7 @@ class TemporaryFileCleanupTest(TestCase):
         files_tmp.append = record
         try:
             context = pisaDocument(
-                self.HTML.format(font=self.FONT).encode(),
+                self.HTML.format(font=self.font_data_uri()).encode(),
                 io.BytesIO(),
                 raise_exception=False,
             )

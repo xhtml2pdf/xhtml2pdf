@@ -106,6 +106,18 @@ Unreleased.
 
 **🐛 Bug-Fixes**
 
+* On Windows, a document with any ``@font-face`` could not be converted:
+  ReportLab's open of the font raised ``PermissionError``/``TTFError``.
+  xhtml2pdf wrote the font to a ``NamedTemporaryFile``, kept the handle
+  open and handed ReportLab the *name*, and on Windows that handle is an
+  exclusive share, so the second open could not succeed. A name handed out
+  for another library to open now belongs to a closed file, removed at the
+  end of the render instead of on close. The same applies to the canvas a
+  watermark is drawn on.
+* A font, image or stylesheet that already was a local file was copied
+  through a temporary file before use -- read whole, written out, and read
+  again. It is now read where it lies, the resource policy having already
+  vetted the path.
 * A source given as ``bytes`` ignored the ``encoding`` argument. Only a
   ``str`` source carried the caller's encoding through to the HTML parser;
   bytes fell through to the parser's own sniffing, whose last resort is
