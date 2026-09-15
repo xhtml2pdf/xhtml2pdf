@@ -574,6 +574,9 @@ def CSS2Frag(c, kw, isBlock):
         c.frag.backColor = getColor(c.cssAttr["background-color"], "#ffffff")
         # FONT SIZE, STYLE, WEIGHT
     if "font-family" in c.cssAttr:
+        # The whole list, not only the winner: the families after the first
+        # are what a character the first one has no glyph for falls back to.
+        c.frag.fontFamilies = c.getFontNames(c.cssAttr["font-family"])
         c.frag.fontName = c.getFontName(c.cssAttr["font-family"])
     if "font-size" in c.cssAttr:
         # XXX inherit

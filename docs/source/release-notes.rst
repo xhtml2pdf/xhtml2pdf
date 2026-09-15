@@ -106,6 +106,17 @@ Unreleased.
 
 **🐛 Bug-Fixes**
 
+* A ``font-family`` list is matched per character now, as CSS says it is.
+  The first family that existed used to draw everything, so a document
+  naming a Latin face first lost every character that face had no glyph
+  for: ``ěščřžýáíéí`` came out ``■š■■žýáíéí``, the boxes being exactly the
+  letters Helvetica lacks. ``font-family: Helvetica, MySans`` now reaches
+  ``MySans`` for those and leaves the rest where it was. A character no
+  family on the list has is reported, by character and by font.
+* A family named with the documented ``#`` prefix -- the way to embed
+  several TTFs that share one internal face name -- was registered with the
+  ``#`` stripped and looked up with it kept, so it was never found and the
+  text was drawn in Helvetica.
 * Choosing a font no longer fails in silence. A ``font-family`` that names
   nothing the document knows, a ``@font-face`` whose ``src`` could not be
   read, a CJK name ReportLab does not have, and a second ``@font-face``

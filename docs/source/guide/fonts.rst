@@ -116,9 +116,16 @@ keyword in CSS like this:
     }
 
 .. note::
-    A character the chosen family does not have simply disappears; there is no
-    falling back to another font for a missing glyph. If a symbol or a script
-    is not showing up, look for it in the font before looking anywhere else.
+    A ``font-family`` list is matched per character, the way CSS says: each
+    character is drawn by the first family on the list that has a glyph for
+    it. So ``font-family: Helvetica, MySans`` draws the Latin text in
+    Helvetica and reaches ``MySans`` only for the characters Helvetica has
+    no glyph for.
+
+    A character no family on the list has comes out blank or as a box, and a
+    warning names the character and every family that was tried. There is no
+    hidden system font behind the list: if a script is not showing up, embed
+    a font that covers it and put it on the list.
 
 The ``font-family`` property defines the names under which the embedded
 font will be known. ``src`` defines the place of the fonts source file.

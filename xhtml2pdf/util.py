@@ -18,7 +18,7 @@ import logging
 import re
 from copy import copy
 from io import BytesIO
-from typing import Any, ClassVar, NamedTuple
+from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple
 
 import arabic_reshaper
 import reportlab.pdfbase._cidfontdata
@@ -27,8 +27,12 @@ from reportlab.lib.colors import Color, toColor
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.lib.units import cm, inch
 from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase._glyphlist import _glyphname2unicode
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 from reportlab.rl_config import register_reset
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 import xhtml2pdf.default
 
@@ -1505,3 +1509,102 @@ def frag_text_language_check(context, frag_text):
 
 class ImageWarning(Exception):  # noqa: N818
     pass
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~ Which characters a face can actually draw
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#: Codepoints each registered face can draw, built on first use. Keyed by the
+#: ReportLab font name, which is what a frag carries.
+_font_coverage: dict[str, frozenset[int] | None] = {}
+
+
+def _coverage(font_name: str) -> frozenset[int] | None:
+    """
+    Every codepoint `font_name` has a glyph for, or None if it cannot be told.
+
+    Two kinds of font answer differently. An embedded TrueType face knows its
+    own cmap, so the question is exact. A base-14 Type 1 face draws through an
+    8-bit encoding, and what it can show is whatever that encoding's 256 slots
+    name -- which is why Helvetica has a glyph for "š" but not for "ě", the
+    difference the Czech bug report came down to.
+
+    A CID font answers None: its coverage is not a table this can read, and
+    None means "do not second-guess this one".
+    """
+    if font_name in _font_coverage:
+        return _font_coverage[font_name]
+
+    coverage: frozenset[int] | None = None
+    try:
+        font = pdfmetrics.getFont(font_name)
+    except Exception:
+        font = None
+
+    face = getattr(font, "face", None)
+    char_to_glyph = getattr(face, "charToGlyph", None)
+    if char_to_glyph is not None:
+        coverage = frozenset(char_to_glyph)
+    else:
+        vector = getattr(getattr(font, "encoding", None), "vector", None)
+        if vector is not None:
+            coverage = frozenset(
+                _glyphname2unicode[glyph]
+                for glyph in vector
+                if glyph and glyph in _glyphname2unicode
+            )
+
+    _font_coverage[font_name] = coverage
+    return coverage
+
+
+def font_has_glyph(font_name: str, char: str) -> bool:
+    """
+    Whether `font_name` can draw `char`.
+
+    True when it cannot be told, so a face whose coverage is unreadable is
+    never passed over: the worst this may do is leave a character where it
+    already was.
+    """
+    coverage = _coverage(font_name)
+    return coverage is None or ord(char) in coverage
+
+
+def split_by_coverage(text: str, font_names: Sequence[str]) -> list[tuple[str, str]]:
+    """
+    Cut `text` into the longest runs one face can draw, in declared order.
+
+    This is what a font-family list means in CSS: not "the first of these
+    that exists" but "for each character, the first of these that has it".
+    Returns (run, font name) pairs covering `text` in order.
+
+    A character no face on the list has stays with the first one, which is
+    where it would have been anyway; the caller is the one that reports it.
+    """
+    if not text or len(font_names) < 2:
+        return [(text, font_names[0])] if text and font_names else []
+
+    first = font_names[0]
+    runs: list[tuple[str, str]] = []
+    start = 0
+    current = None
+    for index, char in enumerate(text):
+        chosen = first
+        # A space has no shape, so let it stay with the run it is in rather
+        # than cutting one in two and pulling the following word's face back
+        # to the start of the line.
+        if not char.isspace():
+            for name in font_names:
+                if font_has_glyph(name, char):
+                    chosen = name
+                    break
+        elif current is not None:
+            chosen = current
+        if current is None:
+            current = chosen
+        elif chosen != current:
+            runs.append((text[start:index], current))
+            start, current = index, chosen
+    runs.append((text[start:], current or first))
+    return runs

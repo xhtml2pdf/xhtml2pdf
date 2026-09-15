@@ -127,3 +127,85 @@ class SubstitutionIsAnnouncedTest(TestCase):
     def test_an_embedded_family_says_nothing(self) -> None:
         with self.assertNoLogs("xhtml2pdf", level=logging.WARNING):
             render(document("Embedded", src=FONT))
+
+
+class GlyphFallbackTest(TestCase):
+    """
+    A font-family list is matched per character, as CSS says it is.
+
+    Until now the first family that existed drew everything, so a document
+    that named a Latin face first lost every accented or non-Latin character
+    to it: the Czech report saw "+ěščřžýáíéí" come out "+■š■■žýáíéí", the
+    boxes being exactly the letters Helvetica has no glyph for.
+    """
+
+    @staticmethod
+    def declaring(families: str, text: str = CZECH) -> str:
+        face = f'@font-face {{ font-family: Fallback; src: url("{FONT}"); }}'
+        html = (
+            f'<html><head><meta charset="utf-8"><style>{face}'
+            f"* {{ font-family: {families}; }}</style></head>"
+            f"<body>{text}</body></html>"
+        )
+        return PdfReader(BytesIO(render(html))).pages[0].extract_text().strip()
+
+    def test_a_later_family_supplies_what_the_first_lacks(self) -> None:
+        self.assertEqual(CZECH, self.declaring("Arial, Fallback"))
+
+    def test_the_first_family_still_draws_what_it_has(self) -> None:
+        # Not "the first family that has any of it": ASCII stays in Helvetica
+        # even when a later family could draw it too.
+        fonts = base_fonts(
+            render(
+                f'<html><head><meta charset="utf-8"><style>'
+                f'@font-face {{ font-family: Fallback; src: url("{FONT}"); }}'
+                f"* {{ font-family: Arial, Fallback; }}</style></head>"
+                f"<body>plain ascii</body></html>"
+            )
+        )
+        self.assertNotIn("/AAAAAA+NotoSans", fonts)
+
+    def test_a_single_family_is_unchanged(self) -> None:
+        # Nothing to fall back to, so this is still the old result -- and the
+        # warning below is the only thing that can help.
+        self.assertNotEqual(CZECH, self.declaring("Arial"))
+
+    def test_a_character_no_family_has_is_reported(self) -> None:
+        with self.assertLogs("xhtml2pdf", level=logging.WARNING) as caught:
+            self.declaring("Arial, Fallback", text="日本語")
+
+        self.assertTrue(
+            any("U+65E5" in message for message in caught.output), caught.output
+        )
+
+    def test_a_character_is_reported_once(self) -> None:
+        with self.assertLogs("xhtml2pdf", level=logging.WARNING) as caught:
+            self.declaring("Arial, Fallback", text="日 日 日 日")
+
+        reported = [m for m in caught.output if "U+65E5" in m]
+        self.assertEqual(1, len(reported), reported)
+
+    def test_covered_text_says_nothing(self) -> None:
+        with self.assertNoLogs("xhtml2pdf", level=logging.WARNING):
+            self.declaring("Arial, Fallback")
+
+
+class HashPrefixedFamilyTest(TestCase):
+    """
+    "#" in front of a family name is the documented way to embed several
+    TTFs that share one internal face name. loadFont stripped it before
+    registering and the lookup did not, so such a family registered under
+    one name and was asked for under another, and every document using the
+    convention has been drawing in Helvetica since it was introduced.
+    """
+
+    def test_a_hash_prefixed_family_is_found(self) -> None:
+        html = (
+            f'<html><head><meta charset="utf-8"><style>'
+            f"@font-face {{ font-family: '#MY'; src: url(\"{FONT}\"); }}"
+            f"* {{ font-family: '#MY'; }}</style></head>"
+            f"<body>{CZECH}</body></html>"
+        )
+        fonts = base_fonts(render(html))
+
+        self.assertTrue(any("NotoSans" in name for name in fonts), sorted(fonts))
