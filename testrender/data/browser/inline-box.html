@@ -1,0 +1,28 @@
+<!--
+  Browser equivalent of data/source/inline-box.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>inline-box</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 11pt; }
+p { margin: 0 0 8pt 0; }
+.tag { padding: 2pt 6pt; border: 1pt solid #cc0000; background-color: #ffeeee; }
+.gap { padding: 1pt 4pt; margin: 0 6pt; background-color: #d3d7cf; }
+.outer { padding: 3pt 8pt; border: 2pt dashed #3465a4; }
+.inner { padding: 1pt 3pt; background-color: #fce94f; }
+.run { padding: 2pt 5pt; border: 1pt solid #4e9a06; background-color: #eeffee; }
+</style>
+</head>
+<body>
+<p>A <span class="tag">tagged</span> word sits in the line with a padding, a border and a background of its own, and the words around it move over to make room for the padding.</p>
+<p>Side margins keep the box <span class="gap">apart</span> from its neighbours, and a <span class="outer">dashed box around a <span class="inner">solid one</span> nests</span> inside the same line.</p>
+<p>A box that runs on for long enough is cut by the line break: <span class="run">these words carry the box across the end of the line and onto the next one, where it goes on without a left edge and closes with a right one</span> and then the paragraph ends as usual.</p>
+</body>
+</html>

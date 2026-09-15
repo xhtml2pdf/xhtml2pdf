@@ -1,0 +1,36 @@
+<!--
+  Browser equivalent of data/source/flex-pagebreak-wrap-reverse.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>flex-pagebreak-wrap-reverse</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 16pt; }
+p { margin: 0 0 8pt 0; line-height: 16pt; }
+.tiles { display: flex; flex-wrap: wrap-reverse; gap: 8pt; background-color: #eeeeec; }
+.tiles div { width: 118pt; height: 64pt; padding: 4pt; background-color: #d3d7cf;
+             border: 1pt solid #888a85; }
+</style>
+</head>
+<body>
+<p>A wrap-reverse container of forty-eight tiles, taller than the page it starts on. Its first line is at the bottom, and the part that carries over begins again at the cross start.</p>
+<div class="tiles">
+<div>tile one</div><div>tile two</div><div>tile three</div><div>tile four</div>
+<div>tile five</div><div>tile six</div><div>tile seven</div><div>tile eight</div>
+<div>tile nine</div><div>tile ten</div><div>tile eleven</div><div>tile twelve</div>
+<div>tile thirteen</div><div>tile fourteen</div><div>tile fifteen</div><div>tile sixteen</div>
+<div>tile seventeen</div><div>tile eighteen</div><div>tile nineteen</div><div>tile twenty</div>
+<div>tile twenty-one</div><div>tile twenty-two</div><div>tile twenty-three</div><div>tile twenty-four</div>
+<div>tile twenty-five</div><div>tile twenty-six</div><div>tile twenty-seven</div><div>tile twenty-eight</div>
+<div>tile twenty-nine</div><div>tile thirty</div><div>tile thirty-one</div><div>tile thirty-two</div>
+<div>tile thirty-three</div><div>tile thirty-four</div><div>tile thirty-five</div><div>tile thirty-six</div>
+<div>tile thirty-seven</div><div>tile thirty-eight</div><div>tile thirty-nine</div><div>tile forty</div><div>tile forty-one</div><div>tile forty-two</div><div>tile forty-three</div><div>tile forty-four</div><div>tile forty-five</div><div>tile forty-six</div><div>tile forty-seven</div><div>tile forty-eight</div>
+</div>
+</body>
+</html>

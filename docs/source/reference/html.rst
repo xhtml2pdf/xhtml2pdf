@@ -73,6 +73,7 @@ xhtml2pdf supports the following standard CSS properties
 
 ::
 
+    align-content, align-items, align-self
     background-color
     background-image, background-position, background-repeat
     border-bottom-color, border-bottom-style, border-bottom-width
@@ -80,13 +81,18 @@ xhtml2pdf supports the following standard CSS properties
     border-right-color, border-right-style, border-right-width
     border-top-color, border-top-style, border-top-width
     color
+    column-gap, row-gap
     display
+    flex-basis, flex-direction, flex-grow, flex-shrink, flex-wrap
     font-family, font-size, font-style, font-weight
     height
+    justify-content
     letter-spacing, word-spacing
     line-height
     list-style-image, list-style-type
     margin-bottom, margin-left, margin-right, margin-top
+    max-height, max-width, min-height, min-width
+    order
     padding-bottom, padding-left, padding-right, padding-top
     page-break-after, page-break-before
     text-align, text-decoration, text-indent, text-transform
@@ -97,8 +103,8 @@ xhtml2pdf supports the following standard CSS properties
 
 The shorthands ``background``, ``border``, ``border-color``,
 ``border-style``, ``border-width``, ``border-top`` (and its three
-siblings), ``font``, ``list-style``, ``margin`` and ``padding`` are
-expanded into the properties above.
+siblings), ``flex``, ``flex-flow``, ``font``, ``gap``, ``list-style``,
+``margin`` and ``padding`` are expanded into the properties above.
 
 A property that is not on this list is parsed and then ignored. Each
 document logs the ones its stylesheet declares, by name, at warning
@@ -116,6 +122,128 @@ Known limitations of the properties above:
    will not wrap inside a run of them.
 -  ``width`` and ``height`` apply to images, table cells and barcodes
    only, not to blocks.
+-  ``display``: ``block``, ``inline``, ``inline-block``, ``flex`` and
+   ``none`` are laid out as such; ``inline-flex`` is laid out as
+   ``flex``, block-level (see :ref:`inline-block` for how to get an
+   inline one); ``table``, ``list-item``, ``flow-root``, ``grid`` and the
+   ``table-*`` values as ``block``. A table is a table because it is a
+   ``<table>``, and a list item because it is an ``<li>``, whatever
+   ``display`` says. Any other value is reported once and treated as
+   ``inline``.
+-  ``min-width``, ``max-width``, ``min-height`` and ``max-height`` apply
+   to flex items only. See :ref:`flexbox` for what a flex container
+   supports.
+
+.. _flexbox:
+
+Flexbox
+-------
+
+``display: flex`` lays the element's children out as flex items, in a row
+or a column, following CSS Flexible Box Layout Module Level 1. The
+container is one box the width of its frame; each child is one item,
+sized by ``flex-basis``, ``width``/``height``, ``min-``/``max-`` and its
+content, then grown or shrunk by ``flex-grow`` and ``flex-shrink`` to fill
+the line. ``flex-direction``, ``flex-wrap``, ``justify-content``,
+``align-items``, ``align-self``, ``align-content``, ``gap``, ``order``
+and ``margin: auto`` on the items behave as in a browser, with these
+differences:
+
+-  ``inline-flex`` is laid out as ``flex``: a container always takes the
+   full width of its frame.
+-  ``align-items`` and ``align-self: baseline`` line the items up on
+   their first baseline: the first line of the item's first paragraph,
+   or, through a nested container, of its first item. A table or an
+   image has no baseline and is aligned by its bottom edge, which is
+   what the specification synthesises. ``last baseline`` is drawn as
+   ``flex-end``.
+-  A percentage ``gap`` resolves against the container's own content box
+   in that gap's axis: ``column-gap`` against the width, ``row-gap``
+   against the height. A container that takes its content's height has no
+   definite height to resolve against, and there a percentage ``row-gap``
+   is zero, as the specification says.
+-  ``align-content`` only acts when the container's ``height`` is a
+   length, which is what makes its cross size definite; in a row without
+   one it does nothing, as the specification says.
+-  A ``flex-direction: column`` container without a ``height`` never
+   wraps and never distributes free space: its height is its content's.
+-  A container that does not fit the room left on a page is cut where
+   the page ends, through the flex line and the items the cut falls in,
+   as a browser fragments it: each item goes on at the top of the next
+   page with no edge at the cut (``box-decoration-break: slice``), and an
+   item whose content cannot break there -- a one-line paragraph, an
+   image -- moves whole. A line with nothing to show above the cut moves
+   whole too, so a row of tiles still breaks between its lines. The
+   continuation keeps the widths of the cut line when the next frame is
+   as wide as the one it left; a declared ``height`` is shared between
+   the two parts, and ``align-content`` places the remaining lines in
+   what is left of it; ``wrap-reverse`` continues at the cross start. A
+   line that no frame can hold and that cannot be cut is shrunk to fit.
+-  Within a container the text direction of the document decides where
+   the row starts: a ``dir="rtl"`` document lays ``row`` out from the
+   right. The direction is read from ``dir`` on ``<html>``, ``<body>``,
+   ``<div>`` or ``<p>``. Bear in mind that ``dir="rtl"`` reverses the
+   characters of a run rather than applying the Unicode bidirectional
+   algorithm, so Latin text in a right-to-left document comes out
+   backwards; ``<pdf:language name="arabic"/>`` reshapes properly.
+
+.. _inline-block:
+
+Inline blocks
+-------------
+
+``display: inline-block`` makes the element a box that sits in the line
+of text around it, as one unbreakable word: it has its own ``width``,
+``height``, ``padding``, ``border`` and ``background``, its content is
+laid out inside it, and ``vertical-align`` places it against the line
+the way it places an inline image (``baseline``, ``top``, ``middle``,
+``bottom``, ``text-top``, ``text-bottom``, ``super``, ``sub`` or a
+length). Without a ``width`` it is as wide as its content, up to the
+room the line has. Form controls (``<input>``, ``<select>``,
+``<textarea>``) are inline blocks by default, so they no longer stand on
+a line of their own.
+
+Differences from a browser:
+
+-  The box's baseline is the baseline of its last line of text, as in a
+   browser; a box that holds no text -- a table, an image -- hangs from
+   its bottom margin edge.
+-  ``top`` and ``bottom`` align the box with the edges of the line box,
+   ``text-top`` and ``text-bottom`` with the edges of the parent's
+   content area, so the four coincide only when nothing else on the line
+   is taller. The line box here is the one ReportLab builds from the
+   font metrics of the line's fragments; it does not carry the half
+   leading CSS puts above and below the content area, so a box on
+   ``top`` sits a little lower than a browser puts it, by the same
+   amount as the first line of a block.
+-  A box wider than the line is laid out again to fit the line rather
+   than overflowing it, and is never broken across lines.
+-  A flex container inside an inline block takes the whole width of the
+   box, which is the way to write ``display: inline-flex``: an inline
+   block around a ``display: flex`` element.
+-  An inline block does not work as a list marker.
+
+.. _inline-box:
+
+Inline boxes
+------------
+
+An inline element -- a ``<span>``, an ``<a>``, a ``<b>`` -- with
+``padding``, a ``border``, a ``background-image`` or a ``margin-left``/
+``margin-right`` of its own is drawn as a box around its text, in the
+line, the way a browser draws it: the padding and the border widen the
+line, the box is painted under the text, and a box cut by a line break
+or a page break goes on from the start of the next line with no edge at
+the cut (``box-decoration-break: slice``). A ``background-color`` alone
+is still painted behind each word, as before.
+
+Differences from a browser:
+
+-  Vertical padding and borders do not change the height of the line, as
+   CSS 2.1 section 10.8 says; a tall padding overlaps the lines above
+   and below.
+-  ``margin-top`` and ``margin-bottom`` do nothing on an inline element,
+   as in a browser.
 
 Selectors
 ---------

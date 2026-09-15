@@ -1,0 +1,44 @@
+<!--
+  Browser equivalent of data/source/flex-justify-content.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>flex-justify-content</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 15pt; }
+h2 { font-size: 10pt; margin: 8pt 0 2pt 0; }
+.row { display: flex; height: 26pt; background-color: #eeeeec; margin-bottom: 2pt; }
+.row div { padding: 4pt 6pt; background-color: #d3d7cf; border: 1pt solid #888a85; }
+.start { justify-content: flex-start; }
+.end { justify-content: flex-end; }
+.center { justify-content: center; }
+.between { justify-content: space-between; }
+.around { justify-content: space-around; }
+.evenly { justify-content: space-evenly; }
+.over { justify-content: center; }
+.over div { width: 200pt; }
+</style>
+</head>
+<body>
+<h2>flex-start</h2>
+<div class="row start"><div>Alpha</div><div>Beta</div><div>Gamma</div></div>
+<h2>flex-end</h2>
+<div class="row end"><div>Alpha</div><div>Beta</div><div>Gamma</div></div>
+<h2>center</h2>
+<div class="row center"><div>Alpha</div><div>Beta</div><div>Gamma</div></div>
+<h2>space-between</h2>
+<div class="row between"><div>Alpha</div><div>Beta</div><div>Gamma</div></div>
+<h2>space-around</h2>
+<div class="row around"><div>Alpha</div><div>Beta</div><div>Gamma</div></div>
+<h2>space-evenly</h2>
+<div class="row evenly"><div>Alpha</div><div>Beta</div><div>Gamma</div></div>
+<h2>Overflow packs to the start</h2>
+<div class="row over"><div>Wide one</div><div>Wide two</div><div>Wide three</div></div>
+</body>
+</html>

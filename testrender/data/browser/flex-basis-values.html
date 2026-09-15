@@ -1,0 +1,32 @@
+<!--
+  Browser equivalent of data/source/flex-basis-values.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>flex-basis-values</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 15pt; }
+h2 { font-size: 10pt; margin: 10pt 0 2pt 0; }
+.box { display: flex; gap: 6pt; background-color: #eeeeec; }
+.box div { padding: 3pt 5pt; background-color: #d3d7cf; border: 1pt solid #888a85; }
+</style>
+</head>
+<body>
+<h2>flex-basis: 0 -- the items ignore their content and share the line</h2>
+<div class="box"><div style="flex-basis: 0; flex-grow: 1">short</div><div style="flex-basis: 0; flex-grow: 1">a much longer item than the first</div></div>
+<h2>flex-basis as a length and as a percentage</h2>
+<div class="box"><div style="flex-basis: 120pt">120pt</div><div style="flex-basis: 25%">25%</div><div style="flex-basis: 40%">40%</div></div>
+<h2>flex-basis: auto falls back to width, then to content</h2>
+<div class="box"><div style="flex-basis: auto; width: 150pt">auto with width 150pt</div><div style="flex-basis: auto">auto, no width</div></div>
+<h2>flex-basis: content ignores the width</h2>
+<div class="box"><div style="flex-basis: content; width: 250pt">content, width 250pt</div><div style="flex-basis: auto; width: 250pt">auto, width 250pt</div></div>
+<h2>flex-basis wins over width when both are set</h2>
+<div class="box"><div style="flex-basis: 90pt; width: 250pt">basis 90pt, width 250pt</div><div style="width: 90pt">width 90pt</div></div>
+</body>
+</html>

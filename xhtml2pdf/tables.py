@@ -46,6 +46,41 @@ def _height(value: str | float | None = None) -> str | float | None:
     return value if value.endswith("%") else getSize(value)
 
 
+def _mirror_columns(tdata, data, maxcols: int) -> None:
+    """
+    Lay the table's columns out right to left.
+
+    In a right-to-left document the first column is the rightmost one, the
+    way the first word of a line is its rightmost word. Everything that
+    names a column has to move with it: the cells of each row, the column
+    widths, the spans, and the x of every style -- a border or a background
+    is given as a rectangle of cell coordinates, so leaving those behind
+    would paint the old column's rules on the new column's cells.
+
+    A negative x counts from the right, which after mirroring counts from
+    the left: -1, the last column, becomes 0. The pair is then put back in
+    ascending order, because a style is a rectangle and not a direction.
+    """
+    if maxcols < 2:
+        return
+
+    def mirror(x: int) -> int:
+        return maxcols - 1 - x if x >= 0 else -1 - x
+
+    for row in data:
+        row.reverse()
+    tdata.colw.reverse()
+    tdata.span = [(mirror(x), y) for x, y in tdata.span]
+    mirrored = []
+    for style in tdata.styles:
+        name, start, stop, *rest = style
+        first, last = mirror(start[0]), mirror(stop[0])
+        if first > last:
+            first, last = last, first
+        mirrored.append((name, (first, start[1]), (last, stop[1]), *rest))
+    tdata.styles = mirrored
+
+
 class TableData:
     def __init__(self) -> None:
         self.align: str = ""
@@ -231,6 +266,9 @@ class pisaTagTABLE(pisaTag):
                 and tdata.colw[col] is None
             ):
                 tdata.colw[col] = _width(padding)
+
+        if c.is_rtl:
+            _mirror_columns(tdata, data, maxcols)
 
         log.debug("Col widths: %r", tdata.colw)
         if tdata.data:

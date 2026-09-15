@@ -109,10 +109,19 @@ _backgroundAttachmentTable = {"scroll", "fixed", "local"}
 _backgroundPositionTable = {"left", "right", "top", "bottom", "center", "middle"}
 
 _lengthPattern = re.compile(r"^[+-]?\d*\.?\d+(%|em|ex|rem|px|pt|pc|cm|mm|in)?$")
+_numberPattern = re.compile(r"^[+-]?(\d+\.?\d*|\.\d+)$")
+
+_flexDirectionTable = {"row", "row-reverse", "column", "column-reverse"}
+_flexWrapTable = {"nowrap", "wrap", "wrap-reverse"}
 
 
 def _isLength(text: str) -> bool:
     return bool(_lengthPattern.match(text))
+
+
+def _isNumber(part) -> bool:
+    """A bare <number>: the parser hands those over as strings, "1" or "1.5"."""
+    return isinstance(part, str) and bool(_numberPattern.match(part))
 
 
 def _joinPart(part) -> str:
@@ -228,6 +237,85 @@ def expandListStyle(parts, last):
     return expanded
 
 
+def expandFlex(parts, last):
+    """
+    flex: none | auto | initial | [ <flex-grow> <flex-shrink>? || <flex-basis> ]
+
+    The parts the shorthand leaves out are not the longhands' own initial
+    values: a bare number sets flex-basis to 0, not auto, and a bare basis
+    sets flex-grow to 1. That is what makes three cards with `flex: 1` come
+    out equal instead of proportional to their text, and it is the error
+    everyone makes the first time (css-flexbox-1, 7.1.1).
+
+    None means the declaration is not a form this understands; the caller
+    keeps it as written, and it is reported as unsupported like any other.
+    """
+    if len(parts) == 1 and isinstance(parts[0], str):
+        keyword = parts[0].lower()
+        if keyword == "none":
+            grow, shrink, basis = "0", "0", "auto"
+        elif keyword == "auto":
+            grow, shrink, basis = "1", "1", "auto"
+        elif keyword == "initial":
+            grow, shrink, basis = "0", "1", "auto"
+        else:
+            keyword = None
+        if keyword is not None:
+            return [
+                ("flex-grow", grow, last),
+                ("flex-shrink", shrink, last),
+                ("flex-basis", basis, last),
+            ]
+
+    grow, shrink, basis = "1", "1", "0"
+    numbers = [part for part in parts if _isNumber(part)]
+    others = [part for part in parts if not _isNumber(part)]
+    # A unitless 0 is a length wherever a length is allowed, so `flex: 1 1 0`
+    # is three numbers of which the last is the basis.
+    if len(numbers) == 3 and numbers[2] == "0" and not others:
+        others = [numbers.pop()]
+    if len(numbers) > 2 or len(others) > 1 or not parts:
+        log.warning("flex: %r is not a form xhtml2pdf understands", parts)
+        return None
+    if numbers:
+        grow = numbers[0]
+    if len(numbers) == 2:
+        shrink = numbers[1]
+    if others:
+        basis = others[0]
+    return [
+        ("flex-grow", grow, last),
+        ("flex-shrink", shrink, last),
+        ("flex-basis", basis, last),
+    ]
+
+
+def expandFlexFlow(parts, last):
+    """flex-flow: <flex-direction> || <flex-wrap>, in either order."""
+    expanded = []
+    for part in parts:
+        if part in _flexDirectionTable:
+            expanded.append(("flex-direction", part, last))
+        elif part in _flexWrapTable:
+            expanded.append(("flex-wrap", part, last))
+        else:
+            log.warning("flex-flow: %r is not a direction or a wrap", part)
+            return None
+    return expanded
+
+
+def expandGap(parts, last):
+    """gap: <row-gap> <column-gap>?; one value serves both."""
+    if len(parts) == 1:
+        row = column = parts[0]
+    elif len(parts) == 2:
+        row, column = parts
+    else:
+        log.warning("gap: %r takes one or two values", parts)
+        return None
+    return [("row-gap", row, last), ("column-gap", column, last)]
+
+
 def parseSpecialRules(declarations, debug=0):
     # print selectors, declarations
     # CSS MODIFY!
@@ -279,6 +367,15 @@ def parseSpecialRules(declarations, debug=0):
         # LIST-STYLE
         elif name == "list-style":
             dd.extend(expandListStyle(parts, last))
+
+        # FLEX, FLEX-FLOW, GAP
+        elif name in {"flex", "flex-flow", "gap"}:
+            expand = {"flex": expandFlex, "flex-flow": expandFlexFlow, "gap": expandGap}
+            expanded = expand[name](parts, last)
+            if expanded is None:
+                dd.append(d)
+            else:
+                dd.extend(expanded)
 
         # TODO: We should definitely outsource the "if len() ==" part into a separate function!
         # Because we're repeating the same if-elif-else statement for MARGIN, PADDING,

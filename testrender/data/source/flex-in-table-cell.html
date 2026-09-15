@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>flex-in-table-cell</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 15pt; }
+h2 { font-size: 10pt; margin: 10pt 0 2pt 0; }
+td { vertical-align: top; padding: 0; }
+.row { display: flex; gap: 4pt; background-color: #eeeeec; }
+.row div { padding: 3pt; background-color: #d3d7cf; border: 1pt solid #888a85; }
+.wrap { flex-wrap: wrap; }
+.wrap div { width: 60pt; }
+.spread { flex-wrap: wrap; align-content: space-between; height: 150pt; }
+.spread div { width: 60pt; }
+.note { font-size: 9pt; padding-left: 8pt; }
+</style>
+</head>
+<body>
+<h2>A single-line row in the left cell of a two-column table</h2>
+<table width="100%"><tr>
+<td width="55%"><div class="row"><div style="flex: 1 1 0">one</div><div style="flex: 1 1 0">two</div><div style="flex: 1 1 0">three</div></div></td>
+<td width="45%" class="note">The right cell is plain content, undisturbed by the row beside it.</td>
+</tr></table>
+<h2>A wrapping row in a cell takes its lines from the cell's width</h2>
+<table width="100%"><tr>
+<td width="55%"><div class="row wrap"><div>one</div><div>two</div><div>three</div><div>four</div><div>five</div><div>six</div></div></td>
+<td width="45%" class="note">Six items of 60pt: four fit across the left cell and two fall to a second line.</td>
+</tr></table>
+<h2>The same row with a height and align-content</h2>
+<table width="100%"><tr>
+<td width="55%"><div class="row spread"><div>one</div><div>two</div><div>three</div><div>four</div><div>five</div><div>six</div></div></td>
+<td width="45%" class="note">The container is 150pt tall and space-between puts its two lines at the ends of that height, not below it.</td>
+</tr></table>
+</body>
+</html>

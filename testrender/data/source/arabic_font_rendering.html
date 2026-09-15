@@ -38,8 +38,14 @@
 </head>
 
 <body>
+<!--
+  Declared for the whole document, which is what the browser side says with
+  <body dir="rtl">. It used to sit inside the <div> below and still reach the
+  whole document, because the direction was one value for the file and nothing
+  put it back; it is bounded by the element that declares it now.
+-->
+<pdf:language name="arabic"/>
 <div>
-    <pdf:language name="arabic"/>
     <span>رقم الغرفة:</span>
 </div>
 

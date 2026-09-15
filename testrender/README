@@ -98,3 +98,26 @@ is explained rather than mysterious.
     leading falls above the first line; ReportLab starts the ascent at the top
     of the box instead. Worth about 4pt at a 10px font with 150% line height,
     the same on every block, so it does not accumulate.
+
+  * A table with no column widths gets equal columns, where a browser sizes
+    each column to its content, so the table comes out wider. As a block it
+    also takes the whole frame width rather than shrink-wrapping. Shown by
+    test-tables, and inherited by flex-item-content, whose flex item is only
+    as wide as the table it holds.
+
+  * Arabic letters are joined by substituting presentation forms, because
+    ReportLab does no shaping of its own. A font built for OpenType shaping
+    carries the plain Arabic block and few or no presentation forms, and the
+    letters are then left unjoined rather than replaced by boxes -- readable,
+    but not what the browser draws. Shown by arabic_font_rendering, which is
+    why it does not compare SSIM.
+
+A trap that is not a difference, because a browser does the same thing: a
+<div> inside a <p> is not allowed, and the HTML parser closes the paragraph
+and lifts the <div> out of every inline element around it. A flex container
+written as <p>... <span style="display:flex"><div>a</div></span> ...</p>
+therefore ends up empty, and a descendant selector rooted at anything outside
+it stops matching, because the items are no longer inside it. Chrome's DOM
+agrees element for element. Use inline children -- spans -- for a flex row
+that lives in a paragraph. inline-block-nested and inline-flex-workaround both
+had this and were comparing two identically-restructured documents.

@@ -1,0 +1,30 @@
+<!--
+  Browser equivalent of data/source/flex-sidebar.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>flex-sidebar</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; }
+.page { display: flex; gap: 10pt; }
+.side { flex: 0 0 140pt; background-color: #ddddee; padding: 8pt; }
+.main { flex: 1; padding: 8pt; border: 1pt solid #666699; }
+p { margin: 0 0 6pt 0; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="side"><p><b>Sidebar</b></p><p>Fixed at 140pt, it never grows and never shrinks.</p></div>
+  <div class="main">
+    <p>The main column grows to fill the rest of the line. Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Donec euismod ante sed mi. Mauris tortor purus, fermentum sit amet, interdum et, rutrum nec, risus. Suspendisse erat nisi, vestibulum a, mattis at, dignissim quis, ante.</p>
+    <p>Ut in dui. Etiam sed elit nec tellus vulputate tincidunt. Nunc tortor risus, dignissim in, tempor a, sodales vel, erat. Aenean metus ipsum, vulputate vel, eleifend sed, tristique sed, nibh.</p>
+  </div>
+</div>
+</body>
+</html>

@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from reportlab import rl_settings
-from reportlab.lib.enums import TA_LEFT
+from reportlab.lib.enums import TA_LEFT, TA_RIGHT
 from reportlab.lib.fonts import addMapping
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
@@ -38,13 +38,14 @@ except ImportError:  # pragma: no cover
 from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
 
 from xhtml2pdf import default, parser
+from xhtml2pdf.builders.flex import FlexData
 from xhtml2pdf.files import B64InlineURI, getFile, pisaFileObject
-from xhtml2pdf.properties import CSSAttrs
+from xhtml2pdf.properties import CSSAttrs, reset_non_inherited
 from xhtml2pdf.tables import TableData
 from xhtml2pdf.util import (
     apply_text_transform,
-    arabic_format,
     copy_attrs,
+    font_has_glyph,
     frag_text_language_check,
     get_default_asian_font,
     getColor,
@@ -58,6 +59,7 @@ from xhtml2pdf.util import (
     getTocNameClass,
     set_asian_fonts,
     set_value,
+    split_by_coverage,
 )
 from xhtml2pdf.w3c import css
 from xhtml2pdf.xhtml2pdf_reportlab import (
@@ -108,6 +110,11 @@ def clone(self, **kwargs) -> ParaFrag:
 ParaFrag.clone = clone
 
 
+#: The file each embedded face was built from, by its ReportLab name. Process
+#: wide, like pdfmetrics._fonts, so that the two can be compared at all.
+_embedded_font_source: dict[str, str] = {}
+
+
 def registerTTFont(fullFontName: str, file) -> None:
     """
     Make an embedded TrueType font available to ReportLab under fullFontName.
@@ -121,11 +128,30 @@ def registerTTFont(fullFontName: str, file) -> None:
 
     The name is all that is consulted, so a second document declaring the same
     font-family from a different file keeps the face the first one embedded.
-    That predates this and is unchanged by it.
+    That predates this; what is new is that it says so.
     """
-    if fullFontName in pdfmetrics._fonts:
+    name = file.getNamedFile()
+    registered = pdfmetrics._fonts.get(fullFontName)
+    if registered is not None:
+        # Same name, different file: the document is going to be drawn with
+        # the other one's glyphs, and until now nothing said a word. Whether
+        # the file is the same cannot be asked of a TTFont, which does not
+        # keep its source, so the filename this render resolved is recorded
+        # alongside and compared.
+        previous = _embedded_font_source.get(fullFontName)
+        if previous is not None and name is not None and previous != name:
+            log.warning(
+                "Font %r is already embedded in this process from %r, so %r is "
+                "ignored and the text is drawn with the first one. Give the two "
+                "families different names.",
+                fullFontName,
+                previous,
+                name,
+            )
         return
-    pdfmetrics.registerFont(TTFont(fullFontName, file.getNamedFile()))
+    if name is not None:
+        _embedded_font_source[fullFontName] = name
+    pdfmetrics.registerFont(TTFont(fullFontName, name))
 
 
 def getParaFrag(style) -> ParaFrag:
@@ -192,6 +218,10 @@ def getParaFrag(style) -> ParaFrag:
     frag.text = ""
     frag.fontName = "Times-Roman"
     frag.fontName, frag.bold, frag.italic = ps2tt(style.fontName)
+    #: Every family the element's font-family named, in order, for the ones
+    #: after the first to be reached per character. Inherited with the rest
+    #: of the frag, the way font-family is.
+    frag.fontFamilies = []
     frag.fontSize = style.fontSize
     frag.textColor = style.textColor
 
@@ -204,6 +234,7 @@ def getParaFrag(style) -> ParaFrag:
     frag.leadingSource = "150%"
     frag.alignment = TA_LEFT
     frag.borderWidth = 1
+    reset_non_inherited(frag)
 
     frag.borderLeftWidth = frag.borderWidth
     frag.borderLeftColor = frag.borderColor
@@ -268,6 +299,19 @@ class pisaCSSBuilder(css.CSSBuilder):
             src = self.c.getFile(font, relative=self.c.cssParser.rootPath)
             if src and not src.notFound():
                 self.c.loadFont(names, src, bold=bold, italic=italic)
+            else:
+                # Dropped without a word until now. The document then drew
+                # with whatever the family name happened to mean -- a base-14
+                # face, if the name was one of the aliases -- and the author
+                # saw missing glyphs with nothing to connect them to.
+                log.warning(
+                    self.c.warning(
+                        "@font-face for %r could not read %r, so the family is "
+                        "not embedded and the text will use another font.",
+                        names,
+                        font,
+                    )
+                )
         return {}, {}
 
     def _pisaAddFrame(
@@ -697,6 +741,12 @@ class pisaContext:
     """
 
     def __init__(self, path: str = "", debug: int = 0, capacity: int = -1) -> None:
+        #: font-family lists already reported as unknown, so a stylesheet
+        #: that names a missing font on every element says it once.
+        self._font_warned: set[tuple[str, ...]] = set()
+        #: Characters already reported as having no glyph anywhere, so a
+        #: paragraph of them says it once per character rather than per word.
+        self._glyph_warned: set[str] = set()
         self.fontList: dict[str, str] = copy.copy(default.DEFAULT_FONT)
         self.asianFontList: dict[str, str] = copy.copy(get_default_asian_font())
         self.anchorFrag: list = []
@@ -716,6 +766,8 @@ class pisaContext:
         self.node: Element | None = None
         self.template = None
         self.tableData: TableData = TableData()
+        #: The flex container being collected, if the walk is inside one.
+        self.flexData: FlexData = FlexData()
         self.err: int = 0
         self.fontSize: float = 0.0
         self.listCounter: int = 0
@@ -823,10 +875,55 @@ class pisaContext:
     def toc(self, value: PmlTableOfContents) -> None:
         self.tocs[""] = value
 
+    @property
+    def is_rtl(self) -> bool:
+        """Whether the element being walked is written right to left."""
+        return bool(getattr(self.frag, "rtl", False))
+
     def setDir(self, direction):
-        if direction == "rtl":
-            self.frag.rtl = True
+        """
+        The writing direction of the element being walked.
+
+        On the frag rather than on the context, because direction is
+        inherited and bounded like any other inherited property: pisaLoop
+        pushes a frag for each element and pops it when the element closes,
+        so a dir on a <div> reaches what is inside it and stops there. It
+        used to be one value for the whole document, set by whichever
+        element declared it last and never put back, so a single
+        `<p dir="rtl">` left every table after it with its columns reversed.
+
+        A right-to-left line is laid out by aligning it to the right, not by
+        turning its words around: the bidirectional algorithm has already put
+        the characters in the order they are drawn in. An explicit text-align
+        on the same element still wins.
+        """
         self.dir = direction
+        self._applyDir(self.frag, direction)
+
+    def setDirForRest(self, direction) -> None:
+        """
+        The direction for the rest of the element this one is inside.
+
+        <pdf:language> is a declaration, not a box: it is empty, so a
+        direction put on its own frag would be popped again the moment the
+        tag closed and reach nothing at all. It goes on the enclosing frag
+        instead, where it lasts until that element closes -- which is what
+        "from here on" means for a document that declares a language
+        halfway down.
+        """
+        self.dir = direction
+        self._applyDir(self.frag, direction)
+        if self.fragStack:
+            self._applyDir(self.fragStack[-1], direction)
+
+    def _applyDir(self, frag, direction) -> None:
+        frag.rtl = direction == "rtl"
+        if direction == "rtl" and "text-align" not in self.cssAttr:
+            frag.alignment = TA_RIGHT
+        elif direction != "rtl" and frag.alignment == TA_RIGHT:
+            # Put the alignment back with the direction; a document that
+            # turns a language off is not asking to stay right-aligned.
+            frag.alignment = TA_LEFT
 
     def UID(self):
         self.uidctr += 1
@@ -1126,11 +1223,11 @@ class pisaContext:
                 frags = self.fragAnchor + self.fragList
 
                 self.dumpPara(frags, style)
-                if hasattr(self, "language"):
-                    language = self.language
-                    detect_language_result = arabic_format(self.text, language)
-                    if detect_language_result is not None:
-                        self.text = detect_language_result
+                # self.text is accumulated from fragments that have already
+                # been reshaped and reordered one by one, so reshaping it
+                # again here put the text through the whole of it twice --
+                # which is what dropped a NUL into an Arabic paragraph that
+                # also declared dir="rtl".
 
                 para = PmlParagraph(
                     self.text, style, frags=frags, bulletText=bulletText, dir=self.dir
@@ -1178,9 +1275,65 @@ class pisaContext:
         return self.frag
 
     def _appendFrag(self, frag) -> None:
-        if frag.link and frag.link.startswith("#"):
-            self.anchorFrag.append((frag, frag.link[1:]))
-        self.fragList.append(frag)
+        for part in self._byCoverage(frag):
+            if part.link and part.link.startswith("#"):
+                self.anchorFrag.append((part, part.link[1:]))
+            self.fragList.append(part)
+
+    def _byCoverage(self, frag) -> list:
+        """
+        `frag` split into runs, each in a family that can draw it.
+
+        Every text fragment passes through here, which is why the split lives
+        here rather than in addFrag's several branches. A fragment carrying a
+        cbDefn -- an image, an inline block, the edge of an inline box -- has
+        no text and is handed back untouched.
+        """
+        text = getattr(frag, "text", "")
+        families = getattr(frag, "fontFamilies", None)
+        if not text or not isinstance(text, str) or not families:
+            return [frag]
+
+        candidates = [tt2ps(family, frag.bold, frag.italic) for family in families]
+        if frag.fontName not in candidates:
+            candidates.insert(0, frag.fontName)
+        self._warn_missing_glyphs(text, candidates)
+        if len(candidates) < 2:
+            return [frag]
+
+        runs = split_by_coverage(text, candidates)
+        if len(runs) == 1 and runs[0][1] == frag.fontName:
+            return [frag]
+        # Not `len(runs) < 2`: a fragment whose every character belongs to a
+        # later family comes back as one run in that family, and returning
+        # the fragment unchanged there threw the answer away. It is the whole
+        # paragraph of Cyrillic or Hebrew that this happens to.
+        parts = []
+        for run, font_name in runs:
+            part = frag.clone()
+            part.text = run
+            part.fontName = part.bulletFontName = font_name
+            parts.append(part)
+        return parts
+
+    def _warn_missing_glyphs(self, text: str, candidates: list) -> None:
+        """Say once per character that no family named has a glyph for it."""
+        for char in set(text):
+            if char.isspace() or char in self._glyph_warned:
+                continue
+            if any(font_has_glyph(name, char) for name in candidates):
+                continue
+            self._glyph_warned.add(char)
+            log.warning(
+                self.warning(
+                    "No font this document has can draw %r (U+%04X); it will "
+                    "come out blank or as a box. None of %s has a glyph for "
+                    "it -- embed a font that covers the script with @font-face.",
+                    char,
+                    ord(char),
+                    ", ".join(repr(name) for name in candidates),
+                )
+            )
 
     def _appendPreservingSpaces(self, line, baseFrag) -> None:
         """
@@ -1273,7 +1426,9 @@ class pisaContext:
                     self._appendFrag(frag)
                 else:
                     frag.text = " ".join(("x" + text + "x").split())[1:-1]
-                    language_check = frag_text_language_check(self, frag.text)
+                    language_check = frag_text_language_check(
+                        self, frag.text, frag.fontName
+                    )
                     if language_check:
                         frag.text = language_check
                     if self.fragStrip:
@@ -1340,23 +1495,77 @@ class pisaContext:
             policy=self.resource_policy,
         )
 
-    def getFontName(self, names, default="helvetica"):
-        """Name of a font."""
-        # print names, self.fontList
+    @staticmethod
+    def _familyKeys(names) -> list[str]:
+        """
+        A font-family list as the font registry keys it.
+
+        loadFont strips a leading "#" before registering -- that is the
+        documented way to embed several TTFs that share one internal face
+        name -- but the lookup did not, so a family declared as "#MY" and
+        used as "#MY" registered under "my" and then found nothing. It has
+        been quietly drawing in Helvetica since the convention was added.
+        """
         if not isinstance(names, list):
-            names = str(names)
-            names = names.strip().split(",")
-        for name in names:
-            name = str(name)
-            font = name.strip().lower()
-            if font in self.asianFontList:
-                font = self.asianFontList.get(font, None)
+            names = str(names).strip().split(",")
+        return [str(name).strip().lstrip("#").lower() for name in names]
+
+    def getFontNames(self, names) -> list[str]:
+        """
+        Every family of this font-family list that the document knows.
+
+        CSS matches a font-family list per character, not per element: the
+        first family that has the character is the one that draws it. Keeping
+        the whole list is what makes that possible; getFontName answers the
+        first of them, which is what everything that places a whole run wants.
+        """
+        resolved: list[str] = []
+        for family in self._familyKeys(names):
+            if family in self.asianFontList:
+                font = self.asianFontList.get(family)
                 set_asian_fonts(font)
             else:
-                font = self.fontList.get(font, None)
-            if font is not None:
-                return font
-        return self.fontList.get(default, None)
+                font = self.fontList.get(family)
+            if font is not None and font not in resolved:
+                resolved.append(font)
+        return resolved
+
+    def getFontName(self, names, default="helvetica", *, warn: bool = True):
+        """
+        The face to draw with: the first family this document knows.
+
+        A family nobody registered used to fall through to Helvetica without
+        a word, which is the single commonest reason for "my font was
+        ignored": a misspelling, a @font-face whose src never arrived, or a
+        system font that was never embedded all look the same from here, and
+        all of them look like nothing at all.
+
+        `warn` is for the one caller that asks on purpose for a font it does
+        not expect to find and has a fallback of its own in mind.
+        """
+        resolved = self.getFontNames(names)
+        if resolved:
+            return resolved[0]
+        fallback = self.fontList.get(default, None)
+        if warn:
+            self._warn_unknown_font(self._familyKeys(names), fallback)
+        return fallback
+
+    def _warn_unknown_font(self, tried, fallback) -> None:
+        """Say once per document that a font-family reached nothing."""
+        key = tuple(tried)
+        if not key or key in self._font_warned:
+            return
+        self._font_warned.add(key)
+        log.warning(
+            self.warning(
+                "None of the font families %s is known to this document, so %r "
+                "is used instead. Embed the family with @font-face, or use one "
+                "of the built-in names.",
+                ", ".join(repr(name) for name in tried),
+                fallback,
+            )
+        )
 
     def registerFont(self, fontname, alias=None):
         alias = alias if alias is not None else []

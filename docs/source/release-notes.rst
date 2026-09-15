@@ -51,6 +51,194 @@ Versions >= 0.2
     --------------------------------------------
 
 
+0.2.20
+====================
+
+Released: 2026-09-15
+
+**🎉 New**
+
+* **CSS flexbox.** ``display: flex`` lays the element's children out in a
+  row or a column, following CSS Flexible Box Layout Module Level 1:
+  ``flex-direction``, ``flex-wrap``, ``flex-flow``, ``justify-content``,
+  ``align-items``, ``align-self``, ``align-content``, ``gap``/``row-gap``/
+  ``column-gap``, ``flex-grow``, ``flex-shrink``, ``flex-basis``, ``flex``,
+  ``order``, ``min-``/``max-width``/``height`` on the items and ``margin:
+  auto``. Before this ``display: flex`` fell through to ``inline`` and the
+  children ran into their parent's text. See the Flexbox section of the
+  HTML reference for what is and is not supported.
+* **``display: inline-block``.** A box inside the line of text, with its
+  own width, height, padding, border and background, placed by
+  ``vertical-align`` like an inline image. Form controls -- ``<input>``,
+  ``<select>``, ``<textarea>`` -- are inline blocks by default and sit in
+  the line instead of each closing the paragraph it was in.
+* **Inline boxes.** An inline element with ``padding``, a ``border``, a
+  ``background-image`` or side margins is drawn as a box around its text,
+  in the line: the padding widens the line, the box is painted under the
+  words, and one cut by a line break or a page break goes on from the
+  next line without an edge at the cut. Before this, padding and borders
+  on a ``<span>`` were ignored.
+* **Flex containers break across pages.** A container that does not fit
+  the room left on a page is cut where the page ends, through its line
+  and its items, the way a browser fragments it: each item goes on at
+  the top of the next page without an edge at the cut, an item whose
+  content cannot break there moves whole, and a line with nothing to
+  show above the cut moves whole.
+* **A ``font-family`` list is matched per character**, as CSS says it is.
+  The first family that existed used to draw everything, so a document
+  naming a Latin face first lost every character that face had no glyph
+  for: ``ěščřžýáíéí`` came out ``■š■■žýáíéí``, the boxes being exactly the
+  letters Helvetica lacks. ``font-family: Helvetica, MySans`` now reaches
+  ``MySans`` for those and leaves the rest where it was, and
+  ``font-family: "Noto Sans Devanagari", "Noto Sans"`` gives a Devanagari
+  subset font the Latin it does not carry. A character no family on the
+  list has is reported, by character and by the fonts tried.
+* **Right-to-left documents.** A direction declared with ``dir="rtl"`` or
+  with ``<pdf:language name="arabic"/>`` now turns the document round
+  rather than only reshaping its text: paragraphs are aligned to the right
+  unless ``text-align`` says otherwise, and a table's columns run from the
+  right, so the first ``<td>`` of a row is its rightmost cell. Hebrew or
+  Arabic inside an otherwise left-to-right paragraph is reordered too --
+  the bidirectional algorithm used to run only on documents that declared
+  a direction, so a Hebrew word in an English sentence read backwards.
+
+**💪🏼 Improvements**
+
+* Every value of ``display`` now means something: ``table``,
+  ``list-item``, ``flow-root``, ``grid`` and the ``table-*`` values are
+  laid out as ``block`` (before, only ``block`` and ``none`` were looked
+  at, so ``display: table`` on a ``<div>`` did not even make it a block),
+  and a value this library does not know is reported once rather than
+  silently treated as ``inline``.
+* The ``flex``, ``flex-flow`` and ``gap`` shorthands are expanded, and a
+  flexbox value this library does not support (``align-items: last
+  baseline`` is drawn as ``flex-end``) is reported once, by value.
+* ``align-items: baseline`` and ``align-self: baseline`` line flex items
+  up on the first baseline of their text, the way a browser does; an
+  item with no text is aligned by its bottom edge. An inline block with
+  ``vertical-align: baseline`` sits on the baseline of its last line of
+  text rather than on its bottom edge.
+* CSS's generic font families are answered deliberately rather than by
+  accident. Only ``sans`` and ``sansserif`` were listed, so ``sans-serif``
+  -- the commonest ``font-family`` there is -- matched nothing and arrived at
+  Helvetica through the fallback. ``cursive``, ``fantasy``, ``system-ui``,
+  ``math`` and the ``ui-*`` families are answered too, each with the nearest
+  base-14 face.
+* Choosing a font no longer fails in silence. A ``font-family`` that names
+  nothing the document knows, a ``@font-face`` whose ``src`` could not be
+  read, a CJK name ReportLab does not have, and a second ``@font-face``
+  reusing a family name already embedded in the process from another file
+  each now say so, naming the family and what was used instead. All four
+  used to end in Helvetica with nothing in the log, which made a missing
+  font indistinguishable from a missing glyph.
+* Arabic letters are no longer replaced by empty boxes when the font has no
+  presentation form for them. Joining is done by substituting those forms,
+  and a font built for OpenType shaping carries few or none; ligatures are
+  dropped first and the letters left unjoined second.
+* A font, image or stylesheet that already is a local file is read where it
+  lies. It used to be copied through a temporary file first -- read whole,
+  written out, and read again -- although the resource policy had already
+  vetted the path.
+
+**🐛 Bug-Fixes**
+
+* On Windows, a document with any ``@font-face`` could not be converted:
+  ReportLab's open of the font raised ``PermissionError``/``TTFError``.
+  xhtml2pdf wrote the font to a ``NamedTemporaryFile``, kept the handle
+  open and handed ReportLab the *name*, and on Windows that handle is an
+  exclusive share, so the second open could not succeed. A name handed out
+  for another library to open now belongs to a closed file, removed at the
+  end of the render instead of on close. The same applies to the canvas a
+  watermark is drawn on.
+* An inline box -- a ``<span>`` with ``padding``, a ``border`` or a
+  ``background`` -- a ``display: inline-block``, or any form control,
+  which is an inline block by default, stopped the conversion with
+  ``OSError: Cannot open resource ...afm, while looking for faceName=...``
+  in any document whose font came from ``@font-face``. The frag that
+  carries the box holds no text, so it never passed through the step that
+  turns a family name into the concrete face registered for it, and an
+  embedded TTF is registered as ``<family>_00``. A base-14 family happened
+  to survive because it is registered under its own name.
+* A family named with the documented ``#`` prefix -- the way to embed
+  several TTFs that share one internal face name -- was registered with the
+  ``#`` stripped and looked up with it kept, so it was never found and the
+  text was drawn in Helvetica.
+* A source given as ``bytes`` ignored the ``encoding`` argument. Only a
+  ``str`` source carried the caller's encoding through to the HTML parser;
+  bytes fell through to the parser's own sniffing, whose last resort is
+  windows-1252, so UTF-8 bytes came out as mojibake -- a bullet as
+  ``â€¢`` -- however plainly ``encoding="utf-8"`` had been passed. Naming
+  no encoding still leaves the document's own ``<meta charset>`` to decide.
+* The writing direction had no end. ``dir="rtl"`` on a ``<div>`` or a
+  ``<p>``, or a ``<pdf:language>`` naming a right-to-left language, was one
+  value for the whole file, set by whichever element declared it last and
+  never put back -- so a single right-to-left paragraph left every table
+  after it with its columns reversed and every paragraph right-aligned with
+  its full stop moved to the front. It is bounded by the element that
+  declares it now, and ``<pdf:language name=""/>`` ends it where it says it
+  does.
+* ``dir="rtl"`` reversed each fragment with ``str[::-1]`` and its words
+  twice over, on top of the bidirectional algorithm that had already run, so
+  the Latin words of a right-to-left document came out backwards -- "and
+  Latin text" as "dna nitaL txet". A right-to-left line is laid out by
+  aligning it to the right, not by turning its words around.
+* A document that declared both ``dir="rtl"`` and ``<pdf:language>`` had its
+  text put through the reshaper twice, once per fragment and once more over
+  the whole paragraph, which could leave a NUL in the middle of it.
+* ``dir`` on the ``<html>`` element was ignored. It was read on ``<body>``,
+  ``<div>`` and ``<p>``, but the root element is where a document usually
+  declares its direction.
+* ``<pdf:language name="Arabic"/>`` did nothing when it was not spelled in
+  lower case: it reshaped no text, and was excluded from ``/Lang`` for being
+  a language name, so it did neither job.
+* ``width`` and ``height`` were handed down from a block to everything
+  inside it, because the frag a child starts from is a clone of its
+  parent's and neither was ever put back. CSS inherits neither, and in a
+  flex container it was doing real damage: every item took the
+  container's own width and height as its own, which made the item's
+  cross size definite and stopped ``align-items: stretch`` from ever
+  sizing an item to its line.
+* A flex container with a declared ``height`` that was cut between pages
+  gave both parts the whole height, so the first part no longer fit the
+  room it was cut for. The height is now shared: the first part takes
+  what it shows, the second the rest.
+* A percentage ``row-gap`` was resolved against the container's width.
+  css-align 8.3 resolves a gap against the container's own content box
+  in that gap's axis, so a percentage ``row-gap`` goes against the
+  height, and counts as zero when the height is indefinite -- which, for
+  a container that takes its content's height, it usually is.
+* ``vertical-align: top`` and ``bottom`` were drawn as ``text-top`` and
+  ``text-bottom``. CSS 2.1 10.8.1 aligns the first pair with the edges of
+  the whole line box and the second with the parent's content area, so
+  the four only coincide when nothing else on the line is taller. The
+  line box is known once the line has been assembled, which is where the
+  two are now told apart. This reaches inline images too, and an ``<img>``
+  with no ``align`` is aligned ``bottom``, so an image sharing a line with
+  something taller than itself now sits at the line's bottom edge rather
+  than a fifth of the font size below the baseline.
+* An inline image measured more than once came out smaller each time: the
+  paragraph scaled the size it found instead of the image's natural size,
+  so ``-pdf-keep-in-frame-mode: shrink`` -- which measures its content
+  repeatedly -- shrank every image twice. Images inside a shrunk frame are
+  now the size the frame's scale gives them.
+
+**📘 Documentation**
+
+* :doc:`reference/html` documents flexbox and inline blocks: which
+  properties are read, and where the layout differs from a browser's on
+  purpose -- ``inline-flex`` as block-level ``flex``, ``align-content``
+  needing a length ``height``, a ``column`` without one never wrapping, and
+  how a container is fragmented at a page edge.
+* :doc:`guide/fonts` is rewritten around what font matching now does: a
+  ``font-family`` list resolved per character, what happens when no family
+  on it has the character, and the fact that a family the document embeds
+  beats a built-in alias of the same name -- the guide said the opposite.
+  Its right-to-left section says what declaring a direction actually turns
+  round, and how far the Arabic joining goes.
+
+--------------------------------------------
+
+
 0.2.19
 ====================
 

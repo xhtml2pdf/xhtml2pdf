@@ -1,0 +1,41 @@
+<!--
+  Browser equivalent of data/source/flex-order-basis.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>flex-order-basis</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; }
+.row { display: flex; gap: 6pt; margin-bottom: 12pt; }
+.row div { padding: 4pt; border: 1pt solid #555753; background-color: #eeeeec; }
+.pct { flex-basis: 25%; }
+.px { flex-basis: 90pt; }
+.grow { flex: 1 1 auto; }
+.last { order: 1; }
+.first { order: -1; background-color: #fce94f; }
+.shrink { width: 300pt; flex-shrink: 2; }
+.noshrink { width: 200pt; flex-shrink: 0; background-color: #fce94f; }
+.minw { min-width: 0; }
+</style>
+</head>
+<body>
+<div class="row">
+  <div class="pct">basis 25%</div>
+  <div class="px">basis 90pt</div>
+  <div class="grow">grows with the rest</div>
+  <div class="last">order 1, last</div>
+  <div class="first">order -1, first</div>
+</div>
+<div class="row">
+  <div class="shrink minw">width 300pt, flex-shrink 2: gives up twice as much of the overflow</div>
+  <div class="noshrink">width 200pt, flex-shrink 0</div>
+  <div class="shrink minw">width 300pt, flex-shrink 2</div>
+</div>
+</body>
+</html>
