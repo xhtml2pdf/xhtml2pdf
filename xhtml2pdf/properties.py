@@ -16,8 +16,10 @@ attribute and converter that apply it means the whitelist and the code that
 acts on it cannot drift apart: the uniform mappings are generated from here
 rather than repeated as literal tuples.
 
-`frag` set means "the registry applies this one", through transform_attrs.
-`frag` unset means the property has a hand-written branch, because its
+`frag` set means "the registry applies this one", through transform_attrs,
+unless `applied_by_hand` says CSS2Frag writes the attribute itself and the
+registry only resets it between elements. `frag` unset means the property has
+a hand-written branch and no reset, because its
 consumption is not a plain mapping: font-weight is a binary flag,
 text-decoration lights two flags from a list, margin-left accumulates into the
 running indent as well as writing to the frag, display decides isBlock, and the
@@ -92,6 +94,11 @@ class CSSProperty(NamedTuple):
     relative_to_font_size: bool = False
     #: Only read inside CSS2Frag's `if isBlock:` sections.
     block_only: bool = False
+    #: CSS2Frag writes this frag attribute itself rather than through a
+    #: uniform group, so the registry only puts it back to `initial`. The
+    #: value it writes is not a length but the declaration as it was
+    #: written, which each consumer resolves against its own basis.
+    applied_by_hand: bool = False
     note: str = ""
     #: The frag attribute's value before the element's own declarations
     #: apply; see KEEP.
@@ -148,8 +155,26 @@ CSS_PROPERTIES: tuple[CSSProperty, ...] = (
         relative_to_font_size=True,
         block_only=True,
     ),
-    CSSProperty("width", "box", note="images, table cells and barcodes only"),
-    CSSProperty("height", "box", note="images, table cells and barcodes only"),
+    # CSS does not inherit width or height, so they go back to "not declared"
+    # before each element's own declarations apply. Without the reset a width
+    # on a block reached everything inside it: every flex item in a container
+    # took the container's own width and height as its own.
+    CSSProperty(
+        "width",
+        "box",
+        frag="width",
+        initial=None,
+        applied_by_hand=True,
+        note="images, table cells, flex items and barcodes",
+    ),
+    CSSProperty(
+        "height",
+        "box",
+        frag="height",
+        initial=None,
+        applied_by_hand=True,
+        note="images, table cells, flex items and barcodes",
+    ),
     CSSProperty("zoom", "box", note="not CSS; scales images"),
 )
 

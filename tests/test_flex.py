@@ -137,6 +137,31 @@ class FlexPropertiesTest(TestCase):
         self.assertEqual(8.0, item.margin_top.value)
         self.assertEqual(0.0, item.margin_right.value)
 
+    def test_the_containers_own_size_does_not_become_the_items(self) -> None:
+        # CSS does not inherit width or height. Before properties.py reset
+        # them per element the frag carried them down the clone, so every
+        # item of a sized container took that size as its own: a row with
+        # height: 26pt gave each item a 26pt height, which made the item's
+        # cross size definite and stopped align-items: stretch from ever
+        # sizing it to the line.
+        container = _container(
+            "<div style='display:flex; width: 200pt; height: 26pt'>"
+            "<div>a</div><div style='height: 12pt'>b</div></div>"
+        )
+        first, second = container.items
+        self.assertEqual("auto", first.width.kind)
+        self.assertEqual("auto", first.height.kind)
+        # The item's own declaration still lands.
+        self.assertEqual(("length", 12.0), second.height)
+
+    def test_a_block_does_not_hand_its_width_to_what_is_inside_it(self) -> None:
+        container = _container(
+            "<div style='width: 300pt'><div style='display:flex'>"
+            "<div>a</div></div></div>"
+        )
+        self.assertEqual("auto", container.css_width.kind)
+        self.assertEqual("auto", container.items[0].width.kind)
+
     def test_width_and_height_become_the_items_size(self) -> None:
         container = _container(
             "<div style='display:flex'><div style='width: 50%; height: 30pt'>a</div></div>"

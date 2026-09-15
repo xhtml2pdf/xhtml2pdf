@@ -22,6 +22,7 @@ from xhtml2pdf.parser import getCSSAttrCacheKey, pisaParser
 from xhtml2pdf.properties import (
     CSS_PROPERTIES,
     FRAG_BLOCK_GROUPS,
+    KEEP,
     LOOP_GROUPS,
     PROPERTY_NAMES,
     SUPPORTED_PROPERTIES,
@@ -329,12 +330,28 @@ class PropertyRegistryTest(TestCase):
     def test_a_registry_driven_mapping_is_complete(self) -> None:
         # frag says "the registry applies this one"; without a converter
         # transform_attrs would be handed None and fail at render time.
+        # applied_by_hand is the exception: CSS2Frag writes the attribute
+        # itself and the registry only resets it, so it needs no converter.
         for prop in CSS_PROPERTIES:
-            if prop.frag is not None:
+            if prop.frag is not None and not prop.applied_by_hand:
                 self.assertIsNotNone(prop.convert, prop.name)
 
+    def test_a_hand_applied_property_is_only_reset(self) -> None:
+        # It earns its frag name solely to be put back to `initial`, so a
+        # converter on one would be dead code and no initial would make the
+        # frag name pointless.
+        for prop in CSS_PROPERTIES:
+            if prop.applied_by_hand:
+                self.assertIsNotNone(prop.frag, prop.name)
+                self.assertIsNone(prop.convert, prop.name)
+                self.assertIsNot(prop.initial, KEEP, prop.name)
+
     def test_uniform_groups_cover_every_driven_property(self) -> None:
-        driven = {p.name for p in CSS_PROPERTIES if p.frag is not None}
+        driven = {
+            p.name
+            for p in CSS_PROPERTIES
+            if p.frag is not None and not p.applied_by_hand
+        }
         grouped = {
             name
             for groups in (FRAG_BLOCK_GROUPS, LOOP_GROUPS)
