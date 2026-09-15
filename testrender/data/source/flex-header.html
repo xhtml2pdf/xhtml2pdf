@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>flex-header</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; }
+.header { display: flex; justify-content: space-between; align-items: center;
+          border-bottom: 2pt solid #333333; padding: 6pt 0; }
+.logo { width: 60pt; height: 24pt; background-color: #cc0000; color: #ffffff; padding: 4pt; }
+.nav { display: flex; gap: 12pt; }
+.signin { margin-left: auto; padding: 4pt 8pt; border: 1pt solid #333333; }
+p { margin: 8pt 0; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">LOGO</div>
+  <div class="nav"><div>Home</div><div>Products</div><div>About</div><div>Contact</div></div>
+  <div class="signin">Sign in</div>
+</div>
+<p>A header laid out with justify-content: space-between and align-items: center; the last item is pushed to the end by margin-left: auto.</p>
+</body>
+</html>

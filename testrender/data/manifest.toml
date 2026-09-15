@@ -226,3 +226,60 @@ would show up as a text position, not only as a blur in the SSIM. The SSIM \
 that remains is mostly the circle marker, which no base-14 font has a hollow \
 glyph for and which xhtml2pdf draws as a disc; the deep unordered tree meets \
 it at every second level."""
+
+[fixtures.flex-header]
+compare = ["pages", "text", "ssim"]
+notes = """A header row: justify-content: space-between, align-items: center, a \
+nested flex nav with gap, and margin-left: auto pushing the last item to the end."""
+
+[fixtures.flex-cards]
+compare = ["pages", "text", "ssim"]
+notes = """Three cards with flex: 1 1 0 (the middle one flex: 2) and gap, then five \
+tiles of flex-basis 30% that wrap onto two lines. The cards' padding, border and \
+background are the item's own box."""
+
+[fixtures.flex-center]
+compare = ["pages", "text", "ssim"]
+notes = """justify-content and align-items on containers with a fixed height: \
+center/center, flex-end/flex-end, space-around."""
+
+[fixtures.flex-sidebar]
+compare = ["pages", "text", "ssim"]
+notes = """A fixed sidebar (flex: 0 0 140pt) next to a growing column (flex: 1) \
+holding two long paragraphs: the main item shrinks its text to the room left."""
+
+[fixtures.flex-column]
+compare = ["pages", "text", "ssim"]
+notes = """flex-direction: column with align-items: flex-start and align-self \
+stretch/center/flex-end on the items, then a row-reverse row. The column has \
+no height, so it takes its content's."""
+
+[fixtures.flex-order-basis]
+compare = ["pages", "text", "ssim"]
+notes = """flex-basis as a percentage, a length and auto, order -1 and 1 moving \
+items to the ends, and a row that overflows: flex-shrink 2 vs 0 with min-width: 0 \
+so the automatic minimum does not stop the shrinking. Known difference: \
+xhtml2pdf's max-content of a paragraph carries a 1pt allowance."""
+
+[fixtures.flex-pagebreak]
+compare = ["pages"]
+notes = """Forty wrapped tiles of 60pt, more than a page: the container is cut \
+between its lines. Only the page count is compared: where each cut falls \
+depends on the engine's page box and line metrics, so neither the rasterised \
+pages nor the per-page text line up, though the document's text as a whole \
+does (text_doc is recorded at 1.0)."""
+
+[fixtures.inline-block-badges]
+compare = ["pages", "text", "ssim"]
+notes = """display: inline-block inside paragraphs: badges with padding and a \
+background, a fixed-width box, a tall empty box with vertical-align: bottom, and \
+a badge near a line end. Known differences: the box's baseline is its bottom \
+edge in xhtml2pdf, its last line's baseline in a browser; and the text score is \
+low because a box's text is written to the page before its line's text -- the \
+paragraph's text object is buffered until the line is done -- so the reading \
+order of the extracted text is not the document's."""
+
+[fixtures.inline-block-nested]
+compare = ["pages", "text", "ssim"]
+notes = """A flex row inside an inline-block, which is how xhtml2pdf writes \
+inline-flex: the container always takes the full width of the box it is in."""

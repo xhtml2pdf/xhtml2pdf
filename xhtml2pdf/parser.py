@@ -25,6 +25,7 @@ from html5lib import treebuilders
 from reportlab.platypus.doctemplate import FrameBreak, NextPageTemplate
 from reportlab.platypus.flowables import KeepInFrame, PageBreak
 
+from xhtml2pdf.builders.flex import FlexData, InlineBoxData, clear_box
 from xhtml2pdf.default import (
     BOOL,
     BOX,
@@ -46,6 +47,7 @@ from xhtml2pdf.properties import (
     SUPPORTED_PROPERTIES,
     CSSAttrs,
     apply_uniform_groups,
+    reset_non_inherited,
 )
 
 # TODO: Why do we need to import these Tags here? They aren't uses in this file or any other file,
@@ -101,9 +103,11 @@ from xhtml2pdf.tags import (  # noqa: F401
     pisaTagUL,
 )
 from xhtml2pdf.util import (
+    Display,
     getAlign,
     getBox,
     getColor,
+    getDisplay,
     getKeepInFrameMode,
     getPos,
     getSize,
@@ -748,10 +752,18 @@ def pisaLoop(node, context, **kw):
 
         pageBreakAfter = False
         frameBreakAfter = False
-        display = lower(context.cssAttr.get("display", "inline"))
-        # print indent, node.tagName, display,
-        # context.cssAttr.get("background-color", None), attr
-        isBlock = display == "block"
+        display = getDisplay(context.cssAttr.get("display", "inline"))
+        isFlex = display == Display.FLEX
+        isBlock = display in {Display.BLOCK, Display.FLEX}
+        # css-flexbox-1, 4: the children of a flex container are blockified.
+        # Only the child itself: collecting_item is off again once it has
+        # published its properties, before its own children are visited.
+        if context.flexData.collecting_item and display != Display.NONE:
+            isBlock = True
+        # An inline-block is a box inside the line: it must not close the
+        # paragraph it sits in, but it does have a block's padding, borders
+        # and background, which CSS2Frag only reads for a block.
+        isInlineBlock = display == Display.INLINE_BLOCK and not isBlock
 
         if isBlock:
             context.addPara()
@@ -788,17 +800,20 @@ def pisaLoop(node, context, **kw):
                 if str(context.cssAttr["page-break-after"]).lower() == "left":
                     pageBreakAfter = PAGE_BREAK_LEFT
 
-        if display == "none":
-            # print "none!"
+        if display == Display.NONE:
             return
 
         # Translate CSS to frags
 
         # Save previous frag styles
         context.pushFrag()
+        # The clone carries the parent's every attribute; the ones CSS does
+        # not inherit go back to their initial value before this element's
+        # own declarations apply.
+        reset_non_inherited(context.frag)
 
         # Map styles to Reportlab fragment properties
-        CSS2Frag(context, kw, isBlock=isBlock)
+        CSS2Frag(context, kw, isBlock=isBlock or isInlineBlock)
 
         # EXTRAS
         # -pdf-keep-with-next, -pdf-outline and -pdf-outline-open. Read here
@@ -806,6 +821,13 @@ def pisaLoop(node, context, **kw):
         # directly for the .pdftoclevelN styles, and a table of contents
         # should not pick up an outline flag from them.
         apply_uniform_groups(context.frag, context.cssAttr, LOOP_GROUPS)
+
+        if context.flexData.collecting_item:
+            # This element is a flex item. Its properties are read off its
+            # own frag, and its margins are the item's place in the row, not
+            # an indent for the paragraphs inside it.
+            context.flexData.set_item_style(context.frag, context.cssAttr)
+            kw["margin-left"] = kw["margin-right"] = 0
 
         if "-pdf-outline-level" in context.cssAttr:
             context.frag.outlineLevel = int(context.cssAttr["-pdf-outline-level"])
@@ -853,6 +875,26 @@ def pisaLoop(node, context, **kw):
             # wrong place.
             context.keepInFrameIndex = len(context.story)
 
+        # Flex container: its children are collected as items into a story
+        # of their own, and the container goes into this story as one
+        # flowable when the element closes. After the keep-in-frame index,
+        # which must count the story the container will land in.
+        if isFlex:
+            context.addPara()
+            context.clearFrag()
+            flexData = FlexData(context.frag, context.cssAttr, rtl=context.dir == "rtl")
+            savedFlexData, context.flexData = context.flexData, flexData
+            savedFlexStory = context.swapStory()
+            # The container paints its own box; its items start from none,
+            # and are not indented by the container's margins twice.
+            clear_box(context.frag)
+            kw["margin-left"] = kw["margin-right"] = 0
+
+        inlineBox = None
+        if isInlineBlock:
+            inlineBox = InlineBoxData(context, context.frag, context.cssAttr)
+            kw["margin-left"] = kw["margin-right"] = 0
+
         # Tag specific operations
         if klass is not None:
             obj = klass(node, attr)
@@ -861,12 +903,27 @@ def pisaLoop(node, context, **kw):
         # Visit child nodes
         context.fragBlock = fragBlock = copy.copy(context.frag)
         for nnode in node.childNodes:
+            if isFlex:
+                context.flexData.begin_item(context)
             pisaLoop(nnode, context, **kw)
+            if isFlex:
+                context.flexData.end_item(context)
         context.fragBlock = fragBlock
 
         # END tag
         if obj:
             obj.end(context)
+
+        if isFlex:
+            context.addPara()
+            flexData, context.flexData = context.flexData, savedFlexData
+            context.swapStory(savedFlexStory)
+            container = flexData.build()
+            if container is not None:
+                context.addStory(container)
+
+        if inlineBox is not None:
+            inlineBox.close(context)
 
         # Block?
         if isBlock:

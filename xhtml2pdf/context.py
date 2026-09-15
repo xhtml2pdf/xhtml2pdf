@@ -38,8 +38,9 @@ except ImportError:  # pragma: no cover
 from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
 
 from xhtml2pdf import default, parser
+from xhtml2pdf.builders.flex import FlexData
 from xhtml2pdf.files import B64InlineURI, getFile, pisaFileObject
-from xhtml2pdf.properties import CSSAttrs
+from xhtml2pdf.properties import CSSAttrs, reset_non_inherited
 from xhtml2pdf.tables import TableData
 from xhtml2pdf.util import (
     apply_text_transform,
@@ -204,6 +205,7 @@ def getParaFrag(style) -> ParaFrag:
     frag.leadingSource = "150%"
     frag.alignment = TA_LEFT
     frag.borderWidth = 1
+    reset_non_inherited(frag)
 
     frag.borderLeftWidth = frag.borderWidth
     frag.borderLeftColor = frag.borderColor
@@ -716,6 +718,8 @@ class pisaContext:
         self.node: Element | None = None
         self.template = None
         self.tableData: TableData = TableData()
+        #: The flex container being collected, if the walk is inside one.
+        self.flexData: FlexData = FlexData()
         self.err: int = 0
         self.fontSize: float = 0.0
         self.listCounter: int = 0

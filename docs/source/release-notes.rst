@@ -51,6 +51,52 @@ Versions >= 0.2
     --------------------------------------------
 
 
+0.2.20
+====================
+
+Unreleased.
+
+**🎉 New**
+
+* **CSS flexbox.** ``display: flex`` lays the element's children out in a
+  row or a column, following CSS Flexible Box Layout Module Level 1:
+  ``flex-direction``, ``flex-wrap``, ``flex-flow``, ``justify-content``,
+  ``align-items``, ``align-self``, ``align-content``, ``gap``/``row-gap``/
+  ``column-gap``, ``flex-grow``, ``flex-shrink``, ``flex-basis``, ``flex``,
+  ``order``, ``min-``/``max-width``/``height`` on the items and ``margin:
+  auto``. A wrapped container that does not fit a page is cut between its
+  lines. Before this ``display: flex`` fell through to ``inline`` and the
+  children ran into their parent's text. See the Flexbox section of the
+  HTML reference for what is and is not supported.
+* **``display: inline-block``.** A box inside the line of text, with its
+  own width, height, padding, border and background, placed by
+  ``vertical-align`` like an inline image. Form controls -- ``<input>``,
+  ``<select>``, ``<textarea>`` -- are inline blocks by default and sit in
+  the line instead of each closing the paragraph it was in.
+
+**💪🏼 Improvements**
+
+* Every value of ``display`` now means something: ``table``,
+  ``list-item``, ``flow-root``, ``grid`` and the ``table-*`` values are
+  laid out as ``block`` (before, only ``block`` and ``none`` were looked
+  at, so ``display: table`` on a ``<div>`` did not even make it a block),
+  and a value this library does not know is reported once rather than
+  silently treated as ``inline``.
+* The ``flex``, ``flex-flow`` and ``gap`` shorthands are expanded, and a
+  flexbox value this library does not support (``align-items: baseline``
+  is drawn as ``flex-start``) is reported once, by value.
+
+**🐛 Bug-Fixes**
+
+* An inline image measured more than once came out smaller each time: the
+  paragraph scaled the size it found instead of the image's natural size,
+  so ``-pdf-keep-in-frame-mode: shrink`` -- which measures its content
+  repeatedly -- shrank every image twice. Images inside a shrunk frame are
+  now the size the frame's scale gives them.
+
+--------------------------------------------
+
+
 0.2.19
 ====================
 

@@ -61,6 +61,75 @@
       "text": 1.0,
       "text_doc": 1.0
     },
+    "flex-cards": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9252,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "flex-center": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9727,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "flex-column": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9619,
+      "text": 0.9759,
+      "text_doc": 0.9759
+    },
+    "flex-header": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9753,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "flex-order-basis": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.947,
+      "text": 0.9177,
+      "text_doc": 0.9177
+    },
+    "flex-pagebreak": {
+      "pages": {
+        "xhtml2pdf": 3
+      }
+    },
+    "flex-sidebar": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9327,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "inline-block-badges": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9563,
+      "text": 0.7236,
+      "text_doc": 0.7236
+    },
+    "inline-block-nested": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9792,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
     "list-blocks": {
       "pages": {
         "xhtml2pdf": 1
@@ -145,7 +214,7 @@
       "pages": {
         "xhtml2pdf": 1
       },
-      "ssim": 0.6961,
+      "ssim": 0.6973,
       "text": 0.6607,
       "text_doc": 0.6607
     },

@@ -625,6 +625,12 @@ blockquote {
 noscript {
     display: none;
 }
+
+/* Form controls sit in the line, as they do in a browser. Before this each
+   one closed the paragraph it was in and stood on a line of its own. */
+input, select, textarea {
+    display: inline-block;
+}
 """
 
 DEFAULT_LANGUAGE_LIST = {

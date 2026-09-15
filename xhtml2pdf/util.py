@@ -18,7 +18,7 @@ import logging
 import re
 from copy import copy
 from io import BytesIO
-from typing import Any, ClassVar
+from typing import Any, ClassVar, NamedTuple
 
 import arabic_reshaper
 import reportlab.pdfbase._cidfontdata
@@ -397,6 +397,74 @@ def drawBorderLine(
     if dash:
         canvas.setDash(dash)
     canvas.line(x1, y1, x2, y2)
+    canvas.restoreState()
+
+
+def drawBoxBackground(canvas, x: float, y: float, w: float, h: float, style) -> None:
+    """
+    Paint the background of a box: the colour, then the image over it.
+
+    CSS 2.1 14.2: the image goes over the colour and under the content, which
+    is why this is separate from drawBoxBorders -- a caller paints this, then
+    its content, then the borders. `style` is read by attribute name, the way
+    a ParagraphStyle spells them (backColor, backgroundImage, ...), so any
+    object carrying those names will do; a missing one means "none".
+    """
+    bg = getattr(style, "backColor", None)
+    if bg:
+        # draw a filled rectangle (with no stroke) using bg color
+        canvas.saveState()
+        canvas.setFillColor(bg)
+        canvas.rect(x, y, w, h, fill=1, stroke=0)
+        canvas.restoreState()
+
+    background_image = getattr(style, "backgroundImage", None)
+    if background_image is not None:
+        reader = getBackgroundImageReader(background_image)
+        if reader is not None:
+            drawBackgroundImage(
+                canvas,
+                reader,
+                x,
+                y,
+                w,
+                h,
+                natural=getBackgroundImageSize(reader),
+                repeat=getattr(style, "backgroundRepeat", "repeat"),
+                position=getattr(style, "backgroundPosition", "0% 0%"),
+                font_size=getattr(style, "fontSize", 0),
+            )
+
+
+def drawBoxBorders(canvas, x: float, y: float, w: float, h: float, style) -> None:
+    """
+    Stroke the four borders of a box, each with its own style, width and colour.
+
+    ReportLab only knows a uniform border, so every side is drawn by hand. A
+    side with no colour takes the text colour, as W3C defines. `style` is read
+    by attribute name like drawBoxBackground's.
+    """
+    text_color = getattr(style, "textColor", None)
+    canvas.saveState()
+    for side, (x1, y1, x2, y2) in (
+        ("Left", (x, y, x, y + h)),
+        ("Right", (x + w, y, x + w, y + h)),
+        ("Top", (x, y + h, x + w, y + h)),
+        ("Bottom", (x, y, x + w, y)),
+    ):
+        color = getattr(style, f"border{side}Color", None)
+        if color is None:
+            color = text_color
+        drawBorderLine(
+            canvas,
+            getattr(style, f"border{side}Style", None),
+            getattr(style, f"border{side}Width", 0),
+            color,
+            x1,
+            y1,
+            x2,
+            y2,
+        )
     canvas.restoreState()
 
 
@@ -923,6 +991,247 @@ ALIGNMENTS = {
     "right": TA_RIGHT,
     "justify": TA_JUSTIFY,
 }
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~ Flexbox values
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+class CSSLength(NamedTuple):
+    """
+    A CSS length that remembers whether it was a keyword.
+
+    getSize answers 0.0 for "auto", "none" and "0" alike, which is the one
+    distinction flexbox cannot do without: an item whose flex-basis is 0
+    starts from nothing, one whose basis is auto starts from its content, and
+    a max-width of none is no limit at all.
+    """
+
+    kind: str  #: "auto", "none", "content", "percent" or "length"
+    value: float = 0.0
+
+    def resolve(self, basis: float | None = None) -> float | None:
+        """Points, or None when the length is indefinite in this context."""
+        if self.kind == "length":
+            return self.value
+        if self.kind == "percent":
+            return None if basis is None else basis * self.value / 100.0
+        return None
+
+    @property
+    def is_definite(self) -> bool:
+        return self.kind in {"length", "percent"}
+
+
+AUTO = CSSLength("auto")
+NONE_LENGTH = CSSLength("none")
+CONTENT = CSSLength("content")
+
+#: Values already reported, so a stylesheet that repeats one bad value does
+#: not fill the log with a line per element.
+_value_warned: set[tuple[str, str]] = set()
+
+
+def _warn_value(property_name: str, value: str, message: str) -> None:
+    key = (property_name, value)
+    if key in _value_warned:
+        return
+    _value_warned.add(key)
+    log.warning("%s: %r %s", property_name, value, message)
+
+
+def _getLength(
+    value, font_size: float, *, name: str, keywords: dict, default: CSSLength
+) -> CSSLength:
+    text = "".join(str(part) for part in toList(value)).strip().lower()
+    if text in keywords:
+        return keywords[text]
+    if text.endswith("%"):
+        try:
+            return CSSLength("percent", float(text[:-1]))
+        except ValueError:
+            _warn_value(name, text, "is not a length; using its initial value")
+            return default
+    if not text or text.startswith("calc(") or text[0].isalpha():
+        _warn_value(name, text, "is not a length; using its initial value")
+        return default
+    return CSSLength("length", getSize(text, font_size))
+
+
+def getLengthOrAuto(value, font_size: float = 0.0) -> CSSLength:
+    """A width, height, gap or min-/max- size: a length, a percentage, auto or none."""
+    return _getLength(
+        value,
+        font_size,
+        name="length",
+        keywords={"auto": AUTO, "none": NONE_LENGTH, "normal": AUTO},
+        default=AUTO,
+    )
+
+
+def getFlexBasis(value, font_size: float = 0.0) -> CSSLength:
+    """flex-basis: a length, a percentage, auto or content."""
+    return _getLength(
+        value,
+        font_size,
+        name="flex-basis",
+        keywords={"auto": AUTO, "content": CONTENT},
+        default=AUTO,
+    )
+
+
+def getNumber(value, default: float = 0.0) -> float:
+    """A bare CSS <number>; flex-grow and flex-shrink."""
+    text = "".join(str(part) for part in toList(value)).strip()
+    try:
+        return float(text)
+    except ValueError:
+        _warn_value("number", text, "is not a number; using its initial value")
+        return default
+
+
+def getInt(value, default: int = 0) -> int:
+    """A bare CSS <integer>; order."""
+    text = "".join(str(part) for part in toList(value)).strip()
+    try:
+        return int(text)
+    except ValueError:
+        _warn_value("integer", text, "is not an integer; using its initial value")
+        return default
+
+
+def _keyword_converter(name: str, table: dict[str, str], default: str, approximate=()):
+    """
+    A converter for a property whose value is one of a fixed set of keywords.
+
+    Aliases map onto the keyword this library acts on (start is flex-start).
+    A value in `approximate` is accepted with a warning: it is drawn as
+    something else, and the author should hear that once.
+    """
+
+    def convert(value) -> str:
+        text = " ".join(str(part) for part in toList(value)).strip().lower()
+        if text in table:
+            if text in approximate:
+                _warn_value(name, text, f"is drawn as {table[text]}")
+            return table[text]
+        _warn_value(name, text, f"is not supported; using {default}")
+        return default
+
+    convert.__name__ = convert.__qualname__ = name
+    return convert
+
+
+getFlexDirection = _keyword_converter(
+    "flex-direction",
+    {k: k for k in ("row", "row-reverse", "column", "column-reverse")},
+    "row",
+)
+
+getFlexWrap = _keyword_converter(
+    "flex-wrap", {k: k for k in ("nowrap", "wrap", "wrap-reverse")}, "nowrap"
+)
+
+getFlexJustify = _keyword_converter(
+    "justify-content",
+    {
+        "flex-start": "flex-start",
+        "start": "flex-start",
+        "left": "flex-start",
+        "normal": "flex-start",
+        "stretch": "flex-start",
+        "flex-end": "flex-end",
+        "end": "flex-end",
+        "right": "flex-end",
+        "center": "center",
+        "space-between": "space-between",
+        "space-around": "space-around",
+        "space-evenly": "space-evenly",
+    },
+    "flex-start",
+)
+
+#: align-items, align-self and align-content share one vocabulary. auto is
+#: only meaningful on align-self and the space-* values on align-content;
+#: neither does harm on the others, so one table serves all three.
+getFlexAlign = _keyword_converter(
+    "align",
+    {
+        "auto": "auto",
+        "normal": "stretch",
+        "stretch": "stretch",
+        "flex-start": "flex-start",
+        "start": "flex-start",
+        "self-start": "flex-start",
+        "flex-end": "flex-end",
+        "end": "flex-end",
+        "self-end": "flex-end",
+        "center": "center",
+        "baseline": "flex-start",
+        "first baseline": "flex-start",
+        "last baseline": "flex-end",
+        "space-between": "space-between",
+        "space-around": "space-around",
+        "space-evenly": "space-evenly",
+    },
+    "stretch",
+    approximate=("baseline", "first baseline", "last baseline"),
+)
+
+
+class Display:
+    """
+    What pisaLoop does with an element, resolved from its display property.
+
+    Not every CSS value is its own mode here. The ones this library lays out
+    are block, inline, inline-block, flex and none; the rest map onto the
+    nearest of those, which is at least a box of the right kind. Before this
+    the property was compared with "block" and "none" and nothing else, so
+    display: table on a div did not even make it a block.
+    """
+
+    BLOCK = "block"
+    INLINE = "inline"
+    INLINE_BLOCK = "inline-block"
+    FLEX = "flex"
+    NONE = "none"
+
+
+_DISPLAY_TABLE: dict[str, str] = {
+    "block": Display.BLOCK,
+    "inline": Display.INLINE,
+    "inline-block": Display.INLINE_BLOCK,
+    "flex": Display.FLEX,
+    "inline-flex": Display.FLEX,
+    "none": Display.NONE,
+    # Block-level things this library does not lay out as such. A table is
+    # still a table when it is a <table>; the tag decides that, not display.
+    "flow-root": Display.BLOCK,
+    "list-item": Display.BLOCK,
+    "table": Display.BLOCK,
+    "inline-table": Display.BLOCK,
+    "table-row": Display.BLOCK,
+    "table-cell": Display.BLOCK,
+    "table-row-group": Display.BLOCK,
+    "table-header-group": Display.BLOCK,
+    "table-footer-group": Display.BLOCK,
+    "table-caption": Display.BLOCK,
+    "grid": Display.BLOCK,
+    "inline-grid": Display.BLOCK,
+    # The element's own box goes away and its children stay: for a flow of
+    # text that is what inline already does.
+    "contents": Display.INLINE,
+}
+
+
+def getDisplay(value, default: str = Display.INLINE) -> str:
+    """One of the Display modes, from a display value."""
+    text = "".join(str(part) for part in toList(value)).strip().lower()
+    if text in _DISPLAY_TABLE:
+        return _DISPLAY_TABLE[text]
+    _warn_value("display", text, f"is not supported; treated as {default}")
+    return default
 
 
 def getAlign(value, default=TA_LEFT):

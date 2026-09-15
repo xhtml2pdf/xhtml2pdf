@@ -251,6 +251,23 @@ def _putFragLine(cur_x, tx, line):
                 cur_x += w
                 cur_x_s += w
                 setXPos(tx, cur_x_s - tx._x0)
+            elif kind == "box":
+                # An inline-block: a flowable that is one word of the line.
+                # Drawing on the canvas while the text object is open is
+                # safe -- PDFTextObject buffers its operators until drawText,
+                # so the box's own text lands before this line's, not inside
+                # it -- and the two do not overlap.
+                w = cbDefn.width
+                h = cbDefn.height
+                txfs = tx._fontsize
+                if txfs is None:
+                    txfs = xs.style.fontSize
+                iy0, iy1 = imgVRange(h, cbDefn.valign, txfs)
+                cur_x_s = cur_x + nSpaces * ws
+                cbDefn.flowable.drawOn(tx._canvas, cur_x_s, cur_y + iy0)
+                cur_x += w
+                cur_x_s += w
+                setXPos(tx, cur_x_s - tx._x0)
             else:
                 name = cbDefn.name
                 if kind == "anchor":
@@ -283,7 +300,7 @@ def _putFragLine(cur_x, tx, line):
                 if not tx._fontname:
                     tx.setFont(xs.style.fontName, xs.style.fontSize)
                     tx._textOut("", 1)
-                elif kind == "img":
+                elif kind in {"img", "box"}:
                     tx._textOut("", 1)
         else:
             cur_x_s = cur_x + nSpaces * ws

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>flex-center</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; }
+.box { display: flex; justify-content: center; align-items: center; height: 80pt;
+       background-color: #e8f0fe; border: 1pt solid #3465a4; margin-bottom: 12pt; }
+.end { display: flex; justify-content: flex-end; align-items: flex-end; height: 60pt;
+       background-color: #fce8e8; border: 1pt solid #a40000; margin-bottom: 12pt; }
+.around { display: flex; justify-content: space-around; height: 40pt; background-color: #eeeeec; }
+.around div { padding: 4pt; background-color: #d3d7cf; }
+</style>
+</head>
+<body>
+<div class="box"><div>Centered both ways</div></div>
+<div class="end"><div>Bottom right</div></div>
+<div class="around"><div>one</div><div>two</div><div>three</div></div>
+</body>
+</html>

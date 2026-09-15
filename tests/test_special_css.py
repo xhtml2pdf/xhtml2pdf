@@ -715,3 +715,149 @@ class StringPatternBacktrackingTest(TestCase):
                 if match is None:
                     self.fail(f"{text} no longer reads as a string")
                 self.assertEqual(content, next(g for g in match.groups() if g))
+
+
+class FlexShorthandTest(TestCase):
+    """
+    flex expands into flex-grow, flex-shrink and flex-basis.
+
+    The omitted parts are not the longhands' initial values: css-flexbox-1
+    7.1.1 says a bare number means basis 0, and a bare basis means grow 1.
+    """
+
+    @staticmethod
+    def _expand(value):
+        return parseSpecialRules([("flex", value, None)])
+
+    def test_one_number_means_grow_one_shrink_one_basis_zero(self) -> None:
+        self.assertEqual(
+            [
+                ("flex-grow", "1", None),
+                ("flex-shrink", "1", None),
+                ("flex-basis", "0", None),
+            ],
+            self._expand("1"),
+        )
+
+    def test_none_auto_and_initial(self) -> None:
+        self.assertEqual(
+            [
+                ("flex-grow", "0", None),
+                ("flex-shrink", "0", None),
+                ("flex-basis", "auto", None),
+            ],
+            self._expand("none"),
+        )
+        self.assertEqual(
+            [
+                ("flex-grow", "1", None),
+                ("flex-shrink", "1", None),
+                ("flex-basis", "auto", None),
+            ],
+            self._expand("auto"),
+        )
+        self.assertEqual(
+            [
+                ("flex-grow", "0", None),
+                ("flex-shrink", "1", None),
+                ("flex-basis", "auto", None),
+            ],
+            self._expand("initial"),
+        )
+
+    def test_a_bare_basis_means_grow_one(self) -> None:
+        self.assertEqual(
+            [
+                ("flex-grow", "1", None),
+                ("flex-shrink", "1", None),
+                ("flex-basis", ("120", "px"), None),
+            ],
+            self._expand(("120", "px")),
+        )
+
+    def test_two_and_three_value_forms(self) -> None:
+        self.assertEqual(
+            [
+                ("flex-grow", "2", None),
+                ("flex-shrink", "0", None),
+                ("flex-basis", "0", None),
+            ],
+            self._expand(["2", "0"]),
+        )
+        self.assertEqual(
+            [
+                ("flex-grow", "1", None),
+                ("flex-shrink", "1", None),
+                ("flex-basis", "auto", None),
+            ],
+            self._expand(["1", "auto"]),
+        )
+        self.assertEqual(
+            [
+                ("flex-grow", "0", None),
+                ("flex-shrink", "0", None),
+                ("flex-basis", ("120", "px"), None),
+            ],
+            self._expand(["0", "0", ("120", "px")]),
+        )
+        # The basis may come first.
+        self.assertEqual(
+            [
+                ("flex-grow", "2", None),
+                ("flex-shrink", "1", None),
+                ("flex-basis", ("30", "%"), None),
+            ],
+            self._expand([("30", "%"), "2"]),
+        )
+
+    def test_a_form_it_does_not_understand_is_kept_as_written(self) -> None:
+        with self.assertLogs("xhtml2pdf.w3c.cssSpecial", level="WARNING"):
+            self.assertEqual(
+                [("flex", ["1", "2", "3"], None)], self._expand(["1", "2", "3"])
+            )
+
+
+class FlexFlowTest(TestCase):
+    def test_either_order(self) -> None:
+        self.assertEqual(
+            [("flex-direction", "row", None), ("flex-wrap", "wrap", None)],
+            parseSpecialRules([("flex-flow", ["row", "wrap"], None)]),
+        )
+        self.assertEqual(
+            [("flex-wrap", "wrap-reverse", None), ("flex-direction", "column", None)],
+            parseSpecialRules([("flex-flow", ["wrap-reverse", "column"], None)]),
+        )
+
+    def test_one_value(self) -> None:
+        self.assertEqual(
+            [("flex-wrap", "wrap", None)],
+            parseSpecialRules([("flex-flow", "wrap", None)]),
+        )
+
+    def test_a_stray_word_keeps_the_declaration_as_written(self) -> None:
+        with self.assertLogs("xhtml2pdf.w3c.cssSpecial", level="WARNING"):
+            self.assertEqual(
+                [("flex-flow", ["row", "tight"], None)],
+                parseSpecialRules([("flex-flow", ["row", "tight"], None)]),
+            )
+
+
+class GapTest(TestCase):
+    def test_one_value_sets_both_axes(self) -> None:
+        self.assertEqual(
+            [("row-gap", ("1", "em"), None), ("column-gap", ("1", "em"), None)],
+            parseSpecialRules([("gap", ("1", "em"), None)]),
+        )
+
+    def test_two_values_are_row_then_column(self) -> None:
+        self.assertEqual(
+            [("row-gap", ("10", "px"), None), ("column-gap", ("5", "px"), None)],
+            parseSpecialRules([("gap", [("10", "px"), ("5", "px")], None)]),
+        )
+
+    def test_three_values_keep_the_declaration_as_written(self) -> None:
+        parts = [("1", "px"), ("2", "px"), ("3", "px")]
+        with self.assertLogs("xhtml2pdf.w3c.cssSpecial", level="WARNING"):
+            self.assertEqual(
+                [("gap", parts, None)], parseSpecialRules([("gap", parts, None)])
+            )

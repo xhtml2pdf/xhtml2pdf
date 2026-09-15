@@ -73,6 +73,7 @@ xhtml2pdf supports the following standard CSS properties
 
 ::
 
+    align-content, align-items, align-self
     background-color
     background-image, background-position, background-repeat
     border-bottom-color, border-bottom-style, border-bottom-width
@@ -80,13 +81,18 @@ xhtml2pdf supports the following standard CSS properties
     border-right-color, border-right-style, border-right-width
     border-top-color, border-top-style, border-top-width
     color
+    column-gap, row-gap
     display
+    flex-basis, flex-direction, flex-grow, flex-shrink, flex-wrap
     font-family, font-size, font-style, font-weight
     height
+    justify-content
     letter-spacing, word-spacing
     line-height
     list-style-image, list-style-type
     margin-bottom, margin-left, margin-right, margin-top
+    max-height, max-width, min-height, min-width
+    order
     padding-bottom, padding-left, padding-right, padding-top
     page-break-after, page-break-before
     text-align, text-decoration, text-indent, text-transform
@@ -97,8 +103,8 @@ xhtml2pdf supports the following standard CSS properties
 
 The shorthands ``background``, ``border``, ``border-color``,
 ``border-style``, ``border-width``, ``border-top`` (and its three
-siblings), ``font``, ``list-style``, ``margin`` and ``padding`` are
-expanded into the properties above.
+siblings), ``flex``, ``flex-flow``, ``font``, ``gap``, ``list-style``,
+``margin`` and ``padding`` are expanded into the properties above.
 
 A property that is not on this list is parsed and then ignored. Each
 document logs the ones its stylesheet declares, by name, at warning
@@ -116,6 +122,75 @@ Known limitations of the properties above:
    will not wrap inside a run of them.
 -  ``width`` and ``height`` apply to images, table cells and barcodes
    only, not to blocks.
+-  ``display``: ``block``, ``inline``, ``inline-block``, ``flex`` and
+   ``none`` are laid out as such; ``inline-flex`` is laid out as
+   ``flex``, block-level (see :ref:`inline-block` for how to get an
+   inline one); ``table``, ``list-item``, ``flow-root``, ``grid`` and the
+   ``table-*`` values as ``block``. A table is a table because it is a
+   ``<table>``, and a list item because it is an ``<li>``, whatever
+   ``display`` says. Any other value is reported once and treated as
+   ``inline``.
+-  ``min-width``, ``max-width``, ``min-height`` and ``max-height`` apply
+   to flex items only. See :ref:`flexbox` for what a flex container
+   supports.
+
+.. _flexbox:
+
+Flexbox
+-------
+
+``display: flex`` lays the element's children out as flex items, in a row
+or a column, following CSS Flexible Box Layout Module Level 1. The
+container is one box the width of its frame; each child is one item,
+sized by ``flex-basis``, ``width``/``height``, ``min-``/``max-`` and its
+content, then grown or shrunk by ``flex-grow`` and ``flex-shrink`` to fill
+the line. ``flex-direction``, ``flex-wrap``, ``justify-content``,
+``align-items``, ``align-self``, ``align-content``, ``gap``, ``order``
+and ``margin: auto`` on the items behave as in a browser, with these
+differences:
+
+-  ``inline-flex`` is laid out as ``flex``: a container always takes the
+   full width of its frame.
+-  ``align-items: baseline`` is drawn as ``flex-start``.
+-  ``align-content`` only acts when the container's ``height`` is a
+   length, which is what makes its cross size definite; in a row without
+   one it does nothing, as the specification says.
+-  A ``flex-direction: column`` container without a ``height`` never
+   wraps and never distributes free space: its height is its content's.
+-  A container is not split inside an item. One that does not fit the
+   room left in a frame moves to the next; one taller than a whole frame
+   is shrunk to fit.
+-  Within a container the text direction of the document decides where
+   the row starts: a ``dir="rtl"`` document lays ``row`` out from the
+   right.
+
+.. _inline-block:
+
+Inline blocks
+-------------
+
+``display: inline-block`` makes the element a box that sits in the line
+of text around it, as one unbreakable word: it has its own ``width``,
+``height``, ``padding``, ``border`` and ``background``, its content is
+laid out inside it, and ``vertical-align`` places it against the line
+the way it places an inline image (``baseline``, ``top``, ``middle``,
+``bottom``, ``text-top``, ``text-bottom``, ``super``, ``sub`` or a
+length). Without a ``width`` it is as wide as its content, up to the
+room the line has. Form controls (``<input>``, ``<select>``,
+``<textarea>``) are inline blocks by default, so they no longer stand on
+a line of their own.
+
+Differences from a browser:
+
+-  The box's baseline is its bottom margin edge, not the baseline of its
+   last line of text; ``vertical-align: middle`` is the value to reach
+   for when the box holds text.
+-  A box wider than the line is laid out again to fit the line rather
+   than overflowing it, and is never broken across lines.
+-  A flex container inside an inline block takes the whole width of the
+   box, which is the way to write ``display: inline-flex``: an inline
+   block around a ``display: flex`` element.
+-  An inline block does not work as a list marker.
 
 Selectors
 ---------

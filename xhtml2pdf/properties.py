@@ -28,11 +28,21 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from xhtml2pdf.util import (
+    AUTO,
+    NONE_LENGTH,
     getBool,
     getColor,
+    getFlexAlign,
+    getFlexBasis,
+    getFlexDirection,
+    getFlexJustify,
+    getFlexWrap,
+    getInt,
+    getLengthOrAuto,
+    getNumber,
     getSize,
     getTocLeader,
     getTocName,
@@ -61,6 +71,15 @@ def as_declared(value):
     return value
 
 
+#: `initial` left at this means the frag attribute is not reset per element.
+#: Frags are cloned parent to child, so an attribute that is not reset is
+#: inherited whether CSS says so or not. That is how the older properties have
+#: always behaved and documents depend on it; the flex ones are reset because
+#: a flex-grow that leaked from an item into its grandchildren would silently
+#: resize a nested container.
+KEEP = object()
+
+
 class CSSProperty(NamedTuple):
     name: str
     group: str
@@ -74,6 +93,9 @@ class CSSProperty(NamedTuple):
     #: Only read inside CSS2Frag's `if isBlock:` sections.
     block_only: bool = False
     note: str = ""
+    #: The frag attribute's value before the element's own declarations
+    #: apply; see KEEP.
+    initial: Any = KEEP
 
 
 CSS_PROPERTIES: tuple[CSSProperty, ...] = (
@@ -235,6 +257,153 @@ CSS_PROPERTIES += (
     CSSProperty("-pdf-word-wrap", "pdf", consumer=LOOP, note="CJK"),
 )
 
+#: Flexbox, CSS Flexible Box Layout Module Level 1. All LOOP: the container
+#: is built in pisaLoop, and addTOC's direct calls to CSS2Frag must not be
+#: able to hand a table of contents a flex property out of its level styles.
+#: None is block_only, so pisaLoop's LOOP_GROUPS pass applies them to every
+#: element; which elements they mean anything on is the container's business.
+CSS_PROPERTIES += (
+    # ~ flex container ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    CSSProperty(
+        "flex-direction",
+        "flex",
+        consumer=LOOP,
+        frag="flexDirection",
+        convert=getFlexDirection,
+        initial="row",
+    ),
+    CSSProperty(
+        "flex-wrap",
+        "flex",
+        consumer=LOOP,
+        frag="flexWrap",
+        convert=getFlexWrap,
+        initial="nowrap",
+    ),
+    CSSProperty(
+        "justify-content",
+        "flex",
+        consumer=LOOP,
+        frag="justifyContent",
+        convert=getFlexJustify,
+        initial="flex-start",
+    ),
+    CSSProperty(
+        "align-items",
+        "flex",
+        consumer=LOOP,
+        frag="alignItems",
+        convert=getFlexAlign,
+        initial="stretch",
+    ),
+    CSSProperty(
+        "align-content",
+        "flex",
+        consumer=LOOP,
+        frag="alignContent",
+        convert=getFlexAlign,
+        initial="stretch",
+        note="acts only when the container's cross size is definite",
+    ),
+    CSSProperty(
+        "row-gap",
+        "flex",
+        consumer=LOOP,
+        frag="rowGap",
+        convert=getLengthOrAuto,
+        relative_to_font_size=True,
+        initial=AUTO,
+        note="auto means normal, which is no gap",
+    ),
+    CSSProperty(
+        "column-gap",
+        "flex",
+        consumer=LOOP,
+        frag="columnGap",
+        convert=getLengthOrAuto,
+        relative_to_font_size=True,
+        initial=AUTO,
+    ),
+    # ~ flex item ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    CSSProperty(
+        "flex-grow",
+        "flex",
+        consumer=LOOP,
+        frag="flexGrow",
+        convert=getNumber,
+        initial=0.0,
+    ),
+    CSSProperty(
+        "flex-shrink",
+        "flex",
+        consumer=LOOP,
+        frag="flexShrink",
+        convert=getNumber,
+        initial=1.0,
+    ),
+    CSSProperty(
+        "flex-basis",
+        "flex",
+        consumer=LOOP,
+        frag="flexBasis",
+        convert=getFlexBasis,
+        relative_to_font_size=True,
+        initial=AUTO,
+    ),
+    CSSProperty(
+        "align-self",
+        "flex",
+        consumer=LOOP,
+        frag="alignSelf",
+        convert=getFlexAlign,
+        initial="auto",
+    ),
+    CSSProperty(
+        "order", "flex", consumer=LOOP, frag="flexOrder", convert=getInt, initial=0
+    ),
+    # ~ sizing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    CSSProperty(
+        "min-width",
+        "box",
+        consumer=LOOP,
+        frag="minWidth",
+        convert=getLengthOrAuto,
+        relative_to_font_size=True,
+        initial=AUTO,
+        note="flex items only",
+    ),
+    CSSProperty(
+        "max-width",
+        "box",
+        consumer=LOOP,
+        frag="maxWidth",
+        convert=getLengthOrAuto,
+        relative_to_font_size=True,
+        initial=NONE_LENGTH,
+        note="flex items only",
+    ),
+    CSSProperty(
+        "min-height",
+        "box",
+        consumer=LOOP,
+        frag="minHeight",
+        convert=getLengthOrAuto,
+        relative_to_font_size=True,
+        initial=AUTO,
+        note="flex items only",
+    ),
+    CSSProperty(
+        "max-height",
+        "box",
+        consumer=LOOP,
+        frag="maxHeight",
+        convert=getLengthOrAuto,
+        relative_to_font_size=True,
+        initial=NONE_LENGTH,
+        note="flex items only",
+    ),
+)
+
 
 #: What CSSCollect asks the cascade for, in registry order.
 PROPERTY_NAMES: tuple[str, ...] = tuple(prop.name for prop in CSS_PROPERTIES)
@@ -246,6 +415,26 @@ SUPPORTED_PROPERTIES: frozenset[str] = frozenset(PROPERTY_NAMES)
 PROPERTIES_BY_NAME: dict[str, CSSProperty] = {
     prop.name: prop for prop in CSS_PROPERTIES
 }
+
+#: Frag attribute -> initial value, for every property that declares one.
+NON_INHERITED_FRAG_INITIALS: dict[str, Any] = {
+    prop.frag: prop.initial
+    for prop in CSS_PROPERTIES
+    if prop.frag is not None and prop.initial is not KEEP
+}
+
+
+def reset_non_inherited(frag) -> None:
+    """
+    Put the non-inherited frag attributes back to their initial values.
+
+    pisaLoop calls this on the fresh clone pushFrag made, before the
+    element's own declarations apply, so a value set on the parent does not
+    reach the child unless the child declares it too. getParaFrag calls it
+    on the root frag so the attributes exist from the start.
+    """
+    for name, value in NON_INHERITED_FRAG_INITIALS.items():
+        setattr(frag, name, value)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

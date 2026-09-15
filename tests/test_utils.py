@@ -611,3 +611,235 @@ class MemoizedTest(TestCase):
         self.assertTrue(utils.getSize.cache)
         rl_config._reset()
         self.assertEqual({}, utils.getSize.cache)
+
+
+class _RecordingCanvas:
+    """Records the drawing calls a box helper makes, in order."""
+
+    def __init__(self) -> None:
+        self.calls: list[tuple] = []
+
+    def __getattr__(self, name):
+        def record(*args, **kwargs):
+            self.calls.append((name, args, kwargs))
+
+        return record
+
+    def named(self, name: str) -> list[tuple]:
+        return [call for call in self.calls if call[0] == name]
+
+
+class _BoxStyle:
+    """
+    A style spelt the way ParagraphStyle spells it, with nothing set.
+
+    drawBoxBackground and drawBoxBorders read their style by attribute name
+    so that any object carrying those names will do, a ParagraphStyle or not.
+    """
+
+    backColor = None
+    backgroundImage = None
+    textColor = Color(0, 0, 0)
+    fontSize = 10
+
+    def __init__(self, **kwargs) -> None:
+        for side in ("Left", "Right", "Top", "Bottom"):
+            setattr(self, f"border{side}Style", None)
+            setattr(self, f"border{side}Width", 0)
+            setattr(self, f"border{side}Color", None)
+        for name, value in kwargs.items():
+            setattr(self, name, value)
+
+
+class DrawBoxBackgroundTest(TestCase):
+    """The colour under the content; PmlParagraph.draw's first half."""
+
+    def test_nothing_declared_draws_nothing(self) -> None:
+        canvas = _RecordingCanvas()
+        utils.drawBoxBackground(canvas, 1, 2, 3, 4, _BoxStyle())
+        self.assertEqual([], canvas.calls)
+
+    def test_a_colour_fills_the_box(self) -> None:
+        canvas = _RecordingCanvas()
+        red = Color(1, 0, 0)
+        utils.drawBoxBackground(canvas, 10, 20, 100, 50, _BoxStyle(backColor=red))
+        self.assertEqual([("setFillColor", (red,), {})], canvas.named("setFillColor"))
+        self.assertEqual(
+            [("rect", (10, 20, 100, 50), {"fill": 1, "stroke": 0})],
+            canvas.named("rect"),
+        )
+
+    def test_a_bare_object_needs_no_attributes(self) -> None:
+        # A style that does not even spell the names is "none" throughout.
+        canvas = _RecordingCanvas()
+        utils.drawBoxBackground(canvas, 0, 0, 1, 1, object())
+        self.assertEqual([], canvas.calls)
+
+
+class DrawBoxBordersTest(TestCase):
+    """Four independent edges; PmlParagraph.draw's second half."""
+
+    @staticmethod
+    def _lines(canvas: _RecordingCanvas) -> list[tuple]:
+        return [args for _name, args, _kw in canvas.named("line")]
+
+    def test_no_width_draws_no_line(self) -> None:
+        canvas = _RecordingCanvas()
+        utils.drawBoxBorders(canvas, 0, 0, 10, 10, _BoxStyle())
+        self.assertEqual([], self._lines(canvas))
+
+    def test_each_side_runs_along_its_own_edge(self) -> None:
+        canvas = _RecordingCanvas()
+        style = _BoxStyle()
+        for side in ("Left", "Right", "Top", "Bottom"):
+            setattr(style, f"border{side}Style", "solid")
+            setattr(style, f"border{side}Width", 1)
+            setattr(style, f"border{side}Color", Color(0, 0, 1))
+        utils.drawBoxBorders(canvas, 10, 20, 100, 50, style)
+        self.assertEqual(
+            [
+                (10, 20, 10, 70),  # left
+                (110, 20, 110, 70),  # right
+                (10, 70, 110, 70),  # top
+                (10, 20, 110, 20),  # bottom
+            ],
+            self._lines(canvas),
+        )
+
+    def test_a_side_without_a_colour_takes_the_text_colour(self) -> None:
+        # W3C: border-color's initial value is currentColor.
+        canvas = _RecordingCanvas()
+        style = _BoxStyle(
+            textColor=Color(0, 1, 0),
+            borderTopStyle="solid",
+            borderTopWidth=2,
+            borderTopColor=None,
+        )
+        utils.drawBoxBorders(canvas, 0, 0, 10, 10, style)
+        self.assertEqual(
+            [("setStrokeColor", (Color(0, 1, 0),), {})], canvas.named("setStrokeColor")
+        )
+        self.assertEqual(1, len(self._lines(canvas)))
+
+    def test_a_side_with_no_style_is_not_drawn(self) -> None:
+        # A width alone is not a border: getBorderWidth says the same.
+        canvas = _RecordingCanvas()
+        style = _BoxStyle(borderLeftWidth=3, borderLeftColor=Color(0, 0, 0))
+        utils.drawBoxBorders(canvas, 0, 0, 10, 10, style)
+        self.assertEqual([], self._lines(canvas))
+
+
+class CSSLengthTest(TestCase):
+    """A length that keeps its keyword, for the places getSize's 0.0 misleads."""
+
+    def test_getSize_cannot_tell_auto_from_zero(self) -> None:
+        # The reason CSSLength exists, as an executable note.
+        self.assertEqual(getSize("auto"), getSize("0"))
+        self.assertEqual(getSize("none"), getSize("0"))
+
+    def test_a_length_resolves_to_itself(self) -> None:
+        self.assertEqual(12.0, utils.getLengthOrAuto("12pt").resolve(500))
+        self.assertEqual(12.0, utils.getLengthOrAuto("12pt").resolve(None))
+
+    def test_a_percentage_resolves_against_its_basis(self) -> None:
+        length = utils.getLengthOrAuto(("50", "%"))
+        self.assertEqual("percent", length.kind)
+        self.assertEqual(250.0, length.resolve(500))
+
+    def test_a_percentage_of_nothing_is_indefinite(self) -> None:
+        self.assertIsNone(utils.getLengthOrAuto("50%").resolve(None))
+
+    def test_auto_and_none_are_kept_apart(self) -> None:
+        self.assertIs(utils.AUTO, utils.getLengthOrAuto("auto"))
+        self.assertIs(utils.NONE_LENGTH, utils.getLengthOrAuto("none"))
+        self.assertIsNone(utils.AUTO.resolve(100))
+        self.assertFalse(utils.AUTO.is_definite)
+        self.assertTrue(utils.getLengthOrAuto("0").is_definite)
+
+    def test_em_is_relative_to_the_font_size(self) -> None:
+        self.assertEqual(24.0, utils.getLengthOrAuto("2em", 12).value)
+
+    def test_a_bad_value_is_the_initial_value_and_says_so(self) -> None:
+        utils._value_warned.discard(("length", "wide"))
+        with self.assertLogs("xhtml2pdf.util", level="WARNING") as logs:
+            self.assertIs(utils.AUTO, utils.getLengthOrAuto("wide"))
+        self.assertIn("wide", logs.output[0])
+        # Once per value, not once per element.
+        with self.assertNoLogs("xhtml2pdf.util", level="WARNING"):
+            utils.getLengthOrAuto("wide")
+
+
+class FlexConvertersTest(TestCase):
+    def test_flex_basis_knows_content(self) -> None:
+        self.assertIs(utils.CONTENT, utils.getFlexBasis("content"))
+        self.assertIs(utils.AUTO, utils.getFlexBasis("auto"))
+        self.assertEqual(0.0, utils.getFlexBasis("0").value)
+        self.assertEqual("length", utils.getFlexBasis("0").kind)
+
+    def test_numbers_and_integers(self) -> None:
+        self.assertEqual(1.5, utils.getNumber("1.5"))
+        self.assertEqual(2.0, utils.getNumber(["2"]))
+        self.assertEqual(-1, utils.getInt("-1"))
+        utils._value_warned.clear()
+        with self.assertLogs("xhtml2pdf.util", level="WARNING"):
+            self.assertEqual(0.0, utils.getNumber("lots"))
+        with self.assertLogs("xhtml2pdf.util", level="WARNING"):
+            self.assertEqual(0, utils.getInt("1.5"))
+
+    def test_keywords_and_their_aliases(self) -> None:
+        self.assertEqual("row-reverse", utils.getFlexDirection("Row-Reverse"))
+        self.assertEqual("wrap", utils.getFlexWrap("wrap"))
+        self.assertEqual("flex-start", utils.getFlexJustify("start"))
+        self.assertEqual("flex-end", utils.getFlexJustify("right"))
+        self.assertEqual("space-evenly", utils.getFlexJustify("space-evenly"))
+        self.assertEqual("flex-start", utils.getFlexAlign("self-start"))
+        self.assertEqual("stretch", utils.getFlexAlign("normal"))
+        self.assertEqual("auto", utils.getFlexAlign("auto"))
+
+    def test_an_unknown_keyword_is_the_initial_value(self) -> None:
+        utils._value_warned.clear()
+        with self.assertLogs("xhtml2pdf.util", level="WARNING") as logs:
+            self.assertEqual("row", utils.getFlexDirection("sideways"))
+        self.assertIn("sideways", logs.output[0])
+
+    def test_baseline_is_drawn_as_flex_start_and_says_so(self) -> None:
+        utils._value_warned.clear()
+        with self.assertLogs("xhtml2pdf.util", level="WARNING") as logs:
+            self.assertEqual("flex-start", utils.getFlexAlign("baseline"))
+        self.assertIn("baseline", logs.output[0])
+        self.assertIn("flex-start", logs.output[0])
+
+
+class GetDisplayTest(TestCase):
+    """
+    One place that says what every display value means to this library.
+
+    Before it the property was compared with "block" and "none" and nothing
+    else, so display: table on a div did not even make it a block, and
+    display: flex was text run into the parent's paragraph.
+    """
+
+    def test_the_modes_this_library_lays_out(self) -> None:
+        D = utils.Display
+        self.assertEqual(D.BLOCK, utils.getDisplay("block"))
+        self.assertEqual(D.INLINE, utils.getDisplay("inline"))
+        self.assertEqual(D.INLINE_BLOCK, utils.getDisplay("inline-block"))
+        self.assertEqual(D.FLEX, utils.getDisplay("flex"))
+        self.assertEqual(D.FLEX, utils.getDisplay("inline-flex"))
+        self.assertEqual(D.NONE, utils.getDisplay("none"))
+
+    def test_other_block_level_values_are_blocks(self) -> None:
+        for value in ("table", "list-item", "flow-root", "grid", "table-cell"):
+            with self.subTest(value=value):
+                self.assertEqual(utils.Display.BLOCK, utils.getDisplay(value))
+
+    def test_case_and_whitespace_do_not_matter(self) -> None:
+        self.assertEqual(utils.Display.BLOCK, utils.getDisplay(" Block "))
+
+    def test_an_unknown_value_is_inline_and_says_so_once(self) -> None:
+        utils._value_warned.discard(("display", "ruby"))
+        with self.assertLogs("xhtml2pdf.util", level="WARNING") as logs:
+            self.assertEqual(utils.Display.INLINE, utils.getDisplay("ruby"))
+        self.assertIn("ruby", logs.output[0])
+        with self.assertNoLogs("xhtml2pdf.util", level="WARNING"):
+            utils.getDisplay("ruby")

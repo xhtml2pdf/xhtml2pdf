@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>inline-block-badges</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 11pt; }
+p { margin: 0 0 8pt 0; }
+.badge { display: inline-block; padding: 2pt 6pt; background-color: #cc0000; color: #ffffff; vertical-align: middle; }
+.blue { background-color: #3465a4; }
+.box { display: inline-block; width: 50pt; padding: 3pt; border: 1pt solid #000000; background-color: #eeeeec; vertical-align: middle; }
+.tall { display: inline-block; height: 30pt; width: 20pt; background-color: #d3d7cf; vertical-align: bottom; }
+</style>
+</head>
+<body>
+<p>Status: <span class="badge">NEW</span> and <span class="badge blue">SALE</span> sit inside the line, with padding and a background of their own.</p>
+<p>A fixed width box <span class="box">50pt</span> in the middle of a sentence, then a tall one <span class="tall"></span> aligned to the bottom, and then enough text to make the paragraph wrap onto a second line so that a <span class="badge">badge</span> can fall near a line end and still be one piece.</p>
+</body>
+</html>
