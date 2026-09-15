@@ -106,6 +106,12 @@ Unreleased.
 
 **🐛 Bug-Fixes**
 
+* A source given as ``bytes`` ignored the ``encoding`` argument. Only a
+  ``str`` source carried the caller's encoding through to the HTML parser;
+  bytes fell through to the parser's own sniffing, whose last resort is
+  windows-1252, so UTF-8 bytes came out as mojibake -- a bullet as
+  ``â€¢`` -- however plainly ``encoding="utf-8"`` had been passed. Naming
+  no encoding still leaves the document's own ``<meta charset>`` to decide.
 * A flex container with a declared ``height`` that was cut between pages
   gave both parts the whole height, so the first part no longer fit the
   room it was cut for. The height is now shared: the first part takes

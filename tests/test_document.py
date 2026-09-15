@@ -2,10 +2,12 @@ import io
 import os
 import tempfile
 from importlib.util import find_spec
+from io import BytesIO
 from unittest import TestCase, skipIf
 
 from pypdf import PdfReader
 
+from xhtml2pdf import pisa
 from xhtml2pdf.document import pisaDocument
 from xhtml2pdf.files import files_tmp
 
@@ -611,3 +613,57 @@ class DocumentLanguageTest(TestCase):
         _, root = self.render("<html><body><p>x</p></body></html>")
 
         self.assertNotIn("/Lang", root)
+
+
+class SourceEncodingTest(TestCase):
+    """
+    The encoding the caller names decides how the source is read.
+
+    pisaParser only handed html5lib a transport_encoding when the source was
+    a str, which it had just encoded itself. A bytes or file source fell
+    through to html5lib's own sniffing, whose last resort is windows-1252, so
+    UTF-8 bytes came back as mojibake however plainly the caller had said
+    encoding="utf-8".
+    """
+
+    @staticmethod
+    def text(source, **kwargs) -> str:
+        output = BytesIO()
+        pisa.CreatePDF(source, dest=output, **kwargs)
+        return PdfReader(BytesIO(output.getvalue())).pages[0].extract_text().strip()
+
+    #: A bullet is the character the report used: U+2022 is one byte in
+    #: cp1252 and three in UTF-8, so a wrong decode is unmistakable.
+    HTML = "<html><body><span>Ä-ö-ü</span></body></html>"
+
+    def test_a_named_encoding_is_used_for_bytes(self) -> None:
+        self.assertEqual(
+            "Ä-ö-ü", self.text(self.HTML.encode("utf-8"), encoding="utf-8")
+        )
+
+    def test_a_named_encoding_is_used_for_text(self) -> None:
+        self.assertEqual("Ä-ö-ü", self.text(self.HTML, encoding="utf-8"))
+
+    def test_bytes_and_text_agree(self) -> None:
+        self.assertEqual(
+            self.text(self.HTML, encoding="utf-8"),
+            self.text(self.HTML.encode("utf-8"), encoding="utf-8"),
+        )
+
+    def test_a_named_encoding_that_is_not_utf_8_is_honoured(self) -> None:
+        self.assertEqual(
+            "Ä-ö-ü", self.text(self.HTML.encode("latin-1"), encoding="latin-1")
+        )
+
+    def test_without_an_encoding_the_document_still_decides(self) -> None:
+        # No encoding named, so html5lib sniffs and the <meta> wins. This is
+        # what must keep working: naming nothing is not the same as naming
+        # UTF-8, and a document that declares windows-1252 means it.
+        declared = '<meta charset="windows-1252">'
+        html = f"<html><head>{declared}</head><body><span>Ä-ö-ü</span></body></html>"
+        self.assertEqual("Ä-ö-ü", self.text(html.encode("cp1252")))
+
+    def test_a_utf_8_meta_is_sniffed_too(self) -> None:
+        declared = '<meta charset="utf-8">'
+        html = f"<html><head>{declared}</head><body><span>Ä-ö-ü</span></body></html>"
+        self.assertEqual("Ä-ö-ü", self.text(html.encode("utf-8")))

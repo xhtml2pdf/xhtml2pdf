@@ -1110,7 +1110,7 @@ def pisaParser(
     context,
     default_css="",
     xhtml=False,  # noqa: FBT002
-    encoding="utf8",
+    encoding=None,
     xml_output=None,
 ):
     """
@@ -1127,13 +1127,18 @@ def pisaParser(
         parser = html5lib.HTMLParser(tree=treebuilders.getTreeBuilder("dom"))
     parser_kwargs = {}
     if isinstance(src, str):
-        # If an encoding was provided, do not change it.
-        if not encoding:
-            encoding = "utf-8"
+        # Text has to become bytes for html5lib, and the encoding chosen here
+        # is the one it must decode with, so it is not a guess either way.
+        encoding = encoding or "utf-8"
         src = src.encode(encoding)
         src = pisaTempFile(src, capacity=context.capacity)
-        # To pass the encoding used to convert the text_type src to binary_type
-        # on to html5lib's parser to ensure proper decoding
+    if encoding:
+        # An encoding the caller named is the answer, whatever the source was.
+        # Without this a bytes or file source fell through to html5lib's own
+        # sniffing, whose last resort is windows-1252, so UTF-8 bytes came out
+        # as mojibake -- a bullet as "\u00e2\u0080\u00a2". Sniffing is still what
+        # happens when the caller names nothing, which is how a document with
+        # its own <meta charset> keeps deciding for itself.
         parser_kwargs["transport_encoding"] = encoding
 
     # # Test for the restrictions of html5lib
@@ -1150,7 +1155,7 @@ def pisaParser(
     document = parser.parse(src, **parser_kwargs)  # encoding=encoding)
 
     if xml_output:
-        xml_output.write(document.toprettyxml(encoding=encoding))
+        xml_output.write(document.toprettyxml(encoding=encoding or "utf-8"))
 
     if default_css:
         context.addDefaultCSS(default_css)
