@@ -239,6 +239,21 @@
         "xhtml2pdf": 3
       }
     },
+    "flex-pagebreak-column": {
+      "pages": {
+        "xhtml2pdf": 2
+      }
+    },
+    "flex-pagebreak-height": {
+      "pages": {
+        "xhtml2pdf": 2
+      }
+    },
+    "flex-pagebreak-wrap-reverse": {
+      "pages": {
+        "xhtml2pdf": 2
+      }
+    },
     "flex-percent-sizes": {
       "pages": {
         "xhtml2pdf": 1

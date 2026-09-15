@@ -1,0 +1,33 @@
+<!--
+  Browser equivalent of data/source/flex-pagebreak-height.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>flex-pagebreak-height</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 16pt; }
+p { margin: 0 0 8pt 0; line-height: 16pt; }
+.tall { display: flex; flex-wrap: wrap; align-content: space-between;
+        height: 1100pt; gap: 10pt; background-color: #eeeeec; padding: 8pt; }
+.tall div { width: 150pt; height: 70pt; padding: 5pt; background-color: #d3d7cf;
+            border: 1pt solid #888a85; }
+</style>
+</head>
+<body>
+<p>A container with a declared height of 1100pt, which is more than a page holds. The height is shared between the two parts, and align-content places the lines in what is left of it.</p>
+<div class="tall">
+<div>one</div><div>two</div><div>three</div>
+<div>four</div><div>five</div><div>six</div>
+<div>seven</div><div>eight</div><div>nine</div>
+<div>ten</div><div>eleven</div><div>twelve</div>
+<div>thirteen</div><div>fourteen</div><div>fifteen</div>
+<div>sixteen</div><div>seventeen</div><div>eighteen</div>
+</div>
+</body>
+</html>

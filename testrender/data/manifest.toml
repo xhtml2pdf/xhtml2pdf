@@ -488,3 +488,29 @@ notes = """An inline block around a display: flex element, which is how \
 inline-flex is written for xhtml2pdf: the container always fills the box it is \
 in, so the inline block's width is what decides the row's, and \
 justify-content spreads the items inside it."""
+
+[fixtures.flex-pagebreak-column]
+compare = ["pages"]
+notes = """A flex-direction: column container of seventeen prose items, taller \
+than the page it starts on. The column is the axis the existing page-break \
+fixtures do not cover: flex-pagebreak cuts a wrapped row of tiles and \
+flex-cut-item a row of prose columns. One item is long enough to straddle the \
+page edge, so the cut falls through it and its box is open at the cut on both \
+sides. line-height is pinned so both engines fit about the same number of lines \
+on a page, and only the page count is compared, as for every fixture that \
+crosses a page: which line the cut falls on still depends on the engine."""
+
+[fixtures.flex-pagebreak-wrap-reverse]
+compare = ["pages"]
+notes = """Thirty-six tiles in a wrap-reverse container, more than a page: the \
+first line is at the bottom, and the part carried over begins again at the \
+cross start. Only the page count is compared, as for the other fixtures that \
+cross a page."""
+
+[fixtures.flex-pagebreak-height]
+compare = ["pages"]
+notes = """A wrapping container with a declared height of 1100pt, more than a \
+page holds, and align-content: space-between placing its six lines inside it. \
+The declared height is shared between the two parts rather than given to both, \
+and align-content places the lines left over in what remains of it. Only the \
+page count is compared, as for every fixture that crosses a page."""
