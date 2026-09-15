@@ -1,0 +1,38 @@
+<!--
+  Browser equivalent of data/source/flex-gap.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>flex-gap</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 15pt; }
+h2 { font-size: 10pt; margin: 10pt 0 2pt 0; }
+.box { display: flex; flex-wrap: wrap; background-color: #eeeeec; }
+.box div { width: 110pt; padding: 3pt 5pt; background-color: #d3d7cf;
+           border: 1pt solid #888a85; }
+.both { gap: 14pt 6pt; }
+.rowonly { row-gap: 20pt; }
+.colonly { column-gap: 20pt; }
+.pc { gap: 4% 2%; }
+.col { flex-direction: column; row-gap: 12pt; height: 120pt; width: 200pt; }
+</style>
+</head>
+<body>
+<h2>gap: 14pt 6pt -- row gap then column gap</h2>
+<div class="box both"><div>one</div><div>two</div><div>three</div><div>four</div><div>five</div><div>six</div></div>
+<h2>row-gap: 20pt alone, no column gap</h2>
+<div class="box rowonly"><div>one</div><div>two</div><div>three</div><div>four</div><div>five</div><div>six</div></div>
+<h2>column-gap: 20pt alone, no row gap</h2>
+<div class="box colonly"><div>one</div><div>two</div><div>three</div><div>four</div><div>five</div><div>six</div></div>
+<h2>Percentage gaps: 4% row, 2% column</h2>
+<div class="box pc"><div>one</div><div>two</div><div>three</div><div>four</div><div>five</div><div>six</div></div>
+<h2>row-gap in a column, where it is the main-axis gap</h2>
+<div class="box col"><div>one</div><div>two</div><div>three</div></div>
+</body>
+</html>

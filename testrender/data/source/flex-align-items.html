@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>flex-align-items</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 15pt; }
+h2 { font-size: 10pt; margin: 10pt 0 2pt 0; }
+.row { display: flex; height: 60pt; gap: 8pt; background-color: #eeeeec; }
+.row div { padding: 3pt 5pt; background-color: #d3d7cf; border: 1pt solid #888a85; }
+.stretch { align-items: stretch; }
+.start { align-items: flex-start; }
+.end { align-items: flex-end; }
+.center { align-items: center; }
+.base { align-items: baseline; }
+.big { font-size: 16pt; }
+.small { font-size: 7pt; }
+.pad { padding-top: 14pt; }
+</style>
+</head>
+<body>
+<h2>stretch (the initial value)</h2>
+<div class="row stretch"><div>One line</div><div>Two words wrapped over<br>a second line</div><div>Third</div></div>
+<h2>flex-start</h2>
+<div class="row start"><div>One line</div><div>Two words wrapped over<br>a second line</div><div>Third</div></div>
+<h2>flex-end</h2>
+<div class="row end"><div>One line</div><div>Two words wrapped over<br>a second line</div><div>Third</div></div>
+<h2>center</h2>
+<div class="row center"><div>One line</div><div>Two words wrapped over<br>a second line</div><div>Third</div></div>
+<h2>baseline</h2>
+<div class="row base"><div class="big">Large</div><div>Regular</div><div class="small">Tiny</div><div class="pad">Padded</div></div>
+</body>
+</html>

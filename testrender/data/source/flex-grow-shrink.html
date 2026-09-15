@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>flex-grow-shrink</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 15pt; }
+h2 { font-size: 10pt; margin: 10pt 0 2pt 0; }
+.box { display: flex; gap: 6pt; background-color: #eeeeec; }
+.box div { padding: 3pt 5pt; background-color: #d3d7cf; border: 1pt solid #888a85; }
+.g0 { flex-grow: 0; }
+.g1 { flex-grow: 1; }
+.g2 { flex-grow: 2; }
+.g3 { flex-grow: 3; }
+.wide div { width: 200pt; }
+.s0 { flex-shrink: 0; }
+.s1 { flex-shrink: 1; }
+.s2 { flex-shrink: 2; }
+.narrow { min-width: 0; }
+</style>
+</head>
+<body>
+<h2>flex-grow 0, 1, 2 and 3 sharing the free space</h2>
+<div class="box"><div class="g0">zero</div><div class="g1">one</div><div class="g2">two</div><div class="g3">three</div></div>
+<h2>flex-shrink 0, 1 and 2 giving back the overflow, min-width: 0</h2>
+<div class="box wide"><div class="s0 narrow">shrink zero</div><div class="s1 narrow">shrink one</div><div class="s2 narrow">shrink two</div></div>
+<h2>The flex shorthand: 1, auto, none and 1 1 0</h2>
+<div class="box"><div style="flex: 1">flex: 1</div><div style="flex: auto">flex: auto, a longer item</div><div style="flex: none">flex: none</div></div>
+<div class="box"><div style="flex: 1 1 0">flex: 1 1 0</div><div style="flex: 1 1 0">flex: 1 1 0, a longer item</div></div>
+<h2>A grow factor below one leaves part of the free space unused</h2>
+<div class="box"><div style="flex: 0.25 1 60pt">quarter</div><div style="flex: 0.25 1 60pt">quarter</div></div>
+</body>
+</html>

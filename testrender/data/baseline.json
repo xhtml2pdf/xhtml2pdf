@@ -61,11 +61,51 @@
       "text": 1.0,
       "text_doc": 1.0
     },
+    "flex-align-content": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.8682,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "flex-align-items": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9386,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "flex-align-self": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.953,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "flex-auto-margins": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9527,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
     "flex-baseline": {
       "pages": {
         "xhtml2pdf": 1
       },
       "ssim": 0.9642,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "flex-basis-values": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9169,
       "text": 1.0,
       "text_doc": 1.0
     },
@@ -81,7 +121,7 @@
       "pages": {
         "xhtml2pdf": 1
       },
-      "ssim": 0.9727,
+      "ssim": 0.9743,
       "text": 1.0,
       "text_doc": 1.0
     },
@@ -98,6 +138,30 @@
         "xhtml2pdf": 2
       }
     },
+    "flex-direction": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9074,
+      "text": 0.773,
+      "text_doc": 0.773
+    },
+    "flex-gap": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.8892,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "flex-grow-shrink": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9176,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
     "flex-header": {
       "pages": {
         "xhtml2pdf": 1
@@ -105,6 +169,30 @@
       "ssim": 0.9753,
       "text": 1.0,
       "text_doc": 1.0
+    },
+    "flex-justify-content": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9565,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "flex-minmax": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9159,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "flex-order": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9155,
+      "text": 0.6895,
+      "text_doc": 0.6895
     },
     "flex-order-basis": {
       "pages": {
@@ -126,6 +214,14 @@
       "ssim": 0.9327,
       "text": 1.0,
       "text_doc": 1.0
+    },
+    "flex-wrap": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.8999,
+      "text": 0.8321,
+      "text_doc": 0.8321
     },
     "inline-block-badges": {
       "pages": {

@@ -312,3 +312,95 @@ place in the continued line. line-height is pinned so both engines fit about \
 the same number of lines on a page, and only the page count is compared: the \
 exact line of the cut differs, so the per-page text does not line up (the \
 document's text as a whole scores 0.88, the rest being line-break spacing)."""
+
+[fixtures.flex-justify-content]
+compare = ["pages", "text", "ssim"]
+notes = """Every justify-content value on a row of three items: flex-start, \
+flex-end, center, space-between, space-around, space-evenly, and a row whose \
+items are wider than it, which packs to the start rather than distributing \
+negative free space."""
+
+[fixtures.flex-align-items]
+compare = ["pages", "text", "ssim"]
+notes = """Every align-items value on a row 60pt tall holding items of unequal \
+content height: stretch, flex-start, flex-end, center, and baseline with a \
+larger font, a smaller one and a padded item, which all line up on their first \
+baseline."""
+
+[fixtures.flex-align-self]
+compare = ["pages", "text", "ssim"]
+notes = """align-self overriding the container's align-items: auto, flex-start, \
+flex-end, center, stretch and baseline against containers set to center, \
+flex-end and stretch, so each value is seen falling back to a different \
+inherited one."""
+
+[fixtures.flex-align-content]
+compare = ["pages", "text", "ssim"]
+notes = """Every align-content value on a wrapping container 96pt tall whose \
+two lines leave free space in the cross axis: flex-start, center, flex-end, \
+space-between, space-around, space-evenly and stretch. The height is a length, \
+which is what makes the container's cross size definite; align-content does \
+nothing without one."""
+
+[fixtures.flex-direction]
+compare = ["pages", "text", "ssim"]
+notes = """All four flex-direction values, each with the justify-content that \
+shows which end is main-start: row, row-reverse laying out from the right, and \
+column and column-reverse in a container with a height, where column-reverse \
+stacks from the bottom. The boxes land in the same places in both engines; the \
+text score is 0.77 because the two write the reversed lines to the PDF in \
+different orders. The browser writes them in painted order, so a reversed row \
+extracts as "third second first"; xhtml2pdf writes them in source order, which \
+is the reading order flexbox 5.3 asks for -- reversing is a visual reordering \
+only, and a reader or a copy-paste should still get the document's order."""
+
+[fixtures.flex-wrap]
+compare = ["pages", "text", "ssim"]
+notes = """The three flex-wrap values on the same six items of 110pt: nowrap \
+shrinks them onto one line, wrap breaks them onto two, and wrap-reverse puts \
+the first line at the bottom, which also turns align-items: flex-start into \
+the bottom edge. The text score is the same painted-order difference \
+flex-direction records: the browser writes a wrap-reverse container's lines \
+bottom line first, xhtml2pdf writes them in source order."""
+
+[fixtures.flex-gap]
+compare = ["pages", "text", "ssim"]
+notes = """gap and its two longhands: the shorthand's row-then-column order, \
+row-gap and column-gap each on their own, percentage gaps, and row-gap in a \
+column container, where it is the main-axis gap rather than the cross one."""
+
+[fixtures.flex-grow-shrink]
+compare = ["pages", "text", "ssim"]
+notes = """flex-grow 0/1/2/3 sharing free space, flex-shrink 0/1/2 giving back \
+an overflow with min-width: 0 so the automatic minimum does not stop it, the \
+flex shorthand as 1, auto, none and 1 1 0, and a grow factor below one, which \
+leaves part of the free space unused."""
+
+[fixtures.flex-basis-values]
+compare = ["pages", "text", "ssim"]
+notes = """Every kind of flex-basis: 0, a length, a percentage, auto falling \
+back to width and then to content, content ignoring a declared width, and \
+basis winning over width when both are given."""
+
+[fixtures.flex-minmax]
+compare = ["pages", "text", "ssim"]
+notes = """min and max on both axes of a flex item: max-width capping a growing \
+item so the others take what it leaves, min-width holding a shrinking one \
+open, the automatic minimum size stopping a shrink at the content next to an \
+item with min-width: 0 that has none, and min-height and max-height against \
+align-items, align-self: stretch and a declared height."""
+
+[fixtures.flex-order]
+compare = ["pages", "text", "ssim"]
+notes = """order moving items to the ends, items sharing an order keeping the \
+order they were written in, order deciding which line an item wraps onto, and \
+order in a column. The boxes land in the same places in both engines; the text \
+score is the painted-order difference flex-direction records, and order shows \
+it most because every container here is reordered."""
+
+[fixtures.flex-auto-margins]
+compare = ["pages", "text", "ssim"]
+notes = """margin: auto on a flex item: one auto margin pushing the rest to the \
+end, two centring the item, an auto margin taking the free space before \
+justify-content sees any, and auto margins on the cross axis, which align the \
+item the way align-self would."""

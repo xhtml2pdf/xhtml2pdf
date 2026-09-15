@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>flex-auto-margins</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 15pt; }
+h2 { font-size: 10pt; margin: 10pt 0 2pt 0; }
+.box { display: flex; height: 60pt; background-color: #eeeeec; }
+.box div { padding: 3pt 5pt; background-color: #d3d7cf; border: 1pt solid #888a85; }
+</style>
+</head>
+<body>
+<h2>margin-left: auto pushes the rest to the end</h2>
+<div class="box"><div>one</div><div style="margin-left: auto">two</div><div>three</div></div>
+<h2>Auto margins on both sides centre an item on the main axis</h2>
+<div class="box"><div style="margin-left: auto; margin-right: auto">centred</div></div>
+<h2>An auto main margin takes the free space before justify-content sees it</h2>
+<div class="box" style="justify-content: center"><div>one</div><div style="margin-right: auto">two</div><div>three</div></div>
+<h2>Auto margins on the cross axis</h2>
+<div class="box" style="align-items: flex-start">
+<div style="margin-top: auto">margin-top auto</div>
+<div style="margin-bottom: auto">margin-bottom auto</div>
+<div style="margin-top: auto; margin-bottom: auto">both auto</div></div>
+</body>
+</html>
