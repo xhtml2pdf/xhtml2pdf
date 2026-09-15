@@ -8,10 +8,10 @@ body { font-family: Helvetica; font-size: 11pt; }
 p { margin: 0 0 8pt 0; }
 .chip { display: inline-block; border: 1pt solid #4e9a06; padding: 2pt; vertical-align: middle; }
 .row { display: flex; gap: 6pt; }
-.row div { padding: 2pt 4pt; background-color: #e8f5e0; }
+.row span { padding: 2pt 4pt; background-color: #e8f5e0; }
 </style>
 </head>
 <body>
-<p>A flex row inside an inline-block: <span class="chip"><span class="row"><div>one</div><div>two</div><div>three</div></span></span> is how inline-flex is written for xhtml2pdf, and the rest of the sentence carries on after it.</p>
+<p>A flex row inside an inline-block: <span class="chip"><span class="row"><span>one</span><span>two</span><span>three</span></span></span> is how inline-flex is written for xhtml2pdf, and the rest of the sentence carries on after it.</p>
 </body>
 </html>

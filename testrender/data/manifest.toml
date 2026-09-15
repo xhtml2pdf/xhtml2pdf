@@ -279,7 +279,11 @@ a badge near a line end."""
 [fixtures.inline-block-nested]
 compare = ["pages", "text", "ssim"]
 notes = """A flex row inside an inline-block, which is how xhtml2pdf writes \
-inline-flex: the container always takes the full width of the box it is in."""
+inline-flex: the container always takes the full width of the box it is in. \
+The items are spans on purpose. A <div> inside a <p> is not allowed, and the \
+HTML parser lifts it out of every inline element around it before any CSS is \
+applied, which leaves the flex container empty -- in a browser exactly as \
+here, so the fixture went on agreeing while testing nothing."""
 
 [fixtures.inline-box]
 compare = ["pages", "text", "ssim"]
@@ -494,7 +498,8 @@ compare = ["pages", "text", "ssim"]
 notes = """An inline block around a display: flex element, which is how \
 inline-flex is written for xhtml2pdf: the container always fills the box it is \
 in, so the inline block's width is what decides the row's, and \
-justify-content spreads the items inside it."""
+justify-content spreads the items inside it. Spans for the items, for the \
+reason inline-block-nested gives."""
 
 [fixtures.flex-pagebreak-column]
 compare = ["pages"]
