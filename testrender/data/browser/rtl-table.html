@@ -1,0 +1,35 @@
+<!--
+  Browser equivalent of data/source/rtl-table.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>rtl-table</title>
+<style type="text/css">
+@font-face { font-family: Dejavu; src: url('../../../manual_test/font/dejavu/DejaVuSans.ttf'); }
+body { font-family: Dejavu; font-size: 12pt; line-height: 18pt; }
+h2 { font-size: 10pt; margin: 10pt 0 2pt 0; }
+p { margin: 0 0 8pt 0; }
+table { width: 100%; }
+td, th { border: 1pt solid #555753; padding: 3pt 5pt; }
+</style>
+</head>
+<body>
+<h2>שלום עולם</h2>
+<p>שורה של טקסט עברי, ואחריה Latin words in the middle, ועוד עברית בסוף.</p>
+<h2>A table in a right-to-left document</h2>
+<table>
+<tr><th>One</th><th>Two</th><th>Three</th><th>Four</th></tr>
+<tr><td>A</td><td>B</td><td>C</td><td>D</td></tr>
+<tr><td>E</td><td>F</td><td>G</td><td>H</td></tr>
+</table>
+<h2>A paragraph is aligned to the right unless it says otherwise</h2>
+<p>This paragraph takes the document's direction.</p>
+<p style="text-align: left">This one declares text-align: left and keeps it.</p>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>font-fallback</title>
+<style type="text/css">
+@font-face { font-family: First; src: url('../../../manual_test/font/rina/rina.ttf'); }
+@font-face { font-family: Second; src: url('../../../manual_test/font/dejavu/DejaVuSansMono.ttf'); }
+@font-face { font-family: Third; src: url('../../../manual_test/font/dejavu/DejaVuSans.ttf'); }
+body { font-family: First, Second, Third; font-size: 14pt; line-height: 21pt; }
+h2 { font-size: 11pt; margin: 10pt 0 2pt 0; font-family: Third; }
+p { margin: 0 0 6pt 0; }
+</style>
+</head>
+<body>
+<h2>Latin: the first family has it</h2>
+<p>Hello, this whole line is drawn by the first family.</p>
+<h2>Czech: the first family has it too</h2>
+<p>Ahoj ěščřž světe</p>
+<h2>Cyrillic and Greek: the first has neither, the second has both</h2>
+<p>Привет мир</p>
+<p>Καλημέρα κόσμε</p>
+<h2>Hebrew: only the third family has it</h2>
+<p>שלום עולם</p>
+<h2>Mixed in one line, family by family</h2>
+<p>Latin Привет Καλημέρα שלום again</p>
+</body>
+</html>

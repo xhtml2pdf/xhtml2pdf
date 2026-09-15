@@ -105,11 +105,12 @@ is explained rather than mysterious.
     test-tables, and inherited by flex-item-content, whose flex item is only
     as wide as the table it holds.
 
-  * dir="rtl" reverses the characters of a run instead of running the Unicode
-    bidirectional algorithm over it, so Latin text in a right-to-left document
-    comes out backwards. <pdf:language name="arabic"/> goes through
-    arabic-reshaper and python-bidi instead and does not have this problem.
-    Shown by flex-rtl, whose boxes match the browser while its words do not.
+  * Arabic letters are joined by substituting presentation forms, because
+    ReportLab does no shaping of its own. A font built for OpenType shaping
+    carries the plain Arabic block and few or no presentation forms, and the
+    letters are then left unjoined rather than replaced by boxes -- readable,
+    but not what the browser draws. Shown by arabic_font_rendering, which is
+    why it does not compare SSIM.
 
 A trap that is not a difference, because a browser does the same thing: a
 <div> inside a <p> is not allowed, and the HTML parser closes the paragraph

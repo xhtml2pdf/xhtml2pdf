@@ -106,6 +106,29 @@ Unreleased.
 
 **🐛 Bug-Fixes**
 
+* **Right-to-left documents.** ``<pdf:language name="arabic"/>`` set the
+  text reshaper going and nothing else, so paragraphs were still laid out
+  left to right with the table columns beside them in left-to-right order.
+  Naming a right-to-left language now turns the document round, the same as
+  ``dir="rtl"``: paragraphs are aligned to the right unless ``text-align``
+  says otherwise, and a table's columns run from the right, so the first
+  ``<td>`` of a row is its rightmost cell.
+* ``dir="rtl"`` reversed each fragment with ``str[::-1]`` and its words
+  twice over, on top of the bidirectional algorithm that had already run, so
+  the Latin words of a right-to-left document came out backwards -- "and
+  Latin text" as "dna nitaL txet". A right-to-left line is laid out by
+  aligning it to the right, not by turning its words around.
+* A document that declared both ``dir="rtl"`` and ``<pdf:language>`` had its
+  text put through the reshaper twice, once per fragment and once more over
+  the whole paragraph, which could leave a NUL in the middle of it.
+* Hebrew or Arabic inside an otherwise left-to-right paragraph is reordered
+  now. The bidirectional algorithm only ran on documents that declared a
+  direction, so a Hebrew word in an English sentence was laid out in logical
+  order and read backwards.
+* Arabic letters are no longer replaced by empty boxes when the font has no
+  presentation form for them. Joining is done by substituting those forms,
+  and a font built for OpenType shaping carries few or none; the letters are
+  left unjoined instead, and ligatures are dropped one step before that.
 * A ``font-family`` list is matched per character now, as CSS says it is.
   The first family that existed used to draw everything, so a document
   naming a Latin face first lost every character that face had no glyph

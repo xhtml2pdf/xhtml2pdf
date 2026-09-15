@@ -10,8 +10,8 @@
       "pages": {
         "xhtml2pdf": 3
       },
-      "text": 0.4444,
-      "text_doc": 0.9198
+      "text": 0.7065,
+      "text_doc": 0.8342
     },
     "css-background": {
       "pages": {
@@ -274,7 +274,9 @@
       "pages": {
         "xhtml2pdf": 1
       },
-      "ssim": 0.9143
+      "ssim": 0.9333,
+      "text": 0.9614,
+      "text_doc": 0.9614
     },
     "flex-sidebar": {
       "pages": {
@@ -291,6 +293,14 @@
       "ssim": 0.8999,
       "text": 0.8321,
       "text_doc": 0.8321
+    },
+    "font-fallback": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9395,
+      "text": 0.9586,
+      "text_doc": 0.9586
     },
     "inline-block-badges": {
       "pages": {
@@ -360,6 +370,12 @@
       "ssim": 0.9002,
       "text": 1.0,
       "text_doc": 1.0
+    },
+    "rtl-table": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9098
     },
     "simple-test": {
       "pages": {

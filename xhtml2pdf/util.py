@@ -1481,6 +1481,22 @@ def detect_language(name):
 
 
 def arabic_format(text, language):
+    """
+    `text` shaped and reordered for a right-to-left document, or None.
+
+    Two steps that are often confused. Reshaping picks the contextual form
+    of each Arabic letter, which a font needs because ReportLab does no
+    shaping of its own. get_display then runs the Unicode bidirectional
+    algorithm, which puts the characters in the order they are drawn in --
+    so what comes back is visual order, laid out left to right like any
+    other string, and nothing downstream should reverse it again.
+
+    The base direction is forced to right-to-left rather than taken from
+    the first strong character: in a right-to-left document a paragraph
+    that happens to open with a Latin word is still a right-to-left
+    paragraph, and letting the first word decide would lay it out the wrong
+    way round.
+    """
     # Note: right now all of the languages are treated the same way.
     # But maybe in the future we have to for example implement something
     # for "hebrew" that isn't used in "arabic"
@@ -1492,19 +1508,77 @@ def arabic_format(text, language):
         "pashto",
         "sindhi",
     }:
-        ar = arabic_reshaper.reshape(text)
-        return get_display(ar)
+        return get_display(arabic_reshaper.reshape(text), base_dir="R")
     return None
 
 
-def frag_text_language_check(context, frag_text):
-    if hasattr(context, "language"):
-        language = context.language
-        detect_language_result = arabic_format(frag_text, language)
-        if detect_language_result:
-            return detect_language_result
+#: The blocks whose characters are written right to left: Hebrew, Arabic,
+#: Syriac, Thaana, NKo, and the presentation forms of the first two. A run of
+#: these inside a left-to-right paragraph is still laid out right to left,
+#: which is the whole point of the bidirectional algorithm and the reason it
+#: cannot be run only on documents that declare a direction.
+_RTL_CHARS = re.compile(
+    r"[\u0590-\u05ff\u0600-\u06ff\u0700-\u074f\u0750-\u077f"
+    r"\u0780-\u07bf\u07c0-\u07ff\ufb1d-\ufdff\ufe70-\ufeff]"
+)
+
+
+def frag_text_language_check(context, frag_text, font_name=None):
+    """
+    `frag_text` shaped and reordered for this document, or None.
+
+    Driven by the text and the document's direction rather than by
+    <pdf:language> alone. A document that only says dir="rtl" is right-to-left
+    too and used to get no reordering at all; and a Hebrew or Arabic word
+    inside an otherwise left-to-right paragraph is still written right to
+    left, which is what the base direction is for -- it says which way the
+    paragraph runs, not which characters get reordered.
+
+    Reshaping is skipped when the font cannot draw what it produces.
+    arabic_reshaper writes Arabic Presentation Forms, and a font built for
+    OpenType shaping -- which is most of them -- carries the base Arabic
+    block and no presentation forms at all, so reshaping turned readable
+    letters into empty boxes. Unjoined letters are a poor second best; a row
+    of boxes is not a best at all.
+    """
+    rtl_document = bool(getattr(context, "is_rtl", False))
+    if not rtl_document and not _RTL_CHARS.search(frag_text):
         return None
-    return None
+    shaped = _reshape_for(frag_text, font_name)
+    return get_display(shaped, base_dir="R" if rtl_document else "L")
+
+
+#: A reshaper that joins letters but writes no ligatures. Ligatures are where
+#: fonts differ most: DejaVu carries 141 presentation forms and not the Allah
+#: ligature, so one word of a paragraph would otherwise cost the joining of
+#: all of it.
+_plain_reshaper = arabic_reshaper.ArabicReshaper(
+    configuration={"support_ligatures": False}
+)
+
+
+def _reshape_for(text: str, font_name: str | None) -> str:
+    """
+    `text` joined as far as `font_name` can draw it.
+
+    Three answers, best first: the full reshaping, the same without
+    ligatures, and the letters as they were written. Unjoined Arabic reads
+    poorly; a row of empty boxes does not read at all, which is what a font
+    built for OpenType shaping gives for a presentation form it never
+    carried.
+    """
+    shaped = arabic_reshaper.reshape(text)
+    if font_name is None or _drawable(shaped, font_name):
+        return shaped
+    without_ligatures = _plain_reshaper.reshape(text)
+    if _drawable(without_ligatures, font_name):
+        return without_ligatures
+    return text if _drawable(text, font_name) else shaped
+
+
+def _drawable(text: str, font_name: str) -> bool:
+    """Whether every character of `text` has a glyph in `font_name`."""
+    return all(font_has_glyph(font_name, char) for char in text)
 
 
 class ImageWarning(Exception):  # noqa: N818

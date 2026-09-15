@@ -139,7 +139,17 @@ compare = ["pages", "text"]
 notes = """<pdf:language name=\"arabic\"/> runs the text through arabic-reshaper \
 and python-bidi; a browser shapes and reorders Arabic natively, so dir=\"rtl\" is \
 the equivalent. The two shaping implementations are not glyph-identical, so \
-SSIM is not compared."""
+SSIM is not compared. Naming a right-to-left language now turns the whole \
+document round rather than only reshaping its text, which is what moved the \
+per-page text from 0.44 to 0.71: the paragraphs are aligned the way the \
+browser aligns them and the Latin words are no longer reversed letter by \
+letter. The document score went the other way, 0.92 to 0.83, and that is the \
+table: its columns are mirrored now, as the browser mirrors them -- both put \
+the first <td> of a row on the right -- but the two engines write the cells to \
+the page in different orders, and pypdf runs its own bidirectional pass over \
+what it extracts on top of that. Measured by turning the mirroring off alone: \
+text 0.89, document 0.97. The layout is closer to the browser than it was; the \
+extraction is a worse way of seeing that."""
 
 # ---------------------------------------------------------------------------
 # Targeted CSS fixtures.
@@ -449,16 +459,15 @@ tall, and last a percentage height with no definite height to resolve against, \
 where the item takes its content's height instead."""
 
 [fixtures.flex-rtl]
-compare = ["pages", "ssim"]
+compare = ["pages", "text", "ssim"]
 notes = """A dir="rtl" document, where main-start is the right: row lays out \
 from the right and row-reverse from the left, justify-content: flex-end packs \
 at the left, an auto margin pushes towards the left, and a column is unaffected \
 because the direction only decides where a row starts. Every box lands where \
-the browser puts it. The text is not compared: dir="rtl" reverses the \
-characters of a run rather than running the Unicode bidirectional algorithm \
-over it, so this fixture's Latin text comes out backwards -- a limitation of \
-dir="rtl" itself, not of the flex layout the fixture is for, and one the \
-reshaping path behind <pdf:language name="arabic"/> does not have."""
+the browser puts it. The text used to be left out of the comparison here: \
+dir="rtl" reversed the characters of a run instead of running the Unicode \
+bidirectional algorithm over it, so this fixture's Latin text came out \
+backwards. It does not any more, and the text is compared again."""
 
 [fixtures.flex-column-sizing]
 compare = ["pages", "text", "ssim"]
@@ -535,3 +544,24 @@ items, a wrapping row whose lines have to come out of the cell's width, and \
 the same row with a height and align-content. Measuring a table's columns \
 probes each cell more than once before the final pass wraps anything, so a \
 container here is asked its size at more than one width."""
+
+[fixtures.font-fallback]
+compare = ["pages", "text", "ssim"]
+notes = """A font-family list of three embedded families, matched per \
+character as CSS says: the first covers Latin and Czech only, the second adds \
+Cyrillic and Greek, the third adds Hebrew. Every family is a file both engines \
+load, so the two make the same decision character by character and the \
+comparison is about the matching rather than about what a system font happens \
+to hold."""
+
+[fixtures.rtl-table]
+compare = ["pages", "ssim"]
+notes = """A dir="rtl" document: paragraphs aligned to the right unless they \
+say otherwise, Latin words keeping their own direction inside Hebrew ones, and \
+a table whose columns run from the right, so the first <td> of a row is its \
+rightmost cell. Hebrew rather than Arabic because it is not cursive -- \
+ReportLab does no shaping, so an Arabic fixture would be comparing xhtml2pdf's \
+unjoined letters against the browser's joined ones and measuring that instead. \
+The text is not compared: pypdf runs its own bidirectional pass over what it \
+extracts, so it answers in logical order and says nothing about what was \
+drawn."""

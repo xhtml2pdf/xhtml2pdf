@@ -568,13 +568,7 @@ def _sameFrag(f, g):
     return 1
 
 
-def reverse_sentence(sentence):
-    words = str(sentence).split(" ")
-    reverse_sentence = " ".join(reversed(words))
-    return reverse_sentence[::-1]
-
-
-def _getFragWords(frags, *, reverse=False):
+def _getFragWords(frags):
     """
     Given a Parafrag list return a list of fragwords
     [[size, (f00,w00), ..., (f0n,w0n)],....,[size, (fm0,wm0), ..., (f0n,wmn)]]
@@ -589,8 +583,6 @@ def _getFragWords(frags, *, reverse=False):
         text = f.text
         if isinstance(text, bytes):
             text = text.decode("utf8")
-        if reverse:
-            text = reverse_sentence(text)
 
         # of paragraphs
         if text:
@@ -598,8 +590,6 @@ def _getFragWords(frags, *, reverse=False):
                 hangingStrip = False
                 text = text.lstrip()
             S = split(text)
-            if reverse:
-                S.reverse()
             if S == []:
                 S = [""]
             if W != [] and text[0] in whitespace:
@@ -1524,9 +1514,14 @@ class Paragraph(Flowable):
             return self.blPara
         n = 0
         words = []
-        frag_words = _getFragWords(frags, reverse=self.dir == "rtl")
-        if self.dir == "rtl":
-            frag_words.reverse()
+        # No reversing here. Right-to-left text arrives in visual order,
+        # because the bidirectional algorithm has already run over it, and a
+        # right-to-left line is laid out by aligning it to the right rather
+        # than by turning its words around. What used to happen instead was a
+        # str[::-1] of each fragment plus two reversals of the word order,
+        # which flipped the Latin words of a right-to-left document letter by
+        # letter -- "and Latin text" came out "dna nitaL txet".
+        frag_words = _getFragWords(frags)
         for w in frag_words:
             f = w[-1][0]
             fontName = f.fontName

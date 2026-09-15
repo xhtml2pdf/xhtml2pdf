@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from reportlab import rl_settings
-from reportlab.lib.enums import TA_LEFT
+from reportlab.lib.enums import TA_LEFT, TA_RIGHT
 from reportlab.lib.fonts import addMapping
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
@@ -44,7 +44,6 @@ from xhtml2pdf.properties import CSSAttrs, reset_non_inherited
 from xhtml2pdf.tables import TableData
 from xhtml2pdf.util import (
     apply_text_transform,
-    arabic_format,
     copy_attrs,
     font_has_glyph,
     frag_text_language_check,
@@ -876,10 +875,23 @@ class pisaContext:
     def toc(self, value: PmlTableOfContents) -> None:
         self.tocs[""] = value
 
+    @property
+    def is_rtl(self) -> bool:
+        """Whether this document is written right to left."""
+        return self.dir == "rtl"
+
     def setDir(self, direction):
-        if direction == "rtl":
-            self.frag.rtl = True
+        """
+        The document's writing direction, and what follows from it.
+
+        A right-to-left line is laid out by aligning it to the right, not by
+        turning its words around: the bidirectional algorithm has already put
+        the characters in the order they are drawn in. An explicit text-align
+        still wins, since CSS2Frag applies it after this.
+        """
         self.dir = direction
+        if direction == "rtl":
+            self.frag.alignment = TA_RIGHT
 
     def UID(self):
         self.uidctr += 1
@@ -1179,11 +1191,11 @@ class pisaContext:
                 frags = self.fragAnchor + self.fragList
 
                 self.dumpPara(frags, style)
-                if hasattr(self, "language"):
-                    language = self.language
-                    detect_language_result = arabic_format(self.text, language)
-                    if detect_language_result is not None:
-                        self.text = detect_language_result
+                # self.text is accumulated from fragments that have already
+                # been reshaped and reordered one by one, so reshaping it
+                # again here put the text through the whole of it twice --
+                # which is what dropped a NUL into an Arabic paragraph that
+                # also declared dir="rtl".
 
                 para = PmlParagraph(
                     self.text, style, frags=frags, bulletText=bulletText, dir=self.dir
@@ -1258,8 +1270,12 @@ class pisaContext:
             return [frag]
 
         runs = split_by_coverage(text, candidates)
-        if len(runs) < 2:
+        if len(runs) == 1 and runs[0][1] == frag.fontName:
             return [frag]
+        # Not `len(runs) < 2`: a fragment whose every character belongs to a
+        # later family comes back as one run in that family, and returning
+        # the fragment unchanged there threw the answer away. It is the whole
+        # paragraph of Cyrillic or Hebrew that this happens to.
         parts = []
         for run, font_name in runs:
             part = frag.clone()
@@ -1378,7 +1394,9 @@ class pisaContext:
                     self._appendFrag(frag)
                 else:
                     frag.text = " ".join(("x" + text + "x").split())[1:-1]
-                    language_check = frag_text_language_check(self, frag.text)
+                    language_check = frag_text_language_check(
+                        self, frag.text, frag.fontName
+                    )
                     if language_check:
                         frag.text = language_check
                     if self.fragStrip:

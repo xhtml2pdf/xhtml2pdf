@@ -89,15 +89,26 @@ Usage example:
    <p>بعض النصوص العربية هنا</p>
    <p>Some English text here</p>
 
-The Arabic letters will render from right to left, while all other Latin letters will keep their left-to-right direction.
+Naming a right-to-left language makes the whole document right to left, the
+same as ``dir="rtl"`` on ``<html>``, ``<body>``, ``<div>`` or ``<p>``. Either
+one turns three things around: the text runs through the Unicode
+bidirectional algorithm, so the Arabic letters read right to left while Latin
+words inside them keep their own direction; paragraphs are aligned to the
+right unless ``text-align`` says otherwise; and a table's columns are laid out
+from the right, so the first ``<td>`` of a row is its rightmost cell.
 
-.. warning::
-    Right now it seems like right-to-left support isn't there for default font
-    families (for example, *Times-Roman*). We're working on fixing this.
-    You can make it work by using the ``@font-face`` tag in the CSS definition
-    and defining a custom font. You will need a custom font file. For example,
-    `Markazi Text <https://fonts.google.com/specimen/Markazi+Text>`_ seems to
-    work.
+.. note::
+    A right-to-left document needs an embedded font. The base-14 families
+    (*Helvetica*, *Times-Roman*, *Courier*) have no Arabic or Hebrew glyphs
+    at all, so the text comes out as boxes whatever the direction is, and a
+    warning says which characters were lost. `Markazi Text
+    <https://fonts.google.com/specimen/Markazi+Text>`_ is one that works.
+
+.. note::
+    Arabic letters are joined by choosing the contextual form of each one,
+    because ReportLab does no shaping of its own. A font built for OpenType
+    shaping carries the plain Arabic block and no presentation forms, and for
+    those the letters are left unjoined rather than replaced by boxes.
 
 
 
