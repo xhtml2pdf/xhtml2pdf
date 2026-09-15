@@ -208,6 +208,14 @@ Differences from a browser:
 -  The box's baseline is the baseline of its last line of text, as in a
    browser; a box that holds no text -- a table, an image -- hangs from
    its bottom margin edge.
+-  ``top`` and ``bottom`` align the box with the edges of the line box,
+   ``text-top`` and ``text-bottom`` with the edges of the parent's
+   content area, so the four coincide only when nothing else on the line
+   is taller. The line box here is the one ReportLab builds from the
+   font metrics of the line's fragments; it does not carry the half
+   leading CSS puts above and below the content area, so a box on
+   ``top`` sits a little lower than a browser puts it, by the same
+   amount as the first line of a block.
 -  A box wider than the line is laid out again to fit the line rather
    than overflowing it, and is never broken across lines.
 -  A flex container inside an inline block takes the whole width of the

@@ -117,6 +117,15 @@ Unreleased.
   container's own width and height as its own, which made the item's
   cross size definite and stopped ``align-items: stretch`` from ever
   sizing an item to its line.
+* ``vertical-align: top`` and ``bottom`` were drawn as ``text-top`` and
+  ``text-bottom``. CSS 2.1 10.8.1 aligns the first pair with the edges of
+  the whole line box and the second with the parent's content area, so
+  the four only coincide when nothing else on the line is taller. The
+  line box is known once the line has been assembled, which is where the
+  two are now told apart. This reaches inline images too, and an ``<img>``
+  with no ``align`` is aligned ``bottom``, so an image sharing a line with
+  something taller than itself now sits at the line's bottom edge rather
+  than a fifth of the font size below the baseline.
 * ``dir`` on the ``<html>`` element was ignored. It was read on ``<body>``,
   ``<div>`` and ``<p>``, but the root element is where a document usually
   declares its direction, and a flex row in such a document laid out from

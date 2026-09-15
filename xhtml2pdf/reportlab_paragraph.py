@@ -143,10 +143,25 @@ def _justifyDrawParaLine(tx, offset, extraspace, words, last=0):
     return offset
 
 
-def imgVRange(h, va, fontSize):
-    """Return bottom,top offsets relative to baseline(0)."""
+def imgVRange(h, va, fontSize, line_ascent=None, line_descent=None):
+    """
+    Return bottom,top offsets relative to baseline(0).
+
+    CSS 2.1 10.8.1 separates the two pairs of keywords: `text-top` and
+    `text-bottom` align with the edges of the parent's content area -- its
+    font's ascent and descent -- while `top` and `bottom` align with the
+    edges of the whole line box, which is taller as soon as anything on the
+    line is. The line box is only known once the line has been assembled, so
+    `line_ascent`/`line_descent` are passed in when it is: while measuring
+    they are absent and `top`/`bottom` reserve the same room `text-top` and
+    `text-bottom` do, which is the height of the box either way.
+    """
     if va == "baseline":
         iyo = 0
+    elif va == "top" and line_ascent is not None:
+        iyo = line_ascent - h
+    elif va == "bottom" and line_descent is not None:
+        iyo = line_descent
     elif va in {"text-top", "top"}:
         iyo = fontSize - h
     elif va == "middle":
@@ -263,7 +278,9 @@ def _putFragLine(cur_x, tx, line):
                 txfs = tx._fontsize
                 if txfs is None:
                     txfs = xs.style.fontSize
-                iy0, iy1 = imgVRange(h, cbDefn.valign, txfs)
+                iy0, iy1 = imgVRange(
+                    h, cbDefn.valign, txfs, xs.lineAscent, xs.lineDescent
+                )
                 cur_x_s = cur_x + nSpaces * ws
                 drawing = cbDefn.image.getDrawing(w, h)
                 if drawing:
@@ -282,7 +299,9 @@ def _putFragLine(cur_x, tx, line):
                 txfs = tx._fontsize
                 if txfs is None:
                     txfs = xs.style.fontSize
-                iy0, iy1 = imgVRange(h, cbDefn.valign, txfs)
+                iy0, iy1 = imgVRange(
+                    h, cbDefn.valign, txfs, xs.lineAscent, xs.lineDescent
+                )
                 cur_x_s = cur_x + nSpaces * ws
                 barcode.draw(canvas=tx._canvas, xoffset=cur_x_s)
                 cur_x += w
@@ -298,7 +317,9 @@ def _putFragLine(cur_x, tx, line):
                 txfs = tx._fontsize
                 if txfs is None:
                     txfs = xs.style.fontSize
-                iy0, iy1 = imgVRange(h, cbDefn.valign, txfs)
+                iy0, iy1 = imgVRange(
+                    h, cbDefn.valign, txfs, xs.lineAscent, xs.lineDescent
+                )
                 cur_x_s = cur_x + nSpaces * ws
                 _flush_text_object(tx, x0, cur_y)
                 cbDefn.flowable.drawOn(tx._canvas, cur_x_s, cur_y + iy0)

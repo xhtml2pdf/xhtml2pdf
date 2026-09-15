@@ -213,14 +213,47 @@ class InlineBlockLayoutTest(TestCase):
         seen = []
         original = reportlab_paragraph.imgVRange
 
-        def spy(h, va, font_size):
+        def spy(h, va, font_size, *line):
             seen.append((h, va))
-            return original(h, va, font_size)
+            return original(h, va, font_size, *line)
 
         with patch.object(reportlab_paragraph, "imgVRange", spy):
             para.wrapOn(self.canv, 400, 800)
         self.assertIn("middle", [va for _h, va in seen])
         self.assertTrue(all(h > 30 for h, _va in seen))
+
+    def test_top_and_bottom_align_to_the_line_box_not_the_font(self) -> None:
+        # CSS 2.1 10.8.1: text-top and text-bottom align with the parent's
+        # content area, top and bottom with the whole line box, which is
+        # taller as soon as something else on the line is. The line box is
+        # only known once the line is assembled, so the four coincide while
+        # measuring and part company when the line is drawn.
+        from xhtml2pdf.reportlab_paragraph import imgVRange
+
+        measuring = {
+            va: imgVRange(8, va, 10)
+            for va in ("top", "text-top", "bottom", "text-bottom")
+        }
+        self.assertEqual(measuring["top"], measuring["text-top"])
+        self.assertEqual(measuring["bottom"], measuring["text-bottom"])
+
+        # A line whose tallest fragment reaches 30pt above and 7pt below.
+        drawing = {
+            va: imgVRange(8, va, 10, 30, -7)
+            for va in ("top", "text-top", "bottom", "text-bottom")
+        }
+        # top puts the box's own top at the line's top; text-top leaves it at
+        # the font's ascent, well below that.
+        self.assertEqual(30, drawing["top"][1])
+        self.assertEqual(10, drawing["text-top"][1])
+        # bottom puts the box's bottom at the line's bottom; text-bottom
+        # leaves it at the font's descent.
+        self.assertEqual(-7, drawing["bottom"][0])
+        self.assertAlmostEqual(-2, drawing["text-bottom"][0])
+        # baseline and middle do not look at the line box at all.
+        self.assertEqual(
+            imgVRange(8, "baseline", 10), imgVRange(8, "baseline", 10, 30, -7)
+        )
 
     def test_a_box_wider_than_the_frame_is_laid_out_to_fit(self) -> None:
         (para,) = _paragraphs(
