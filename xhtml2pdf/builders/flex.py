@@ -30,6 +30,7 @@ from operator import itemgetter
 from typing import TYPE_CHECKING, Any
 
 from reportlab.lib.abag import ABag
+from reportlab.lib.fonts import tt2ps
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.platypus.flowables import Flowable, KeepInFrame
 from reportlab.platypus.paragraph import Paragraph as ReportLabParagraph
@@ -1545,6 +1546,28 @@ class InlineBox(Flowable):
         drawBoxBorders(canv, x, y, self._box_width, self._box_height, style)
 
 
+def _carrier(frag):
+    """
+    A clone of `frag` that carries a cbDefn instead of text.
+
+    pisaContext.addFrag turns the frag's family name into a concrete face
+    with tt2ps on its way to the paragraph, because that is where bold and
+    italic are known. A carrier never goes through addFrag -- it holds no
+    text -- so it has to do the same for itself. Without it the frag keeps
+    the family the stylesheet wrote, and the first thing that measures it
+    goes looking for a face by that name: harmless for a base-14 family,
+    which is registered under its own name, and fatal for an embedded one,
+    which is registered as "<family>_00" and sends ReportLab off to find a
+    system .afm that does not exist.
+    """
+    carrier = frag.clone()
+    carrier.text = ""
+    carrier.fontName = tt2ps(
+        frag.fontName, getattr(frag, "bold", 0), getattr(frag, "italic", 0)
+    )
+    return carrier
+
+
 def inline_box_frag(frag, box: InlineBox, valign="baseline"):
     """
     The frag that carries an InlineBox through a paragraph.
@@ -1554,8 +1577,7 @@ def inline_box_frag(frag, box: InlineBox, valign="baseline"):
     given any, on purpose, so that a box is not inherited by the text after
     it. Same shape as the frag pisaTagIMG builds for an inline image.
     """
-    carrier = frag.clone()
-    carrier.text = ""
+    carrier = _carrier(frag)
     carrier.cbDefn = ABag(
         kind="box",
         flowable=box,
@@ -1587,8 +1609,7 @@ def inline_box_markers(frag, style: BoxStyle, margins=(0.0, 0.0)):
     left, right = margins
 
     def marker(edge: str, advance: float, inset: float):
-        carrier = frag.clone()
-        carrier.text = ""
+        carrier = _carrier(frag)
         carrier.cbDefn = ABag(
             kind="inlineBox", edge=edge, style=style, advance=advance, inset=inset
         )

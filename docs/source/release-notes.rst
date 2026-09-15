@@ -117,6 +117,15 @@ Unreleased.
   container's own width and height as its own, which made the item's
   cross size definite and stopped ``align-items: stretch`` from ever
   sizing an item to its line.
+* An inline box -- a ``<span>`` with ``padding``, a ``border`` or a
+  ``background`` -- an ``display: inline-block``, or any form control,
+  which is an inline block by default, stopped the conversion with
+  ``OSError: Cannot open resource ...afm, while looking for faceName=...``
+  in any document whose font came from ``@font-face``. The frag that
+  carries the box holds no text, so it never passed through the step that
+  turns a family name into the concrete face registered for it, and an
+  embedded TTF is registered as ``<family>_00``. A base-14 family happened
+  to survive because it is registered under its own name.
 * ``vertical-align: top`` and ``bottom`` were drawn as ``text-top`` and
   ``text-bottom``. CSS 2.1 10.8.1 aligns the first pair with the edges of
   the whole line box and the second with the parent's content area, so

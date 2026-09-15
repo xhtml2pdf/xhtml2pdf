@@ -10,6 +10,7 @@ breaker counts their padding, and that the box is painted where the text is.
 import io
 import re
 from io import BytesIO
+from pathlib import Path
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -388,6 +389,61 @@ class InlineBoxRenderTest(TestCase):
     def test_a_box_alone_in_a_paragraph_renders(self) -> None:
         page = self._render(f"<p><span style='{BOX}'>only</span></p>")
         self.assertIn("only", page.extract_text())
+
+
+class EmbeddedFontTest(TestCase):
+    """
+    An inline box in a document whose font is its own, not a base-14.
+
+    The carrier frag holds no text, so it never goes through addFrag, where
+    a family name is turned into a concrete face. It used to keep the family
+    the stylesheet wrote; an embedded TTF is registered as "<family>_00", so
+    the first thing to measure the carrier went looking for a face that does
+    not exist and the conversion died inside ReportLab.
+    """
+
+    FONT = Path(__file__).parent.parent / "manual_test" / "font" / "dejavu"
+
+    def _build(self, body: str, css: str = "") -> bytes:
+        html = f"""<html><head><style>
+        @font-face {{ font-family: "My Sans"; src: url("{self.FONT / "DejaVuSans.ttf"}"); }}
+        @font-face {{ font-family: "My Sans"; src: url("{self.FONT / "DejaVuSans-Bold.ttf"}");
+                      font-weight: bold; }}
+        body {{ font-family: "My Sans"; font-size: 11pt; }}
+        {css}
+        </style></head><body>{body}</body></html>"""
+        out = BytesIO()
+        result = pisa.CreatePDF(io.BytesIO(html.encode()), dest=out)
+        self.assertEqual(0, result.err)
+        return out.getvalue()
+
+    def test_an_inline_box_builds(self) -> None:
+        pdf = self._build(
+            "<p>before <span class='b'>boxed</span> after</p>",
+            ".b { padding: 2pt; border: 1pt solid #000; }",
+        )
+        self.assertIn("boxed", PdfReader(BytesIO(pdf)).pages[0].extract_text())
+
+    def test_an_inline_block_builds(self) -> None:
+        pdf = self._build(
+            "<p>before <span class='b'>boxed</span> after</p>",
+            ".b { display: inline-block; padding: 2pt; }",
+        )
+        self.assertIn("boxed", PdfReader(BytesIO(pdf)).pages[0].extract_text())
+
+    def test_a_form_control_builds(self) -> None:
+        # Form controls are inline blocks by default, so every document with
+        # an embedded font and a form went down the same path.
+        self._build("<p>before <input type='text' name='x'> after</p>")
+
+    def test_a_bold_inline_box_builds(self) -> None:
+        # tt2ps picks the face from the frag's bold and italic, so the bold
+        # carrier has to resolve to the bold face and not to the regular one.
+        pdf = self._build(
+            "<p><b>before <span class='b'>boxed</span> after</b></p>",
+            ".b { padding: 2pt; border: 1pt solid #000; }",
+        )
+        self.assertIn("boxed", PdfReader(BytesIO(pdf)).pages[0].extract_text())
 
 
 class MarkerHelperTest(TestCase):
