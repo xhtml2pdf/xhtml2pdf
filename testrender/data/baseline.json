@@ -109,6 +109,14 @@
       "text": 1.0,
       "text_doc": 1.0
     },
+    "flex-boxes": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9163,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
     "flex-cards": {
       "pages": {
         "xhtml2pdf": 1
@@ -132,6 +140,14 @@
       "ssim": 0.9619,
       "text": 0.9759,
       "text_doc": 0.9759
+    },
+    "flex-column-sizing": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9102,
+      "text": 1.0,
+      "text_doc": 1.0
     },
     "flex-cut-item": {
       "pages": {
@@ -170,6 +186,14 @@
       "text": 1.0,
       "text_doc": 1.0
     },
+    "flex-item-content": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.878,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
     "flex-justify-content": {
       "pages": {
         "xhtml2pdf": 1
@@ -183,6 +207,14 @@
         "xhtml2pdf": 1
       },
       "ssim": 0.9159,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "flex-nested": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9384,
       "text": 1.0,
       "text_doc": 1.0
     },
@@ -206,6 +238,20 @@
       "pages": {
         "xhtml2pdf": 3
       }
+    },
+    "flex-percent-sizes": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.902,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "flex-rtl": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9143
     },
     "flex-sidebar": {
       "pages": {

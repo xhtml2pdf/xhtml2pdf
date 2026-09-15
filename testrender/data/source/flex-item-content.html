@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>flex-item-content</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 15pt; }
+h2 { font-size: 10pt; margin: 10pt 0 2pt 0; }
+h3 { font-size: 12pt; margin: 0; }
+p { margin: 0; }
+.box { display: flex; gap: 8pt; background-color: #eeeeec; }
+.box > div { padding: 4pt; background-color: #d3d7cf; border: 1pt solid #888a85; }
+td, th { border: 1pt solid #555753; padding: 2pt 4pt; }
+ul { margin: 0 0 0 1.5em; padding-left: 0; }
+pre { margin: 0; font-size: 9pt; }
+</style>
+</head>
+<body>
+<h2>An image, a table and a list as flex items</h2>
+<div class="box">
+<div><img src="img/denker.png" width="90"></div>
+<div><table><tr><th>Year</th><th>Total</th></tr><tr><td>2024</td><td>118</td></tr><tr><td>2025</td><td>207</td></tr></table></div>
+<div><ul><li>First entry</li><li>Second entry</li><li>Third entry</li></ul></div>
+</div>
+<h2>A heading, a paragraph and preformatted text as flex items</h2>
+<div class="box">
+<div style="flex: 1"><h3>A heading</h3><p>The paragraph under it, which wraps because the item is narrow.</p></div>
+<div style="flex: 1"><pre>one   1
+two   2
+three 3</pre></div>
+</div>
+<h2>align-items: baseline with an image and a table, which have none</h2>
+<div class="box" style="align-items: baseline">
+<div>Text with a baseline</div>
+<div><img src="img/denker.png" width="60"></div>
+<div><table><tr><td>A cell</td></tr></table></div>
+<div>More text</div>
+</div>
+</body>
+</html>

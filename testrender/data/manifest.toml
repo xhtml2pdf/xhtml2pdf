@@ -404,3 +404,57 @@ notes = """margin: auto on a flex item: one auto margin pushing the rest to the 
 end, two centring the item, an auto margin taking the free space before \
 justify-content sees any, and auto margins on the cross axis, which align the \
 item the way align-self would."""
+
+[fixtures.flex-item-content]
+compare = ["pages", "text", "ssim"]
+notes = """What a flex item can hold besides a paragraph: an image, a table, a \
+list, a heading and preformatted text, each measured for its own min- and \
+max-content. The last row is align-items: baseline with an image and a table \
+in it, neither of which has a baseline, so both are aligned by the bottom edge \
+the specification synthesises for them while the text items line up on their \
+first baseline. Known difference: the table is 80pt wide here against the \
+browser's 65pt, because xhtml2pdf gives a table's columns equal widths where a \
+browser sizes each to its content. That is PmlTable's own auto layout, not the \
+flex item around it -- the item shrink-wraps to whatever width the table \
+reports -- and it is what test-tables scores too."""
+
+[fixtures.flex-nested]
+compare = ["pages", "text", "ssim"]
+notes = """Three levels of container: a row of columns each holding a row, a \
+nested container lending its first item's baseline to an outer align-items: \
+baseline row, and a growing item whose own content is a growing row, so the \
+inner line is resolved against the width the outer one gave it."""
+
+[fixtures.flex-boxes]
+compare = ["pages", "text", "ssim"]
+notes = """The box model on both sides of a flex container: padding, border and \
+margin on the items, a container with a box of its own that the items sit \
+inside, container margins narrowing the line, and a declared width being the \
+content box with padding and border outside it."""
+
+[fixtures.flex-percent-sizes]
+compare = ["pages", "text", "ssim"]
+notes = """Percentages on both axes: widths and min-/max-widths on the items \
+and on the container, then heights and a max-height inside a container 100pt \
+tall, and last a percentage height with no definite height to resolve against, \
+where the item takes its content's height instead."""
+
+[fixtures.flex-rtl]
+compare = ["pages", "ssim"]
+notes = """A dir="rtl" document, where main-start is the right: row lays out \
+from the right and row-reverse from the left, justify-content: flex-end packs \
+at the left, an auto margin pushes towards the left, and a column is unaffected \
+because the direction only decides where a row starts. Every box lands where \
+the browser puts it. The text is not compared: dir="rtl" reverses the \
+characters of a run rather than running the Unicode bidirectional algorithm \
+over it, so this fixture's Latin text comes out backwards -- a limitation of \
+dir="rtl" itself, not of the flex layout the fixture is for, and one the \
+reshaping path behind <pdf:language name="arabic"/> does not have."""
+
+[fixtures.flex-column-sizing]
+compare = ["pages", "text", "ssim"]
+notes = """Sizing a flex-direction: column container: one with no height taking \
+its content's beside ones with a height that distribute their free space, \
+align-items sizing the items across the width, and flex-grow sharing the \
+leftover height. A column with no height never distributes, which is why every \
+container here that does has one."""

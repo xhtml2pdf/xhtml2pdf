@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>flex-rtl</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 15pt; }
+h2 { font-size: 10pt; margin: 10pt 0 2pt 0; }
+.box { display: flex; gap: 6pt; background-color: #eeeeec; }
+.box div { padding: 3pt 5pt; background-color: #d3d7cf; border: 1pt solid #888a85; }
+</style>
+</head>
+<body>
+<h2>row in a right-to-left document starts at the right</h2>
+<div class="box"><div>one</div><div>two</div><div>three</div></div>
+<h2>row-reverse in the same document starts at the left</h2>
+<div class="box" style="flex-direction: row-reverse"><div>one</div><div>two</div><div>three</div></div>
+<h2>justify-content: flex-end packs at the left</h2>
+<div class="box" style="justify-content: flex-end"><div>one</div><div>two</div><div>three</div></div>
+<h2>margin-left: auto pushes towards main-end, which is the left</h2>
+<div class="box"><div>one</div><div style="margin-left: auto">two</div><div>three</div></div>
+<h2>A column is unaffected by the direction</h2>
+<div class="box" style="flex-direction: column; width: 200pt"><div>one</div><div>two</div></div>
+</body>
+</html>

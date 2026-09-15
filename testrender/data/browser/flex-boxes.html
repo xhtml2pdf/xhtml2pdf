@@ -1,0 +1,36 @@
+<!--
+  Browser equivalent of data/source/flex-boxes.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>flex-boxes</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 15pt; }
+h2 { font-size: 10pt; margin: 10pt 0 2pt 0; }
+.box { display: flex; gap: 8pt; }
+.plain { background-color: #eeeeec; }
+.padded { background-color: #eeeeec; padding: 10pt; border: 2pt solid #3465a4; }
+.indent { background-color: #eeeeec; margin-left: 30pt; margin-right: 50pt; }
+.box div { background-color: #d3d7cf; }
+.a { padding: 8pt; border: 1pt solid #a40000; }
+.b { padding: 2pt 12pt; border: 4pt solid #4e9a06; }
+.c { margin: 6pt; padding: 4pt; border: 1pt dashed #888a85; }
+</style>
+</head>
+<body>
+<h2>Padding, border and margin on the items</h2>
+<div class="box plain"><div class="a">padding 8pt</div><div class="b">border 4pt</div><div class="c">margin 6pt</div></div>
+<h2>The container has a box of its own; the items sit inside its padding</h2>
+<div class="box padded"><div class="a">one</div><div class="b">two</div><div class="c">three</div></div>
+<h2>Margins on the container narrow the line the items share</h2>
+<div class="box indent"><div class="a" style="flex: 1">one</div><div class="a" style="flex: 1">two</div></div>
+<h2>A declared width is the content box; padding and border sit outside it</h2>
+<div class="box plain"><div class="a" style="width: 100pt">width 100pt</div><div class="b" style="width: 100pt">width 100pt</div></div>
+</body>
+</html>

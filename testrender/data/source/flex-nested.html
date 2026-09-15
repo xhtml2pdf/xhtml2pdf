@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>flex-nested</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 15pt; }
+h2 { font-size: 10pt; margin: 10pt 0 2pt 0; }
+p { margin: 0; }
+.outer { display: flex; gap: 8pt; background-color: #eeeeec; padding: 4pt; }
+.mid { display: flex; flex-direction: column; gap: 6pt; background-color: #e0e4dc;
+       padding: 4pt; flex: 1; }
+.inner { display: flex; gap: 4pt; background-color: #d5dcd0; padding: 3pt; }
+.leaf { padding: 2pt 4pt; background-color: #c8d0c0; border: 1pt solid #888a85; }
+</style>
+</head>
+<body>
+<h2>A row holding columns, each holding a row</h2>
+<div class="outer">
+  <div class="mid">
+    <div class="inner"><div class="leaf">a</div><div class="leaf">b</div></div>
+    <div class="inner"><div class="leaf">c</div><div class="leaf">d</div><div class="leaf">e</div></div>
+  </div>
+  <div class="mid">
+    <div class="inner"><div class="leaf">f</div></div>
+    <div class="inner"><div class="leaf">g</div><div class="leaf">h</div></div>
+  </div>
+</div>
+<h2>A nested container lends its first item's baseline to the outer row</h2>
+<div class="outer" style="align-items: baseline">
+  <div class="leaf" style="font-size: 16pt">Large text</div>
+  <div class="inner" style="flex: 0 0 auto"><div class="leaf">nested row</div><div class="leaf">second</div></div>
+  <div class="leaf">Plain text</div>
+</div>
+<h2>A growing item whose content is itself a growing row</h2>
+<div class="outer">
+  <div class="mid"><div class="inner"><div class="leaf" style="flex: 1">grows</div><div class="leaf" style="flex: 2">grows twice as much</div></div></div>
+  <div class="leaf" style="flex: 0 0 90pt">fixed 90pt</div>
+</div>
+</body>
+</html>
