@@ -110,6 +110,18 @@ Unreleased.
   gave both parts the whole height, so the first part no longer fit the
   room it was cut for. The height is now shared: the first part takes
   what it shows, the second the rest.
+* ``width`` and ``height`` were handed down from a block to everything
+  inside it, because the frag a child starts from is a clone of its
+  parent's and neither was ever put back. CSS inherits neither, and in a
+  flex container it was doing real damage: every item took the
+  container's own width and height as its own, which made the item's
+  cross size definite and stopped ``align-items: stretch`` from ever
+  sizing an item to its line.
+* A percentage ``row-gap`` was resolved against the container's width.
+  css-align 8.3 resolves a gap against the container's own content box
+  in that gap's axis, so a percentage ``row-gap`` goes against the
+  height, and counts as zero when the height is indefinite -- which, for
+  a container that takes its content's height, it usually is.
 * An inline image measured more than once came out smaller each time: the
   paragraph scaled the size it found instead of the image's natural size,
   so ``-pdf-keep-in-frame-mode: shrink`` -- which measures its content

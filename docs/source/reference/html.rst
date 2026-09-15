@@ -157,6 +157,11 @@ differences:
    image has no baseline and is aligned by its bottom edge, which is
    what the specification synthesises. ``last baseline`` is drawn as
    ``flex-end``.
+-  A percentage ``gap`` resolves against the container's own content box
+   in that gap's axis: ``column-gap`` against the width, ``row-gap``
+   against the height. A container that takes its content's height has no
+   definite height to resolve against, and there a percentage ``row-gap``
+   is zero, as the specification says.
 -  ``align-content`` only acts when the container's ``height`` is a
    length, which is what makes its cross size definite; in a row without
    one it does nothing, as the specification says.

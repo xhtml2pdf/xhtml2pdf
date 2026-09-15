@@ -825,9 +825,12 @@ class FlexContainer(Flowable, PmlMaxHeightMixIn):
             self._spec(index, inner_width, inner_height, canv)
             for index in range(len(self.items))
         ]
-        gap_basis = inner_width
-        row_gap = self.row_gap.resolve(gap_basis) or 0.0
-        column_gap = self.column_gap.resolve(gap_basis) or 0.0
+        # css-align 8.3: a percentage gap resolves against the container's
+        # own content box in that gap's axis -- row-gap down the block axis,
+        # column-gap across the inline one -- and counts as zero when that
+        # axis is indefinite, which the container's height usually is.
+        row_gap = self.row_gap.resolve(inner_height) or 0.0
+        column_gap = self.column_gap.resolve(inner_width) or 0.0
         container = ContainerSpec(
             main_size=main_size,
             cross_size=cross_size,

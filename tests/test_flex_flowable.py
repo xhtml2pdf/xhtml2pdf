@@ -74,6 +74,10 @@ def _paragraph(text: str = "x") -> Paragraph:
     return Paragraph(text, getSampleStyleSheet()["Normal"])
 
 
+def _percent(value: float) -> CSSLength:
+    return CSSLength("percent", value)
+
+
 def _length(points: float) -> CSSLength:
     return CSSLength("length", points)
 
@@ -210,6 +214,34 @@ class FlexContainerWrapTest(TestCase):
         )
         container.wrapOn(self.canv, 300, 800)
         self.assertEqual([180, 250], [p.main_pos for p in container.layout.placed])
+
+    def test_a_percentage_gap_resolves_against_its_own_axis(self) -> None:
+        # css-align 8.3: column-gap is an inline-axis gap, so 10% of a 300pt
+        # container is 30pt. row-gap is a block-axis gap, and this container
+        # has no height, so the percentage has nothing definite to resolve
+        # against and counts as zero -- it must not borrow the width.
+        container = self._container(
+            [([_Probe(50, 10)], {}), ([_Probe(50, 10)], {})],
+            column_gap=_percent(10),
+            row_gap=_percent(10),
+            wrap="wrap",
+        )
+        container.wrapOn(self.canv, 300, 800)
+        self.assertEqual([0, 80], [p.main_pos for p in container.layout.placed])
+        self.assertEqual(10, container.height)
+
+    def test_a_percentage_row_gap_resolves_against_a_declared_height(self) -> None:
+        container = self._container(
+            [([_Probe(200, 10)], {}), ([_Probe(200, 10)], {})],
+            row_gap=_percent(10),
+            wrap="wrap",
+            height=_length(200),
+            # stretch, the initial value, would grow the lines into the free
+            # space and hide the gap being measured here.
+            align_content="flex-start",
+        )
+        container.wrapOn(self.canv, 300, 800)
+        self.assertEqual([0, 30], [p.cross_pos for p in container.layout.placed])
 
     def test_wrap_is_memoised_for_the_same_available_size(self) -> None:
         grow = {"flex_basis": _length(0), "flex_grow": 1}
