@@ -1,0 +1,28 @@
+<!--
+  Browser equivalent of data/source/inline-block-sizing.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>inline-block-sizing</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 11pt; line-height: 18pt; }
+p { margin: 0 0 10pt 0; }
+.b { display: inline-block; padding: 2pt 4pt; background-color: #e8f5e0;
+     border: 1pt solid #4e9a06; vertical-align: baseline; }
+</style>
+</head>
+<body>
+<p>Shrink to fit: <span class="b">short</span> and <span class="b">a rather longer piece of text in a box</span>.</p>
+<p>A declared width: <span class="b" style="width: 60pt">60pt</span> and <span class="b" style="width: 160pt">160pt, with text that wraps inside it</span>.</p>
+<p>A percentage width against the line: <span class="b" style="width: 30%">thirty per cent</span> after it.</p>
+<p>A box with no content but a size: <span class="b" style="width: 40pt; height: 22pt"></span> after it.</p>
+<p>A box wider than the line is laid out again to fit: <span class="b" style="width: 700pt">this box asks for 700pt in a frame that is narrower</span>.</p>
+<p>A height smaller than the content does not clip it: <span class="b" style="width: 90pt; height: 10pt">two lines of text in a short box</span> after it.</p>
+</body>
+</html>

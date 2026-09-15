@@ -458,3 +458,33 @@ its content's beside ones with a height that distribute their free space, \
 align-items sizing the items across the width, and flex-grow sharing the \
 leftover height. A column with no height never distributes, which is why every \
 container here that does has one."""
+
+[fixtures.inline-block-valign]
+compare = ["pages", "text", "ssim"]
+notes = """Every vertical-align an inline block accepts: baseline, top, \
+text-top, middle, bottom, text-bottom, super, sub and a length in either \
+direction, each in a line of its own so the box can be read against the text \
+around it. The last line is a two-line box on the baseline, which hangs from \
+its last line as CSS 2.1 10.8.1 says."""
+
+[fixtures.inline-block-sizing]
+compare = ["pages", "text", "ssim"]
+notes = """How wide an inline block gets: shrink-to-fit from its content, a \
+declared width in points and as a percentage of the line, an empty box with \
+only a width and a height, a box that asks for more than the line and is laid \
+out again to fit, and a height smaller than the content, which does not clip \
+it."""
+
+[fixtures.inline-box-nesting]
+compare = ["pages", "text", "ssim"]
+notes = """Inline boxes against the edges of a line: one nested in another, one \
+at the very start of a line and one at the very end, side margins, a box cut \
+by two line breaks whose three parts are drawn without an edge at either cut, \
+and two boxes with nothing between them."""
+
+[fixtures.inline-flex-workaround]
+compare = ["pages", "text", "ssim"]
+notes = """An inline block around a display: flex element, which is how \
+inline-flex is written for xhtml2pdf: the container always fills the box it is \
+in, so the inline block's width is what decides the row's, and \
+justify-content spreads the items inside it."""

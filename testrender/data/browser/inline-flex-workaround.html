@@ -1,0 +1,28 @@
+<!--
+  Browser equivalent of data/source/inline-flex-workaround.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>inline-flex-workaround</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 11pt; line-height: 18pt; }
+p { margin: 0 0 12pt 0; }
+.chip { display: inline-block; border: 1pt solid #4e9a06; padding: 2pt;
+        vertical-align: middle; }
+.row { display: flex; gap: 6pt; }
+.row div { padding: 2pt 4pt; background-color: #e8f5e0; }
+.wide { width: 150pt; }
+</style>
+</head>
+<body>
+<p>An inline block around a flex row is how inline-flex is written for xhtml2pdf: <span class="chip"><span class="row"><div>one</div><div>two</div></span></span> and the sentence carries on.</p>
+<p>The container fills the inline block, so the block's width decides it: <span class="chip wide"><span class="row"><div>one</div><div>two</div></span></span> after it.</p>
+<p>With justify-content the items spread inside that width: <span class="chip wide"><span class="row" style="justify-content: space-between"><div>one</div><div>two</div></span></span> after it.</p>
+</body>
+</html>

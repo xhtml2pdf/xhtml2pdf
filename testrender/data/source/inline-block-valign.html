@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>inline-block-valign</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 11pt; line-height: 22pt; }
+p { margin: 0 0 10pt 0; }
+.b { display: inline-block; padding: 2pt 4pt; background-color: #e8f5e0;
+     border: 1pt solid #4e9a06; }
+.two { width: 70pt; }
+</style>
+</head>
+<body>
+<p>baseline: <span class="b" style="vertical-align: baseline">box</span> and the line goes on.</p>
+<p>top: <span class="b" style="vertical-align: top">box</span> and the line goes on.</p>
+<p>text-top: <span class="b" style="vertical-align: text-top">box</span> and the line goes on.</p>
+<p>middle: <span class="b" style="vertical-align: middle">box</span> and the line goes on.</p>
+<p>bottom: <span class="b" style="vertical-align: bottom">box</span> and the line goes on.</p>
+<p>text-bottom: <span class="b" style="vertical-align: text-bottom">box</span> and the line goes on.</p>
+<p>super: <span class="b" style="vertical-align: super">box</span> and sub: <span class="b" style="vertical-align: sub">box</span> on one line.</p>
+<p>A length: <span class="b" style="vertical-align: 8pt">raised 8pt</span> and <span class="b" style="vertical-align: -6pt">lowered 6pt</span>.</p>
+<p><span style="font-size: 30pt">Tall</span> <span class="b" style="vertical-align: top">top</span> <span class="b" style="vertical-align: text-top">text-top</span> <span class="b" style="vertical-align: bottom">bottom</span> <span class="b" style="vertical-align: text-bottom">text-bottom</span></p>
+<p>A box of two lines on the baseline hangs from its last: <span class="b two" style="vertical-align: baseline">first line, second line</span> and on it goes.</p>
+</body>
+</html>

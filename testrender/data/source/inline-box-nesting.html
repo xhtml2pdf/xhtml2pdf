@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>inline-box-nesting</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 11pt; line-height: 18pt; }
+p { margin: 0 0 12pt 0; }
+.outer { padding: 2pt 5pt; background-color: #e8f0fe; border: 1pt solid #3465a4; }
+.inner { padding: 1pt 3pt; background-color: #fce8e8; border: 1pt solid #a40000; }
+.mar { padding: 2pt 4pt; margin: 0 12pt; background-color: #e8f5e0;
+       border: 1pt solid #4e9a06; }
+</style>
+</head>
+<body>
+<p>A box inside another: <span class="outer">outer text <span class="inner">inner text</span> and outer again</span> after both.</p>
+<p><span class="outer">A box at the very start of the line</span> and the rest of the sentence follows it to the end.</p>
+<p>A box at the very end of the line, which is what this sentence is here to arrange, <span class="outer">at the end</span></p>
+<p>A box with side margins: <span class="mar">twelve points either side</span> and on it goes.</p>
+<p>A box that spans three lines: <span class="outer">this one opens here and carries on past the end of its first line, and past the end of the second one as well, so that it is cut twice and both cuts are drawn without an edge</span> and then the text after it.</p>
+<p>Two boxes in a row: <span class="outer">first</span><span class="inner">second</span> with nothing between them.</p>
+</body>
+</html>
