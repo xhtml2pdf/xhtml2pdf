@@ -673,6 +673,24 @@ DEFAULT_FONT = {
     "courier new": "Courier",
     "verdana": "Helvetica",
     "geneva": "Helvetica",
+    # The generic families CSS itself defines. Only "sans" and "sansserif"
+    # were listed, so "sans-serif" -- the commonest font-family there is --
+    # matched nothing and arrived at Helvetica through the default, which is
+    # the right face by accident and, since an unknown family started warning,
+    # a warning on nearly every document. There is no better answer than a
+    # base-14 face for any of them, but answering deliberately is not the same
+    # as falling through.
+    "sans-serif": "Helvetica",
+    "ui-sans-serif": "Helvetica",
+    "system-ui": "Helvetica",
+    "ui-serif": "Times-Roman",
+    "ui-monospace": "Courier",
+    "ui-rounded": "Helvetica",
+    "cursive": "Times-Roman",
+    "fantasy": "Helvetica",
+    "math": "Times-Roman",
+    "emoji": "Helvetica",
+    "fangsong": "Times-Roman",
 }
 
 PML_PAGESIZES = {

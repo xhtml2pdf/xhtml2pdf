@@ -120,6 +120,31 @@ class SubstitutionIsAnnouncedTest(TestCase):
             any("@font-face" in m and "font.ttf" in m for m in messages), messages
         )
 
+    def test_a_css_generic_family_says_nothing(self) -> None:
+        # sans-serif is the commonest font-family there is, and only "sans"
+        # and "sansserif" were listed, so it reached Helvetica through the
+        # default -- the right face, by accident, and once an unknown family
+        # started warning, a warning on nearly every document.
+        for family in (
+            "sans-serif",
+            "serif",
+            "monospace",
+            "cursive",
+            "fantasy",
+            "system-ui",
+            "ui-monospace",
+        ):
+            with (
+                self.subTest(family=family),
+                self.assertNoLogs("xhtml2pdf", level=logging.WARNING),
+            ):
+                render(document(family, text="x"))
+
+    def test_a_generic_after_an_unknown_family_says_nothing(self) -> None:
+        # The list resolved, which is all the warning is about.
+        with self.assertNoLogs("xhtml2pdf", level=logging.WARNING):
+            render(document("Calibri, sans-serif", text="x"))
+
     def test_a_known_family_says_nothing(self) -> None:
         with self.assertNoLogs("xhtml2pdf", level=logging.WARNING):
             render(document("Helvetica", text="x"))

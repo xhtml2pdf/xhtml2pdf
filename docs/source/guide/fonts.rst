@@ -18,13 +18,21 @@ By default, there is just a certain set of fonts available for PDF. Here is the
 complete list of those that ``xhtml2pdf`` "knows" about, together with their
 alias names:
 
--  **Times-Roman**: *Times New Roman*, *Times*, *Georgia*, serif
--  **Helvetica**: *Arial*, *Verdana*, *Geneva*, *sansserif*, *sans*
--  **Courier**: *Courier New*, *monospace*, *monospaced*, *mono*
+-  **Times-Roman**: *Times New Roman*, *Times*, *Georgia*
+-  **Helvetica**: *Arial*, *Verdana*, *Geneva*
+-  **Courier**: *Courier New*
 -  **ZapfDingbats**
 -  **Symbol**
 
 The names are case-insensitive.
+
+CSS's generic families are answered with the nearest of those: ``serif``,
+``cursive``, ``ui-serif``, ``math`` and ``fangsong`` with *Times-Roman*;
+``sans-serif``, ``sans``, ``sansserif``, ``system-ui``, ``ui-sans-serif``,
+``ui-rounded``, ``fantasy`` and ``emoji`` with *Helvetica*; ``monospace``,
+``monospaced``, ``mono`` and ``ui-monospace`` with *Courier*. None of them is
+a good likeness of what a browser would pick, and there is nothing better to
+pick from without embedding a font.
 
 A family the document embeds with ``@font-face`` wins over the alias of the
 same name: declaring ``@font-face { font-family: Arial; }`` gives you your
