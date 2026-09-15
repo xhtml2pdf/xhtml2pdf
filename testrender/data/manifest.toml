@@ -514,3 +514,12 @@ page holds, and align-content: space-between placing its six lines inside it. \
 The declared height is shared between the two parts rather than given to both, \
 and align-content places the lines left over in what remains of it. Only the \
 page count is compared, as for every fixture that crosses a page."""
+
+[fixtures.flex-in-table-cell]
+compare = ["pages", "text", "ssim"]
+notes = """A flex container inside a table cell, which is the one place the \
+container's width is not simply its frame's: a single-line row of flex: 1 1 0 \
+items, a wrapping row whose lines have to come out of the cell's width, and \
+the same row with a height and align-content. Measuring a table's columns \
+probes each cell more than once before the final pass wraps anything, so a \
+container here is asked its size at more than one width."""
