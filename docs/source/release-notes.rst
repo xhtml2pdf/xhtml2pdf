@@ -89,8 +89,13 @@ Unreleased.
   and a value this library does not know is reported once rather than
   silently treated as ``inline``.
 * The ``flex``, ``flex-flow`` and ``gap`` shorthands are expanded, and a
-  flexbox value this library does not support (``align-items: baseline``
-  is drawn as ``flex-start``) is reported once, by value.
+  flexbox value this library does not support (``align-items: last
+  baseline`` is drawn as ``flex-end``) is reported once, by value.
+* ``align-items: baseline`` and ``align-self: baseline`` line flex items
+  up on the first baseline of their text, the way a browser does; an
+  item with no text is aligned by its bottom edge. An inline block with
+  ``vertical-align: baseline`` sits on the baseline of its last line of
+  text rather than on its bottom edge.
 
 **🐛 Bug-Fixes**
 

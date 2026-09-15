@@ -151,7 +151,12 @@ differences:
 
 -  ``inline-flex`` is laid out as ``flex``: a container always takes the
    full width of its frame.
--  ``align-items: baseline`` is drawn as ``flex-start``.
+-  ``align-items`` and ``align-self: baseline`` line the items up on
+   their first baseline: the first line of the item's first paragraph,
+   or, through a nested container, of its first item. A table or an
+   image has no baseline and is aligned by its bottom edge, which is
+   what the specification synthesises. ``last baseline`` is drawn as
+   ``flex-end``.
 -  ``align-content`` only acts when the container's ``height`` is a
    length, which is what makes its cross size definite; in a row without
    one it does nothing, as the specification says.
@@ -182,9 +187,9 @@ a line of their own.
 
 Differences from a browser:
 
--  The box's baseline is its bottom margin edge, not the baseline of its
-   last line of text; ``vertical-align: middle`` is the value to reach
-   for when the box holds text.
+-  The box's baseline is the baseline of its last line of text, as in a
+   browser; a box that holds no text -- a table, an image -- hangs from
+   its bottom margin edge.
 -  A box wider than the line is laid out again to fit the line rather
    than overflowing it, and is never broken across lines.
 -  A flex container inside an inline block takes the whole width of the

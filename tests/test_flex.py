@@ -79,6 +79,13 @@ class FlexItemsTest(TestCase):
 
 
 class FlexPropertiesTest(TestCase):
+    def test_align_items_baseline_reaches_the_flowable(self) -> None:
+        container = _container(
+            "<div style='display:flex; align-items: baseline'>"
+            "<div>a</div><div style='font-size: 20pt'>b</div></div>"
+        )
+        self.assertEqual("baseline", container.align_items)
+
     def test_item_properties_are_read_from_the_child_not_the_container(self) -> None:
         container = _container(
             "<div style='display:flex; flex-grow: 9'>"

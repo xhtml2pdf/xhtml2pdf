@@ -61,6 +61,14 @@
       "text": 1.0,
       "text_doc": 1.0
     },
+    "flex-baseline": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9642,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
     "flex-cards": {
       "pages": {
         "xhtml2pdf": 1

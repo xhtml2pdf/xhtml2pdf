@@ -273,8 +273,7 @@ does (text_doc is recorded at 1.0)."""
 compare = ["pages", "text", "ssim"]
 notes = """display: inline-block inside paragraphs: badges with padding and a \
 background, a fixed-width box, a tall empty box with vertical-align: bottom, and \
-a badge near a line end. Known difference: the box's baseline is its bottom \
-edge in xhtml2pdf, its last line's baseline in a browser."""
+a badge near a line end."""
 
 [fixtures.inline-block-nested]
 compare = ["pages", "text", "ssim"]
@@ -295,3 +294,10 @@ the bottom of page 1 and carries on, without a left edge, at the top of page 2. 
 line-height is pinned so both engines fit about the same number of lines on a \
 page. Only the page count is compared: where exactly the paragraph breaks still \
 depends on the engine's line breaking, so the per-page text does not line up."""
+
+[fixtures.flex-baseline]
+compare = ["pages", "text", "ssim"]
+notes = """align-items: baseline on a row of items with different font sizes, \
+one with padding-top and one whose first line is a nested flex row; then a \
+paragraph with inline-blocks of one and two lines on vertical-align: baseline, \
+which hang from their last line."""

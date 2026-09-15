@@ -795,6 +795,14 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
                     canv, availWidth, availHeight
                 )
                 box.fontSize = box.height
+                # vertical-align: baseline puts the box's last line on the
+                # line's baseline, which imgVRange takes as a bottom offset
+                # below it; a box with no text keeps its bottom edge there.
+                declared = getattr(box, "declared_valign", box.valign)
+                box.valign = declared
+                last_baseline = getattr(box.flowable, "last_baseline", None)
+                if declared == "baseline" and last_baseline is not None:
+                    box.valign = -last_baseline
             elif frag.cbDefn.kind == "img":
                 img = frag.cbDefn
                 natural = getattr(img, "naturalSize", None)

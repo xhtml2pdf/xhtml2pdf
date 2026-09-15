@@ -1176,15 +1176,15 @@ getFlexAlign = _keyword_converter(
         "end": "flex-end",
         "self-end": "flex-end",
         "center": "center",
-        "baseline": "flex-start",
-        "first baseline": "flex-start",
+        "baseline": "baseline",
+        "first baseline": "baseline",
         "last baseline": "flex-end",
         "space-between": "space-between",
         "space-around": "space-around",
         "space-evenly": "space-evenly",
     },
     "stretch",
-    approximate=("baseline", "first baseline", "last baseline"),
+    approximate=("last baseline",),
 )
 
 

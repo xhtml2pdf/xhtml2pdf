@@ -280,6 +280,92 @@ class CrossAxisAlignmentTest(TestCase):
         self.assertEqual([50, 50], [p.cross_size for p in result.placed])
 
 
+class BaselineAlignmentTest(TestCase):
+    """9.4 step 8 and 9.6: align-items / align-self: baseline."""
+
+    @staticmethod
+    def _layout(specs, cross, baselines, **kwargs):
+        spec = container(align_items="baseline", **kwargs)
+        return resolve_flex_layout(
+            specs, spec, lambda i, _main: cross[i], lambda i, _main: baselines.get(i)
+        )
+
+    def test_baselines_line_up(self) -> None:
+        # 30 tall with the baseline 10 down, 50 tall with it 25 down: the
+        # second sits at the top, the first comes down 15 to meet it.
+        specs = [item(specified=50), item(specified=50)]
+        result = self._layout(specs, {0: 30, 1: 50}, {0: 10, 1: 25})
+        self.assertEqual([15, 0], [p.cross_pos for p in result.placed])
+        self.assertEqual(50, result.cross_size)
+
+    def test_the_line_grows_when_the_parts_below_do_not_nest(self) -> None:
+        # Both 30 tall; baselines 25 and 5 down: 25 above the line, and the
+        # second has 25 below it, so the line is 50.
+        specs = [item(specified=50), item(specified=50)]
+        result = self._layout(specs, {0: 30, 1: 30}, {0: 25, 1: 5})
+        self.assertEqual(50, result.cross_size)
+        self.assertEqual([0, 20], [p.cross_pos for p in result.placed])
+
+    def test_an_item_without_a_baseline_is_aligned_by_its_bottom_edge(self) -> None:
+        # No baseline: synthesised from the bottom edge, so it hangs from
+        # the other item's baseline.
+        specs = [item(specified=50), item(specified=50)]
+        result = self._layout(specs, {0: 30, 1: 10}, {0: 20})
+        self.assertEqual([0, 10], [p.cross_pos for p in result.placed])
+
+    def test_a_cross_margin_counts_above_the_baseline(self) -> None:
+        specs = [item(specified=50, margin_cross_start=8), item(specified=50)]
+        result = self._layout(specs, {0: 30, 1: 30}, {0: 10, 1: 10})
+        # The margin box tops align at 0; the border boxes are 8 apart.
+        self.assertEqual([8, 8], [p.cross_pos for p in result.placed])
+        self.assertEqual(38, result.cross_size)
+
+    def test_baseline_items_are_not_stretched(self) -> None:
+        specs = [item(specified=50), item(specified=50)]
+        result = self._layout(specs, {0: 30, 1: 50}, {0: 10, 1: 25})
+        self.assertEqual([30, 50], [p.cross_size for p in result.placed])
+
+    def test_an_auto_cross_margin_wins_over_baseline(self) -> None:
+        specs = [item(specified=50, margin_cross_start=None), item(specified=50)]
+        result = self._layout(specs, {0: 10, 1: 50}, {0: 5, 1: 25})
+        # Pushed to the end by its auto margin, not aligned.
+        self.assertEqual(40, result.placed[0].cross_pos)
+
+    def test_baseline_in_a_column_is_flex_start(self) -> None:
+        specs = [item(specified=50), item(specified=50)]
+        result = self._layout(specs, {0: 30, 1: 50}, {0: 10, 1: 25}, direction="column")
+        self.assertEqual([0, 0], [p.cross_pos for p in result.placed])
+
+    def test_align_self_baseline_joins_the_group_and_others_do_not(self) -> None:
+        specs = [
+            item(specified=50, align_self="baseline"),
+            item(specified=50, align_self="baseline"),
+            item(specified=50, align_self="flex-start"),
+        ]
+        spec = container(align_items="center")
+        result = resolve_flex_layout(
+            specs,
+            spec,
+            lambda i, _main: {0: 30, 1: 50, 2: 20}[i],
+            lambda i, _main: {0: 10, 1: 25}.get(i),
+        )
+        self.assertEqual([15, 0, 0], [p.cross_pos for p in result.placed])
+
+    def test_wrap_reverse_with_baseline_does_not_fail(self) -> None:
+        specs = [item(specified=50), item(specified=50)]
+        result = self._layout(
+            specs, {0: 30, 1: 50}, {0: 10, 1: 25}, wrap="wrap-reverse"
+        )
+        self.assertEqual(2, len(result.placed))
+
+    def test_without_a_callback_every_baseline_is_the_bottom_edge(self) -> None:
+        specs = [item(specified=50), item(specified=50)]
+        result = resolve_flex_layout(
+            specs, container(align_items="baseline"), lambda i, _m: {0: 30, 1: 10}[i]
+        )
+        self.assertEqual([0, 20], [p.cross_pos for p in result.placed])
+
+
 class OrderAndDirectionTest(TestCase):
     def test_order_reorders_layout_but_placed_items_keep_source_indices(self) -> None:
         specs = [item(specified=50, order=2), item(specified=50, order=1)]

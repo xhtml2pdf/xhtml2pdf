@@ -802,12 +802,18 @@ class FlexConvertersTest(TestCase):
             self.assertEqual("row", utils.getFlexDirection("sideways"))
         self.assertIn("sideways", logs.output[0])
 
-    def test_baseline_is_drawn_as_flex_start_and_says_so(self) -> None:
+    def test_baseline_is_a_value_of_its_own(self) -> None:
+        utils._value_warned.clear()
+        with self.assertNoLogs("xhtml2pdf.util", level="WARNING"):
+            self.assertEqual("baseline", utils.getFlexAlign("baseline"))
+            self.assertEqual("baseline", utils.getFlexAlign("first baseline"))
+
+    def test_last_baseline_is_drawn_as_flex_end_and_says_so(self) -> None:
         utils._value_warned.clear()
         with self.assertLogs("xhtml2pdf.util", level="WARNING") as logs:
-            self.assertEqual("flex-start", utils.getFlexAlign("baseline"))
-        self.assertIn("baseline", logs.output[0])
-        self.assertIn("flex-start", logs.output[0])
+            self.assertEqual("flex-end", utils.getFlexAlign("last baseline"))
+        self.assertIn("last baseline", logs.output[0])
+        self.assertIn("flex-end", logs.output[0])
 
 
 class GetDisplayTest(TestCase):

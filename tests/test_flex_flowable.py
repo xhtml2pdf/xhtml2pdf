@@ -21,6 +21,8 @@ from xhtml2pdf.builders.flex import (
     FlexContainer,
     FlexItem,
     content_widths,
+    flowable_baseline,
+    flowable_last_baseline,
     stack_flowables,
 )
 from xhtml2pdf.reportlab_paragraph import Paragraph
@@ -53,6 +55,18 @@ def _paragraph(text: str = "x") -> Paragraph:
 
 def _length(points: float) -> CSSLength:
     return CSSLength("length", points)
+
+
+def _baseline(flowable) -> float:
+    value = flowable_baseline(flowable)
+    assert value is not None
+    return value
+
+
+def _last_baseline(flowable) -> float:
+    value = flowable_last_baseline(flowable)
+    assert value is not None
+    return value
 
 
 class StackFlowablesTest(TestCase):
@@ -206,6 +220,89 @@ class FlexContainerWrapTest(TestCase):
     def test_min_width_is_the_min_content_of_the_row(self) -> None:
         container = self._container([([_Probe(30, 5)], {}), ([_Probe(80, 5)], {})])
         self.assertEqual(110, container.minWidth())
+
+
+class FlexContainerBaselineTest(TestCase):
+    def setUp(self) -> None:
+        self.canv = Canvas(BytesIO())
+
+    @staticmethod
+    def _sized(size: float, text: str = "x") -> Paragraph:
+        style = getSampleStyleSheet()["Normal"].clone(
+            "s", fontSize=size, leading=size * 1.2
+        )
+        return Paragraph(text, style)
+
+    def test_paragraphs_of_two_sizes_share_a_baseline(self) -> None:
+        small, big = self._sized(10), self._sized(20)
+        container = FlexContainer(
+            [FlexItem(content=[small]), FlexItem(content=[big])], align_items="baseline"
+        )
+        container.wrapOn(self.canv, 300, 800)
+        first, second = container.layout.placed
+        self.assertEqual(0, second.cross_pos)
+        self.assertAlmostEqual(_baseline(big) - _baseline(small), first.cross_pos)
+
+    def test_a_probe_has_no_baseline_and_sits_on_its_bottom(self) -> None:
+        container = FlexContainer(
+            [FlexItem(content=[_Probe(50, 30)]), FlexItem(content=[_Probe(50, 10)])],
+            align_items="baseline",
+        )
+        container.wrapOn(self.canv, 300, 800)
+        self.assertEqual([0, 20], [p.cross_pos for p in container.layout.placed])
+
+    def test_the_items_top_padding_and_border_sit_above_its_baseline(self) -> None:
+        para = self._sized(10)
+        padded = BoxStyle(paddingTop=7, borderTopStyle="solid", borderTopWidth=2)
+        container = FlexContainer(
+            [
+                FlexItem(content=[self._sized(10)]),
+                FlexItem(content=[para], style=padded),
+            ],
+            align_items="baseline",
+        )
+        container.wrapOn(self.canv, 300, 800)
+        first, second = container.layout.placed
+        self.assertEqual(0, second.cross_pos)
+        self.assertAlmostEqual(9, first.cross_pos)
+
+    def test_a_nested_container_lends_its_first_items_baseline(self) -> None:
+        inner = FlexContainer([FlexItem(content=[self._sized(20)])])
+        outer = FlexContainer(
+            [FlexItem(content=[self._sized(10)]), FlexItem(content=[inner])],
+            align_items="baseline",
+        )
+        outer.wrapOn(self.canv, 300, 800)
+        first, second = outer.layout.placed
+        self.assertEqual(0, second.cross_pos)
+        self.assertGreater(first.cross_pos, 0)
+        first_baseline = inner.first_baseline()
+        assert first_baseline is not None
+        self.assertAlmostEqual(first_baseline, _baseline(inner))
+
+    def test_first_baseline_is_none_before_wrap(self) -> None:
+        container = FlexContainer([FlexItem(content=[self._sized(10)])])
+        self.assertIsNone(container.first_baseline())
+        container.wrapOn(self.canv, 300, 800)
+        self.assertIsNotNone(container.first_baseline())
+
+    def test_the_last_baseline_of_a_paragraph_is_its_descent(self) -> None:
+        para = self._sized(10, " ".join(["word"] * 40))
+        para.wrapOn(self.canv, 100, 800)
+        self.assertGreater(len(para.blPara.lines), 3)
+        last = _last_baseline(para)
+        # Between the descent of a 10pt line and the leading below it.
+        self.assertGreater(last, 1)
+        self.assertLess(last, 12)
+        # The baselines are a leading apart: first from the top, last from
+        # the bottom, and the lines in between.
+        n = len(para.blPara.lines)
+        self.assertAlmostEqual(
+            para.height, _baseline(para) + 12 * (n - 1) + last, places=6
+        )
+
+    def test_a_probe_has_no_last_baseline(self) -> None:
+        self.assertIsNone(flowable_last_baseline(_Probe(10, 10)))
 
 
 class FlexContainerSplitTest(TestCase):

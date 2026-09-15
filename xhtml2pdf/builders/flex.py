@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from itertools import pairwise
 from operator import itemgetter
 from typing import TYPE_CHECKING, Any
 
@@ -51,7 +52,11 @@ from xhtml2pdf.util import (
     getLengthOrAuto,
     getSize,
 )
-from xhtml2pdf.xhtml2pdf_reportlab import PmlKeepInFrame, PmlMaxHeightMixIn
+from xhtml2pdf.xhtml2pdf_reportlab import (
+    PmlKeepInFrame,
+    PmlMaxHeightMixIn,
+    PmlParagraph,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -225,6 +230,100 @@ def draw_stack(
         surplus = max(width - entry.width, 0.0)
         entry.flowable.drawOn(canv, x, cursor, surplus)
         cursor -= entry.after
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~ Baselines
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+def _paragraph_lines(flowable):
+    """The broken lines of a wrapped paragraph, or None for anything else."""
+    if not isinstance(flowable, Paragraph | ReportLabParagraph):
+        return None
+    blPara = getattr(flowable, "blPara", None)
+    if blPara is None or not getattr(blPara, "lines", None):
+        return None
+    return blPara
+
+
+def _paragraph_top(flowable) -> float:
+    """What a paragraph draws above its first line: padding and border."""
+    if isinstance(flowable, PmlParagraph):
+        return flowable.style.paddingTop + getattr(flowable, "borderWidthTop", 0.0)
+    return 0.0
+
+
+def flowable_baseline(flowable) -> float | None:
+    """
+    Distance from the top of a wrapped flowable to its first baseline.
+
+    A paragraph's is the ascent of its first line, which is where drawPara
+    puts the pen; a flex container lends its first item's. Anything else --
+    a table, an image, a keep-in-frame -- has none, and answers None.
+    """
+    if isinstance(flowable, FlexContainer):
+        return flowable.first_baseline()
+    blPara = _paragraph_lines(flowable)
+    if blPara is None:
+        return None
+    if blPara.kind == 1:
+        ascent = blPara.lines[0].ascent
+    else:
+        ascent = getattr(blPara, "ascent", blPara.fontSize)
+    return _paragraph_top(flowable) + ascent
+
+
+def flowable_last_baseline(flowable) -> float | None:
+    """
+    Distance from the bottom of a wrapped paragraph to its last baseline.
+
+    The same walk _putFragLine makes from line to line: with auto-leading
+    each line is as tall as its ascent and descent, floored at the style's
+    leading; without it, every line steps by the leading. None for a
+    flowable that is not a paragraph.
+    """
+    blPara = _paragraph_lines(flowable)
+    if blPara is None:
+        return None
+    style = flowable.style
+    leading = style.leading
+    auto_leading = getattr(flowable, "autoLeading", getattr(style, "autoLeading", ""))
+    lines = blPara.lines
+    if blPara.kind == 1:
+        from_top = lines[0].ascent
+        for previous, line in pairwise(lines):
+            if auto_leading == "max":
+                from_top += max(leading / 6.0, -previous.descent)
+                from_top += max(leading * 5.0 / 6.0, line.ascent)
+            elif auto_leading == "min":
+                from_top += -previous.descent + line.ascent
+            else:
+                from_top += leading
+    else:
+        step = leading
+        if auto_leading == "max":
+            step = max(leading, blPara.fontSize)
+        elif auto_leading == "min":
+            step = blPara.fontSize
+        from_top = getattr(blPara, "ascent", blPara.fontSize) + step * (len(lines) - 1)
+    inner_height = flowable.height - getattr(flowable, "deltaHeight", 0.0)
+    bottom = 0.0
+    if isinstance(flowable, PmlParagraph):
+        bottom = style.paddingBottom + getattr(flowable, "borderWidthBottom", 0.0)
+    return inner_height - from_top + bottom
+
+
+def stack_baseline(entries: Sequence[StackEntry]) -> float | None:
+    """The first baseline of stacked entries, measured from the top of the stack."""
+    cursor = 0.0
+    for entry in entries:
+        cursor += entry.before
+        baseline = flowable_baseline(entry.flowable)
+        if baseline is not None:
+            return cursor + baseline
+        cursor += entry.height + entry.after
+    return None
 
 
 def _paragraph_widths(paragraph, style) -> tuple[float, float]:
@@ -491,6 +590,27 @@ class FlexContainer(Flowable, PmlMaxHeightMixIn):
     def is_row(self) -> bool:
         return self.direction in {"row", "row-reverse"}
 
+    def first_baseline(self) -> float | None:
+        """
+        Distance from the container's top to its first baseline, once wrapped.
+
+        Section 8.5: the first item in layout order that has a baseline lends
+        it. None before wrap, and when no item has one.
+        """
+        if self._box is None:
+            return None
+        for placed in sorted(self.layout.placed, key=lambda p: (p.line, p.main_pos)):
+            stack = self._stacks.get(placed.index)
+            if stack is None:
+                continue
+            baseline = stack_baseline(stack[1])
+            if baseline is None:
+                continue
+            item = self.items[placed.index]
+            top = placed.cross_pos if self.is_row else placed.main_pos
+            return self.style.content_top + top + item.style.content_top + baseline
+        return None
+
     def content_widths(self, canv) -> tuple[float, float]:
         """(min-content, max-content) of the container itself, for nesting."""
         lows, highs = [], []
@@ -662,7 +782,13 @@ class FlexContainer(Flowable, PmlMaxHeightMixIn):
             _low, high = content_widths(item.content, canv)
             return min(high + item.style.horizontal, inner_width)
 
-        layout = resolve_flex_layout(specs, container, measure_cross)
+        def measure_baseline(index: int, main: float) -> float | None:
+            item = self.items[index]
+            entries, _height = self._stack(index, main - item.style.horizontal, canv)
+            baseline = stack_baseline(entries)
+            return None if baseline is None else item.style.content_top + baseline
+
+        layout = resolve_flex_layout(specs, container, measure_cross, measure_baseline)
 
         # The final pass wins: every item is stacked at the width it will be
         # drawn at, whatever width it was probed at along the way.
@@ -1001,6 +1127,7 @@ class InlineBox(Flowable):
         self._entries: list[StackEntry] = []
         self._box_width = 0.0
         self._box_height = 0.0
+        self.last_baseline: float | None = None
         self._cache_key: float | None = None
 
     def identity(self, maxLen=None) -> str:
@@ -1028,6 +1155,7 @@ class InlineBox(Flowable):
         self._entries, content_height = stack_flowables(
             self.content, content_width, canv, LARGE
         )
+        stacked_height = content_height
         declared_height = self.css_height.resolve(None)
         if declared_height is not None:
             content_height = declared_height
@@ -1036,6 +1164,22 @@ class InlineBox(Flowable):
         self._box_height = content_height + style.vertical
         self.width = self._box_width + left + right
         self.height = self._box_height + top + bottom
+
+        # CSS 2.1 10.8.1: the baseline of an inline-block is the baseline of
+        # its last line box; a declared height moves the bottom edge, not the
+        # text. None when nothing inside has one, and the bottom margin edge
+        # is the baseline, as before.
+        self.last_baseline = None
+        if self._entries:
+            last = flowable_last_baseline(self._entries[-1].flowable)
+            if last is not None:
+                self.last_baseline = (
+                    bottom
+                    + style.paddingBottom
+                    + style.border("Bottom")
+                    + (content_height - stacked_height)
+                    + last
+                )
         self._cache_key = key
         return self.width, self.height
 
@@ -1072,6 +1216,10 @@ def inline_box_frag(frag, box: InlineBox, valign="baseline"):
         kind="box",
         flowable=box,
         valign=valign,
+        # What the element asked for; valign is what the line gets, which
+        # PmlParagraph._calcImageMaxSizes works out from the box's last
+        # baseline once the box is laid out at its real width.
+        declared_valign=valign,
         fontName=carrier.fontName,
         fontSize=box.height,
         width=box.width,

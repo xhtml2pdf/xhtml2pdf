@@ -112,6 +112,77 @@ class InlineBlockParsingTest(TestCase):
         self.assertIn("end", para.text)
 
 
+class InlineBlockBaselineTest(TestCase):
+    """vertical-align: baseline is the box's last line, not its bottom edge."""
+
+    def setUp(self) -> None:
+        self.canv = Canvas(BytesIO())
+
+    def test_a_baseline_box_sits_on_its_last_lines_baseline(self) -> None:
+        (para,) = _paragraphs(
+            "<p>x <span style='display:inline-block; padding-bottom: 5pt'>text"
+            "</span> y</p>"
+        )
+        (box,) = _boxes(para)
+        self.assertEqual("baseline", box.valign)
+        para.wrapOn(self.canv, 400, 800)
+        self.assertEqual("baseline", box.declared_valign)
+        # Bottom padding plus the last line's descent, below the baseline.
+        self.assertLess(box.valign, -5)
+        self.assertGreater(box.valign, -5 - 10)
+        self.assertAlmostEqual(-box.flowable.last_baseline, box.valign)
+
+    def test_a_box_of_two_lines_hangs_by_its_last(self) -> None:
+        one = _paragraphs("<p>x <span style='display:inline-block'>a</span> y</p>")[0]
+        two = _paragraphs(
+            "<p>x <span style='display:inline-block'>a<br/>b</span> y</p>"
+        )[0]
+        for para in (one, two):
+            para.wrapOn(self.canv, 400, 800)
+        # The same distance from the bottom, whatever is above the last line.
+        self.assertAlmostEqual(_boxes(one)[0].valign, _boxes(two)[0].valign)
+        self.assertGreater(_boxes(two)[0].height, _boxes(one)[0].height)
+
+    def test_a_box_without_a_baseline_keeps_its_bottom_on_the_baseline(self) -> None:
+        # A table has no baseline of its own (only paragraphs do), so the
+        # box hangs from its bottom margin edge, as before.
+        (para,) = _paragraphs(
+            "<p>x <span style='display:inline-block'><table><tr><td>t</td></tr>"
+            "</table></span> y</p>"
+        )
+        para.wrapOn(self.canv, 400, 800)
+        (box,) = _boxes(para)
+        self.assertEqual("baseline", box.valign)
+
+    def test_vertical_align_bottom_is_left_alone(self) -> None:
+        (para,) = _paragraphs(
+            "<p>x <span style='display:inline-block; vertical-align: bottom'>text"
+            "</span> y</p>"
+        )
+        para.wrapOn(self.canv, 400, 800)
+        self.assertEqual("bottom", _boxes(para)[0].valign)
+
+    def test_the_box_is_measured_again_on_a_second_wrap_without_drift(self) -> None:
+        (para,) = _paragraphs(
+            "<p>x <span style='display:inline-block; padding-bottom: 5pt'>text"
+            "</span> y</p>"
+        )
+        para.wrapOn(self.canv, 400, 800)
+        first = _boxes(para)[0].valign
+        para.wrapOn(self.canv, 400, 800)
+        self.assertEqual(first, _boxes(para)[0].valign)
+
+    def test_the_lines_descent_grows_to_hold_the_box(self) -> None:
+        plain = _paragraphs("<p>x y</p>")[0]
+        boxed = _paragraphs(
+            "<p>x <span style='display:inline-block; padding-bottom: 12pt'>text"
+            "</span> y</p>"
+        )[0]
+        for para in (plain, boxed):
+            para.wrapOn(self.canv, 400, 800)
+        self.assertGreater(boxed.height, plain.height + 10)
+
+
 class InlineBlockLayoutTest(TestCase):
     def setUp(self) -> None:
         self.canv = Canvas(BytesIO())

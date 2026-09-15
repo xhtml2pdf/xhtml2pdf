@@ -338,13 +338,17 @@ def resolve_flex_layout(
     specs: Sequence[ItemSpec],
     container: ContainerSpec,
     measure_cross: Callable[[int, float], float],
+    measure_baseline: Callable[[int, float], float | None] | None = None,
 ) -> FlexLayout:
     """
     Lay the items out; the whole of section 9, in order.
 
     `measure_cross(index, main_size)` is the item's content cross size once
     its main size is known: in a row, the height its content takes at that
-    width. It is the only thing that needs the outside world.
+    width. `measure_baseline(index, main_size)` is the distance from the
+    item's cross-start border edge to its first baseline, or None when it
+    has none; it is asked only for items aligned by baseline. These two are
+    the only things that need the outside world.
     """
     layout = FlexLayout()
     if not specs:
@@ -372,6 +376,11 @@ def resolve_flex_layout(
     # 9.3 step 6 and 9.4 step 7: main sizes, then cross sizes at those.
     main: dict[int, float] = {}
     cross_hypothetical: dict[int, float] = {}
+    #: Items aligned by baseline: the distance from the outer cross-start
+    #: edge to the baseline. Only in a row (8.3: in a column the inline axis
+    #: is the cross axis and baseline is flex-start), and only without an
+    #: auto cross margin, which takes the free space instead.
+    above: dict[int, float] = {}
     for line in lines:
         sizes = resolve_flexible_lengths(line, specs, main_size, container.main_gap)
         for i, size in zip(line, sizes, strict=True):
@@ -383,16 +392,36 @@ def resolve_flex_layout(
                 else measure_cross(i, size)
             )
             cross_hypothetical[i] = _clamp(cross, spec.min_cross, spec.max_cross)
+            if (
+                container.is_row
+                and _align_self(spec, container) == "baseline"
+                and spec.margin_cross_start is not None
+                and spec.margin_cross_end is not None
+            ):
+                baseline = measure_baseline(i, size) if measure_baseline else None
+                if baseline is None:
+                    # 8.5: an item with no baseline of its own gets one
+                    # synthesised from the cross-end edge of its border box.
+                    baseline = cross_hypothetical[i]
+                above[i] = spec.margin_cross_start + baseline
 
-    # 9.4 step 8: the cross size of each line.
+    # 9.4 step 8: the cross size of each line. The baseline group needs
+    # room for the tallest part above the baseline plus the tallest below.
     flex_lines = [FlexLine(items=line) for line in lines]
+    line_above: list[float] = []
+    for flex_line in flex_lines:
+        group = [i for i in flex_line.items if i in above]
+        line_above.append(max((above[i] for i in group), default=0.0))
+        flex_line.cross_size = max(
+            specs[i].outer_cross(cross_hypothetical[i]) for i in flex_line.items
+        )
+        if group:
+            below = max(
+                specs[i].outer_cross(cross_hypothetical[i]) - above[i] for i in group
+            )
+            flex_line.cross_size = max(flex_line.cross_size, line_above[-1] + below)
     if len(flex_lines) == 1 and container.cross_size is not None:
         flex_lines[0].cross_size = container.cross_size
-    else:
-        for flex_line in flex_lines:
-            flex_line.cross_size = max(
-                specs[i].outer_cross(cross_hypothetical[i]) for i in flex_line.items
-            )
 
     # 9.4 step 15 and 9.6 step 16: the container's cross size, and how the
     # lines share it. align-content acts only on a definite cross size.
@@ -482,6 +511,10 @@ def resolve_flex_layout(
                     offset = cross_free
                 elif mode == "center":
                     offset = cross_free / 2.0
+                elif mode == "baseline" and i in above:
+                    # The item with the most above its baseline sits at
+                    # cross-start; the others come down to meet it.
+                    offset = line_above[line_number] - above[i]
                 else:
                     offset = 0.0
                 offset += cross_start
