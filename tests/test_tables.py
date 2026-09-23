@@ -137,6 +137,19 @@ class TableDataTestCase(TestCase):
         instance.add_cell_styles(context, (0, 1), (3, 5), mode="td")
         self.assertEqual(instance.styles[0], ("BACKGROUND", (0, 1), (3, 5), "green"))
 
+    def test_add_cell_styles_records_rounded_cell(self) -> None:
+        context = pisaContext()
+        context.frag.borderRadius = 8
+        for side in ("Left", "Right", "Top", "Bottom"):
+            setattr(context.frag, f"border{side}Style", "solid")
+            setattr(context.frag, f"border{side}Width", 2)
+            setattr(context.frag, f"border{side}Color", "red")
+        instance = self.sut()
+
+        instance.add_cell_styles(context, (0, 1), (0, 1), mode="td")
+
+        self.assertEqual(instance.rounded_cells[0]["radius"], 8)
+
     def test_add_cell_styles_will_not_add_background_style_if_context_frag_has_backcolor_set_and_mode_is_tr(
         self,
     ) -> None:

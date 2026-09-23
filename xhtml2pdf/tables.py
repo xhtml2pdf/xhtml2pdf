@@ -103,6 +103,7 @@ class TableData:
         self.styles: list[
             tuple[str, tuple[int, int], tuple[int, int], str, str, str]
         ] = []
+        self.rounded_cells: list[dict] = []
         self.width: str | float = 0
 
     def add_cell(self, data=None):
@@ -127,6 +128,28 @@ class TableData:
 
     def add_cell_styles(self, c, begin, end, mode="td"):
         self.mode = mode.upper()
+        border_sides = ("Left", "Right", "Top", "Bottom")
+        uniform_border = all(
+            getattr(c.frag, f"border{side}Style")
+            == getattr(c.frag, "borderLeftStyle")
+            and getattr(c.frag, f"border{side}Width")
+            == getattr(c.frag, "borderLeftWidth")
+            and getattr(c.frag, f"border{side}Color")
+            == getattr(c.frag, "borderLeftColor")
+            for side in border_sides
+        )
+        if mode == "td" and getattr(c.frag, "borderRadius", 0) and uniform_border:
+            self.rounded_cells.append(
+                {
+                    "begin": begin,
+                    "end": end,
+                    "radius": c.frag.borderRadius,
+                    "background": c.frag.backColor,
+                    "color": c.frag.borderLeftColor,
+                    "width": c.frag.borderLeftWidth,
+                    "style": c.frag.borderLeftStyle,
+                }
+            )
         if c.frag.backColor and mode != "tr":  # XXX Stimmt das so?
             self.add_style(("BACKGROUND", begin, end, c.frag.backColor))
 
@@ -285,6 +308,7 @@ class pisaTagTABLE(pisaTag):
                 vAlign="TOP",
                 style=TableStyle(tdata.styles),
             )
+            t.rounded_cells = tdata.rounded_cells
             t.totalWidth = _width(tdata.width)
             t.spaceBefore = c.frag.spaceBefore
             t.spaceAfter = c.frag.spaceAfter

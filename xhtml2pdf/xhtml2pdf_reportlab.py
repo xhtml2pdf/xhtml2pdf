@@ -963,6 +963,77 @@ class PmlKeepInFrame(KeepInFrame, PmlMaxHeightMixIn):
 
 
 class PmlTable(Table, PmlMaxHeightMixIn):
+    def _rounded_cell(self, command, cell):
+        begin, end = cell["begin"], cell["end"]
+        if command[1] == begin and command[2] == end:
+            return True
+        return command[1] == end and command[2] == begin
+
+    def _drawBkgrnd(self):
+        rounded = getattr(self, "rounded_cells", ())
+        if not rounded:
+            return super()._drawBkgrnd()
+
+        original = self._bkgrndcmds
+        self._bkgrndcmds = [
+            command
+            for command in original
+            if not any(
+                command[0] == "BACKGROUND" and self._rounded_cell(command, cell)
+                for cell in rounded
+            )
+        ]
+        super()._drawBkgrnd()
+        self._bkgrndcmds = original
+
+        for cell in rounded:
+            begin, end = cell["begin"], cell["end"]
+            start_col, start_row = begin
+            end_col, end_row = end
+            x = self._colpositions[start_col]
+            y = self._rowpositions[end_row + 1]
+            w = self._colpositions[end_col + 1] - x
+            h = self._rowpositions[start_row] - y
+            if cell["background"] is not None:
+                self.canv.setFillColor(cell["background"])
+                self.canv.roundRect(x, y, w, h, cell["radius"], fill=1, stroke=0)
+
+    def _drawLines(self):
+        rounded = getattr(self, "rounded_cells", ())
+        if not rounded:
+            return super()._drawLines()
+
+        original = self._linecmds
+        self._linecmds = [
+            command
+            for command in original
+            if not any(
+                command[1] == cell["begin"]
+                and command[2] == cell["end"]
+                or command[1] == cell["end"]
+                and command[2] == cell["begin"]
+                for cell in rounded
+            )
+        ]
+        super()._drawLines()
+        self._linecmds = original
+
+        for cell in rounded:
+            if cell["style"] != "solid" or not cell["width"]:
+                continue
+            begin, end = cell["begin"], cell["end"]
+            start_col, start_row = begin
+            end_col, end_row = end
+            x = self._colpositions[start_col]
+            y = self._rowpositions[end_row + 1]
+            w = self._colpositions[end_col + 1] - x
+            h = self._rowpositions[start_row] - y
+            color = cell["color"]
+            if color is not None:
+                self.canv.setStrokeColor(color)
+            self.canv.setLineWidth(cell["width"])
+            self.canv.roundRect(x, y, w, h, cell["radius"], fill=0, stroke=1)
+
     @staticmethod
     def _normWidth(w, maxw):
         """Normalize width when using percentages."""
