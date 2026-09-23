@@ -106,12 +106,40 @@ class Box(dict):
     def drawBox(self, canvas: Canvas, x: int, y: int, w: int, h: int):
         canvas.saveState()
 
+        radius = self.get("borderRadius", 0)
+        border_sides = (
+            "borderLeft",
+            "borderRight",
+            "borderTop",
+            "borderBottom",
+        )
+        uniform_border = all(
+            self.get(f"{side}Style") == self.get("borderLeftStyle")
+            and self.get(f"{side}Width") == self.get("borderLeftWidth")
+            and self.get(f"{side}Color") == self.get("borderLeftColor")
+            for side in border_sides
+        )
+
         # Background
         bg = self.get("backgroundColor", None)
         if bg is not None:
             # draw a filled rectangle (with no stroke) using bg color
             canvas.setFillColor(bg)
-            canvas.rect(x, y, w, h, fill=1, stroke=0)
+            if radius:
+                canvas.roundRect(x, y, w, h, radius, fill=1, stroke=0)
+            else:
+                canvas.rect(x, y, w, h, fill=1, stroke=0)
+
+        if radius and uniform_border and self.get("borderLeftStyle") == "solid":
+            width = self.get("borderLeftWidth", 0)
+            color = self.get("borderLeftColor")
+            if color is None:
+                color = self.get("textColor", Color(0, 0, 0))
+            canvas.setStrokeColor(color)
+            canvas.setLineWidth(width)
+            canvas.roundRect(x, y, w, h, radius, fill=0, stroke=1)
+            canvas.restoreState()
+            return
 
         # Borders
         def _drawBorderLine(bstyle, width, color, x1, y1, x2, y2):

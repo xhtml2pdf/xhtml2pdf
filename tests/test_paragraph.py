@@ -2,12 +2,14 @@ import copy
 import re
 import tempfile
 from unittest import TestCase
+from unittest.mock import Mock
 
 from reportlab.lib.colors import Color
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.platypus import SimpleDocTemplate
 
 from xhtml2pdf.paragraph import (
+    Box,
     BoxBegin,
     BoxEnd,
     LineBreak,
@@ -17,6 +19,30 @@ from xhtml2pdf.paragraph import (
     Text,
     Word,
 )
+
+
+class BoxRenderingTests(TestCase):
+    def test_uniform_border_radius_uses_rounded_rectangles(self):
+        color = Color(1, 0, 0)
+        box = Box(
+            backgroundColor=Color(0.9, 0.9, 0.9),
+            borderRadius=8,
+            **{
+                f"border{side}{part}": value
+                for side in ("Left", "Right", "Top", "Bottom")
+                for part, value in (
+                    ("Color", color),
+                    ("Width", 2),
+                    ("Style", "solid"),
+                )
+            },
+        )
+        canvas = Mock()
+
+        box.drawBox(canvas, 0, 0, 100, 50)
+
+        canvas.roundRect.assert_any_call(0, 0, 100, 50, 8, fill=1, stroke=0)
+        canvas.roundRect.assert_any_call(0, 0, 100, 50, 8, fill=0, stroke=1)
 
 
 class LegacyParagraphTests(TestCase):

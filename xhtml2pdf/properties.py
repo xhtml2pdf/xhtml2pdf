@@ -136,6 +136,15 @@ CSS_PROPERTIES: tuple[CSSProperty, ...] = (
     CSSProperty("background-repeat", "background"),
     CSSProperty("background-position", "background"),
     # ~ box ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    CSSProperty(
+        "border-radius",
+        "box",
+        frag="borderRadius",
+        convert=getSize,
+        relative_to_font_size=True,
+        block_only=True,
+        initial=0,
+    ),
     CSSProperty("display", "box", consumer=LOOP, note="block or none; decides isBlock"),
     CSSProperty("margin-left", "box", note="accumulates into the running indent"),
     CSSProperty("margin-right", "box", note="accumulates into the running indent"),

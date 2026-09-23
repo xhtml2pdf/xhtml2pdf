@@ -76,6 +76,7 @@ xhtml2pdf supports the following standard CSS properties
     align-content, align-items, align-self
     background-color
     background-image, background-position, background-repeat
+      border-radius
     border-bottom-color, border-bottom-style, border-bottom-width
     border-left-color, border-left-style, border-left-width
     border-right-color, border-right-style, border-right-width
