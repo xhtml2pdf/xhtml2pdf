@@ -580,6 +580,25 @@ class CSSParser:
             return ""
         return src[end + 1 :].lstrip()
 
+    @staticmethod
+    def _skipBlock(src):
+        """
+        Return the source after the {} block that the first "{" in src opens,
+        nested blocks included, or "" if that block never closes.
+        """
+        start = src.find("{")
+        if start < 0:
+            return ""
+        depth = 0
+        for i in range(start, len(src)):
+            if src[i] == "{":
+                depth += 1
+            elif src[i] == "}":
+                depth -= 1
+                if depth == 0:
+                    return src[i + 1 :].lstrip()
+        return ""
+
     def _parseRulesetOrSkip(self, src, stylesheetElements):
         """Parse one ruleset, or drop it if its selector is malformed."""
         try:
@@ -624,6 +643,15 @@ class CSSParser:
                 src, atResults = self._parseAtKeyword(src)
                 if atResults is not None and atResults != NotImplemented:
                     stylesheetElements.extend(atResults)
+            elif src.startswith("}"):
+                # No block is open at top level, so this "}" joins the prelude
+                # of the next rule, which is dropped together with its block
+                # (CSS Syntax 3, "consume a qualified rule").
+                # _skipMalformedRuleset hands a leading "}" back unconsumed for
+                # an enclosing block to close; here nothing would ever
+                # consume it.
+                log.warning("Ignoring CSS rule after an unmatched '}': %.40r", src)
+                src = self._skipBlock(src[1:])
             else:
                 # ruleset
                 src = self._parseRulesetOrSkip(src, stylesheetElements)
@@ -980,8 +1008,10 @@ class CSSParser:
                     # try to parse it as a declarations block
                     src, declarations = self._parseDeclarationGroup(src)
                 except self.ParseError:
-                    # try to parse it as a stylesheet block
-                    src, stylesheet = self._parseStylesheet(src)
+                    # A block of rules (@keyframes, @supports, ...). Nothing
+                    # here uses them, so skip to its matching "}". Parsing it
+                    # as a stylesheet read that "}" as a stray top-level one.
+                    src = self._skipBlock(src)
             else:
                 msg = "Unable to ignore @-rule block"
                 raise self.ParserError(msg, src, ctxsrc)

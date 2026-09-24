@@ -51,6 +51,24 @@ Versions >= 0.2
     --------------------------------------------
 
 
+0.2.21
+====================
+
+Unreleased.
+
+**🐛 Bug-Fixes**
+
+* **A stray ``}`` no longer hangs the parser.** Since 0.2.18 a ``}`` with
+  no open block at the top of a stylesheet -- one that closes a rule twice,
+  as the stylesheet ``svc.webspellchecker.net`` serves does -- made
+  ``pisa.CreatePDF`` loop forever: the malformed-rule skip hands a leading
+  ``}`` back for an enclosing block to close, and at top level nothing
+  consumed it. The ``}`` now joins the next rule's prelude and that rule
+  is dropped with its whole block, as CSS Syntax 3 specifies. The block of
+  an at-rule the parser does not support (``@keyframes``, ``@supports``)
+  is skipped to its matching ``}`` rather than parsed as a stylesheet,
+  which read that ``}`` as a stray one and dropped the rules after it.
+
 0.2.20
 ====================
 
