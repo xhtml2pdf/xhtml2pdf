@@ -51,6 +51,35 @@ Versions >= 0.2
     --------------------------------------------
 
 
+Unreleased
+====================
+
+Unreleased.
+
+**🎉 New**
+
+* **Rounded corners.** ``border-radius`` and its four longhands, with one
+  to four values, the ``/`` form for elliptical corners, lengths and
+  percentages of the box. Blocks, flex containers and items, inline
+  blocks, inline boxes, images, tables and table cells are rounded: the
+  background and its image are clipped to the curve, and the border
+  follows it, a thick side tapering into a thin one through the corner as
+  in a browser. A box cut by a line or page break is square at the cut.
+  A ``background-color`` with a radius on a ``<span>`` is drawn as one
+  rounded box, which is how a pill badge is written. See the Rounded
+  corners section of the HTML reference for what differs from a browser.
+
+**🐛 Bug-Fixes**
+
+* An inline box nested in another is no longer covered by the outer
+  one's background, which used to be painted last.
+
+| Thanks to the following people on GitHub for contributing to this release:
+| *Chaitu5210*, whose rounded-corners branch was the starting point.
+
+--------------------------------------------
+
+
 0.2.20
 ====================
 

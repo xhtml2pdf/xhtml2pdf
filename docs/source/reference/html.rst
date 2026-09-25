@@ -237,7 +237,8 @@ line, the way a browser draws it: the padding and the border widen the
 line, the box is painted under the text, and a box cut by a line break
 or a page break goes on from the start of the next line with no edge at
 the cut (``box-decoration-break: slice``). A ``background-color`` alone
-is still painted behind each word, as before.
+is still painted behind each word, as before, unless the element has a
+``border-radius`` too: then it is one rounded box, like a pill badge.
 
 Differences from a browser:
 
@@ -246,6 +247,53 @@ Differences from a browser:
    and below.
 -  ``margin-top`` and ``margin-bottom`` do nothing on an inline element,
    as in a browser.
+
+.. _border-radius:
+
+Rounded corners
+---------------
+
+``border-radius`` rounds the corners of a box: one to four values, top-left
+clockwise, and after a ``/`` one to four vertical radii for elliptical
+corners; or ``border-top-left-radius`` and its siblings, one value or two.
+A percentage is of the box's width across and of its height down, so
+``50%`` makes a circle of a square and an ellipse of anything else. Radii
+too large for their side shrink together until they fit, as the
+specification says. The background and its image are clipped to the
+curve; the border follows it, with an inner curve smaller by the border
+width, so a border wider than its radius is square inside, and a thick
+side tapers into a thin one through the corner. It applies to:
+
+-  blocks with text, flex containers and flex items, inline blocks and
+   inline boxes;
+-  images, which it clips;
+-  tables and table cells, drawn as with ``border-collapse: separate``: a
+   browser ignores the radius of a collapsed table, and xhtml2pdf's
+   ``cellspacing="0"`` is what ``border-spacing: 0`` lays out there.
+
+Differences from a browser:
+
+-  A ``<div>`` that holds other blocks has no box of its own: each block
+   inside it paints its border and background, so a radius on the
+   ``<div>`` rounds nothing. A ``display: flex; flex-direction: column``
+   container around the blocks is one box, and rounds as expected.
+-  An image's radius only clips it; an image draws no border or
+   background of its own.
+-  Like a straight border, a rounded one is centred on the edge of the
+   box, so it sits half its width further out than in a browser.
+-  The point where two sides of different colours or styles meet is on
+   the line from the outer corner to the inner one, as in a browser; a
+   dashed or dotted side is stroked along the middle of the border and
+   meets its neighbour half way round the corner.
+-  A block split between pages is rounded at both ends of each part
+   (``box-decoration-break: clone``). A flex container or item, an inline
+   box and a table are square at the cut (``slice``), as in a browser.
+-  In a table, a rounded cell draws its own border, and the grid line of
+   the neighbour it shares an edge with gives way to it. A corner cell's
+   background is not clipped by a rounded table, as a browser does not
+   clip it either. A radius on a ``<tr>`` is ignored, as browsers do.
+-  ``inherit`` is not supported: the value is not inherited, as CSS says,
+   so there is nothing to take.
 
 Selectors
 ---------
