@@ -85,6 +85,21 @@ Unreleased.
 * An at-rule the parser does not support and that has no block, such as
   ``@layer base;``, is skipped instead of raising a ``TypeError`` that
   aborted the whole document.
+* **A ``unicode-range`` no longer aborts the document.** Every one raised
+  an ``IndexError`` -- and every ``@font-face`` Google Fonts serves has
+  one. So did a few other lines of CSS, each with an exception nothing
+  caught: an at-rule the parser skips, such as ``@keyframes``, inside
+  ``@media`` or ``@page`` (``TypeError``); ``@media print`` with no block
+  at the end of a stylesheet (``IndexError``); a function left open at
+  its end, ``width: calc(1px`` (``IndexError``); and ``@charset`` without
+  its ``;`` (``AttributeError``). The ``@media`` and the ``@charset`` now
+  report a CSS parse error, as other malformed at-rules do; the rest are
+  parsed.
+* An empty declaration, as in ``color: red;;`` or ``p {;``, is skipped.
+  It used to throw away the whole rule it was in.
+* The end of a stylesheet closes any block still open, as CSS Syntax 3
+  says: ``p { color: red`` is applied, and an unclosed ``@media`` keeps its
+  rules instead of failing the whole document.
 * An inline box nested in another is no longer covered by the outer
   one's background, which used to be painted last.
 

@@ -428,7 +428,12 @@ class CSSParser:
     re_functionterm = re.compile(i_functionterm, _reflags)
     i_unicoderange1 = rf"(?:U\+{i_hex}{{1,6}}-{i_hex}{{1,6}})"
     i_unicoderange2 = r"(?:U\+\?{1,6}|{h}(\?{0,5}|{h}(\?{0,4}|{h}(\?{0,3}|{h}(\?{0,2}|{h}(\??|{h}))))))"
-    i_unicoderange = i_unicoderange1  # '(%s|%s)' % (i_unicoderange1, i_unicoderange2)
+    # In a group of its own: _getMatchResult returns group 1, and without it
+    # every unicode-range -- in each @font-face Google Fonts serves -- raised
+    # IndexError and took the document down.
+    i_unicoderange = (
+        f"({i_unicoderange1})"  # '(%s|%s)' % (i_unicoderange1, i_unicoderange2)
+    )
     re_unicoderange = re.compile(i_unicoderange, _reflags)
 
     # i_comment = '(?:\/\*[^*]*\*+([^/*][^*]*\*+)*\/)|(?://.*)'
@@ -692,12 +697,13 @@ class CSSParser:
     def _parseAtCharset(self, src):
         """[ CHARSET_SYM S* STRING S* ';' ]?."""
         if isAtRuleIdent(src, "charset"):
+            ctxsrc = src
             src = stripAtRuleIdent(src)
             charset, src = self._getString(src)
             src = src.lstrip()
             if src[:1] != ";":
                 msg = "@charset expected a terminating ';'"
-                raise self.ParseError(msg, src, self.ctxsrc)
+                raise self.ParseError(msg, src, ctxsrc)
             src = src[1:].lstrip()
 
             self.cssBuilder.atCharset(charset)
@@ -817,10 +823,10 @@ class CSSParser:
                 pattern = re.compile(r".*?[{]", re.DOTALL)
 
                 match = re.match(pattern, src)
-                src = src[match.end() - 1 :]
+                src = src[match.end() - 1 :] if match else ""
                 break
             mediums.append(medium)
-            src = src[1:].lstrip() if src[0] == "," else src.lstrip()
+            src = src[1:].lstrip() if src[:1] == "," else src.lstrip()
 
         if not src.startswith("{"):
             msg = "Ruleset opening '{' not found"
@@ -838,16 +844,18 @@ class CSSParser:
             if src.startswith("@"):
                 # @media, @page, @font-face
                 src, atResults = self._parseAtKeyword(src)
-                if atResults is not None:
+                # NotImplemented is an at-rule skipped whole, such as a
+                # @keyframes inside @media: nothing to add.
+                if atResults is not None and atResults is not NotImplemented:
                     stylesheetElements.extend(atResults)
             else:
                 # ruleset
                 src = self._parseRulesetOrSkip(src, stylesheetElements)
             src = src.lstrip()
 
-        if not src.startswith("}"):
-            msg = "Ruleset closing '}' not found"
-            raise self.ParseError(msg, src, ctxsrc)
+        # The loop stops at the closing "}" or at the end of the stylesheet,
+        # which closes any block still open (CSS Syntax 3), as it already did
+        # for @page. Raising there used to cost the whole document.
         src = src[1:].lstrip()
 
         result = self.cssBuilder.atMedia(mediums, stylesheetElements)
@@ -903,7 +911,9 @@ class CSSParser:
             if src.startswith("@"):
                 # @media, @page, @font-face
                 src, atResults = self._parseAtKeyword(src)
-                if atResults is not None:
+                # NotImplemented is an at-rule skipped whole, such as a
+                # @keyframes inside @media: nothing to add.
+                if atResults is not None and atResults is not NotImplemented:
                     stylesheetElements.extend(atResults)
             else:
                 src, nproperties = self._parseDeclarationGroup(
@@ -1013,7 +1023,7 @@ class CSSParser:
             elif blockIdx is None:
                 # consume the rest of the content since we didn't find a block or a semicolon
                 src = src[-1:-1]
-            elif blockIdx is not None:
+            else:
                 # expecting a block...
                 src = src[blockIdx:]
                 try:
@@ -1024,9 +1034,6 @@ class CSSParser:
                     # here uses them, so skip to its matching "}". Parsing it
                     # as a stylesheet read that "}" as a stray top-level one.
                     src = self._skipBlock(src)
-            else:
-                msg = "Unable to ignore @-rule block"
-                raise self.ParserError(msg, src, ctxsrc)
 
         return src.lstrip(), result
 
@@ -1230,6 +1237,11 @@ class CSSParser:
                 continue
 
             if single_property is None:
+                if src.startswith(";"):
+                    # An empty declaration, as in "color: red;;" or "{;":
+                    # nothing to keep, but the block goes on after it.
+                    src = src[1:].lstrip()
+                    continue
                 src = src[1:].lstrip()
                 break
             properties.append(single_property)
@@ -1239,7 +1251,8 @@ class CSSParser:
                 break
 
         if braces:
-            if not src.startswith("}"):
+            # As for @media: the end of the stylesheet closes the block.
+            if src and not src.startswith("}"):
                 msg = "Declaration group closing '}' not found"
                 raise self.ParseError(msg, src, ctxsrc)
             src = src[1:]
@@ -1340,7 +1353,7 @@ class CSSParser:
         result, src = self._getMatchResult(self.re_functionterm, src)
         if result is not None:
             src, params = self._parseExpression(src, return_list=True)
-            if src[0] != ")":
+            if src[:1] != ")":
                 msg = "Terminal function expression expected closing ')'"
                 raise self.ParseError(msg, src, ctxsrc)
             src = src[1:].lstrip()

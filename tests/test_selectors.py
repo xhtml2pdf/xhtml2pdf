@@ -147,6 +147,28 @@ class MalformedSelectorTest(TestCase):
         rules = self._parse("@layer base; div { color: blue; }")
         self.assertEqual({"div"}, set(rules))
 
+    def test_unsupported_at_rule_at_the_end(self) -> None:
+        # Neither a ";" nor a block: the rest of the stylesheet is the rule.
+        rules = self._parse("p { color: green; } @layer base")
+        self.assertEqual({"p"}, set(rules))
+
+    def test_escaped_quote_in_a_skipped_block(self) -> None:
+        rules = self._parse(
+            '@supports (x) { p::after { content: "a\\"}"; } } div { color: blue; }'
+        )
+        self.assertEqual({"div"}, set(rules))
+
+    def test_blocks_that_never_close(self) -> None:
+        # A malformed rule, a skipped at-rule and the rule after a stray "}"
+        # each run to the end of the stylesheet, which ends them.
+        for css in (
+            "p { color: green; } h2 >> p { color: red;",
+            "p { color: green; } @supports (x) { a {",
+            "p { color: green; } } div",
+        ):
+            with self.subTest(css=css):
+                self.assertEqual({"p"}, set(self._parse(css)))
+
 
 class StandardSelectorTest(TestCase):
     """
