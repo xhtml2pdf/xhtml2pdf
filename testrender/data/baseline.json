@@ -1,5 +1,5 @@
 {
-  "browser": "chrome 151.0.7922.137",
+  "browser": "chrome 152.0.7977.82",
   "fixtures": {
     "adobe_asian_lenguage_pack": {
       "pages": {
@@ -18,6 +18,22 @@
         "xhtml2pdf": 1
       },
       "ssim": 0.9697,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "css-border-radius-background": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9234,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "css-border-radius-borders": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.8024,
       "text": 1.0,
       "text_doc": 1.0
     },
@@ -108,6 +124,19 @@
       "ssim": 0.9169,
       "text": 1.0,
       "text_doc": 1.0
+    },
+    "flex-border-radius": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9205,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "flex-border-radius-pagebreak": {
+      "pages": {
+        "xhtml2pdf": 2
+      }
     },
     "flex-boxes": {
       "pages": {
@@ -302,11 +331,27 @@
       "text": 0.9586,
       "text_doc": 0.9586
     },
+    "img-border-radius": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.8947,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
     "inline-block-badges": {
       "pages": {
         "xhtml2pdf": 1
       },
       "ssim": 0.9563,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "inline-block-border-radius": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9787,
       "text": 1.0,
       "text_doc": 1.0
     },
@@ -342,11 +387,19 @@
       "text": 1.0,
       "text_doc": 1.0
     },
+    "inline-box-border-radius": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9506,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
     "inline-box-nesting": {
       "pages": {
         "xhtml2pdf": 1
       },
-      "ssim": 0.8897,
+      "ssim": 0.8898,
       "text": 1.0,
       "text_doc": 1.0
     },
@@ -382,6 +435,27 @@
         "xhtml2pdf": 1
       },
       "ssim": 0.8192,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "table-border-radius": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9239,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "table-border-radius-pagebreak": {
+      "pages": {
+        "xhtml2pdf": 3
+      }
+    },
+    "table-cell-border-radius": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.939,
       "text": 1.0,
       "text_doc": 1.0
     },
