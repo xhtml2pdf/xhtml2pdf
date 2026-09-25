@@ -565,3 +565,18 @@ unjoined letters against the browser's joined ones and measuring that instead. \
 The text is not compared: pypdf runs its own bidirectional pass over what it \
 extracts, so it answers in logical order and says nothing about what was \
 drawn."""
+
+[fixtures.css-border-radius-background]
+compare = ["pages", "text", "ssim"]
+notes = """border-radius on blocks, the fill and the image: one to four values, \
+the / elliptical form, percentages of the box, 999px scaled down to a pill \
+(css-backgrounds-3 5.5), em, the corner longhands, and a tiled \
+background-image clipped to the curve."""
+
+[fixtures.css-border-radius-borders]
+compare = ["pages", "text", "ssim"]
+notes = """Rounded borders on blocks: uniform solid, dashed, dotted and double \
+as one closed path; per-side colours and widths as one path per side, \
+meeting halfway round each corner; a missing side. xhtml2pdf centres the \
+stroke on the edge of the box, as it does for straight borders, so the ring \
+sits half its width further out than the browser's."""

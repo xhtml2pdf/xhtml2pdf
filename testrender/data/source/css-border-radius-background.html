@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>css-border-radius-background</title>
+<style type="text/css">
+body { font-size: 10pt; line-height: 14pt; }
+p {
+    margin: 0 0 8pt 0;
+    padding: 6pt 10pt;
+    background-color: #cfdcec;
+}
+.one    { border-radius: 12px; }
+.two    { border-radius: 24px 4px; }
+.three  { border-radius: 4px 24px 12px; }
+.four   { border-radius: 0 8px 16px 24px; background-color: #f6d8ae; }
+.slash  { border-radius: 40px / 12px; background-color: #d7ecc9; }
+.slash4 { border-radius: 30px 10px 30px 10px / 10px 20px; background-color: #d7ecc9; }
+.pct    { border-radius: 50%; padding: 14pt 10pt; background-color: #e9d7f2; }
+.pct2   { border-radius: 10% / 50%; background-color: #e9d7f2; }
+.pill   { border-radius: 999px; background-color: #2e3436; color: #ffffff; }
+.em     { border-radius: 1.5em; font-size: 14pt; line-height: 18pt; }
+.corner { border-top-left-radius: 20px; border-bottom-right-radius: 20px 8px; }
+.image  {
+    border-radius: 28px;
+    padding: 24pt 10pt;
+    background-image: url("img/denker.png");
+}
+</style>
+</head>
+<body>
+<p class="one">border-radius: 12px on every corner</p>
+<p class="two">border-radius: 24px 4px, top-left and bottom-right round</p>
+<p class="three">border-radius: 4px 24px 12px</p>
+<p class="four">border-radius: 0 8px 16px 24px, clockwise from top-left</p>
+<p class="slash">border-radius: 40px / 12px, wide and shallow</p>
+<p class="slash4">border-radius: 30px 10px 30px 10px / 10px 20px</p>
+<p class="pct">border-radius: 50%, an ellipse the size of the box</p>
+<p class="pct2">border-radius: 10% / 50%</p>
+<p class="pill">border-radius: 999px, scaled down to a pill</p>
+<p class="em">border-radius: 1.5em at 14pt</p>
+<p class="corner">border-top-left-radius and border-bottom-right-radius longhands</p>
+<p class="image">background-image clipped to a 28px radius</p>
+</body>
+</html>

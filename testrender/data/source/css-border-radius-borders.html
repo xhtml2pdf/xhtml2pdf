@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>css-border-radius-borders</title>
+<style type="text/css">
+body { font-size: 10pt; line-height: 14pt; }
+p {
+    margin: 0 0 8pt 0;
+    padding: 6pt 10pt;
+    border: 2px solid #204a87;
+    border-radius: 14px;
+}
+.bg     { background-color: #cfdcec; }
+.dashed { border: 3px dashed #a40000; }
+.dotted { border: 3px dotted #a40000; }
+.double { border: 6px double #4e9a06; border-radius: 20px; }
+.thick  { border: 8px solid #5c3566; border-radius: 6px; }
+.thin   { border: 1px solid #555753; border-radius: 30px / 10px; }
+.sides  {
+    border-top: 4px solid #cc0000;
+    border-right: 4px solid #3465a4;
+    border-bottom: 4px solid #4e9a06;
+    border-left: 4px solid #f57900;
+    border-radius: 18px;
+}
+.widths {
+    border-style: solid;
+    border-color: #2e3436;
+    border-width: 1px 4px 8px 2px;
+    border-radius: 16px;
+}
+.noleft { border-left: none; background-color: #fce94f; }
+.accent {
+    border: none;
+    border-left: 6px solid #cc0000;
+    border-radius: 0 12px 12px 0;
+    background-color: #eeeeec;
+}
+.onlytop { border: none; border-top: 3px solid #204a87; border-radius: 12px; }
+</style>
+</head>
+<body>
+<p>2px solid, 14px radius, no background</p>
+<p class="bg">2px solid over a background</p>
+<p class="dashed">3px dashed</p>
+<p class="dotted">3px dotted</p>
+<p class="double">6px double, 20px radius</p>
+<p class="thick">8px solid, 6px radius</p>
+<p class="thin">1px solid, 30px / 10px</p>
+<p class="sides">each side its own colour</p>
+<p class="widths">widths 1px 4px 8px 2px</p>
+<p class="noleft">left border none</p>
+<p class="accent">a left accent bar with the right corners rounded</p>
+<p class="onlytop">only a top border, every corner rounded</p>
+</body>
+</html>

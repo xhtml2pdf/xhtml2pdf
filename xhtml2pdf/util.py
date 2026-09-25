@@ -29,6 +29,7 @@ from reportlab.lib.units import cm, inch
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase._glyphlist import _glyphname2unicode
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
+from reportlab.pdfgen.canvas import FILL_EVEN_ODD
 from reportlab.rl_config import register_reset
 
 if TYPE_CHECKING:
@@ -404,7 +405,316 @@ def drawBorderLine(
     canvas.restoreState()
 
 
-def drawBoxBackground(canvas, x: float, y: float, w: float, h: float, style) -> None:
+_BOX_SIDES = ("Left", "Right", "Top", "Bottom")
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~ Rounded boxes
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#: The Bezier handle length, as a fraction of the radius, that makes a cubic
+#: the closest match to a quarter of an ellipse.
+_KAPPA = 0.5522847498
+
+#: The two sides that meet at each corner, in RADIUS_CORNERS order: the one
+#: that bounds it vertically, then the one that bounds it horizontally.
+_CORNER_SIDES = (
+    ("Top", "Left"),
+    ("Top", "Right"),
+    ("Bottom", "Right"),
+    ("Bottom", "Left"),
+)
+
+Radii = tuple[tuple[float, float], ...]
+
+
+class RoundedBox(NamedTuple):
+    """
+    A box with a border-radius, as CSS draws it.
+
+    x, y, w, h are the outer edge of the border. The border of a side is
+    centred on the edge the caller passes, like the straight borders, so the
+    outer edge lies half a border width further out. `radii` are those of the
+    outer edge, top-left clockwise -- what border-radius declares -- and an
+    edge further in has each radius less by how far in it is, as
+    css-backgrounds-3 5.2 has the padding edge.
+    """
+
+    x: float
+    y: float
+    w: float
+    h: float
+    radii: Radii
+    #: Side -> (style, width, colour) for each side that strokes.
+    borders: dict
+    #: Side -> width of the border drawn there, 0 where none is.
+    widths: dict
+
+    def inset(self, f: float) -> tuple[float, float, float, float, Radii]:
+        """(x, y, w, h, radii) of the edge f of the way in through the border."""
+        left, right, top, bottom = (
+            f * self.widths[side] for side in ("Left", "Right", "Top", "Bottom")
+        )
+        inward = {"Left": left, "Right": right, "Top": top, "Bottom": bottom}
+        radii = []
+        for (rx, ry), (vertical, horizontal) in zip(
+            self.radii, _CORNER_SIDES, strict=True
+        ):
+            rx, ry = rx - inward[horizontal], ry - inward[vertical]
+            radii.append((rx, ry) if rx > 0 and ry > 0 else (0.0, 0.0))
+        return (
+            self.x + left,
+            self.y + bottom,
+            max(self.w - left - right, 0.0),
+            max(self.h - top - bottom, 0.0),
+            tuple(radii),
+        )
+
+
+def _drawnBorders(style, sides) -> dict:
+    """Side -> (style, width, colour) for the sides in `sides` that stroke."""
+    text_color = getattr(style, "textColor", None)
+    drawn = {}
+    for side in _BOX_SIDES:
+        if side not in sides:
+            continue
+        bstyle = getattr(style, f"border{side}Style", None)
+        width = getattr(style, f"border{side}Width", 0)
+        color = getattr(style, f"border{side}Color", None)
+        if color is None:
+            color = text_color
+        # drawBorderLine's test for a line that shows.
+        if width and getBorderStyle(bstyle) and color is not None:
+            drawn[side] = (str(bstyle).lower(), width, color)
+    return drawn
+
+
+def roundedBox(
+    style, x: float, y: float, w: float, h: float, sides=_BOX_SIDES
+) -> RoundedBox | None:
+    """
+    The rounded geometry of a box, or None when it has no border-radius.
+
+    None is what every box without a radius gets, and the painters keep
+    their plain rectangles for it, so a document that declares none draws
+    exactly what it drew before.
+
+    A corner next to a side in no `sides` -- the edge of a box cut by a line
+    or page break -- is square, as box-decoration-break: slice has it. It is
+    squared before the radii are scaled, so a corner this fragment does not
+    have cannot shrink the ones it does. css-backgrounds-3 5.5: when two
+    radii on one side add up to more than the side, all of them shrink by
+    the same factor until they fit.
+    """
+    declared = [
+        getattr(style, f"border{corner}Radius", None) for corner in RADIUS_CORNERS
+    ]
+    if w <= 0 or h <= 0 or all(d is None or d is NO_RADIUS for d in declared):
+        return None
+    borders = _drawnBorders(style, sides)
+    widths = {side: borders[side][1] if side in borders else 0.0 for side in _BOX_SIDES}
+    x -= widths["Left"] / 2.0
+    y -= widths["Bottom"] / 2.0
+    w += (widths["Left"] + widths["Right"]) / 2.0
+    h += (widths["Top"] + widths["Bottom"]) / 2.0
+    radii = [
+        (
+            (0.0, 0.0)
+            if d is None or d is NO_RADIUS or a not in sides or b not in sides
+            else d.resolve(w, h)
+        )
+        for d, (a, b) in zip(declared, _CORNER_SIDES, strict=True)
+    ]
+    if not any(rx for rx, _ in radii):
+        return None
+    tl, tr, br, bl = radii
+    factor = min(
+        [1.0]
+        + [
+            length / total
+            for length, total in (
+                (w, tl[0] + tr[0]),
+                (w, bl[0] + br[0]),
+                (h, tl[1] + bl[1]),
+                (h, tr[1] + br[1]),
+            )
+            if total > length
+        ]
+    )
+    if factor < 1.0:
+        radii = [(rx * factor, ry * factor) for rx, ry in radii]
+    return RoundedBox(x, y, w, h, tuple(radii), borders, widths)
+
+
+def _cornerCurves(x: float, y: float, w: float, h: float, radii: Radii) -> tuple:
+    """
+    The four corners as cubic Beziers, top-left clockwise, in PDF's y-up space.
+
+    Each runs from the side before it to the side after it -- the top-left
+    one from the left side up to the top -- so that a side is what lies
+    between two curves. A square corner is its corner point four times over.
+    """
+    (tlx, tly), (trx, try_), (brx, bry), (blx, bly) = radii
+    k = _KAPPA
+    top, right = y + h, x + w
+    return (
+        (
+            (x, top - tly),
+            (x, top - tly + k * tly),
+            (x + tlx - k * tlx, top),
+            (x + tlx, top),
+        ),
+        (
+            (right - trx, top),
+            (right - trx + k * trx, top),
+            (right, top - try_ + k * try_),
+            (right, top - try_),
+        ),
+        (
+            (right, y + bry),
+            (right, y + bry - k * bry),
+            (right - brx + k * brx, y),
+            (right - brx, y),
+        ),
+        ((x + blx, y), (x + blx - k * blx, y), (x, y + bly - k * bly), (x, y + bly)),
+    )
+
+
+def _splitCurve(curve, t: float = 0.5) -> tuple:
+    """De Casteljau: the curve cut in two at t, each half a cubic of its own."""
+
+    def lerp(a, b):
+        return (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t)
+
+    p0, p1, p2, p3 = curve
+    p01, p12, p23 = lerp(p0, p1), lerp(p1, p2), lerp(p2, p3)
+    p012, p123 = lerp(p01, p12), lerp(p12, p23)
+    middle = lerp(p012, p123)
+    return (p0, p01, p012, middle), (middle, p123, p23, p3)
+
+
+def _curveTo(path, curve) -> None:
+    if curve[0] != curve[3]:
+        path.curveTo(*curve[1], *curve[2], *curve[3])
+
+
+def _addRoundedRect(path, x: float, y: float, w: float, h: float, radii: Radii):
+    curves = _cornerCurves(x, y, w, h, radii)
+    path.moveTo(*curves[0][0])
+    for index, curve in enumerate(curves):
+        if index:
+            path.lineTo(*curve[0])
+        _curveTo(path, curve)
+    path.close()
+    return path
+
+
+def roundedRectPath(canvas, x: float, y: float, w: float, h: float, radii: Radii):
+    """A closed path around the box with its corners rounded."""
+    return _addRoundedRect(canvas.beginPath(), x, y, w, h, radii)
+
+
+def _ringPath(canvas, box: RoundedBox, outer: float, inner: float):
+    """The band of the border between two insets, to be filled even-odd."""
+    path = roundedRectPath(canvas, *box.inset(outer))
+    x, y, w, h, radii = box.inset(inner)
+    if w > 0 and h > 0:
+        _addRoundedRect(path, x, y, w, h, radii)
+    return path
+
+
+def _sidePath(canvas, x: float, y: float, w: float, h: float, radii: Radii, side: str):
+    """
+    One side of a rounded outline as an open path, taking half of each corner.
+
+    What a dashed or dotted side is stroked along when its neighbours differ.
+    """
+    curves = _cornerCurves(x, y, w, h, radii)
+    before, after = {"Top": (0, 1), "Right": (1, 2), "Bottom": (2, 3), "Left": (3, 0)}[
+        side
+    ]
+    first = _splitCurve(curves[before])[1]
+    second = _splitCurve(curves[after])[0]
+    path = canvas.beginPath()
+    path.moveTo(*first[0])
+    _curveTo(path, first)
+    path.lineTo(*second[0])
+    _curveTo(path, second)
+    return path
+
+
+def _intersection(p1, p2, p3, p4):
+    """Where segment p1-p2 crosses segment p3-p4, or None."""
+    d = (p2[0] - p1[0]) * (p4[1] - p3[1]) - (p2[1] - p1[1]) * (p4[0] - p3[0])
+    if abs(d) < 1e-9:
+        return None
+    t = ((p3[0] - p1[0]) * (p4[1] - p3[1]) - (p3[1] - p1[1]) * (p4[0] - p3[0])) / d
+    u = ((p3[0] - p1[0]) * (p2[1] - p1[1]) - (p3[1] - p1[1]) * (p2[0] - p1[0])) / d
+    if 0 <= t <= 1 and 0 <= u <= 1:
+        return (p1[0] + t * (p2[0] - p1[0]), p1[1] + t * (p2[1] - p1[1]))
+    return None
+
+
+def _sideWedge(canvas, box: RoundedBox, side: str):
+    """
+    The part of the box that belongs to one side's border.
+
+    CSS splits a corner between its two sides along the line from the outer
+    corner to the inner one, so a wide border takes more of the corner than
+    a thin one, and a side with no border gives the whole corner to its
+    neighbour. The line runs on past the curve of the corner; where the two
+    lines of a side cross first, in a box narrower than its corners, they
+    stop there.
+    """
+    x, y, w, h = box.x, box.y, box.w, box.h
+    wd = box.widths
+    outer = {0: (x, y + h), 1: (x + w, y + h), 2: (x + w, y), 3: (x, y)}
+    inner = {
+        0: (x + wd["Left"], y + h - wd["Top"]),
+        1: (x + w - wd["Right"], y + h - wd["Top"]),
+        2: (x + w - wd["Right"], y + wd["Bottom"]),
+        3: (x + wd["Left"], y + wd["Bottom"]),
+    }
+
+    def reach(corner):
+        (outer_x, outer_y), (inner_x, inner_y) = outer[corner], inner[corner]
+        dx, dy = inner_x - outer_x, inner_y - outer_y
+        rx, ry = box.radii[corner]
+        # Far enough to clear the curve on both axes.
+        scale = 1.0
+        if dx:
+            scale = max(scale, (rx + abs(dx)) / abs(dx))
+        if dy:
+            scale = max(scale, (ry + abs(dy)) / abs(dy))
+        return (outer_x + dx * scale, outer_y + dy * scale)
+
+    first, second = {"Top": (0, 1), "Right": (1, 2), "Bottom": (2, 3), "Left": (3, 0)}[
+        side
+    ]
+    a, b = outer[first], outer[second]
+    far_a, far_b = reach(first), reach(second)
+    path = canvas.beginPath()
+    path.moveTo(*a)
+    path.lineTo(*b)
+    crossing = _intersection(a, far_a, b, far_b)
+    if crossing is None:
+        path.lineTo(*far_b)
+        path.lineTo(*far_a)
+    else:
+        path.lineTo(*crossing)
+    path.close()
+    return path
+
+
+def clipRoundedRect(
+    canvas, x: float, y: float, w: float, h: float, radii: Radii
+) -> None:
+    """Clip what is drawn next to the rounded box, until the next restoreState."""
+    canvas.clipPath(roundedRectPath(canvas, x, y, w, h, radii), stroke=0, fill=0)
+
+
+def drawBoxBackground(
+    canvas, x: float, y: float, w: float, h: float, style, sides=_BOX_SIDES
+) -> None:
     """
     Paint the background of a box: the colour, then the image over it.
 
@@ -413,19 +723,32 @@ def drawBoxBackground(canvas, x: float, y: float, w: float, h: float, style) -> 
     its content, then the borders. `style` is read by attribute name, the way
     a ParagraphStyle spells them (backColor, backgroundImage, ...), so any
     object carrying those names will do; a missing one means "none".
+
+    A box with a border-radius is painted inside its curve, the image
+    included. `sides` are the edges this fragment of the box has, as for
+    drawBoxBorders; the corners at a cut stay square.
     """
+    box = roundedBox(style, x, y, w, h, sides)
+    # The middle of the border, which is where a square box's fill stops.
+    clip = None if box is None else box.inset(0.5)
     bg = getattr(style, "backColor", None)
     if bg:
         # draw a filled rectangle (with no stroke) using bg color
         canvas.saveState()
         canvas.setFillColor(bg)
-        canvas.rect(x, y, w, h, fill=1, stroke=0)
+        if clip is None:
+            canvas.rect(x, y, w, h, fill=1, stroke=0)
+        else:
+            canvas.drawPath(roundedRectPath(canvas, *clip), fill=1, stroke=0)
         canvas.restoreState()
 
     background_image = getattr(style, "backgroundImage", None)
     if background_image is not None:
         reader = getBackgroundImageReader(background_image)
         if reader is not None:
+            if clip is not None:
+                canvas.saveState()
+                clipRoundedRect(canvas, *clip)
             drawBackgroundImage(
                 canvas,
                 reader,
@@ -438,9 +761,48 @@ def drawBoxBackground(canvas, x: float, y: float, w: float, h: float, style) -> 
                 position=getattr(style, "backgroundPosition", "0% 0%"),
                 font_size=getattr(style, "fontSize", 0),
             )
+            if clip is not None:
+                canvas.restoreState()
 
 
-_BOX_SIDES = ("Left", "Right", "Top", "Bottom")
+def _drawRoundedSide(canvas, box: RoundedBox, spec, side: str | None) -> None:
+    """
+    Paint one side's border, or all four when `side` is None.
+
+    A solid or double border is filled as the band between two edges of the
+    box -- the whole ring, or the part in the side's wedge -- so its corner
+    grows and thins the way CSS draws it. Dashes need a stroke, so dashed
+    and dotted are stroked along the middle of the band.
+    """
+    bstyle, width, color = spec
+    canvas.saveState()
+    dash = getBorderDash(bstyle, width)
+    if dash:
+        canvas.setStrokeColor(color)
+        canvas.setLineWidth(width)
+        canvas.setDash(dash)
+        middle = box.inset(0.5)
+        path = (
+            roundedRectPath(canvas, *middle)
+            if side is None
+            else _sidePath(canvas, *middle, side)
+        )
+        canvas.drawPath(path, fill=0, stroke=1)
+        canvas.restoreState()
+        return
+    if side is not None:
+        canvas.clipPath(_sideWedge(canvas, box, side), stroke=0, fill=0)
+    canvas.setFillColor(color)
+    # CSS 2.1 8.5.3: double is two lines with a gap, a third of the width each.
+    bands = ((0.0, 1 / 3), (2 / 3, 1.0)) if _is_double(bstyle, width) else ((0.0, 1.0),)
+    for outer, inner in bands:
+        canvas.drawPath(
+            _ringPath(canvas, box, outer, inner),
+            fill=1,
+            stroke=0,
+            fillMode=FILL_EVEN_ODD,
+        )
+    canvas.restoreState()
 
 
 def drawBoxBorders(
@@ -454,6 +816,15 @@ def drawBoxBorders(
     by attribute name like drawBoxBackground's. `sides` names the edges to
     draw: a box cut by a line or page break has none at the cut.
     """
+    box = roundedBox(style, x, y, w, h, sides)
+    if box is not None:
+        specs = set(box.borders.values())
+        if len(box.borders) == 4 and len(specs) == 1:
+            _drawRoundedSide(canvas, box, specs.pop(), None)
+        else:
+            for side, spec in box.borders.items():
+                _drawRoundedSide(canvas, box, spec, side)
+        return
     text_color = getattr(style, "textColor", None)
     canvas.saveState()
     for side, (x1, y1, x2, y2) in (

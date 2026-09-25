@@ -876,3 +876,200 @@ class GetBorderRadiusTest(TestCase):
     def test_an_invalid_value_is_no_radius(self) -> None:
         with self.assertLogs("xhtml2pdf.util", level="WARNING"):
             self.assertIs(utils.NO_RADIUS, utils.getBorderRadius(["auto"]))
+
+
+def _radius(*values: float) -> utils.CornerRadius:
+    """A corner radius in points: one value for both axes, or two."""
+    h, v = (values[0], values[-1])
+    return utils.CornerRadius(
+        utils.CSSLength("length", h), utils.CSSLength("length", v)
+    )
+
+
+def _rounded(radius, **kwargs) -> _BoxStyle:
+    """A style whose four corners have the same radius."""
+    corners = {f"border{corner}Radius": radius for corner in utils.RADIUS_CORNERS}
+    return _BoxStyle(**corners, **kwargs)
+
+
+def _solid(width: float, color=None, **kwargs) -> dict:
+    color = color or Color(0, 0, 1)
+    return {
+        f"border{side}{part}": value
+        for side in ("Left", "Right", "Top", "Bottom")
+        for part, value in (("Style", "solid"), ("Width", width), ("Color", color))
+    } | kwargs
+
+
+def _box(style, *geometry, **kwargs) -> utils.RoundedBox:
+    box = utils.roundedBox(style, *geometry, **kwargs)
+    assert box is not None
+    return box
+
+
+class RoundedBoxTest(TestCase):
+    """The geometry every rounded painter shares."""
+
+    def test_no_radius_is_no_rounded_box(self) -> None:
+        self.assertIsNone(utils.roundedBox(_BoxStyle(), 0, 0, 100, 50))
+        self.assertIsNone(utils.roundedBox(_rounded(utils.NO_RADIUS), 0, 0, 100, 50))
+        self.assertIsNone(utils.roundedBox(_rounded(_radius(0)), 0, 0, 100, 50))
+
+    def test_without_borders_the_box_is_the_outer_edge(self) -> None:
+        box = _box(_rounded(_radius(8, 4)), 10, 20, 100, 50)
+        self.assertEqual((10, 20, 100, 50), box[:4])
+        self.assertEqual(((8, 4),) * 4, box.radii)
+
+    def test_a_border_moves_the_outer_edge_out_by_half_its_width(self) -> None:
+        box = _box(_rounded(_radius(8), **_solid(4)), 10, 20, 100, 50)
+        self.assertEqual((8, 18, 104, 54), box[:4])
+
+    def test_percentages_resolve_against_the_outer_edge(self) -> None:
+        percent = utils.CSSLength("percent", 50)
+        style = _rounded(utils.CornerRadius(percent, percent))
+        box = _box(style, 0, 0, 100, 40)
+        self.assertEqual(((50, 20),) * 4, box.radii)
+
+    def test_radii_too_large_for_a_side_shrink_together(self) -> None:
+        # css-backgrounds-3 5.5: 999 on a 40pt tall box is scaled to 20.
+        box = _box(_rounded(_radius(999)), 0, 0, 100, 40)
+        for rx, ry in box.radii:
+            self.assertAlmostEqual(20, rx)
+            self.assertAlmostEqual(20, ry)
+
+    def test_the_corners_at_a_cut_are_square(self) -> None:
+        box = _box(_rounded(_radius(8)), 0, 0, 100, 50, sides=("Left", "Right", "Top"))
+        self.assertEqual(((8, 8), (8, 8), (0, 0), (0, 0)), box.radii)
+
+    def test_a_square_corner_at_a_cut_does_not_shrink_the_others(self) -> None:
+        # Four radii of 30 on a 50 tall box scale to 25; with the bottom cut
+        # the top ones fit as they are.
+        box = _box(_rounded(_radius(30)), 0, 0, 100, 50, sides=("Left", "Right", "Top"))
+        self.assertEqual((30, 30), box.radii[0])
+
+    def test_the_inner_edge_takes_the_border_widths_off_the_radii(self) -> None:
+        style = _rounded(_radius(10), **_solid(4, borderLeftWidth=12, borderTopWidth=2))
+        box = _box(style, 0, 0, 100, 50)
+        x, y, w, h, radii = box.inset(1.0)
+        # Top-left loses the left width across and the top width down;
+        # 10 - 12 is below zero, so the corner is square.
+        self.assertEqual((0, 0), radii[0])
+        self.assertEqual((6, 8), radii[1])
+        self.assertEqual((6, 6), radii[2])
+
+    def test_the_middle_of_the_border_is_the_box_passed_in(self) -> None:
+        box = _box(_rounded(_radius(10), **_solid(4)), 10, 20, 100, 50)
+        x, y, w, h, radii = box.inset(0.5)
+        self.assertEqual((10, 20, 100, 50), (x, y, w, h))
+        self.assertEqual(((8, 8),) * 4, radii)
+
+
+class _PathCanvas:
+    """
+    A real canvas whose paths are recorded, operator by operator.
+
+    Rounded boxes build paths with beginPath, which the plain recorder cannot
+    answer; this keeps ReportLab's own path objects and records what is done
+    with them.
+    """
+
+    def __init__(self) -> None:
+        from io import BytesIO
+
+        from reportlab.pdfgen.canvas import Canvas
+
+        self._canvas = Canvas(BytesIO())
+        self.calls: list[tuple] = []
+
+    def beginPath(self):
+        return self._canvas.beginPath()
+
+    def __getattr__(self, name):
+        def record(*args, **kwargs):
+            args = tuple(
+                arg.getCode() if hasattr(arg, "getCode") else arg for arg in args
+            )
+            self.calls.append((name, args, kwargs))
+
+        return record
+
+    def named(self, name: str) -> list[tuple]:
+        return [call for call in self.calls if call[0] == name]
+
+
+class RoundedPaintingTest(TestCase):
+    def test_a_rounded_background_fills_a_curved_path(self) -> None:
+        canvas = _PathCanvas()
+        style = _rounded(_radius(8), backColor=Color(1, 0, 0))
+        utils.drawBoxBackground(canvas, 0, 0, 100, 50, style)
+        self.assertEqual([], canvas.named("rect"))
+        ((_, (code,), kwargs),) = canvas.named("drawPath")
+        self.assertEqual(4, code.count(" c"))
+        self.assertEqual({"fill": 1, "stroke": 0}, kwargs)
+
+    def test_a_uniform_solid_border_is_one_ring(self) -> None:
+        canvas = _PathCanvas()
+        utils.drawBoxBorders(canvas, 0, 0, 100, 50, _rounded(_radius(8), **_solid(2)))
+        self.assertEqual([], canvas.named("clipPath"))
+        ((_, (code,), kwargs),) = canvas.named("drawPath")
+        # The outer edge and the inner one, filled even-odd.
+        self.assertEqual(2, code.count(" m"))
+        self.assertEqual(utils.FILL_EVEN_ODD, kwargs["fillMode"])
+
+    def test_a_double_border_is_two_rings(self) -> None:
+        canvas = _PathCanvas()
+        style = _rounded(
+            _radius(8),
+            **_solid(
+                6,
+                **{
+                    f"border{s}Style": "double"
+                    for s in ["Top", "Left", "Right", "Bottom"]
+                },
+            ),
+        )
+        utils.drawBoxBorders(canvas, 0, 0, 100, 50, style)
+        self.assertEqual(2, len(canvas.named("drawPath")))
+
+    def test_a_dashed_border_is_stroked(self) -> None:
+        canvas = _PathCanvas()
+        style = _rounded(
+            _radius(8),
+            **_solid(
+                3,
+                **{
+                    f"border{s}Style": "dashed"
+                    for s in ["Top", "Left", "Right", "Bottom"]
+                },
+            ),
+        )
+        utils.drawBoxBorders(canvas, 0, 0, 100, 50, style)
+        self.assertEqual(1, len(canvas.named("setDash")))
+        ((_, _, kwargs),) = canvas.named("drawPath")
+        self.assertEqual({"fill": 0, "stroke": 1}, kwargs)
+
+    def test_sides_that_differ_are_each_clipped_to_their_wedge(self) -> None:
+        canvas = _PathCanvas()
+        style = _rounded(_radius(8), **_solid(2, borderTopColor=Color(1, 0, 0)))
+        utils.drawBoxBorders(canvas, 0, 0, 100, 50, style)
+        self.assertEqual(4, len(canvas.named("clipPath")))
+        self.assertEqual(4, len(canvas.named("drawPath")))
+
+    def test_a_side_with_no_border_is_not_painted(self) -> None:
+        canvas = _PathCanvas()
+        style = _rounded(_radius(8), **_solid(2, borderLeftStyle="none"))
+        utils.drawBoxBorders(canvas, 0, 0, 100, 50, style)
+        self.assertEqual(3, len(canvas.named("drawPath")))
+
+    def test_the_sides_at_a_cut_are_not_painted(self) -> None:
+        canvas = _PathCanvas()
+        utils.drawBoxBorders(
+            canvas,
+            0,
+            0,
+            100,
+            50,
+            _rounded(_radius(8), **_solid(2)),
+            sides=("Left", "Right", "Top"),
+        )
+        self.assertEqual(3, len(canvas.named("drawPath")))
