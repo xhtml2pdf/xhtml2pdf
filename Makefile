@@ -2,8 +2,12 @@
 
 # Virtualenv used by setup/devsetup. Override with e.g. `make setup VENV=.venv312`.
 VENV ?= .venv
-PYTHON := $(VENV)/bin/python
 PIP := $(VENV)/bin/pip
+# The targets below run in that virtualenv once `make setup` has created it,
+# and in whatever python3 is on PATH otherwise, as in CI, which installs into
+# the runner's Python and has no virtualenv. Absolute, because some recipes
+# cd first. Recursive (=), so `make setup test-ref` picks up the new venv.
+PYTHON = $(if $(wildcard $(VENV)/bin/python),$(abspath $(VENV))/bin/python,python3)
 
 help:
 	@echo "setup - create a venv and install xhtml2pdf in editable mode"
@@ -62,10 +66,10 @@ lint:
 	pep8 xhtml2pdf
 
 test:
-	coverage run -m unittest discover -t . -s tests
+	$(PYTHON) -m coverage run -m unittest discover -t . -s tests
 
 test-render:
-	cd testrender && python testrender.py --only-errors
+	cd testrender && $(PYTHON) testrender.py --only-errors
 
 # Convenience for local use. Note this compares the output against a reference
 # built from the same commit and the same reportlab, so it only catches
@@ -79,32 +83,32 @@ test-render-all: test-ref test-render
 XVFB := $(shell command -v xvfb-run 2>/dev/null)
 
 test-browser:
-	$(if $(XVFB),$(XVFB) -a,) python testrender/browsercompare.py --report
+	$(if $(XVFB),$(XVFB) -a,) $(PYTHON) testrender/browsercompare.py --report
 
 test-browser-update:
-	$(if $(XVFB),$(XVFB) -a,) python testrender/browsercompare.py --update-baseline
+	$(if $(XVFB),$(XVFB) -a,) $(PYTHON) testrender/browsercompare.py --update-baseline
 
 
 # Deliberately not wired into `test` or into CI: a timing on a shared runner
 # says more about the runner than about the change, and perf-golden only means
 # anything next to a reference recorded before the change.
 perf:
-	python tools/perf/bench.py
+	$(PYTHON) tools/perf/bench.py
 
 perf-scaling:
-	python tools/perf/bench.py --scaling
+	$(PYTHON) tools/perf/bench.py --scaling
 
 perf-golden:
-	python tools/perf/golden.py
+	$(PYTHON) tools/perf/golden.py
 
 perf-golden-update:
-	python tools/perf/golden.py --update
+	$(PYTHON) tools/perf/golden.py --update
 
 test-all:
 	tox
 
 test-ref:
-	cd testrender && python testrender.py --create-reference data/reference
+	cd testrender && $(PYTHON) testrender.py --create-reference data/reference
 
 docs:
 	$(MAKE) -C docs clean
@@ -115,9 +119,9 @@ docs:
 release: clean
 	git tag -a "v`xhtml2pdf --version`" -m "Bump version `xhtml2pdf --version`"
 	git push origin "v`xhtml2pdf --version`"
-	python -m build
+	$(PYTHON) -m build
 	twine upload -s dist/*
 
 sdist: clean
-	python -m build --sdist
+	$(PYTHON) -m build --sdist
 	ls -l dist
