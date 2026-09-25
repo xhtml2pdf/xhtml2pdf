@@ -584,19 +584,31 @@ class CSSParser:
     def _skipBlock(src):
         """
         Return the source after the {} block that the first "{" in src opens,
-        nested blocks included, or "" if that block never closes.
+        nested blocks included, or "" if that block never closes. A brace in
+        a quoted string, as in content: "}", does not count.
         """
         start = src.find("{")
         if start < 0:
             return ""
         depth = 0
-        for i in range(start, len(src)):
-            if src[i] == "{":
+        quote = None
+        i = start
+        while i < len(src):
+            char = src[i]
+            if quote:
+                if char == "\\":
+                    i += 1
+                elif char == quote:
+                    quote = None
+            elif char in {'"', "'"}:
+                quote = char
+            elif char == "{":
                 depth += 1
-            elif src[i] == "}":
+            elif char == "}":
                 depth -= 1
                 if depth == 0:
                     return src[i + 1 :].lstrip()
+            i += 1
         return ""
 
     def _parseRulesetOrSkip(self, src, stylesheetElements):
@@ -996,7 +1008,7 @@ class CSSParser:
             if blockIdx < 0:
                 blockIdx = None
 
-            if semiIdx is not None and semiIdx < blockIdx:
+            if semiIdx is not None and (blockIdx is None or semiIdx < blockIdx):
                 src = src[semiIdx + 1 :].lstrip()
             elif blockIdx is None:
                 # consume the rest of the content since we didn't find a block or a semicolon

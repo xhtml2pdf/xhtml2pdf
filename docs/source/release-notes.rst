@@ -80,7 +80,11 @@ Unreleased.
   is dropped with its whole block, as CSS Syntax 3 specifies. The block of
   an at-rule the parser does not support (``@keyframes``, ``@supports``)
   is skipped to its matching ``}`` rather than parsed as a stylesheet,
-  which read that ``}`` as a stray one and hung the same way.
+  which read that ``}`` as a stray one and hung the same way. A ``}``
+  inside a quoted string, as in ``content: "}"``, does not end that block.
+* An at-rule the parser does not support and that has no block, such as
+  ``@layer base;``, is skipped instead of raising a ``TypeError`` that
+  aborted the whole document.
 * An inline box nested in another is no longer covered by the outer
   one's background, which used to be painted last.
 

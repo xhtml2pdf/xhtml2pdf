@@ -134,6 +134,19 @@ class MalformedSelectorTest(TestCase):
         )
         self.assertEqual({"div"}, set(rules))
 
+    def test_brace_in_a_string_does_not_close_a_skipped_block(self) -> None:
+        rules = self._parse(
+            "@supports (display: grid) { p::after { content: '}'; } }"
+            "div { color: blue; }"
+        )
+        self.assertEqual({"div"}, set(rules))
+
+    def test_unsupported_at_rule_without_a_block(self) -> None:
+        # "@layer base;" ends at its ";". With no "{" before that ";", the
+        # search for the block used to compare the ";" with None and raise.
+        rules = self._parse("@layer base; div { color: blue; }")
+        self.assertEqual({"div"}, set(rules))
+
 
 class StandardSelectorTest(TestCase):
     """
