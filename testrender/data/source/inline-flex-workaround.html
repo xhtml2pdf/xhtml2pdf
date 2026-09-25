@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>inline-flex-workaround</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 11pt; line-height: 18pt; }
+p { margin: 0 0 12pt 0; }
+.chip { display: inline-block; border: 1pt solid #4e9a06; padding: 2pt;
+        vertical-align: middle; }
+.row { display: flex; gap: 6pt; }
+.row span { padding: 2pt 4pt; background-color: #e8f5e0; }
+.wide { width: 150pt; }
+</style>
+</head>
+<body>
+<p>An inline block around a flex row is how inline-flex is written for xhtml2pdf: <span class="chip"><span class="row"><span>one</span><span>two</span></span></span> and the sentence carries on.</p>
+<p>The container fills the inline block, so the block's width decides it: <span class="chip wide"><span class="row"><span>one</span><span>two</span></span></span> after it.</p>
+<p>With justify-content the items spread inside that width: <span class="chip wide"><span class="row" style="justify-content: space-between"><span>one</span><span>two</span></span></span> after it.</p>
+</body>
+</html>

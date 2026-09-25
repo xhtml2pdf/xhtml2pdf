@@ -50,10 +50,8 @@ from xhtml2pdf.files import pisaFileObject, pisaTempFile
 from xhtml2pdf.reportlab_paragraph import Paragraph
 from xhtml2pdf.util import (
     ImageWarning,
-    drawBackgroundImage,
-    drawBorderLine,
-    getBackgroundImageReader,
-    getBackgroundImageSize,
+    drawBoxBackground,
+    drawBoxBorders,
     getBorderWidth,
 )
 
@@ -75,8 +73,8 @@ PRODUCER: str = "xhtml2pdf <https://github.com/xhtml2pdf/xhtml2pdf/>"
 
 
 class PmlMaxHeightMixIn:
-    def setMaxHeight(self, availHeight: int) -> int:
-        self.availHeightValue: int = availHeight
+    def setMaxHeight(self, availHeight: float) -> float:
+        self.availHeightValue: float = availHeight
         if availHeight < 70000 and hasattr(self, "canv"):
             if not hasattr(self.canv, "maxAvailHeightValue"):
                 self.canv.maxAvailHeightValue = 0
@@ -85,7 +83,7 @@ class PmlMaxHeightMixIn:
             )
         return self.availHeightValue
 
-    def getMaxHeight(self) -> int:
+    def getMaxHeight(self) -> float:
         return self.availHeightValue if hasattr(self, "availHeightValue") else 0
 
 
@@ -774,21 +772,54 @@ class PmlParagraphAndImage(ParagraphAndImage, PmlMaxHeightMixIn):
 
 class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
     def _calcImageMaxSizes(self, availWidth, availHeight):
+        """
+        Fit every inline image into the space the paragraph is offered.
+
+        Scales from the image's natural size each time, not from whatever the
+        previous call left: wrap runs more than once per flowable (Frame.add,
+        then split, and anything that measures a paragraph before placing
+        it), and scaling the already-scaled size compounded the shrink -- an
+        image at 50% measured twice came out at 25%.
+        """
         self.hasImages = False
         for frag in self.frags:
-            if hasattr(frag, "cbDefn") and frag.cbDefn.kind == "img":
+            if not hasattr(frag, "cbDefn"):
+                continue
+            if frag.cbDefn.kind == "box":
+                # An inline-block is not scaled; it is laid out again for the
+                # width on offer, which is when a percentage width or a box
+                # wider than the line gets its real size.
+                box = frag.cbDefn
+                canv = getattr(self, "canv", None)
+                box.width, box.height = box.flowable.wrapOn(
+                    canv, availWidth, availHeight
+                )
+                box.fontSize = box.height
+                # vertical-align: baseline puts the box's last line on the
+                # line's baseline, which imgVRange takes as a bottom offset
+                # below it; a box with no text keeps its bottom edge there.
+                declared = getattr(box, "declared_valign", box.valign)
+                box.valign = declared
+                last_baseline = getattr(box.flowable, "last_baseline", None)
+                if declared == "baseline" and last_baseline is not None:
+                    box.valign = -last_baseline
+            elif frag.cbDefn.kind == "img":
                 img = frag.cbDefn
-                if img.width > 0 and img.height > 0:
+                natural = getattr(img, "naturalSize", None)
+                if natural is None:
+                    natural = img.naturalSize = (img.width, img.height)
+                naturalWidth, naturalHeight = natural
+                if naturalWidth > 0 and naturalHeight > 0:
                     self.hasImages = True
-                    width = min(img.width, availWidth)
-                    wfactor = float(width) / img.width
+                    width = min(naturalWidth, availWidth)
+                    wfactor = float(width) / naturalWidth
                     height = min(
-                        img.height, availHeight * MAX_IMAGE_RATIO
+                        naturalHeight, availHeight * MAX_IMAGE_RATIO
                     )  # XXX 99% because 100% do not work...
-                    hfactor = float(height) / img.height
+                    hfactor = float(height) / naturalHeight
                     factor = min(wfactor, hfactor)
-                    img.height *= factor
-                    img.width *= factor
+                    img.height = naturalHeight * factor
+                    img.width = naturalWidth * factor
 
     def wrap(self, availWidth, availHeight):
         availHeight = self.setMaxHeight(availHeight)
@@ -899,32 +930,7 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
         w = self.width - (leftIndent + style.rightIndent) + 2 * bp
         h = self.height + 2 * bp
 
-        if bg:
-            # draw a filled rectangle (with no stroke) using bg color
-            canvas.saveState()
-            canvas.setFillColor(bg)
-            canvas.rect(x, y, w, h, fill=1, stroke=0)
-            canvas.restoreState()
-
-        # CSS 2.1 14.2: the image goes over the colour and under the content.
-        # Before this, background-image existed only on @page; on an element
-        # the property was parsed, cascaded and then dropped.
-        background_image = getattr(style, "backgroundImage", None)
-        if background_image is not None:
-            reader = getBackgroundImageReader(background_image)
-            if reader is not None:
-                drawBackgroundImage(
-                    canvas,
-                    reader,
-                    x,
-                    y,
-                    w,
-                    h,
-                    natural=getBackgroundImageSize(reader),
-                    repeat=getattr(style, "backgroundRepeat", "repeat"),
-                    position=getattr(style, "backgroundPosition", "0% 0%"),
-                    font_size=style.fontSize,
-                )
+        drawBoxBackground(canvas, x, y, w, h, style)
 
         # we need to hide the bg color (if any) so Paragraph won't try to draw it again
         style.backColor = None
@@ -944,53 +950,7 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
         # do when using TOC
         style.backColor = bg
 
-        canvas.saveState()
-
-        def _drawBorderLine(bstyle, width, color, x1, y1, x2, y2):
-            # If no color for border is given, the text color is used (like
-            # defined by W3C)
-            if color is None:
-                color = style.textColor
-            drawBorderLine(canvas, bstyle, width, color, x1, y1, x2, y2)
-
-        _drawBorderLine(
-            style.borderLeftStyle,
-            style.borderLeftWidth,
-            style.borderLeftColor,
-            x,
-            y,
-            x,
-            y + h,
-        )
-        _drawBorderLine(
-            style.borderRightStyle,
-            style.borderRightWidth,
-            style.borderRightColor,
-            x + w,
-            y,
-            x + w,
-            y + h,
-        )
-        _drawBorderLine(
-            style.borderTopStyle,
-            style.borderTopWidth,
-            style.borderTopColor,
-            x,
-            y + h,
-            x + w,
-            y + h,
-        )
-        _drawBorderLine(
-            style.borderBottomStyle,
-            style.borderBottomWidth,
-            style.borderBottomColor,
-            x,
-            y,
-            x + w,
-            y,
-        )
-
-        canvas.restoreState()
+        drawBoxBorders(canvas, x, y, w, h, style)
 
 
 class PmlKeepInFrame(KeepInFrame, PmlMaxHeightMixIn):

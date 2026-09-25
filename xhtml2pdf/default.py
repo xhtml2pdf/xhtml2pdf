@@ -325,9 +325,10 @@ TAGS = {
         {"align": ["left", "center", "right", "justify"], "dir": ["ltr", "rtl"]},
     ),
     "p": (1, {"align": ["left", "center", "right", "justify"], "dir": ["ltr", "rtl"]}),
-    # Not a block. Declared so that `lang` is parsed at all: it is where the
-    # /Lang written to the PDF catalog comes from.
-    "html": (0, {"lang": (STRING, "")}),
+    # Not a block. Declared so that `lang` and `dir` are parsed at all: the
+    # first is where the /Lang written to the PDF catalog comes from, and the
+    # second is where a document usually declares its direction.
+    "html": (0, {"lang": (STRING, ""), "dir": ["ltr", "rtl"]}),
     "body": (1, {"dir": ["ltr", "rtl"]}),
     "br": (0, {}),
     "h1": (
@@ -625,6 +626,12 @@ blockquote {
 noscript {
     display: none;
 }
+
+/* Form controls sit in the line, as they do in a browser. Before this each
+   one closed the paragraph it was in and stood on a line of its own. */
+input, select, textarea {
+    display: inline-block;
+}
 """
 
 DEFAULT_LANGUAGE_LIST = {
@@ -666,6 +673,24 @@ DEFAULT_FONT = {
     "courier new": "Courier",
     "verdana": "Helvetica",
     "geneva": "Helvetica",
+    # The generic families CSS itself defines. Only "sans" and "sansserif"
+    # were listed, so "sans-serif" -- the commonest font-family there is --
+    # matched nothing and arrived at Helvetica through the default, which is
+    # the right face by accident and, since an unknown family started warning,
+    # a warning on nearly every document. There is no better answer than a
+    # base-14 face for any of them, but answering deliberately is not the same
+    # as falling through.
+    "sans-serif": "Helvetica",
+    "ui-sans-serif": "Helvetica",
+    "system-ui": "Helvetica",
+    "ui-serif": "Times-Roman",
+    "ui-monospace": "Courier",
+    "ui-rounded": "Helvetica",
+    "cursive": "Times-Roman",
+    "fantasy": "Helvetica",
+    "math": "Times-Roman",
+    "emoji": "Helvetica",
+    "fangsong": "Times-Roman",
 }
 
 PML_PAGESIZES = {

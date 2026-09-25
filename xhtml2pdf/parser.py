@@ -25,6 +25,13 @@ from html5lib import treebuilders
 from reportlab.platypus.doctemplate import FrameBreak, NextPageTemplate
 from reportlab.platypus.flowables import KeepInFrame, PageBreak
 
+from xhtml2pdf.builders.flex import (
+    BoxStyle,
+    FlexData,
+    InlineBoxData,
+    clear_box,
+    inline_box_markers,
+)
 from xhtml2pdf.default import (
     BOOL,
     BOX,
@@ -45,7 +52,9 @@ from xhtml2pdf.properties import (
     PROPERTY_NAMES,
     SUPPORTED_PROPERTIES,
     CSSAttrs,
+    UniformGroup,
     apply_uniform_groups,
+    reset_non_inherited,
 )
 
 # TODO: Why do we need to import these Tags here? They aren't uses in this file or any other file,
@@ -101,10 +110,13 @@ from xhtml2pdf.tags import (  # noqa: F401
     pisaTagUL,
 )
 from xhtml2pdf.util import (
+    Display,
     getAlign,
     getBox,
     getColor,
+    getDisplay,
     getKeepInFrameMode,
+    getLengthOrAuto,
     getPos,
     getSize,
     toList,
@@ -562,6 +574,9 @@ def CSS2Frag(c, kw, isBlock):
         c.frag.backColor = getColor(c.cssAttr["background-color"], "#ffffff")
         # FONT SIZE, STYLE, WEIGHT
     if "font-family" in c.cssAttr:
+        # The whole list, not only the winner: the families after the first
+        # are what a character the first one has no glyph for falls back to.
+        c.frag.fontFamilies = c.getFontNames(c.cssAttr["font-family"])
         c.frag.fontName = c.getFontName(c.cssAttr["font-family"])
     if "font-size" in c.cssAttr:
         # XXX inherit
@@ -677,6 +692,107 @@ def CSS2Frag(c, kw, isBlock):
             )
 
 
+#: The declarations that give an inline element a box of its own. Written
+#: out in full so the registry check in the tests can see each name.
+_INLINE_BOX_PROPERTIES = (
+    "padding-left",
+    "padding-right",
+    "padding-top",
+    "padding-bottom",
+    "border-left-style",
+    "border-right-style",
+    "border-top-style",
+    "border-bottom-style",
+    "background-image",
+    "margin-left",
+    "margin-right",
+)
+
+
+#: Inline elements that are not text: an image or a barcode is one word of
+#: its own height, and a box drawn to the line's ascent and descent would
+#: not fit it. They keep ignoring padding, borders and side margins.
+_REPLACED_INLINE_TAGS = frozenset({"img", "br", "hr", "pdfbarcode"})
+
+
+def declaresInlineBox(context, tagName: str) -> bool:
+    if tagName in _REPLACED_INLINE_TAGS:
+        return False
+    return any(name in context.cssAttr for name in _INLINE_BOX_PROPERTIES)
+
+
+#: The block groups that make an element's box: padding and borders, without
+#: the text-indent and vertical margins that travel with them for a block.
+_INLINE_BOX_GROUPS = tuple(
+    UniformGroup(group.convert, group.relative_to_font_size, pairs)
+    for group in FRAG_BLOCK_GROUPS
+    if (
+        pairs := tuple(
+            pair for pair in group.pairs if pair[0].startswith(("padding", "border"))
+        )
+    )
+)
+
+
+def _stripInlineBox(frag) -> None:
+    """Take the padding and borders off an inline element's frag again."""
+    for side in ("Left", "Right", "Top", "Bottom"):
+        setattr(frag, f"padding{side}", 0)
+        setattr(frag, f"border{side}Width", 0)
+        setattr(frag, f"border{side}Style", None)
+        setattr(frag, f"border{side}Color", None)
+
+
+def inlineBoxMarkers(context):
+    """
+    The pair of frags that carry an inline element's box, or None.
+
+    CSS2Frag reads padding, borders and background images for blocks only.
+    An inline element that declares them gets them applied here, taken off
+    its frag again so that its text does not paint them, and carried by a
+    marker on either side of the content instead. A declaration that adds
+    up to nothing -- a reset such as `* { padding: 0 }` -- is no box: the
+    text goes on painting its own background colour, as before.
+    """
+    frag = context.frag
+    cssAttr = context.cssAttr
+    backColor = frag.backColor
+    apply_uniform_groups(frag, cssAttr, _INLINE_BOX_GROUPS)
+    style = BoxStyle(frag)
+    _stripInlineBox(frag)
+    # The frag is a clone of its parent's: only the element's own image counts.
+    style.backgroundImage = None
+    if "background-image" in cssAttr:
+        # `none` is a keyword, not a filename.
+        image = cssAttr["background-image"]
+        style.backgroundImage = (
+            None if str(image).strip().lower() == "none" else context.getFile(image)
+        )
+    if "background-repeat" in cssAttr:
+        style.backgroundRepeat = lower(cssAttr["background-repeat"])
+    if "background-position" in cssAttr:
+        style.backgroundPosition = " ".join(
+            str(part) for part in toList(cssAttr["background-position"])
+        )
+    size = frag.fontSize
+    margins = tuple(
+        (
+            getLengthOrAuto(cssAttr[name], size).resolve(None) or 0.0
+            if name in cssAttr
+            else 0.0
+        )
+        for name in ("margin-left", "margin-right")
+    )
+    if not (
+        style.horizontal or style.vertical or style.backgroundImage or any(margins)
+    ):
+        return None
+    # The box paints the background; the words inside it must not.
+    frag.backColor = None
+    style.backColor = backColor
+    return inline_box_markers(frag, style, margins)
+
+
 def pisaPreLoop(node, context, *, collect=False):
     """Collect all CSS definitions."""
     data = ""
@@ -748,10 +864,18 @@ def pisaLoop(node, context, **kw):
 
         pageBreakAfter = False
         frameBreakAfter = False
-        display = lower(context.cssAttr.get("display", "inline"))
-        # print indent, node.tagName, display,
-        # context.cssAttr.get("background-color", None), attr
-        isBlock = display == "block"
+        display = getDisplay(context.cssAttr.get("display", "inline"))
+        isFlex = display == Display.FLEX
+        isBlock = display in {Display.BLOCK, Display.FLEX}
+        # css-flexbox-1, 4: the children of a flex container are blockified.
+        # Only the child itself: collecting_item is off again once it has
+        # published its properties, before its own children are visited.
+        if context.flexData.collecting_item and display != Display.NONE:
+            isBlock = True
+        # An inline-block is a box inside the line: it must not close the
+        # paragraph it sits in, but it does have a block's padding, borders
+        # and background, which CSS2Frag only reads for a block.
+        isInlineBlock = display == Display.INLINE_BLOCK and not isBlock
 
         if isBlock:
             context.addPara()
@@ -788,17 +912,20 @@ def pisaLoop(node, context, **kw):
                 if str(context.cssAttr["page-break-after"]).lower() == "left":
                     pageBreakAfter = PAGE_BREAK_LEFT
 
-        if display == "none":
-            # print "none!"
+        if display == Display.NONE:
             return
 
         # Translate CSS to frags
 
         # Save previous frag styles
         context.pushFrag()
+        # The clone carries the parent's every attribute; the ones CSS does
+        # not inherit go back to their initial value before this element's
+        # own declarations apply.
+        reset_non_inherited(context.frag)
 
         # Map styles to Reportlab fragment properties
-        CSS2Frag(context, kw, isBlock=isBlock)
+        CSS2Frag(context, kw, isBlock=isBlock or isInlineBlock)
 
         # EXTRAS
         # -pdf-keep-with-next, -pdf-outline and -pdf-outline-open. Read here
@@ -806,6 +933,13 @@ def pisaLoop(node, context, **kw):
         # directly for the .pdftoclevelN styles, and a table of contents
         # should not pick up an outline flag from them.
         apply_uniform_groups(context.frag, context.cssAttr, LOOP_GROUPS)
+
+        if context.flexData.collecting_item:
+            # This element is a flex item. Its properties are read off its
+            # own frag, and its margins are the item's place in the row, not
+            # an indent for the paragraphs inside it.
+            context.flexData.set_item_style(context.frag, context.cssAttr)
+            kw["margin-left"] = kw["margin-right"] = 0
 
         if "-pdf-outline-level" in context.cssAttr:
             context.frag.outlineLevel = int(context.cssAttr["-pdf-outline-level"])
@@ -853,6 +987,40 @@ def pisaLoop(node, context, **kw):
             # wrong place.
             context.keepInFrameIndex = len(context.story)
 
+        # Flex container: its children are collected as items into a story
+        # of their own, and the container goes into this story as one
+        # flowable when the element closes. After the keep-in-frame index,
+        # which must count the story the container will land in.
+        if isFlex:
+            context.addPara()
+            context.clearFrag()
+            flexData = FlexData(context.frag, context.cssAttr, rtl=context.dir == "rtl")
+            savedFlexData, context.flexData = context.flexData, flexData
+            savedFlexStory = context.swapStory()
+            # The container paints its own box; its items start from none,
+            # and are not indented by the container's margins twice.
+            clear_box(context.frag)
+            kw["margin-left"] = kw["margin-right"] = 0
+
+        inlineBox = None
+        if isInlineBlock:
+            inlineBox = InlineBoxData(context, context.frag, context.cssAttr)
+            kw["margin-left"] = kw["margin-right"] = 0
+
+        # An inline element with a box of its own: padding, borders, a
+        # background image or side margins, carried by a marker frag on
+        # either side of the content.
+        inlineBoxClose = None
+        if (
+            display == Display.INLINE
+            and not isBlock
+            and declaresInlineBox(context, node.tagName)
+        ):
+            markers = inlineBoxMarkers(context)
+            if markers is not None:
+                inlineBoxOpen, inlineBoxClose = markers
+                context.fragList.append(inlineBoxOpen)
+
         # Tag specific operations
         if klass is not None:
             obj = klass(node, attr)
@@ -861,12 +1029,30 @@ def pisaLoop(node, context, **kw):
         # Visit child nodes
         context.fragBlock = fragBlock = copy.copy(context.frag)
         for nnode in node.childNodes:
+            if isFlex:
+                context.flexData.begin_item(context)
             pisaLoop(nnode, context, **kw)
+            if isFlex:
+                context.flexData.end_item(context)
         context.fragBlock = fragBlock
 
         # END tag
         if obj:
             obj.end(context)
+
+        if isFlex:
+            context.addPara()
+            flexData, context.flexData = context.flexData, savedFlexData
+            context.swapStory(savedFlexStory)
+            container = flexData.build()
+            if container is not None:
+                context.addStory(container)
+
+        if inlineBox is not None:
+            inlineBox.close(context)
+
+        if inlineBoxClose is not None:
+            context.fragList.append(inlineBoxClose)
 
         # Block?
         if isBlock:
@@ -927,7 +1113,7 @@ def pisaParser(
     context,
     default_css="",
     xhtml=False,  # noqa: FBT002
-    encoding="utf8",
+    encoding=None,
     xml_output=None,
 ):
     """
@@ -944,13 +1130,18 @@ def pisaParser(
         parser = html5lib.HTMLParser(tree=treebuilders.getTreeBuilder("dom"))
     parser_kwargs = {}
     if isinstance(src, str):
-        # If an encoding was provided, do not change it.
-        if not encoding:
-            encoding = "utf-8"
+        # Text has to become bytes for html5lib, and the encoding chosen here
+        # is the one it must decode with, so it is not a guess either way.
+        encoding = encoding or "utf-8"
         src = src.encode(encoding)
         src = pisaTempFile(src, capacity=context.capacity)
-        # To pass the encoding used to convert the text_type src to binary_type
-        # on to html5lib's parser to ensure proper decoding
+    if encoding:
+        # An encoding the caller named is the answer, whatever the source was.
+        # Without this a bytes or file source fell through to html5lib's own
+        # sniffing, whose last resort is windows-1252, so UTF-8 bytes came out
+        # as mojibake -- a bullet as "\u00e2\u0080\u00a2". Sniffing is still what
+        # happens when the caller names nothing, which is how a document with
+        # its own <meta charset> keeps deciding for itself.
         parser_kwargs["transport_encoding"] = encoding
 
     # # Test for the restrictions of html5lib
@@ -967,7 +1158,7 @@ def pisaParser(
     document = parser.parse(src, **parser_kwargs)  # encoding=encoding)
 
     if xml_output:
-        xml_output.write(document.toprettyxml(encoding=encoding))
+        xml_output.write(document.toprettyxml(encoding=encoding or "utf-8"))
 
     if default_css:
         context.addDefaultCSS(default_css)

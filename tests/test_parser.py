@@ -22,6 +22,7 @@ from xhtml2pdf.parser import getCSSAttrCacheKey, pisaParser
 from xhtml2pdf.properties import (
     CSS_PROPERTIES,
     FRAG_BLOCK_GROUPS,
+    KEEP,
     LOOP_GROUPS,
     PROPERTY_NAMES,
     SUPPORTED_PROPERTIES,
@@ -329,12 +330,28 @@ class PropertyRegistryTest(TestCase):
     def test_a_registry_driven_mapping_is_complete(self) -> None:
         # frag says "the registry applies this one"; without a converter
         # transform_attrs would be handed None and fail at render time.
+        # applied_by_hand is the exception: CSS2Frag writes the attribute
+        # itself and the registry only resets it, so it needs no converter.
         for prop in CSS_PROPERTIES:
-            if prop.frag is not None:
+            if prop.frag is not None and not prop.applied_by_hand:
                 self.assertIsNotNone(prop.convert, prop.name)
 
+    def test_a_hand_applied_property_is_only_reset(self) -> None:
+        # It earns its frag name solely to be put back to `initial`, so a
+        # converter on one would be dead code and no initial would make the
+        # frag name pointless.
+        for prop in CSS_PROPERTIES:
+            if prop.applied_by_hand:
+                self.assertIsNotNone(prop.frag, prop.name)
+                self.assertIsNone(prop.convert, prop.name)
+                self.assertIsNot(prop.initial, KEEP, prop.name)
+
     def test_uniform_groups_cover_every_driven_property(self) -> None:
-        driven = {p.name for p in CSS_PROPERTIES if p.frag is not None}
+        driven = {
+            p.name
+            for p in CSS_PROPERTIES
+            if p.frag is not None and not p.applied_by_hand
+        }
         grouped = {
             name
             for groups in (FRAG_BLOCK_GROUPS, LOOP_GROUPS)
@@ -1233,3 +1250,45 @@ class DeeplyNestedListTest(TestCase):
         self.assertEqual(
             "1. a1 1. b1 1. c1 1. d1 2. d2 2. c2 2. b2 2. a2", markers.strip()
         )
+
+
+class NonInheritedPropertiesTest(TestCase):
+    """
+    Frags are cloned parent to child, so a frag attribute is inherited unless
+    something puts it back. The flex properties are not inherited in CSS, and
+    a flex-grow that leaked from an item into a nested container's items
+    would silently resize them.
+    """
+
+    def test_every_flex_row_declares_an_initial_value(self) -> None:
+        for prop in CSS_PROPERTIES:
+            if prop.group == "flex" or prop.name.startswith(("min-", "max-")):
+                with self.subTest(name=prop.name):
+                    self.assertIsNot(properties.KEEP, prop.initial)
+                    self.assertIn(prop.frag, properties.NON_INHERITED_FRAG_INITIALS)
+
+    @staticmethod
+    def _first_frag(html: str):
+        # The first paragraph in the story; a block may put a Spacer first.
+        paragraph = next(f for f in pisaStory(html).story if hasattr(f, "frags"))
+        return paragraph.frags[0]
+
+    def test_a_declared_value_reaches_the_element_that_declared_it(self) -> None:
+        frag = self._first_frag("<p style='flex-grow: 2; order: 3'>x</p>")
+        self.assertEqual(2.0, frag.flexGrow)
+        self.assertEqual(3, frag.flexOrder)
+
+    def test_the_value_does_not_reach_a_grandchild(self) -> None:
+        # The <span> is the frag the text is emitted from; it declares
+        # nothing, so it must read the initial value, not the div's.
+        frag = self._first_frag(
+            "<div style='flex-grow: 2; flex-basis: 50%'><p><span>x</span></p></div>"
+        )
+        self.assertEqual(0.0, frag.flexGrow)
+        self.assertEqual("auto", frag.flexBasis.kind)
+
+    def test_the_root_frag_carries_the_initial_values(self) -> None:
+        frag = pisaContext(".").frag
+        self.assertEqual("row", frag.flexDirection)
+        self.assertEqual(1.0, frag.flexShrink)
+        self.assertEqual("none", frag.maxWidth.kind)

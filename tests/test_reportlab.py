@@ -376,3 +376,45 @@ class StaticFrameOverflowTest(TestCase):
 
         self.assertIn("Could not paint the static frame 'header'", logs.output[-1])
         self.assertIn("the footer", PdfReader(io.BytesIO(pdf)).pages[0].extract_text())
+
+
+class PmlParagraphImageSizeTest(TestCase):
+    """
+    _calcImageMaxSizes fits inline images to the space on offer.
+
+    It used to scale the size it found, so the second call scaled the
+    already-scaled image. wrap runs more than once per flowable, and anything
+    that measures a paragraph before placing it runs it more still.
+    """
+
+    @staticmethod
+    def _paragraph(width: float, height: float):
+        from reportlab.lib.abag import ABag
+        from reportlab.lib.styles import getSampleStyleSheet
+
+        para = xhtml2pdf_reportlab.PmlParagraph("x", getSampleStyleSheet()["Normal"])
+        para.frags = [ABag(cbDefn=ABag(kind="img", width=width, height=height))]
+        return para
+
+    def test_measuring_twice_does_not_shrink_the_image(self) -> None:
+        para = self._paragraph(200, 100)
+        para._calcImageMaxSizes(100, 1000)
+        para._calcImageMaxSizes(100, 1000)
+        img = para.frags[0].cbDefn
+        self.assertEqual((100, 50), (img.width, img.height))
+
+    def test_more_room_gives_the_natural_size_back(self) -> None:
+        # Measured narrow first, then wide: the image is not stuck small.
+        para = self._paragraph(200, 100)
+        para._calcImageMaxSizes(100, 1000)
+        para._calcImageMaxSizes(1000, 1000)
+        img = para.frags[0].cbDefn
+        self.assertEqual((200, 100), (img.width, img.height))
+
+    def test_the_height_cap_applies_to_the_natural_size(self) -> None:
+        para = self._paragraph(100, 400)
+        para._calcImageMaxSizes(1000, 100)
+        img = para.frags[0].cbDefn
+        self.assertAlmostEqual(100 * xhtml2pdf_reportlab.MAX_IMAGE_RATIO, img.height)
+        self.assertAlmostEqual(25 * xhtml2pdf_reportlab.MAX_IMAGE_RATIO, img.width)
+        self.assertTrue(para.hasImages)

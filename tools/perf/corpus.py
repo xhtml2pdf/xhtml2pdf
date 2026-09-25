@@ -40,6 +40,8 @@ FIXTURES: tuple[Path, ...] = (
     _SOURCE / "test-keep-in-frame.html",
     _SOURCE / "test-keep-with-next.html",
     _SOURCE / "test-loremipsum.html",
+    _SOURCE / "flex-cards.html",
+    _SOURCE / "inline-block-badges.html",
     _SAMPLES / "utf8.html",
 )
 

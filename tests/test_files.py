@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import tempfile
 import threading
 import warnings
@@ -268,3 +269,66 @@ class NamedTmpFileRegistrationTest(TestCase):
         before = len(files_tmp.files)
         getFile(str(SAMPLES / "img" / "denker.png")).getFile()
         self.assertEqual(before + 1, len(files_tmp.files))
+
+
+class NamedFileIsOpenableTest(TestCase):
+    """
+    A name handed to another library has to be openable by that library.
+
+    getNamedFile() exists so that ReportLab can open a font, and Canvas a
+    page, for itself. The file behind it was a NamedTemporaryFile whose
+    handle xhtml2pdf kept open, and on Windows that is an exclusive share:
+    ReportLab's open raised PermissionError and a document with any
+    @font-face could not be converted at all. It cannot be reproduced on
+    Linux, so what is pinned here is the condition that caused it.
+    """
+
+    FONT = SAMPLES / "font" / "Noto_Sans" / "NotoSans-Regular.ttf"
+
+    @staticmethod
+    def tearDown() -> None:
+        cleanFiles()
+
+    def named_file(self, uri: str, **kwargs) -> str:
+        name = getFile(uri, **kwargs).getNamedFile()
+        self.assertIsNotNone(name)
+        assert name is not None
+        return name
+
+    def data_uri(self) -> str:
+        return "data:font/ttf;base64," + base64.b64encode(
+            self.FONT.read_bytes()
+        ).decode("ascii")
+
+    def test_a_named_file_handle_is_closed(self) -> None:
+        name = self.named_file(self.data_uri())
+
+        # The handle xhtml2pdf holds is closed, which is what Windows needs,
+        # and the bytes are on disk all the same.
+        self.assertTrue(all(f.file.closed for f in files_tmp.files))
+        with open(name, "rb") as reopened:
+            self.assertEqual(self.FONT.read_bytes(), reopened.read())
+
+    def test_a_named_temporary_file_is_still_removed(self) -> None:
+        # Closing no longer deletes it, so cleanFiles() has to.
+        name = self.named_file(self.data_uri())
+
+        self.assertTrue(Path(name).exists())
+        cleanFiles()
+        self.assertFalse(Path(name).exists())
+
+    def test_a_local_file_is_read_where_it_lies(self) -> None:
+        # No copy at all: the path has already been past the resource policy,
+        # so a temporary duplicate of the font adds nothing but a read and a
+        # write of the whole file.
+        name = self.named_file(str(self.FONT), basepath=str(SAMPLES))
+
+        self.assertEqual(str(self.FONT), name)
+        self.assertEqual([], files_tmp.files)
+
+    def test_a_local_file_survives_cleanup(self) -> None:
+        # It is the caller's font, not a temporary file of ours to delete.
+        name = self.named_file(str(self.FONT), basepath=str(SAMPLES))
+        cleanFiles()
+
+        self.assertTrue(Path(name).exists())

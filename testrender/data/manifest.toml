@@ -139,7 +139,17 @@ compare = ["pages", "text"]
 notes = """<pdf:language name=\"arabic\"/> runs the text through arabic-reshaper \
 and python-bidi; a browser shapes and reorders Arabic natively, so dir=\"rtl\" is \
 the equivalent. The two shaping implementations are not glyph-identical, so \
-SSIM is not compared."""
+SSIM is not compared. Naming a right-to-left language now turns the whole \
+document round rather than only reshaping its text, which is what moved the \
+per-page text from 0.44 to 0.71: the paragraphs are aligned the way the \
+browser aligns them and the Latin words are no longer reversed letter by \
+letter. The document score went the other way, 0.92 to 0.83, and that is the \
+table: its columns are mirrored now, as the browser mirrors them -- both put \
+the first <td> of a row on the right -- but the two engines write the cells to \
+the page in different orders, and pypdf runs its own bidirectional pass over \
+what it extracts on top of that. Measured by turning the mirroring off alone: \
+text 0.89, document 0.97. The layout is closer to the browser than it was; the \
+extraction is a worse way of seeing that."""
 
 # ---------------------------------------------------------------------------
 # Targeted CSS fixtures.
@@ -226,3 +236,332 @@ would show up as a text position, not only as a blur in the SSIM. The SSIM \
 that remains is mostly the circle marker, which no base-14 font has a hollow \
 glyph for and which xhtml2pdf draws as a disc; the deep unordered tree meets \
 it at every second level."""
+
+[fixtures.flex-header]
+compare = ["pages", "text", "ssim"]
+notes = """A header row: justify-content: space-between, align-items: center, a \
+nested flex nav with gap, and margin-left: auto pushing the last item to the end."""
+
+[fixtures.flex-cards]
+compare = ["pages", "text", "ssim"]
+notes = """Three cards with flex: 1 1 0 (the middle one flex: 2) and gap, then five \
+tiles of flex-basis 30% that wrap onto two lines. The cards' padding, border and \
+background are the item's own box."""
+
+[fixtures.flex-center]
+compare = ["pages", "text", "ssim"]
+notes = """justify-content and align-items on containers with a fixed height: \
+center/center, flex-end/flex-end, space-around."""
+
+[fixtures.flex-sidebar]
+compare = ["pages", "text", "ssim"]
+notes = """A fixed sidebar (flex: 0 0 140pt) next to a growing column (flex: 1) \
+holding two long paragraphs: the main item shrinks its text to the room left."""
+
+[fixtures.flex-column]
+compare = ["pages", "text", "ssim"]
+notes = """flex-direction: column with align-items: flex-start and align-self \
+stretch/center/flex-end on the items, then a row-reverse row. The column has \
+no height, so it takes its content's."""
+
+[fixtures.flex-order-basis]
+compare = ["pages", "text", "ssim"]
+notes = """flex-basis as a percentage, a length and auto, order -1 and 1 moving \
+items to the ends, and a row that overflows: flex-shrink 2 vs 0 with min-width: 0 \
+so the automatic minimum does not stop the shrinking. Known difference: \
+xhtml2pdf's max-content of a paragraph carries a 1pt allowance."""
+
+[fixtures.flex-pagebreak]
+compare = ["pages"]
+notes = """Forty wrapped tiles of 60pt, more than a page: the container is cut \
+at the page edge, slicing the tile the cut falls in (its one-line text stays \
+above the cut, its box goes on below). Only the page count is compared: where \
+each cut falls depends on the engine's page box and line metrics, so neither \
+the rasterised pages nor the per-page text line up, though the document's \
+text as a whole does (text_doc is recorded at 1.0)."""
+
+[fixtures.inline-block-badges]
+compare = ["pages", "text", "ssim"]
+notes = """display: inline-block inside paragraphs: badges with padding and a \
+background, a fixed-width box, a tall empty box with vertical-align: bottom, and \
+a badge near a line end."""
+
+[fixtures.inline-block-nested]
+compare = ["pages", "text", "ssim"]
+notes = """A flex row inside an inline-block, which is how xhtml2pdf writes \
+inline-flex: the container always takes the full width of the box it is in. \
+The items are spans on purpose. A <div> inside a <p> is not allowed, and the \
+HTML parser lifts it out of every inline element around it before any CSS is \
+applied, which leaves the flex container empty -- in a browser exactly as \
+here, so the fixture went on agreeing while testing nothing."""
+
+[fixtures.inline-box]
+compare = ["pages", "text", "ssim"]
+notes = """display: inline with a box of its own: spans with padding, border \
+and background inside a line, one with side margins, one nested in another, and \
+one cut by a line break, which continues on the next line with no edge at the \
+cut (box-decoration-break: slice)."""
+
+[fixtures.inline-box-pagebreak]
+compare = ["pages"]
+notes = """A padded, bordered span of a page and a half: the box is open at \
+the bottom of page 1 and carries on, without a left edge, at the top of page 2. \
+line-height is pinned so both engines fit about the same number of lines on a \
+page. Only the page count is compared: where exactly the paragraph breaks still \
+depends on the engine's line breaking, so the per-page text does not line up."""
+
+[fixtures.flex-baseline]
+compare = ["pages", "text", "ssim"]
+notes = """align-items: baseline on a row of items with different font sizes, \
+one with padding-top and one whose first line is a nested flex row; then a \
+paragraph with inline-blocks of one and two lines on vertical-align: baseline, \
+which hang from their last line."""
+
+[fixtures.flex-cut-item]
+compare = ["pages"]
+notes = """A fixed sidebar card beside two columns of prose, together taller than \
+a page: the row is cut where the page ends, each column goes on at the top of \
+page 2 with its box open at the cut, and the sidebar, done on page 1, holds its \
+place in the continued line. line-height is pinned so both engines fit about \
+the same number of lines on a page, and only the page count is compared: the \
+exact line of the cut differs, so the per-page text does not line up (the \
+document's text as a whole scores 0.88, the rest being line-break spacing)."""
+
+[fixtures.flex-justify-content]
+compare = ["pages", "text", "ssim"]
+notes = """Every justify-content value on a row of three items: flex-start, \
+flex-end, center, space-between, space-around, space-evenly, and a row whose \
+items are wider than it, which packs to the start rather than distributing \
+negative free space."""
+
+[fixtures.flex-align-items]
+compare = ["pages", "text", "ssim"]
+notes = """Every align-items value on a row 60pt tall holding items of unequal \
+content height: stretch, flex-start, flex-end, center, and baseline with a \
+larger font, a smaller one and a padded item, which all line up on their first \
+baseline."""
+
+[fixtures.flex-align-self]
+compare = ["pages", "text", "ssim"]
+notes = """align-self overriding the container's align-items: auto, flex-start, \
+flex-end, center, stretch and baseline against containers set to center, \
+flex-end and stretch, so each value is seen falling back to a different \
+inherited one."""
+
+[fixtures.flex-align-content]
+compare = ["pages", "text", "ssim"]
+notes = """Every align-content value on a wrapping container 66pt tall whose \
+two lines leave free space in the cross axis: flex-start, center, flex-end, \
+space-between, space-around, space-evenly and stretch. The height is a length, \
+which is what makes the container's cross size definite; align-content does \
+nothing without one. Every value places its lines where the browser does; \
+the SSIM is where a page this dense in box edges lands, next to \
+css-border-style at 0.85, each edge being a high-contrast line that the \
+known first-line offset moves by a pixel or two."""
+
+[fixtures.flex-direction]
+compare = ["pages", "text", "ssim"]
+notes = """All four flex-direction values, each with the justify-content that \
+shows which end is main-start: row, row-reverse laying out from the right, and \
+column and column-reverse in a container with a height, where column-reverse \
+stacks from the bottom. The boxes land in the same places in both engines; the \
+text score is 0.77 because the two write the reversed lines to the PDF in \
+different orders. The browser writes them in painted order, so a reversed row \
+extracts as "third second first"; xhtml2pdf writes them in source order, which \
+is the reading order flexbox 5.3 asks for -- reversing is a visual reordering \
+only, and a reader or a copy-paste should still get the document's order."""
+
+[fixtures.flex-wrap]
+compare = ["pages", "text", "ssim"]
+notes = """The three flex-wrap values on the same six items of 110pt: nowrap \
+shrinks them onto one line, wrap breaks them onto two, and wrap-reverse puts \
+the first line at the bottom, which also turns align-items: flex-start into \
+the bottom edge. The text score is the same painted-order difference \
+flex-direction records: the browser writes a wrap-reverse container's lines \
+bottom line first, xhtml2pdf writes them in source order. The lines \
+themselves land where the browser puts them, checked side by side."""
+
+[fixtures.flex-gap]
+compare = ["pages", "text", "ssim"]
+notes = """gap and its two longhands: the shorthand's row-then-column order, \
+row-gap and column-gap each on their own, percentage gaps, and row-gap in a \
+column container, where it is the main-axis gap rather than the cross one. The SSIM is box-edge \
+density, as for flex-align-content."""
+
+[fixtures.flex-grow-shrink]
+compare = ["pages", "text", "ssim"]
+notes = """flex-grow 0/1/2/3 sharing free space, flex-shrink 0/1/2 giving back \
+an overflow with min-width: 0 so the automatic minimum does not stop it, the \
+flex shorthand as 1, auto, none and 1 1 0, and a grow factor below one, which \
+leaves part of the free space unused."""
+
+[fixtures.flex-basis-values]
+compare = ["pages", "text", "ssim"]
+notes = """Every kind of flex-basis: 0, a length, a percentage, auto falling \
+back to width and then to content, content ignoring a declared width, and \
+basis winning over width when both are given."""
+
+[fixtures.flex-minmax]
+compare = ["pages", "text", "ssim"]
+notes = """min and max on both axes of a flex item: max-width capping a growing \
+item so the others take what it leaves, min-width holding a shrinking one \
+open, the automatic minimum size stopping a shrink at the content next to an \
+item with min-width: 0 that has none, and min-height and max-height against \
+align-items, align-self: stretch and a declared height."""
+
+[fixtures.flex-order]
+compare = ["pages", "text", "ssim"]
+notes = """order moving items to the ends, items sharing an order keeping the \
+order they were written in, order deciding which line an item wraps onto, and \
+order in a column. The boxes land in the same places in both engines; the text \
+score is the painted-order difference flex-direction records, and order shows \
+it most because every container here is reordered."""
+
+[fixtures.flex-auto-margins]
+compare = ["pages", "text", "ssim"]
+notes = """margin: auto on a flex item: one auto margin pushing the rest to the \
+end, two centring the item, an auto margin taking the free space before \
+justify-content sees any, and auto margins on the cross axis, which align the \
+item the way align-self would."""
+
+[fixtures.flex-item-content]
+compare = ["pages", "text", "ssim"]
+notes = """What a flex item can hold besides a paragraph: an image, a table, a \
+list, a heading and preformatted text, each measured for its own min- and \
+max-content. The last row is align-items: baseline with an image and a table \
+in it, neither of which has a baseline, so both are aligned by the bottom edge \
+the specification synthesises for them while the text items line up on their \
+first baseline. Known difference: the table is 80pt wide here against the \
+browser's 65pt, because xhtml2pdf gives a table's columns equal widths where a \
+browser sizes each to its content. That is PmlTable's own auto layout, not the \
+flex item around it -- the item shrink-wraps to whatever width the table \
+reports -- and it is what test-tables scores too."""
+
+[fixtures.flex-nested]
+compare = ["pages", "text", "ssim"]
+notes = """Three levels of container: a row of columns each holding a row, a \
+nested container lending its first item's baseline to an outer align-items: \
+baseline row, and a growing item whose own content is a growing row, so the \
+inner line is resolved against the width the outer one gave it."""
+
+[fixtures.flex-boxes]
+compare = ["pages", "text", "ssim"]
+notes = """The box model on both sides of a flex container: padding, border and \
+margin on the items, a container with a box of its own that the items sit \
+inside, container margins narrowing the line, and a declared width being the \
+content box with padding and border outside it."""
+
+[fixtures.flex-percent-sizes]
+compare = ["pages", "text", "ssim"]
+notes = """Percentages on both axes: widths and min-/max-widths on the items \
+and on the container, then heights and a max-height inside a container 100pt \
+tall, and last a percentage height with no definite height to resolve against, \
+where the item takes its content's height instead."""
+
+[fixtures.flex-rtl]
+compare = ["pages", "text", "ssim"]
+notes = """A dir="rtl" document, where main-start is the right: row lays out \
+from the right and row-reverse from the left, justify-content: flex-end packs \
+at the left, an auto margin pushes towards the left, and a column is unaffected \
+because the direction only decides where a row starts. Every box lands where \
+the browser puts it. The text used to be left out of the comparison here: \
+dir="rtl" reversed the characters of a run instead of running the Unicode \
+bidirectional algorithm over it, so this fixture's Latin text came out \
+backwards. It does not any more, and the text is compared again."""
+
+[fixtures.flex-column-sizing]
+compare = ["pages", "text", "ssim"]
+notes = """Sizing a flex-direction: column container: one with no height taking \
+its content's beside ones with a height that distribute their free space, \
+align-items sizing the items across the width, and flex-grow sharing the \
+leftover height. A column with no height never distributes, which is why every \
+container here that does has one."""
+
+[fixtures.inline-block-valign]
+compare = ["pages", "text", "ssim"]
+notes = """Every vertical-align an inline block accepts: baseline, top, \
+text-top, middle, bottom, text-bottom, super, sub and a length in either \
+direction, each in a line of its own so the box can be read against the text \
+around it. The last line is a two-line box on the baseline, which hangs from \
+its last line as CSS 2.1 10.8.1 says."""
+
+[fixtures.inline-block-sizing]
+compare = ["pages", "text", "ssim"]
+notes = """How wide an inline block gets: shrink-to-fit from its content, a \
+declared width in points and as a percentage of the line, an empty box with \
+only a width and a height, a box that asks for more than the line and is laid \
+out again to fit, and a height smaller than the content, which does not clip \
+it."""
+
+[fixtures.inline-box-nesting]
+compare = ["pages", "text", "ssim"]
+notes = """Inline boxes against the edges of a line: one nested in another, one \
+at the very start of a line and one at the very end, side margins, a box cut \
+by two line breaks whose three parts are drawn without an edge at either cut, \
+and two boxes with nothing between them. Every box matches the \
+browser line for line; the SSIM is the edge density of six bordered spans, \
+the same place the older inline-box fixture sits at 0.91."""
+
+[fixtures.inline-flex-workaround]
+compare = ["pages", "text", "ssim"]
+notes = """An inline block around a display: flex element, which is how \
+inline-flex is written for xhtml2pdf: the container always fills the box it is \
+in, so the inline block's width is what decides the row's, and \
+justify-content spreads the items inside it. Spans for the items, for the \
+reason inline-block-nested gives."""
+
+[fixtures.flex-pagebreak-column]
+compare = ["pages"]
+notes = """A flex-direction: column container of seventeen prose items, taller \
+than the page it starts on. The column is the axis the existing page-break \
+fixtures do not cover: flex-pagebreak cuts a wrapped row of tiles and \
+flex-cut-item a row of prose columns. One item is long enough to straddle the \
+page edge, so the cut falls through it and its box is open at the cut on both \
+sides. line-height is pinned so both engines fit about the same number of lines \
+on a page, and only the page count is compared, as for every fixture that \
+crosses a page: which line the cut falls on still depends on the engine."""
+
+[fixtures.flex-pagebreak-wrap-reverse]
+compare = ["pages"]
+notes = """Thirty-six tiles in a wrap-reverse container, more than a page: the \
+first line is at the bottom, and the part carried over begins again at the \
+cross start. Only the page count is compared, as for the other fixtures that \
+cross a page."""
+
+[fixtures.flex-pagebreak-height]
+compare = ["pages"]
+notes = """A wrapping container with a declared height of 1100pt, more than a \
+page holds, and align-content: space-between placing its six lines inside it. \
+The declared height is shared between the two parts rather than given to both, \
+and align-content places the lines left over in what remains of it. Only the \
+page count is compared, as for every fixture that crosses a page."""
+
+[fixtures.flex-in-table-cell]
+compare = ["pages", "text", "ssim"]
+notes = """A flex container inside a table cell, which is the one place the \
+container's width is not simply its frame's: a single-line row of flex: 1 1 0 \
+items, a wrapping row whose lines have to come out of the cell's width, and \
+the same row with a height and align-content. Measuring a table's columns \
+probes each cell more than once before the final pass wraps anything, so a \
+container here is asked its size at more than one width."""
+
+[fixtures.font-fallback]
+compare = ["pages", "text", "ssim"]
+notes = """A font-family list of three embedded families, matched per \
+character as CSS says: the first covers Latin and Czech only, the second adds \
+Cyrillic and Greek, the third adds Hebrew. Every family is a file both engines \
+load, so the two make the same decision character by character and the \
+comparison is about the matching rather than about what a system font happens \
+to hold."""
+
+[fixtures.rtl-table]
+compare = ["pages", "ssim"]
+notes = """A dir="rtl" document: paragraphs aligned to the right unless they \
+say otherwise, Latin words keeping their own direction inside Hebrew ones, and \
+a table whose columns run from the right, so the first <td> of a row is its \
+rightmost cell. Hebrew rather than Arabic because it is not cursive -- \
+ReportLab does no shaping, so an Arabic fixture would be comparing xhtml2pdf's \
+unjoined letters against the browser's joined ones and measuring that instead. \
+The text is not compared: pypdf runs its own bidirectional pass over what it \
+extracts, so it answers in logical order and says nothing about what was \
+drawn."""

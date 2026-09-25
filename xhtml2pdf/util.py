@@ -18,7 +18,7 @@ import logging
 import re
 from copy import copy
 from io import BytesIO
-from typing import Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple
 
 import arabic_reshaper
 import reportlab.pdfbase._cidfontdata
@@ -27,8 +27,12 @@ from reportlab.lib.colors import Color, toColor
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.lib.units import cm, inch
 from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase._glyphlist import _glyphname2unicode
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 from reportlab.rl_config import register_reset
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 import xhtml2pdf.default
 
@@ -397,6 +401,82 @@ def drawBorderLine(
     if dash:
         canvas.setDash(dash)
     canvas.line(x1, y1, x2, y2)
+    canvas.restoreState()
+
+
+def drawBoxBackground(canvas, x: float, y: float, w: float, h: float, style) -> None:
+    """
+    Paint the background of a box: the colour, then the image over it.
+
+    CSS 2.1 14.2: the image goes over the colour and under the content, which
+    is why this is separate from drawBoxBorders -- a caller paints this, then
+    its content, then the borders. `style` is read by attribute name, the way
+    a ParagraphStyle spells them (backColor, backgroundImage, ...), so any
+    object carrying those names will do; a missing one means "none".
+    """
+    bg = getattr(style, "backColor", None)
+    if bg:
+        # draw a filled rectangle (with no stroke) using bg color
+        canvas.saveState()
+        canvas.setFillColor(bg)
+        canvas.rect(x, y, w, h, fill=1, stroke=0)
+        canvas.restoreState()
+
+    background_image = getattr(style, "backgroundImage", None)
+    if background_image is not None:
+        reader = getBackgroundImageReader(background_image)
+        if reader is not None:
+            drawBackgroundImage(
+                canvas,
+                reader,
+                x,
+                y,
+                w,
+                h,
+                natural=getBackgroundImageSize(reader),
+                repeat=getattr(style, "backgroundRepeat", "repeat"),
+                position=getattr(style, "backgroundPosition", "0% 0%"),
+                font_size=getattr(style, "fontSize", 0),
+            )
+
+
+_BOX_SIDES = ("Left", "Right", "Top", "Bottom")
+
+
+def drawBoxBorders(
+    canvas, x: float, y: float, w: float, h: float, style, sides=_BOX_SIDES
+) -> None:
+    """
+    Stroke the borders of a box, each side with its own style, width and colour.
+
+    ReportLab only knows a uniform border, so every side is drawn by hand. A
+    side with no colour takes the text colour, as W3C defines. `style` is read
+    by attribute name like drawBoxBackground's. `sides` names the edges to
+    draw: a box cut by a line or page break has none at the cut.
+    """
+    text_color = getattr(style, "textColor", None)
+    canvas.saveState()
+    for side, (x1, y1, x2, y2) in (
+        ("Left", (x, y, x, y + h)),
+        ("Right", (x + w, y, x + w, y + h)),
+        ("Top", (x, y + h, x + w, y + h)),
+        ("Bottom", (x, y, x + w, y)),
+    ):
+        if side not in sides:
+            continue
+        color = getattr(style, f"border{side}Color", None)
+        if color is None:
+            color = text_color
+        drawBorderLine(
+            canvas,
+            getattr(style, f"border{side}Style", None),
+            getattr(style, f"border{side}Width", 0),
+            color,
+            x1,
+            y1,
+            x2,
+            y2,
+        )
     canvas.restoreState()
 
 
@@ -925,6 +1005,247 @@ ALIGNMENTS = {
 }
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~ Flexbox values
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+class CSSLength(NamedTuple):
+    """
+    A CSS length that remembers whether it was a keyword.
+
+    getSize answers 0.0 for "auto", "none" and "0" alike, which is the one
+    distinction flexbox cannot do without: an item whose flex-basis is 0
+    starts from nothing, one whose basis is auto starts from its content, and
+    a max-width of none is no limit at all.
+    """
+
+    kind: str  #: "auto", "none", "content", "percent" or "length"
+    value: float = 0.0
+
+    def resolve(self, basis: float | None = None) -> float | None:
+        """Points, or None when the length is indefinite in this context."""
+        if self.kind == "length":
+            return self.value
+        if self.kind == "percent":
+            return None if basis is None else basis * self.value / 100.0
+        return None
+
+    @property
+    def is_definite(self) -> bool:
+        return self.kind in {"length", "percent"}
+
+
+AUTO = CSSLength("auto")
+NONE_LENGTH = CSSLength("none")
+CONTENT = CSSLength("content")
+
+#: Values already reported, so a stylesheet that repeats one bad value does
+#: not fill the log with a line per element.
+_value_warned: set[tuple[str, str]] = set()
+
+
+def _warn_value(property_name: str, value: str, message: str) -> None:
+    key = (property_name, value)
+    if key in _value_warned:
+        return
+    _value_warned.add(key)
+    log.warning("%s: %r %s", property_name, value, message)
+
+
+def _getLength(
+    value, font_size: float, *, name: str, keywords: dict, default: CSSLength
+) -> CSSLength:
+    text = "".join(str(part) for part in toList(value)).strip().lower()
+    if text in keywords:
+        return keywords[text]
+    if text.endswith("%"):
+        try:
+            return CSSLength("percent", float(text[:-1]))
+        except ValueError:
+            _warn_value(name, text, "is not a length; using its initial value")
+            return default
+    if not text or text.startswith("calc(") or text[0].isalpha():
+        _warn_value(name, text, "is not a length; using its initial value")
+        return default
+    return CSSLength("length", getSize(text, font_size))
+
+
+def getLengthOrAuto(value, font_size: float = 0.0) -> CSSLength:
+    """A width, height, gap or min-/max- size: a length, a percentage, auto or none."""
+    return _getLength(
+        value,
+        font_size,
+        name="length",
+        keywords={"auto": AUTO, "none": NONE_LENGTH, "normal": AUTO},
+        default=AUTO,
+    )
+
+
+def getFlexBasis(value, font_size: float = 0.0) -> CSSLength:
+    """flex-basis: a length, a percentage, auto or content."""
+    return _getLength(
+        value,
+        font_size,
+        name="flex-basis",
+        keywords={"auto": AUTO, "content": CONTENT},
+        default=AUTO,
+    )
+
+
+def getNumber(value, default: float = 0.0) -> float:
+    """A bare CSS <number>; flex-grow and flex-shrink."""
+    text = "".join(str(part) for part in toList(value)).strip()
+    try:
+        return float(text)
+    except ValueError:
+        _warn_value("number", text, "is not a number; using its initial value")
+        return default
+
+
+def getInt(value, default: int = 0) -> int:
+    """A bare CSS <integer>; order."""
+    text = "".join(str(part) for part in toList(value)).strip()
+    try:
+        return int(text)
+    except ValueError:
+        _warn_value("integer", text, "is not an integer; using its initial value")
+        return default
+
+
+def _keyword_converter(name: str, table: dict[str, str], default: str, approximate=()):
+    """
+    A converter for a property whose value is one of a fixed set of keywords.
+
+    Aliases map onto the keyword this library acts on (start is flex-start).
+    A value in `approximate` is accepted with a warning: it is drawn as
+    something else, and the author should hear that once.
+    """
+
+    def convert(value) -> str:
+        text = " ".join(str(part) for part in toList(value)).strip().lower()
+        if text in table:
+            if text in approximate:
+                _warn_value(name, text, f"is drawn as {table[text]}")
+            return table[text]
+        _warn_value(name, text, f"is not supported; using {default}")
+        return default
+
+    convert.__name__ = convert.__qualname__ = name
+    return convert
+
+
+getFlexDirection = _keyword_converter(
+    "flex-direction",
+    {k: k for k in ("row", "row-reverse", "column", "column-reverse")},
+    "row",
+)
+
+getFlexWrap = _keyword_converter(
+    "flex-wrap", {k: k for k in ("nowrap", "wrap", "wrap-reverse")}, "nowrap"
+)
+
+getFlexJustify = _keyword_converter(
+    "justify-content",
+    {
+        "flex-start": "flex-start",
+        "start": "flex-start",
+        "left": "flex-start",
+        "normal": "flex-start",
+        "stretch": "flex-start",
+        "flex-end": "flex-end",
+        "end": "flex-end",
+        "right": "flex-end",
+        "center": "center",
+        "space-between": "space-between",
+        "space-around": "space-around",
+        "space-evenly": "space-evenly",
+    },
+    "flex-start",
+)
+
+#: align-items, align-self and align-content share one vocabulary. auto is
+#: only meaningful on align-self and the space-* values on align-content;
+#: neither does harm on the others, so one table serves all three.
+getFlexAlign = _keyword_converter(
+    "align",
+    {
+        "auto": "auto",
+        "normal": "stretch",
+        "stretch": "stretch",
+        "flex-start": "flex-start",
+        "start": "flex-start",
+        "self-start": "flex-start",
+        "flex-end": "flex-end",
+        "end": "flex-end",
+        "self-end": "flex-end",
+        "center": "center",
+        "baseline": "baseline",
+        "first baseline": "baseline",
+        "last baseline": "flex-end",
+        "space-between": "space-between",
+        "space-around": "space-around",
+        "space-evenly": "space-evenly",
+    },
+    "stretch",
+    approximate=("last baseline",),
+)
+
+
+class Display:
+    """
+    What pisaLoop does with an element, resolved from its display property.
+
+    Not every CSS value is its own mode here. The ones this library lays out
+    are block, inline, inline-block, flex and none; the rest map onto the
+    nearest of those, which is at least a box of the right kind. Before this
+    the property was compared with "block" and "none" and nothing else, so
+    display: table on a div did not even make it a block.
+    """
+
+    BLOCK = "block"
+    INLINE = "inline"
+    INLINE_BLOCK = "inline-block"
+    FLEX = "flex"
+    NONE = "none"
+
+
+_DISPLAY_TABLE: dict[str, str] = {
+    "block": Display.BLOCK,
+    "inline": Display.INLINE,
+    "inline-block": Display.INLINE_BLOCK,
+    "flex": Display.FLEX,
+    "inline-flex": Display.FLEX,
+    "none": Display.NONE,
+    # Block-level things this library does not lay out as such. A table is
+    # still a table when it is a <table>; the tag decides that, not display.
+    "flow-root": Display.BLOCK,
+    "list-item": Display.BLOCK,
+    "table": Display.BLOCK,
+    "inline-table": Display.BLOCK,
+    "table-row": Display.BLOCK,
+    "table-cell": Display.BLOCK,
+    "table-row-group": Display.BLOCK,
+    "table-header-group": Display.BLOCK,
+    "table-footer-group": Display.BLOCK,
+    "table-caption": Display.BLOCK,
+    "grid": Display.BLOCK,
+    "inline-grid": Display.BLOCK,
+    # The element's own box goes away and its children stay: for a flow of
+    # text that is what inline already does.
+    "contents": Display.INLINE,
+}
+
+
+def getDisplay(value, default: str = Display.INLINE) -> str:
+    """One of the Display modes, from a display value."""
+    text = "".join(str(part) for part in toList(value)).strip().lower()
+    if text in _DISPLAY_TABLE:
+        return _DISPLAY_TABLE[text]
+    _warn_value("display", text, f"is not supported; treated as {default}")
+    return default
+
+
 def getAlign(value, default=TA_LEFT):
     return ALIGNMENTS.get(str(value).lower(), default)
 
@@ -1126,20 +1447,56 @@ def get_default_asian_font():
 
 
 def set_asian_fonts(fontname):
+    """Register one of ReportLab's CJK faces, if that is what this name is."""
     font_dict = copy(reportlab.pdfbase._cidfontdata.defaultUnicodeEncodings)
     fonts = font_dict.keys()
     if fontname in fonts:
         pdfmetrics.registerFont(UnicodeCIDFont(fontname))
+        return
+    # Reached only from getFontName, which looked the name up in the CJK
+    # table first, so a miss here means ReportLab and that table disagree.
+    # It used to be a silent no-op and the document drew with a font that
+    # had never been registered.
+    _warn_value(
+        "font-family",
+        str(fontname),
+        f"is not one of ReportLab's CJK faces ({', '.join(sorted(fonts))})",
+    )
 
 
 def detect_language(name):
+    """
+    The RTL language this name stands for, or None.
+
+    Lowercased because DEFAULT_LANGUAGE_LIST is, while the name comes
+    straight from the markup: <pdf:language name="Arabic"/> reshaped
+    nothing, and was excluded from /Lang for being a language name, so it
+    did neither job.
+    """
     asian_language_list = xhtml2pdf.default.DEFAULT_LANGUAGE_LIST
+    name = str(name).strip().lower() if name else ""
     if name in asian_language_list:
         return name
     return None
 
 
 def arabic_format(text, language):
+    """
+    `text` shaped and reordered for a right-to-left document, or None.
+
+    Two steps that are often confused. Reshaping picks the contextual form
+    of each Arabic letter, which a font needs because ReportLab does no
+    shaping of its own. get_display then runs the Unicode bidirectional
+    algorithm, which puts the characters in the order they are drawn in --
+    so what comes back is visual order, laid out left to right like any
+    other string, and nothing downstream should reverse it again.
+
+    The base direction is forced to right-to-left rather than taken from
+    the first strong character: in a right-to-left document a paragraph
+    that happens to open with a Latin word is still a right-to-left
+    paragraph, and letting the first word decide would lay it out the wrong
+    way round.
+    """
     # Note: right now all of the languages are treated the same way.
     # But maybe in the future we have to for example implement something
     # for "hebrew" that isn't used in "arabic"
@@ -1151,20 +1508,177 @@ def arabic_format(text, language):
         "pashto",
         "sindhi",
     }:
-        ar = arabic_reshaper.reshape(text)
-        return get_display(ar)
+        return get_display(arabic_reshaper.reshape(text), base_dir="R")
     return None
 
 
-def frag_text_language_check(context, frag_text):
-    if hasattr(context, "language"):
-        language = context.language
-        detect_language_result = arabic_format(frag_text, language)
-        if detect_language_result:
-            return detect_language_result
+#: The blocks whose characters are written right to left: Hebrew, Arabic,
+#: Syriac, Thaana, NKo, and the presentation forms of the first two. A run of
+#: these inside a left-to-right paragraph is still laid out right to left,
+#: which is the whole point of the bidirectional algorithm and the reason it
+#: cannot be run only on documents that declare a direction.
+_RTL_CHARS = re.compile(
+    r"[\u0590-\u05ff\u0600-\u06ff\u0700-\u074f\u0750-\u077f"
+    r"\u0780-\u07bf\u07c0-\u07ff\ufb1d-\ufdff\ufe70-\ufeff]"
+)
+
+
+def frag_text_language_check(context, frag_text, font_name=None):
+    """
+    `frag_text` shaped and reordered for this document, or None.
+
+    Driven by the text and the document's direction rather than by
+    <pdf:language> alone. A document that only says dir="rtl" is right-to-left
+    too and used to get no reordering at all; and a Hebrew or Arabic word
+    inside an otherwise left-to-right paragraph is still written right to
+    left, which is what the base direction is for -- it says which way the
+    paragraph runs, not which characters get reordered.
+
+    Reshaping is skipped when the font cannot draw what it produces.
+    arabic_reshaper writes Arabic Presentation Forms, and a font built for
+    OpenType shaping -- which is most of them -- carries the base Arabic
+    block and no presentation forms at all, so reshaping turned readable
+    letters into empty boxes. Unjoined letters are a poor second best; a row
+    of boxes is not a best at all.
+    """
+    rtl_document = bool(getattr(context, "is_rtl", False))
+    if not rtl_document and not _RTL_CHARS.search(frag_text):
         return None
-    return None
+    shaped = _reshape_for(frag_text, font_name)
+    return get_display(shaped, base_dir="R" if rtl_document else "L")
+
+
+#: A reshaper that joins letters but writes no ligatures. Ligatures are where
+#: fonts differ most: DejaVu carries 141 presentation forms and not the Allah
+#: ligature, so one word of a paragraph would otherwise cost the joining of
+#: all of it.
+_plain_reshaper = arabic_reshaper.ArabicReshaper(
+    configuration={"support_ligatures": False}
+)
+
+
+def _reshape_for(text: str, font_name: str | None) -> str:
+    """
+    `text` joined as far as `font_name` can draw it.
+
+    Three answers, best first: the full reshaping, the same without
+    ligatures, and the letters as they were written. Unjoined Arabic reads
+    poorly; a row of empty boxes does not read at all, which is what a font
+    built for OpenType shaping gives for a presentation form it never
+    carried.
+    """
+    shaped = arabic_reshaper.reshape(text)
+    if font_name is None or _drawable(shaped, font_name):
+        return shaped
+    without_ligatures = _plain_reshaper.reshape(text)
+    if _drawable(without_ligatures, font_name):
+        return without_ligatures
+    return text if _drawable(text, font_name) else shaped
+
+
+def _drawable(text: str, font_name: str) -> bool:
+    """Whether every character of `text` has a glyph in `font_name`."""
+    return all(font_has_glyph(font_name, char) for char in text)
 
 
 class ImageWarning(Exception):  # noqa: N818
     pass
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~ Which characters a face can actually draw
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#: Codepoints each registered face can draw, built on first use. Keyed by the
+#: ReportLab font name, which is what a frag carries.
+_font_coverage: dict[str, frozenset[int] | None] = {}
+
+
+def _coverage(font_name: str) -> frozenset[int] | None:
+    """
+    Every codepoint `font_name` has a glyph for, or None if it cannot be told.
+
+    Two kinds of font answer differently. An embedded TrueType face knows its
+    own cmap, so the question is exact. A base-14 Type 1 face draws through an
+    8-bit encoding, and what it can show is whatever that encoding's 256 slots
+    name -- which is why Helvetica has a glyph for "š" but not for "ě", the
+    difference the Czech bug report came down to.
+
+    A CID font answers None: its coverage is not a table this can read, and
+    None means "do not second-guess this one".
+    """
+    if font_name in _font_coverage:
+        return _font_coverage[font_name]
+
+    coverage: frozenset[int] | None = None
+    try:
+        font = pdfmetrics.getFont(font_name)
+    except Exception:
+        font = None
+
+    face = getattr(font, "face", None)
+    char_to_glyph = getattr(face, "charToGlyph", None)
+    if char_to_glyph is not None:
+        coverage = frozenset(char_to_glyph)
+    else:
+        vector = getattr(getattr(font, "encoding", None), "vector", None)
+        if vector is not None:
+            coverage = frozenset(
+                _glyphname2unicode[glyph]
+                for glyph in vector
+                if glyph and glyph in _glyphname2unicode
+            )
+
+    _font_coverage[font_name] = coverage
+    return coverage
+
+
+def font_has_glyph(font_name: str, char: str) -> bool:
+    """
+    Whether `font_name` can draw `char`.
+
+    True when it cannot be told, so a face whose coverage is unreadable is
+    never passed over: the worst this may do is leave a character where it
+    already was.
+    """
+    coverage = _coverage(font_name)
+    return coverage is None or ord(char) in coverage
+
+
+def split_by_coverage(text: str, font_names: Sequence[str]) -> list[tuple[str, str]]:
+    """
+    Cut `text` into the longest runs one face can draw, in declared order.
+
+    This is what a font-family list means in CSS: not "the first of these
+    that exists" but "for each character, the first of these that has it".
+    Returns (run, font name) pairs covering `text` in order.
+
+    A character no face on the list has stays with the first one, which is
+    where it would have been anyway; the caller is the one that reports it.
+    """
+    if not text or len(font_names) < 2:
+        return [(text, font_names[0])] if text and font_names else []
+
+    first = font_names[0]
+    runs: list[tuple[str, str]] = []
+    start = 0
+    current = None
+    for index, char in enumerate(text):
+        chosen = first
+        # A space has no shape, so let it stay with the run it is in rather
+        # than cutting one in two and pulling the following word's face back
+        # to the start of the line.
+        if not char.isspace():
+            for name in font_names:
+                if font_has_glyph(name, char):
+                    chosen = name
+                    break
+        elif current is not None:
+            chosen = current
+        if current is None:
+            current = chosen
+        elif chosen != current:
+            runs.append((text[start:index], current))
+            start, current = index, chosen
+    runs.append((text[start:], current or first))
+    return runs

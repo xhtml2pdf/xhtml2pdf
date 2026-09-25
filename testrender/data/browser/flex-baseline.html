@@ -1,0 +1,36 @@
+<!--
+  Browser equivalent of data/source/flex-baseline.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>flex-baseline</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 11pt; }
+p { margin: 0 0 8pt 0; }
+.row { display: flex; align-items: baseline; gap: 8pt; background-color: #eeeeec; margin-bottom: 12pt; }
+.row div { padding: 4pt; }
+.small { font-size: 9pt; background-color: #fce94f; }
+.big { font-size: 24pt; background-color: #8ae234; }
+.padded { padding-top: 18pt; background-color: #ad7fa8; }
+.nested { display: flex; gap: 4pt; }
+.nested div { font-size: 16pt; background-color: #729fcf; }
+.box { display: inline-block; padding: 2pt 6pt; border: 1pt solid #cc0000; background-color: #ffeeee; }
+</style>
+</head>
+<body>
+<div class="row">
+  <div class="small">Small text</div>
+  <div>Normal text</div>
+  <div class="big">Big text</div>
+  <div class="padded">Padded on top</div>
+  <div><div class="nested"><div>Nested</div><div>row</div></div></div>
+</div>
+<p>Text before <span class="box">one line</span> and <span class="box">first line<br/>second line</span> and after, on one baseline.</p>
+</body>
+</html>

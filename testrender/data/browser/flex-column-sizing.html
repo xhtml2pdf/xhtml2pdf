@@ -1,0 +1,42 @@
+<!--
+  Browser equivalent of data/source/flex-column-sizing.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>flex-column-sizing</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 15pt; }
+h2 { font-size: 10pt; margin: 10pt 0 2pt 0; }
+.col { display: flex; flex-direction: column; gap: 6pt; background-color: #eeeeec;
+       width: 170pt; }
+.col div { padding: 3pt 5pt; background-color: #d3d7cf; border: 1pt solid #888a85; }
+.side { display: flex; gap: 10pt; }
+</style>
+</head>
+<body>
+<h2>A column with no height takes its content's; one with a height distributes</h2>
+<div class="side">
+<div class="col"><div>one</div><div>two</div><div>three</div></div>
+<div class="col" style="height: 130pt; justify-content: space-between"><div>one</div><div>two</div><div>three</div></div>
+<div class="col" style="height: 130pt; justify-content: center"><div>one</div><div>two</div></div>
+</div>
+<h2>align-items in a column sizes the items across the width</h2>
+<div class="side">
+<div class="col" style="align-items: stretch"><div>stretch</div><div>a longer item</div></div>
+<div class="col" style="align-items: flex-start"><div>flex-start</div><div>a longer item</div></div>
+<div class="col" style="align-items: center"><div>center</div><div>a longer item</div></div>
+<div class="col" style="align-items: flex-end"><div>flex-end</div><div>a longer item</div></div>
+</div>
+<h2>flex-grow in a column shares the leftover height</h2>
+<div class="side">
+<div class="col" style="height: 140pt"><div style="flex: 1">grows once</div><div style="flex: 2">grows twice</div></div>
+<div class="col" style="height: 140pt"><div>no grow</div><div style="flex: 1">grows</div></div>
+</div>
+</body>
+</html>

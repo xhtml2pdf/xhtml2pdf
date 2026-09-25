@@ -1,10 +1,12 @@
 import io
 import os
+from pathlib import Path
 from unittest import TestCase
 
 import html5lib
+from pypdf import PdfReader
 
-from xhtml2pdf.document import pisaDocument
+from xhtml2pdf.document import pisaDocument, pisaStory
 
 
 class RightToLeftFontSupportTests(TestCase):
@@ -274,3 +276,149 @@ class RightToLeftFontSupportTests(TestCase):
             self.assertEqual(
                 pisa_doc.language, "sindhi", '"sindhi" not detected in <pdf:language>!'
             )
+
+
+class RightToLeftLayoutTests(TestCase):
+    """
+    What a right-to-left document actually comes out as.
+
+    The tests above check that <pdf:language> was stored on the context;
+    none of them looks at the page. Three things were wrong behind that:
+    <pdf:language name="arabic"/> set the reshaper going and nothing else,
+    so paragraphs were still laid out left to right with the table columns
+    beside them in left-to-right order; dir="rtl" reversed each fragment
+    with str[::-1], which turned "and Latin text" into "dna nitaL txet";
+    and a document declaring both had its text put through the whole of it
+    twice.
+    """
+
+    FONT = (
+        Path(__file__).parent
+        / "samples"
+        / "font"
+        / "Arabic_font"
+        / "MarkaziText-Regular.ttf"
+    )
+    ARABIC = "تقرير"
+    TABLE = "<table><tr><td>One</td><td>Two</td><td>Three</td></tr></table>"
+
+    def story_text(self, body: str, *, rtl: str = "") -> str:
+        """
+        The text of every fragment, as the paragraph will draw it.
+
+        Not PdfReader.extract_text: pypdf runs its own bidirectional pass
+        over what it finds, so it hands back something in logical order that
+        says nothing about what was drawn. The fragments are what was drawn.
+        """
+        context = pisaStory(self.document(body, rtl=rtl).encode())
+        return " ".join(
+            frag.text
+            for flowable in context.story
+            for frag in getattr(flowable, "frags", None) or []
+            if isinstance(frag.text, str)
+        )
+
+    def document(self, body: str, *, rtl: str = "") -> str:
+        css = f"@font-face {{ font-family: Markazi; src: url('{self.FONT}'); }}"
+        attribute = ' dir="rtl"' if rtl == "attribute" else ""
+        tag = '<pdf:language name="arabic"/>' if rtl == "tag" else ""
+        return (
+            f"<html{attribute}>"
+            f'<head><meta charset="utf-8"><style>{css}'
+            f"body {{ font-family: Markazi; }}</style></head><body>"
+            f"{tag}{body}</body></html>"
+        )
+
+    def render(self, body: str, *, rtl: str = "") -> str:
+        output = io.BytesIO()
+        pisaDocument(self.document(body, rtl=rtl).encode(), output)
+        return PdfReader(io.BytesIO(output.getvalue())).pages[0].extract_text()
+
+    def test_latin_text_is_not_reversed(self) -> None:
+        for rtl in ("tag", "attribute"):
+            with self.subTest(rtl=rtl):
+                self.assertIn(
+                    "and Latin text",
+                    self.story_text(f"<p>{self.ARABIC} and Latin text</p>", rtl=rtl),
+                )
+
+    def test_the_language_tag_turns_the_document_round(self) -> None:
+        text = self.render(self.TABLE, rtl="tag")
+
+        self.assertLess(
+            text.index("Three"), text.index("One"), f"columns not mirrored: {text!r}"
+        )
+
+    def test_the_dir_attribute_turns_the_document_round(self) -> None:
+        text = self.render(self.TABLE, rtl="attribute")
+
+        self.assertLess(text.index("Three"), text.index("One"), text)
+
+    def test_a_left_to_right_document_is_untouched(self) -> None:
+        text = self.render(self.TABLE)
+
+        self.assertLess(text.index("One"), text.index("Three"), text)
+
+    def test_declaring_both_is_not_done_twice(self) -> None:
+        # The reshaper ran in addFrag and again over the accumulated text in
+        # addPara, which put a NUL into the middle of an Arabic paragraph.
+        css = f"@font-face {{ font-family: Markazi; src: url('{self.FONT}'); }}"
+        html = (
+            f'<html dir="rtl"><head><meta charset="utf-8"><style>{css}'
+            f"body {{ font-family: Markazi; }}</style></head><body>"
+            f'<pdf:language name="arabic"/><p>{self.ARABIC} and Latin</p>'
+            f"</body></html>"
+        )
+        context = pisaStory(html.encode())
+        text = " ".join(
+            frag.text
+            for flowable in context.story
+            for frag in getattr(flowable, "frags", None) or []
+            if isinstance(frag.text, str)
+        )
+
+        self.assertNotIn("\x00", text)
+        self.assertIn("and Latin", text)
+
+    def test_the_language_name_is_not_case_sensitive(self) -> None:
+        css = f"@font-face {{ font-family: Markazi; src: url('{self.FONT}'); }}"
+        html = (
+            f'<html><head><meta charset="utf-8"><style>{css}'
+            f"body {{ font-family: Markazi; }}</style></head><body>"
+            f'<pdf:language name="Arabic"/>{self.TABLE}</body></html>'
+        )
+        output = io.BytesIO()
+        pisaDocument(html.encode(), output)
+        text = PdfReader(io.BytesIO(output.getvalue())).pages[0].extract_text()
+
+        self.assertLess(text.index("Three"), text.index("One"), text)
+
+    def test_a_direction_declared_inside_the_document_ends_with_it(self) -> None:
+        # dir was one value for the whole document, set by whichever element
+        # declared it last and never put back, so a single <p dir="rtl"> left
+        # every table after it with its columns reversed.
+        text = self.render(f'<p dir="rtl">{self.ARABIC}</p><p>after.</p>{self.TABLE}')
+
+        self.assertLess(text.index("One"), text.index("Three"), text)
+        self.assertIn("after.", text)
+
+    def test_the_language_tag_can_be_turned_off_again(self) -> None:
+        # <pdf:language name=""/> is how a document says it is done with the
+        # language, and it has to put the direction back with it.
+        text = self.render(
+            f'<pdf:language name="arabic"/><p>{self.ARABIC}</p>'
+            f'<pdf:language name=""/><p>after.</p>{self.TABLE}'
+        )
+
+        self.assertLess(text.index("One"), text.index("Three"), text)
+        self.assertIn("after.", text)
+
+    def test_the_arabic_is_put_in_visual_order(self) -> None:
+        # get_display returns the order the characters are drawn in, so the
+        # Arabic ends up after the Latin on the line -- which is where a
+        # right-to-left line puts what was written first.
+        text = self.story_text(f"<p>{self.ARABIC} and Latin</p>", rtl="tag")
+
+        # The Arabic was written first, so on a right-to-left line it is
+        # drawn last -- the Latin comes out at the start of the run.
+        self.assertTrue(text.strip().startswith("and Latin"), repr(text))

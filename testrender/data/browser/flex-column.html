@@ -1,0 +1,33 @@
+<!--
+  Browser equivalent of data/source/flex-column.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>flex-column</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; }
+.col { display: flex; flex-direction: column; align-items: flex-start; gap: 6pt; margin-bottom: 12pt; }
+.col div { background-color: #fde0e8; padding: 4pt; border: 1pt solid #cc6688; }
+.col .stretch { align-self: stretch; }
+.col .end { align-self: flex-end; }
+.col .center { align-self: center; }
+.rev { display: flex; flex-direction: row-reverse; gap: 6pt; }
+.rev div { padding: 4pt; background-color: #e0e8fd; border: 1pt solid #6688cc; }
+</style>
+</head>
+<body>
+<div class="col">
+  <div>first, at the start</div>
+  <div class="stretch">second, stretched across the whole width</div>
+  <div class="center">third, centered</div>
+  <div class="end">fourth, at the end</div>
+</div>
+<div class="rev"><div>A</div><div>B</div><div>C</div></div>
+</body>
+</html>

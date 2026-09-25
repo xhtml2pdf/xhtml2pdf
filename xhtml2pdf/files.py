@@ -10,6 +10,7 @@ import tempfile
 import threading
 import urllib.parse as urlparse
 from abc import abstractmethod
+from contextlib import suppress
 from io import BytesIO
 from pathlib import Path
 from tempfile import _TemporaryFileWrapper
@@ -53,14 +54,27 @@ class TmpFiles(threading.local):
     def __init__(self) -> None:
         super().__init__()
         self.files: list[_TemporaryFileWrapper[bytes]] = []
+        #: Temporary files created with delete=False, so that another library
+        #: could open them by name. Closing one no longer removes it, so the
+        #: path is kept here for cleanFiles() to unlink. Not a flag on the
+        #: wrapper: NamedTemporaryFile does not record `delete` as an
+        #: attribute, so asking it later answers nothing.
+        self.unlink_at_clean: list[str] = []
 
     def append(self, file) -> None:
         self.files.append(file)
 
+    def unlink_later(self, name: str) -> None:
+        self.unlink_at_clean.append(name)
+
     def cleanFiles(self) -> None:
         for file in self.files:
             file.close()
+        for name in self.unlink_at_clean:
+            with suppress(OSError):
+                Path(name).unlink()
         self.files.clear()
+        self.unlink_at_clean.clear()
 
 
 files_tmp: TmpFiles = TmpFiles()  # permanent safe file, to prevent file close
@@ -218,11 +232,26 @@ class BaseFile:
     def get_mimetype(self) -> str | None:
         return self.mimetype
 
-    def get_named_tmp_file(self) -> _TemporaryFileWrapper[bytes]:
+    def get_named_tmp_file(
+        self, *, keep_open: bool = True
+    ) -> _TemporaryFileWrapper[bytes]:
+        """
+        The resource as a file on disk.
+
+        `keep_open` says who reads it next. A caller that takes the handle
+        needs it open; a caller that takes only the name is going to open it
+        itself, and on Windows it cannot while this handle is alive --
+        NamedTemporaryFile asks for exclusive sharing there, so ReportLab's
+        open of a font or a canvas raised PermissionError. Closing first means
+        delete-on-close would take the file with it, so those are created with
+        delete=False and cleanFiles() unlinks them.
+        """
         data: bytes | None = self.get_data()
         # Not a context manager: the handle outlives this call on purpose,
         # registered below for cleanFiles() to close.
-        tmp_file = tempfile.NamedTemporaryFile(suffix=self.suffix)  # noqa: SIM115
+        tmp_file = tempfile.NamedTemporaryFile(  # noqa: SIM115
+            suffix=self.suffix, delete=keep_open
+        )
         # Register unconditionally. Registration used to sit inside the `if
         # data` below, so a temp file created for an empty resource was never
         # closed by cleanFiles() and survived until the garbage collector ran
@@ -231,9 +260,16 @@ class BaseFile:
         if data:
             tmp_file.write(data)
             tmp_file.flush()
+        if not keep_open:
+            tmp_file.close()
+            files_tmp.unlink_later(tmp_file.name)
         if self.path is None:
             self.path = tmp_file.name
         return tmp_file
+
+    def get_path_for_reading(self) -> str | None:
+        """The name of a file another library may open for itself."""
+        return self.get_named_tmp_file(keep_open=False).name
 
     def get_BytesIO(self) -> BytesIO | None:
         data: bytes | None = self.get_data()
@@ -482,6 +518,16 @@ class LocalFileURI(BaseFile):
             mimetype = mimetype.split(";")[0]
         return mimetype
 
+    def get_path_for_reading(self) -> str | None:
+        # The resource already is a file on disk, and get_data() has run the
+        # path past the resource policy, so there is nothing a temporary copy
+        # would add. A font declared as url("/path/to/x.ttf") used to be read
+        # whole and written out again for ReportLab to read a third time.
+        self.get_data()
+        if self.uri is not None and Path(self.uri).is_file():
+            return str(self.uri)
+        return super().get_path_for_reading()
+
     def extract_data(self) -> bytes | None:
         data = None
         log.debug("Unrecognized scheme, assuming local file path")
@@ -529,8 +575,8 @@ class LocalTmpFile(BaseFile):
         self.uri: str | Path | None = None
         self.policy: ResourceAccessPolicy = policy or current_policy()
 
-    def get_named_tmp_file(self):
-        tmp_file = super().get_named_tmp_file()
+    def get_named_tmp_file(self, *, keep_open: bool = True):
+        tmp_file = super().get_named_tmp_file(keep_open=keep_open)
         if self.path is None:
             self.path = tmp_file.name
         return tmp_file
@@ -599,8 +645,7 @@ class pisaFileObject:
         return self.instance.get_data()
 
     def getNamedFile(self) -> str | None:
-        f = self.instance.get_named_tmp_file()
-        return f.name if f else None
+        return self.instance.get_path_for_reading()
 
     def getData(self) -> bytes | None:
         return self.instance.get_data()

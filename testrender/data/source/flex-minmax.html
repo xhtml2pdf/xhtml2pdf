@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>flex-minmax</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 15pt; }
+h2 { font-size: 10pt; margin: 10pt 0 2pt 0; }
+.box { display: flex; gap: 6pt; background-color: #eeeeec; }
+.box div { padding: 3pt 5pt; background-color: #d3d7cf; border: 1pt solid #888a85; }
+.tall { height: 80pt; }
+</style>
+</head>
+<body>
+<h2>max-width caps a growing item; the rest takes what it leaves</h2>
+<div class="box"><div style="flex: 1; max-width: 120pt">max-width 120pt</div><div style="flex: 1">flex: 1</div><div style="flex: 1">flex: 1</div></div>
+<h2>min-width holds a shrinking item open</h2>
+<div class="box"><div style="flex: 1 1 300pt; min-width: 200pt">min-width 200pt</div><div style="flex: 1 1 300pt; min-width: 0">min-width 0</div></div>
+<h2>The automatic minimum size stops a shrink at the content; min-width: 0 does not</h2>
+<div class="box"><div style="flex: 1 1 0">Automatic minimum keeps this readable</div><div style="flex: 1 1 0; min-width: 0">This one may shrink below its content</div></div>
+<h2>min-height and max-height on the cross axis of a row 80pt tall</h2>
+<div class="box tall" style="align-items: flex-start">
+<div style="min-height: 50pt">min-height 50pt</div>
+<div style="align-self: stretch; max-height: 30pt">stretch, max-height 30pt</div>
+<div style="height: 60pt; max-height: 40pt">height 60pt, max 40pt</div></div>
+</body>
+</html>

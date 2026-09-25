@@ -1,0 +1,32 @@
+<!--
+  Browser equivalent of data/source/flex-order.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>flex-order</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 15pt; }
+h2 { font-size: 10pt; margin: 10pt 0 2pt 0; }
+.box { display: flex; gap: 6pt; background-color: #eeeeec; }
+.box div { padding: 3pt 5pt; background-color: #d3d7cf; border: 1pt solid #888a85; }
+.wrap { flex-wrap: wrap; }
+.wrap div { width: 150pt; }
+</style>
+</head>
+<body>
+<h2>order -1, 0 and 1 move items to the ends</h2>
+<div class="box"><div style="order: 1">written first, order 1</div><div>written second, order 0</div><div style="order: -1">written third, order -1</div></div>
+<h2>Items sharing an order keep the order they were written in</h2>
+<div class="box"><div style="order: 2">alpha, order 2</div><div style="order: 2">beta, order 2</div><div style="order: 1">gamma, order 1</div><div style="order: 2">delta, order 2</div></div>
+<h2>order decides which line an item wraps onto</h2>
+<div class="wrap box"><div style="order: 3">one, order 3</div><div>two</div><div>three</div><div style="order: -2">four, order -2</div><div>five</div></div>
+<h2>order in a column</h2>
+<div class="box" style="flex-direction: column; width: 200pt"><div style="order: 1">first written</div><div style="order: -1">second written</div><div>third written</div></div>
+</body>
+</html>

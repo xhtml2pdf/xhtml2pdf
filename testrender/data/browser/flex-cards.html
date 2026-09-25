@@ -1,0 +1,37 @@
+<!--
+  Browser equivalent of data/source/flex-cards.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>flex-cards</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; }
+.cards { display: flex; gap: 10pt; margin-bottom: 12pt; }
+.card { flex: 1 1 0; border: 1pt solid #888888; padding: 8pt; background-color: #f4f4f4; }
+.card.wide { flex: 2 1 0; }
+.grid { display: flex; flex-wrap: wrap; gap: 8pt; }
+.tile { flex: 0 0 30%; border: 1pt solid #4e9a06; padding: 6pt; background-color: #e8f5e0; }
+p { margin: 0 0 4pt 0; }
+</style>
+</head>
+<body>
+<div class="cards">
+  <div class="card"><p><b>Card one</b></p><p>Some text that wraps inside the first card of the row.</p></div>
+  <div class="card wide"><p><b>Card two, wide</b></p><p>This one has flex: 2 and takes twice the room of the others. Lorem ipsum dolor sit amet, consectetuer adipiscing elit.</p></div>
+  <div class="card"><p><b>Card three</b></p><p>Short.</p></div>
+</div>
+<div class="grid">
+  <div class="tile">Tile 1</div>
+  <div class="tile">Tile 2</div>
+  <div class="tile">Tile 3</div>
+  <div class="tile">Tile 4, on the second line</div>
+  <div class="tile">Tile 5</div>
+</div>
+</body>
+</html>

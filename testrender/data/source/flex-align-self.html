@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>flex-align-self</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 15pt; }
+h2 { font-size: 10pt; margin: 10pt 0 2pt 0; }
+.row { display: flex; height: 70pt; gap: 8pt; background-color: #eeeeec; }
+.row div { padding: 3pt 5pt; background-color: #d3d7cf; border: 1pt solid #888a85; }
+.auto { align-self: auto; }
+.start { align-self: flex-start; }
+.end { align-self: flex-end; }
+.center { align-self: center; }
+.stretch { align-self: stretch; }
+.base { align-self: baseline; }
+.big { font-size: 15pt; }
+</style>
+</head>
+<body>
+<h2>Container align-items: center, overridden per item</h2>
+<div class="row" style="align-items: center">
+<div class="auto">auto</div><div class="start">start</div><div class="end">end</div>
+<div class="center">center</div><div class="stretch">stretch</div></div>
+<h2>Container align-items: flex-end, overridden per item</h2>
+<div class="row" style="align-items: flex-end">
+<div class="auto">auto</div><div class="start">start</div><div class="center">center</div>
+<div class="stretch">stretch</div></div>
+<h2>Container align-items: stretch, one item on baseline</h2>
+<div class="row" style="align-items: stretch">
+<div class="auto">auto</div><div class="base big">baseline</div><div class="base">baseline</div>
+<div class="end">end</div></div>
+</body>
+</html>

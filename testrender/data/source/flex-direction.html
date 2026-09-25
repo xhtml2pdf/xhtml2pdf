@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>flex-direction</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 15pt; }
+h2 { font-size: 10pt; margin: 10pt 0 2pt 0; }
+.box { display: flex; gap: 6pt; background-color: #eeeeec; margin-bottom: 4pt; }
+.box div { padding: 3pt 6pt; background-color: #d3d7cf; border: 1pt solid #888a85; }
+.row { flex-direction: row; }
+.rrev { flex-direction: row-reverse; }
+.col { flex-direction: column; height: 96pt; }
+.crev { flex-direction: column-reverse; height: 96pt; }
+.half { width: 240pt; }
+</style>
+</head>
+<body>
+<h2>row</h2>
+<div class="box row"><div>first</div><div>second</div><div>third</div></div>
+<h2>row-reverse: the row starts at the right</h2>
+<div class="box rrev"><div>first</div><div>second</div><div>third</div></div>
+<h2>row-reverse with justify-content: flex-end packs at the left</h2>
+<div class="box rrev" style="justify-content: flex-end"><div>first</div><div>second</div><div>third</div></div>
+<h2>column and column-reverse, both 96pt tall</h2>
+<div class="box col half"><div>first</div><div>second</div><div>third</div></div>
+<div class="box crev half"><div>first</div><div>second</div><div>third</div></div>
+<h2>column-reverse with justify-content: flex-start packs at the bottom</h2>
+<div class="box crev half" style="justify-content: flex-start"><div>first</div><div>second</div><div>third</div></div>
+</body>
+</html>

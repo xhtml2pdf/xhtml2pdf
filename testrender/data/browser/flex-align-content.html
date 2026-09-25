@@ -1,0 +1,38 @@
+<!--
+  Browser equivalent of data/source/flex-align-content.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>flex-align-content</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 15pt; }
+h2 { font-size: 10pt; margin: 6pt 0 2pt 0; }
+.wrap { display: flex; flex-wrap: wrap; height: 66pt; column-gap: 6pt;
+        background-color: #eeeeec; }
+.wrap div { width: 100pt; padding: 2pt 4pt; background-color: #d3d7cf;
+            border: 1pt solid #888a85; }
+</style>
+</head>
+<body>
+<h2>flex-start</h2>
+<div class="wrap" style="align-content: flex-start"><div>one</div><div>two</div><div>three</div><div>four</div><div>five</div><div>six</div><div>seven</div></div>
+<h2>center</h2>
+<div class="wrap" style="align-content: center"><div>one</div><div>two</div><div>three</div><div>four</div><div>five</div><div>six</div><div>seven</div></div>
+<h2>flex-end</h2>
+<div class="wrap" style="align-content: flex-end"><div>one</div><div>two</div><div>three</div><div>four</div><div>five</div><div>six</div><div>seven</div></div>
+<h2>space-between</h2>
+<div class="wrap" style="align-content: space-between"><div>one</div><div>two</div><div>three</div><div>four</div><div>five</div><div>six</div><div>seven</div></div>
+<h2>space-around</h2>
+<div class="wrap" style="align-content: space-around"><div>one</div><div>two</div><div>three</div><div>four</div><div>five</div><div>six</div><div>seven</div></div>
+<h2>space-evenly</h2>
+<div class="wrap" style="align-content: space-evenly"><div>one</div><div>two</div><div>three</div><div>four</div><div>five</div><div>six</div><div>seven</div></div>
+<h2>stretch (the initial value)</h2>
+<div class="wrap" style="align-content: stretch"><div>one</div><div>two</div><div>three</div><div>four</div><div>five</div><div>six</div><div>seven</div></div>
+</body>
+</html>

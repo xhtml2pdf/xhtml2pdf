@@ -882,11 +882,16 @@ class pisaTagPDFTEMPLATE(pisaTag):
 
 
 class pisaTagHTML(pisaTag):
-    """<html lang="">."""
+    """<html lang="" dir="">."""
 
     def start(self, c: pisaContext) -> None:
         if self.attr.lang:
             c.lang_tag = self.attr.lang
+        # The root element is where a document usually declares its direction,
+        # and it has to be read here: <body dir> and <div dir> were honoured
+        # but <html dir> was not, so the most common spelling did nothing.
+        if self.attr.get("dir"):
+            c.setDir(self.attr["dir"])
 
 
 class pisaTagPDFLANGUAGE(pisaTag):
@@ -899,6 +904,17 @@ class pisaTagPDFLANGUAGE(pisaTag):
         # document that declares its language this way should still get it.
         if self.attr.name and self.attr.name.lower() not in DEFAULT_LANGUAGE_LIST:
             c.lang_tag = self.attr.name
+        elif self.attr.name:
+            # Naming a right-to-left language is naming right-to-left text.
+            # This used to set the reshaper going and nothing else, so the
+            # text was shaped and reordered inside paragraphs that were still
+            # laid out left to right, with the table columns in left-to-right
+            # order beside them.
+            c.setDirForRest("rtl")
+        else:
+            # <pdf:language name=""/> is how a document says it is done with
+            # the language, and it has to put the direction back with it.
+            c.setDirForRest("ltr")
 
 
 class pisaTagPDFFONT(pisaTag):
@@ -964,7 +980,9 @@ class pisaTagPDFBARCODE(pisaTag):
         checksum: int = int(attr.checksum)
         barWidth: float = attr.barwidth or 0.01 * inch
         barHeight: float = attr.barheight or 0.5 * inch
-        fontName: str = c.getFontName("OCRB10,OCR-B,OCR B,OCRB")  # or "Helvetica"
+        # Asked for on the chance the document embedded it; Helvetica is the
+        # intended answer when it did not, so this one does not warn.
+        fontName: str = c.getFontName("OCRB10,OCR-B,OCR B,OCRB", warn=False)
         fontSize: float = attr.fontsize or 2.75 * mm
 
         # Assure minimal size.

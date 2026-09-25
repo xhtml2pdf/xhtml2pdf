@@ -1,0 +1,34 @@
+<!--
+  Browser equivalent of data/source/flex-wrap.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>flex-wrap</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 15pt; }
+h2 { font-size: 10pt; margin: 10pt 0 2pt 0; }
+.box { display: flex; gap: 6pt; background-color: #eeeeec; }
+.box div { width: 110pt; padding: 3pt 5pt; background-color: #d3d7cf;
+           border: 1pt solid #888a85; }
+.nowrap { flex-wrap: nowrap; }
+.wrap { flex-wrap: wrap; }
+.rev { flex-wrap: wrap-reverse; }
+</style>
+</head>
+<body>
+<h2>nowrap: six items of 110pt shrink onto one line</h2>
+<div class="box nowrap"><div>one</div><div>two</div><div>three</div><div>four</div><div>five</div><div>six</div></div>
+<h2>wrap: the same six break onto a second line</h2>
+<div class="box wrap"><div>one</div><div>two</div><div>three</div><div>four</div><div>five</div><div>six</div></div>
+<h2>wrap-reverse: the first line is at the bottom</h2>
+<div class="box rev"><div>one</div><div>two</div><div>three</div><div>four</div><div>five</div><div>six</div></div>
+<h2>wrap-reverse with align-items: flex-start, which is now the bottom edge</h2>
+<div class="box rev" style="align-items: flex-start; height: 90pt"><div>one</div><div>two</div><div>three</div><div>four</div><div>five</div><div>six</div></div>
+</body>
+</html>
