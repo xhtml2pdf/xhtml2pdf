@@ -1292,3 +1292,34 @@ class NonInheritedPropertiesTest(TestCase):
         self.assertEqual("row", frag.flexDirection)
         self.assertEqual(1.0, frag.flexShrink)
         self.assertEqual("none", frag.maxWidth.kind)
+
+
+class BorderRadiusCascadeTest(TestCase):
+    """border-radius reaches the block that declares it and no further."""
+
+    @staticmethod
+    def _radii(html: bytes) -> list:
+        styles = [f.style for f in pisaStory(html).story if hasattr(f, "style")]
+        return [
+            tuple(
+                getattr(style, f"border{corner}Radius").resolve(100, 50)
+                for corner in ("TopLeft", "TopRight", "BottomRight", "BottomLeft")
+            )
+            for style in styles
+        ]
+
+    def test_the_declaring_block_carries_each_corner(self) -> None:
+        (radii,) = self._radii(b"<p style='border-radius: 3pt 50% / 6pt'>x</p>")
+        self.assertEqual(((3, 6), (50, 6), (3, 6), (50, 6)), radii)
+
+    def test_em_is_the_element_own_font_size(self) -> None:
+        (radii,) = self._radii(
+            b"<p style='font-size: 20pt; border-radius: 0.5em'>x</p>"
+        )
+        self.assertEqual(((10, 10),) * 4, radii)
+
+    def test_it_is_not_inherited(self) -> None:
+        radii = self._radii(
+            b"<div style='border-radius: 4pt'><p>child</p>own text</div>"
+        )
+        self.assertEqual([((0, 0),) * 4, ((4, 4),) * 4], radii)

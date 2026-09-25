@@ -6,6 +6,7 @@ from pypdf import PdfReader
 
 from xhtml2pdf import pisa
 from xhtml2pdf.util import apply_text_transform
+from xhtml2pdf.w3c.css import CSSBuilder
 from xhtml2pdf.w3c.cssParser import CSSParser
 from xhtml2pdf.w3c.cssSpecial import parseSpecialRules, splitBorder
 
@@ -861,3 +862,89 @@ class GapTest(TestCase):
             self.assertEqual(
                 [("gap", parts, None)], parseSpecialRules([("gap", parts, None)])
             )
+
+
+def _radii(value: str) -> dict:
+    """What `border-radius: <value>` expands to, through the real parser."""
+    builder = CSSBuilder(mediumSet=["all"])
+    declarations, _ = CSSParser(builder).parseInline(f"border-radius: {value}")
+    return declarations
+
+
+class BorderRadiusShorthandTest(TestCase):
+    """
+    border-radius lists the corners top-left, top-right, bottom-right,
+    bottom-left, with the same 1-to-4 pattern as margin; `/` separates the
+    horizontal radii from the vertical ones.
+    """
+
+    @staticmethod
+    def corners(value: str) -> list:
+        radii = _radii(value)
+        return [
+            radii[f"border-{corner}-radius"]
+            for corner in ("top-left", "top-right", "bottom-right", "bottom-left")
+        ]
+
+    def test_one_value_rounds_every_corner_alike(self) -> None:
+        px = ("10", "px")
+        self.assertEqual([[px, px]] * 4, self.corners("10px"))
+
+    def test_two_values_pair_opposite_corners(self) -> None:
+        a, b = ("1", "px"), ("2", "px")
+        self.assertEqual([[a, a], [b, b], [a, a], [b, b]], self.corners("1px 2px"))
+
+    def test_three_values_share_the_second_between_top_right_and_bottom_left(
+        self,
+    ) -> None:
+        a, b, c = ("1", "px"), ("2", "px"), ("3", "px")
+        self.assertEqual([[a, a], [b, b], [c, c], [b, b]], self.corners("1px 2px 3px"))
+
+    def test_four_values_go_clockwise_from_top_left(self) -> None:
+        values = [(str(n), "px") for n in (1, 2, 3, 4)]
+        self.assertEqual([[v, v] for v in values], self.corners("1px 2px 3px 4px"))
+
+    def test_slash_gives_the_vertical_radii(self) -> None:
+        h, v = ("10", "px"), ("20", "px")
+        self.assertEqual([[h, v]] * 4, self.corners("10px / 20px"))
+        self.assertEqual([[h, v]] * 4, self.corners("10px/20px"))
+
+    def test_each_side_of_the_slash_expands_on_its_own(self) -> None:
+        px = lambda n: (str(n), "px")  # noqa: E731
+        self.assertEqual(
+            [[px(10), px(20)], [px(5), px(4)], [px(3), px(20)], [px(1), px(4)]],
+            self.corners("10px 5px 3px 1px / 20px 4px"),
+        )
+
+    def test_percentages_and_ems_are_kept_as_written(self) -> None:
+        self.assertEqual([[("50", "%")] * 2] * 4, self.corners("50%"))
+        self.assertEqual([[("1", "em"), ("2", "em")]] * 4, self.corners("1em/2em"))
+
+    def test_zero(self) -> None:
+        self.assertEqual([["0", "0"]] * 4, self.corners("0"))
+
+    def test_an_invalid_value_drops_the_declaration(self) -> None:
+        for value in (
+            "-3px",
+            "1px/2px/3px",
+            "calc(1px)",
+            "1px 2px 3px 4px 5px",
+            "inherit",
+            "10",
+        ):
+            with (
+                self.subTest(value),
+                self.assertLogs("xhtml2pdf.w3c.cssSpecial", level="WARNING"),
+            ):
+                self.assertEqual({}, dict(_radii(value)))
+
+    def test_an_invalid_longhand_is_dropped(self) -> None:
+        with self.assertLogs("xhtml2pdf.w3c.cssSpecial", level="WARNING"):
+            self.assertEqual(
+                [],
+                parseSpecialRules([("border-top-left-radius", [("-1", "px")], None)]),
+            )
+
+    def test_a_valid_longhand_is_kept(self) -> None:
+        declaration = ("border-top-left-radius", [("1", "px"), ("2", "px")], None)
+        self.assertEqual([declaration], parseSpecialRules([declaration]))

@@ -849,3 +849,30 @@ class GetDisplayTest(TestCase):
         self.assertIn("ruby", logs.output[0])
         with self.assertNoLogs("xhtml2pdf.util", level="WARNING"):
             utils.getDisplay("ruby")
+
+
+class GetBorderRadiusTest(TestCase):
+    def test_one_value_serves_both_axes(self) -> None:
+        radius = utils.getBorderRadius([("4", "pt")])
+        self.assertEqual((4, 4), radius.resolve(100, 50))
+
+    def test_two_values_are_horizontal_then_vertical(self) -> None:
+        radius = utils.getBorderRadius([("4", "pt"), ("8", "pt")])
+        self.assertEqual((4, 8), radius.resolve(100, 50))
+
+    def test_a_percentage_waits_for_the_box(self) -> None:
+        radius = utils.getBorderRadius([("50", "%")], 10)
+        self.assertEqual("percent", radius.h.kind)
+        self.assertEqual((50, 25), radius.resolve(100, 50))
+
+    def test_em_is_the_font_size(self) -> None:
+        radius = utils.getBorderRadius([("2", "em")], 10)
+        self.assertEqual((20, 20), radius.resolve(100, 50))
+
+    def test_a_zero_axis_makes_the_corner_square(self) -> None:
+        radius = utils.getBorderRadius([("4", "pt"), "0"])
+        self.assertEqual((0, 0), radius.resolve(100, 50))
+
+    def test_an_invalid_value_is_no_radius(self) -> None:
+        with self.assertLogs("xhtml2pdf.util", level="WARNING"):
+            self.assertIs(utils.NO_RADIUS, utils.getBorderRadius(["auto"]))

@@ -22,7 +22,7 @@ limitations under the License.
 import logging
 import re
 
-from xhtml2pdf.util import toList
+from xhtml2pdf.util import isRadiusPart, toList
 
 log = logging.getLogger(__name__)
 
@@ -316,6 +316,79 @@ def expandGap(parts, last):
     return [("row-gap", row, last), ("column-gap", column, last)]
 
 
+def expandFourValues(parts):
+    """
+    The 1-to-4 value pattern of margin, padding and border-radius.
+
+    Returns the four values in the order the shorthand names them -- top,
+    right, bottom, left, or top-left, top-right, bottom-right, bottom-left
+    -- or None for any other count. A missing value copies the one across.
+    """
+    if len(parts) == 1:
+        return (parts[0],) * 4
+    if len(parts) == 2:
+        return (parts[0], parts[1], parts[0], parts[1])
+    if len(parts) == 3:
+        return (parts[0], parts[1], parts[2], parts[1])
+    if len(parts) == 4:
+        return tuple(parts)
+    return None
+
+
+_RADIUS_CORNERS = ("top-left", "top-right", "bottom-right", "bottom-left")
+
+
+def _isOperator(part):
+    """
+    A CSSTerminalOperator, which is what the parser makes of `a / b`: a
+    tuple of three, where a length is a tuple of two. Checked by shape
+    because css.py imports this module.
+    """
+    return isinstance(part, tuple) and len(part) == 3
+
+
+def splitSlash(parts):
+    """
+    Split `a b / c d` into ([a, b], [c, d]).
+
+    The parser binds `/` to the value on each side of it, so the list comes
+    in as [a, op(b, '/', c), d]. Without a slash both halves are the same
+    list. None when there is more than one slash or another operator.
+    """
+    horizontal, vertical, seen = [], [], False
+    for part in parts:
+        if _isOperator(part):
+            if seen or part[1] != "/" or _isOperator(part[0]) or _isOperator(part[2]):
+                return None
+            horizontal.append(part[0])
+            vertical.append(part[2])
+            seen = True
+        else:
+            (vertical if seen else horizontal).append(part)
+    return horizontal, (vertical if seen else horizontal)
+
+
+def expandBorderRadius(parts, last):
+    """
+    border-radius: 1-4 horizontal radii, optionally `/` 1-4 vertical ones.
+
+    An invalid value drops the whole declaration, as CSS does, so an earlier
+    valid one still applies.
+    """
+    split = splitSlash(parts)
+    horizontal = vertical = None
+    if split is not None and all(isRadiusPart(p) for p in split[0] + split[1]):
+        horizontal = expandFourValues(split[0])
+        vertical = expandFourValues(split[1])
+    if horizontal is None or vertical is None:
+        log.warning("border-radius: %r is not a radius; ignored", parts)
+        return []
+    return [
+        (f"border-{corner}-radius", [h, v], last)
+        for corner, h, v in zip(_RADIUS_CORNERS, horizontal, vertical, strict=True)
+    ]
+
+
 def parseSpecialRules(declarations, debug=0):
     # print selectors, declarations
     # CSS MODIFY!
@@ -376,6 +449,16 @@ def parseSpecialRules(declarations, debug=0):
                 dd.append(d)
             else:
                 dd.extend(expanded)
+
+        # BORDER-RADIUS
+        elif name == "border-radius":
+            dd.extend(expandBorderRadius(parts, last))
+
+        elif name in {f"border-{corner}-radius" for corner in _RADIUS_CORNERS}:
+            if 1 <= len(parts) <= 2 and all(isRadiusPart(p) for p in parts):
+                dd.append(d)
+            else:
+                log.warning("%s: %r is not a radius; ignored", name, parts)
 
         # TODO: We should definitely outsource the "if len() ==" part into a separate function!
         # Because we're repeating the same if-elif-else statement for MARGIN, PADDING,

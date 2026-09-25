@@ -46,7 +46,9 @@ from xhtml2pdf.builders.flex_layout import (
 from xhtml2pdf.reportlab_paragraph import Paragraph, _getFragWords
 from xhtml2pdf.util import (
     AUTO,
+    NO_RADIUS,
     NONE_LENGTH,
+    RADIUS_CORNERS,
     CSSLength,
     drawBoxBackground,
     drawBoxBorders,
@@ -114,6 +116,8 @@ class BoxStyle:
             setattr(self, f"border{side}Width", 0.0)
             setattr(self, f"border{side}Style", None)
             setattr(self, f"border{side}Color", None)
+        for corner in RADIUS_CORNERS:
+            setattr(self, f"border{corner}Radius", NO_RADIUS)
         self.backColor = None
         self.backgroundImage = None
         self.backgroundRepeat = "repeat"
@@ -1321,6 +1325,8 @@ def clear_box(frag) -> None:
         setattr(frag, f"border{side}Width", 0)
         setattr(frag, f"border{side}Style", None)
         setattr(frag, f"border{side}Color", None)
+    for corner in RADIUS_CORNERS:
+        setattr(frag, f"border{corner}Radius", NO_RADIUS)
 
 
 class FlexData:

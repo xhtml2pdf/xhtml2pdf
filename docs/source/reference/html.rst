@@ -77,9 +77,11 @@ xhtml2pdf supports the following standard CSS properties
     background-color
     background-image, background-position, background-repeat
     border-bottom-color, border-bottom-style, border-bottom-width
+    border-bottom-left-radius, border-bottom-right-radius
     border-left-color, border-left-style, border-left-width
     border-right-color, border-right-style, border-right-width
     border-top-color, border-top-style, border-top-width
+    border-top-left-radius, border-top-right-radius
     color
     column-gap, row-gap
     display
@@ -102,8 +104,8 @@ xhtml2pdf supports the following standard CSS properties
     zoom
 
 The shorthands ``background``, ``border``, ``border-color``,
-``border-style``, ``border-width``, ``border-top`` (and its three
-siblings), ``flex``, ``flex-flow``, ``font``, ``gap``, ``list-style``,
+``border-radius``, ``border-style``, ``border-width``, ``border-top`` (and
+its three siblings), ``flex``, ``flex-flow``, ``font``, ``gap``, ``list-style``,
 ``margin`` and ``padding`` are expanded into the properties above.
 
 A property that is not on this list is parsed and then ignored. Each

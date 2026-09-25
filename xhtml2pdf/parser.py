@@ -110,6 +110,8 @@ from xhtml2pdf.tags import (  # noqa: F401
     pisaTagUL,
 )
 from xhtml2pdf.util import (
+    NO_RADIUS,
+    RADIUS_CORNERS,
     Display,
     getAlign,
     getBox,
@@ -741,6 +743,8 @@ def _stripInlineBox(frag) -> None:
         setattr(frag, f"border{side}Width", 0)
         setattr(frag, f"border{side}Style", None)
         setattr(frag, f"border{side}Color", None)
+    for corner in RADIUS_CORNERS:
+        setattr(frag, f"border{corner}Radius", NO_RADIUS)
 
 
 def inlineBoxMarkers(context):

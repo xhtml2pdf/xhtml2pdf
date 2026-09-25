@@ -1093,6 +1093,81 @@ def getFlexBasis(value, font_size: float = 0.0) -> CSSLength:
     )
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~ border-radius
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ZERO_LENGTH = CSSLength("length", 0.0)
+
+
+class CornerRadius(NamedTuple):
+    """
+    One corner's border-*-radius: a horizontal and a vertical radius.
+
+    Kept unresolved because CSS resolves a percentage against the border
+    box -- the horizontal radius against its width, the vertical one
+    against its height -- and the box is only known when it is drawn.
+    """
+
+    h: CSSLength
+    v: CSSLength
+
+    def resolve(self, width: float, height: float) -> tuple[float, float]:
+        """(rx, ry) in points; a corner with either radius 0 is square."""
+        rx = max(self.h.resolve(width) or 0.0, 0.0)
+        ry = max(self.v.resolve(height) or 0.0, 0.0)
+        return (rx, ry) if rx > 0 and ry > 0 else (0.0, 0.0)
+
+
+#: The initial value of every corner. Painters test it by identity to keep
+#: the square-box path, and its output, exactly as it was.
+NO_RADIUS = CornerRadius(ZERO_LENGTH, ZERO_LENGTH)
+
+#: The corners in the order the border-radius shorthand lists them. The frag
+#: and style attribute of each is f"border{corner}Radius".
+RADIUS_CORNERS = ("TopLeft", "TopRight", "BottomRight", "BottomLeft")
+
+_RADIUS_UNITS = ("px", "pt", "pc", "cm", "mm", "in", "rem", "em", "ex", "%")
+
+
+def isRadiusPart(part) -> bool:
+    """
+    Whether one parsed value can be a radius: 0, or a non-negative length
+    or percentage. The parser hands a length over as a (number, unit) tuple;
+    the `/` of the shorthand, calc() and keywords are something else.
+    """
+    if isinstance(part, str):
+        return part.strip() == "0"
+    if type(part) is not tuple or len(part) != 2:
+        return False
+    number, unit = part
+    if not isinstance(number, str) or str(unit).lower() not in _RADIUS_UNITS:
+        return False
+    try:
+        return float(number) >= 0
+    except ValueError:
+        return False
+
+
+def getBorderRadius(value, font_size: float = 0.0) -> CornerRadius:
+    """
+    A border-*-radius longhand: one radius for both axes, or two.
+
+    getSize is no use here: it resolves a percentage against the font size.
+    """
+    parts = toList(value, cast_tuple=False)
+    if not 1 <= len(parts) <= 2 or not all(isRadiusPart(part) for part in parts):
+        _warn_value("border-radius", str(value), "is not a radius; using 0")
+        return NO_RADIUS
+    h, v = (
+        _getLength(
+            part, font_size, name="border-radius", keywords={}, default=ZERO_LENGTH
+        )
+        for part in (parts[0], parts[-1])
+    )
+    return CornerRadius(h, v)
+
+
 def getNumber(value, default: float = 0.0) -> float:
     """A bare CSS <number>; flex-grow and flex-shrink."""
     text = "".join(str(part) for part in toList(value)).strip()

@@ -34,8 +34,10 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 
 from xhtml2pdf.util import (
     AUTO,
+    NO_RADIUS,
     NONE_LENGTH,
     getBool,
+    getBorderRadius,
     getColor,
     getFlexAlign,
     getFlexBasis,
@@ -217,6 +219,28 @@ CSS_PROPERTIES += tuple(
             relative_to_font_size=True,
             block_only=True,
         ),
+    )
+)
+
+#: border-*-radius, one per corner. The shorthand is expanded by
+#: w3c/cssSpecial.py. Unlike the other border properties these reset per
+#: element, as CSS says: a radius that reached a card's children would draw
+#: every one of them rounded.
+CSS_PROPERTIES += tuple(
+    CSSProperty(
+        f"border-{vertical}-{horizontal}-radius",
+        "box",
+        frag=f"border{vertical.title()}{horizontal.title()}Radius",
+        convert=getBorderRadius,
+        relative_to_font_size=True,
+        block_only=True,
+        initial=NO_RADIUS,
+    )
+    for vertical, horizontal in (
+        ("top", "left"),
+        ("top", "right"),
+        ("bottom", "right"),
+        ("bottom", "left"),
     )
 )
 
