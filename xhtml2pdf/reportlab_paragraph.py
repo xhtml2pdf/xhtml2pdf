@@ -929,7 +929,9 @@ def _do_post_text(tx):
         if last:
             sides.append("Right")
         if box_style.backColor or box_style.backgroundImage:
-            drawBoxBackground(tx._canvas, x1, bottom, x2 - x1, top - bottom, box_style)
+            drawBoxBackground(
+                tx._canvas, x1, bottom, x2 - x1, top - bottom, box_style, sides=sides
+            )
         if any(box_style.border(side) for side in sides):
             drawBoxBorders(
                 tx._canvas, x1, bottom, x2 - x1, top - bottom, box_style, sides=sides

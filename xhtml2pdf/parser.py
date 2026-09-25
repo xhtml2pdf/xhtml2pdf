@@ -121,6 +121,7 @@ from xhtml2pdf.util import (
     getLengthOrAuto,
     getPos,
     getSize,
+    roundedBox,
     toList,
 )
 from xhtml2pdf.w3c import cssDOMElementInterface
@@ -717,10 +718,25 @@ _INLINE_BOX_PROPERTIES = (
 _REPLACED_INLINE_TAGS = frozenset({"img", "br", "hr", "pdfbarcode"})
 
 
+#: A radius makes a box of an inline element's own background colour, which
+#: otherwise is painted word by word: `border-radius: 1em` on a highlighted
+#: span is how a pill badge is written.
+_RADIUS_PROPERTIES = (
+    "border-top-left-radius",
+    "border-top-right-radius",
+    "border-bottom-right-radius",
+    "border-bottom-left-radius",
+)
+
+
 def declaresInlineBox(context, tagName: str) -> bool:
     if tagName in _REPLACED_INLINE_TAGS:
         return False
-    return any(name in context.cssAttr for name in _INLINE_BOX_PROPERTIES)
+    cssAttr = context.cssAttr
+    return any(name in cssAttr for name in _INLINE_BOX_PROPERTIES) or (
+        "background-color" in cssAttr
+        and any(name in cssAttr for name in _RADIUS_PROPERTIES)
+    )
 
 
 #: The block groups that make an element's box: padding and borders, without
@@ -787,8 +803,17 @@ def inlineBoxMarkers(context):
         )
         for name in ("margin-left", "margin-right")
     )
+    rounded_color = (
+        "background-color" in cssAttr
+        and backColor
+        and roundedBox(style, 0.0, 0.0, 1.0, 1.0) is not None
+    )
     if not (
-        style.horizontal or style.vertical or style.backgroundImage or any(margins)
+        style.horizontal
+        or style.vertical
+        or style.backgroundImage
+        or any(margins)
+        or rounded_color
     ):
         return None
     # The box paints the background; the words inside it must not.
