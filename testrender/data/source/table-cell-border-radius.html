@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>table-cell-border-radius</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 14pt; }
+table { width: 100%; margin-bottom: 14pt; }
+td, th { padding: 4pt 8pt; }
+th { background-color: #204a87; color: #ffffff; }
+.first { border-top-left-radius: 10px; }
+.last { border-top-right-radius: 10px; }
+td { background-color: #eeeeec; }
+.pill { background-color: #8ae234; border-radius: 999px; }
+.ring { background-color: #ffffff; border: 2px solid #a40000; border-radius: 8px; }
+.tall { background-color: #fce94f; border-radius: 14px; }
+</style>
+</head>
+<body>
+<table cellspacing="0">
+<tr><th class="first">Name</th><th>Value</th><th class="last">Note</th></tr>
+<tr><td>alpha</td><td>1</td><td>a header row with rounded outer corners</td></tr>
+<tr><td>beta</td><td class="pill">2</td><td>a pill cell</td></tr>
+</table>
+<table cellspacing="0">
+<tr><td class="ring" colspan="2">a bordered rounded cell spanning two columns</td><td>plain</td></tr>
+<tr><td class="tall" rowspan="2">spans two rows</td><td>b</td><td>c</td></tr>
+<tr><td>d</td><td>e</td></tr>
+</table>
+</body>
+</html>

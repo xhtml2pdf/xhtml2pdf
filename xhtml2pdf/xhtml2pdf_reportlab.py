@@ -43,7 +43,7 @@ from reportlab.platypus.flowables import (
     ParagraphAndImage,
 )
 from reportlab.platypus.tableofcontents import TableOfContents, drawPageNumbers
-from reportlab.platypus.tables import Table, TableStyle
+from reportlab.platypus.tables import _SPECIALROWS, Table, TableStyle
 from reportlab.rl_config import register_reset
 
 from xhtml2pdf.files import pisaFileObject, pisaTempFile
@@ -53,6 +53,7 @@ from xhtml2pdf.util import (
     drawBoxBackground,
     drawBoxBorders,
     getBorderWidth,
+    roundedBox,
     roundedClip,
 )
 
@@ -964,7 +965,171 @@ class PmlKeepInFrame(KeepInFrame, PmlMaxHeightMixIn):
         return KeepInFrame.wrap(self, availWidth, availHeight)
 
 
+class RoundedTableBox:
+    """
+    A table or cell with a border-radius, as the argument of a BACKGROUND.
+
+    ReportLab calls a callable BACKGROUND argument to paint it, and carries
+    the command through everything it does to a table's commands: splitting
+    it between pages, repeating header rows, spans, negative indices. So the
+    rounded box rides along as one, and PmlTable works out from the command
+    where the box has ended up before it paints.
+
+    `style` has the box's background, borders and radii, spelt as
+    drawBoxBackground and drawBoxBorders read them.
+    """
+
+    def __init__(self, style, kind: str) -> None:
+        self.style = style
+        #: "table" or "td": a table's box is cut by a page break, a cell's
+        #: never is, since xhtml2pdf splits tables between rows.
+        self.kind = kind
+
+    def __call__(self, table, canv, x0, y0, w, h) -> None:
+        placed = getattr(table, "_roundedBoxes", {}).get(id(self))
+        if placed is None or placed.painted:
+            return
+        # Repeated header rows split a table-wide command in two; the box
+        # is the union of both, painted once.
+        placed.painted = True
+        drawBoxBackground(
+            canv, placed.x, placed.y, placed.w, placed.h, self.style, placed.sides
+        )
+
+
+class _PlacedBox:
+    """Where a RoundedTableBox lands in one table, or one fragment of it."""
+
+    def __init__(self, painter: RoundedTableBox, x0, x1, bottom, top) -> None:
+        self.painter = painter
+        self.x0, self.x1, self.bottom, self.top = x0, x1, bottom, top
+        self.sides: tuple[str, ...] = ("Left", "Right", "Top", "Bottom")
+        self.painted = False
+        self.rounded = None
+
+    def extend(self, x0, x1, bottom, top) -> None:
+        self.x0, self.x1 = min(self.x0, x0), max(self.x1, x1)
+        self.bottom, self.top = min(self.bottom, bottom), max(self.top, top)
+
+    @property
+    def x(self) -> float:
+        return self.x0
+
+    @property
+    def y(self) -> float:
+        return self.bottom
+
+    @property
+    def w(self) -> float:
+        return self.x1 - self.x0
+
+    @property
+    def h(self) -> float:
+        return self.top - self.bottom
+
+
+def _mergeBlocks(blocks: dict) -> dict:
+    """Sort and join overlapping intervals; _hLine walks them in order."""
+    merged = {}
+    for key, intervals in blocks.items():
+        joined: list = []
+        for start, end in sorted(intervals):
+            if joined and start <= joined[-1][1]:
+                joined[-1] = (joined[-1][0], max(joined[-1][1], end))
+            else:
+                joined.append((start, end))
+        merged[key] = joined
+    return merged
+
+
 class PmlTable(Table, PmlMaxHeightMixIn):
+    #: Whether a page break cut this fragment of the table at its top or its
+    #: bottom; the table's box has no edge and no rounded corners there.
+    _cutTop = False
+    _cutBottom = False
+
+    def split(self, availWidth, availHeight):
+        parts = Table.split(self, availWidth, availHeight)
+        if len(parts) == 2:
+            parts[0]._cutTop, parts[0]._cutBottom = self._cutTop, True
+            parts[1]._cutTop, parts[1]._cutBottom = True, self._cutBottom
+        return parts
+
+    def _placeRoundedBoxes(self) -> dict:
+        """Each RoundedTableBox's rectangle in this table, by painter."""
+        boxes: dict = {}
+        ncols, nrows = self._ncols, self._nrows
+        cp, rp = self._colpositions, self._rowpositions
+        for _cmd, (sc, sr), (ec, er), arg in self._bkgrndcmds:
+            if not isinstance(arg, RoundedTableBox) or sr in _SPECIALROWS:
+                continue
+            sc, ec = (c + ncols if c < 0 else c for c in (sc, ec))
+            sr, er = (r + nrows if r < 0 else r for r in (sr, er))
+            rect = (cp[sc], cp[min(ec + 1, ncols)], rp[min(er + 1, nrows)], rp[sr])
+            if id(arg) in boxes:
+                boxes[id(arg)].extend(*rect)
+            else:
+                boxes[id(arg)] = _PlacedBox(arg, *rect)
+        for box in boxes.values():
+            if box.painter.kind == "table":
+                box.sides = tuple(
+                    side
+                    for side in box.sides
+                    if not (side == "Top" and self._cutTop)
+                    and not (side == "Bottom" and self._cutBottom)
+                )
+            box.rounded = roundedBox(
+                box.painter.style, box.x, box.y, box.w, box.h, box.sides
+            )
+        return boxes
+
+    def _drawBkgrnd(self):
+        self._roundedBoxes = self._placeRoundedBoxes()
+        Table._drawBkgrnd(self)
+
+    def _drawLines(self):
+        """
+        Draw the grid, leaving out the edges a rounded box strokes itself.
+
+        The lines are ReportLab's, from the LINE* commands, and can come
+        from anywhere: the box's own, a neighbour's on the edge they share,
+        a table-wide one. _hBlocks and _vBlocks are how ReportLab keeps its
+        lines out of a spanned cell, and they keep them off a rounded edge
+        just as well; the rounded box then draws its own border.
+        """
+        boxes = [
+            box
+            for box in getattr(self, "_roundedBoxes", {}).values()
+            if box.rounded is not None and box.rounded.borders
+        ]
+        if not boxes:
+            Table._drawLines(self)
+            return
+        saved = {name: self.__dict__.get(name) for name in ("_hBlocks", "_vBlocks")}
+        hBlocks = {k: list(v) for k, v in (saved["_hBlocks"] or {}).items()}
+        vBlocks = {k: list(v) for k, v in (saved["_vBlocks"] or {}).items()}
+        for box in boxes:
+            for side in box.rounded.borders:
+                if side in {"Top", "Bottom"}:
+                    y = box.top if side == "Top" else box.bottom
+                    hBlocks.setdefault(y, []).append((box.x0, box.x1))
+                else:
+                    x = box.x0 if side == "Left" else box.x1
+                    vBlocks.setdefault(x, []).append((box.bottom, box.top))
+        self._hBlocks, self._vBlocks = _mergeBlocks(hBlocks), _mergeBlocks(vBlocks)
+        try:
+            Table._drawLines(self)
+        finally:
+            for name, value in saved.items():
+                if value is None:
+                    self.__dict__.pop(name, None)
+                else:
+                    setattr(self, name, value)
+        for box in boxes:
+            drawBoxBorders(
+                self.canv, box.x, box.y, box.w, box.h, box.painter.style, box.sides
+            )
+
     @staticmethod
     def _normWidth(w, maxw):
         """Normalize width when using percentages."""

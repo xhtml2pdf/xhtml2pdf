@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<!--
+  Browser equivalent of data/source/table-border-radius-pagebreak.html
+
+  The same markup with _normalize.css linked ahead of the document's own
+  styles. The browser collapses a table's borders by default and then
+  ignores border-radius on it and its cells, so the table keeps them
+  separate, with no spacing, which is what xhtml2pdf's cellspacing="0"
+  lays out.
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>table-border-radius-pagebreak</title>
+<link rel="stylesheet" href="_normalize.css">
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 14pt; }
+table { width: 100%; background-color: #dde6f0; border-radius: 12px; }
+td, th { padding: 3pt 8pt; text-align: left; }
+th { background-color: #204a87; color: #ffffff; }
+.first { border-top-left-radius: 12px; }
+.last { border-top-right-radius: 12px; }
+table { border-collapse: separate; border-spacing: 0; }
+</style>
+</head>
+<body>
+<table cellspacing="0" repeat="1">
+<thead><tr><th class="first">Row</th><th>Pair</th><th class="last">Words</th></tr></thead>
+<tr><td>Row 1</td><td>heron harbour</td><td>station lamp ferry river</td></tr>
+<tr><td>Row 2</td><td>lamp bridge</td><td>heron chestnut lamp lamp</td></tr>
+<tr><td>Row 3</td><td>ledger harbour</td><td>heron harbour ledger river</td></tr>
+<tr><td>Row 4</td><td>ferry meadow</td><td>orchard clock river bridge</td></tr>
+<tr><td>Row 5</td><td>lamp ledger</td><td>thyme ledger bench harbour</td></tr>
+<tr><td>Row 6</td><td>station lantern</td><td>orchard harbour lamp chestnut</td></tr>
+<tr><td>Row 7</td><td>bridge thyme</td><td>clock thyme ledger station</td></tr>
+<tr><td>Row 8</td><td>thyme heron</td><td>baker river bridge meadow</td></tr>
+<tr><td>Row 9</td><td>baker lantern</td><td>chestnut bridge clock lantern</td></tr>
+<tr><td>Row 10</td><td>ferry lamp</td><td>lamp ferry station ferry</td></tr>
+<tr><td>Row 11</td><td>thyme harbour</td><td>river clock thyme thyme</td></tr>
+<tr><td>Row 12</td><td>lantern orchard</td><td>orchard ledger baker bridge</td></tr>
+<tr><td>Row 13</td><td>heron orchard</td><td>clock river ferry lantern</td></tr>
+<tr><td>Row 14</td><td>orchard chestnut</td><td>thyme clock bridge harbour</td></tr>
+<tr><td>Row 15</td><td>orchard baker</td><td>baker station harbour ledger</td></tr>
+<tr><td>Row 16</td><td>ledger bench</td><td>ledger lantern bridge thyme</td></tr>
+<tr><td>Row 17</td><td>heron clock</td><td>thyme bridge clock baker</td></tr>
+<tr><td>Row 18</td><td>river thyme</td><td>baker river ledger harbour</td></tr>
+<tr><td>Row 19</td><td>orchard baker</td><td>bench station station bridge</td></tr>
+<tr><td>Row 20</td><td>lamp river</td><td>orchard river station bridge</td></tr>
+<tr><td>Row 21</td><td>bench clock</td><td>baker meadow station meadow</td></tr>
+<tr><td>Row 22</td><td>baker station</td><td>bridge clock ledger lantern</td></tr>
+<tr><td>Row 23</td><td>river harbour</td><td>clock heron bridge heron</td></tr>
+<tr><td>Row 24</td><td>baker meadow</td><td>thyme lantern lantern baker</td></tr>
+<tr><td>Row 25</td><td>baker heron</td><td>bench meadow ferry baker</td></tr>
+<tr><td>Row 26</td><td>chestnut bench</td><td>bridge heron lantern orchard</td></tr>
+<tr><td>Row 27</td><td>chestnut baker</td><td>meadow bridge baker ferry</td></tr>
+<tr><td>Row 28</td><td>station harbour</td><td>thyme clock bridge bench</td></tr>
+<tr><td>Row 29</td><td>station thyme</td><td>clock thyme thyme orchard</td></tr>
+<tr><td>Row 30</td><td>thyme harbour</td><td>chestnut river lamp thyme</td></tr>
+<tr><td>Row 31</td><td>heron orchard</td><td>bench clock baker heron</td></tr>
+<tr><td>Row 32</td><td>ferry clock</td><td>lantern heron orchard orchard</td></tr>
+<tr><td>Row 33</td><td>chestnut thyme</td><td>orchard river lamp lantern</td></tr>
+<tr><td>Row 34</td><td>meadow clock</td><td>heron river thyme orchard</td></tr>
+<tr><td>Row 35</td><td>lantern baker</td><td>harbour bridge lamp orchard</td></tr>
+<tr><td>Row 36</td><td>station heron</td><td>chestnut lantern lantern meadow</td></tr>
+<tr><td>Row 37</td><td>heron bridge</td><td>harbour river lamp ledger</td></tr>
+<tr><td>Row 38</td><td>orchard bridge</td><td>heron bridge thyme orchard</td></tr>
+<tr><td>Row 39</td><td>lamp baker</td><td>river orchard harbour orchard</td></tr>
+<tr><td>Row 40</td><td>lantern orchard</td><td>ferry lamp orchard ferry</td></tr>
+<tr><td>Row 41</td><td>lamp baker</td><td>meadow baker ferry station</td></tr>
+<tr><td>Row 42</td><td>ledger ledger</td><td>clock station bridge chestnut</td></tr>
+<tr><td>Row 43</td><td>baker thyme</td><td>lantern harbour river ledger</td></tr>
+<tr><td>Row 44</td><td>ferry meadow</td><td>orchard station bench ledger</td></tr>
+<tr><td>Row 45</td><td>orchard thyme</td><td>orchard station lamp baker</td></tr>
+<tr><td>Row 46</td><td>thyme thyme</td><td>bench river heron chestnut</td></tr>
+<tr><td>Row 47</td><td>bridge ferry</td><td>thyme heron thyme harbour</td></tr>
+<tr><td>Row 48</td><td>river baker</td><td>station bridge lantern bench</td></tr>
+<tr><td>Row 49</td><td>lantern ledger</td><td>lantern baker lantern river</td></tr>
+<tr><td>Row 50</td><td>lamp harbour</td><td>heron ledger orchard ferry</td></tr>
+<tr><td>Row 51</td><td>lantern ledger</td><td>meadow river baker lantern</td></tr>
+<tr><td>Row 52</td><td>river lantern</td><td>lamp clock clock ferry</td></tr>
+<tr><td>Row 53</td><td>orchard heron</td><td>lantern lantern orchard baker</td></tr>
+<tr><td>Row 54</td><td>meadow ferry</td><td>heron meadow heron bench</td></tr>
+<tr><td>Row 55</td><td>ledger bridge</td><td>station ledger station thyme</td></tr>
+<tr><td>Row 56</td><td>ferry ledger</td><td>heron thyme meadow thyme</td></tr>
+<tr><td>Row 57</td><td>lamp harbour</td><td>ledger harbour meadow lantern</td></tr>
+<tr><td>Row 58</td><td>lamp lamp</td><td>bench meadow harbour bridge</td></tr>
+<tr><td>Row 59</td><td>chestnut harbour</td><td>baker heron clock thyme</td></tr>
+<tr><td>Row 60</td><td>bridge chestnut</td><td>clock river bridge lamp</td></tr>
+<tr><td>Row 61</td><td>ledger chestnut</td><td>meadow station heron baker</td></tr>
+<tr><td>Row 62</td><td>lamp harbour</td><td>thyme lamp chestnut bench</td></tr>
+<tr><td>Row 63</td><td>river lamp</td><td>ferry ledger orchard bench</td></tr>
+<tr><td>Row 64</td><td>heron heron</td><td>ferry chestnut bridge heron</td></tr>
+<tr><td>Row 65</td><td>chestnut bridge</td><td>harbour meadow orchard bridge</td></tr>
+<tr><td>Row 66</td><td>meadow orchard</td><td>baker meadow thyme ferry</td></tr>
+<tr><td>Row 67</td><td>ferry lantern</td><td>ferry bridge clock orchard</td></tr>
+<tr><td>Row 68</td><td>station bench</td><td>baker river river baker</td></tr>
+<tr><td>Row 69</td><td>baker thyme</td><td>ledger lamp ferry chestnut</td></tr>
+<tr><td>Row 70</td><td>lamp ledger</td><td>harbour baker lantern bridge</td></tr>
+<tr><td>Row 71</td><td>ferry thyme</td><td>lantern bench bridge lantern</td></tr>
+<tr><td>Row 72</td><td>station station</td><td>bench clock bridge lantern</td></tr>
+<tr><td>Row 73</td><td>baker lantern</td><td>lamp station orchard clock</td></tr>
+<tr><td>Row 74</td><td>meadow harbour</td><td>meadow station bench lantern</td></tr>
+<tr><td>Row 75</td><td>lantern harbour</td><td>baker thyme clock meadow</td></tr>
+</table>
+</body>
+</html>

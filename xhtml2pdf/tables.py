@@ -18,16 +18,20 @@ import logging
 
 from reportlab.platypus.tables import TableStyle
 
+from xhtml2pdf.builders.flex import BoxStyle
 from xhtml2pdf.tags import pisaTag
 from xhtml2pdf.util import (
+    NO_RADIUS,
+    RADIUS_CORNERS,
     getAlign,
     getBorderStyle,
     getBorderTableLine,
     getKeepInFrameMode,
     getSize,
+    roundedBox,
     set_value,
 )
-from xhtml2pdf.xhtml2pdf_reportlab import PmlKeepInFrame, PmlTable
+from xhtml2pdf.xhtml2pdf_reportlab import PmlKeepInFrame, PmlTable, RoundedTableBox
 
 log = logging.getLogger(__name__)
 
@@ -125,9 +129,25 @@ class TableData:
                 data[y].insert(x, "")
         return data
 
-    def add_cell_styles(self, c, begin, end, mode="td"):
+    def add_cell_styles(self, c, begin, end, mode="td") -> bool:
+        """
+        Describe the element's box to ReportLab; True when it is rounded.
+
+        A rounded table or cell paints its own background and border
+        through a RoundedTableBox, and its caller keeps what is inside from
+        painting a square copy of the colour. A row's radius is ignored, as
+        browsers ignore it.
+        """
         self.mode = mode.upper()
-        if c.frag.backColor and mode != "tr":  # XXX Stimmt das so?
+        rounded = None
+        if mode in {"table", "td"}:
+            # A table side with no colour is not drawn, so no text colour.
+            style = BoxStyle(c.frag, textColor=None, backgroundImage=None)
+            if roundedBox(style, 0.0, 0.0, 1.0, 1.0) is not None:
+                rounded = RoundedTableBox(style, mode)
+        if rounded is not None:
+            self.add_style(("BACKGROUND", begin, end, rounded))
+        elif c.frag.backColor and mode != "tr":  # XXX Stimmt das so?
             self.add_style(("BACKGROUND", begin, end, c.frag.backColor))
 
         if 0:
@@ -183,6 +203,7 @@ class TableData:
         self.add_style(
             ("BOTTOMPADDING", begin, end, c.frag.paddingBottom or self.padding)
         )
+        return rounded is not None
 
 
 class pisaTagTABLE(pisaTag):
@@ -232,7 +253,10 @@ class pisaTagTABLE(pisaTag):
             self.set_borders(c.frag, attrs)
 
         tdata.padding = attrs.cellpadding
-        tdata.add_cell_styles(c, (0, 0), (-1, -1), "table")
+        if tdata.add_cell_styles(c, (0, 0), (-1, -1), "table"):
+            # The rounded box paints the colour; a row or cell inheriting it
+            # would paint it again, square, over the corners.
+            c.frag.backColor = None
         tdata.align = attrs.align.upper()
         tdata.col = 0
         tdata.row = 0
@@ -378,7 +402,7 @@ class pisaTagTD(pisaTag):
                         tdata.add_empty(x, y)
 
         # Set Border and padding styles
-        tdata.add_cell_styles(c, begin, end, "td")
+        rounded = tdata.add_cell_styles(c, begin, end, "td")
 
         # Calculate widths
         # Add empty placeholders for new columns
@@ -449,6 +473,11 @@ class pisaTagTD(pisaTag):
             ),
             None,
         )
+        if rounded:
+            # The paragraphs in the cell would paint its colour square.
+            frag.backColor = None
+            for corner in RADIUS_CORNERS:
+                setattr(frag, f"border{corner}Radius", NO_RADIUS)
 
     def end(self, c):
         tdata = c.tableData

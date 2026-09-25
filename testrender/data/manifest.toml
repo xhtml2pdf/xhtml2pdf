@@ -614,3 +614,25 @@ notes = """border-radius clips an image: a square one at 50% is a circle, a \
 wide one an ellipse, px and elliptical corners, a floated image, and an \
 SVG. An image draws no border or background of its own yet, so only the \
 clipping is compared."""
+
+[fixtures.table-border-radius]
+compare = ["pages", "text", "ssim"]
+notes = """A table's own border-radius: over a background, with a solid and a \
+double border, and in percentages. The bordered tables also show a \
+difference that has nothing to do with the radius: a border declared on \
+a table reaches its cells, which xhtml2pdf draws as a grid inside the \
+rounded outline, where the browser draws the outline alone."""
+
+[fixtures.table-cell-border-radius]
+compare = ["pages", "text", "ssim"]
+notes = """border-radius on cells: a header row with its outer corners \
+rounded, a pill cell, a bordered rounded cell across two columns (the \
+neighbour's line on the edge they share gives way to it), a cell across \
+two rows. The columns come out equal where the browser sizes them to \
+their content, PmlTable's own layout."""
+
+[fixtures.table-border-radius-pagebreak]
+compare = ["pages"]
+notes = """A rounded table with a repeated header, long enough for three \
+pages. The table is square where a page cuts it and round at its two \
+ends; the header's rounded corners come back with it on every page."""

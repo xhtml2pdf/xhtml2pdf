@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<!--
+  Browser equivalent of data/source/table-border-radius.html
+
+  The same markup with _normalize.css linked ahead of the document's own
+  styles. The browser collapses a table's borders by default and then
+  ignores border-radius on it and its cells, so the table keeps them
+  separate, with no spacing, which is what xhtml2pdf's cellspacing="0"
+  lays out.
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>table-border-radius</title>
+<link rel="stylesheet" href="_normalize.css">
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 14pt; }
+table { width: 100%; margin-bottom: 14pt; }
+td { padding: 4pt 8pt; }
+.shaded { background-color: #dde6f0; border-radius: 12px; }
+.outlined { border: 2px solid #204a87; border-radius: 12px; }
+.double { border: 6px double #4e9a06; border-radius: 16px; background-color: #f2f8ea; }
+.pct { background-color: #fce94f; border-radius: 10% / 50%; }
+table { border-collapse: separate; border-spacing: 0; }
+</style>
+</head>
+<body>
+<table class="shaded" cellspacing="0">
+<tr><td>A rounded table</td><td>with a background</td><td>and no border</td></tr>
+<tr><td>second row</td><td>of three</td><td>cells</td></tr>
+</table>
+<table class="outlined" cellspacing="0">
+<tr><td>A rounded table</td><td>with a 2px border</td></tr>
+<tr><td>around</td><td>two rows</td></tr>
+</table>
+<table class="double" cellspacing="0">
+<tr><td>A double border, 16px</td><td>over a pale green</td></tr>
+</table>
+<table class="pct" cellspacing="0">
+<tr><td>Percentages: 10% across, 50% down</td></tr>
+</table>
+</body>
+</html>
