@@ -1,3 +1,4 @@
+import threading
 from typing import ClassVar
 from unittest import TestCase
 from xml.dom import minidom
@@ -93,6 +94,45 @@ class MalformedSelectorTest(TestCase):
         rules = self._parse("p { color: green; } h2 >> ")
 
         self.assertEqual({"p"}, set(rules))
+
+    def test_stray_closing_brace_at_top_level(self) -> None:
+        # An extra "}" between two rules, as in the stylesheet
+        # svc.webspellchecker.net serves. At top level there is no block for it
+        # to close, so it starts the prelude of the next rule and takes that
+        # rule down with it (CSS Syntax 3). The skip used to hand the same
+        # "}" back to the stylesheet loop, which then never advanced.
+        css = "p { color: green; }} .gone { color: red; } div { color: blue; }"
+        result: dict = {}
+        worker = threading.Thread(
+            target=lambda: result.update(rules=self._parse(css)), daemon=True
+        )
+        worker.start()
+        worker.join(timeout=5)
+
+        self.assertFalse(worker.is_alive(), "parser did not terminate")
+        self.assertEqual({"p", "div"}, set(result["rules"]))
+
+    def test_stray_closing_brace_drops_the_whole_next_block(self) -> None:
+        # The dropped rule ends at its matching "}", not at the first one.
+        rules = self._parse(
+            "p { color: green; }} @media print { a { color: red; } }"
+            "div { color: blue; }"
+        )
+        self.assertEqual({"p", "div"}, set(rules))
+
+        rules = self._parse("p { color: green; } }{} span { color: blue; }")
+        self.assertEqual({"p", "span"}, set(rules))
+
+    def test_rules_after_an_unsupported_at_rule_block_survive(self) -> None:
+        # @keyframes and @supports are skipped whole. Their block of rules
+        # used to be parsed as a stylesheet, which took the closing "}" for a
+        # stray one and dropped what followed.
+        rules = self._parse(
+            "@keyframes fade { from { opacity: 0; } to { opacity: 1; } }"
+            "@supports (display: grid) { p { color: red; } }"
+            "div { color: blue; }"
+        )
+        self.assertEqual({"div"}, set(rules))
 
 
 class StandardSelectorTest(TestCase):
