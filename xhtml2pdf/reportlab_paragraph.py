@@ -21,7 +21,7 @@ from reportlab.platypus.flowables import Flowable
 from reportlab.platypus.paraparser import ParaParser
 from reportlab.rl_settings import _FUZZ
 
-from xhtml2pdf.util import drawBoxBackground, drawBoxBorders, getSize
+from xhtml2pdf.util import drawBoxBackground, drawBoxBorders, getSize, roundedClip
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -283,12 +283,18 @@ def _putFragLine(cur_x, tx, line):
                 )
                 cur_x_s = cur_x + nSpaces * ws
                 drawing = cbDefn.image.getDrawing(w, h)
-                if drawing:
-                    renderPDF.draw(drawing, tx._canvas, cur_x_s, cur_y + iy0)
-                else:
-                    tx._canvas.drawImage(
-                        cbDefn.image.getImage(), cur_x_s, cur_y + iy0, w, h, mask="auto"
-                    )
+                with roundedClip(tx._canvas, cbDefn.image, cur_x_s, cur_y + iy0, w, h):
+                    if drawing:
+                        renderPDF.draw(drawing, tx._canvas, cur_x_s, cur_y + iy0)
+                    else:
+                        tx._canvas.drawImage(
+                            cbDefn.image.getImage(),
+                            cur_x_s,
+                            cur_y + iy0,
+                            w,
+                            h,
+                            mask="auto",
+                        )
                 cur_x += w
                 cur_x_s += w
                 setXPos(tx, cur_x_s - tx._x0)

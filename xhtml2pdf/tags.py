@@ -46,8 +46,12 @@ from xhtml2pdf.default import DEFAULT_LANGUAGE_LIST
 from xhtml2pdf.paragraph import PageNumberFlowable
 from xhtml2pdf.util import (
     DPI96,
+    NO_RADIUS,
+    RADIUS_CORNERS,
+    RADIUS_PROPERTIES,
     ImageWarning,
     getAlign,
+    getBorderRadius,
     getColor,
     getKeepInFrameMode,
     getSize,
@@ -490,6 +494,22 @@ class pisaTagIMG(pisaTag):
 
                     img.spaceBefore = c.frag.spaceBefore
                     img.spaceAfter = c.frag.spaceAfter
+
+                    # An image has no box of its own to paint yet, but its
+                    # corners are clipped. The frag never reads them: they
+                    # are block properties, and an image is inline.
+                    for corner, name in zip(
+                        RADIUS_CORNERS, RADIUS_PROPERTIES, strict=True
+                    ):
+                        setattr(
+                            img,
+                            f"border{corner}Radius",
+                            (
+                                getBorderRadius(c.cssAttr[name], c.frag.fontSize)
+                                if name in c.cssAttr
+                                else NO_RADIUS
+                            ),
+                        )
 
                     # print "image", id(img), img.drawWidth, img.drawHeight
 

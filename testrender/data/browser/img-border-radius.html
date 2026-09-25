@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<!--
+  Browser equivalent of data/source/img-border-radius.html
+
+  The same markup with _normalize.css linked ahead of the document's own
+  styles, and the image paths rewritten to reach out of data/browser/ into
+  data/source/img/.
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>img-border-radius</title>
+<link rel="stylesheet" href="_normalize.css">
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 15pt; }
+p { margin: 0 0 12pt 0; }
+.avatar { width: 90pt; height: 90pt; border-radius: 50%; }
+.oval { width: 150pt; height: 100pt; border-radius: 50%; }
+.soft { width: 150pt; height: 100pt; border-radius: 16px; }
+.mixed { width: 150pt; height: 100pt; border-radius: 40px 0 / 20px 0; }
+.float { float: left; width: 80pt; height: 60pt; border-radius: 12px; margin-right: 8pt; }
+.svg { width: 90pt; height: 90pt; border-radius: 24px; }
+</style>
+</head>
+<body>
+<p><img class="avatar" src="../source/img/test.jpg"> <img class="oval" src="../source/img/beach.jpg"></p>
+<p><img class="soft" src="../source/img/beach.jpg"> <img class="mixed" src="../source/img/beach.jpg"></p>
+<p><img class="float" src="../source/img/test.jpg" align="left">A floated image with its corners rounded, and text flowing beside it. The river bends twice before it reaches the old mill, where the water slows and turns green. Every spring the orchard behind the school fills with blossom that the wind carries into town.</p>
+<p><img class="svg" src="../source/img/shapes.svg"> an SVG image clipped the same way.</p>
+</body>
+</html>

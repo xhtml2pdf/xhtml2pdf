@@ -53,6 +53,7 @@ from xhtml2pdf.util import (
     drawBoxBackground,
     drawBoxBorders,
     getBorderWidth,
+    roundedClip,
 )
 
 if TYPE_CHECKING:
@@ -748,7 +749,8 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         #     renderPDF.draw(drawing, self.canv, 0, 0)
         # else:
         img = self.getImage()
-        self.canv.drawImage(img, 0, 0, self.dWidth, self.dHeight, mask=self._mask)
+        with roundedClip(self.canv, self, 0, 0, self.dWidth, self.dHeight):
+            self.canv.drawImage(img, 0, 0, self.dWidth, self.dHeight, mask=self._mask)
 
     def identity(self, maxLen=None):
         return Flowable.identity(self, maxLen)

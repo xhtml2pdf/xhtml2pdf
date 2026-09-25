@@ -1,5 +1,6 @@
 import io
 import re
+from pathlib import Path
 from unittest import TestCase
 from xml.dom import minidom
 
@@ -753,3 +754,36 @@ class TocLevelStylesTestCase(TestCase):
         plain = self.positions(f"<html><body>{body}</body></html>", page=0)
 
         self.assertEqual(plain["Body text"], leaked["Body text"])
+
+
+class ImageBorderRadiusTestCase(TestCase):
+    """border-radius clips an image; with none it is drawn as before."""
+
+    IMAGE = (
+        Path(__file__).parent.parent
+        / "testrender"
+        / "data"
+        / "source"
+        / "img"
+        / "test.jpg"
+    ).as_uri()
+
+    def _page(self, style: str, align: str = "") -> str:
+        html = f'<p><img src="{self.IMAGE}" {align} style="width: 60pt; {style}"></p>'
+        out = io.BytesIO()
+        self.assertFalse(pisa.CreatePDF(html, dest=out).err)
+        page = PdfReader(out).pages[0]
+        return page.get_contents().get_data().decode("latin-1")
+
+    def test_a_rounded_image_is_drawn_inside_a_curved_clip(self) -> None:
+        for align in ("", 'align="left"'):
+            with self.subTest(align=align or "inline"):
+                content = self._page("border-radius: 50%", align)
+                clip = re.search(r" W\*? n", content)
+                assert clip is not None
+                self.assertGreater(content.index(" Do"), clip.start())
+                # An ellipse: four quarter curves.
+                self.assertEqual(4, len(re.findall(r" c\b", content[: clip.start()])))
+
+    def test_an_image_without_a_radius_has_no_clip(self) -> None:
+        self.assertIsNone(re.search(r" W\*? n", self._page("")))

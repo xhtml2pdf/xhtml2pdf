@@ -712,6 +712,26 @@ def clipRoundedRect(
     canvas.clipPath(roundedRectPath(canvas, x, y, w, h, radii), stroke=0, fill=0)
 
 
+@contextlib.contextmanager
+def roundedClip(canvas, style, x: float, y: float, w: float, h: float):
+    """
+    Clip what is drawn inside the block to the box's rounded corners.
+
+    For content with no box of its own to paint, an image: nothing happens
+    when the style declares no radius.
+    """
+    box = roundedBox(style, x, y, w, h)
+    if box is None:
+        yield
+        return
+    canvas.saveState()
+    try:
+        clipRoundedRect(canvas, *box.inset(0.5))
+        yield
+    finally:
+        canvas.restoreState()
+
+
 def drawBoxBackground(
     canvas, x: float, y: float, w: float, h: float, style, sides=_BOX_SIDES
 ) -> None:
@@ -1497,6 +1517,14 @@ NO_RADIUS = CornerRadius(ZERO_LENGTH, ZERO_LENGTH)
 #: The corners in the order the border-radius shorthand lists them. The frag
 #: and style attribute of each is f"border{corner}Radius".
 RADIUS_CORNERS = ("TopLeft", "TopRight", "BottomRight", "BottomLeft")
+
+#: The CSS longhand of each corner, in the same order.
+RADIUS_PROPERTIES = (
+    "border-top-left-radius",
+    "border-top-right-radius",
+    "border-bottom-right-radius",
+    "border-bottom-left-radius",
+)
 
 _RADIUS_UNITS = ("px", "pt", "pc", "cm", "mm", "in", "rem", "em", "ex", "%")
 

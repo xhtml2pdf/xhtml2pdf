@@ -607,3 +607,10 @@ notes = """border-radius on inline boxes: pills and a rounded highlight, which \
 a background colour and a radius make a box of; a bordered rounded span \
 wrapping over two lines, whose corners at the line break are square \
 (box-decoration-break: slice); a rounded span nested in another."""
+
+[fixtures.img-border-radius]
+compare = ["pages", "text", "ssim"]
+notes = """border-radius clips an image: a square one at 50% is a circle, a \
+wide one an ellipse, px and elliptical corners, a floated image, and an \
+SVG. An image draws no border or background of its own yet, so only the \
+clipping is compared."""

@@ -112,6 +112,7 @@ from xhtml2pdf.tags import (  # noqa: F401
 from xhtml2pdf.util import (
     NO_RADIUS,
     RADIUS_CORNERS,
+    RADIUS_PROPERTIES,
     Display,
     getAlign,
     getBox,
@@ -718,24 +719,16 @@ _INLINE_BOX_PROPERTIES = (
 _REPLACED_INLINE_TAGS = frozenset({"img", "br", "hr", "pdfbarcode"})
 
 
-#: A radius makes a box of an inline element's own background colour, which
-#: otherwise is painted word by word: `border-radius: 1em` on a highlighted
-#: span is how a pill badge is written.
-_RADIUS_PROPERTIES = (
-    "border-top-left-radius",
-    "border-top-right-radius",
-    "border-bottom-right-radius",
-    "border-bottom-left-radius",
-)
-
-
 def declaresInlineBox(context, tagName: str) -> bool:
     if tagName in _REPLACED_INLINE_TAGS:
         return False
     cssAttr = context.cssAttr
+    # A radius makes a box of the element's own background colour, which
+    # otherwise is painted word by word: `border-radius: 1em` on a
+    # highlighted span is how a pill badge is written.
     return any(name in cssAttr for name in _INLINE_BOX_PROPERTIES) or (
         "background-color" in cssAttr
-        and any(name in cssAttr for name in _RADIUS_PROPERTIES)
+        and any(name in cssAttr for name in RADIUS_PROPERTIES)
     )
 
 
