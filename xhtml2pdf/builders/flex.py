@@ -1004,10 +1004,8 @@ class FlexContainer(Flowable, PmlMaxHeightMixIn):
             self._not_cut(probed)
             return None
 
-        head_style = BoxStyle(self.style, paddingBottom=0.0, spaceAfter=0.0)
-        head_style.borderBottomStyle = None
-        tail_style = BoxStyle(self.style, paddingTop=0.0, spaceBefore=0.0)
-        tail_style.borderTopStyle = None
+        head_style = cut_style(self.style, "Bottom")
+        tail_style = cut_style(self.style, "Top")
 
         placed_by_index = {p.index: p for p in self.layout.placed}
         items: list[FlexItem] = []
@@ -1075,10 +1073,8 @@ class FlexContainer(Flowable, PmlMaxHeightMixIn):
         head_content, tail_content = split_stack(
             entries, cut - top - item.style.content_top, width, canv
         )
-        head_style = BoxStyle(item.style, paddingBottom=0.0, spaceAfter=0.0)
-        head_style.borderBottomStyle = None
-        tail_style = BoxStyle(item.style, paddingTop=0.0, spaceBefore=0.0)
-        tail_style.borderTopStyle = None
+        head_style = cut_style(item.style, "Bottom")
+        tail_style = cut_style(item.style, "Top")
         head = replace(item, content=head_content, style=head_style)
         tail = self._continued(
             item, placed, tail_content, tail_style, remaining=top + size - cut
@@ -1315,6 +1311,22 @@ _BOX_ATTRIBUTES: dict[str, Any] = {
     "spaceAfter": 0,
     "bulletIndent": 0,
 }
+
+
+def cut_style(style: BoxStyle, side: str) -> BoxStyle:
+    """
+    The style of a box's fragment at a page break: no edge at the cut.
+
+    Its padding, border and the rounding of its two corners stop there, as
+    box-decoration-break: slice has it; the fragment on the other side of
+    the cut has them at its own end.
+    """
+    margin = "spaceAfter" if side == "Bottom" else "spaceBefore"
+    fragment = BoxStyle(style, **{f"padding{side}": 0.0, margin: 0.0})
+    setattr(fragment, f"border{side}Style", None)
+    for corner in (f"{side}Left", f"{side}Right"):
+        setattr(fragment, f"border{corner}Radius", NO_RADIUS)
+    return fragment
 
 
 def clear_box(frag) -> None:

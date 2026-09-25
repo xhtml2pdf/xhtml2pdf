@@ -580,3 +580,23 @@ as one closed path; per-side colours and widths as one path per side, \
 meeting halfway round each corner; a missing side. xhtml2pdf centres the \
 stroke on the edge of the box, as it does for straight borders, so the ring \
 sits half its width further out than the browser's."""
+
+[fixtures.flex-border-radius]
+compare = ["pages", "text", "ssim"]
+notes = """border-radius on flex items and on the container around them: \
+radius alone, a bordered 12pt 0, a dashed 50%. The card is a column flex \
+box, the way to draw a rounded box around blocks until a plain div wrapping \
+blocks has a box of its own; its tag is a pill."""
+
+[fixtures.inline-block-border-radius]
+compare = ["pages", "text", "ssim"]
+notes = """Rounded inline-blocks in a line: badges, a pill, a 50% circle and \
+ellipse with a border, and tabs open at the bottom whose bottom corners are \
+square."""
+
+[fixtures.flex-border-radius-pagebreak]
+compare = ["pages"]
+notes = """A rounded column flex container of rounded items, taller than a \
+page. At the cut the container and the item straddling it are open, and \
+their corners there are square while the far ones stay round, as \
+box-decoration-break: slice has it and Chrome prints."""

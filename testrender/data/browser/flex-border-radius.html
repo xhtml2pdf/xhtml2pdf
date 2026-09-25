@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<!--
+  Browser equivalent of data/source/flex-border-radius.html
+
+  The same markup with _normalize.css linked ahead of the document's own
+  styles.
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>flex-border-radius</title>
+<link rel="stylesheet" href="_normalize.css">
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 15pt; }
+h2 { font-size: 10pt; margin: 10pt 0 2pt 0; }
+.row { display: flex; gap: 8pt; }
+.shell {
+    background-color: #eeeeec;
+    padding: 10pt;
+    border: 2pt solid #3465a4;
+    border-radius: 16pt;
+}
+.row > span { flex: 1; padding: 8pt; background-color: #d3d7cf; }
+.a { border-radius: 8pt; }
+.b { border: 3pt solid #a40000; border-radius: 12pt 0; }
+.c { border: 2pt dashed #4e9a06; border-radius: 50%; }
+.card {
+    display: flex;
+    flex-direction: column;
+    gap: 4pt;
+    padding: 10pt;
+    border: 1pt solid #888a85;
+    border-radius: 10pt;
+    background-color: #fcfcfc;
+}
+.card .title { font-weight: bold; }
+.card .tag {
+    align-self: flex-start;
+    padding: 1pt 8pt;
+    background-color: #204a87;
+    color: #ffffff;
+    border-radius: 999px;
+}
+</style>
+</head>
+<body>
+<h2>Rounded items in a plain row</h2>
+<div class="row"><span class="a">radius 8pt</span><span class="b">12pt 0, bordered</span><span class="c">50%, dashed</span></div>
+<h2>A rounded container around rounded items</h2>
+<div class="row shell"><span class="a">one</span><span class="b">two</span><span class="a">three</span></div>
+<h2>A card: a column flex box standing in for a rounded div</h2>
+<div class="card">
+<span class="title">Card title</span>
+<span>A column of blocks inside one rounded box, which a plain div around blocks cannot draw yet.</span>
+<span class="tag">tag</span>
+</div>
+</body>
+</html>

@@ -28,7 +28,7 @@ from xhtml2pdf.builders.flex import (
     stack_flowables,
 )
 from xhtml2pdf.reportlab_paragraph import Paragraph
-from xhtml2pdf.util import AUTO, CSSLength
+from xhtml2pdf.util import AUTO, NO_RADIUS, RADIUS_CORNERS, CornerRadius, CSSLength
 from xhtml2pdf.xhtml2pdf_reportlab import PmlKeepInFrame, PmlTable
 
 
@@ -366,6 +366,26 @@ class FlexContainerCutTest(TestCase):
             ),
         )
         self.assertEqual("solid", bottom.style.borderBottomStyle)
+
+    def test_the_corners_at_the_cut_are_square(self) -> None:
+        radius = CornerRadius(_length(8), _length(8))
+        corners = {f"border{c}Radius": radius for c in RADIUS_CORNERS}
+        container = FlexContainer(
+            [FlexItem(content=[_SplitProbe(200, 100, 10)], style=BoxStyle(**corners))],
+            style=BoxStyle(**corners),
+        )
+        head, tail = self._cut(container, 45)
+
+        def rounded(style):
+            return tuple(
+                getattr(style, f"border{c}Radius") is not NO_RADIUS
+                for c in RADIUS_CORNERS
+            )
+
+        # Top-left, top-right, bottom-right, bottom-left.
+        for top, bottom in ((head, tail), (head.items[0], tail.items[0])):
+            self.assertEqual((True, True, False, False), rounded(top.style))
+            self.assertEqual((False, False, True, True), rounded(bottom.style))
 
     def test_the_tail_line_keeps_the_main_sizes_of_the_cut_line(self) -> None:
         container = FlexContainer(

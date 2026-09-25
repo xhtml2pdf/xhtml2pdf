@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<!--
+  Browser equivalent of data/source/inline-block-border-radius.html
+
+  The same markup with _normalize.css linked ahead of the document's own
+  styles.
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>inline-block-border-radius</title>
+<link rel="stylesheet" href="_normalize.css">
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 15pt; }
+p { margin: 0 0 10pt 0; }
+.badge {
+    display: inline-block;
+    padding: 2pt 8pt;
+    background-color: #4e9a06;
+    color: #ffffff;
+    border-radius: 8pt;
+}
+.pill { border-radius: 999px; background-color: #204a87; }
+.ring {
+    display: inline-block;
+    width: 40pt;
+    height: 40pt;
+    border: 3pt solid #a40000;
+    border-radius: 50%;
+    background-color: #fce94f;
+}
+.tab {
+    display: inline-block;
+    padding: 4pt 10pt;
+    border: 1pt solid #555753;
+    border-bottom: none;
+    border-radius: 6pt 6pt 0 0;
+    background-color: #eeeeec;
+}
+</style>
+</head>
+<body>
+<p>Status: <span class="badge">passed</span> and <span class="badge pill">a pill badge</span> sitting in a line of text.</p>
+<p>Circles: <span class="ring">&nbsp;</span> <span class="ring" style="width: 80pt">&nbsp;</span> an ellipse when the box is wider than tall.</p>
+<p><span class="tab">First tab</span><span class="tab">Second tab</span></p>
+</body>
+</html>

@@ -20,6 +20,7 @@ from xhtml2pdf import pisa
 from xhtml2pdf.builders.flex import FlexContainer, InlineBox
 from xhtml2pdf.document import pisaStory
 from xhtml2pdf.reportlab_paragraph import _getFragWords
+from xhtml2pdf.util import NO_RADIUS
 from xhtml2pdf.xhtml2pdf_reportlab import PmlInput, PmlParagraph
 
 BOX = "display:inline-block; width:40pt; padding:2pt; border:1pt solid #000"
@@ -67,6 +68,15 @@ class InlineBlockParsingTest(TestCase):
         inner = box.flowable.content[0]
         self.assertEqual(0, inner.style.paddingLeft)
         self.assertIsNone(inner.style.backColor)
+
+    def test_the_box_is_rounded_and_its_content_is_not(self) -> None:
+        (para,) = _paragraphs(
+            f"<p>a <span style='{BOX}; border-radius: 6pt'>X</span></p>"
+        )
+        (box,) = _boxes(para)
+        self.assertEqual((6, 6), box.flowable.style.borderTopLeftRadius.resolve(40, 40))
+        inner = box.flowable.content[0]
+        self.assertIs(NO_RADIUS, inner.style.borderTopLeftRadius)
 
     def test_getFragWords_treats_it_as_one_atom(self) -> None:
         (para,) = _paragraphs(f"<p>a <span style='{BOX}'>X Y</span> b</p>")
