@@ -918,7 +918,14 @@ def _do_post_text(tx):
     # ascent and descent. CSS 2.1 10.8: they do not change the line's
     # height, so a tall padding overlaps the neighbouring lines, as in a
     # browser. A box cut by a line break has no edge at the cut.
-    for x1, x2, box_style, first, last in getattr(xs, "inlineBoxSpans", ()):
+    #
+    # A span is recorded when its box closes, so a nested box comes before
+    # the one around it; painted in that order the outer background covered
+    # the inner box. CSS paints them from the outside in: wider first, and
+    # of two alike the one recorded later, which encloses the other.
+    spans = list(getattr(xs, "inlineBoxSpans", ()))
+    order = sorted(range(len(spans)), key=lambda i: (spans[i][0] - spans[i][1], -i))
+    for x1, x2, box_style, first, last in (spans[i] for i in order):
         top = y0 + xs.lineAscent + box_style.paddingTop + box_style.border("Top")
         bottom = (
             y0 + xs.lineDescent - box_style.paddingBottom - box_style.border("Bottom")

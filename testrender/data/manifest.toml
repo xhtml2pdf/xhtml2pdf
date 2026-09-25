@@ -600,3 +600,10 @@ notes = """A rounded column flex container of rounded items, taller than a \
 page. At the cut the container and the item straddling it are open, and \
 their corners there are square while the far ones stay round, as \
 box-decoration-break: slice has it and Chrome prints."""
+
+[fixtures.inline-box-border-radius]
+compare = ["pages", "text", "ssim"]
+notes = """border-radius on inline boxes: pills and a rounded highlight, which \
+a background colour and a radius make a box of; a bordered rounded span \
+wrapping over two lines, whose corners at the line break are square \
+(box-decoration-break: slice); a rounded span nested in another."""

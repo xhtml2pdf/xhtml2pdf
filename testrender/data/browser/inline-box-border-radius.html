@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<!--
+  Browser equivalent of data/source/inline-box-border-radius.html
+
+  The same markup with _normalize.css linked ahead of the document's own
+  styles.
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>inline-box-border-radius</title>
+<link rel="stylesheet" href="_normalize.css">
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 18pt; }
+p { margin: 0 0 12pt 0; }
+.pill { background-color: #204a87; color: #ffffff; border-radius: 999px; padding: 1pt 6pt; }
+.soft { background-color: #fce94f; border-radius: 4pt; }
+.ring { border: 1pt solid #a40000; border-radius: 6pt; padding: 0 4pt; background-color: #fdeaea; }
+.inner { background-color: #4e9a06; color: #ffffff; border-radius: 3pt; padding: 0 2pt; }
+</style>
+</head>
+<body>
+<p>Labels such as <span class="pill">new</span>, <span class="pill">beta</span> and <span class="soft">a softly rounded highlight</span> sit in the running text.</p>
+<p>A bordered span that is long enough to wrap: <span class="ring">the quick brown fox jumps over the lazy dog, then over the fence, across the meadow and down to the river where it finally stops</span> and the text goes on after it.</p>
+<p>Boxes nest: <span class="ring">outer with an <span class="inner">inner</span> one</span> inside.</p>
+</body>
+</html>

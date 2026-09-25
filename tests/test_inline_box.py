@@ -181,6 +181,24 @@ class _LineFixture(TestCase):
 
 
 class InlineBoxLineTest(_LineFixture):
+    def test_a_box_around_another_paints_first(self) -> None:
+        # The inner box closes, and is recorded, before the outer one; the
+        # outer background painted last used to cover it.
+        para = _paragraph(
+            "<p>a <span style='padding: 0 4pt; background-color: #ff0000'>"
+            "b <span style='padding: 0 2pt; background-color: #00ff00'>c</span>"
+            " d</span> e</p>"
+        )
+        painted = []
+        with patch.object(
+            reportlab_paragraph,
+            "drawBoxBackground",
+            lambda *args, **_kw: painted.append(args[5].backColor),
+        ):
+            para.wrapOn(self.canv, 400, 800)
+            para.drawOn(self.canv, 0, 0)
+        self.assertEqual(["0xff0000", "0x00ff00"], [c.hexval() for c in painted])
+
     def test_getFragWords_counts_the_padding_in_the_word(self) -> None:
         box = BoxStyle(paddingLeft=6, paddingRight=6)
         para = self._frags("aa ", "bb", " cc", box)
