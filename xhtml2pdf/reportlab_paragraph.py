@@ -183,6 +183,22 @@ _56 = 5.0 / 6
 _16 = 1.0 / 6
 
 
+def _maxLeadingExtent(line, leading):
+    """
+    The ascent and descent a line is given with autoLeading "max": the
+    leading split 5/6 above the baseline and 1/6 below, each part widened to
+    the font's own where that is taller.
+
+    One function for drawing (_putFragLine) and for measuring (wrap, split).
+    They used to measure max(ascent - descent, leading) instead, which is
+    less whenever the font's ascent wins above and its descent below -- a
+    TTF taller than 1.2em with a line-height over 1.2 -- so a paragraph was
+    drawn taller than it said it was, and the next block ran over its last
+    lines, by about a point per line.
+    """
+    return max(_56 * leading, line.ascent), max(_16 * leading, -line.descent)
+
+
 def _flush_text_object(tx, x0, cur_y):
     """
     Write what the text object holds so far to the canvas, and start it again.
@@ -217,8 +233,7 @@ def _putFragLine(cur_x, tx, line):
     dal = autoLeading in {"min", "max"}
     if dal:
         if autoLeading == "max":
-            ascent = max(_56 * leading, line.ascent)
-            descent = max(_16 * leading, -line.descent)
+            ascent, descent = _maxLeadingExtent(line, leading)
         else:
             ascent = line.ascent
             descent = -line.descent
@@ -1292,7 +1307,7 @@ class Paragraph(Flowable):
             height = 0
             if autoLeading == "max":
                 for line in blPara.lines:
-                    height += max(line.ascent - line.descent, leading)
+                    height += sum(_maxLeadingExtent(line, leading))
             elif autoLeading == "min":
                 for line in blPara.lines:
                     height += line.ascent - line.descent
@@ -1354,7 +1369,7 @@ class Paragraph(Flowable):
             s = height = 0
             if autoLeading == "max":
                 for i, line in enumerate(blPara.lines):
-                    h = max(line.ascent - line.descent, leading)
+                    h = sum(_maxLeadingExtent(line, leading))
                     n = height + h
                     if n > availHeight + 1e-8:
                         break

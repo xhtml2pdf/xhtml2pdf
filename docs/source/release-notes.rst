@@ -118,6 +118,13 @@ Unreleased.
 * An ``@import`` after another rule is ignored, as CSS 2.1 requires, and
   a selector with a namespace prefix no ``@namespace`` declared drops its
   rule. ``|p`` selects only elements in no namespace; it matched any.
+* **Paragraphs are as tall as they are drawn.** With a font whose ascent
+  and descent pass 1.2em -- Noto Sans, Nunito Sans, Roboto -- and a
+  ``line-height`` over 1.2, a paragraph was measured about a point per
+  line shorter than it was drawn: the next block ran over its last lines,
+  and a paragraph split at a page break ran past the bottom margin. Lines
+  holding an inline block did the same. Measuring now uses the drawing's
+  own formula, so text that overlapped moves down to where it belongs.
 * An inline box nested in another is no longer covered by the outer
   one's background, which used to be painted last.
 
