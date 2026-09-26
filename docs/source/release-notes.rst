@@ -112,9 +112,12 @@ Unreleased.
 * **``inherit`` works.** It was ignored on every property: the parent's
   value was found and then an error raised anyway. ``border-radius``
   accepts it too.
+* **Sibling selectors.** ``h1 + p`` coloured every paragraph after the
+  heading, and ``h1 ~ p`` and ``p + p`` none: siblings shared the style
+  cache's entry, as with attributes above.
 * An ``@import`` after another rule is ignored, as CSS 2.1 requires, and
   a selector with a namespace prefix no ``@namespace`` declared drops its
-  rule.
+  rule. ``|p`` selects only elements in no namespace; it matched any.
 * An inline box nested in another is no longer covered by the outer
   one's background, which used to be painted last.
 

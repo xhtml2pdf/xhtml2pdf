@@ -403,7 +403,12 @@ class CSSSelectorBase:
         # with  CSSDOMElementInterface.matchesNode(self, (namespace, tagName)) replacement:
         if self.fullName[1] not in {"*", element.domElement.tagName}:
             return False
-        if (
+        if self.nsPrefix == "":  # noqa: PLC1901 -- None, no prefix, is not this
+            # "|p": an element in no namespace (CSS Namespaces 3). This used
+            # to be read as any namespace, the same as "*|p".
+            if element.domElement.namespaceURI:
+                return False
+        elif (
             self.fullName[0] not in {None, "", "*"}
             and self.fullName[0] != element.domElement.namespaceURI
         ):

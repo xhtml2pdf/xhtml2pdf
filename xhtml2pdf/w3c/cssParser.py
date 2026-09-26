@@ -235,20 +235,15 @@ class CSSBuilderAbstract:
 class CSSParseError(Exception):
     src: str = ""
     ctxsrc: str = ""
-    fullsrc: bytes | str = ""
-    inline: bool = False
     srcCtxIdx: int | None = None
-    srcFullIdx: int | None = None
-    ctxsrcFullIdx: int | None = None
 
     def __init__(self, msg, src, ctxsrc=None) -> None:
         super().__init__(msg)
         self.src = src
         self.ctxsrc = ctxsrc or src
         if self.ctxsrc:
-            self.srcCtxIdx = self.ctxsrc.find(self.src)
-            if self.srcCtxIdx < 0:
-                del self.srcCtxIdx
+            index = self.ctxsrc.find(self.src)
+            self.srcCtxIdx = index if index >= 0 else None
 
     def __str__(self) -> str:
         if self.ctxsrc and self.srcCtxIdx is not None:
@@ -261,20 +256,6 @@ class CSSParseError(Exception):
                 + ")"
             )
         return super().__str__() + ":: " + repr(self.src[:40])
-
-    def setFullCSSSource(self, fullsrc, *, inline=False):
-        self.fullsrc = fullsrc
-        if isinstance(self.fullsrc, bytes):
-            self.fullsrc = str(self.fullsrc, "utf-8")
-        if inline:
-            self.inline = inline
-        if self.fullsrc:
-            self.srcFullIdx = self.fullsrc.find(self.src)
-            if self.srcFullIdx < 0:
-                del self.srcFullIdx
-            self.ctxsrcFullIdx = self.fullsrc.find(self.ctxsrc)
-            if self.ctxsrcFullIdx < 0:
-                del self.ctxsrcFullIdx
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -484,11 +465,7 @@ class CSSParser:
             # XXX Some simple preprocessing
             src = cssSpecial.cleanupCSS(src)
 
-            try:
-                src, stylesheet = self._parseStylesheet(src)
-            except self.ParseError as err:
-                err.setFullCSSSource(src)
-                raise
+            src, stylesheet = self._parseStylesheet(src)
         finally:
             self.cssBuilder.endStylesheet()
         return stylesheet
@@ -500,12 +477,7 @@ class CSSParser:
         """
         self.cssBuilder.beginInline()
         try:
-            try:
-                src, properties = self._parseDeclarationGroup(src.strip(), braces=False)
-            except self.ParseError as err:
-                err.setFullCSSSource(src, inline=True)
-                raise
-
+            src, properties = self._parseDeclarationGroup(src.strip(), braces=False)
             result = self.cssBuilder.inline(properties)
         finally:
             self.cssBuilder.endInline()
@@ -525,16 +497,11 @@ class CSSParser:
         self.cssBuilder.beginInline()
         try:
             properties = []
-            try:
-                for property_name, src in kwAttributes.items():
-                    src, single_property = self._parseDeclarationProperty(
-                        src.strip(), property_name
-                    )
-                    properties.append(single_property)
-
-            except self.ParseError as err:
-                err.setFullCSSSource(src, inline=True)
-                raise
+            for property_name, src in kwAttributes.items():
+                src, single_property = self._parseDeclarationProperty(
+                    src.strip(), property_name
+                )
+                properties.append(single_property)
 
             result = self.cssBuilder.inline(properties)
         finally:

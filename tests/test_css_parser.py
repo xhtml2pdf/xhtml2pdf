@@ -102,9 +102,10 @@ class PublicApiTest(ParserTestCase):
         self.assertEqual(["Arial"], normal["font-family"])
 
     def test_parse_attributes_error(self) -> None:
-        with self.assertRaises(CSSParseError) as caught:
+        # Unlike a style attribute, which drops the declaration: this API
+        # takes one value per property and has nothing else to keep.
+        with self.assertRaisesRegex(CSSParseError, "calc"):
             self._parser().parseAttributes(width="calc(1px ;")
-        self.assertTrue(caught.exception.inline)
 
     def test_parse_single_attribute(self) -> None:
         parser = self._parser()
@@ -192,6 +193,11 @@ class AtRuleTest(ParserTestCase):
             ),
         )
         self.assertEqual({"svg", "plain"}, self._matched("*|circle{c:d}"))
+
+    def test_empty_prefix_is_no_namespace(self) -> None:
+        # CSS Namespaces 3: "|circle" is a circle in no namespace. It used to
+        # match any, as "*|circle" does.
+        self.assertEqual({"plain"}, self._matched("|circle{c:d}"))
 
     def test_malformed_namespace_is_dropped(self) -> None:
         cases = {
@@ -447,6 +453,20 @@ class DocumentTest(ParserTestCase):
     def test_broken_inline_style_keeps_the_rest(self) -> None:
         html = b'<p style="color: #ff0000; width: calc(1px">x</p>'
         self.assertEqual(["Color(1,0,0,1)"], self._colors(html))
+
+    def test_sibling_combinators_tell_siblings_apart(self) -> None:
+        # Siblings shared one cache entry, so "h1 + p" coloured every
+        # paragraph after the heading and "h1 ~ p" and "p + p" none.
+        red, black = "Color(1,0,0,1)", "Color(0,0,0,1)"
+        cases = {
+            b"h1 + p": (b"<h1>t</h1><p>a</p><p>b</p>", [black, red, black]),
+            b"h1 ~ p": (b"<p>a</p><h1>t</h1><p>b</p>", [black, black, red]),
+            b"p + p": (b"<p>a</p><p>b</p><p>c</p>", [black, red, red]),
+        }
+        for selector, (body, colors) in cases.items():
+            with self.subTest(selector=selector):
+                css = b"<style>" + selector + b" { color: #ff0000 }</style>"
+                self.assertEqual(colors, self._colors(css + body))
 
     def test_attribute_selectors_tell_siblings_apart(self) -> None:
         # The style cache keyed siblings by tag, class, id and style only, so

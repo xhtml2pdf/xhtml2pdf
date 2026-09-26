@@ -466,17 +466,23 @@ def getPositionalTagNames(cssCascade) -> set[str]:
     """
     Tag names some rule selects by position, so their cache key needs one.
 
-    Only a pseudo-class on the selector's own subject counts. In
+    Only a constraint on the selector's own subject counts. In
     `ul li:first-child div` the constraint is on the li, and two div siblings
     under one li answer it the same way, so the div does not need a position
     in its key. "*" means every tag does.
+
+    A sibling combinator counts as a position: in `h1 + p` whether a p matches
+    depends on what comes before it, and without the position every p after
+    the first was handed the first one's result -- `h1 + p` coloured each
+    paragraph after the heading, and `h1 ~ p` none of them.
     """
     names: set[str] = set()
     for ruleset in cssCascade.iterCSSRulesets():
         for selector in ruleset:
             qualifiers = getattr(selector, "qualifiers", ())
             if any(
-                qualifier.isPseudo() and qualifier.name in POSITIONAL_PSEUDO_CLASSES
+                (qualifier.isPseudo() and qualifier.name in POSITIONAL_PSEUDO_CLASSES)
+                or getattr(qualifier, "op", None) in {"+", "~"}
                 for qualifier in qualifiers
             ):
                 names.add(str(selector.name).lower())
