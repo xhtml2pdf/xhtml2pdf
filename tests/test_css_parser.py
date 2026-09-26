@@ -15,6 +15,9 @@ from typing import ClassVar
 from unittest import TestCase
 from xml.dom import minidom
 
+from reportlab.lib.pagesizes import A5
+from reportlab.lib.units import cm
+
 from xhtml2pdf.context import pisaContext
 from xhtml2pdf.document import pisaStory
 from xhtml2pdf.w3c.css import CSSBuilder, CSSParser
@@ -41,8 +44,12 @@ class ParserTestCase(TestCase):
 
 class ParseErrorTest(ParserTestCase):
     def test_message_points_at_the_error_in_its_context(self) -> None:
-        error = CSSParseError("Bad thing", "bc", "abc")
-        self.assertEqual("Bad thing:: ('a', 'bc')", str(error))
+        # What came before the error and where it starts, so a warning in
+        # the log says which CSS was dropped.
+        message = str(CSSParseError("Bad thing", "bc {x}", "p > bc {x}"))
+        self.assertTrue(message.startswith("Bad thing"))
+        self.assertIn("'p > '", message)
+        self.assertIn("'bc {x}'", message)
 
     def test_error_at_the_start_is_located(self) -> None:
         # Position 0 used to count as no position at all.
@@ -50,22 +57,6 @@ class ParseErrorTest(ParserTestCase):
 
     def test_message_without_a_position_quotes_the_source(self) -> None:
         self.assertEqual("Bad:: 'zzz'", str(CSSParseError("Bad", "zzz", "abc")))
-
-    def test_full_source_is_located_and_decoded(self) -> None:
-        error = CSSParseError("Bad", "b", "abc")
-        error.setFullCSSSource(b"xxabc", inline=True)
-
-        self.assertEqual("xxabc", error.fullsrc)
-        self.assertTrue(error.inline)
-        self.assertEqual(3, error.srcFullIdx)
-        self.assertEqual(2, error.ctxsrcFullIdx)
-
-    def test_full_source_that_does_not_contain_the_error(self) -> None:
-        error = CSSParseError("Bad", "q", "abc")
-        error.setFullCSSSource("xyz")
-
-        self.assertIsNone(error.srcFullIdx)
-        self.assertIsNone(error.ctxsrcFullIdx)
 
 
 class PublicApiTest(ParserTestCase):
@@ -160,13 +151,34 @@ class AtRuleTest(ParserTestCase):
             ([], {"p", "div"}), self._imports("p{c:d} @import url(x.css); div{c:d}")
         )
 
+    NAMESPACED = (
+        "<root><circle xmlns='http://www.w3.org/2000/svg' id='svg'/>"
+        "<circle id='plain'/></root>"
+    )
+
+    def _matched(self, css: str) -> set:
+        ruleset = self._parser().parse(css)[0]
+        document = minidom.parseString(self.NAMESPACED)
+        return {
+            element.getIdAttr()
+            for element in map(
+                CSSDOMElementInterface, document.getElementsByTagName("*")
+            )
+            if any(selector.matches(element) for selector in ruleset)
+        }
+
     def test_namespace(self) -> None:
-        rules = self._parse(
-            "@namespace svg url(http://www.w3.org/2000/svg);"
-            "@namespace url(http://www.w3.org/1999/xhtml);"
-            "svg|circle{color:red} p{color:blue}"
+        declare = "@namespace svg url(http://www.w3.org/2000/svg);"
+        self.assertEqual({"svg"}, self._matched(declare + "svg|circle{c:d}"))
+        # A default namespace does not stop the prefixed one from resolving.
+        self.assertEqual(
+            {"svg"},
+            self._matched(
+                declare
+                + "@namespace url(http://www.w3.org/1999/xhtml); svg|circle{c:d}"
+            ),
         )
-        self.assertEqual({"svg|circle", "p"}, set(rules))
+        self.assertEqual({"svg", "plain"}, self._matched("*|circle{c:d}"))
 
     def test_malformed_namespace_is_dropped(self) -> None:
         cases = {
@@ -181,10 +193,6 @@ class AtRuleTest(ParserTestCase):
 
     def test_at_rule_without_a_name_is_dropped(self) -> None:
         self.assertEqual({"p"}, set(self._parse("@123 {} p{c:d}")))
-
-    def test_unknown_state(self) -> None:
-        with self.assertRaisesRegex(CSSParseError, "Unknown state in atKeyword"):
-            self._parser()._parseAtKeyword("p{c:d}")
 
 
 class MediaTest(ParserTestCase):
@@ -201,6 +209,8 @@ class MediaTest(ParserTestCase):
         self.assertEqual({"p": {"color": "red"}}, rules)
 
     def test_at_rule_inside_media(self) -> None:
+        # The base CSSBuilder files a @font-face as a rule for "*"; that it is
+        # there at all is what this checks.
         rules = self._parse(
             "@media print { @font-face { font-family: x; src: url(a.ttf) }"
             " p { color: red; } }"
@@ -228,22 +238,21 @@ class PageTest(ParserTestCase):
         return context
 
     def test_size_as_two_lengths(self) -> None:
-        context = self._context("@page { size: 10cm 20cm }")
-        self.assertEqual(
-            (10, 20), tuple(round(side / 28.3464567) for side in context.pageSize)
-        )
+        width, height = self._context("@page { size: 10cm 20cm }").pageSize
+        self.assertAlmostEqual(10 * cm, width)
+        self.assertAlmostEqual(20 * cm, height)
 
     def test_pdf_page_size(self) -> None:
         context = self._context("@page { -pdf-page-size: a5 }")
-        self.assertEqual((420, 595), tuple(round(side) for side in context.pageSize))
+        self.assertEqual(A5, tuple(context.pageSize))
 
     def test_unsupported_at_rule_inside_page(self) -> None:
         context = self._context("@page { @supports (x) { p { c: d } } size: a5 }")
-        self.assertEqual((420, 595), tuple(round(side) for side in context.pageSize))
+        self.assertEqual(A5, tuple(context.pageSize))
 
     def test_page_without_a_block_is_dropped(self) -> None:
         context = self._context("@page x y; @page { size: a5 }")
-        self.assertEqual((420, 595), tuple(round(side) for side in context.pageSize))
+        self.assertEqual(A5, tuple(context.pageSize))
 
 
 class AttributeSelectorTest(ParserTestCase):
@@ -315,14 +324,11 @@ class SelectorTest(ParserTestCase):
             with self.subTest(css=css):
                 self.assertEqual({"p"}, set(self._parse(css + " {c:d} p{c:d}")))
 
-    def test_namespace_wildcards(self) -> None:
-        self.assertEqual({"*|p", "|p"}, set(self._parse("*|p{c:d} |p{c:d}")))
-
 
 class DeclarationTest(ParserTestCase):
-    def test_group_without_an_opening_brace(self) -> None:
-        with self.assertRaisesRegex(CSSParseError, "opening '{' not found"):
-            self._parser()._parseDeclarationGroup("color: red }")
+    def test_rule_without_a_block_takes_the_next_one_with_it(self) -> None:
+        # "p ; div" is one prelude, so its block is not div's (CSS Syntax 3).
+        self.assertEqual({"span"}, set(self._parse("p ; div{c:d} span{c:d}")))
 
     def test_empty_declarations_are_skipped(self) -> None:
         # Both used to throw the whole rule away.

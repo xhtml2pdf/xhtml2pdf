@@ -3,6 +3,7 @@
 from io import BytesIO
 from unittest import TestCase
 
+from reportlab.lib.colors import toColor
 from reportlab.pdfgen.canvas import Canvas
 
 from xhtml2pdf.document import pisaStory
@@ -73,7 +74,9 @@ class RoundedTableCommandsTest(TestCase):
             "<tr><td>a</td></tr></table>"
         )
         self.assertEqual([], _painters(table))
-        self.assertEqual("BACKGROUND", table._bkgrndcmds[0][0])
+        self.assertEqual(
+            [("BACKGROUND", (0, 0), (-1, -1), toColor("#eeeeee"))], table._bkgrndcmds
+        )
 
     def test_the_cell_content_does_not_paint_the_colour_again(self) -> None:
         # A paragraph in the cell would repaint it square, over the corners.

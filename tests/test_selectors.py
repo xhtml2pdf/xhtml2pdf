@@ -51,6 +51,21 @@ class MalformedSelectorTest(TestCase):
         ruleset = parser.parse(css)[0]
         return {str(selector): dict(decls) for selector, decls in ruleset.items()}
 
+    def _parseInTime(self, css: str) -> dict:
+        """
+        _parse, failing rather than hanging if the parser loops. Each of the
+        recovery bugs below hung the parser forever, which would stop the
+        suite instead of failing one test.
+        """
+        result: dict = {}
+        worker = threading.Thread(
+            target=lambda: result.update(rules=self._parse(css)), daemon=True
+        )
+        worker.start()
+        worker.join(timeout=5)
+        self.assertFalse(worker.is_alive(), "parser did not terminate")
+        return result["rules"]
+
     def test_malformed_selector_drops_only_its_own_rule(self) -> None:
         # ">>" is not a combinator, so the middle rule cannot be parsed. The
         # rules on either side of it must survive.
@@ -101,33 +116,27 @@ class MalformedSelectorTest(TestCase):
         # to close, so it starts the prelude of the next rule and takes that
         # rule down with it (CSS Syntax 3). The skip used to hand the same
         # "}" back to the stylesheet loop, which then never advanced.
-        css = "p { color: green; }} .gone { color: red; } div { color: blue; }"
-        result: dict = {}
-        worker = threading.Thread(
-            target=lambda: result.update(rules=self._parse(css)), daemon=True
+        rules = self._parseInTime(
+            "p { color: green; }} .gone { color: red; } div { color: blue; }"
         )
-        worker.start()
-        worker.join(timeout=5)
-
-        self.assertFalse(worker.is_alive(), "parser did not terminate")
-        self.assertEqual({"p", "div"}, set(result["rules"]))
+        self.assertEqual({"p", "div"}, set(rules))
 
     def test_stray_closing_brace_drops_the_whole_next_block(self) -> None:
         # The dropped rule ends at its matching "}", not at the first one.
-        rules = self._parse(
+        rules = self._parseInTime(
             "p { color: green; }} @media print { a { color: red; } }"
             "div { color: blue; }"
         )
         self.assertEqual({"p", "div"}, set(rules))
 
-        rules = self._parse("p { color: green; } }{} span { color: blue; }")
+        rules = self._parseInTime("p { color: green; } }{} span { color: blue; }")
         self.assertEqual({"p", "span"}, set(rules))
 
     def test_rules_after_an_unsupported_at_rule_block_survive(self) -> None:
         # @keyframes and @supports are skipped whole. Their block of rules
         # used to be parsed as a stylesheet, which took the closing "}" for a
         # stray one and dropped what followed.
-        rules = self._parse(
+        rules = self._parseInTime(
             "@keyframes fade { from { opacity: 0; } to { opacity: 1; } }"
             "@supports (display: grid) { p { color: red; } }"
             "div { color: blue; }"
@@ -135,7 +144,7 @@ class MalformedSelectorTest(TestCase):
         self.assertEqual({"div"}, set(rules))
 
     def test_brace_in_a_string_does_not_close_a_skipped_block(self) -> None:
-        rules = self._parse(
+        rules = self._parseInTime(
             "@supports (display: grid) { p::after { content: '}'; } }"
             "div { color: blue; }"
         )
@@ -144,16 +153,19 @@ class MalformedSelectorTest(TestCase):
     def test_unsupported_at_rule_without_a_block(self) -> None:
         # "@layer base;" ends at its ";". With no "{" before that ";", the
         # search for the block used to compare the ";" with None and raise.
-        rules = self._parse("@layer base; div { color: blue; }")
+        rules = self._parseInTime("@layer base; div { color: blue; }")
         self.assertEqual({"div"}, set(rules))
 
     def test_unsupported_at_rule_at_the_end(self) -> None:
-        # Neither a ";" nor a block: the rest of the stylesheet is the rule.
-        rules = self._parse("p { color: green; } @layer base")
+        # Neither a ";" nor a block of its own: it takes the next rule's
+        # prelude and block with it (CSS Syntax 3).
+        rules = self._parseInTime(
+            "p { color: green; } @layer base div { color: blue; }"
+        )
         self.assertEqual({"p"}, set(rules))
 
     def test_escaped_quote_in_a_skipped_block(self) -> None:
-        rules = self._parse(
+        rules = self._parseInTime(
             '@supports (x) { p::after { content: "a\\"}"; } } div { color: blue; }'
         )
         self.assertEqual({"div"}, set(rules))
@@ -163,11 +175,12 @@ class MalformedSelectorTest(TestCase):
         # each run to the end of the stylesheet, which ends them.
         for css in (
             "p { color: green; } h2 >> p { color: red;",
-            "p { color: green; } @supports (x) { a {",
+            # What the skipped block holds must stay skipped.
+            "p { color: green; } @supports (x) { a { color: red; } q { c: d; }",
             "p { color: green; } } div",
         ):
             with self.subTest(css=css):
-                self.assertEqual({"p"}, set(self._parse(css)))
+                self.assertEqual({"p"}, set(self._parseInTime(css)))
 
 
 class StandardSelectorTest(TestCase):

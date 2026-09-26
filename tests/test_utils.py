@@ -925,10 +925,12 @@ class RoundedBoxTest(TestCase):
         self.assertEqual((8, 18, 104, 54), box[:4])
 
     def test_percentages_resolve_against_the_outer_edge(self) -> None:
+        # With a 4pt border the outer edge is 104 x 44; the inner one would
+        # give 50 x 20.
         percent = utils.CSSLength("percent", 50)
-        style = _rounded(utils.CornerRadius(percent, percent))
+        style = _rounded(utils.CornerRadius(percent, percent), **_solid(4))
         box = _box(style, 0, 0, 100, 40)
-        self.assertEqual(((50, 20),) * 4, box.radii)
+        self.assertEqual(((52, 22),) * 4, box.radii)
 
     def test_radii_too_large_for_a_side_shrink_together(self) -> None:
         # css-backgrounds-3 5.5: 999 on a 40pt tall box is scaled to 20.
