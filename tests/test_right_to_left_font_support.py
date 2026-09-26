@@ -1,4 +1,5 @@
 import io
+import logging
 import os
 from pathlib import Path
 from unittest import TestCase
@@ -352,6 +353,14 @@ class RightToLeftLayoutTests(TestCase):
     def test_the_dir_attribute_turns_the_document_round(self) -> None:
         text = self.render(self.TABLE, rtl="attribute")
 
+        self.assertLess(text.index("Three"), text.index("One"), text)
+
+    def test_dir_auto_keeps_the_inherited_direction_without_a_warning(self) -> None:
+        # dir="auto" is valid HTML; it used to be reported as a wrong value.
+        # The direction of the text is not worked out, so it inherits.
+        table = f'<div dir="auto">{self.TABLE}</div>'
+        with self.assertNoLogs("xhtml2pdf", level=logging.WARNING):
+            text = self.render(table, rtl="attribute")
         self.assertLess(text.index("Three"), text.index("One"), text)
 
     def test_a_left_to_right_document_is_untouched(self) -> None:

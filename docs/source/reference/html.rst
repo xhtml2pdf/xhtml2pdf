@@ -318,6 +318,12 @@ read from the document as written. As in a browser, HTML's ``type``,
 ignoring case on HTML elements, unless the selector says ``s``. Any other
 pseudo-class, such as ``:hover``, parses and matches nothing.
 
+The form states select for styling only: ``disabled`` and ``readonly`` do
+not make the field in the PDF read-only, and a reader can still fill it
+in. ``dir="auto"`` matches neither ``:dir(ltr)`` nor ``:dir(rtl)``, and for
+layout the element keeps the direction it inherits: the direction of its
+text is not worked out.
+
 ``@media`` is honoured for the media *types* ``all``, ``print`` and
 ``pdf``; a media query's conditions are ignored, so ``@media
 (max-width: 500px)`` applies unconditionally.

@@ -127,7 +127,9 @@ class pisaTagBODY(pisaTag):
         # canvas.
         if c.frag.backColor:
             c.pageCanvasBackground = c.frag.backColor
-        if self.attr.get("dir"):
+        # dir="auto" is valid HTML, but the direction of the text is not
+        # worked out: the element keeps the one it inherits.
+        if self.attr.get("dir") in {"ltr", "rtl"}:
             c.setDir(self.attr["dir"])
         # print("base font size", c.baseFontSize)
 
@@ -208,7 +210,7 @@ class pisaTagP(pisaTag):
         # save the type of tag; it's used in PmlBaseDoc.afterFlowable()
         # to check if we need to add an outline-entry
         # c.frag.tag = self.tag
-        if self.attr.get("dir"):
+        if self.attr.get("dir") in {"ltr", "rtl"}:
             c.setDir(self.attr["dir"])
         if self.attr.align is not None:
             c.frag.alignment = getAlign(self.attr.align)
@@ -910,7 +912,7 @@ class pisaTagHTML(pisaTag):
         # The root element is where a document usually declares its direction,
         # and it has to be read here: <body dir> and <div dir> were honoured
         # but <html dir> was not, so the most common spelling did nothing.
-        if self.attr.get("dir"):
+        if self.attr.get("dir") in {"ltr", "rtl"}:
             c.setDir(self.attr["dir"])
 
 

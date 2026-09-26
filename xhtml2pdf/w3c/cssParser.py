@@ -41,6 +41,10 @@ from xhtml2pdf.w3c import cssSpecial
 
 log = logging.getLogger("xhtml2pdf")
 
+#: The pseudo-class each argument of :has() is anchored to: the element the
+#: :has() qualifies, while it is matched.
+HAS_ANCHOR = "-pdf-has-anchor"
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ~ Definitions
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1302,8 +1306,9 @@ class CSSParser:
         """
         The arguments of :has(), each relative to the element it qualifies:
         "> img", "+ p", "~ p", or "img" for a descendant. Each is read as
-        ":scope > img" and so on, and :scope is that element while :has()
-        is matched.
+        ":-pdf-has-anchor > img" and so on, and that pseudo-class is the
+        element while :has() is matched. It is not :scope: an author's
+        :scope inside :has() is still the root, as in a browser.
         """
         anchored = []
         while True:
@@ -1313,7 +1318,9 @@ class CSSParser:
                 msg = "Empty argument in :has()"
                 raise self.ParseError(msg, src, ctxsrc)
             combinator = part[0] if part[0] in ">+~" else ""
-            anchored.append(f":scope {combinator} {part[len(combinator):].lstrip()}")
+            anchored.append(
+                f":{HAS_ANCHOR} {combinator} {part[len(combinator):].lstrip()}"
+            )
             if end < 0:
                 break
             src = src[end + 1 :]

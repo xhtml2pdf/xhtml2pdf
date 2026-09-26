@@ -80,13 +80,17 @@ Unreleased.
   ``:checked``, ``:default``, ``:disabled``, ``:enabled``, ``:required``,
   ``:optional``, ``:read-only``, ``:read-write`` and
   ``:placeholder-shown``, all read from the document as written.
-  ``dir="auto"`` matches neither ``:dir(ltr)`` nor ``:dir(rtl)``.
+  ``dir="auto"`` matches neither ``:dir(ltr)`` nor ``:dir(rtl)``. The form
+  states only select: a ``disabled`` or ``readonly`` field is still
+  editable in the PDF.
   As in a browser, ``[type=text]`` selects ``type="TEXT"``: HTML's
   ``type``, ``lang``, ``dir``, ``rel`` and the other attributes it lists
   compare ignoring case on HTML elements, unless the selector says ``s``.
 
 **🐛 Bug-Fixes**
 
+* ``dir="auto"`` is no longer reported as a wrong value of ``dir``; the
+  element keeps the direction it inherits.
 * **Pseudo-class specificity.** A pseudo-class counted as a type rather
   than a class, so ``div p:first-child`` lost to ``.x p``.
 * A space before the ``]`` of an attribute selector, ``[type=text ]``,

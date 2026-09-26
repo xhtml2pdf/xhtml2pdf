@@ -179,13 +179,12 @@ class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
             self.domElement.parentNode is None
             or self.domElement.parentNode.nodeType != self.domElement.ELEMENT_NODE
         ),
-        # Selectors 4. :scope is the root, except in the arguments of a
-        # :has(), where it is the element the :has() qualifies.
-        "scope": lambda self: (
-            css._scope.get() is self.domElement
-            if css._scope.get() is not None
-            else self._pseudoStateHandlerLookup["root"](self)
-        ),
+        # Selectors 4. Outside @scope, which is not supported, :scope is the
+        # root -- in the arguments of a :has() too, as in a browser.
+        "scope": lambda self: self._pseudoStateHandlerLookup["root"](self),
+        # What the arguments of a :has() are relative to: the element the
+        # :has() qualifies, and nothing outside one.
+        css.cssParser.HAS_ANCHOR: lambda self: css._scope.get() is self.domElement,
         "link": lambda self: (
             self.domElement.tagName.lower() in {"a", "area"}
             and self.domElement.hasAttribute("href")

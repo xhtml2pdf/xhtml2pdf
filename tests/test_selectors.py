@@ -447,6 +447,9 @@ class SelectorsLevel4Test(TestCase):
 
     def test_scope_is_the_root(self) -> None:
         self.assertEqual({"root"}, self._matched(self.BLOCKS, ":scope {c:d}"))
+        # Inside :has() too, as in a browser: it is not the element the
+        # :has() qualifies, so this does not select a p with a child img.
+        self.assertEqual(set(), self._matched(self.BLOCKS, "p:has(:scope > img) {c:d}"))
 
     @staticmethod
     def _specificity(selector: str) -> tuple:

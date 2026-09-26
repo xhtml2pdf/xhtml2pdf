@@ -359,8 +359,8 @@ def _matches_nth(index: int, a: int, b: int) -> bool:
     return offset % a == 0 and offset // a >= 0
 
 
-#: The element a :has() is being matched for, which is what :scope means inside
-#: its arguments. Unset, :scope is the root element.
+#: The element a :has() is being matched for, which the anchor its arguments
+#: are read against (cssParser.HAS_ANCHOR) matches. Unset, it matches nothing.
 _scope: contextvars.ContextVar = contextvars.ContextVar("css_scope", default=None)
 
 #: Pseudo-elements. A selector that names one never matches here -- nothing
@@ -877,8 +877,8 @@ class CSSSelectorLogicalQualifier(CSSSelectorQualifierBase):
         else:
             best = max(selector.specificity()[1:] for selector in self.selectors)
         if self.name == "has":
-            # Each argument was read as ":scope > ...", and :scope is not
-            # the author's.
+            # Each argument was read as ":-pdf-has-anchor > ...", and that
+            # pseudo-class is not the author's.
             best = (best[0], best[1] - 1, best[2])
         if self.nth is not None:
             best = (best[0], best[1] + 1, best[2])
@@ -897,7 +897,7 @@ class CSSSelectorLogicalQualifier(CSSSelectorQualifierBase):
 
     @staticmethod
     def _anchor(selector):
-        """The combinator next to :scope in a :has() argument: " ", ">", "+" or "~"."""
+        """The combinator next to the anchor of a :has() argument: " ", ">", "+" or "~"."""
         op = " "
         while True:
             links = [
