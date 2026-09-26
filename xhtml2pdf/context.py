@@ -1179,7 +1179,13 @@ class pisaContext:
             maxLeading = max(leading, frag.fontSize + frag.leadingSpace, maxLeading)
             frag.leading = leading
 
-        if force or (self.text.strip() and self.fragList):
+        # A page number or count is text too, only not known yet: it never
+        # reaches self.text, and a paragraph holding nothing else -- a
+        # footer cell with a lone <pdf:pagenumber/> -- used to be dropped.
+        has_page_field = any(
+            frag.pageNumber or frag.pageCount for frag in self.fragList
+        )
+        if force or ((self.text.strip() or has_page_field) and self.fragList):
             # A list item's marker belongs to the item, not to whichever frag
             # happens to be current, and it is claimed here -- by the first
             # paragraph the item really emits, which may well come from a

@@ -1022,6 +1022,53 @@ class PageNumberExampleTest(TestCase):
         self.assertNotIn("88", text)
 
 
+class LonePageNumberTest(TestCase):
+    """
+    A block holding nothing but <pdf:pagenumber/> or <pdf:pagecount/> (#670).
+
+    The number is not known until the page is drawn, so it never reached the
+    text the paragraph is judged by, and a paragraph with no other text was
+    dropped as empty.
+    """
+
+    @staticmethod
+    def footers(footer: str) -> list[str]:
+        html = (
+            "<html><head><style>@page { size: a5;"
+            " @frame f { -pdf-frame-content: foot; left: 10mm; right: 10mm;"
+            " bottom: 10mm; height: 10mm; }"
+            " @frame b { left: 10mm; right: 10mm; top: 10mm; bottom: 25mm; } }"
+            "</style></head><body>"
+            f'<div id="foot">{footer}</div>'
+            "<p>one</p><pdf:nextpage/><p>two</p></body></html>"
+        )
+        dest = io.BytesIO()
+        pisa.pisaDocument(io.StringIO(html), dest)
+        dest.seek(0)
+        # The footer's line on each page, the one line that is a number.
+        return [
+            " ".join(
+                line for line in (page.extract_text() or "").split() if line.isdigit()
+            )
+            for page in PdfReader(dest).pages
+        ]
+
+    def test_alone_in_the_frame(self) -> None:
+        self.assertEqual(["1", "2"], self.footers("<pdf:pagenumber/>"))
+
+    def test_alone_in_a_paragraph(self) -> None:
+        self.assertEqual(["1", "2"], self.footers("<p><pdf:pagenumber/></p>"))
+
+    def test_alone_in_a_cell(self) -> None:
+        self.assertEqual(
+            ["1", "2"],
+            self.footers("<table><tr><td><pdf:pagenumber/></td></tr></table>"),
+        )
+
+    def test_page_count_alone(self) -> None:
+        self.assertEqual(["2", "2"], self.footers("<p><pdf:pagecount/></p>"))
+
+
 class WrappedListItemTest(TestCase):
     """
     Where the marker of a multi-line item is drawn, not merely whether the
