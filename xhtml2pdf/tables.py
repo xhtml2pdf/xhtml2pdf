@@ -438,6 +438,9 @@ class pisaTagTD(pisaTag):
 
         c.clearFrag()
         self.story = c.swapStory()
+        # Read now: by end() c.cssAttr is that of the cell's last child, and
+        # a cell holding a <p> took that paragraph's mode, "shrink".
+        self.keep_in_frame_mode = c.cssAttr.get("-pdf-keep-in-frame-mode", "shrink")
 
         attrs = self.attr
 
@@ -555,9 +558,7 @@ class pisaTagTD(pisaTag):
         # Keep in frame if needed since Reportlab does no split inside of cells
         if not c.frag.insideStaticFrame:
             # tdata.keepinframe["content"] = cell
-            mode = getKeepInFrameMode(
-                c.cssAttr.get("-pdf-keep-in-frame-mode", "shrink")
-            )
+            mode = getKeepInFrameMode(self.keep_in_frame_mode)
             # keepInFrame mode is passed to Platypus for rendering
             cell = PmlKeepInFrame(maxWidth=0, maxHeight=0, mode=mode, content=cell)
 

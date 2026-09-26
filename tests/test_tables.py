@@ -677,3 +677,41 @@ class RowGroupTestCase(TestCase):
         # The second group's first cell is in the first column.
         self.assertNotEqual("", data[2][0])
         self.assertEqual(2, len(data[2]))
+
+
+class CellKeepInFrameModeTestCase(TestCase):
+    """-pdf-keep-in-frame-mode is the cell's own, whatever it holds (#220)."""
+
+    @staticmethod
+    def modes(html: str) -> list[str]:
+        from io import BytesIO
+        from unittest import mock
+
+        from xhtml2pdf import pisa
+
+        seen: list[str] = []
+        original = tables.PmlKeepInFrame.__init__
+
+        def spy(frame, *args, **kwargs):
+            seen.append(kwargs["mode"])
+            original(frame, *args, **kwargs)
+
+        with mock.patch.object(tables.PmlKeepInFrame, "__init__", spy):
+            pisa.CreatePDF(html, dest=BytesIO())
+        return seen
+
+    def test_a_cell_holding_a_block(self) -> None:
+        self.assertEqual(
+            ["truncate"],
+            self.modes(
+                '<table><tr><td style="-pdf-keep-in-frame-mode: truncate"><p>x</p></td></tr></table>'
+            ),
+        )
+
+    def test_a_cell_holding_text(self) -> None:
+        self.assertEqual(
+            ["overflow"],
+            self.modes(
+                '<table><tr><td style="-pdf-keep-in-frame-mode: overflow">x</td></tr></table>'
+            ),
+        )
