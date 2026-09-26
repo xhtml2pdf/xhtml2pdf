@@ -975,3 +975,39 @@ class TransparentColorTest(TestCase):
     def test_eight_digit_hex_is_read_as_rgba(self) -> None:
         line = self.text_operators('<p style="color: #ff000080">RED</p>', "RED")
         self.assertIn("1 0 0 rg", line)
+
+
+class RootEmTest(TestCase):
+    """rem is relative to the font size of <html> (#726)."""
+
+    @staticmethod
+    def font_sizes(html: str) -> list[str]:
+        out = io.BytesIO()
+        pisa.CreatePDF(html, dest=out)
+        page = PdfReader(io.BytesIO(out.getvalue())).pages[0]
+        data = page.get_contents().get_data().decode("latin-1")
+        return [
+            line.split(" Tf")[0].split()[-1]
+            for line in data.splitlines()
+            if "Tj" in line
+        ]
+
+    def test_rem_ignores_the_parent_font_size(self) -> None:
+        sizes = self.font_sizes(
+            '<html style="font-size: 20px"><body><div style="font-size: 10px">'
+            '<p style="font-size: 2rem">x</p></div></body></html>'
+        )
+        self.assertEqual(["30"], sizes)
+
+    def test_rem_uses_the_default_root_size(self) -> None:
+        # DEFAULT_CSS sets html to 10px, 7.5pt.
+        sizes = self.font_sizes(
+            '<div style="font-size: 30pt"><p style="font-size: 2rem">x</p></div>'
+        )
+        self.assertEqual(["15"], sizes)
+
+    def test_rem_on_html_itself_is_the_initial_size(self) -> None:
+        sizes = self.font_sizes(
+            '<html style="font-size: 1rem"><body><p>x</p></body></html>'
+        )
+        self.assertEqual(["12"], sizes)

@@ -789,6 +789,9 @@ class pisaContext:
         #: declared here because addTOC reads it before the walk has set it.
         self.cssAttr: CSSAttrs = CSSAttrs()
         self.cssAttrCache: dict = {}
+        #: The font size of <html>, which `rem` is relative to; None until
+        #: <html> has been styled. See parser.resolveRootEm.
+        self.rootFontSize: float | None = None
         #: Declarations dropped because their value is a CSS function this
         #: library cannot evaluate, as "property: function()". Filled by
         #: parser.CSSCollect and reported once when the document is done, the

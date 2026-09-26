@@ -676,3 +676,10 @@ and over a background colour. The alpha was dropped when the image was \
 converted to RGB, and the transparent ground, black under it, made the \
 whole image a black box. The background of the div comes out in two \
 bands, one per child, the block-box difference of #728."""
+
+[fixtures.css-rem-units]
+compare = ["pages", "text", "ssim"]
+notes = """Issue #726: rem against the root font size, in font-size, \
+line-height, margin, padding and a cell's width and height, inside a \
+block with a smaller font. A rem used to be read as an em, relative to the \
+element's own font size."""

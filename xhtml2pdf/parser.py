@@ -635,8 +635,8 @@ def CSSCollect(node, c):
         key = getCSSAttrCacheKey(node, c.cssPositionalTags, c.cssAttributeNames)
         cached = c.cssAttrCache.get(key)
         if cached is not None:
-            node.cssAttrs = cached
-            return cached
+            node.cssAttrs = resolveRootEm(cached, c)
+            return node.cssAttrs
 
         node.cssElement = cssDOMElementInterface.CSSDOMElementInterface(node)
         node.cssAttrs = CSSAttrs()
@@ -645,7 +645,42 @@ def CSSCollect(node, c):
         dropUnreadableFunctions(node.cssAttrs, c.cssDroppedFunctions)
 
         c.cssAttrCache[key] = node.cssAttrs
+        node.cssAttrs = resolveRootEm(node.cssAttrs, c)
     return node.cssAttrs
+
+
+#: 1rem inside the root element itself: the initial font size, `medium`.
+INITIAL_FONT_SIZE = 12.0
+
+
+def _resolveRootEm(value, root):
+    if isinstance(value, tuple) and len(value) == 2 and str(value[1]).lower() == "rem":
+        try:
+            return (f"{float(value[0]) * root:g}", "pt")
+        except ValueError:
+            return value
+    if isinstance(value, list):
+        return [_resolveRootEm(part, root) for part in value]
+    return value
+
+
+def resolveRootEm(attrs, c):
+    """
+    Resolve `rem` against the root element's font size.
+
+    getSize read a rem as an em, relative to the element's own font size,
+    so `2rem` under a 10px parent came out as 20px whatever <html> said.
+    The root's size is only known once <html> has been styled, which is
+    after the cascade, so the lengths are rewritten here in points; the
+    attrs the cache holds are left as written.
+    """
+    if not any(_resolveRootEm(value, 1.0) != value for value in attrs.values()):
+        return attrs
+    root = c.rootFontSize if c.rootFontSize is not None else INITIAL_FONT_SIZE
+    resolved = type(attrs)()
+    for name, value in attrs.items():
+        resolved[name] = _resolveRootEm(value, root)
+    return resolved
 
 
 def lower(sequence):
@@ -1042,6 +1077,8 @@ def pisaLoop(node, context, **kw):
 
         # Map styles to Reportlab fragment properties
         CSS2Frag(context, kw, isBlock=isBlock or isInlineBlock)
+        if node.tagName == "html":
+            context.rootFontSize = context.frag.fontSize
 
         # EXTRAS
         # -pdf-keep-with-next, -pdf-outline and -pdf-outline-open. Read here

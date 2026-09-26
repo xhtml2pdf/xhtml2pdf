@@ -1,0 +1,33 @@
+<!--
+  Browser equivalent of data/source/css-rem-units.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>css-rem-units</title>
+<style type="text/css">
+html { font-size: 16px; }
+body { font-size: 11pt; line-height: 15pt; }
+p { margin: 0 0 8pt 0; }
+.small { font-size: 8pt; line-height: 12pt; }
+.rem { font-size: 1.5rem; line-height: 2rem; }
+.box { margin-left: 2rem; padding: 0.5rem; border: 1pt solid #3465a4; background-color: #d3d7cf; }
+.bar { width: 10rem; height: 1rem; background-color: #ef2929; }
+</style>
+</head>
+<body>
+<p>The root font size is 16px, so 1rem is 12pt wherever it is used.</p>
+<div class="small">
+<p>This paragraph sits in an 8pt block.</p>
+<p class="rem">At 1.5rem this line is 18pt, relative to the root, not to the small block around it.</p>
+</div>
+<div class="box"><p>A box indented by 2rem with a padding of half a rem, the same wherever it is nested.</p></div>
+<table><tr><td class="bar"></td></tr></table>
+<p class="small"><span class="rem">1.5rem in a span</span> next to eight-point text.</p>
+</body>
+</html>
