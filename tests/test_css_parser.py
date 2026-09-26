@@ -10,6 +10,7 @@ and nothing catches it, so one line of a stylesheet cost the whole document.
 
 import logging
 import tempfile
+import threading
 from pathlib import Path
 from typing import ClassVar
 from unittest import TestCase
@@ -38,8 +39,20 @@ class ParserTestCase(TestCase):
         return CSSParser(CSSBuilder(mediumSet=self.MEDIUM_SET))
 
     def _parse(self, css: str) -> dict:
-        ruleset = self._parser().parse(css)[0]
-        return {str(selector): dict(decls) for selector, decls in ruleset.items()}
+        # In a thread with a timeout: a skip that stops advancing loops
+        # forever, and that must fail one test rather than hang the suite.
+        result: dict = {}
+
+        def parse() -> None:
+            result["ruleset"] = self._parser().parse(css)[0]
+
+        worker = threading.Thread(target=parse, daemon=True)
+        worker.start()
+        worker.join(timeout=5)
+        self.assertFalse(worker.is_alive(), "parser did not terminate")
+        return {
+            str(selector): dict(decls) for selector, decls in result["ruleset"].items()
+        }
 
 
 class ParseErrorTest(ParserTestCase):
@@ -191,6 +204,9 @@ class AtRuleTest(ParserTestCase):
             with self.subTest(css=css):
                 self.assertEqual(kept, set(self._parse(css)))
 
+    def test_skipped_at_rule_ends_outside_strings(self) -> None:
+        self.assertEqual({"div"}, set(self._parse('@foo "a;b" { p{c:d} } div{c:d}')))
+
     def test_at_rule_without_a_name_is_dropped(self) -> None:
         self.assertEqual({"p"}, set(self._parse("@123 {} p{c:d}")))
 
@@ -207,6 +223,11 @@ class MediaTest(ParserTestCase):
             "}"
         )
         self.assertEqual({"p": {"color": "red"}}, rules)
+
+    def test_skipped_at_rule_leaves_the_media_block_its_brace(self) -> None:
+        # "@foo bar" ends at the "}" of @media without taking it, so p is
+        # outside the (unmatched) screen block.
+        self.assertEqual({"p"}, set(self._parse("@media screen { @foo bar } p{c:d}")))
 
     def test_at_rule_inside_media(self) -> None:
         # The base CSSBuilder files a @font-face as a rule for "*"; that it is
@@ -349,6 +370,13 @@ class DeclarationTest(ParserTestCase):
         )
         self.assertEqual(
             {"p": {"color": "red"}}, self._parse("p{color: red blue !x; color: red}")
+        )
+
+    def test_skipped_declaration_ends_outside_strings(self) -> None:
+        # The "}" in the string does not end the block.
+        self.assertEqual(
+            {"p": {"color": "red"}, "q": {"c": "d"}},
+            self._parse('p{ !x "a}b"; color: red } q{c:d}'),
         )
 
     def test_star_hack_is_dropped(self) -> None:

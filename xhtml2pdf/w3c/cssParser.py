@@ -1294,6 +1294,8 @@ class CSSParser:
                     "Ignoring CSS declaration that could not be parsed: %.40r", start
                 )
                 src = self._skipDeclaration(start).lstrip()
+                if src.startswith(";"):
+                    src = src[1:].lstrip()
                 continue
             properties.append(single_property)
 
