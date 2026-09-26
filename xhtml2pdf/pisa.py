@@ -416,13 +416,20 @@ def execute():
 
         fdestclose = 0
 
+        # With the PDF on stdout, what the command has to say goes to stderr:
+        # "Converting - to -..." written into the same stream made the PDF
+        # unreadable.
+        messages = sys.stdout
         if dest == "-" or base_dir:
             if sys.platform == "win32":
                 import msvcrt
 
                 msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
 
-            fdest = sys.stdout
+            # The PDF is bytes; the text stream refused them with "write()
+            # argument must be str, not bytes".
+            fdest = getattr(sys.stdout, "buffer", sys.stdout)
+            messages = sys.stderr
             startviewer = 0
         else:
             dest = os.path.abspath(dest)
@@ -436,7 +443,7 @@ def execute():
             fdestclose = 1
 
         if not quiet:
-            print(f"Converting {src} to {dest}...")
+            print(f"Converting {src} to {dest}...", file=messages)
 
         pisaDocument(
             fsrc,

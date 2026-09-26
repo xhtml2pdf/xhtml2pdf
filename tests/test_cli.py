@@ -179,6 +179,22 @@ class RunAsAModuleTest(TestCase):
         self.assertTrue(dest.is_file())
         self.assertEqual(1, len(PdfReader(dest).pages))
 
+    def test_stdin_to_stdout_writes_only_the_pdf(self) -> None:
+        """`xhtml2pdf - -` (#464): the PDF alone on stdout, the message on stderr."""
+        result = subprocess.run(
+            [sys.executable, "-m", "xhtml2pdf", "-", "-"],
+            input=HTML.encode(),
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(0, result.returncode, result.stderr.decode())
+        self.assertTrue(result.stdout.startswith(b"%PDF-"))
+        self.assertIn(b"Converting - to -", result.stderr)
+        self.assertIn(
+            "hello", PdfReader(io.BytesIO(result.stdout)).pages[0].extract_text()
+        )
+
 
 class StartViewerTest(TestCase):
     """
