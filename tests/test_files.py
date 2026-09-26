@@ -351,3 +351,25 @@ class NamedFileIsOpenableTest(TestCase):
         cleanFiles()
 
         self.assertTrue(Path(name).exists())
+
+
+class WindowsPathTest(TestCase):
+    """A Windows path is a local path, not a URL with the scheme "c" (#447)."""
+
+    def test_the_directory_of_a_windows_document(self) -> None:
+        from xhtml2pdf.context import getDirName
+
+        self.assertEqual(r"C:\Users\me\docs", getDirName(r"C:\Users\me\docs\test.html"))
+        self.assertEqual("C:/Users/me", getDirName("C:/Users/me/test.html"))
+
+    def test_urls_and_posix_paths_are_unchanged(self) -> None:
+        from xhtml2pdf.context import getDirName
+
+        self.assertEqual("https://x.org/a/b.html", getDirName("https://x.org/a/b.html"))
+        self.assertEqual(str(Path("/tmp").resolve()), getDirName("/tmp/a.html"))
+
+    def test_the_context_keeps_the_directory(self) -> None:
+        from xhtml2pdf.context import pisaContext
+
+        context = pisaContext(r"C:\Users\me\docs\test.html")
+        self.assertEqual(r"C:\Users\me\docs", context.pathDirectory)

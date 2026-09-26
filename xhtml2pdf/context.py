@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import copy
 import logging
+import ntpath
 import re
 import urllib.parse as urlparse
 from pathlib import Path
@@ -256,12 +257,33 @@ def getParaFrag(style) -> ParaFrag:
     return frag
 
 
+def _is_windows_drive_path(path: str) -> bool:
+    r"""`C:\dir\file.html` or `C:/dir/file.html`, a local Windows path."""
+    return len(path) >= 3 and path[0].isalpha() and path[1] == ":" and path[2] in "\\/"
+
+
+def hasURLScheme(path) -> bool:
+    r"""
+    Whether `path` is a URL rather than a local path.
+
+    urlparse reads the drive letter of a Windows path as a scheme --
+    `C:\docs\a.html` has the scheme "c" -- so a document on a Windows disk
+    was taken for a URL: its directory was the file itself, and every
+    relative image, stylesheet and font was looked for under it.
+    """
+    path = str(path)
+    return bool(urlparse.urlparse(path).scheme) and not _is_windows_drive_path(path)
+
+
 def getDirName(path) -> str:
     # A resolved local file arrives as a Path, and urlparse only speaks str.
     path = str(path)
-    parts = urlparse.urlparse(path)
-    if parts.scheme:
+    if hasURLScheme(path):
         return path
+    if _is_windows_drive_path(path):
+        # Already absolute. ntpath rather than Path, which only splits on
+        # backslashes on Windows itself.
+        return ntpath.dirname(path)
     return str(Path(path).parent.resolve())
 
 
@@ -683,7 +705,7 @@ class pisaCSSParser(css.CSSParser):
             # as written, and Path("fonts.css").parent.resolve() is the
             # process working directory, so every url() in an imported sheet
             # -- a @font-face src, above all -- was looked for there.
-            if self.rootPath and urlparse.urlparse(self.rootPath).scheme:
+            if self.rootPath and hasURLScheme(self.rootPath):
                 self.rootPath = urlparse.urljoin(self.rootPath, cssResourceName)
             else:
                 self.rootPath = getDirName(cssFile.getAbsPath() or cssFile.uri)
@@ -865,8 +887,9 @@ class pisaContext:
 
         # Store path to document
         self.pathDocument: str = path or "__dummy__"
-        parts = urlparse.urlparse(self.pathDocument)
-        if not parts.scheme:
+        if not hasURLScheme(self.pathDocument) and not _is_windows_drive_path(
+            self.pathDocument
+        ):
             self.pathDocument = str(Path(self.pathDocument).absolute().resolve())
         self.pathDirectory: str = getDirName(self.pathDocument)
         #: What this document may fetch; see xhtml2pdf.config.resources.
