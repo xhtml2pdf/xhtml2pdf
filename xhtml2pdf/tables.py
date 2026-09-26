@@ -337,7 +337,58 @@ class pisaTagTABLE(pisaTag):
         c.tableData, self.tableData = self.tableData, None
 
 
-class pisaTagTHEAD(pisaTag):
+class pisaTagTBODY(pisaTag):
+    """
+    <tbody>, and the base of the other two row groups.
+
+    A group is a boundary for rowspan: HTML clips a cell's rowspan at the
+    end of its group, so the next group starts on rows of its own. Here the
+    placeholders of a span reaching past the group used to stay behind and
+    push the next group's cells one column to the right, beside the span.
+
+    A group's background-color is painted behind its rows, under whatever
+    the rows and cells paint themselves; it was ignored.
+    """
+
+    def start(self, c) -> None:
+        tdata = c.tableData
+        self.first_row = tdata.row
+        # Its own colour only: the frag also carries the table's, which the
+        # table paints itself.
+        self.backColor = c.frag.backColor if "background-color" in c.cssAttr else None
+        # Where the group's background goes in the style list: before the
+        # rows', which reportlab paints after it and so over it.
+        self.style_index = len(tdata.styles)
+
+    def end(self, c) -> None:
+        tdata = c.tableData
+        last_row = tdata.row - 1
+        if self.backColor and last_row >= self.first_row:
+            tdata.styles.insert(
+                self.style_index,
+                ("BACKGROUND", (0, self.first_row), (-1, last_row), self.backColor),
+            )
+        self.clip_row_spans(tdata, last_row)
+
+    @staticmethod
+    def clip_row_spans(tdata, last_row) -> None:
+        tdata.span = [(x, y) for x, y in tdata.span if y <= last_row]
+        clipped = []
+        for style in tdata.styles:
+            if style[0] == "SPAN" and style[1][1] <= last_row < style[2][1]:
+                begin, end = style[1], (style[2][0], last_row)
+                if begin == end:
+                    continue
+                style = ("SPAN", begin, end)
+            clipped.append(style)
+        tdata.styles[:] = clipped
+
+
+class pisaTagTFOOT(pisaTagTBODY):
+    pass
+
+
+class pisaTagTHEAD(pisaTagTBODY):
     """
     <thead>: the rows that repeat at the top of every page.
 
@@ -347,8 +398,8 @@ class pisaTagTHEAD(pisaTag):
     page only, and said nothing about it.
     """
 
-    @staticmethod
-    def end(c) -> None:
+    def end(self, c) -> None:
+        super().end(c)
         tdata = c.tableData
         # Every </tr> has bumped the row counter, so this is the number of rows
         # the header holds. An explicit repeat="N" still wins if it asks for

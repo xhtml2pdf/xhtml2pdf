@@ -619,3 +619,61 @@ class EmptyRowTestCase(TestCase):
     def test_table_of_empty_rows_is_skipped(self) -> None:
         text = self.render("<p>before</p><table><tr></tr></table><p>after</p>")
         self.assertIn("after", text)
+
+
+class RowGroupTestCase(TestCase):
+    """thead/tbody/tfoot: their background (#806) and the rowspan boundary (#470)."""
+
+    @staticmethod
+    def table_commands(html: str) -> tuple[list, list]:
+        from io import BytesIO
+        from unittest import mock
+
+        from xhtml2pdf import pisa
+
+        seen: list = []
+        original = PmlTable.__init__
+
+        def spy(table, data, *args, **kwargs):
+            seen.append((data, kwargs["style"].getCommands()))
+            original(table, data, *args, **kwargs)
+
+        with mock.patch.object(PmlTable, "__init__", spy):
+            pisa.CreatePDF(html, dest=BytesIO())
+        return seen[0]
+
+    def test_thead_background_is_painted_behind_its_rows(self) -> None:
+        _data, commands = self.table_commands(
+            '<table><thead style="background-color: orange"><tr><th>H</th></tr></thead>'
+            "<tbody><tr><td>a</td></tr></tbody></table>"
+        )
+        backgrounds = [c for c in commands if c[0] == "BACKGROUND"]
+        self.assertEqual([((0, 0), (-1, 0))], [c[1:3] for c in backgrounds])
+
+    def test_group_background_comes_before_its_rows(self) -> None:
+        _data, commands = self.table_commands(
+            '<table><tbody style="background-color: orange">'
+            '<tr style="background-color: red"><td>a</td></tr></tbody></table>'
+        )
+        colours = [str(c[3]) for c in commands if c[0] == "BACKGROUND"]
+        self.assertEqual(2, len(colours))
+        self.assertIn("1,.647059,0", colours[0])
+
+    def test_table_background_is_not_repeated_by_the_implied_tbody(self) -> None:
+        _data, commands = self.table_commands(
+            '<table style="background-color: orange"><tr><td>a</td></tr></table>'
+        )
+        self.assertEqual(1, len([c for c in commands if c[0] == "BACKGROUND"]))
+
+    def test_rowspan_stops_at_the_end_of_its_tbody(self) -> None:
+        data, commands = self.table_commands(
+            "<table><tbody><tr><td rowspan=3>s</td><td>x</td></tr>"
+            "<tr><td>y</td></tr></tbody>"
+            "<tbody><tr><td>b</td><td>c</td></tr></tbody></table>"
+        )
+        self.assertEqual(
+            [((0, 0), (0, 1))], [c[1:3] for c in commands if c[0] == "SPAN"]
+        )
+        # The second group's first cell is in the first column.
+        self.assertNotEqual("", data[2][0])
+        self.assertEqual(2, len(data[2]))

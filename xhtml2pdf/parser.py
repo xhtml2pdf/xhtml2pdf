@@ -63,7 +63,9 @@ from xhtml2pdf.properties import (
 from xhtml2pdf.tables import (  # noqa: F401
     TableData,
     pisaTagTABLE,
+    pisaTagTBODY,
     pisaTagTD,
+    pisaTagTFOOT,
     pisaTagTH,
     pisaTagTHEAD,
     pisaTagTR,
