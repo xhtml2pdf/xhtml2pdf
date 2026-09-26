@@ -85,21 +85,36 @@ Unreleased.
 * An at-rule the parser does not support and that has no block, such as
   ``@layer base;``, is skipped instead of raising a ``TypeError`` that
   aborted the whole document.
-* **A ``unicode-range`` no longer aborts the document.** Every one raised
-  an ``IndexError`` -- and every ``@font-face`` Google Fonts serves has
-  one. So did a few other lines of CSS, each with an exception nothing
-  caught: an at-rule the parser skips, such as ``@keyframes``, inside
-  ``@media`` or ``@page`` (``TypeError``); ``@media print`` with no block
-  at the end of a stylesheet (``IndexError``); a function left open at
-  its end, ``width: calc(1px`` (``IndexError``); and ``@charset`` without
-  its ``;`` (``AttributeError``). The ``@media`` and the ``@charset`` now
-  report a CSS parse error, as other malformed at-rules do; the rest are
-  parsed.
-* An empty declaration, as in ``color: red;;`` or ``p {;``, is skipped.
-  It used to throw away the whole rule it was in.
-* The end of a stylesheet closes any block still open, as CSS Syntax 3
-  says: ``p { color: red`` is applied, and an unclosed ``@media`` keeps its
-  rules instead of failing the whole document.
+* **Invalid CSS is dropped, not fatal.** As CSS Syntax 3 says, what the
+  parser cannot read is now skipped and the rest of the stylesheet
+  applies: an at-rule up to its ``;`` or through its block, a declaration
+  up to its ``;``. Until now only a malformed selector was recovered from;
+  anything else raised out of ``pisa.CreatePDF`` and the document was
+  lost. That covered a malformed ``@import``, ``@namespace`` or
+  ``@charset``, ``@media`` or ``@page`` with no block, an at-rule the
+  parser skips (``@keyframes``) inside ``@media`` or ``@page``, and a
+  broken inline ``style``, such as ``width: calc(1px``. An invalid
+  declaration -- ``!ie``, the ``*font`` hack, ``color: red;;`` -- used to
+  take the whole rule with it; now only the declaration goes. The end of a
+  stylesheet closes any block still open, so ``p { color: red`` applies.
+* **``unicode-range`` no longer aborts the document.** It raised an
+  ``IndexError`` -- and every ``@font-face`` Google Fonts serves has one.
+* **Attribute selectors.** ``[attr^=v]``, ``[attr$=v]`` and ``[attr*=v]``
+  work; ``^=`` used to raise out of the document. ``[lang|=GB]`` no
+  longer matches ``lang="en-GB"``: ``|=`` is a prefix up to a ``-``. And
+  elements that differ only in an attribute a rule selects by, such as a
+  ``<p title="a">`` next to a ``<p title="b">``, are styled each on its
+  own: the style cache ignored attributes and gave the second one the
+  first one's style.
+* **Text past Latin-1 in CSS strings.** ``font-family: "宋体"`` was not
+  read as a string at all, ``'宋体'`` kept its quotes in the font name,
+  and ``content: "a宋"`` lost its rule.
+* **``inherit`` works.** It was ignored on every property: the parent's
+  value was found and then an error raised anyway. ``border-radius``
+  accepts it too.
+* An ``@import`` after another rule is ignored, as CSS 2.1 requires, and
+  a selector with a namespace prefix no ``@namespace`` declared drops its
+  rule.
 * An inline box nested in another is no longer covered by the outer
   one's background, which used to be painted last.
 

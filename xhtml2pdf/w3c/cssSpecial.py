@@ -375,6 +375,11 @@ def expandBorderRadius(parts, last):
     An invalid value drops the whole declaration, as CSS does, so an earlier
     valid one still applies.
     """
+    if parts == ["inherit"]:
+        # Each corner inherits, as margin and padding expand it.
+        return [
+            (f"border-{corner}-radius", "inherit", last) for corner in _RADIUS_CORNERS
+        ]
     split = splitSlash(parts)
     horizontal = vertical = None
     if split is not None and all(isRadiusPart(p) for p in split[0] + split[1]):
@@ -455,7 +460,9 @@ def parseSpecialRules(declarations, debug=0):
             dd.extend(expandBorderRadius(parts, last))
 
         elif name in {f"border-{corner}-radius" for corner in _RADIUS_CORNERS}:
-            if 1 <= len(parts) <= 2 and all(isRadiusPart(p) for p in parts):
+            if parts == ["inherit"]:
+                dd.append((name, "inherit", last))
+            elif 1 <= len(parts) <= 2 and all(isRadiusPart(p) for p in parts):
                 dd.append(d)
             else:
                 log.warning("%s: %r is not a radius; ignored", name, parts)

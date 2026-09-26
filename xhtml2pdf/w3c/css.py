@@ -615,18 +615,23 @@ class CSSSelectorAttributeQualifier(CSSSelectorQualifierBase):
             return element.getAttr(self.name, NotImplemented) != NotImplemented
         if self.op == "=":
             return self.value == element.getAttr(self.name, NotImplemented)
+        attr_value = element.domElement.attributes.get(self.name)
+        if attr_value is None:
+            return False
+        value = attr_value.value
         if self.op == "~=":
-            # return self.value in element.getAttr(self.name, '').split()
-            attr_value = element.domElement.attributes.get(self.name)
-            if attr_value is not None:
-                return self.value in attr_value.value.split()
-            return False
+            return self.value in value.split()
         if self.op == "|=":
-            # return self.value in element.getAttr(self.name, '').split('-')
-            attr_value = element.domElement.attributes.get(self.name)
-            if attr_value is not None:
-                return self.value in attr_value.value.split("-")
-            return False
+            # The value or a prefix of it up to a "-": "en" matches "en-GB",
+            # but "GB" does not. This used to match any "-" separated part.
+            return value == self.value or value.startswith(self.value + "-")
+        # Selectors 3: an empty value matches nothing for these three.
+        if self.op == "^=":
+            return bool(self.value) and value.startswith(self.value)
+        if self.op == "$=":
+            return bool(self.value) and value.endswith(self.value)
+        if self.op == "*=":
+            return bool(self.value) and self.value in value
         msg = f"Unknown operator {self.op!r} for {self!r}"
         raise RuntimeError(msg)
 
@@ -1071,6 +1076,11 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
     def resolveNamespacePrefix(self, nsPrefix, name):
         if nsPrefix == "*":
             return (nsPrefix, "*", name)
+        if nsPrefix and nsPrefix not in self.namespaces:
+            # CSS Namespaces 3: a prefix no @namespace declared makes the
+            # selector invalid, and with it the rule.
+            msg = f"Undeclared namespace prefix {nsPrefix!r}"
+            raise cssParser.CSSParseError(msg, name)
         xmlns = self.namespaces.get(nsPrefix, None)
         xmlns = self._xmlnsGetSynonym(xmlns)
         return (nsPrefix, xmlns, name)

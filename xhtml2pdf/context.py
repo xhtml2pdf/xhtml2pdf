@@ -777,6 +777,8 @@ class pisaContext:
         self.cssText: str = ""
         #: Tags some rule selects by position; see parser.getCSSAttrCacheKey.
         self.cssPositionalTags: set[str] = set()
+        #: Attributes some rule selects by; see parser.getCSSAttrCacheKey.
+        self.cssAttributeNames: frozenset[str] = frozenset()
         #: The CSS properties already resolved for an element shape, keyed by
         #: parser.CSSAttrCacheKey. It belongs to the render rather than to the
         #: module: as a global it was shared by concurrent renders, and its
@@ -973,6 +975,7 @@ class pisaContext:
         self.cssCascade.parser = self.cssParser
         # Which tags any rule selects by position; see getCSSAttrCacheKey.
         self.cssPositionalTags = parser.getPositionalTagNames(self.cssCascade)
+        self.cssAttributeNames = parser.getAttributeSelectorNames(self.cssCascade)
         parser.warnUnsupportedProperties(self.css)
 
     # METHODS FOR STORY

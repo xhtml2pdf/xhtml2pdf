@@ -924,14 +924,7 @@ class BorderRadiusShorthandTest(TestCase):
         self.assertEqual([["0", "0"]] * 4, self.corners("0"))
 
     def test_an_invalid_value_drops_the_declaration(self) -> None:
-        for value in (
-            "-3px",
-            "1px/2px/3px",
-            "calc(1px)",
-            "1px 2px 3px 4px 5px",
-            "inherit",
-            "10",
-        ):
+        for value in ("-3px", "1px/2px/3px", "calc(1px)", "1px 2px 3px 4px 5px", "10"):
             with (
                 self.subTest(value),
                 self.assertLogs("xhtml2pdf.w3c.cssSpecial", level="WARNING"),

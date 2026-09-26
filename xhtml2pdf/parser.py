@@ -126,7 +126,7 @@ from xhtml2pdf.util import (
     toList,
 )
 from xhtml2pdf.w3c import cssDOMElementInterface
-from xhtml2pdf.w3c.css import CSSTerminalFunction
+from xhtml2pdf.w3c.css import CSSSelectorAttributeQualifier, CSSTerminalFunction
 from xhtml2pdf.xhtml2pdf_reportlab import PmlLeftPageBreak, PmlRightPageBreak
 
 log = logging.getLogger(__name__)
@@ -340,11 +340,14 @@ def getCSSAttr(self, cssCascade, attrName, default=NotImplemented):
 
     if result == "inherit":
         if hasattr(self.parentNode, "getCSSAttr"):
+            # The parent's value. This used to fall through to the raise
+            # below, so "inherit" never took effect on any property.
             result = self.parentNode.getCSSAttr(cssCascade, attrName, default)
         elif default is not NotImplemented:
             return default
-        msg = f"Could not find inherited CSS attribute value for '{attrName}'"
-        raise LookupError(msg)
+        else:
+            msg = f"Could not find inherited CSS attribute value for '{attrName}'"
+            raise LookupError(msg)
 
     if result is not None:
         self.cssAttrs[attrName] = result
@@ -383,13 +386,12 @@ def collectCSSAttrs(node, cssCascade, attrNames) -> None:
         if result is None:
             continue
         if result == "inherit":
-            # Inheritance recurses into the parent element and, as
-            # getCSSAttr stands, always ends in a LookupError that is logged
-            # and stepped over. Delegated rather than reimplemented so there
-            # is one account of that, whatever it becomes.
+            # Delegated to getCSSAttr, which resolves it against the parent
+            # and records the value in node.cssAttrs, so there is one account
+            # of inheritance. The root element has no parent to ask.
             try:
                 node.getCSSAttr(cssCascade, attrName)
-            except Exception as e:
+            except LookupError as e:
                 log.debug("%r during CSS attr '%s'", e, attrName, exc_info=True)
             continue
         attrs[attrName] = result
@@ -481,6 +483,27 @@ def getPositionalTagNames(cssCascade) -> set[str]:
     return names
 
 
+def getAttributeSelectorNames(cssCascade) -> frozenset[str]:
+    """
+    Attribute names some rule's subject is selected by, as in input[type=text].
+
+    Their values go in the cache key. Without them two siblings that differ
+    only in such an attribute -- a text input next to a checkbox -- shared the
+    first one's result. Only the subject counts, as for positions: an
+    attribute on an ancestor is told apart by the parent in the key.
+    """
+    names: set[str] = set()
+    for ruleset in cssCascade.iterCSSRulesets():
+        for selector in ruleset:
+            for qualifier in getattr(selector, "qualifiers", ()):
+                # A namespaced attribute's name is a tuple; it is left out.
+                if isinstance(qualifier, CSSSelectorAttributeQualifier) and isinstance(
+                    qualifier.name, str
+                ):
+                    names.add(qualifier.name)
+    return frozenset(names)
+
+
 def getElementPosition(node) -> int:
     """This element's 0-based position among its element siblings."""
     position = 0
@@ -513,9 +536,14 @@ class CSSAttrCacheKey(NamedTuple):
     style: str
     #: Only for tags some rule selects by position; see getPositionalTagNames.
     position: int | None = None
+    #: The values of the attributes rules select by; see
+    #: getAttributeSelectorNames.
+    attributes: tuple = ()
 
 
-def getCSSAttrCacheKey(node, positional_tags=frozenset()) -> CSSAttrCacheKey:
+def getCSSAttrCacheKey(
+    node, positional_tags=frozenset(), attribute_names=frozenset()
+) -> CSSAttrCacheKey:
     _cl = _id = _st = ""
     for k, v in node.attributes.items():
         if k == "class":
@@ -543,12 +571,16 @@ def getCSSAttrCacheKey(node, positional_tags=frozenset()) -> CSSAttrCacheKey:
         css_id=_id,
         style=_st,
         position=getElementPosition(node) if positional else None,
+        attributes=tuple(
+            (name, node.getAttribute(name) if node.hasAttribute(name) else None)
+            for name in sorted(attribute_names)
+        ),
     )
 
 
 def CSSCollect(node, c):
     if c.css:
-        key = getCSSAttrCacheKey(node, c.cssPositionalTags)
+        key = getCSSAttrCacheKey(node, c.cssPositionalTags, c.cssAttributeNames)
         cached = c.cssAttrCache.get(key)
         if cached is not None:
             node.cssAttrs = cached
