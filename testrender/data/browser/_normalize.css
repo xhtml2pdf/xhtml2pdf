@@ -147,6 +147,13 @@ ol {
     list-style-type: decimal;
 }
 
+/* DEFAULT_CSS: a right-to-left list is indented from the right */
+ul:dir(rtl),
+ol:dir(rtl) {
+    margin-left: 0;
+    margin-right: 1.5em;
+}
+
 ul li div:first-child {
     display: inline-block;
 }

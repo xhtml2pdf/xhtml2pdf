@@ -799,6 +799,7 @@ def CSS2Frag(c, kw, isBlock):
             kw["margin-left"] += getSize(c.cssAttr["margin-left"], c.frag.fontSize)
             c.frag.leftIndent = kw["margin-left"]
         if "margin-right" in c.cssAttr:
+            c.frag.bulletRightIndent = kw["margin-right"]  # For right-to-left lists
             kw["margin-right"] += getSize(c.cssAttr["margin-right"], c.frag.fontSize)
             c.frag.rightIndent = kw["margin-right"]
 

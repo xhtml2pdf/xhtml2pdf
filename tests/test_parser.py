@@ -1467,3 +1467,27 @@ class PageBreakAvoidTest(TestCase):
     def test_no_avoid_keeps_nothing(self) -> None:
         story = self.story("<h2>T</h2><p>text</p>")
         self.assertFalse(any(getattr(f, "keepWithNext", False) for f in story))
+
+
+class RightToLeftListMarkerTest(TestCase):
+    """In a right-to-left list the marker is on the right, in visual order (#663)."""
+
+    def test_the_bullet_is_right_of_the_text(self) -> None:
+        chunks = text_positions(
+            '<html dir="rtl"><body><ul><li>item text</li></ul></body></html>'
+        )
+        bullet_x = next(x for x, _y, text in chunks if text == "•")
+        text_x = next(x for x, _y, text in chunks if text != "•")
+        self.assertGreater(bullet_x, text_x)
+
+    def test_a_number_reads_right_to_left(self) -> None:
+        chunks = text_positions(
+            '<html dir="rtl"><body><ol><li>item</li></ol></body></html>'
+        )
+        self.assertIn(".1", [text for _x, _y, text in chunks])
+
+    def test_a_left_to_right_list_is_unchanged(self) -> None:
+        chunks = text_positions("<ul><li>item text</li></ul>")
+        bullet_x = next(x for x, _y, text in chunks if text == "•")
+        text_x = next(x for x, _y, text in chunks if text != "•")
+        self.assertLess(bullet_x, text_x)

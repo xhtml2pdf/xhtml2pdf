@@ -1,0 +1,40 @@
+<!--
+  Browser equivalent of data/source/rtl-list-markers.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>rtl-list-markers</title>
+<style type="text/css">
+@font-face { font-family: Dejavu; src: url('../../../manual_test/font/dejavu/DejaVuSans.ttf'); }
+body { font-family: Dejavu; font-size: 12pt; line-height: 18pt; }
+p { margin: 0 0 8pt 0; }
+h2 { font-size: 11pt; line-height: 16pt; margin: 8pt 0 4pt 0; }
+</style>
+</head>
+<body>
+<h2>רשימה עם תבליטים</h2>
+<ul>
+<li>פריט ראשון ברשימה</li>
+<li>פריט שני, קצת יותר ארוך מהראשון</li>
+<li>פריט שלישי</li>
+</ul>
+<h2>רשימה ממוספרת</h2>
+<ol>
+<li>שלב ראשון</li>
+<li>שלב שני</li>
+<li>שלב שלישי ואחרון</li>
+</ol>
+<h2>רשימה מקוננת</h2>
+<ul>
+<li>חוץ<ul><li>פנים אחד</li><li>פנים שניים</li></ul></li>
+<li>חוץ שוב</li>
+</ul>
+<p>פסקה רגילה אחרי הרשימות.</p>
+</body>
+</html>

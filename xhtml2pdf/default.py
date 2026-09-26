@@ -623,6 +623,13 @@ ol {
     margin-left: 1.5em;
 }
 
+/* A right-to-left list is indented from the right, where its markers go. */
+ul:dir(rtl),
+ol:dir(rtl) {
+    margin-left: 0;
+    margin-right: 1.5em;
+}
+
 pre {
     white-space: pre;
 }

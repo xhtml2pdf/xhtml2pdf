@@ -11,6 +11,7 @@ from operator import truth
 from string import whitespace
 from typing import TYPE_CHECKING
 
+from bidi import get_display
 from reportlab.graphics import renderPDF
 from reportlab.lib.abag import ABag
 from reportlab.lib.colors import Color
@@ -752,6 +753,65 @@ def _reopen_inline_boxes(lines) -> list:
     return reopened
 
 
+def _bulletWidth(bulletText, style) -> float:
+    if isinstance(bulletText, str):
+        return stringWidth(bulletText, style.bulletFontName, style.bulletFontSize)
+    return sum(
+        (
+            f.image.drawWidth
+            if hasattr(f, "image")
+            else stringWidth(f.text, f.fontName, f.fontSize)
+        )
+        for f in bulletText
+    )
+
+
+def _drawBulletRTL(canvas, offset, cur_y, bulletText, style, width):
+    """
+    Draw the marker of a right-to-left list item, on the right.
+
+    The mirror of _drawBullet: the marker ends where a left-to-right one
+    starts, at the edge of the margin the list is indented by, here the
+    right one. It used to be drawn on the left of a right-aligned item.
+    """
+    # In visual order: "1." in a right-to-left line reads ".1", as a browser
+    # draws it.
+    if isinstance(bulletText, str):
+        bulletText = get_display(bulletText, base_dir="R")
+    else:
+        bulletText = [
+            (
+                f
+                if hasattr(f, "image")
+                else f.clone(text=get_display(f.text, base_dir="R"))
+            )
+            for f in reversed(bulletText)
+        ]
+    y = cur_y + getattr(style, "bulletOffsetY", 0)
+    x = width - getattr(style, "bulletRightIndent", 0) - _bulletWidth(bulletText, style)
+    tx2 = canvas.beginText(x, y)
+    tx2.setFont(style.bulletFontName, style.bulletFontSize)
+    tx2.setFillColor(
+        (hasattr(style, "bulletColor") and style.bulletColor) or style.textColor
+    )
+    if isinstance(bulletText, str):
+        tx2.textOut(bulletText)
+    else:
+        for f in bulletText:
+            if hasattr(f, "image"):
+                image = f.image
+                canvas.drawImage(
+                    image.getImage(), tx2.getX(), y, image.drawWidth, image.drawHeight
+                )
+                tx2.moveCursor(image.drawWidth, 0)
+            else:
+                tx2.setFont(f.fontName, f.fontSize)
+                tx2.setFillColor(f.textColor)
+                tx2.textOut(f.text)
+    canvas.drawText(tx2)
+    return offset
+
+
 def _drawBullet(canvas, offset, cur_y, bulletText, style):
     """Draw a bullet text could be a simple string or a frag list."""
     tx2 = canvas.beginText(
@@ -790,9 +850,18 @@ def _drawBullet(canvas, offset, cur_y, bulletText, style):
     return max(offset, bulletEnd - style.leftIndent)
 
 
-def _handleBulletWidth(bulletText, style, maxWidths):
+def _handleBulletWidth(bulletText, style, maxWidths, *, rtl=False):
     """Work out bullet width and adjust maxWidths[0] if neccessary."""
-    if bulletText:
+    if bulletText and rtl:
+        # The same overrun, measured from the right.
+        bulletLeft = (
+            getattr(style, "bulletRightIndent", 0)
+            + _bulletWidth(bulletText, style)
+            + 0.6 * style.bulletFontSize
+        )
+        if bulletLeft > style.rightIndent:
+            maxWidths[0] -= bulletLeft - style.rightIndent
+    elif bulletText:
         if isinstance(bulletText, str):
             bulletWidth = stringWidth(
                 bulletText, style.bulletFontName, style.bulletFontSize
@@ -1489,7 +1558,7 @@ class Paragraph(Flowable):
         style = self.style
 
         # for bullets, work out width and ensure we wrap the right amount onto line one
-        _handleBulletWidth(self.bulletText, style, maxWidths)
+        _handleBulletWidth(self.bulletText, style, maxWidths, rtl=self.dir == "rtl")
 
         maxWidth = maxWidths[0]
 
@@ -1751,7 +1820,7 @@ class Paragraph(Flowable):
         style = self.style
 
         # for bullets, work out width and ensure we wrap the right amount onto line one
-        _handleBulletWidth(self.bulletText, style, maxWidths)
+        _handleBulletWidth(self.bulletText, style, maxWidths, rtl=self.dir == "rtl")
         if len(self.frags) > 1:
             autoLeading = getattr(
                 self, "autoLeading", getattr(style, "autoLeading", "")
@@ -1879,7 +1948,12 @@ class Paragraph(Flowable):
                     f, "ascent", f.fontSize
                 )  # TODO fix XPreformatted to remove this hack
                 if bulletText:
-                    offset = _drawBullet(canvas, offset, cur_y, bulletText, style)
+                    if self.dir == "rtl":
+                        offset = _drawBulletRTL(
+                            canvas, offset, cur_y, bulletText, style, self.width
+                        )
+                    else:
+                        offset = _drawBullet(canvas, offset, cur_y, bulletText, style)
 
                 # set up the font etc.
                 canvas.setFillColor(f.textColor)
@@ -1962,7 +2036,12 @@ class Paragraph(Flowable):
                 # default?
                 dpl = _leftDrawParaLineX
                 if bulletText:
-                    offset = _drawBullet(canvas, offset, cur_y, bulletText, style)
+                    if self.dir == "rtl":
+                        offset = _drawBulletRTL(
+                            canvas, offset, cur_y, bulletText, style, self.width
+                        )
+                    else:
+                        offset = _drawBullet(canvas, offset, cur_y, bulletText, style)
                 if alignment == TA_LEFT:
                     dpl = _leftDrawParaLineX
                 elif alignment == TA_CENTER:

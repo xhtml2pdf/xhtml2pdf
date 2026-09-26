@@ -180,6 +180,7 @@ def getParaFrag(style) -> ParaFrag:
             "paddingTop",
             "paddingBottom",
             "bulletIndent",
+            "bulletRightIndent",
             "insideStaticFrame",
             "outlineLevel",
         ),
@@ -1061,6 +1062,7 @@ class pisaContext:
                 "textColor",
                 "alignment",
                 "bulletIndent",
+                "bulletRightIndent",
                 "wordWrap",
                 "borderTopStyle",
                 "borderTopWidth",
@@ -1246,6 +1248,7 @@ class pisaContext:
                 # the hanging indent, and would lose the base-14 font a square
                 # or lower-greek marker has to be drawn in.
                 self.fragBlock.bulletIndent = item_frag.bulletIndent
+                self.fragBlock.bulletRightIndent = item_frag.bulletRightIndent
                 self.fragBlock.bulletFontName = item_frag.bulletFontName
                 self.pendingBullet = None
 

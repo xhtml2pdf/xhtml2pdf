@@ -701,3 +701,11 @@ be the last line of its page, page-break-inside: avoid on a block that \
 would otherwise be split, and break-before: avoid-page, the CSS 3 name, \
 on a paragraph after a heading. Each is placed where the page would end, \
 and each must carry over to the page Chrome carries it to."""
+
+[fixtures.rtl-list-markers]
+compare = ["pages", "text", "ssim"]
+notes = """Issue #663: bulleted, numbered and nested lists in a right-to-left \
+document. The text was aligned right but every marker was drawn on the \
+left, and the list was indented from the left. The markers are drawn on \
+the right now, and DEFAULT_CSS indents a list from the right when it is \
+:dir(rtl), which _normalize.css mirrors."""
