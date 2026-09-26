@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import io
 import tempfile
 import threading
 import warnings
@@ -204,6 +205,24 @@ class PmlImageReaderTest(LocalServerMixin, TestCase):
         assert reader.fp is not None
         self.addCleanup(reader.fp.close)
         self.assertEqual((70, 137), reader.getSize())
+
+    def test_grey_with_alpha_keeps_its_alpha(self) -> None:
+        """A PNG in mode LA gets a soft mask, not a black box (#349)."""
+        from PIL import Image
+
+        from xhtml2pdf.xhtml2pdf_reportlab import PmlImageReader
+
+        grey = Image.new("LA", (2, 1))
+        grey.putdata([(200, 0), (200, 255)])
+        buffer = io.BytesIO()
+        grey.save(buffer, "PNG")
+        buffer.seek(0)
+        reader = PmlImageReader(buffer)
+        data = reader.getRGBData()
+        self.assertEqual("RGB", reader.mode)
+        self.assertEqual(bytes([200] * 6), data)
+        assert reader._dataA is not None
+        self.assertEqual(bytes([0, 255]), reader._dataA.getRGBData())
 
     def test_unreachable_url_raises(self) -> None:
         from xhtml2pdf.xhtml2pdf_reportlab import PmlImageReader

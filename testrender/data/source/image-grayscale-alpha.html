@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>image-grayscale-alpha</title>
+<style type="text/css">
+body { font-size: 11pt; line-height: 15pt; }
+p { margin: 0 0 8pt 0; }
+.ground { background-color: #fce94f; padding: 6pt; }
+</style>
+</head>
+<body>
+<p>A grey PNG with an alpha channel (mode LA): a grey disc with a lighter, half-transparent square, on a transparent ground.</p>
+<p><img src="img/grey-alpha.png" width="90" height="90"></p>
+<div class="ground"><p>The same image over a yellow background, where the transparent ground lets the colour through:</p>
+<p><img src="img/grey-alpha.png" width="90" height="90"></p></div>
+<p>Before the fix the whole image was a black box.</p>
+</body>
+</html>

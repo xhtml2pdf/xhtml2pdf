@@ -588,6 +588,13 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
             else:
                 im = self._image
                 mode = self.mode = im.mode
+                if mode != "RGBA" and im.getbands()[-1] in {"A", "a"}:
+                    # An alpha channel on grey or palette pixels. Converted
+                    # straight to RGB the alpha was dropped, and a grey logo
+                    # on a transparent ground -- black under the alpha --
+                    # came out as a black box.
+                    im = im.convert("RGBA")
+                    mode = "RGBA"
                 if mode == "RGBA":
                     im.load()
                     self._dataA = PmlImageReader(im.split()[3])

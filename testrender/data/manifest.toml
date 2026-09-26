@@ -668,3 +668,11 @@ under a row and a cell that paint their own; and a rowspan reaching past \
 the end of its tbody, which HTML clips there. The group colours were \
 ignored, and the next group's cells were pushed beside the span. The \
 columns come out equal where the browser sizes them to their content."""
+
+[fixtures.image-grayscale-alpha]
+compare = ["pages", "text", "ssim"]
+notes = """Issue #349: a grey PNG with an alpha channel (mode LA), on white \
+and over a background colour. The alpha was dropped when the image was \
+converted to RGB, and the transparent ground, black under it, made the \
+whole image a black box. The background of the div comes out in two \
+bands, one per child, the block-box difference of #728."""
