@@ -170,18 +170,9 @@ class pisaTagA(pisaTag):
 
     def start(self, c: pisaContext) -> None:
         attr = self.attr
-        # XXX Also support attr.id ?
+        # An id is a target too; pisaLoop adds it for every element.
         if attr.name:
-            # Important! Make sure that cbDefn is not inherited by other
-            # fragments because of a bug in Reportlab!
-            afrag = c.frag.clone()
-            # These 3 lines are needed to fix an error with non internal fonts
-            afrag.fontName = "Helvetica"
-            afrag.bold = 0
-            afrag.italic = 0
-            afrag.cbDefn = ABag(kind="anchor", name=attr.name, label="anchor")
-            c.fragAnchor.append(afrag)
-            c.anchorName.append(attr.name)
+            c.addAnchor(attr.name)
         if attr.href and re.match(self.rxLink, attr.href):
             c.frag.link = attr.href
 

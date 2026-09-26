@@ -953,6 +953,11 @@ def pisaPreLoop(node, context, *, collect=False):
     elif node.nodeType == Node.ELEMENT_NODE:
         name = node.tagName.lower()
 
+        if name == "a":
+            href = node.getAttribute("href").strip()
+            if href.startswith("#") and len(href) > 1:
+                context.linkTargets.add(href[1:])
+
         if name in {"style", "link"}:
             attr = pisaGetAttributes(context, name, node.attributes)
             media = [x.strip() for x in attr.media.lower().split(",") if x.strip()]
@@ -1079,6 +1084,13 @@ def pisaLoop(node, context, **kw):
         CSS2Frag(context, kw, isBlock=isBlock or isInlineBlock)
         if node.tagName == "html":
             context.rootFontSize = context.frag.fontSize
+
+        # <a href="#x"> reaches any element whose id is x, not only an
+        # <a name="x">; only <a name> used to make a destination, and a link
+        # to a heading's id was dropped as pointing nowhere.
+        ident = node.getAttribute("id").strip()
+        if ident in context.linkTargets and ident not in context.anchorName:
+            context.addAnchor(ident)
 
         # EXTRAS
         # -pdf-keep-with-next, -pdf-outline and -pdf-outline-open. Read here

@@ -787,3 +787,44 @@ class ImageBorderRadiusTestCase(TestCase):
 
     def test_an_image_without_a_radius_has_no_clip(self) -> None:
         self.assertIsNone(re.search(r" W\*? n", self._page("")))
+
+
+class LinkTargetTestCase(TestCase):
+    """<a href="#x"> reaches any element with id="x" (#615)."""
+
+    @staticmethod
+    def links(html: str) -> tuple[list[int], PdfReader]:
+        out = io.BytesIO()
+        pisa.CreatePDF(html, dest=out)
+        reader = PdfReader(io.BytesIO(out.getvalue()))
+        targets = []
+        for annot in reader.pages[0].get("/Annots", []):
+            dest = annot.get_object().get("/Dest")
+            if dest is not None:
+                targets.append(reader.get_page_number(dest[0].get_object()))
+        return targets, reader
+
+    def test_a_heading_id_is_a_destination(self) -> None:
+        targets, _reader = self.links(
+            '<p><a href="#intro">intro</a></p><pdf:nextpage/><h2 id="intro">Intro</h2>'
+        )
+        self.assertEqual([1], targets)
+
+    def test_ids_on_block_and_cell(self) -> None:
+        targets, _reader = self.links(
+            '<p><a href="#d">div</a> <a href="#c">cell</a></p><pdf:nextpage/>'
+            '<div id="d">div</div><pdf:nextpage/><table><tr><td id="c">cell</td></tr></table>'
+        )
+        self.assertEqual([1, 2], targets)
+
+    def test_a_name_still_works(self) -> None:
+        targets, _reader = self.links(
+            '<p><a href="#n">n</a></p><pdf:nextpage/><a name="n"></a><p>x</p>'
+        )
+        self.assertEqual([1], targets)
+
+    def test_a_link_to_nothing_is_dropped(self) -> None:
+        targets, _reader = self.links(
+            '<p><a href="#missing">x</a></p><p id="other">y</p>'
+        )
+        self.assertEqual([], targets)

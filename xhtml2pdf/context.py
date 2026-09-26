@@ -35,7 +35,7 @@ except ImportError:  # pragma: no cover
     # reportlab < 4.0.9.1; the class was removed from platypus.frames in
     # reportlab 5, so this branch only ever runs on the oldest supported 4.x
     from reportlab.platypus.frames import ShowBoundaryValue
-from reportlab.platypus.paraparser import ParaFrag, ps2tt, tt2ps
+from reportlab.platypus.paraparser import ABag, ParaFrag, ps2tt, tt2ps
 
 from xhtml2pdf import default, parser
 from xhtml2pdf.builders.flex import FlexData
@@ -752,6 +752,10 @@ class pisaContext:
         self.anchorFrag: list = []
         self.anchorName: list = []
         self.fragAnchor: list = []
+        #: The fragment identifiers some <a href="#..."> points at, collected
+        #: before the document is laid out, so that an element's id becomes
+        #: a destination only when something links to it.
+        self.linkTargets: set[str] = set()
         self.fragList: list = []
         self.fragStack: list = []
         self.frameList: list = []
@@ -1276,6 +1280,19 @@ class pisaContext:
         self.imageData = {}
 
         self.clearFrag()
+
+    def addAnchor(self, name: str) -> None:
+        """Make `name` a destination at the start of the next paragraph."""
+        # Important! Make sure that cbDefn is not inherited by other
+        # fragments because of a bug in Reportlab!
+        afrag = self.frag.clone()
+        # These 3 lines are needed to fix an error with non internal fonts
+        afrag.fontName = "Helvetica"
+        afrag.bold = 0
+        afrag.italic = 0
+        afrag.cbDefn = ABag(kind="anchor", name=name, label="anchor")
+        self.fragAnchor.append(afrag)
+        self.anchorName.append(name)
 
     # METHODS FOR FRAG
     def clearFrag(self) -> None:
