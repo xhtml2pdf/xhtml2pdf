@@ -360,12 +360,30 @@ class SelectorsLevel4Test(TestCase):
         self.assertEqual(set(), self._matched(self.LIST, "li:nth-child(x of .x) {c:d}"))
 
     def test_attribute_case_flag(self) -> None:
-        html = "<form><input id='upper' type='TEXT'/><input id='lower' type='text'/></form>"
-        self.assertEqual({"upper", "lower"}, self._matched(html, "[type=text i] {c:d}"))
-        self.assertEqual({"lower"}, self._matched(html, "[type=text s] {c:d}"))
-        self.assertEqual({"upper"}, self._matched(html, "[type^=TE] {c:d}"))
+        # data-kind is not one of HTML's case-insensitive attributes, so
+        # case matters unless the selector says "i".
+        html = "<div><p id='upper' data-kind='ALPHA'/><p id='lower' data-kind='alpha'/></div>"
+        self.assertEqual({"lower"}, self._matched(html, "[data-kind=alpha] {c:d}"))
+        self.assertEqual(
+            {"upper", "lower"}, self._matched(html, "[data-kind=alpha i] {c:d}")
+        )
+        self.assertEqual({"upper"}, self._matched(html, "[data-kind^=AL] {c:d}"))
         # Space before the "]" is allowed; it used to drop the rule.
-        self.assertEqual({"lower"}, self._matched(html, "[type=text ] {c:d}"))
+        self.assertEqual({"lower"}, self._matched(html, "[data-kind=alpha ] {c:d}"))
+
+    def test_html_attributes_that_ignore_case(self) -> None:
+        # HTML 4.2.6: type, lang, dir, rel and the like match ignoring case
+        # on an HTML element, as in a browser, unless the selector says "s".
+        html = "<form><input id='upper' type='TEXT'/><input id='lower' type='text'/></form>"
+        self.assertEqual({"upper", "lower"}, self._matched(html, "[type=text] {c:d}"))
+        self.assertEqual({"upper", "lower"}, self._matched(html, "[type^=Te] {c:d}"))
+        self.assertEqual({"lower"}, self._matched(html, "[type=text s] {c:d}"))
+        # Not on an element in another namespace, such as SVG.
+        svg = (
+            "<svg xmlns='http://www.w3.org/2000/svg'>"
+            "<a id='svg-upper' type='TEXT'/><a id='svg-lower' type='text'/></svg>"
+        )
+        self.assertEqual({"svg-lower"}, self._matched(svg, "[type=text] {c:d}"))
 
     def test_lang(self) -> None:
         html = (

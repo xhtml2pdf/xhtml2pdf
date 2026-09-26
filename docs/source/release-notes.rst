@@ -79,6 +79,9 @@ Unreleased.
   ``:optional``, ``:read-only``, ``:read-write`` and
   ``:placeholder-shown``, all read from the document as written.
   ``dir="auto"`` matches neither ``:dir(ltr)`` nor ``:dir(rtl)``.
+  As in a browser, ``[type=text]`` selects ``type="TEXT"``: HTML's
+  ``type``, ``lang``, ``dir``, ``rel`` and the other attributes it lists
+  compare ignoring case on HTML elements, unless the selector says ``s``.
 
 **🐛 Bug-Fixes**
 

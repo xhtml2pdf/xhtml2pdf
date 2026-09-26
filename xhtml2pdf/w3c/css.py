@@ -692,6 +692,63 @@ class CSSSelectorClassQualifier(CSSSelectorQualifierBase):
         return self.classId < other.classId
 
 
+#: HTML 4.2.6 ("case-sensitivity of selectors"): on an HTML element, these
+#: attributes' values are matched ignoring ASCII case unless the selector says
+#: "s", so [type=text] selects <input type="TEXT"> as in a browser.
+HTML_CASE_INSENSITIVE_ATTRIBUTES = frozenset(
+    [
+        "accept",
+        "accept-charset",
+        "align",
+        "alink",
+        "axis",
+        "bgcolor",
+        "charset",
+        "checked",
+        "clear",
+        "codetype",
+        "color",
+        "compact",
+        "declare",
+        "defer",
+        "dir",
+        "direction",
+        "disabled",
+        "enctype",
+        "face",
+        "frame",
+        "hreflang",
+        "http-equiv",
+        "lang",
+        "language",
+        "link",
+        "media",
+        "method",
+        "multiple",
+        "nohref",
+        "noresize",
+        "noshade",
+        "nowrap",
+        "readonly",
+        "rel",
+        "rev",
+        "rules",
+        "scope",
+        "scrolling",
+        "selected",
+        "shape",
+        "target",
+        "text",
+        "type",
+        "valign",
+        "valuetype",
+        "vlink",
+    ]
+)
+#: The namespace html5lib puts HTML elements in; SVG and MathML are elsewhere.
+XHTML_NAMESPACE = "http://www.w3.org/1999/xhtml"
+
+
 class CSSSelectorAttributeQualifier(CSSSelectorQualifierBase):
     name, op, value = None, None, NotImplemented
     #: "i" to compare ignoring case, as [type=text i]; "s" or None with it.
@@ -727,7 +784,7 @@ class CSSSelectorAttributeQualifier(CSSSelectorQualifierBase):
         if value is None:
             return False
         expected = self.value
-        if self.flag == "i":
+        if self._ignoresCase(element):
             value, expected = value.casefold(), expected.casefold()
         if self.op == "=":
             return value == expected
@@ -746,6 +803,15 @@ class CSSSelectorAttributeQualifier(CSSSelectorQualifierBase):
             return bool(expected) and expected in value
         msg = f"Unknown operator {self.op!r} for {self!r}"
         raise RuntimeError(msg)
+
+    def _ignoresCase(self, element):
+        if self.flag is not None:
+            return self.flag == "i"
+        return (
+            isinstance(self.name, str)
+            and self.name.lower() in HTML_CASE_INSENSITIVE_ATTRIBUTES
+            and element.domElement.namespaceURI in {None, XHTML_NAMESPACE}
+        )
 
 
 class CSSSelectorPseudoQualifier(CSSSelectorQualifierBase):
