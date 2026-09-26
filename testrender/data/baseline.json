@@ -45,6 +45,12 @@
       "text": 1.0,
       "text_doc": 1.0
     },
+    "css-color-transparent": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9292
+    },
     "css-list-style": {
       "pages": {
         "xhtml2pdf": 1
@@ -58,6 +64,19 @@
         "xhtml2pdf": 1
       },
       "ssim": 0.9447,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "css-page-break-avoid": {
+      "pages": {
+        "xhtml2pdf": 6
+      }
+    },
+    "css-rem-units": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9375,
       "text": 1.0,
       "text_doc": 1.0
     },
@@ -331,6 +350,14 @@
       "text": 0.9586,
       "text_doc": 0.9586
     },
+    "image-grayscale-alpha": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9483,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
     "img-border-radius": {
       "pages": {
         "xhtml2pdf": 1
@@ -424,6 +451,19 @@
       "text": 1.0,
       "text_doc": 1.0
     },
+    "page-frame-margin": {
+      "pages": {
+        "xhtml2pdf": 4
+      }
+    },
+    "rtl-list-markers": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.961,
+      "text": 0.8882,
+      "text_doc": 0.8882
+    },
     "rtl-table": {
       "pages": {
         "xhtml2pdf": 1
@@ -464,6 +504,22 @@
         "xhtml2pdf": 1
       },
       "ssim": 0.939,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "table-empty-row": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.8908,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
+    "table-row-groups": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.864,
       "text": 1.0,
       "text_doc": 1.0
     },
