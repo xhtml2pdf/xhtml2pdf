@@ -828,3 +828,40 @@ class LinkTargetTestCase(TestCase):
             '<p><a href="#missing">x</a></p><p id="other">y</p>'
         )
         self.assertEqual([], targets)
+
+
+class ImageLinkTestCase(TestCase):
+    """<a href><img></a> is a link over the image (#491)."""
+
+    IMAGE = Path(__file__).parent / "samples" / "img" / "denker.png"
+
+    def annotations(self, html: str) -> list:
+        out = io.BytesIO()
+        pisa.CreatePDF(html.replace("IMG", str(self.IMAGE)), dest=out)
+        page = PdfReader(io.BytesIO(out.getvalue())).pages[0]
+        return [annot.get_object() for annot in page.get("/Annots", [])]
+
+    def test_the_link_covers_the_image(self) -> None:
+        (annot,) = self.annotations(
+            '<p>x <a href="https://example.com/"><img src="IMG" width="40" height="80"></a></p>'
+        )
+        self.assertEqual("https://example.com/", annot["/A"]["/URI"])
+        x1, y1, x2, y2 = (float(v) for v in annot["/Rect"])
+        # 40x80 px is 30x60 pt.
+        self.assertAlmostEqual(30, x2 - x1, places=0)
+        self.assertAlmostEqual(60, y2 - y1, places=0)
+
+    def test_an_internal_link_on_an_image(self) -> None:
+        (annot,) = self.annotations(
+            '<p><a href="#end"><img src="IMG" width="20" height="20"></a></p>'
+            '<pdf:nextpage/><p id="end">end</p>'
+        )
+        self.assertIn("/Dest", annot)
+
+    def test_a_link_to_nothing_on_an_image_is_dropped(self) -> None:
+        self.assertEqual(
+            [],
+            self.annotations(
+                '<p><a href="#missing"><img src="IMG" width="20" height="20"></a></p>'
+            ),
+        )

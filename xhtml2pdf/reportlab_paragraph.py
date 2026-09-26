@@ -310,6 +310,13 @@ def _putFragLine(cur_x, tx, line):
                             h,
                             mask="auto",
                         )
+                # An image inside <a href>. The links of a line are gathered
+                # from its text, and an image has none, so a linked image
+                # made no link at all; its own rectangle is the link.
+                if f.link:
+                    _doLink(
+                        tx, f.link, (cur_x_s, cur_y + iy0, cur_x_s + w, cur_y + iy0 + h)
+                    )
                 cur_x += w
                 cur_x_s += w
                 setXPos(tx, cur_x_s - tx._x0)

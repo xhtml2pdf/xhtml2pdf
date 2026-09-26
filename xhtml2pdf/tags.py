@@ -548,6 +548,9 @@ class pisaTagIMG(pisaTag):
 
                         c.fragList.append(afrag)
                         c.fontSize = img.drawHeight
+                        if afrag.link and afrag.link.startswith("#"):
+                            # Dropped by pisaDocument if nothing is there.
+                            c.anchorFrag.append((afrag, afrag.link[1:]))
 
                 except ImageWarning as e:
                     log.warning(c.warning(f"{e}:"))
