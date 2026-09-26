@@ -51,6 +51,67 @@ Versions >= 0.2
     --------------------------------------------
 
 
+Unreleased
+====================
+
+**🎉 New**
+
+* **page-break-*: avoid.** ``page-break-after: avoid`` keeps a block with
+  what follows it, ``page-break-before: avoid`` keeps what came before with
+  it, and ``page-break-inside: avoid`` moves a block to the next page whole
+  when it does not fit. ``break-before``, ``break-after`` and
+  ``break-inside``, the CSS 3 names, are read as the same properties
+  (:issue:`27`).
+* ``<a href="#x">`` links to any element with ``id="x"``, not only to an
+  ``<a name="x">`` (:issue:`615`).
+* An image inside ``<a href>`` is a link (:issue:`491`).
+* The hex colours with an alpha channel, ``#rgba`` and ``#rrggbbaa``, are
+  read (:issue:`811`).
+
+**🐛 Bug-Fixes**
+
+* ``color: transparent`` came out black. The text is drawn with no ink now,
+  and ``color: #0000`` no longer aborts the document (:issue:`811`).
+* An empty ``<tr></tr>`` at the end of a table aborted the document with
+  reportlab's "N rows in data but N-1 row heights". An empty row now has no
+  height, as in a browser, in the middle of a table too (:issue:`323`).
+* A ``background-color`` on ``<thead>``, ``<tbody>`` or ``<tfoot>`` was
+  ignored (:issue:`806`).
+* A rowspan reaching past the end of its ``<tbody>`` pushed the next group's
+  cells one column to the right; it stops at the end of its group, as HTML
+  says (:issue:`470`).
+* A grey PNG with an alpha channel came out as a black box (:issue:`349`).
+* ``rem`` was relative to the element's own font size; it is relative to the
+  root's (:issue:`726`).
+* ``<pdf:pagenumber/>`` or ``<pdf:pagecount/>`` alone in a frame, cell or
+  paragraph printed nothing (:issue:`670`).
+* A ``margin`` on ``@page`` together with a content ``@frame`` made the
+  story overprint itself on the first page and never reach the next. The
+  margins only make the content frame when no ``@frame`` is one
+  (:issue:`303`, :issue:`765`).
+* ``-pdf-keep-in-frame-mode`` on a ``<td>`` holding a block was read from
+  the block, not from the cell (:issue:`220`).
+* The bullets and numbers of a right-to-left list were drawn on the left.
+  They are drawn on the right, in visual order, and the default stylesheet
+  indents a ``:dir(rtl)`` list from the right (:issue:`663`).
+* On Windows, the drive letter of a path such as ``C:\docs\a.html`` was
+  taken for a URL scheme, and every relative image, stylesheet and font of
+  the document was looked for in the wrong place (:issue:`447`).
+* ``xhtml2pdf - -`` wrote its progress message into the PDF on stdout and
+  then failed writing the PDF; the PDF goes to stdout alone and the message
+  to stderr (:issue:`464`).
+* The debug log no longer repeats the whole source document (:issue:`92`).
+
+**📘 Documentation**
+
+* The Python reference says that ``default_css`` replaces the predefined
+  CSS rather than adding to it, and how to extend it (:issue:`735`).
+* The HTML reference lists ``page-break-inside`` and the ``break-*``
+  properties.
+
+--------------------------------------------
+
+
 0.2.21
 ====================
 
