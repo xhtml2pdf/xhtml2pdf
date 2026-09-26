@@ -251,6 +251,10 @@ CSS_PROPERTIES += (
     # ~ pagination ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     CSSProperty("page-break-before", "page", consumer=LOOP, note="emits a flowable"),
     CSSProperty("page-break-after", "page", consumer=LOOP, note="emits a flowable"),
+    CSSProperty("page-break-inside", "page", consumer=LOOP, note="avoid only"),
+    CSSProperty("break-before", "page", consumer=LOOP, note="page-break-before"),
+    CSSProperty("break-after", "page", consumer=LOOP, note="page-break-after"),
+    CSSProperty("break-inside", "page", consumer=LOOP, note="page-break-inside"),
     # ~ proprietary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     CSSProperty("-pdf-page-break", "pdf", consumer=LOOP, note="before only"),
     CSSProperty("-pdf-frame-break", "pdf", consumer=LOOP),

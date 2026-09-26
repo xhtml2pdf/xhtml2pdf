@@ -24,7 +24,7 @@ import html5lib
 from html5lib import treebuilders
 from reportlab.lib.colors import Color
 from reportlab.platypus.doctemplate import FrameBreak, NextPageTemplate
-from reportlab.platypus.flowables import KeepInFrame, PageBreak
+from reportlab.platypus.flowables import KeepInFrame, KeepTogether, PageBreak
 
 from xhtml2pdf.builders.flex import (
     BoxStyle,
@@ -944,6 +944,21 @@ def inlineBoxMarkers(context):
     return inline_box_markers(frag, style, margins)
 
 
+def pageBreakValue(cssAttr, side: str) -> str | None:
+    """
+    What `page-break-<side>` or `break-<side>` asks for, in CSS 2.1's words.
+
+    CSS Fragmentation 3 renamed the properties and some values: `page` is
+    `always`, `avoid-page` is `avoid`. The CSS 2.1 name wins when both are
+    declared.
+    """
+    for name in (f"page-break-{side}", f"break-{side}"):
+        if name in cssAttr:
+            value = str(cssAttr[name]).strip().lower()
+            return {"page": "always", "avoid-page": "avoid"}.get(value, value)
+    return None
+
+
 def pisaPreLoop(node, context, *, collect=False):
     """Collect all CSS definitions."""
     data = ""
@@ -1017,8 +1032,11 @@ def pisaLoop(node, context, **kw):
         PAGE_BREAK = 1
         PAGE_BREAK_RIGHT = 2
         PAGE_BREAK_LEFT = 3
+        PAGE_BREAK_AVOID = 4
 
         pageBreakAfter = False
+        breakInsideAvoid = False
+        blockStoryStart = 0
         frameBreakAfter = False
         display = getDisplay(context.cssAttr.get("display", "inline"))
         isFlex = display == Display.FLEX
@@ -1051,22 +1069,29 @@ def pisaLoop(node, context, **kw):
                     context.addStory(FrameBreak())
                 if str(context.cssAttr["-pdf-frame-break"]).lower() == "after":
                     frameBreakAfter = True
-            if "page-break-before" in context.cssAttr:
-                if str(context.cssAttr["page-break-before"]).lower() == "always":
-                    context.addStory(PageBreak())
-                if str(context.cssAttr["page-break-before"]).lower() == "right":
-                    context.addStory(PageBreak())
-                    context.addStory(PmlRightPageBreak())
-                if str(context.cssAttr["page-break-before"]).lower() == "left":
-                    context.addStory(PageBreak())
-                    context.addStory(PmlLeftPageBreak())
-            if "page-break-after" in context.cssAttr:
-                if str(context.cssAttr["page-break-after"]).lower() == "always":
-                    pageBreakAfter = PAGE_BREAK
-                if str(context.cssAttr["page-break-after"]).lower() == "right":
-                    pageBreakAfter = PAGE_BREAK_RIGHT
-                if str(context.cssAttr["page-break-after"]).lower() == "left":
-                    pageBreakAfter = PAGE_BREAK_LEFT
+            breakBefore = pageBreakValue(context.cssAttr, "before")
+            if breakBefore == "always":
+                context.addStory(PageBreak())
+            if breakBefore == "right":
+                context.addStory(PageBreak())
+                context.addStory(PmlRightPageBreak())
+            if breakBefore == "left":
+                context.addStory(PageBreak())
+                context.addStory(PmlLeftPageBreak())
+            if breakBefore == "avoid" and context.story:
+                # Whatever came before stays on the page this block starts on.
+                context.story[-1].keepWithNext = True
+            breakAfter = pageBreakValue(context.cssAttr, "after")
+            if breakAfter == "always":
+                pageBreakAfter = PAGE_BREAK
+            if breakAfter == "right":
+                pageBreakAfter = PAGE_BREAK_RIGHT
+            if breakAfter == "left":
+                pageBreakAfter = PAGE_BREAK_LEFT
+            if breakAfter == "avoid":
+                pageBreakAfter = PAGE_BREAK_AVOID
+            breakInsideAvoid = pageBreakValue(context.cssAttr, "inside") == "avoid"
+            blockStoryStart = len(context.story)
 
         if display == Display.NONE:
             return
@@ -1225,8 +1250,16 @@ def pisaLoop(node, context, **kw):
 
             # XXX Buggy!
 
+            if breakInsideAvoid and len(context.story) - blockStoryStart > 1:
+                context.story[blockStoryStart:] = [
+                    KeepTogether(context.story[blockStoryStart:])
+                ]
+            if pageBreakAfter == PAGE_BREAK_AVOID:
+                if len(context.story) > blockStoryStart:
+                    # The block stays on the page what follows it starts on.
+                    context.story[-1].keepWithNext = True
             # Page break by CSS
-            if pageBreakAfter:
+            elif pageBreakAfter:
                 context.addStory(PageBreak())
                 if pageBreakAfter == PAGE_BREAK_RIGHT:
                     context.addStory(PmlRightPageBreak())

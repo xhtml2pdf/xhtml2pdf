@@ -1420,3 +1420,50 @@ class PageMarginWithFrameTest(TestCase):
         wide = self.items_per_page(f"margin: 1cm; {footer}")
         narrow = self.items_per_page(f"margin: 4cm; {footer}")
         self.assertGreater(wide[0], narrow[0])
+
+
+class PageBreakAvoidTest(TestCase):
+    """page-break-*: avoid and the CSS 3 break-* names (#27)."""
+
+    @staticmethod
+    def story(html: str) -> list:
+        from xhtml2pdf.document import pisaStory
+
+        return pisaStory(html).story
+
+    def test_the_break_names(self) -> None:
+        from xhtml2pdf.parser import pageBreakValue
+
+        self.assertEqual("always", pageBreakValue({"break-before": "page"}, "before"))
+        self.assertEqual(
+            "avoid", pageBreakValue({"break-after": "avoid-page"}, "after")
+        )
+        self.assertEqual(
+            "left",
+            pageBreakValue(
+                {"page-break-after": "left", "break-after": "right"}, "after"
+            ),
+        )
+        self.assertIsNone(pageBreakValue({}, "inside"))
+
+    def test_after_avoid_keeps_the_block_with_the_next(self) -> None:
+        story = self.story('<h2 style="page-break-after: avoid">T</h2><p>text</p>')
+        heading = next(f for f in story if "T" in getattr(f, "text", ""))
+        self.assertTrue(heading.keepWithNext)
+
+    def test_before_avoid_keeps_the_previous_block_with_it(self) -> None:
+        story = self.story('<h2>T</h2><p style="break-before: avoid">text</p>')
+        heading = next(f for f in story if "T" in getattr(f, "text", ""))
+        self.assertTrue(heading.keepWithNext)
+
+    def test_inside_avoid_wraps_the_block(self) -> None:
+        from reportlab.platypus.flowables import KeepTogether
+
+        story = self.story(
+            '<div style="page-break-inside: avoid"><p>a</p><p>b</p></div>'
+        )
+        self.assertTrue(any(isinstance(f, KeepTogether) for f in story))
+
+    def test_no_avoid_keeps_nothing(self) -> None:
+        story = self.story("<h2>T</h2><p>text</p>")
+        self.assertFalse(any(getattr(f, "keepWithNext", False) for f in story))

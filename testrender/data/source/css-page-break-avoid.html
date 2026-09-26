@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>css-page-break-avoid</title>
+<style type="text/css">
+@page { size: a5; margin: 1.5cm; }
+p { font-size: 10pt; line-height: 14pt; margin: 0 0 6pt 0; }
+h2 { font-size: 14pt; line-height: 18pt; margin: 0 0 6pt 0; }
+.keep { page-break-after: avoid; }
+.whole { page-break-inside: avoid; }
+.stay { break-before: avoid-page; }
+.lead { font-weight: bold; }
+</style>
+</head>
+<body>
+<p>The river bends twice before it reaches the mill, and in spring the water rises high enough to cover the lower path.</p>
+<p>Walkers who know the valley take the upper track instead, past the orchard and the ruined chapel on the hill.</p>
+<p>In the orchard the apple trees are older than the village records, planted by a family whose name nobody recalls.</p>
+<p>The chapel lost its roof in a storm a century ago; swallows nest in the empty window frames every summer.</p>
+<p>Beyond the chapel the path drops into a beech wood where the light turns green and the air smells of moss.</p>
+<p>A wooden bridge crosses the stream at the bottom, its handrail worn smooth by generations of hands.</p>
+<p>On the far side a meadow opens out, full of cowslips in April and grasshoppers in August.</p>
+<p>The old miller used to say that the meadow flooded exactly once every seven years, never more and never less.</p>
+<p>Nobody has checked his claim properly, although the schoolteacher keeps a notebook of the water levels.</p>
+<p>From the meadow a lane leads back towards the square, lined with stone walls and blackberry hedges.</p>
+<p>At the corner stands a bakery whose ovens have not gone cold, people say, since the day it opened.</p>
+<p>Its bread is dense and dark, made with rye from the fields above the quarry and water from the spring.</p>
+<p>Short line number 1.</p>
+<p>Brief line number 2.</p>
+<p>Small line number 3.</p>
+<p>Quick line number 4.</p>
+<h2 class="keep">Heading kept with its text</h2>
+<p class="one">A single line that follows the heading.</p>
+<pdf:nextpage/>
+<p>The chapel lost its roof in a storm a century ago; swallows nest in the empty window frames every summer.</p>
+<p>Beyond the chapel the path drops into a beech wood where the light turns green and the air smells of moss.</p>
+<p>A wooden bridge crosses the stream at the bottom, its handrail worn smooth by generations of hands.</p>
+<p>On the far side a meadow opens out, full of cowslips in April and grasshoppers in August.</p>
+<p>The old miller used to say that the meadow flooded exactly once every seven years, never more and never less.</p>
+<p>Nobody has checked his claim properly, although the schoolteacher keeps a notebook of the water levels.</p>
+<p>From the meadow a lane leads back towards the square, lined with stone walls and blackberry hedges.</p>
+<p>At the corner stands a bakery whose ovens have not gone cold, people say, since the day it opened.</p>
+<p>Its bread is dense and dark, made with rye from the fields above the quarry and water from the spring.</p>
+<p>The river bends twice before it reaches the mill, and in spring the water rises high enough to cover the lower path.</p>
+<p>Short line number 1.</p>
+<p>Brief line number 2.</p>
+<p>Small line number 3.</p>
+<p>Quick line number 4.</p>
+<div class="whole">
+<p class="lead">Block kept whole</p>
+<p>A wooden bridge crosses the stream at the bottom, its handrail worn smooth by generations of hands.</p>
+<p>On the far side a meadow opens out, full of cowslips in April and grasshoppers in August.</p>
+<p>The old miller used to say that the meadow flooded exactly once every seven years, never more and never less.</p>
+<p>Nobody has checked his claim properly, although the schoolteacher keeps a notebook of the water levels.</p>
+<p>End of the kept block.</p>
+</div>
+<pdf:nextpage/>
+<p>The old miller used to say that the meadow flooded exactly once every seven years, never more and never less.</p>
+<p>Nobody has checked his claim properly, although the schoolteacher keeps a notebook of the water levels.</p>
+<p>From the meadow a lane leads back towards the square, lined with stone walls and blackberry hedges.</p>
+<p>At the corner stands a bakery whose ovens have not gone cold, people say, since the day it opened.</p>
+<p>Its bread is dense and dark, made with rye from the fields above the quarry and water from the spring.</p>
+<p>The river bends twice before it reaches the mill, and in spring the water rises high enough to cover the lower path.</p>
+<p>Walkers who know the valley take the upper track instead, past the orchard and the ruined chapel on the hill.</p>
+<p>In the orchard the apple trees are older than the village records, planted by a family whose name nobody recalls.</p>
+<p>The chapel lost its roof in a storm a century ago; swallows nest in the empty window frames every summer.</p>
+<p>Beyond the chapel the path drops into a beech wood where the light turns green and the air smells of moss.</p>
+<p>A wooden bridge crosses the stream at the bottom, its handrail worn smooth by generations of hands.</p>
+<p>On the far side a meadow opens out, full of cowslips in April and grasshoppers in August.</p>
+<p>Short line number 1.</p>
+<p>Brief line number 2.</p>
+<p>Small line number 3.</p>
+<p>Quick line number 4.</p>
+<h2>Heading before a paragraph</h2>
+<p class="stay">Paragraph that avoids a break before it, so it stays with the heading.</p>
+</body>
+</html>

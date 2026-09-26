@@ -82,6 +82,7 @@ xhtml2pdf supports the following standard CSS properties
     border-right-color, border-right-style, border-right-width
     border-top-color, border-top-style, border-top-width
     border-top-left-radius, border-top-right-radius
+    break-after, break-before, break-inside
     color
     column-gap, row-gap
     display
@@ -96,7 +97,7 @@ xhtml2pdf supports the following standard CSS properties
     max-height, max-width, min-height, min-width
     order
     padding-bottom, padding-left, padding-right, padding-top
-    page-break-after, page-break-before
+    page-break-after, page-break-before, page-break-inside
     text-align, text-decoration, text-indent, text-transform
     vertical-align
     white-space
@@ -120,6 +121,14 @@ Known limitations of the properties above:
 -  ``list-style-type``: ``circle`` draws a filled bullet, because no font
    in the base-14 set has a hollow circle.
 -  ``text-decoration``: ``overline`` is not drawn.
+-  ``page-break-before``, ``page-break-after``: ``always``, ``left``,
+   ``right`` and ``avoid``. ``avoid`` keeps the block on the same page as
+   what comes before (or after) it, as ``-pdf-keep-with-next`` does.
+   ``page-break-inside`` knows ``avoid`` only: the block moves to the next
+   page whole when it does not fit, unless it is taller than a page.
+   ``break-before``, ``break-after`` and ``break-inside`` are the same
+   properties under their CSS 3 names, with ``page`` for ``always`` and
+   ``avoid-page`` for ``avoid``.
 -  ``white-space``: ``pre-wrap`` keeps its spaces unbreakable, so a line
    will not wrap inside a run of them.
 -  ``width`` and ``height`` apply to images, table cells and barcodes

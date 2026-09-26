@@ -692,3 +692,12 @@ notes = """Issues #303 and #765: a margin on @page together with a content \
 so the story filled the page, then carried on into the @frame on the same \
 page, on top of itself, and never reached the next. The browser side \
 makes the frame the page area."""
+
+[fixtures.css-page-break-avoid]
+compare = ["pages", "headings"]
+headings = ["Heading kept with its text", "A single line that follows", "Block kept whole", "End of the kept block", "Heading before a paragraph", "Paragraph that avoids a break"]
+notes = """Issue #27: page-break-after: avoid on a heading that would otherwise \
+be the last line of its page, page-break-inside: avoid on a block that \
+would otherwise be split, and break-before: avoid-page, the CSS 3 name, \
+on a paragraph after a heading. Each is placed where the page would end, \
+and each must carry over to the page Chrome carries it to."""
