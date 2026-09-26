@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>selectors-level4</title>
+<style type="text/css">
+body { font-size: 11pt; line-height: 16pt; }
+p, li { margin: 0; padding: 0.2em; background-color: #eeeeec; }
+ul { margin: 0 0 0.5em 1.5em; }
+div { margin-bottom: 0.5em; }
+
+.not p:not(.skip, :last-child) { background-color: #8ae234; }
+.is :is(.a, .b) { background-color: #fce94f; }
+.has p:has(> b) { background-color: #729fcf; }
+.has p:has(+ .after) { color: #a40000; }
+.nth li:nth-child(2 of .x) { background-color: #ad7fa8; }
+.nth li:nth-last-child(1 of .x) { color: #a40000; }
+.flag p[data-kind=alpha i] { background-color: #fcaf3e; }
+.lang :lang(fr) { background-color: #e9b96e; }
+
+/* Specificity, in a section so no other block is reached. section >
+   p:first-child is (0,1,2) and beats .spec p (0,1,1); counting the
+   pseudo-class as a type made it (0,0,3), and it lost. :where() adds
+   nothing, so section p.last (0,1,2) beats the :where() rule after it. */
+.spec p { background-color: #ef2929; color: #204a87; }
+section > p:first-child { background-color: #8ae234; }
+section p.last { background-color: #8ae234; }
+:where(.spec p.last) { background-color: #ef2929; }
+</style>
+</head>
+<body>
+<div class="not">
+<p>:not() leaves this one green.</p>
+<p class="skip">Skipped by :not(.skip), so grey.</p>
+<p>And this one green.</p>
+<p>The last child is grey.</p>
+</div>
+<div class="is">
+<p class="a">:is(.a, .b) makes this yellow,</p>
+<p>not this one,</p>
+<p class="b">and this one yellow.</p>
+</div>
+<div class="has">
+<p>Has no bold child: grey.</p>
+<p>Has a <b>bold</b> child: blue.</p>
+<p>Followed by the one after, so red text.</p>
+<p class="after">The one after.</p>
+</div>
+<ul class="nth">
+<li class="x">First .x</li>
+<li>Not .x</li>
+<li class="x">Second .x: purple</li>
+<li class="x">Third .x, the last one: red text</li>
+<li>Not .x either</li>
+</ul>
+<div class="flag">
+<p data-kind="ALPHA">data-kind=ALPHA matches alpha i: orange.</p>
+<p data-kind="beta">data-kind=beta does not.</p>
+</div>
+<div class="lang" lang="en">
+<p>English: grey.</p>
+<p lang="fr-CA">Français: brown.</p>
+<p lang="frr">Frr is not fr: grey.</p>
+</div>
+<section class="spec">
+<p>First child: green, beating .spec p.</p>
+<p>The middle one: red, .spec p.</p>
+<p class="last">Last: green, :where() adds nothing.</p>
+</section>
+</body>
+</html>

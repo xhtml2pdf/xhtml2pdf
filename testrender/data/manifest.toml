@@ -636,3 +636,12 @@ compare = ["pages"]
 notes = """A rounded table with a repeated header, long enough for three \
 pages. The table is square where a page cuts it and round at its two \
 ends; the header's rounded corners come back with it on every page."""
+
+[fixtures.selectors-level4]
+compare = ["pages", "text", "ssim"]
+notes = """Selectors 4: :not() with a list, :is(), :where(), :has() with a child \
+and a sibling, :nth-child() and :nth-last-child() "of S", the "i" attribute \
+flag and :lang(). Before, the argument of all but :lang() was read as a \
+value and the rule was dropped, so every band here stayed grey. The last \
+block checks specificity: a pseudo-class counts as a class, and :where() as \
+nothing."""

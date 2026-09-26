@@ -430,6 +430,14 @@
       },
       "ssim": 0.9098
     },
+    "selectors-level4": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.8226,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
     "simple-test": {
       "pages": {
         "xhtml2pdf": 1
