@@ -345,6 +345,11 @@ class SelectorsLevel4Test(TestCase):
             self._matched(self.BLOCKS, "*:has(> p > span, > p > img) {c:d}"),
         )
         self.assertEqual({"text"}, self._matched(self.BLOCKS, "p:not(:has(img)) {c:d}"))
+        # A descendant argument and a sibling one in the same list.
+        self.assertEqual(
+            {"pic", "text", "deep"},
+            self._matched(self.BLOCKS, "p:has(img, ~ section) {c:d}"),
+        )
 
     def test_nth_child_of_a_selector(self) -> None:
         # The second, and the last, of the .x items -- not of all items.

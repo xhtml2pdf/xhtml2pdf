@@ -64,7 +64,9 @@ Unreleased.
   blocks, inline boxes, images, tables and table cells are rounded: the
   background and its image are clipped to the curve, and the border
   follows it, a thick side tapering into a thin one through the corner as
-  in a browser. A box cut by a line or page break is square at the cut.
+  in a browser. A block split between pages is rounded at both ends of
+  each part; a flex box, an inline box or a table cut by a line or page
+  break is square at the cut.
   A ``background-color`` with a radius on a ``<span>`` is drawn as one
   rounded box, which is how a pill badge is written. See the Rounded
   corners section of the HTML reference for what differs from a browser.
@@ -145,6 +147,16 @@ Unreleased.
   own formula, so text that overlapped moves down to where it belongs.
 * An inline box nested in another is no longer covered by the outer
   one's background, which used to be painted last.
+
+**⚠️ Deprecation**
+
+* ``CSSParser.parse()`` and ``parseInline()`` no longer raise
+  ``CSSParseError`` on invalid CSS: what cannot be read is skipped and
+  logged as a warning. ``CSSParseError`` lost ``setFullCSSSource()`` and
+  its ``fullsrc``, ``inline``, ``srcFullIdx`` and ``ctxsrcFullIdx``
+  attributes, which held the whole stylesheet.
+* The attribute operators ``&=``, ``!=`` and ``<>``, which no CSS
+  specification defines, drop their rule.
 
 | Thanks to the following people on GitHub for contributing to this release:
 | *Chaitu5210*, whose rounded-corners branch was the starting point, and

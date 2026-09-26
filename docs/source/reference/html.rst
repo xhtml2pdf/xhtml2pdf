@@ -292,8 +292,8 @@ Differences from a browser:
    the neighbour it shares an edge with gives way to it. A corner cell's
    background is not clipped by a rounded table, as a browser does not
    clip it either. A radius on a ``<tr>`` is ignored, as browsers do.
--  ``inherit`` is not supported: the value is not inherited, as CSS says,
-   so there is nothing to take.
+-  The radius is not inherited, as CSS says; ``inherit`` takes the
+   parent's, for the shorthand and each corner.
 
 Selectors
 ---------
@@ -304,7 +304,19 @@ supported, along with the structural pseudo-classes ``:first-child``,
 ``:last-child``, ``:only-child``, ``:only-of-type``, ``:first-of-type``,
 ``:last-of-type``, ``:empty``, ``:root`` and the ``:nth-child()``,
 ``:nth-last-child()``, ``:nth-of-type()`` and ``:nth-last-of-type()``
-functions. Any other pseudo-class parses and matches nothing.
+functions.
+
+From Selectors Level 4: ``:not()`` with a list of selectors, ``:is()``,
+``:where()``, ``:has()`` (``p:has(> img)``, ``h2:has(+ p)``),
+``:nth-child(2 of .x)`` and ``:nth-last-child()`` with ``of``, the ``i``
+and ``s`` flags of an attribute selector (``[type=text i]``), ``:lang()``,
+``:dir()``, ``:scope``, ``:link``, ``:any-link``, and the form states
+``:checked``, ``:default``, ``:disabled``, ``:enabled``, ``:required``,
+``:optional``, ``:read-only``, ``:read-write`` and ``:placeholder-shown``,
+read from the document as written. As in a browser, HTML's ``type``,
+``lang``, ``dir``, ``rel`` and the other attributes it lists compare
+ignoring case on HTML elements, unless the selector says ``s``. Any other
+pseudo-class, such as ``:hover``, parses and matches nothing.
 
 ``@media`` is honoured for the media *types* ``all``, ``print`` and
 ``pdf``; a media query's conditions are ignored, so ``@media

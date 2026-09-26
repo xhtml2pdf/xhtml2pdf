@@ -895,15 +895,36 @@ class CSSSelectorLogicalQualifier(CSSSelectorQualifierBase):
             return self._nthMatch(element)
         return False
 
+    @staticmethod
+    def _anchor(selector):
+        """The combinator next to :scope in a :has() argument: " ", ">", "+" or "~"."""
+        op = " "
+        while True:
+            links = [
+                q
+                for q in selector.qualifiers
+                if isinstance(q, CSSSelectorCombinationQualifier)
+            ]
+            if not links:
+                return op
+            op, selector = links[0].op, links[0].selector
+
     def _hasMatch(self, element):
+        # Only the element's descendants can match "img" or "> img", and only
+        # its following siblings and their descendants "+ p" or "~ p".
+        # Gathering both for every element made a long table quadratic.
+        anchors = {self._anchor(selector) for selector in self.selectors}
         node = element.domElement
-        candidates = list(node.getElementsByTagName("*"))
-        sibling = node.nextSibling
-        while sibling is not None:
-            if sibling.nodeType == sibling.ELEMENT_NODE:
-                candidates.append(sibling)
-                candidates.extend(sibling.getElementsByTagName("*"))
-            sibling = sibling.nextSibling
+        candidates = []
+        if anchors & {" ", ">"}:
+            candidates.extend(node.getElementsByTagName("*"))
+        if anchors & {"+", "~"}:
+            sibling = node.nextSibling
+            while sibling is not None:
+                if sibling.nodeType == sibling.ELEMENT_NODE:
+                    candidates.append(sibling)
+                    candidates.extend(sibling.getElementsByTagName("*"))
+                sibling = sibling.nextSibling
         token = _scope.set(node)
         try:
             wrap = type(element)
