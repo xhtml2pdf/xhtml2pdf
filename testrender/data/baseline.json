@@ -89,7 +89,7 @@
       "pages": {
         "xhtml2pdf": 1
       },
-      "ssim": 0.9386,
+      "ssim": 0.9384,
       "text": 1.0,
       "text_doc": 1.0
     },
@@ -97,7 +97,7 @@
       "pages": {
         "xhtml2pdf": 1
       },
-      "ssim": 0.953,
+      "ssim": 0.9525,
       "text": 1.0,
       "text_doc": 1.0
     },
@@ -227,7 +227,7 @@
       "pages": {
         "xhtml2pdf": 1
       },
-      "ssim": 0.8776,
+      "ssim": 0.8797,
       "text": 1.0,
       "text_doc": 1.0
     },
@@ -251,7 +251,7 @@
       "pages": {
         "xhtml2pdf": 1
       },
-      "ssim": 0.9384,
+      "ssim": 0.9381,
       "text": 1.0,
       "text_doc": 1.0
     },
@@ -335,7 +335,7 @@
       "pages": {
         "xhtml2pdf": 1
       },
-      "ssim": 0.8947,
+      "ssim": 0.8934,
       "text": 1.0,
       "text_doc": 1.0
     },
@@ -351,7 +351,7 @@
       "pages": {
         "xhtml2pdf": 1
       },
-      "ssim": 0.9787,
+      "ssim": 0.9805,
       "text": 1.0,
       "text_doc": 1.0
     },
@@ -367,7 +367,7 @@
       "pages": {
         "xhtml2pdf": 1
       },
-      "ssim": 0.9038,
+      "ssim": 0.9029,
       "text": 1.0,
       "text_doc": 1.0
     },
@@ -375,7 +375,7 @@
       "pages": {
         "xhtml2pdf": 1
       },
-      "ssim": 0.9143,
+      "ssim": 0.8992,
       "text": 1.0,
       "text_doc": 1.0
     },
@@ -519,7 +519,7 @@
       "pages": {
         "xhtml2pdf": 2
       },
-      "ssim": 0.8286,
+      "ssim": 0.8313,
       "text": 0.9302,
       "text_doc": 1.0
     },
@@ -582,7 +582,7 @@
       "pages": {
         "xhtml2pdf": 1
       },
-      "ssim": 0.9798,
+      "ssim": 0.9839,
       "text": 1.0,
       "text_doc": 1.0
     },
