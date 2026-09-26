@@ -695,3 +695,22 @@ class DebugLogTest(TestCase):
             )
             self.assertLess(len(options), 1000)
             self.assertIn("long paragraph", options)
+
+
+class DefaultCssTest(TestCase):
+    """default_css replaces the predefined CSS; extending it keeps the text (#735)."""
+
+    @staticmethod
+    def text(**kwargs) -> str:
+        dest = BytesIO()
+        pisaDocument("<body><p>visible text</p></body>", dest, **kwargs)
+        dest.seek(0)
+        return PdfReader(dest).pages[0].extract_text()
+
+    def test_extending_the_default_css_keeps_the_text(self) -> None:
+        from xhtml2pdf.default import DEFAULT_CSS
+
+        self.assertIn(
+            "visible text",
+            self.text(default_css=DEFAULT_CSS + "body { font-size: 12pt; }"),
+        )

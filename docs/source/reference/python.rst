@@ -37,6 +37,20 @@ The main function of xhtml2pdf is :py:func:`CreatePDF`.
       The default CSS definition. If ``None``, the predefined CSS of xhtml2pdf
       is used.
 
+      A string given here **replaces** that predefined CSS, it is not added
+      to it. The predefined CSS is what makes ``<p>``, ``<div>`` and the
+      other block elements blocks, and without it a document may come out
+      blank. To add rules of your own, extend it:
+
+      .. code-block:: python
+
+         from xhtml2pdf import pisa
+         from xhtml2pdf.default import DEFAULT_CSS
+
+         pisa.CreatePDF(html, dest, default_css=DEFAULT_CSS + "body { font-size: 12pt; }")
+
+      A ``<style>`` in the document does the same without replacing anything.
+
    :param bool xhtml:
       Force parsing the source as HTML. If omitted, the parser will try to guess
       this.
