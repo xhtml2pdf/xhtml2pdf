@@ -3,11 +3,17 @@
 # Virtualenv used by setup/devsetup. Override with e.g. `make setup VENV=.venv312`.
 VENV ?= .venv
 PIP := $(VENV)/bin/pip
-# The targets below run in that virtualenv once `make setup` has created it,
-# and in whatever python3 is on PATH otherwise, as in CI, which installs into
-# the runner's Python and has no virtualenv. Absolute, because some recipes
-# cd first. Recursive (=), so `make setup test-ref` picks up the new venv.
-PYTHON = $(if $(wildcard $(VENV)/bin/python),$(abspath $(VENV))/bin/python,python3)
+
+# The targets that run the code prepare that virtualenv before they run, and
+# put it first on PATH, so the plain "python" of their recipes is its
+# interpreter, after a cd too. Not in CI, which installs into the runner's
+# Python with a pinned reportlab, nor inside a virtualenv already active: both
+# run with the Python they have.
+ifeq ($(CI)$(VIRTUAL_ENV),)
+ENV := $(VENV)/.installed
+BROWSER_ENV := $(VENV)/.installed-browser
+export PATH := $(CURDIR)/$(VENV)/bin:$(PATH)
+endif
 
 help:
 	@echo "setup - create a venv and install xhtml2pdf in editable mode"
@@ -32,6 +38,17 @@ help:
 
 $(VENV)/bin/python:
 	python3 -m venv $(VENV)
+
+# What the test and perf targets need, installed again when pyproject.toml
+# changes.
+$(VENV)/.installed: pyproject.toml | $(VENV)/bin/python
+	$(PIP) install --upgrade pip
+	$(PIP) install -e .[test]
+	touch $@
+
+$(VENV)/.installed-browser: $(VENV)/.installed
+	$(PIP) install -e .[test,browsertest]
+	touch $@
 
 # Base install: just the package itself, editable, for running/using xhtml2pdf.
 setup: $(VENV)/bin/python
@@ -65,11 +82,11 @@ clean-pyc:
 lint:
 	pep8 xhtml2pdf
 
-test:
-	$(PYTHON) -m coverage run -m unittest discover -t . -s tests
+test: $(ENV)
+	coverage run -m unittest discover -t . -s tests
 
-test-render:
-	cd testrender && $(PYTHON) testrender.py --only-errors
+test-render: $(ENV)
+	cd testrender && python testrender.py --only-errors
 
 # Convenience for local use. Note this compares the output against a reference
 # built from the same commit and the same reportlab, so it only catches
@@ -82,33 +99,33 @@ test-render-all: test-ref test-render
 # --headed debugging runs land on a virtual display instead of the desktop.
 XVFB := $(shell command -v xvfb-run 2>/dev/null)
 
-test-browser:
-	$(if $(XVFB),$(XVFB) -a,) $(PYTHON) testrender/browsercompare.py --report
+test-browser: $(BROWSER_ENV)
+	$(if $(XVFB),$(XVFB) -a,) python testrender/browsercompare.py --report
 
-test-browser-update:
-	$(if $(XVFB),$(XVFB) -a,) $(PYTHON) testrender/browsercompare.py --update-baseline
+test-browser-update: $(BROWSER_ENV)
+	$(if $(XVFB),$(XVFB) -a,) python testrender/browsercompare.py --update-baseline
 
 
 # Deliberately not wired into `test` or into CI: a timing on a shared runner
 # says more about the runner than about the change, and perf-golden only means
 # anything next to a reference recorded before the change.
-perf:
-	$(PYTHON) tools/perf/bench.py
+perf: $(ENV)
+	python tools/perf/bench.py
 
-perf-scaling:
-	$(PYTHON) tools/perf/bench.py --scaling
+perf-scaling: $(ENV)
+	python tools/perf/bench.py --scaling
 
-perf-golden:
-	$(PYTHON) tools/perf/golden.py
+perf-golden: $(ENV)
+	python tools/perf/golden.py
 
-perf-golden-update:
-	$(PYTHON) tools/perf/golden.py --update
+perf-golden-update: $(ENV)
+	python tools/perf/golden.py --update
 
 test-all:
 	tox
 
-test-ref:
-	cd testrender && $(PYTHON) testrender.py --create-reference data/reference
+test-ref: $(ENV)
+	cd testrender && python testrender.py --create-reference data/reference
 
 docs:
 	$(MAKE) -C docs clean
@@ -119,9 +136,9 @@ docs:
 release: clean
 	git tag -a "v`xhtml2pdf --version`" -m "Bump version `xhtml2pdf --version`"
 	git push origin "v`xhtml2pdf --version`"
-	$(PYTHON) -m build
+	python -m build
 	twine upload -s dist/*
 
 sdist: clean
-	$(PYTHON) -m build --sdist
+	python -m build --sdist
 	ls -l dist
