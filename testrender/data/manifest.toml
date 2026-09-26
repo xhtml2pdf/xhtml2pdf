@@ -683,3 +683,12 @@ notes = """Issue #726: rem against the root font size, in font-size, \
 line-height, margin, padding and a cell's width and height, inside a \
 block with a smaller font. A rem used to be read as an em, relative to the \
 element's own font size."""
+
+[fixtures.page-frame-margin]
+compare = ["pages", "headings"]
+headings = ["Harbour", "Market", "Library", "Workshop", "Station", "Garden", "Evening"]
+notes = """Issues #303 and #765: a margin on @page together with a content \
+@frame. The margins made a frame of their own ahead of the declared one, \
+so the story filled the page, then carried on into the @frame on the same \
+page, on top of itself, and never reached the next. The browser side \
+makes the frame the page area."""

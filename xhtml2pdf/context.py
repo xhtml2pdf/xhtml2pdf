@@ -458,25 +458,44 @@ class pisaCSSBuilder(css.CSSBuilder):
             getSize,
         )
 
-        for prop in (
-            "margin-top",
-            "margin-left",
-            "margin-right",
-            "margin-bottom",
-            "top",
-            "left",
-            "right",
-            "bottom",
-            "width",
-            "height",
-        ):
-            if prop in data:
-                c.frameList.append(
-                    self._pisaAddFrame(
-                        name, data, first=True, border=pageBorder, size=c.pageSize
-                    )
+        # The page's own margins make a content frame: the page less its
+        # margins. Only when no @frame is a content frame, though. With one,
+        # the margin frame came first and the story filled it, then went on
+        # into the declared frame on the same page, on top of what it had
+        # just written, and never reached the next page.
+        page_box = next(
+            (
+                prop
+                for prop in (
+                    "margin-top",
+                    "margin-left",
+                    "margin-right",
+                    "margin-bottom",
+                    "top",
+                    "left",
+                    "right",
+                    "bottom",
+                    "width",
+                    "height",
                 )
-                break
+                if prop in data
+            ),
+            None,
+        )
+        has_content_frame = any(static is None for _n, static, *_rest in c.frameList)
+        if page_box and has_content_frame:
+            log.debug(
+                "@page %r declares %s and a content @frame; the frame is where the"
+                " content goes, and the margins are ignored",
+                name,
+                page_box,
+            )
+        elif page_box:
+            c.frameList.append(
+                self._pisaAddFrame(
+                    name, data, first=True, border=pageBorder, size=c.pageSize
+                )
+            )
 
         # Frames have to be calculated after we know the pagesize
         frameList = []

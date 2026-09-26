@@ -1383,3 +1383,40 @@ class BorderRadiusCascadeTest(TestCase):
             b"<div style='border-radius: 4pt'><p>child</p>own text</div>"
         )
         self.assertEqual([((0, 0),) * 4, ((4, 4),) * 4], radii)
+
+
+class PageMarginWithFrameTest(TestCase):
+    """
+    A margin on @page and a content @frame (#303, #765): the frame is where
+    the story goes. The margins used to make a frame of their own ahead of
+    it, and the story filled the page, then the @frame on top of itself.
+    """
+
+    ITEMS = "".join(f"<li>Item number {i}</li>" for i in range(60))
+
+    def items_per_page(self, page: str) -> list[int]:
+        html = (
+            f"<html><head><style>@page {{ size: a5; {page} }}</style></head>"
+            f"<body><div id='f'>foot</div><ul>{self.ITEMS}</ul></body></html>"
+        )
+        dest = io.BytesIO()
+        pisa.pisaDocument(io.StringIO(html), dest)
+        dest.seek(0)
+        return [
+            (p.extract_text() or "").count("Item number") for p in PdfReader(dest).pages
+        ]
+
+    def test_the_margin_does_not_add_a_frame(self) -> None:
+        frame = "@frame content { left: 50pt; width: 300pt; top: 50pt; height: 400pt; }"
+        self.assertEqual(
+            self.items_per_page(frame), self.items_per_page(f"margin: 20px; {frame}")
+        )
+        self.assertGreater(len(self.items_per_page(f"margin: 20px; {frame}")), 1)
+
+    def test_with_static_frames_only_the_margin_still_makes_the_content_frame(
+        self,
+    ) -> None:
+        footer = "@frame footer { -pdf-frame-content: f; bottom: 1cm; height: 1cm; left: 2cm; width: 5cm; }"
+        wide = self.items_per_page(f"margin: 1cm; {footer}")
+        narrow = self.items_per_page(f"margin: 4cm; {footer}")
+        self.assertGreater(wide[0], narrow[0])
