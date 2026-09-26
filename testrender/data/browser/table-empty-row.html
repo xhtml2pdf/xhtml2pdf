@@ -1,0 +1,36 @@
+<!--
+  Browser equivalent of data/source/table-empty-row.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>table-empty-row</title>
+<style type="text/css">
+body { font-size: 11pt; line-height: 15pt; }
+p { margin: 0 0 8pt 0; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 10pt; }
+td, th { border: 1pt solid #555753; padding: 3pt 5pt; }
+</style>
+</head>
+<body>
+<p>A template loop that leaves an empty row at the end of the table:</p>
+<table>
+<tr><th>Product</th><th>Quantity</th><th>Price</th></tr>
+<tr><td rowspan="2">Coffee beans</td><td>2</td><td>18.00</td></tr>
+<tr><td>1</td><td>9.50</td></tr>
+<tr></tr>
+</table>
+<p>An empty row between two rows with cells:</p>
+<table>
+<tr><td>Morning shift</td><td>Ana</td></tr>
+<tr></tr>
+<tr><td>Evening shift</td><td>Luis</td></tr>
+</table>
+<p>The document goes on after both tables, which it did not when the first one aborted it.</p>
+</body>
+</html>

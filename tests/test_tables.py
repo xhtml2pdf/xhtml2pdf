@@ -587,3 +587,35 @@ class RepeatedHeaderTestCase(TestCase):
         self.assertEqual(
             0, self.repeat_rows("<table><tr><th>h</th></tr><tr><td>a</td></tr></table>")
         )
+
+
+class EmptyRowTestCase(TestCase):
+    """A <tr> with no cells does not abort the document (#323)."""
+
+    def render(self, html: str) -> str:
+        from io import BytesIO
+
+        from pypdf import PdfReader
+
+        from xhtml2pdf import pisa
+
+        out = BytesIO()
+        result = pisa.CreatePDF(html, dest=out)
+        self.assertFalse(result.err)
+        return PdfReader(BytesIO(out.getvalue())).pages[0].extract_text()
+
+    def test_empty_last_row(self) -> None:
+        text = self.render(
+            "<table><tr><td>first</td><td>second</td></tr><tr></tr></table>"
+        )
+        self.assertIn("first", text)
+
+    def test_empty_last_row_under_a_rowspan(self) -> None:
+        text = self.render(
+            "<table><tr><td rowspan=2>span</td><td>b</td></tr><tr></tr></table>"
+        )
+        self.assertIn("span", text)
+
+    def test_table_of_empty_rows_is_skipped(self) -> None:
+        text = self.render("<p>before</p><table><tr></tr></table><p>after</p>")
+        self.assertIn("after", text)

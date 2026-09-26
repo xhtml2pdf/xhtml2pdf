@@ -653,3 +653,10 @@ cells, and the hex forms with an alpha channel, #rrggbbaa and #rgba. \
 Transparent text used to come out black and #0000 aborted the document. \
 Text is not compared: the invisible text is still in the text layer on \
 both sides, which is right, but pdftotext reads it differently."""
+
+[fixtures.table-empty-row]
+compare = ["pages", "text", "ssim"]
+notes = """Issue #323: a <tr> with no cells, last under a rowspan and between \
+two rows. The trailing one aborted the whole document with reportlab's \
+"N rows in data but N-1 row heights". The columns come out equal where \
+the browser sizes them to their content, PmlTable's own layout."""

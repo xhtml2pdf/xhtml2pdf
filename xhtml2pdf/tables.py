@@ -98,6 +98,9 @@ class TableData:
         self.row: int = 0
         self.rowh: list = []
         self.span: list = []
+        #: Rows whose <tr> held no cell and that no rowspan reaches. They are
+        #: there, as in a browser, with nothing to give them any height.
+        self.empty_rows: set[int] = set()
         #: Columns holding a cell with content, which is what can size them.
         self.col_with_content: set[int] = set()
         #: The width an empty cell offers for its column, by column. Applied
@@ -281,6 +284,15 @@ class pisaTagTABLE(pisaTag):
         for i, row in enumerate(data):
             data[i] += [""] * (maxcols - len(row))
 
+        # A row's height is recorded by its cells, so a <tr> with none -- a
+        # template loop that left an empty last row -- had no height at all,
+        # and reportlab refused the table: "N rows in data but N-1 row
+        # heights". An empty row in the middle got one from the row after,
+        # and came out as a gap. A browser gives such a row no height.
+        tdata.rowh += [_height()] * (len(data) - len(tdata.rowh))
+        for row in tdata.empty_rows:
+            tdata.rowh[row] = 0
+
         # A column whose every cell is empty has nothing that can size it, so
         # it gets the padding those cells offered. A declared width still wins.
         for col, padding in tdata.col_empty_width.items():
@@ -295,7 +307,7 @@ class pisaTagTABLE(pisaTag):
             _mirror_columns(tdata, data, maxcols)
 
         log.debug("Col widths: %r", tdata.colw)
-        if tdata.data:
+        if tdata.data and maxcols:
             # log.debug("Table styles %r", tdata.styles)
             t = PmlTable(
                 data,
@@ -361,7 +373,11 @@ class pisaTagTR(pisaTag):
 
     @staticmethod
     def end(c):
-        c.tableData.row += 1
+        tdata = c.tableData
+        row = tdata.row
+        if not tdata.data[row] and all(y != row for _x, y in tdata.span):
+            tdata.empty_rows.add(row)
+        tdata.row += 1
 
 
 class pisaTagTD(pisaTag):
