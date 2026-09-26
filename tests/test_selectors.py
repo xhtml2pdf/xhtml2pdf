@@ -183,6 +183,21 @@ class MalformedSelectorTest(TestCase):
                 self.assertEqual({"p"}, set(self._parseInTime(css)))
 
 
+def matchedIds(html: str, css: str, medium_set: list[str]) -> set:
+    """Ids of the elements a one-rule stylesheet colours."""
+    parser = CSSParser(CSSBuilder(mediumSet=medium_set))
+    ruleset = parser.parse(css)[0]
+    document = minidom.parseString(html)
+
+    matched = set()
+    for node in document.getElementsByTagName("*"):
+        element = CSSDOMElementInterface(node)
+        for selector in ruleset:
+            if selector.matches(element):
+                matched.add(element.getIdAttr())
+    return matched
+
+
 class StandardSelectorTest(TestCase):
     """
     Selectors the parser has always accepted and the matcher used to drop on
@@ -193,18 +208,7 @@ class StandardSelectorTest(TestCase):
     MEDIUM_SET: ClassVar[list[str]] = ["all", "print", "pdf"]
 
     def _matched(self, html: str, css: str) -> set:
-        """Ids of the elements a one-rule stylesheet colours."""
-        parser = CSSParser(CSSBuilder(mediumSet=self.MEDIUM_SET))
-        ruleset = parser.parse(css)[0]
-        document = minidom.parseString(html)
-
-        matched = set()
-        for node in document.getElementsByTagName("*"):
-            element = CSSDOMElementInterface(node)
-            for selector in ruleset:
-                if selector.matches(element):
-                    matched.add(element.getIdAttr())
-        return matched
+        return matchedIds(html, css, self.MEDIUM_SET)
 
     LIST = (
         "<ul>"
@@ -272,6 +276,176 @@ class StandardSelectorTest(TestCase):
 
     def test_unknown_pseudo_class_still_matches_nothing(self) -> None:
         self.assertEqual(set(), self._matched(self.LIST, "li:hover {color: red}"))
+
+
+class SelectorsLevel4Test(TestCase):
+    """
+    Selectors 4 pseudo-classes and attribute flags. Before, the argument of
+    :not(), :is(), :where(), :has() and "An+B of S" was read as a value,
+    failed, and dropped the whole rule without a word; :lang() and the rest
+    parsed and matched nothing.
+    """
+
+    MEDIUM_SET: ClassVar[list[str]] = ["all", "print", "pdf"]
+
+    def _matched(self, html: str, css: str) -> set:
+        return matchedIds(html, css, self.MEDIUM_SET)
+
+    LIST = (
+        "<ul id='list'>"
+        "<li id='one' class='x'>a</li><li id='two'>b</li>"
+        "<li id='three' class='x'>c</li><li id='four' class='x'>d</li>"
+        "</ul>"
+    )
+    BLOCKS = (
+        "<div id='root'>"
+        "<p id='pic'><img id='img'/></p><p id='text'>t</p>"
+        "<section id='sec'><p id='deep'><span><img id='img2'/></span></p></section>"
+        "</div>"
+    )
+
+    def test_not(self) -> None:
+        self.assertEqual({"two"}, self._matched(self.LIST, "li:not(.x) {c:d}"))
+        # A list: none of its selectors may match.
+        self.assertEqual(
+            {"two"}, self._matched(self.LIST, "li:not(.x, :first-child) {c:d}")
+        )
+        self.assertEqual(
+            {"three", "four"}, self._matched(self.LIST, "li.x:not(:first-child) {c:d}")
+        )
+        # Complex arguments (Selectors 4): li that is not a child of #list.
+        self.assertEqual(set(), self._matched(self.LIST, "li:not(#list > li) {c:d}"))
+
+    def test_not_with_an_invalid_argument_drops_the_rule(self) -> None:
+        # :not() is not forgiving: one bad argument invalidates the selector.
+        self.assertEqual(set(), self._matched(self.LIST, "li:not(.x, !!) {c:d}"))
+
+    def test_is_and_where(self) -> None:
+        self.assertEqual(
+            {"one", "two"}, self._matched(self.LIST, ":is(#one, #two) {c:d}")
+        )
+        self.assertEqual(
+            {"one", "three", "four"}, self._matched(self.LIST, "li:where(.x) {c:d}")
+        )
+        # Forgiving: the argument that cannot be parsed is dropped, the
+        # others still apply.
+        self.assertEqual({"two"}, self._matched(self.LIST, ":is(!!, #two) {c:d}"))
+
+    def test_has(self) -> None:
+        self.assertEqual({"pic"}, self._matched(self.BLOCKS, "p:has(> img) {c:d}"))
+        self.assertEqual(
+            {"pic", "deep"}, self._matched(self.BLOCKS, "p:has(img) {c:d}")
+        )
+        self.assertEqual({"pic"}, self._matched(self.BLOCKS, "p:has(+ p) {c:d}"))
+        self.assertEqual(
+            {"pic", "text"}, self._matched(self.BLOCKS, "p:has(~ section) {c:d}")
+        )
+        self.assertEqual(
+            {"root", "sec"},
+            self._matched(self.BLOCKS, "*:has(> p > span, > p > img) {c:d}"),
+        )
+        self.assertEqual({"text"}, self._matched(self.BLOCKS, "p:not(:has(img)) {c:d}"))
+
+    def test_nth_child_of_a_selector(self) -> None:
+        # The second, and the last, of the .x items -- not of all items.
+        self.assertEqual(
+            {"three"}, self._matched(self.LIST, "li:nth-child(2 of .x) {c:d}")
+        )
+        self.assertEqual(
+            {"four"}, self._matched(self.LIST, "li:nth-last-child(1 of .x) {c:d}")
+        )
+        self.assertEqual(
+            {"one", "four"}, self._matched(self.LIST, "li:nth-child(odd of .x) {c:d}")
+        )
+        self.assertEqual(set(), self._matched(self.LIST, "li:nth-child(x of .x) {c:d}"))
+
+    def test_attribute_case_flag(self) -> None:
+        html = "<form><input id='upper' type='TEXT'/><input id='lower' type='text'/></form>"
+        self.assertEqual({"upper", "lower"}, self._matched(html, "[type=text i] {c:d}"))
+        self.assertEqual({"lower"}, self._matched(html, "[type=text s] {c:d}"))
+        self.assertEqual({"upper"}, self._matched(html, "[type^=TE] {c:d}"))
+        # Space before the "]" is allowed; it used to drop the rule.
+        self.assertEqual({"lower"}, self._matched(html, "[type=text ] {c:d}"))
+
+    def test_lang(self) -> None:
+        html = (
+            "<div id='doc' lang='en-GB'><p id='en'>x</p>"
+            "<p id='fr' lang='FR'>y</p><p id='eng' lang='eng'>z</p></div>"
+        )
+        self.assertEqual({"doc", "en"}, self._matched(html, ":lang(en) {c:d}"))
+        self.assertEqual({"fr"}, self._matched(html, ":lang(fr) {c:d}"))
+        self.assertEqual({"en", "fr"}, self._matched(html, "p:lang(en-GB, fr) {c:d}"))
+        self.assertEqual(set(), self._matched("<p id='none'>x</p>", ":lang(en) {c:d}"))
+
+    def test_dir(self) -> None:
+        html = (
+            "<div id='doc'><p id='r' dir='rtl'><span id='in'>x</span></p>"
+            "<p id='a' dir='auto'>y</p></div>"
+        )
+        self.assertEqual({"r", "in"}, self._matched(html, ":dir(rtl) {c:d}"))
+        # No dir is ltr; dir="auto" would need the text's direction.
+        self.assertEqual({"doc"}, self._matched(html, ":dir(ltr) {c:d}"))
+
+    FORM = (
+        "<form id='f'>"
+        "<input id='on' type='checkbox' checked=''/><input id='off' type='checkbox'/>"
+        "<input id='name' placeholder='Name' required=''/>"
+        "<input id='filled' placeholder='Name' value='Ana'/>"
+        "<input id='fixed' readonly=''/>"
+        "<fieldset id='set' disabled=''><input id='inside'/></fieldset>"
+        "<select id='sel'><option id='a'>a</option><option id='b' selected=''>b</option></select>"
+        "<a id='link' href='#'>l</a><a id='anchor'>n</a>"
+        "</form>"
+    )
+
+    def test_form_states(self) -> None:
+        cases = {
+            "input:checked": {"on"},
+            "option:checked": {"b"},
+            ":default": {"on", "b"},
+            # A disabled fieldset is itself disabled, and so is what it holds.
+            ":disabled": {"set", "inside"},
+            "input:enabled": {"on", "off", "name", "filled", "fixed"},
+            ":required": {"name"},
+            "input:optional": {"on", "off", "filled", "fixed", "inside"},
+            "input:read-write": {"name", "filled"},
+            "input:read-only": {"on", "off", "fixed", "inside"},
+            ":placeholder-shown": {"name"},
+        }
+        for selector, expected in cases.items():
+            with self.subTest(selector=selector):
+                self.assertEqual(
+                    expected, self._matched(self.FORM, selector + " {c:d}")
+                )
+
+    def test_links(self) -> None:
+        self.assertEqual({"link"}, self._matched(self.FORM, ":link {c:d}"))
+        self.assertEqual({"link"}, self._matched(self.FORM, "a:any-link {c:d}"))
+
+    def test_scope_is_the_root(self) -> None:
+        self.assertEqual({"root"}, self._matched(self.BLOCKS, ":scope {c:d}"))
+
+    @staticmethod
+    def _specificity(selector: str) -> tuple:
+        parser = CSSParser(CSSBuilder(mediumSet=["all"]))
+        (parsed,) = parser.parse(selector + " {c:d}")[0]
+        return parsed.specificity()[1:]
+
+    def test_specificity(self) -> None:
+        cases = {
+            # A pseudo-class counts as a class; it used to count as a type.
+            "p:first-child": (0, 1, 1),
+            "p::before": (0, 0, 2),
+            ":not(#a, .b)": (1, 0, 0),
+            ":is(p, .b)": (0, 1, 0),
+            ":where(#a.b)": (0, 0, 0),
+            "p:has(> img.x)": (0, 1, 2),
+            "li:nth-child(2 of .x)": (0, 2, 1),
+            "[a=b i]": (0, 1, 0),
+        }
+        for selector, expected in cases.items():
+            with self.subTest(selector=selector):
+                self.assertEqual(expected, self._specificity(selector))
 
 
 class CascadeOrderTest(TestCase):

@@ -468,6 +468,33 @@ class DocumentTest(ParserTestCase):
                 css = b"<style>" + selector + b" { color: #ff0000 }</style>"
                 self.assertEqual(colors, self._colors(css + body))
 
+    def test_selector_list_pseudo_classes_tell_siblings_apart(self) -> None:
+        # Each of these tells two siblings with the same tag apart by
+        # something the style cache has to key on: a class inside :not(),
+        # the children for :has(), an attribute for :checked and :lang().
+        red, black = "Color(1,0,0,1)", "Color(0,0,0,1)"
+        cases = {
+            b"p:not(.x)": (b"<p class='x'>a</p><p>b</p>", [black, red]),
+            b"p:has(b)": (b"<p>a</p><p><b>b</b></p>", [black, red]),
+            b"p:not(:first-child)": (b"<p>a</p><p>b</p>", [black, red]),
+            b"p:lang(fr)": (b"<p lang='en'>a</p><p lang='fr'>b</p>", [black, red]),
+            b"p:is([title])": (b"<p>a</p><p title='t'>b</p>", [black, red]),
+        }
+        for selector, (body, colors) in cases.items():
+            with self.subTest(selector=selector):
+                css = b"<style>" + selector + b" { color: #ff0000 }</style>"
+                self.assertEqual(colors, self._colors(css + body))
+
+    def test_pseudo_class_specificity_in_the_cascade(self) -> None:
+        # div p:first-child is (0,1,2) and beats .x p (0,1,1); it used to be
+        # (0,0,3) and lose. :where() adds nothing, so p beats it.
+        html = (
+            b"<style>div p:first-child { color: #ff0000 } .x p { color: #000000 }"
+            b" p.y { color: #ff0000 } :where(p.y) { color: #000000 }</style>"
+            b"<div class='x'><p>a</p></div><p class='y'>b</p>"
+        )
+        self.assertEqual(["Color(1,0,0,1)", "Color(1,0,0,1)"], self._colors(html))
+
     def test_attribute_selectors_tell_siblings_apart(self) -> None:
         # The style cache keyed siblings by tag, class, id and style only, so
         # the second paragraph was handed the first one's colour.

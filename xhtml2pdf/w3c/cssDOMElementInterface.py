@@ -9,7 +9,6 @@
 # ruff: file-ignore[invalid-module-name]
 from __future__ import annotations
 
-import re
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from xhtml2pdf.w3c import css
@@ -23,58 +22,120 @@ if TYPE_CHECKING:
 # ~ Definitions
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-#: an+b, the argument of :nth-child() and its relatives. CSS Selectors 3 6.6.5.
-_NTH_PATTERN = re.compile(r"^(?:([+-]?\d*)n)?\s*([+-]?\s*\d+)?$")
+_flatten_params = css._flatten_params
+_parse_nth = css._parse_nth
+_matches_nth = css._matches_nth
+
+#: Elements the form-state pseudo-classes (:disabled, :enabled) apply to.
+_FORM_CONTROLS = frozenset(
+    {"button", "input", "select", "textarea", "option", "optgroup", "fieldset"}
+)
+#: The <input> types a user types text into: :read-write and
+#: :placeholder-shown apply to these.
+_TEXT_INPUTS = frozenset(
+    {
+        "text", "search", "url", "tel", "email", "password", "number",
+        "date", "month", "week", "time", "datetime-local",
+    }
+)  # fmt: skip
 
 
-def _flatten_params(params) -> str:
+def _inputType(node) -> str:
+    return (node.getAttribute("type") or "text").lower()
+
+
+def _isDisabled(node) -> bool:
+    """HTML's "actually disabled": its own disabled, or a disabled container's."""
+    if node.tagName.lower() not in _FORM_CONTROLS:
+        return False
+    current = node
+    while current is not None and current.nodeType == current.ELEMENT_NODE:
+        if current.hasAttribute("disabled") and (
+            current is node
+            or current.tagName.lower() in {"fieldset", "optgroup", "select"}
+        ):
+            return True
+        current = current.parentNode
+    return False
+
+
+def _isChecked(node) -> bool:
+    tag = node.tagName.lower()
+    if tag == "input":
+        return _inputType(node) in {"checkbox", "radio"} and node.hasAttribute(
+            "checked"
+        )
+    return tag == "option" and node.hasAttribute("selected")
+
+
+def _isReadWrite(node) -> bool:
+    tag = node.tagName.lower()
+    if tag not in {"input", "textarea"} or (
+        tag == "input" and _inputType(node) not in _TEXT_INPUTS
+    ):
+        return False
+    return not node.hasAttribute("readonly") and not _isDisabled(node)
+
+
+def _isPlaceholderShown(node) -> bool:
+    tag = node.tagName.lower()
+    if not node.hasAttribute("placeholder"):
+        return False
+    if tag == "input":
+        return _inputType(node) in _TEXT_INPUTS and not node.getAttribute("value")
+    if tag == "textarea":
+        return not any(
+            child.nodeType == child.TEXT_NODE and child.data
+            for child in node.childNodes
+        )
+    return False
+
+
+def _inheritedAttr(node, names) -> str | None:
+    """The first of names set on node or its nearest ancestor that sets one."""
+    current = node
+    while current is not None and current.nodeType == current.ELEMENT_NODE:
+        for name in names:
+            if current.hasAttribute(name):
+                return current.getAttribute(name)
+        current = current.parentNode
+    return None
+
+
+def _matchesLang(self, params) -> bool:
     """
-    The argument of a functional pseudo-class, as one string.
-
-    The parser hands it over already broken into terms, and how it breaks it
-    depends on the spelling: "odd" arrives as ("odd",), "2n+1" as
-    (("2", "n"), "+", "1"), "-n + 3" as ("-n", "+", "3"). Reassembling and
-    matching one pattern is steadier than reading each of those shapes.
+    :lang(): the element's language, from its own lang or xml:lang or its
+    nearest ancestor's, is one asked for or begins with it and a "-".
+    Case does not matter; "*" matches any language that is set.
     """
-    parts = []
-    for param in params:
-        if isinstance(param, tuple | list):
-            parts.append(_flatten_params(param))
-        else:
-            parts.append(str(param))
-    return "".join(parts).replace(" ", "").lower()
+    lang = _inheritedAttr(self.domElement, ("lang", "xml:lang"))
+    if not lang:
+        return False
+    lang = lang.lower()
+    # Each language arrives as its own parameter: ("en-GB", "fr").
+    wanted = [_flatten_params([param]).strip("'\"") for param in params]
+    return any(
+        language in {"*", lang} or lang.startswith(language + "-")
+        for language in wanted
+        if language
+    )
 
 
-def _parse_nth(params) -> tuple[int, int] | None:
-    """Turn an an+b argument into (a, b), or None if it is not one."""
-    text = _flatten_params(params)
-    if text == "odd":
-        return (2, 1)
-    if text == "even":
-        return (2, 0)
-
-    match = _NTH_PATTERN.match(text)
-    if not match or not text:
-        return None
-    coefficient, constant = match.groups()
-    if coefficient is None:
-        # A plain number: b on its own, matching one position.
-        return (0, int(constant)) if constant else None
-    if coefficient in {"", "+"}:
-        a = 1
-    elif coefficient == "-":
-        a = -1
-    else:
-        a = int(coefficient)
-    return (a, int(constant) if constant else 0)
-
-
-def _matches_nth(index: int, a: int, b: int) -> bool:
-    """Whether a 1-based position satisfies an+b for some whole n >= 0."""
-    if a == 0:
-        return index == b
-    offset = index - b
-    return offset % a == 0 and offset // a >= 0
+def _matchesDir(self, params) -> bool:
+    """
+    :dir(): the direction dir sets on the element or its nearest ancestor
+    with a dir of ltr or rtl, and ltr without one. dir="auto" takes the
+    direction of the text, which is not worked out here: it matches neither.
+    """
+    current = self.domElement
+    direction = "ltr"
+    while current is not None and current.nodeType == current.ELEMENT_NODE:
+        value = (current.getAttribute("dir") or "").lower()
+        if value in {"ltr", "rtl", "auto"}:
+            direction = value
+            break
+        current = current.parentNode
+    return direction == _flatten_params(params)
 
 
 class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
@@ -118,7 +179,44 @@ class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
             self.domElement.parentNode is None
             or self.domElement.parentNode.nodeType != self.domElement.ELEMENT_NODE
         ),
-        # XXX 'first-line':
+        # Selectors 4. :scope is the root, except in the arguments of a
+        # :has(), where it is the element the :has() qualifies.
+        "scope": lambda self: (
+            css._scope.get() is self.domElement
+            if css._scope.get() is not None
+            else self._pseudoStateHandlerLookup["root"](self)
+        ),
+        "link": lambda self: (
+            self.domElement.tagName.lower() in {"a", "area"}
+            and self.domElement.hasAttribute("href")
+        ),
+        "any-link": lambda self: self._pseudoStateHandlerLookup["link"](self),
+        "checked": lambda self: _isChecked(self.domElement),
+        # In a document that is never interacted with, what is checked is
+        # what was checked to begin with.
+        "default": lambda self: _isChecked(self.domElement),
+        "disabled": lambda self: _isDisabled(self.domElement),
+        "enabled": lambda self: (
+            self.domElement.tagName.lower() in _FORM_CONTROLS
+            and not _isDisabled(self.domElement)
+        ),
+        "required": lambda self: (
+            self.domElement.tagName.lower() in {"input", "select", "textarea"}
+            and self.domElement.hasAttribute("required")
+        ),
+        "optional": lambda self: (
+            self.domElement.tagName.lower() in {"input", "select", "textarea"}
+            and not self.domElement.hasAttribute("required")
+        ),
+        "read-write": lambda self: _isReadWrite(self.domElement),
+        "read-only": lambda self: not _isReadWrite(self.domElement),
+        "placeholder-shown": lambda self: _isPlaceholderShown(self.domElement),
+    }
+
+    #: Pseudo-classes that take a plain argument: a language, a direction.
+    _pseudoArgumentHandlerLookup: ClassVar[dict[str, Callable]] = {
+        "lang": _matchesLang,
+        "dir": _matchesDir,
     }
 
     #: Pseudo-classes that take an an+b argument.
@@ -213,6 +311,10 @@ class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
         handler = self._pseudoStateHandlerLookup.get(name)
         if handler is not None:
             return handler(self)
+
+        argument = self._pseudoArgumentHandlerLookup.get(name)
+        if argument is not None:
+            return argument(self, params)
 
         function = self._pseudoFunctionHandlerLookup.get(name)
         if function is None:

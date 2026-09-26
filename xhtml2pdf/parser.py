@@ -126,7 +126,11 @@ from xhtml2pdf.util import (
     toList,
 )
 from xhtml2pdf.w3c import cssDOMElementInterface
-from xhtml2pdf.w3c.css import CSSSelectorAttributeQualifier, CSSTerminalFunction
+from xhtml2pdf.w3c.css import (
+    CSSSelectorAttributeQualifier,
+    CSSSelectorLogicalQualifier,
+    CSSTerminalFunction,
+)
 from xhtml2pdf.xhtml2pdf_reportlab import PmlLeftPageBreak, PmlRightPageBreak
 
 log = logging.getLogger(__name__)
@@ -458,8 +462,46 @@ POSITIONAL_PSEUDO_CLASSES: frozenset[str] = frozenset(
         "nth-of-type",
         "only-child",
         "only-of-type",
+        # What the element contains: its descendants and later siblings, and
+        # the text of a textarea.
+        "has",
+        "placeholder-shown",
     }
 )
+
+#: The attributes a pseudo-class reads on the element itself. Two siblings
+#: that differ in one of them must not share a cached result either.
+PSEUDO_CLASS_ATTRIBUTES: dict[str, frozenset[str]] = {
+    "lang": frozenset({"lang", "xml:lang"}),
+    "dir": frozenset({"dir"}),
+    "link": frozenset({"href"}),
+    "any-link": frozenset({"href"}),
+    "checked": frozenset({"checked", "selected", "type"}),
+    "default": frozenset({"checked", "selected", "type"}),
+    "disabled": frozenset({"disabled"}),
+    "enabled": frozenset({"disabled"}),
+    "required": frozenset({"required"}),
+    "optional": frozenset({"required"}),
+    "read-only": frozenset({"readonly", "disabled", "type"}),
+    "read-write": frozenset({"readonly", "disabled", "type"}),
+    "placeholder-shown": frozenset({"placeholder", "value", "type"}),
+}
+
+
+def iterSubjectQualifiers(selector):
+    """
+    Every constraint a selector puts on its subject: its own qualifiers, and
+    those of the arguments of :not(), :is(), :where() and "An+B of S", which
+    are about the same element.
+    """
+    for qualifier in getattr(selector, "qualifiers", ()):
+        yield qualifier
+        if (
+            isinstance(qualifier, CSSSelectorLogicalQualifier)
+            and qualifier.name != "has"
+        ):
+            for argument in qualifier.selectors:
+                yield from iterSubjectQualifiers(argument)
 
 
 def getPositionalTagNames(cssCascade) -> set[str]:
@@ -479,11 +521,10 @@ def getPositionalTagNames(cssCascade) -> set[str]:
     names: set[str] = set()
     for ruleset in cssCascade.iterCSSRulesets():
         for selector in ruleset:
-            qualifiers = getattr(selector, "qualifiers", ())
             if any(
                 (qualifier.isPseudo() and qualifier.name in POSITIONAL_PSEUDO_CLASSES)
                 or getattr(qualifier, "op", None) in {"+", "~"}
-                for qualifier in qualifiers
+                for qualifier in iterSubjectQualifiers(selector)
             ):
                 names.add(str(selector.name).lower())
     return names
@@ -501,12 +542,14 @@ def getAttributeSelectorNames(cssCascade) -> frozenset[str]:
     names: set[str] = set()
     for ruleset in cssCascade.iterCSSRulesets():
         for selector in ruleset:
-            for qualifier in getattr(selector, "qualifiers", ()):
+            for qualifier in iterSubjectQualifiers(selector):
                 # A namespaced attribute's name is a tuple; it is left out.
                 if isinstance(qualifier, CSSSelectorAttributeQualifier) and isinstance(
                     qualifier.name, str
                 ):
                     names.add(qualifier.name)
+                elif qualifier.isPseudo():
+                    names |= PSEUDO_CLASS_ATTRIBUTES.get(qualifier.name, frozenset())
     return frozenset(names)
 
 

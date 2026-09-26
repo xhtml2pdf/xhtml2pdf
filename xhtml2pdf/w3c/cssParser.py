@@ -88,6 +88,10 @@ class CSSSelectorAbstract:
     def addPseudoFunction(self, name, value):
         raise NotImplementedError
 
+    @abstractmethod
+    def addLogicalPseudo(self, name, selectors, nth=None):
+        raise NotImplementedError
+
 
 class CSSBuilderAbstract:
     """
@@ -325,6 +329,12 @@ class CSSParser:
     # Selectors 3. "&=", "!=" and "<>" used to be accepted here too, and then
     # raised RuntimeError when matched, since nothing implements them.
     AttributeOperators: ClassVar[list[str]] = ["=", "~=", "|=", "^=", "$=", "*="]
+    #: Functional pseudo-classes whose argument is a list of selectors
+    #: (Selectors 4) rather than a value. nth-child and nth-last-child take
+    #: one only after "of".
+    SelectorListPseudos: ClassVar[frozenset[str]] = frozenset(
+        {"not", "is", "where", "has", "nth-child", "nth-last-child"}
+    )
     SelectorQualifiers: ClassVar[tuple[str, ...]] = ("#", ".", "[", ":")
     SelectorCombiners: ClassVar[list[str]] = ["+", ">", "~"]
     ExpressionOperators: ClassVar[tuple[str, ...]] = ("/", "+", ",")
@@ -1185,13 +1195,24 @@ class CSSParser:
         else:
             attr_value = None
 
+        # Selectors 4: [attr=value i] compares ignoring case, "s" with it.
+        # Space before the "]" is allowed too; it used to drop the rule.
+        src = src.lstrip()
+        flag = None
+        if op:
+            flag, rest = self._getIdent(src)
+            if flag is not None and flag.lower() in {"i", "s"}:
+                flag, src = flag.lower(), rest.lstrip()
+            else:
+                flag = None
+
         if not src.startswith("]"):
             msg = "Selector Attribute closing ']' not found"
             raise self.ParseError(msg, src, ctxsrc)
         src = src[1:]
 
         if op:
-            selector.addAttributeOperation(attrName, op, attr_value)
+            selector.addAttributeOperation(attrName, op, attr_value, flag)
         else:
             selector.addAttribute(attrName)
         return src, selector
@@ -1212,6 +1233,33 @@ class CSSParser:
         if not name:
             msg = "Selector Pseudo identifier not found"
             raise self.ParseError(msg, src, ctxsrc)
+        name = name.lower()
+
+        if src.startswith("(") and name in self.SelectorListPseudos:
+            end = self._findAtTopLevel(src[1:], {")"})
+            if end < 0:
+                msg = "Selector Pseudo Function closing ')' not found"
+                raise self.ParseError(msg, src, ctxsrc)
+            argument, rest = src[1 : end + 1], src[end + 2 :]
+            nth = None
+            if name in {"nth-child", "nth-last-child"}:
+                # "An+B of S" counts only the siblings S selects. Without the
+                # "of" it is the plain form, read below as before.
+                of = re.search(r"\s+of\s+", argument, re.IGNORECASE)
+                if of is not None:
+                    nth, argument = argument[: of.start()], argument[of.end() :]
+            if name not in {"nth-child", "nth-last-child"} or nth is not None:
+                if name == "has":
+                    selectors = self._parseRelativeSelectors(argument, ctxsrc)
+                else:
+                    # :is() and :where() take a forgiving list: an argument
+                    # that cannot be parsed is dropped, the rest still apply.
+                    forgiving = name in {"is", "where"}
+                    selectors = self._parseSelectorArguments(
+                        argument, ctxsrc, forgiving=forgiving
+                    )
+                selector.addLogicalPseudo(name, selectors, nth)
+                return rest, selector
 
         if src.startswith("("):
             # function
@@ -1226,6 +1274,50 @@ class CSSParser:
             selector.addPseudo(name)
 
         return src, selector
+
+    def _parseSelectorArguments(self, src, ctxsrc, *, forgiving=False):
+        """The comma separated selectors of :not(), :is() and the like."""
+        selectors = []
+        while True:
+            end = self._findAtTopLevel(src, {","})
+            part = (src if end < 0 else src[:end]).strip()
+            try:
+                selectors.append(self._parseWholeSelector(part, ctxsrc))
+            except self.ParseError:
+                if not forgiving:
+                    raise
+            if end < 0:
+                return selectors
+            src = src[end + 1 :]
+
+    def _parseWholeSelector(self, src, ctxsrc):
+        """One selector that must use up all of src."""
+        rest, selector = self._parseSelector(src) if src else (src, None)
+        if selector is None or rest.strip():
+            msg = "Invalid selector in a selector list"
+            raise self.ParseError(msg, src, ctxsrc)
+        return selector
+
+    def _parseRelativeSelectors(self, src, ctxsrc):
+        """
+        The arguments of :has(), each relative to the element it qualifies:
+        "> img", "+ p", "~ p", or "img" for a descendant. Each is read as
+        ":scope > img" and so on, and :scope is that element while :has()
+        is matched.
+        """
+        anchored = []
+        while True:
+            end = self._findAtTopLevel(src, {","})
+            part = (src if end < 0 else src[:end]).strip()
+            if not part:
+                msg = "Empty argument in :has()"
+                raise self.ParseError(msg, src, ctxsrc)
+            combinator = part[0] if part[0] in ">+~" else ""
+            anchored.append(f":scope {combinator} {part[len(combinator):].lstrip()}")
+            if end < 0:
+                break
+            src = src[end + 1 :]
+        return self._parseSelectorArguments(", ".join(anchored), ctxsrc)
 
     # ~ declaration and expression parsing ~~~~~~~~~~~~~~~
 

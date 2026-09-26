@@ -69,8 +69,23 @@ Unreleased.
   rounded box, which is how a pill badge is written. See the Rounded
   corners section of the HTML reference for what differs from a browser.
 
+* **Selectors Level 4.** ``:not()`` with a list of selectors, ``:is()``,
+  ``:where()``, ``:has()`` (``p:has(> img)``, ``h2:has(+ p)``), and
+  ``:nth-child(2 of .x)`` / ``:nth-last-child()`` with ``of``. Before,
+  the argument of each was read as a value and the whole rule was dropped
+  without a word. Also ``[type=text i]`` and ``s``, ``:lang()``, ``:dir()``,
+  ``:scope``, ``:link`` and ``:any-link``, and the form states
+  ``:checked``, ``:default``, ``:disabled``, ``:enabled``, ``:required``,
+  ``:optional``, ``:read-only``, ``:read-write`` and
+  ``:placeholder-shown``, all read from the document as written.
+  ``dir="auto"`` matches neither ``:dir(ltr)`` nor ``:dir(rtl)``.
+
 **🐛 Bug-Fixes**
 
+* **Pseudo-class specificity.** A pseudo-class counted as a type rather
+  than a class, so ``div p:first-child`` lost to ``.x p``.
+* A space before the ``]`` of an attribute selector, ``[type=text ]``,
+  no longer drops the rule.
 * **A stray ``}`` no longer hangs the parser.** Since 0.2.18 a ``}`` with
   no open block at the top of a stylesheet -- one that closes a rule twice,
   as the stylesheet ``svc.webspellchecker.net`` serves does -- made
