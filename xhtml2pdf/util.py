@@ -222,6 +222,27 @@ def _rgbFunctionColor(function, default):
     return Color(_clamp01(red), _clamp01(green), _clamp01(blue), alpha=_clamp01(alpha))
 
 
+def _hexAlphaColor(value, original, default):
+    """
+    Read `#rgba` or `#rrggbbaa`, the hex forms with an alpha channel.
+
+    reportlab reads neither: `#rgba` failed an assertion and took the
+    document down, and `#rrggbbaa` was read as one big number, a colour
+    nobody wrote.
+    """
+    digits = value[1:]
+    if len(digits) == 4:
+        digits = "".join(digit * 2 for digit in digits)
+    try:
+        red, green, blue, alpha = (
+            int(digits[i : i + 2], 16) / 255.0 for i in range(0, 8, 2)
+        )
+    except ValueError:
+        log.warning("Cannot read the colour %r, using %r", original, default)
+        return default
+    return Color(red, green, blue, alpha=alpha)
+
+
 @Memoized
 def getColor(value, default=None):
     """
@@ -252,6 +273,8 @@ def getColor(value, default=None):
         return default
     if value in COLOR_BY_NAME:
         return COLOR_BY_NAME[value]
+    if value.startswith("#") and len(value) in {5, 9}:
+        return _hexAlphaColor(value, original, default)
     if value.startswith("#") and len(value) == 4:
         value = "#" + value[1] + value[1] + value[2] + value[2] + value[3] + value[3]
     elif rgb_match := rgb_re.match(value):
@@ -263,7 +286,9 @@ def getColor(value, default=None):
 
     try:
         return toColor(value, default)  # Calling the reportlab function
-    except ValueError:
+    except (ValueError, AssertionError):
+        # AssertionError too: toColor asserts on some shapes it cannot read,
+        # a hex of the wrong length among them.
         # reportlab raises rather than handing back the default it was given.
         # A colour nobody can read is worth a line in the log; it is not worth
         # abandoning the document.

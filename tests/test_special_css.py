@@ -941,3 +941,37 @@ class BorderRadiusShorthandTest(TestCase):
     def test_a_valid_longhand_is_kept(self) -> None:
         declaration = ("border-top-left-radius", [("1", "px"), ("2", "px")], None)
         self.assertEqual([declaration], parseSpecialRules([declaration]))
+
+
+class TransparentColorTest(TestCase):
+    """`color: transparent` and the hex forms with alpha (#811)."""
+
+    @staticmethod
+    def render(html: str) -> str:
+        out = io.BytesIO()
+        result = pisa.CreatePDF(html, dest=out)
+        assert not result.err
+        page = PdfReader(io.BytesIO(out.getvalue())).pages[0]
+        return page.get_contents().get_data().decode("latin-1")
+
+    def text_operators(self, html: str, word: str) -> str:
+        return next(
+            line for line in self.render(html).splitlines() if f"({word})" in line
+        )
+
+    def test_transparent_text_is_drawn_with_no_ink(self) -> None:
+        line = self.text_operators('<p style="color: transparent">HIDDEN</p>', "HIDDEN")
+        # An ExtGState with a zero fill alpha is set before the text.
+        self.assertIn(" gs ", line)
+
+    def test_opaque_text_sets_no_alpha(self) -> None:
+        line = self.text_operators("<p>SHOWN</p>", "SHOWN")
+        self.assertNotIn(" gs ", line)
+
+    def test_four_digit_hex_does_not_abort(self) -> None:
+        line = self.text_operators('<p style="color: #0000">HIDDEN</p>', "HIDDEN")
+        self.assertIn(" gs ", line)
+
+    def test_eight_digit_hex_is_read_as_rgba(self) -> None:
+        line = self.text_operators('<p style="color: #ff000080">RED</p>', "RED")
+        self.assertIn("1 0 0 rg", line)

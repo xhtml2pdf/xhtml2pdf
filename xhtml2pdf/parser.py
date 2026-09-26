@@ -22,6 +22,7 @@ from xml.dom import Node
 
 import html5lib
 from html5lib import treebuilders
+from reportlab.lib.colors import Color
 from reportlab.platypus.doctemplate import FrameBreak, NextPageTemplate
 from reportlab.platypus.flowables import KeepInFrame, PageBreak
 
@@ -651,10 +652,20 @@ def lower(sequence):
     return sequence[0].lower()
 
 
+#: The colour of text written `color: transparent`: black with no ink.
+TRANSPARENT = Color(0, 0, 0, alpha=0)
+
+
 def CSS2Frag(c, kw, isBlock):
     # COLORS
     if "color" in c.cssAttr:
-        c.frag.textColor = getColor(c.cssAttr["color"], "#000000")
+        # `transparent` is a colour for text, one nothing shows through:
+        # getColor hands back the default for it, which is right for a
+        # background with nothing to paint and made the text black.
+        if str(c.cssAttr["color"]).strip().lower() == "transparent":
+            c.frag.textColor = TRANSPARENT
+        else:
+            c.frag.textColor = getColor(c.cssAttr["color"], "#000000")
     if "background-color" in c.cssAttr:
         c.frag.backColor = getColor(c.cssAttr["background-color"], "#ffffff")
         # FONT SIZE, STYLE, WEIGHT

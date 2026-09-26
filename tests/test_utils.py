@@ -87,6 +87,17 @@ class UtilsColorTestCase(TestCase):
         res = getColor("#F00")
         self.assertEqual(res, Color(1, 0, 0, 1))
 
+    def test_get_color_for_hex_with_alpha(self):
+        """#rgba and #rrggbbaa carry an alpha channel (#811)."""
+        self.assertEqual(getColor("#ff000080"), Color(1, 0, 0, alpha=128 / 255))
+        self.assertEqual(getColor("#00f8"), Color(0, 0, 1, alpha=0x88 / 255))
+        self.assertEqual(getColor("#0000"), Color(0, 0, 0, alpha=0))
+
+    def test_get_color_for_unreadable_hex_gives_default(self):
+        """A four-digit hex that is not hex is logged, not raised (#811)."""
+        with self.assertLogs("xhtml2pdf.util", level="WARNING"):
+            self.assertEqual(getColor("#zzzz", default="TOKEN"), "TOKEN")
+
     def test_get_color_for_CSS_RGB_function(self):
         # It's regexp based, let's try common cases.
         res = getColor("rgb(255,0,0)")
