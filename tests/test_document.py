@@ -677,3 +677,21 @@ class SourceEncodingTest(TestCase):
         declared = '<meta charset="utf-8">'
         html = f"<html><head>{declared}</head><body><span>Ä-ö-ü</span></body></html>"
         self.assertEqual("Ä-ö-ü", self.text(html.encode("utf-8")))
+
+
+class DebugLogTest(TestCase):
+    """The debug log does not repeat the whole source document (#92)."""
+
+    def test_the_source_is_shortened(self) -> None:
+        html = "<p>" + "long paragraph " * 2000 + "</p>"
+        for src in (html, html.encode()):
+            with (
+                self.subTest(type=type(src).__name__),
+                self.assertLogs("xhtml2pdf.document", level="DEBUG") as logs,
+            ):
+                pisaDocument(src, BytesIO())
+            options = next(
+                line for line in logs.output if "pisaDocument options" in line
+            )
+            self.assertLess(len(options), 1000)
+            self.assertIn("long paragraph", options)

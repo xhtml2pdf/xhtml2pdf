@@ -14,6 +14,7 @@
 
 import io
 import logging
+import reprlib
 import warnings
 from html import escape as html_escape
 
@@ -32,6 +33,10 @@ from xhtml2pdf.util import getBox, reset_caches
 from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlPageTemplate
 
 log = logging.getLogger(__name__)
+
+_SHORT_REPR = reprlib.Repr()
+_SHORT_REPR.maxstring = 200
+_SHORT_REPR.maxother = 200
 
 
 def pisaErrorDocument(dest, c):
@@ -207,7 +212,9 @@ def pisaDocument(
     log.debug(
         "pisaDocument options:\n  src = %r\n  dest = %r\n  path = %r\n  link_callback ="
         " %r\n  xhtml = %r\n  context_meta = %r",
-        src,
+        # The source may be the whole document, megabytes of it, and a debug
+        # log is no place to read it again.
+        _SHORT_REPR.repr(src),
         dest,
         path,
         link_callback,
