@@ -162,6 +162,11 @@ class ResourceAccessPolicy:
         elements, fetches and flowables, so it is a bound, not a precise stop.
     :param max_document_bytes: how large the source document may be.
     :param max_depth: how deeply its elements may nest.
+    :param allow_remote_pdf_backgrounds: use a PDF page background that was
+        fetched over the network or written inline as a ``data:`` URI. A PDF
+        is a complex format parsed by pypdf; one from a file beside the
+        document is the integrator's, one from anywhere else is the
+        document author's.
 
     Every limit after ``max_resource_bytes`` is off (``None``) by default;
     :meth:`server` turns them all on.
@@ -197,6 +202,7 @@ class ResourceAccessPolicy:
     max_render_seconds: float | None = None
     max_document_bytes: int | None = None
     max_depth: int | None = None
+    allow_remote_pdf_backgrounds: bool = True
 
     @classmethod
     def server(
@@ -227,6 +233,7 @@ class ResourceAccessPolicy:
             max_document_bytes=10 * 1024 * 1024,
             # Far from the ~1,200 levels where the walks run out of stack.
             max_depth=200,
+            allow_remote_pdf_backgrounds=False,
         )
         return replace(policy, **overrides)  # type: ignore[arg-type]
 

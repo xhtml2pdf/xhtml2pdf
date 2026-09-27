@@ -92,12 +92,16 @@ Unreleased
 * ``ResourceAccessPolicy.server()`` turns every limit on at once, with
   values meant for rendering untrusted HTML; the security guide lists them
   and has a checklist for deploying on a server.
+* ``ResourceAccessPolicy(allow_remote_pdf_backgrounds=False)`` refuses a
+  PDF page background that was fetched or written inline.
 * Only an image that may be SVG is handed to svglib; a JPEG or a PNG used
   to go through the SVG parser first, and was taken for a raster once it
   had failed.
 
 **🐛 Bug-Fixes**
 
+* A PDF page background that pypdf could not read aborted the render; it
+  is logged and left out.
 * ``color: transparent`` came out black. The text is drawn with no ink now,
   and ``color: #0000`` no longer aborts the document (:issue:`811`).
 * An empty ``<tr></tr>`` at the end of a table aborted the document with

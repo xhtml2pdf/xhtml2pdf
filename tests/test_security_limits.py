@@ -34,7 +34,7 @@ from xhtml2pdf.config.resources import (
 from xhtml2pdf.files import getFile
 from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlImage, looks_like_svg
 
-from .httpserver import LocalServerMixin
+from .httpserver import LocalServerMixin, sample_server
 
 
 class LocalSizeLimitTest(TestCase):
@@ -485,3 +485,75 @@ class ServerProfileTest(TestCase):
 
         self.assertEqual(0, result.err)
         self.assertEqual(1, image_count(dest.getvalue()))
+
+
+def pdf_background(src: str) -> str:
+    return f"<style>@page {{ background-image: url('{src}') }}</style><p>text</p>"
+
+
+class PdfBackgroundTest(TestCase):
+    """A PDF a document names as its page background is untrusted input."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.base = Path(self.tmp.name)
+        backdrop = io.BytesIO()
+        pisa.CreatePDF("<p>backdrop</p>", dest=backdrop)
+        self.pdf = backdrop.getvalue()
+        (self.base / "bg.pdf").write_bytes(self.pdf)
+        self.data_uri = (
+            "data:application/pdf;base64," + base64.b64encode(self.pdf).decode()
+        )
+
+    def render(self, html: str, policy: ResourceAccessPolicy) -> str:
+        dest = io.BytesIO()
+        pisa.CreatePDF(
+            html, dest=dest, resource_policy=policy, path=str(self.base / "doc.html")
+        )
+        return PdfReader(io.BytesIO(dest.getvalue())).pages[0].extract_text()
+
+    def test_a_malformed_pdf_does_not_abort_the_render(self) -> None:
+        bad = base64.b64encode(b"%PDF-1.4\nnot really\n%%EOF").decode()
+        with self.assertLogs("xhtml2pdf.builders.watermarks", level="WARNING"):
+            text = self.render(
+                pdf_background(f"data:application/pdf;base64,{bad}"),
+                ResourceAccessPolicy(base_dir=self.base),
+            )
+
+        self.assertIn("text", text)
+
+    def test_untrusted_pdf_backgrounds_can_be_refused(self) -> None:
+        policy = ResourceAccessPolicy(
+            base_dir=self.base,
+            allow_private_networks=True,
+            allow_remote_pdf_backgrounds=False,
+        )
+        with sample_server(self.base) as base_url:
+            for src in (self.data_uri, f"{base_url}/bg.pdf"):
+                with (
+                    self.subTest(src=src[:30]),
+                    self.assertLogs("xhtml2pdf", level="WARNING") as logs,
+                ):
+                    text = self.render(pdf_background(src), policy)
+
+                self.assertNotIn("backdrop", text)
+                self.assertTrue(
+                    any("PDF background" in line for line in logs.output), logs.output
+                )
+
+    def test_a_local_pdf_background_is_still_allowed(self) -> None:
+        policy = ResourceAccessPolicy(
+            base_dir=self.base, allow_remote_pdf_backgrounds=False
+        )
+
+        self.assertIn("backdrop", self.render(pdf_background("bg.pdf"), policy))
+
+    def test_allowed_by_default_and_refused_by_the_server_profile(self) -> None:
+        self.assertIn(
+            "backdrop",
+            self.render(
+                pdf_background(self.data_uri), ResourceAccessPolicy(base_dir=self.base)
+            ),
+        )
+        self.assertFalse(ResourceAccessPolicy.server().allow_remote_pdf_backgrounds)

@@ -62,6 +62,9 @@ every limit below on at once:
 ``max_depth``              200 levels of nesting
 =========================  ==================================
 
+It also refuses a PDF page background that was fetched or written inline
+(``allow_remote_pdf_backgrounds=False``).
+
 Without ``base_dir`` local reads are denied outright, rather than confined to
 the working directory, which on a server holds its source and its settings.
 Any field can be passed to change one limit and keep the rest:
@@ -167,6 +170,13 @@ what it actually allows:
     ``RenderLimitError`` rather than continued without something. Time is
     checked between elements, fetches and flowables, so it is a bound rather
     than a precise stop.
+
+``allow_remote_pdf_backgrounds`` (default ``True``)
+    Whether ``@page { background-image }`` may name a PDF fetched over the
+    network or written as a ``data:`` URI. A PDF is parsed by pypdf, and one
+    from anywhere but a file beside the document is the document author's
+    input. A local PDF is still used. Whatever its source, a PDF that cannot
+    be read is logged and left out rather than aborting the render.
 
 A renderer with several entry points can set the policy once around a build
 instead of passing it to every call. The ``resource_policy`` argument still
