@@ -54,7 +54,7 @@ import threading
 import time
 import urllib.parse as urlparse
 from contextlib import contextmanager
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -197,6 +197,38 @@ class ResourceAccessPolicy:
     max_render_seconds: float | None = None
     max_document_bytes: int | None = None
     max_depth: int | None = None
+
+    @classmethod
+    def server(
+        cls, base_dir: str | Path | None = None, **overrides: object
+    ) -> ResourceAccessPolicy:
+        """
+        The policy for rendering HTML you did not write: every limit on.
+
+        Local reads are confined to ``base_dir`` and denied outright without
+        one -- not the working directory, which on a server holds its source
+        and its settings. Any field can be given to change one limit and keep
+        the others, ``ResourceAccessPolicy.server(media, max_depth=50)``.
+
+        The values are generous for a document and far below what it takes
+        to hurt a worker; the security guide lists them.
+        """
+        policy = cls(
+            base_dir=Path(base_dir) if base_dir is not None else None,
+            max_resource_bytes=20 * 1024 * 1024,
+            max_local_bytes=20 * 1024 * 1024,
+            # A 24 megapixel photograph, 6000 x 4000, fits; decoded as RGBA
+            # this is 100 MB.
+            max_image_pixels=25_000_000,
+            max_resources=100,
+            max_total_bytes=50 * 1024 * 1024,
+            max_fetch_seconds=10,
+            max_render_seconds=60,
+            max_document_bytes=10 * 1024 * 1024,
+            # Far from the ~1,200 levels where the walks run out of stack.
+            max_depth=200,
+        )
+        return replace(policy, **overrides)  # type: ignore[arg-type]
 
     @property
     def roots(self) -> tuple[Path, ...]:

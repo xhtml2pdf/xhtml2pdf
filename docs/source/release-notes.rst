@@ -89,6 +89,9 @@ Unreleased
   a server dripping a byte at a time cannot outlast), ``max_render_seconds``,
   ``max_document_bytes`` and ``max_depth``. The last three abandon the render
   with the new ``RenderLimitError``. All are off by default.
+* ``ResourceAccessPolicy.server()`` turns every limit on at once, with
+  values meant for rendering untrusted HTML; the security guide lists them
+  and has a checklist for deploying on a server.
 * Only an image that may be SVG is handed to svglib; a JPEG or a PNG used
   to go through the SVG parser first, and was taken for a raster once it
   had failed.

@@ -31,6 +31,60 @@ Public HTTP(S) is unaffected. A refused resource is logged by
 ``xhtml2pdf.files`` at warning level and left out of the document; the render
 continues, as it does for a resource that is merely unreachable.
 
+Rendering untrusted HTML on a server
+------------------------------------
+
+The default keeps a document away from your network and your files, but not
+from your worker's memory and time. ``ResourceAccessPolicy.server()`` turns
+every limit below on at once:
+
+.. code:: python
+
+    from xhtml2pdf import pisa
+    from xhtml2pdf.config.resources import RenderLimitError, ResourceAccessPolicy
+
+    policy = ResourceAccessPolicy.server(base_dir="/srv/app/media")
+
+    try:
+        pisa.CreatePDF(user_html, dest=out, resource_policy=policy)
+    except RenderLimitError:
+        ...  # too large, too deep or too slow: tell the user
+
+=========================  ==================================
+``max_resource_bytes``     20 MiB per fetched resource
+``max_local_bytes``        20 MiB per local file or ``data:`` URI
+``max_image_pixels``       25 million (a 6000 x 4000 photograph)
+``max_resources``          100 files and URLs
+``max_total_bytes``        50 MiB for all of them
+``max_fetch_seconds``      10 seconds per fetch
+``max_render_seconds``     60 seconds
+``max_document_bytes``     10 MiB of source
+``max_depth``              200 levels of nesting
+=========================  ==================================
+
+Without ``base_dir`` local reads are denied outright, rather than confined to
+the working directory, which on a server holds its source and its settings.
+Any field can be passed to change one limit and keep the rest:
+``ResourceAccessPolicy.server(media, max_render_seconds=20)``.
+
+Server deployment checklist
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Use ``ResourceAccessPolicy.server()`` and handle ``RenderLimitError``.
+* Name the hosts a document may fetch from with ``allowed_hosts``, or turn
+  remote fetches off with ``allow_remote=False``. The address check alone
+  cannot close DNS rebinding: the connection resolves the name a second time,
+  and a name can answer differently.
+* Do not turn off certificate checks (``nosslcheck``, ``--http_nosslcheck``)
+  for untrusted documents: that lets anyone on the path answer for the host.
+* Still run conversions in a process you can bound from outside -- memory,
+  CPU, a wall-clock kill. The limits here are checked between steps, and a
+  single step, such as laying out one very large table, is not interrupted.
+* Fonts from ``@font-face`` are registered process-wide by family name, so
+  in a process shared between tenants one document's font can stand in for
+  another's. Render tenants' documents in separate processes until that
+  changes.
+
 Choosing your own policy
 ------------------------
 
@@ -174,9 +228,11 @@ input, upgrade.
 What this does not protect you from
 -----------------------------------
 
-* **Resource exhaustion.** A document can ask for a very large image or
-  thousands of pages. Nothing bounds conversion time or memory; run untrusted
-  conversions where you can bound both.
+* **Resource exhaustion, by default.** Unless you choose the limits above,
+  a document can ask for a very large image or thousands of pages, and
+  nothing bounds conversion time or memory. Even with them, a single step of
+  the layout is not interrupted; run untrusted conversions where you can
+  bound both from outside.
 * **What you do with the PDF afterwards.** xhtml2pdf writes a file; it does
   not sanitise what reads it.
 

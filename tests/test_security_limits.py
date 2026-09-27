@@ -441,3 +441,47 @@ class RenderBudgetTest(LocalServerMixin, TestCase):
             "max_depth",
         ):
             self.assertIsNone(getattr(policy, name), name)
+
+
+class ServerProfileTest(TestCase):
+    """``ResourceAccessPolicy.server()``: every limit on at once."""
+
+    def test_every_limit_is_on(self) -> None:
+        policy = ResourceAccessPolicy.server(base_dir=SAMPLES)
+        for name in (
+            "max_resource_bytes",
+            "max_local_bytes",
+            "max_image_pixels",
+            "max_resources",
+            "max_total_bytes",
+            "max_fetch_seconds",
+            "max_render_seconds",
+            "max_document_bytes",
+            "max_depth",
+        ):
+            self.assertIsNotNone(getattr(policy, name), name)
+        self.assertFalse(policy.allow_private_networks)
+        self.assertFalse(policy.allow_local_outside_base)
+
+    def test_without_a_base_dir_local_reads_are_denied(self) -> None:
+        """Not the working directory, which on a server holds its source."""
+        with self.assertRaises(ResourceAccessError):
+            ResourceAccessPolicy.server().check_path(SAMPLES / "img" / "denker.png")
+
+    def test_a_limit_can_be_changed_and_the_rest_kept(self) -> None:
+        policy = ResourceAccessPolicy.server(base_dir=SAMPLES, max_depth=50)
+
+        self.assertEqual(50, policy.max_depth)
+        self.assertIsNotNone(policy.max_render_seconds)
+
+    def test_an_ordinary_document_renders_under_it(self) -> None:
+        dest = io.BytesIO()
+        result = pisa.CreatePDF(
+            '<h1>Title</h1><p>text</p><img src="img/denker.png">',
+            dest=dest,
+            path=str(SAMPLES / "doc.html"),
+            resource_policy=ResourceAccessPolicy.server(base_dir=SAMPLES),
+        )
+
+        self.assertEqual(0, result.err)
+        self.assertEqual(1, image_count(dest.getvalue()))
