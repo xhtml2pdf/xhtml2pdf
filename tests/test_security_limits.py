@@ -25,6 +25,7 @@ from unittest import TestCase, mock
 from asn1crypto import pem
 from pypdf import PdfReader
 from reportlab.platypus import Spacer
+from svglib.svglib import svg2rlg
 
 from xhtml2pdf import pisa
 from xhtml2pdf.builders.signs import PDFSignature
@@ -136,6 +137,17 @@ SVG = (
 )
 
 
+def svg_points(pixels: float) -> float:
+    """
+    What svglib makes of an SVG length in pixels.
+
+    svglib 2 reads them as CSS pixels, three quarters of a point; 1.5, which
+    pip picks beside an older reportlab, reads them as points.
+    """
+    drawing = svg2rlg(io.BytesIO(SVG))
+    return pixels * drawing.width / 20
+
+
 class SvgSniffingTest(TestCase):
     """svglib is handed SVG only, and parses it without reaching out."""
 
@@ -154,8 +166,9 @@ class SvgSniffingTest(TestCase):
     def test_an_svg_is_still_drawn(self) -> None:
         image = PmlImage(SVG)
 
-        # svglib reads SVG pixels as CSS pixels, three quarters of a point
-        self.assertEqual((15, 7.5), (image.imageWidth, image.imageHeight))
+        self.assertEqual(
+            (svg_points(20), svg_points(10)), (image.imageWidth, image.imageHeight)
+        )
 
     def test_an_svg_with_a_bom_and_a_prolog_is_recognised(self) -> None:
         self.assertTrue(looks_like_svg(b"\xef\xbb\xbf  <?xml version='1.0'?>" + SVG))
@@ -177,7 +190,7 @@ class SvgSniffingTest(TestCase):
             image = PmlImage(svg)
 
         # the drawing survives, with the entity left out
-        self.assertEqual(15, image.imageWidth)
+        self.assertEqual(svg_points(20), image.imageWidth)
 
     def test_a_billion_laughs_does_not_expand(self) -> None:
         entities = b'<!ENTITY a0 "lol">' + b"".join(
@@ -193,7 +206,7 @@ class SvgSniffingTest(TestCase):
         # test finishing is most of the assertion.
         image = PmlImage(svg)
 
-        self.assertEqual(15, image.imageWidth)
+        self.assertEqual(svg_points(20), image.imageWidth)
 
     def test_an_image_reference_inside_an_svg_is_not_followed(self) -> None:
         for href in (
@@ -313,10 +326,10 @@ class ImagePixelLimitTest(TestCase):
             "xhtml2pdf.xhtml2pdf_reportlab.renderPM.drawToFile",
             side_effect=AssertionError("rasterised"),
         ):
-            # rasterised at a point per pixel, and 3000 CSS pixels are 2250pt
+            # rasterised at a pixel per point
             self.assert_refused(
                 f'<img src="data:image/svg+xml;base64,{base64.b64encode(svg).decode()}">',
-                pixels=2250 * 2250,
+                pixels=int(svg_points(3000)) ** 2,
             )
 
     def test_the_decode_is_never_reached(self) -> None:
