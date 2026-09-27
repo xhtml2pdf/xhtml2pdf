@@ -1,0 +1,37 @@
+<!--
+  Browser equivalent of data/source/css-position-overlay.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>css-position-overlay</title>
+<style type="text/css">
+body { font-size: 11pt; line-height: 15pt; }
+p { margin: 0 0 8pt 0; }
+.frame { position: relative; margin: 10pt 0 10pt 0; }
+.caption { position: absolute; top: 12pt; left: 12pt; background-color: #fce94f; padding: 3pt; }
+.badge { position: absolute; bottom: 8pt; right: 8pt; background-color: #ef2929; color: #ffffff; padding: 3pt; }
+.card { position: absolute; top: 30pt; left: 300pt; width: 200pt; height: 90pt; background-color: #d3d7cf; padding: 6pt; }
+.corner { position: absolute; bottom: 6pt; right: 6pt; background-color: #729fcf; padding: 3pt; }
+.shifted { position: relative; left: 30pt; background-color: #fcaf3e; }
+.lowered { margin-top: 150pt; }
+.tag { position: absolute; top: 0; right: 40pt; background-color: #8ae234; padding: 2pt; }
+</style>
+</head>
+<body>
+<p>Text over an image: the caption and the badge are placed inside the relative block that holds the picture.</p>
+<div class="frame">
+<img src="../source/img/beach.jpg" width="300" height="200">
+<div class="caption">Caption over the photo</div>
+<div class="badge">NEW</div>
+</div>
+<p>The paragraph after the picture is where it would be without the two boxes.</p>
+<div class="card">A grey absolute card, 200pt wide.<div class="corner">Inside the card</div></div>
+<div class="shifted"><p class="lowered">A relative block moved right by 30pt; the green tag is placed from its moved box.</p><div class="tag">Tag</div></div>
+</body>
+</html>

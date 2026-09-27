@@ -35,6 +35,8 @@ from xhtml2pdf.builders.flex import (
 )
 from xhtml2pdf.builders.position import (
     PositionedBoxData,
+    close_relative_container,
+    open_relative_container,
     read_offsets,
     read_position,
     shift_story,
@@ -1128,6 +1130,12 @@ def pisaLoop(node, context, **kw):
             if position != "static"
             else None
         )
+        relativeContainer = None
+        if position == "relative" and isBlock:
+            blockIndent = kw["margin-left"]
+            relativeContainer = open_relative_container(
+                context, context.frag, context.cssAttr, kw["margin-right"]
+            )
         if position == "relative" and not isBlock:
             context.warnOnce(
                 "position: relative is applied to blocks only; an inline element"
@@ -1289,6 +1297,10 @@ def pisaLoop(node, context, **kw):
 
             # XXX Buggy!
 
+            if relativeContainer is not None:
+                close_relative_container(
+                    context, relativeContainer, blockStoryStart, blockIndent
+                )
             if position == "relative":
                 # Drawn where top/left say, laid out and paginated where it is.
                 shift_story(context.story, blockStoryStart, offsets)

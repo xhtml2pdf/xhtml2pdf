@@ -131,7 +131,10 @@ Known limitations of the properties above:
 
    ``absolute`` takes the element out of the flow into a box of its own,
    sized to its content unless ``width``/``height`` (or both ``left`` and
-   ``right``, or both ``top`` and ``bottom``) say otherwise. With no
+   ``right``, or both ``top`` and ``bottom``) say otherwise. Inside a
+   positioned ancestor -- a ``relative`` block, or another ``absolute`` or
+   ``fixed`` box -- its offsets are from that ancestor's padding box, and it
+   is painted after it. With no
    positioned ancestor its offsets are from the page area of the *first*
    page -- the initial containing block, as in a browser -- and a ``top``
    larger than that area carries on to the pages after it. An offset left

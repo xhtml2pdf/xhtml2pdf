@@ -794,6 +794,9 @@ class pisaContext:
         #: The absolute and fixed boxes, painted by the page template; see
         #: xhtml2pdf/builders/position.py.
         self.positioned: list = []
+        #: The positioned ancestors of the element being read, innermost
+        #: last: what an absolute box is placed against.
+        self.positionStack: list = []
         self.fontList: dict[str, str] = copy.copy(default.DEFAULT_FONT)
         self.asianFontList: dict[str, str] = copy.copy(get_default_asian_font())
         self.anchorFrag: list = []

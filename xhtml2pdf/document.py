@@ -22,6 +22,7 @@ from reportlab.lib import pdfencrypt
 from reportlab.platypus.flowables import Spacer
 from reportlab.platypus.frames import Frame
 
+from xhtml2pdf.builders.position import PositionAnchor
 from xhtml2pdf.builders.signs import PDFSignature
 from xhtml2pdf.builders.watermarks import WaterMarks
 from xhtml2pdf.config.resources import active_policy, default_policy, use_policy
@@ -108,12 +109,21 @@ def pisaStory(
         # Only the start of the story. Further pages begin with content
         # carried over, and neither engine reintroduces a margin at a page
         # break.
-        first = context.story[0]
+        # A zero-size anchor of a positioned box is not the first block.
+        index = next(
+            (
+                i
+                for i, f in enumerate(context.story)
+                if not isinstance(f, PositionAnchor)
+            ),
+            0,
+        )
+        first = context.story[index]
         style = getattr(first, "style", None)
         space_before = getattr(style, "spaceBefore", 0) or 0
         if space_before > 0:
             style.spaceBefore = 0
-            context.story.insert(0, Spacer(1, space_before))
+            context.story.insert(index, Spacer(1, space_before))
 
     if context.indexing_story:
         context.story.append(context.indexing_story)

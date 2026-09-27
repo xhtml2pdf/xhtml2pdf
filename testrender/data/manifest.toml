@@ -731,3 +731,10 @@ of them. Text is not compared: the boxes overlap the flow's lines."""
 compare = ["pages", "ssim"]
 notes = """position: fixed: a band across the middle and a stamp in the \
 corner, repeated on every page of a three-page document."""
+
+[fixtures.css-position-overlay]
+compare = ["pages", "ssim"]
+notes = """Issue #566: absolute boxes placed from a positioned ancestor. Text \
+over an image inside a relative block (top/left and bottom/right), a box \
+inside an absolute card, and a tag placed from a relative block that is \
+itself moved. Text is not compared: the boxes overlap."""

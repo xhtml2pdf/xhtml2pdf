@@ -190,3 +190,62 @@ class FixedTest(TestCase):
             '<p>Alpha</p><div style="position: fixed; bottom: 0">Stamp</div><p>Charlie</p>'
         )
         self.assertEqual(plain["Charlie"], where["Charlie"])
+
+
+class ContainingBlockTest(TestCase):
+    """An absolute box inside a positioned ancestor is placed from it (#566)."""
+
+    def test_from_a_relative_block(self) -> None:
+        where = positions(
+            '<p>Intro</p><div style="position: relative; margin-left: 50pt">'
+            "<p>Inside</p>"
+            '<div style="position: absolute; top: 0; left: 20pt">Over</div></div>'
+        )
+        # Over sits on Inside's line, 20pt into the block, which starts 50pt in.
+        self.assertAlmostEqual(where["Inside"][1], where["Over"][1], places=0)
+        self.assertAlmostEqual(AREA_LEFT + 50 + 20, where["Over"][0], places=0)
+
+    def test_right_is_from_the_relative_blocks_right_edge(self) -> None:
+        where = positions(
+            '<div style="position: relative; margin-right: 100pt"><p>Inside</p>'
+            '<span style="position: absolute; top: 0; right: 0">R</span></div>'
+        )
+        self.assertLess(where["R"][0], AREA_RIGHT - 100)
+        self.assertGreater(where["R"][0], AREA_RIGHT - 115)
+
+    def test_a_moved_relative_block_moves_what_it_contains(self) -> None:
+        plain = positions(
+            '<div style="position: relative"><p>Inside</p>'
+            '<span style="position: absolute; top: 0; right: 0">R</span></div>'
+        )
+        moved = positions(
+            '<div style="position: relative; left: 30pt"><p>Inside</p>'
+            '<span style="position: absolute; top: 0; right: 0">R</span></div>'
+        )
+        self.assertAlmostEqual(30, moved["R"][0] - plain["R"][0], places=0)
+
+    def test_from_an_absolute_box(self) -> None:
+        where = positions(
+            '<div style="position: absolute; top: 100pt; left: 100pt; width: 200pt;'
+            ' height: 100pt">Parent<div style="position: absolute; bottom: 0; left: 0">Child</div>'
+            "</div>"
+        )
+        self.assertAlmostEqual(AREA_LEFT + 100, where["Child"][0], places=0)
+        self.assertLess(where["Child"][1], AREA_TOP - 185)
+        self.assertGreater(where["Child"][1], AREA_TOP - 200)
+
+    def test_a_child_paints_over_its_parent_whatever_its_z_index(self) -> None:
+        reader = render(
+            '<div style="position: absolute; top: 0; z-index: 5">Parent'
+            '<div style="position: absolute; top: 0; z-index: -3">Child</div></div>'
+        )
+        data = reader.pages[0].get_contents().get_data().decode("latin-1")
+        self.assertLess(data.index("(Parent)"), data.index("(Child)"))
+
+    def test_the_relative_block_does_not_move_the_flow(self) -> None:
+        plain = positions("<div><p>Inside</p></div><p>After</p>")
+        with_boxes = positions(
+            '<div style="position: relative"><p>Inside</p>'
+            '<div style="position: absolute; top: 0">Box</div></div><p>After</p>'
+        )
+        self.assertEqual(plain["After"], with_boxes["After"])

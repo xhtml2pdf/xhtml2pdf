@@ -15,7 +15,7 @@ been drawn -- in z-index order, over everything in the flow.
 from __future__ import annotations
 
 import logging
-from operator import itemgetter
+from operator import attrgetter
 from typing import TYPE_CHECKING, Any
 
 from reportlab.platypus.flowables import Flowable
@@ -24,6 +24,8 @@ from xhtml2pdf.util import AUTO, CSSLength, getLengthOrAuto
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
+
+    from xhtml2pdf.builders.flex import InlineBox
 
 log = logging.getLogger(__name__)
 
@@ -160,7 +162,8 @@ class PositionAnchor(Flowable):
     fell on and its point on that page -- through the canvas's matrix, since
     inside a paragraph the canvas has been moved to the paragraph's corner.
     That point is the box's static position, which CSS uses for an offset
-    left auto.
+    left auto. A relative block's two anchors, at its start and end, are
+    how its box is found again, to place what it contains.
     """
 
     width = 0.0
@@ -182,6 +185,11 @@ class PositionAnchor(Flowable):
         self.page: int | None = None
         self.x = 0.0
         self.y = 0.0
+        #: The frame's right edge and bottom, and the space after the
+        #: flowable before the anchor -- what a margin collapsed into.
+        self.frame_right = 0.0
+        self.frame_bottom = 0.0
+        self.space_before = 0.0
 
     def wrap(self, availWidth, availHeight):  # noqa: PLR6301 - the Flowable API
         return 0.0, 0.0
@@ -192,6 +200,15 @@ class PositionAnchor(Flowable):
         self.page = getattr(doc, "page", None)
         self.x = a * x + c * y + e + self.indent
         self.y = b * x + d * y + f
+        frame = getattr(self, "_frame", None)
+        if frame is not None:
+            # The frame's right edge measured from the x the anchor was given,
+            # so that a relative block's offset moves that edge too.
+            room = frame._x1 + frame._width - frame._rightPadding - frame._x
+            room -= frame._leftExtraIndent
+            self.frame_right = self.x - self.indent + a * room
+            self.frame_bottom = d * (frame._y1 + frame._bottomPadding) + f
+            self.space_before = getattr(frame, "_prevASpace", 0.0) or 0.0
 
     def draw(self) -> None:
         pass
@@ -221,18 +238,70 @@ class PageArea:
         return cls(left, bottom + height, width, height)
 
 
+class RelativeContainer:
+    """
+    A relative block, as the containing block of the boxes inside it.
+
+    Its box is not a flowable -- its paragraphs are -- so it is found again
+    from two anchors placed around them: the start anchor gives its left,
+    top and the frame's right edge, the end anchor its bottom when both fell
+    on the same page. Its padding box is that, less its borders.
+    """
+
+    def __init__(self, *, margin_top, right_indent, borders, key) -> None:
+        self.start = PositionAnchor()
+        self.end = PositionAnchor()
+        self.margin_top = margin_top
+        self.right_indent = right_indent
+        self.borders = borders
+        #: Where in the painting order the boxes inside it belong.
+        self.key = key
+
+    def anchors(self) -> tuple[PositionAnchor, PositionAnchor]:
+        return self.start, self.end
+
+    def padding_box(self, page: int) -> PageArea | None:
+        start, end = self.start, self.end
+        if start.page != page:
+            return None
+        border_left, border_right, border_top, border_bottom = self.borders
+        # The anchor sits above the block's own top margin, less whatever
+        # of it collapsed into the space after the block before.
+        top = start.y - max(self.margin_top - start.space_before, 0.0)
+        bottom = end.y + end.space_before if end.page == page else start.frame_bottom
+        left = start.x + border_left
+        right = start.frame_right - self.right_indent - border_right
+        top -= border_top
+        bottom += border_bottom
+        return PageArea(left, top, max(right - left, 0.0), max(top - bottom, 0.0))
+
+
 class PositionedEntry:
     """An absolute or fixed box waiting for its page."""
 
-    def __init__(self, box, mode, offsets, *, width, height, z, order, anchor) -> None:
-        self.box = box
+    def __init__(self, mode, offsets, *, z, order, container) -> None:
+        self.box: InlineBox | None = None
         self.mode = mode
         self.offsets = offsets
-        self.width = width
-        self.height = height
+        self.width = AUTO
+        self.height = AUTO
         self.z = z
         self.order = order
-        self.anchor = anchor
+        self.anchor: PositionAnchor | None = None
+        #: The nearest positioned ancestor: a RelativeContainer, another
+        #: PositionedEntry, or None for the initial containing block.
+        self.container = container
+        #: Painting order. A box inside another comes right after it,
+        #: whatever its own z-index: the ancestor's is the one that counts
+        #: against everything outside it.
+        prefix = container.key if container is not None else ()
+        self.key = (*prefix, z, order)
+        #: Where the box was painted last: the page, and its padding box.
+        self.painted_page: int | None = None
+        self.painted_box: PageArea | None = None
+
+    def padding_box(self, page: int) -> PageArea | None:
+        return self.painted_box if self.painted_page == page else None
 
     def _length(self, name: str, basis: float) -> float | None:
         length = self.offsets[name]
@@ -240,14 +309,28 @@ class PositionedEntry:
 
     def place(self, page: int, page_area: PageArea, initial: PageArea | None):
         """The containing block and top offset for `page`, or None if not on it."""
-        if self.mode == "fixed":
+        if self.box is None:
+            return None
+        if self.mode == "fixed" and self.container is None:
             return page_area, None
+        if self.container is not None:
+            block = self.container.padding_box(page)
+            if block is None:
+                return None
+            if (
+                self.offsets["top"].kind == "auto"
+                and self.offsets["bottom"].kind == "auto"
+            ):
+                return (
+                    (block, None) if self.anchor and self.anchor.page == page else None
+                )
+            return block, None
         block = initial or page_area
         top = self._length("top", block.height)
         bottom = self._length("bottom", block.height)
         if top is None and bottom is None:
             # The static position: wherever the anchor fell.
-            return (block, None) if self.anchor.page == page else None
+            return (block, None) if self.anchor and self.anchor.page == page else None
         if top is not None and block.height > 0:
             # The initial containing block is the first page's area, and what
             # lies past it goes on in the pages after, as the flow does.
@@ -255,10 +338,13 @@ class PositionedEntry:
             return (block, top) if page == 1 + int(target) else None
         return (block, None) if page == 1 else None
 
-    def paint(self, canvas, block: PageArea, top_override: float | None) -> None:
+    def paint(
+        self, canvas, page: int, block: PageArea, top_override: float | None
+    ) -> None:
         from xhtml2pdf.builders.flex import LARGE
 
         box = self.box
+        assert box is not None  # place() hands out no entry without one
         style = box.style
         m_left, m_right, m_top, m_bottom = box.margins
         left = self._length("left", block.width)
@@ -269,6 +355,11 @@ class PositionedEntry:
             else self._length("top", block.height)
         )
         bottom = self._length("bottom", block.height)
+        anchor = (
+            self.anchor
+            if self.anchor is not None and self.anchor.page == page
+            else None
+        )
 
         # CSS 2.1 10.3.7 and 10.6.4: with both offsets and no size, the box
         # fills what is left between them.
@@ -284,8 +375,8 @@ class PositionedEntry:
 
         if box.css_width.kind != "auto":
             avail = block.width
-        elif left is None and right is None and self.anchor and self.anchor.page:
-            avail = block.x + block.width - self.anchor.x
+        elif left is None and right is None and anchor is not None:
+            avail = block.x + block.width - anchor.x
         else:
             avail = block.width - (left or 0.0) - (right or 0.0)
         width, height = box.wrapOn(canvas, max(avail, 1.0), LARGE)
@@ -295,14 +386,23 @@ class PositionedEntry:
         elif right is not None:
             x = block.x + block.width - right - width
         else:
-            x = self.anchor.x if self.anchor and self.anchor.page else block.x
+            x = anchor.x if anchor is not None else block.x
         if top is not None:
             y_top = block.top - top
         elif bottom is not None:
             y_top = block.bottom + bottom + height
         else:
-            y_top = self.anchor.y if self.anchor and self.anchor.page else block.top
-        box.drawOn(canvas, x, y_top - height)
+            y_top = anchor.y if anchor is not None else block.top
+        y = y_top - height
+        box.drawOn(canvas, x, y)
+        # Its padding box, for the boxes positioned inside it.
+        self.painted_page = page
+        self.painted_box = PageArea(
+            x + m_left + style.border("Left"),
+            y + height - m_top - style.border("Top"),
+            box._box_width - style.border("Left") - style.border("Right"),
+            box._box_height - style.border("Top") - style.border("Bottom"),
+        )
 
 
 class PositionedBoxData:
@@ -313,6 +413,8 @@ class PositionedBoxData:
     into a story of its own, the box's own padding, borders and background
     taken off the frag -- with a different ending: the box goes to the
     document's list of positioned boxes, and only an anchor stays behind.
+    The entry is made when the element opens, so that it comes before the
+    boxes inside it in the list, and those can find it as their container.
     """
 
     def __init__(
@@ -320,33 +422,43 @@ class PositionedBoxData:
     ) -> None:
         from xhtml2pdf.builders.flex import InlineBoxData
 
-        self.mode = mode
-        self.offsets = offsets
-        self.z = read_z_index(css_attr)
         self.block_level = block_level
         self.indent = indent
+        container = c.positionStack[-1] if c.positionStack else None
+        self.entry = PositionedEntry(
+            mode,
+            offsets,
+            z=read_z_index(css_attr),
+            order=len(c.positioned),
+            container=container,
+        )
+        c.positioned.append(self.entry)
         self._inner = InlineBoxData.__new__(InlineBoxData)
         InlineBoxData.__init__(self._inner, c, frag, css_attr)
+        c.positionStack.append(self.entry)
 
     def close(self, c) -> None:
         from xhtml2pdf.builders.flex import InlineBox, inline_box_frag
 
+        c.positionStack.pop()
         inner = self._inner
+        entry = self.entry
         c.addPara()
         content = c.swapStory(inner._outer_story)
         for name, value in inner._saved.items():
             setattr(c, name, value)
-        anchor = None
-        if self.mode == "absolute":
-            anchor = PositionAnchor(self.indent if self.block_level else 0.0)
+        if entry.mode == "absolute":
+            entry.anchor = PositionAnchor(self.indent if self.block_level else 0.0)
             if self.block_level:
-                c.addStory(anchor)
+                c.addStory(entry.anchor)
             else:
-                c.fragList.append(inline_box_frag(c.frag, anchor, "top"))
+                c.fragList.append(inline_box_frag(c.frag, entry.anchor, "top"))
         if not content:
             return
         left, right, top, bottom = inner.margins
-        box = InlineBox(
+        entry.width = inner.width
+        entry.height = inner.height
+        entry.box = InlineBox(
             content,
             inner.style,
             width=inner.width,
@@ -356,18 +468,50 @@ class PositionedBoxData:
             margin_top=top,
             margin_bottom=bottom,
         )
-        c.positioned.append(
-            PositionedEntry(
-                box,
-                self.mode,
-                self.offsets,
-                width=inner.width,
-                height=inner.height,
-                z=self.z,
-                order=len(c.positioned),
-                anchor=anchor,
-            )
-        )
+
+
+def open_relative_container(c, frag, css_attr, right_indent) -> RelativeContainer:
+    """Make a relative block the containing block of what is inside it."""
+    from xhtml2pdf.builders.flex import BoxStyle
+
+    style = BoxStyle(frag)
+    margin_top = (
+        getLengthOrAuto(css_attr["margin-top"], frag.fontSize).resolve(None)
+        if "margin-top" in css_attr
+        else 0.0
+    )
+    enclosing = next(
+        (
+            item
+            for item in reversed(c.positionStack)
+            if isinstance(item, PositionedEntry)
+        ),
+        None,
+    )
+    container = RelativeContainer(
+        margin_top=margin_top or 0.0,
+        right_indent=right_indent,
+        borders=tuple(
+            style.border(side) for side in ("Left", "Right", "Top", "Bottom")
+        ),
+        key=enclosing.key if enclosing is not None else (),
+    )
+    c.positionStack.append(container)
+    return container
+
+
+def close_relative_container(
+    c, container: RelativeContainer, start: int, indent: float
+) -> None:
+    """Put the container's two anchors around its flowables, story[start:]."""
+    c.positionStack.pop()
+    container.start.indent = indent
+    # The block's top border edge is below the top margin of what it starts
+    # with: its own margin went there, and a child's collapses through it.
+    if start < len(c.story):
+        container.margin_top = c.story[start].getSpaceBefore() or 0.0
+    c.story.insert(start, container.start)
+    c.story.append(container.end)
 
 
 def reset_positioned(doc) -> None:
@@ -375,11 +519,16 @@ def reset_positioned(doc) -> None:
     for entry in getattr(doc, "pisaPositioned", ()):
         if entry.anchor is not None:
             entry.anchor.reset()
+        entry.painted_page = None
+        container = entry.container
+        if isinstance(container, RelativeContainer):
+            for anchor in container.anchors():
+                anchor.reset()
     doc.pisaInitialBlock = None
 
 
 def paint_positioned(canvas, doc, template) -> None:
-    """Paint the positioned boxes that belong on this page, in z-index order."""
+    """Paint the positioned boxes that belong on this page, in painting order."""
     entries = getattr(doc, "pisaPositioned", None)
     if not entries:
         return
@@ -387,11 +536,10 @@ def paint_positioned(canvas, doc, template) -> None:
     area = PageArea.of_template(template)
     if page == 1 or getattr(doc, "pisaInitialBlock", None) is None:
         doc.pisaInitialBlock = area
-    placed = []
-    for entry in entries:
+    # In painting order, which puts every box after the one it is inside:
+    # its containing block is known by the time it is placed.
+    for entry in sorted(entries, key=attrgetter("key")):
         placement = entry.place(page, area, doc.pisaInitialBlock)
         if placement is not None:
-            placed.append((entry.z, entry.order, entry, placement))
-    placed.sort(key=itemgetter(0, 1))
-    for _z, _order, entry, (block, top) in placed:
-        entry.paint(canvas, block, top)
+            block, top = placement
+            entry.paint(canvas, page, block, top)
