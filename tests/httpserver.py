@@ -16,6 +16,9 @@ fixtures for the redirect/error handling in ``xhtml2pdf.files.NetworkFileUri``:
 ``/large/<n>``             n bytes of body, with a Content-Length to match
 ``/gzip-bomb/<n>``         n bytes of zeroes, gzipped -- a few hundred bytes
                            on the wire
+``/drip/<n>/<interval>``   n bytes, one every ``interval`` seconds: never
+                           slow enough for a socket timeout, as slow as it
+                           likes in total
 """
 
 from __future__ import annotations
@@ -105,6 +108,20 @@ class SampleRequestHandler(SimpleHTTPRequestHandler):
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
+            return
+
+        if path.startswith("/drip/"):
+            count, interval = path[len("/drip/") :].split("/")
+            # the client hangs up part way through when the test passes
+            with contextlib.suppress(OSError):
+                self.send_response(200)
+                self.send_header("Content-Type", "application/octet-stream")
+                self.send_header("Content-Length", count)
+                self.end_headers()
+                for _ in range(int(count)):
+                    self.wfile.write(b"x")
+                    self.wfile.flush()
+                    time.sleep(float(interval))
             return
 
         if path.startswith("/slow/"):

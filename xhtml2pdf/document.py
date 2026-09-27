@@ -25,7 +25,12 @@ from reportlab.platypus.frames import Frame
 from xhtml2pdf.builders.position import PositionAnchor
 from xhtml2pdf.builders.signs import PDFSignature
 from xhtml2pdf.builders.watermarks import WaterMarks
-from xhtml2pdf.config.resources import active_policy, default_policy, use_policy
+from xhtml2pdf.config.resources import (
+    active_policy,
+    default_policy,
+    render_budget,
+    use_policy,
+)
 from xhtml2pdf.context import pisaContext
 from xhtml2pdf.default import DEFAULT_CSS, DEFAULT_PAGE_NAME
 from xhtml2pdf.files import cleanFiles, pisaTempFile
@@ -90,7 +95,7 @@ def pisaStory(
     # Parse and fill the story. Everything the markup asks the renderer to
     # fetch happens inside this block, including the paths that do not go
     # through link_callback.
-    with use_policy(context.resource_policy):
+    with use_policy(context.resource_policy), render_budget(context.resource_policy):
         pisaParser(src, context, default_css, xhtml, encoding, xml_output)
 
     # Avoid empty documents
@@ -250,7 +255,10 @@ def pisaDocument(
     )
 
     try:
-        with use_policy(context.resource_policy):
+        with (
+            use_policy(context.resource_policy),
+            render_budget(context.resource_policy),
+        ):
             return _build(
                 src,
                 context,

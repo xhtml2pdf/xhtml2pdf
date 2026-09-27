@@ -47,7 +47,7 @@ from reportlab.platypus.tableofcontents import TableOfContents, drawPageNumbers
 from reportlab.platypus.tables import _SPECIALROWS, Table, TableStyle
 from reportlab.rl_config import register_reset
 
-from xhtml2pdf.config.resources import current_policy
+from xhtml2pdf.config.resources import check_deadline, current_policy
 from xhtml2pdf.files import pisaFileObject, pisaTempFile
 from xhtml2pdf.reportlab_paragraph import Paragraph
 from xhtml2pdf.util import (
@@ -149,6 +149,9 @@ class PmlBaseDoc(BaseDocTemplate):
         """
 
     def afterFlowable(self, flowable: Flowable) -> None:
+        # The build is most of a long render's time, and this runs for every
+        # flowable placed, including each part of one split across pages.
+        check_deadline()
         # Does the flowable contain fragments?
         if getattr(flowable, "outline", False):
             self.notify(

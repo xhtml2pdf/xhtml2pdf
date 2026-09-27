@@ -95,6 +95,25 @@ what it actually allows:
     which refuses about 179 million pixels. A refused image is left out of
     the document.
 
+``max_resources``, ``max_total_bytes`` (default ``None``)
+    How many distinct files and URLs one render may read, and how many bytes
+    they may add up to. A resource used twice counts once, and ``data:``
+    URIs are part of the document rather than resources. What does not fit
+    is left out, like any refused resource.
+
+``max_fetch_seconds`` (default ``None``)
+    How long one network fetch may take in all, retries and redirects
+    included. The socket timeout of five seconds bounds each read only, so a
+    server sending a byte every four seconds is never cut off without this.
+
+``max_render_seconds``, ``max_document_bytes``, ``max_depth`` (default ``None``)
+    Limits on the render as a whole: its time, the size of the source
+    document, and how deeply its elements nest. There is no useful remainder
+    to a document that breaks one of these, so the render is abandoned with
+    ``RenderLimitError`` rather than continued without something. Time is
+    checked between elements, fetches and flowables, so it is a bound rather
+    than a precise stop.
+
 A renderer with several entry points can set the policy once around a build
 instead of passing it to every call. The ``resource_policy`` argument still
 wins over it:

@@ -41,6 +41,7 @@ from xhtml2pdf.builders.position import (
     read_position,
     shift_story,
 )
+from xhtml2pdf.config.resources import RenderLimitError, check_deadline, current_policy
 from xhtml2pdf.default import (
     BOOL,
     BOX,
@@ -1010,6 +1011,9 @@ def pisaPreLoop(node, context, *, collect=False):
 
 
 def pisaLoop(node, context, **kw):
+    # Once per element: a render's time limit is checked as it goes.
+    check_deadline()
+
     # Initialize KW. The copy keeps a child's margins out of its siblings'.
     if not kw:
         kw = {"margin-top": 0, "margin-bottom": 0, "margin-left": 0, "margin-right": 0}
@@ -1360,6 +1364,54 @@ def pisaLoop(node, context, **kw):
             pisaLoop(child, context, **kw)
 
 
+def _limit_source(src, limit: int | None):
+    """
+    The source, refused if it is larger than ``limit`` bytes.
+
+    A file is read here, a byte past the limit at most, rather than by
+    html5lib, which would read all of it.
+    """
+    if limit is None:
+        return src
+    if isinstance(src, str):
+        size = len(src.encode("utf-8", "surrogatepass"))
+    elif isinstance(src, bytes | bytearray):
+        size = len(src)
+    elif hasattr(src, "read"):
+        src = src.read(limit + 1)
+        if isinstance(src, str):
+            src = src.encode("utf-8")
+        size = len(src)
+    else:
+        return src
+    if size > limit:
+        msg = f"the document is larger than the {limit} bytes it may take"
+        raise RenderLimitError(msg)
+    return src
+
+
+def _check_depth(document, limit: int | None) -> None:
+    """
+    Refuse a document whose elements nest more than ``limit`` deep.
+
+    Walked with a stack of its own, not recursively: what this guards is the
+    recursion of the walks that follow.
+    """
+    if limit is None:
+        return
+    stack = [(document, 0)]
+    while stack:
+        node, depth = stack.pop()
+        if depth > limit:
+            msg = f"the document nests more than the {limit} levels it may"
+            raise RenderLimitError(msg)
+        stack.extend(
+            (child, depth + 1)
+            for child in node.childNodes
+            if child.nodeType == Node.ELEMENT_NODE
+        )
+
+
 def pisaParser(
     src,
     context,
@@ -1381,6 +1433,8 @@ def pisaParser(
     else:
         parser = html5lib.HTMLParser(tree=treebuilders.getTreeBuilder("dom"))
     parser_kwargs = {}
+    policy = current_policy()
+    src = _limit_source(src, policy.max_document_bytes)
     if isinstance(src, str):
         # Text has to become bytes for html5lib, and the encoding chosen here
         # is the one it must decode with, so it is not a guess either way.
@@ -1408,6 +1462,7 @@ def pisaParser(
     #         if inputstream.codecName(encoding) is None:
     #             log.error("%r is not a valid encoding", encoding)
     document = parser.parse(src, **parser_kwargs)  # encoding=encoding)
+    _check_depth(document, policy.max_depth)
 
     if xml_output:
         xml_output.write(document.toprettyxml(encoding=encoding or "utf-8"))

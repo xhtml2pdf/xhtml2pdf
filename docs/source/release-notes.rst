@@ -84,6 +84,11 @@ Unreleased
   refused from its size on disk. Off by default.
 * ``ResourceAccessPolicy(max_image_pixels=...)`` refuses an image from the
   pixel count in its header, before it is decoded. Off by default.
+* A render can be bounded as a whole: ``max_resources``,
+  ``max_total_bytes``, ``max_fetch_seconds`` (a deadline on one fetch that
+  a server dripping a byte at a time cannot outlast), ``max_render_seconds``,
+  ``max_document_bytes`` and ``max_depth``. The last three abandon the render
+  with the new ``RenderLimitError``. All are off by default.
 * Only an image that may be SVG is handed to svglib; a JPEG or a PNG used
   to go through the SVG parser first, and was taken for a raster once it
   had failed.
