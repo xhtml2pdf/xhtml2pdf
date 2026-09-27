@@ -56,6 +56,15 @@ Unreleased
 
 **🎉 New**
 
+* **CSS positioning.** ``position: relative`` moves a block without moving
+  anything around it. ``position: absolute`` takes an element out of the
+  flow into a box of its own, placed from its positioned ancestor -- text
+  over an image in a relative block -- or, with none, from the first page's
+  area, as a browser does. ``position: fixed`` repeats the box on every
+  page. Boxes are painted over the flow in ``z-index`` order, and under it
+  with a negative ``z-index``. ``position``, ``top``, ``right``,
+  ``bottom``, ``left`` and ``z-index`` used to be ignored (:issue:`449`,
+  :issue:`566`, :issue:`638`).
 * **page-break-*: avoid.** ``page-break-after: avoid`` keeps a block with
   what follows it, ``page-break-before: avoid`` keeps what came before with
   it, and ``page-break-inside: avoid`` moves a block to the next page whole
