@@ -21,7 +21,6 @@ import urllib.parse as urlparse
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from reportlab import rl_settings
 from reportlab.lib.enums import TA_LEFT, TA_RIGHT
 from reportlab.lib.fonts import addMapping
 from reportlab.lib.pagesizes import A4
@@ -82,7 +81,6 @@ if TYPE_CHECKING:
     from xhtml2pdf.xhtml2pdf_reportlab import PmlImage
 
 
-rl_settings.warnOnMissingFontGlyphs = 0
 log = logging.getLogger(__name__)
 
 sizeDelta = 2  # amount to reduce font size by for super and sub script

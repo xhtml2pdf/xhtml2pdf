@@ -40,7 +40,7 @@ REQUIRED_SYMBOLS: dict[str, tuple[str, ...]] = {
     # private / undocumented
     "reportlab.pdfbase._cidfontdata": ("defaultUnicodeEncodings",),
     "reportlab.pdfbase._glyphlist": ("_glyphname2unicode",),
-    "reportlab.rl_settings": ("_FUZZ", "warnOnMissingFontGlyphs"),
+    "reportlab.rl_settings": ("_FUZZ",),
     "reportlab.rl_config": ("register_reset",),
     "reportlab.lib.abag": ("ABag",),
     "reportlab.lib.utils": (
@@ -67,7 +67,6 @@ REQUIRED_SYMBOLS: dict[str, tuple[str, ...]] = {
         "tt2ps",
     ),
     # public, but load-bearing
-    "reportlab": ("rl_settings",),
     "reportlab.graphics": ("renderPDF",),
     "reportlab.lib": ("pdfencrypt",),
     "reportlab.pdfbase": ("pdfform", "pdfmetrics"),
