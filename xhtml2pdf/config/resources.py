@@ -129,6 +129,9 @@ class ResourceAccessPolicy:
         network rules.
     :param max_resource_bytes: how large a single fetched resource may be,
         before and after decompression. ``None`` removes the limit.
+    :param max_local_bytes: how large a local file or a decoded ``data:`` URI
+        may be. ``None``, the default, removes the limit: the caller's own
+        document is read under a policy too, and it may be large.
     """
 
     allow_remote: bool = True
@@ -148,6 +151,10 @@ class ResourceAccessPolicy:
     #: worker: without a limit, a 203KB response declaring Content-Encoding:
     #: gzip expands to 209MB of resident memory.
     max_resource_bytes: int | None = 20 * 1024 * 1024
+    #: Off by default, unlike the network limit, because a local read has
+    #: always been unbounded and documents rely on it: a large image beside
+    #: the document is not an attack when the caller wrote the document.
+    max_local_bytes: int | None = None
 
     @property
     def roots(self) -> tuple[Path, ...]:
@@ -264,6 +271,16 @@ class ResourceAccessPolicy:
         if limit is not None and size > limit:
             msg = (
                 f"{str(url)[:120]!r} is larger than the {limit} bytes a single "
+                f"resource may take"
+            )
+            raise ResourceAccessError(msg)
+
+    def check_local_size(self, size: int, where: str | Path) -> None:
+        """Raise :class:`ResourceAccessError` if a local resource is too large."""
+        limit = self.max_local_bytes
+        if limit is not None and size > limit:
+            msg = (
+                f"{str(where)[:120]!r} is larger than the {limit} bytes a local "
                 f"resource may take"
             )
             raise ResourceAccessError(msg)

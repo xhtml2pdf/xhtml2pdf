@@ -308,9 +308,15 @@ class InlineDataURI(BaseFile):
         # mime_params are preserved for future use
         self.mime_params = params[1:] if params and "/" in params[0] else params
 
+        # Checked on the decoded payload, which is what the rest of the render
+        # holds on to. Decoding first costs nothing the markup has not already
+        # paid: the payload cannot decode to more than it is written as.
         if is_base64:
-            return base64.b64decode(urllib_unquote(data).encode("utf-8"))
-        return unquote_to_bytes(data)
+            decoded = base64.b64decode(urllib_unquote(data).encode("utf-8"))
+        else:
+            decoded = unquote_to_bytes(data)
+        self.policy.check_local_size(len(decoded), f"data:{header}")
+        return decoded
 
 
 # Backwards-compatible alias: this class was named after the base64 form only.
@@ -343,6 +349,7 @@ class LocalProtocolURI(BaseFile):
         self.policy.check_path(path)
         if not path.is_file():
             return None
+        self.policy.check_local_size(path.stat().st_size, path)
         self.suffix = path.suffix
         self.mimetype = LocalFileURI.guess_mimetype(path)
         return path.read_bytes()
@@ -542,6 +549,8 @@ class LocalFileURI(BaseFile):
         # exactly why the resolved result has to be vetted.
         self.policy.check_path(uri)
         if uri.is_file():
+            # From the size on disk, so an oversized file is never read at all.
+            self.policy.check_local_size(uri.stat().st_size, uri)
             self.uri = uri
             self.suffix = uri.suffix
             self.mimetype = self.guess_mimetype(uri)

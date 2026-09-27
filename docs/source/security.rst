@@ -80,6 +80,12 @@ what it actually allows:
     from, so without this a 200 KB response can arrive as 200 MB of memory.
     ``None`` removes the limit.
 
+``max_local_bytes`` (default ``None``)
+    How large a local file or a decoded ``data:`` URI may be. A local file is
+    refused from its size on disk, before it is opened. Off by default, since
+    a local read has always been unbounded and the document you render may
+    sit beside large assets of its own.
+
 A renderer with several entry points can set the policy once around a build
 instead of passing it to every call. The ``resource_policy`` argument still
 wins over it:

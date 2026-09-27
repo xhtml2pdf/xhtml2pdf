@@ -77,6 +77,12 @@ Unreleased
 * The hex colours with an alpha channel, ``#rgba`` and ``#rrggbbaa``, are
   read (:issue:`811`).
 
+**💪🏼 Improvements**
+
+* ``ResourceAccessPolicy(max_local_bytes=...)`` bounds local files and
+  ``data:`` URIs, which were read whole whatever their size; a local file is
+  refused from its size on disk. Off by default.
+
 **🐛 Bug-Fixes**
 
 * ``color: transparent`` came out black. The text is drawn with no ink now,
