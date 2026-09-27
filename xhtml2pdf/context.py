@@ -112,7 +112,7 @@ ParaFrag.clone = clone
 
 
 #: The file each embedded face was built from, by its ReportLab name. Process
-#: wide, like pdfmetrics._fonts, so that the two can be compared at all.
+#: wide, like reportlab's font registry, so that the two can be compared at all.
 _embedded_font_source: dict[str, str] = {}
 
 
@@ -120,8 +120,8 @@ def registerTTFont(fullFontName: str, file) -> None:
     """
     Make an embedded TrueType font available to ReportLab under fullFontName.
 
-    Not a cache: registerFont keeps whichever object is already in
-    pdfmetrics._fonts under a dynamic font's name, so from the second document
+    Not a cache: registerFont keeps whichever object is already registered
+    under a dynamic font's name, so from the second document
     of a process onwards the TTFont built here was discarded on arrival. This
     builds the object that gets used and skips the ones that never did --
     which matters because building one reads and parses the whole font file,
@@ -132,8 +132,7 @@ def registerTTFont(fullFontName: str, file) -> None:
     That predates this; what is new is that it says so.
     """
     name = file.getNamedFile()
-    registered = pdfmetrics._fonts.get(fullFontName)
-    if registered is not None:
+    if fullFontName in pdfmetrics.getRegisteredFontNames():
         # Same name, different file: the document is going to be drawn with
         # the other one's glyphs, and until now nothing said a word. Whether
         # the file is the same cannot be asked of a TTFont, which does not

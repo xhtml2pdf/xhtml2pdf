@@ -611,33 +611,23 @@ class OtherPrivateStateTest(TestCase):
 
     def test_the_font_and_glyph_tables(self) -> None:
         """
-        ``pdfmetrics._fonts`` is how ``context.registerTTFont`` asks whether a
-        name is taken; ``getRegisteredFontNames()`` is the public, sorted,
-        copy of its keys. ``_glyphname2unicode`` and
-        ``_cidfontdata.defaultUnicodeEncodings`` feed ``util.py``'s font maps
-        and have no public equivalent.
+        ``_glyphname2unicode`` and ``_cidfontdata.defaultUnicodeEncodings``
+        feed ``util.py``'s font maps and have no public equivalent.
         """
         import reportlab.pdfbase._cidfontdata as cidfontdata
-        from reportlab.pdfbase import pdfmetrics
         from reportlab.pdfbase._glyphlist import _glyphname2unicode
 
-        pdfmetrics.getFont("Helvetica")
-        self.assertIn("Helvetica", pdfmetrics._fonts)
         self.assertEqual(ord("A"), _glyphname2unicode["A"])
         self.assertIsInstance(cidfontdata.defaultUnicodeEncodings, dict)
 
-    def test_the_canvas_keeps_its_code_and_document(self) -> None:
-        """
-        The paragraph fork appends to ``canvas._code`` directly, and
-        ``PmlBaseDoc`` set the producer through ``canvas._doc``.
-        """
+    def test_the_canvas_keeps_its_code(self) -> None:
+        """The paragraph fork appends to ``canvas._code`` directly."""
         import io
 
         from reportlab.pdfgen.canvas import Canvas
 
         canvas = Canvas(io.BytesIO())
         self.assertIsInstance(canvas._code, list)
-        self.assertTrue(hasattr(canvas._doc.info, "producer"))
 
 
 @skipUnless(tomllib is not None, "needs tomllib (py>=3.11) or the tomli extra")

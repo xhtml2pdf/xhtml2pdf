@@ -128,7 +128,7 @@ class PmlBaseDoc(BaseDocTemplate):
                     delattr(self, attribute)
 
     def beforePage(self) -> None:
-        self.canv._doc.info.producer = PRODUCER
+        self.canv.setProducer(PRODUCER)
 
         """
         # Convert to ASCII because there is a Bug in Reportlab not
