@@ -72,6 +72,36 @@
         "xhtml2pdf": 6
       }
     },
+    "css-position-absolute": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9202
+    },
+    "css-position-fixed": {
+      "pages": {
+        "xhtml2pdf": 3
+      },
+      "ssim": 0.9448
+    },
+    "css-position-overlay": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.8992
+    },
+    "css-position-relative": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9329
+    },
+    "css-position-z-negative": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9592
+    },
     "css-rem-units": {
       "pages": {
         "xhtml2pdf": 1
