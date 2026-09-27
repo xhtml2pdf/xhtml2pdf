@@ -103,6 +103,11 @@ Unreleased
 
 **🐛 Bug-Fixes**
 
+* Importing xhtml2pdf no longer changes how reportlab's own ``Paragraph``
+  clones its fragments. ``ParaFrag.clone`` was replaced for the whole
+  process, so an application also using reportlab directly lost a fragment's
+  bullet, and the inline image or anchor of one cloned with changes. The
+  behaviour is kept for xhtml2pdf's own fragments, now a subclass.
 * ReportLab 4.4.9 is now the lowest version required. xhtml2pdf has needed
   it since 0.2.19 -- the table of contents uses ``TableOfContents``'
   ``notifyKind`` (4.2.2) and ``Canvas.setNamedCB`` (4.4.9) -- while still

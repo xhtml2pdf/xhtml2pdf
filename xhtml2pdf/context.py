@@ -94,19 +94,27 @@ _NEWLINES = re.compile(r"(\r\n|\n|\r)")
 _NBSP = re.compile("(" + NBSP + ")")
 
 
-def clone(self, **kwargs) -> ParaFrag:
-    n = ParaFrag(**self.__dict__)
-    if kwargs:
-        d = n.__dict__
-        d.update(kwargs)
-        # This else could cause trouble in Paragraphs with images etc.
-        if "cbDefn" in d:
-            del d["cbDefn"]
-    n.bulletText = None
-    return n
+class PmlParaFrag(ParaFrag):
+    """
+    A fragment of xhtml2pdf's, cloned the way the story builder expects.
 
+    A clone never carries the bullet, and one made with changes drops the
+    callback -- an inline image or an anchor belongs to the fragment it was
+    made for, not to the text that follows it. This used to be a patch on
+    reportlab's ParaFrag itself, which changed how every Paragraph in the
+    process cloned its fragments, not only xhtml2pdf's.
+    """
 
-ParaFrag.clone = clone
+    def clone(self, **kwargs) -> PmlParaFrag:
+        n = self.__class__(**self.__dict__)
+        if kwargs:
+            d = n.__dict__
+            d.update(kwargs)
+            # This else could cause trouble in Paragraphs with images etc.
+            if "cbDefn" in d:
+                del d["cbDefn"]
+        n.bulletText = None
+        return n
 
 
 #: The file each embedded face was built from, by its ReportLab name. Process
@@ -153,7 +161,7 @@ def registerTTFont(fullFontName: str, file) -> None:
 
 
 def getParaFrag(style) -> ParaFrag:
-    frag: ParaFrag = ParaFrag()
+    frag: ParaFrag = PmlParaFrag()
 
     set_value(
         frag,

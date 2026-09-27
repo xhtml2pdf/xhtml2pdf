@@ -299,17 +299,40 @@ class PrivateBehaviourTest(TestCase):
             with self.subTest(attribute=attribute):
                 self.assertTrue(hasattr(text_object, attribute))
 
-    def test_ParaFrag_accepts_the_clone_monkeypatch(self) -> None:
-        """``xhtml2pdf.context`` replaces ``ParaFrag.clone`` globally."""
+    def test_importing_xhtml2pdf_leaves_ParaFrag_alone(self) -> None:
+        """
+        ``xhtml2pdf.context`` used to replace ``ParaFrag.clone`` for the whole
+        process, and reportlab's own Paragraph clones its frags with it: in a
+        process that also used reportlab directly, a cloned frag lost its
+        bulletText, and one cloned with changes lost its cbDefn -- an inline
+        image or an anchor.
+        """
+        from reportlab.lib.abag import ABag
         from reportlab.platypus.paraparser import ParaFrag
 
-        import xhtml2pdf.context  # noqa: F401  (applies the patch on import)
+        import xhtml2pdf.context  # noqa: F401
 
-        frag = ParaFrag(fontName="Helvetica", fontSize=10)
+        self.assertIs(ABag.clone, ParaFrag.clone)
+        frag = ParaFrag(text="x", bulletText="1.", cbDefn=ABag(kind="img"))
+        clone = frag.clone(text="y")
+        self.assertEqual(("1.", "img"), (clone.bulletText, clone.cbDefn.kind))
+
+    def test_xhtml2pdf_frags_clone_their_own_way(self) -> None:
+        """What the patch did, now only for xhtml2pdf's own fragments."""
+        from reportlab.lib.abag import ABag
+
+        from xhtml2pdf.context import PmlParaFrag
+
+        frag = PmlParaFrag(fontName="Helvetica", fontSize=10, bulletText="1.")
+        frag.cbDefn = ABag(kind="img")
         clone = frag.clone(fontSize=12)
-        self.assertEqual("Helvetica", clone.fontName)
-        self.assertEqual(12, clone.fontSize)
+
+        self.assertIsInstance(clone, PmlParaFrag)
+        self.assertEqual(("Helvetica", 12), (clone.fontName, clone.fontSize))
         self.assertEqual(10, frag.fontSize, "clone must not mutate the original")
+        self.assertIsNone(clone.bulletText)
+        self.assertFalse(hasattr(clone, "cbDefn"))
+        self.assertTrue(hasattr(frag.clone(), "cbDefn"), "kept without changes")
 
     def test_table_exposes_the_private_attributes_the_subclass_uses(self) -> None:
         from reportlab.platypus.tables import Table
