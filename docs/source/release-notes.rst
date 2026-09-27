@@ -82,6 +82,9 @@ Unreleased
 * ``ResourceAccessPolicy(max_local_bytes=...)`` bounds local files and
   ``data:`` URIs, which were read whole whatever their size; a local file is
   refused from its size on disk. Off by default.
+* Only an image that may be SVG is handed to svglib; a JPEG or a PNG used
+  to go through the SVG parser first, and was taken for a raster once it
+  had failed.
 
 **🐛 Bug-Fixes**
 

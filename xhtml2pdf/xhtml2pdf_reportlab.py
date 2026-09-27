@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import codecs
 import contextlib
 import copy
 import logging
@@ -658,6 +659,26 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
         return str(self.fileName or id(self))
 
 
+_BOMS: tuple[bytes, ...] = (codecs.BOM_UTF8, codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE)
+
+
+def looks_like_svg(data: bytes, mimetype: str | None = None) -> bool:
+    """
+    Whether an image payload may be SVG, and so is worth handing to svglib.
+
+    Every image used to go through ``svg2rlg`` first, a JPEG or a PNG
+    included, and was only taken for a raster once the XML parser had given
+    up on it. SVG is text, so it starts with a ``<`` -- after any byte-order
+    mark and white space -- or is gzipped (svgz); no raster format does.
+    """
+    if mimetype and "svg" in mimetype.lower():
+        return True
+    if data.startswith(_BOMS):
+        # UTF-16 spells the "<" as two bytes; a raster never has a BOM.
+        return True
+    return data.lstrip().startswith((b"<", b"\x1f\x8b"))
+
+
 class PmlImage(Flowable, PmlMaxHeightMixIn):
     def __init__(
         self,
@@ -724,9 +745,13 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         self, width: float | None = None, height: float | None = None
     ) -> Drawing | None:
         """If this image is a vector image and the library is available, returns a ReportLab Drawing."""
-        if svg2rlg:
+        if svg2rlg and looks_like_svg(self._imgdata, self.mimetype):
             try:
-                drawing = svg2rlg(BytesIO(self._imgdata))
+                # From a buffer, not a path, so svglib has no directory to
+                # resolve an <image href> against and follows none; entities
+                # are left unexpanded, which is svglib's default, stated here
+                # so that a change of default cannot reach untrusted input.
+                drawing = svg2rlg(BytesIO(self._imgdata), resolve_entities=False)
             except Exception:
                 return None
             if drawing:
