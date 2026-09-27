@@ -54,7 +54,7 @@ dependencies = [
     "pyhanko-certvalidator>=0.19.5",
     "pypdf>=3.1.0",
     "python-bidi>=0.5.0",
-    "reportlab>=4.0.4,<6",
+    "reportlab>=4.4.9,<6",
     "svglib>=1.2.1"
 ]
 dynamic = ["version"]
@@ -67,7 +67,7 @@ Changelog = "https://xhtml2pdf.readthedocs.io/en/latest/release-notes.html"
 
 [project.optional-dependencies]
 pycairo = [
-    "reportlab[pycairo]>=4.0.4,<6",
+    "reportlab[pycairo]>=4.4.9,<6",
 ]
 # Deprecated alias. reportlab 5 dropped the C renderPM backend along with its
 # "renderpm" extra, so requesting it there resolves to nothing at all; the
@@ -113,13 +113,16 @@ include = ["xhtml2pdf*"]
 [tool.tox]
 legacy_tox_ini = """
     [tox]
-    envlist = py{3.10,3.11,3.12,3.13,3.14}-rl{4,5}
+    envlist = py{3.10,3.11,3.12,3.13,3.14}-rl{4,5}, py3.10-rlmin
 
     [testenv]
     deps =
         coverage[toml]
-        rl4: reportlab>=4.0.4,<5
+        rl4: reportlab>=4.4.9,<5
         rl5: reportlab>=5,<6
+        # The declared floor, exactly: rl4 installs the newest 4.x, so the
+        # floor went untested and drifted below what the code needs.
+        rlmin: reportlab==4.4.9
     commands =
         python3 -c 'import sys;print(sys.version_info)'
         python3 -c "from reportlab import Version; print('%s %s' % ('Reportlab Version', Version))"

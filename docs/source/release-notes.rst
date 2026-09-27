@@ -103,6 +103,11 @@ Unreleased
 
 **🐛 Bug-Fixes**
 
+* ReportLab 4.4.9 is now the lowest version required. xhtml2pdf has needed
+  it since 0.2.19 -- the table of contents uses ``TableOfContents``'
+  ``notifyKind`` (4.2.2) and ``Canvas.setNamedCB`` (4.4.9) -- while still
+  declaring 4.0.4, so with 4.0.4 to 4.4.7 installed every document with a
+  ``<pdf:toc>`` failed. The lowest version is now tested as well.
 * A signing input -- ``ca_chain``, a CRL, an OCSP response -- outside the
   document's directory was refused by the document's resource policy, and the
   signature then failed with an unrelated ``TypeError``. They are read as the

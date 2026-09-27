@@ -20,6 +20,10 @@ jobs:
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         reportlab: ["4", "5"]
+        # The lowest reportlab pyproject.toml allows, on the oldest Python.
+        include:
+          - python-version: "3.10"
+            reportlab: "min"
     env:
       PYTHON_VERSION: ${{matrix.python-version}}
       TOXENV: py${{matrix.python-version}}-rl${{matrix.reportlab}}
@@ -88,13 +92,13 @@ jobs:
       matrix:
         include:
           - reference: "4"
-            reference_spec: "reportlab>=4.0.4,<5"
+            reference_spec: "reportlab>=4.4.9,<5"
             render: "5"
             render_spec: "reportlab>=5,<6"
           - reference: "5"
             reference_spec: "reportlab>=5,<6"
             render: "4"
-            render_spec: "reportlab>=4.0.4,<5"
+            render_spec: "reportlab>=4.4.9,<5"
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
