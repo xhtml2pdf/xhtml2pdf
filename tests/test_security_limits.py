@@ -35,7 +35,7 @@ from xhtml2pdf.config.resources import (
     render_budget,
     use_policy,
 )
-from xhtml2pdf.files import getFile
+from xhtml2pdf.files import cleanFiles, getFile, pisaTempFile
 from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlImage, looks_like_svg
 
 from .httpserver import LocalServerMixin, sample_server
@@ -655,3 +655,27 @@ class SigningInputTest(TestCase):
                     [expected],
                     [cert.dump() for cert in config["validation_context"][key]],
                 )
+
+
+class TemporaryFileTest(TestCase):
+    """What a render writes to disk stays private, and goes as a whole."""
+
+    def setUp(self) -> None:
+        self.addCleanup(cleanFiles)
+
+    def test_temporary_files_live_in_a_private_directory(self) -> None:
+        payload = base64.b64encode(b"font bytes").decode()
+        tmp = getFile(f"data:font/ttf;base64,{payload}").getNamedFile()
+        assert tmp is not None
+        directory = Path(tmp).parent
+
+        self.assertTrue(directory.name.startswith("xhtml2pdf-"))
+        self.assertEqual(0o700, directory.stat().st_mode & 0o777)
+        cleanFiles()
+        self.assertFalse(directory.exists())
+
+    def test_a_spilled_buffer_is_logged_at_debug_only(self) -> None:
+        with self.assertNoLogs("xhtml2pdf.files", level="WARNING"):
+            buffer = pisaTempFile(capacity=10)
+            buffer.write(b"x" * 100)
+        buffer.close()

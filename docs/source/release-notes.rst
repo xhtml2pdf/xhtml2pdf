@@ -94,6 +94,9 @@ Unreleased
   and has a checklist for deploying on a server.
 * ``ResourceAccessPolicy(allow_remote_pdf_backgrounds=False)`` refuses a
   PDF page background that was fetched or written inline.
+* The temporary files of a render are made in a directory of its own, 0700,
+  removed as a whole when the render ends, and no longer logged at warning
+  level.
 * Only an image that may be SVG is handed to svglib; a JPEG or a PNG used
   to go through the SVG parser first, and was taken for a raster once it
   had failed.

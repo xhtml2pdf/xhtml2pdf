@@ -5,6 +5,7 @@ import gzip
 import http.client as httplib
 import logging
 import mimetypes
+import shutil
 import socket
 import sys
 import tempfile
@@ -63,6 +64,17 @@ class TmpFiles(threading.local):
         #: wrapper: NamedTemporaryFile does not record `delete` as an
         #: attribute, so asking it later answers nothing.
         self.unlink_at_clean: list[str] = []
+        #: A directory of this render's own, made on first use: 0700, so its
+        #: files cannot be listed or opened by another user, and removed as a
+        #: whole by cleanFiles(). A file left behind by a crash is left in
+        #: it, under a name that says where it came from.
+        self.directory: str | None = None
+
+    def tmpdir(self) -> str:
+        """The render's private temporary directory, made if need be."""
+        if self.directory is None:
+            self.directory = tempfile.mkdtemp(prefix="xhtml2pdf-")
+        return self.directory
 
     def append(self, file) -> None:
         self.files.append(file)
@@ -78,6 +90,9 @@ class TmpFiles(threading.local):
                 Path(name).unlink()
         self.files.clear()
         self.unlink_at_clean.clear()
+        if self.directory is not None:
+            shutil.rmtree(self.directory, ignore_errors=True)
+            self.directory = None
 
 
 files_tmp: TmpFiles = TmpFiles()  # permanent safe file, to prevent file close
@@ -134,7 +149,7 @@ class pisaTempFile:
                 self.strategy = 1
                 # was never assigned, so getFileName() always returned None
                 self.name = getattr(new_delegate, "name", None)
-                log.warning("Created temporary file %s", self.name)
+                log.debug("Created temporary file %s", self.name)
             except Exception:
                 self.capacity = -1
 
@@ -278,7 +293,7 @@ class BaseFile:
         # Not a context manager: the handle outlives this call on purpose,
         # registered below for cleanFiles() to close.
         tmp_file = tempfile.NamedTemporaryFile(  # noqa: SIM115
-            suffix=self.suffix, delete=keep_open
+            suffix=self.suffix, delete=keep_open, dir=files_tmp.tmpdir()
         )
         # Register unconditionally. Registration used to sit inside the `if
         # data` below, so a temp file created for an empty resource was never
