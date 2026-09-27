@@ -83,6 +83,9 @@ Server deployment checklist
 * Still run conversions in a process you can bound from outside -- memory,
   CPU, a wall-clock kill. The limits here are checked between steps, and a
   single step, such as laying out one very large table, is not interrupted.
+* Signing reads and fetches what the ``signature`` dictionary names, which
+  is your configuration rather than the document; see
+  :doc:`encryption_and_signatures` to confine or stop it.
 * Fonts from ``@font-face`` are registered process-wide by family name, so
   in a process shared between tenants one document's font can stand in for
   another's. Render tenants' documents in separate processes until that

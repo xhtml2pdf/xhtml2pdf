@@ -100,6 +100,11 @@ Unreleased
 
 **🐛 Bug-Fixes**
 
+* A signing input -- ``ca_chain``, a CRL, an OCSP response -- outside the
+  document's directory was refused by the document's resource policy, and the
+  signature then failed with an unrelated ``TypeError``. They are read as the
+  caller's own files, ``signature["policy"]`` can confine them, and one that
+  cannot be read is a ``ValueError`` that names it.
 * A PDF page background that pypdf could not read aborted the render; it
   is logged and left out.
 * ``color: transparent`` came out black. The text is drawn with no ink now,

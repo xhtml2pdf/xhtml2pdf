@@ -149,6 +149,33 @@ from `ca_chain` when build pdf signature.
                                'crls': ['http://your.crl', '/path/to/file.crl']}
     }
 
+Signing inputs and the network
+------------------------------
+
+The files the signature dictionary names -- ``ca_chain``, and the ``crls``,
+``ocsps``, ``trust_roots`` and ``other_certs`` of ``validation_context`` --
+are yours, not the document's, so they are read without the document's
+resource policy: a chain outside the document's directory is found. A file
+that cannot be read is a ``ValueError`` naming the input, where it used to be
+a warning followed by an unrelated error from the certificate parser. To
+confine these reads too, pass a policy of your own:
+
+.. code:: python
+
+    from xhtml2pdf.config.resources import ResourceAccessPolicy
+
+    signature = {
+        ...,
+        "policy": ResourceAccessPolicy(base_dir="/srv/app/certs"),
+    }
+
+pyHanko also reaches the network itself, and not through that policy: it
+fetches the ``tsa`` URL, and, since ``validation_context`` defaults to
+``allow_fetching: True``, the revocation information the certificates point
+to. All of these come from your configuration and your certificates, never
+from the document. Set ``'validation_context': {'allow_fetching': False, ...}``
+and supply ``crls``/``ocsps`` yourself for a signer that must stay offline.
+
 Demonstration
 -------------
 

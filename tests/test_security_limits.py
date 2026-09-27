@@ -11,6 +11,7 @@ Hitting one must be a logged refusal, never a crash or a hang.
 from __future__ import annotations
 
 import base64
+import datetime
 import io
 import re
 import struct
@@ -24,6 +25,7 @@ from pypdf import PdfReader
 from reportlab.platypus import Spacer
 
 from xhtml2pdf import pisa
+from xhtml2pdf.builders.signs import PDFSignature
 from xhtml2pdf.config.resources import (
     RenderLimitError,
     ResourceAccessError,
@@ -557,3 +559,74 @@ class PdfBackgroundTest(TestCase):
             ),
         )
         self.assertFalse(ResourceAccessPolicy.server().allow_remote_pdf_backgrounds)
+
+
+def self_signed_pem() -> bytes:
+    """A throwaway CA certificate, as PEM."""
+    from cryptography import x509
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric import ec
+    from cryptography.x509.oid import NameOID
+
+    key = ec.generate_private_key(ec.SECP256R1())
+    name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "test CA")])
+    now = datetime.datetime.now(datetime.timezone.utc)
+    cert = (
+        x509.CertificateBuilder()
+        .subject_name(name)
+        .issuer_name(name)
+        .public_key(key.public_key())
+        .serial_number(1)
+        .not_valid_before(now)
+        .not_valid_after(now + datetime.timedelta(days=1))
+        .sign(key, hashes.SHA256())
+    )
+    return cert.public_bytes(serialization.Encoding.PEM)
+
+
+class SigningInputTest(TestCase):
+    """Signing inputs are the caller's, read under the caller's policy."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.certs = Path(self.tmp.name)
+        self.chain = self.certs / "ca.pem"
+        self.chain.write_bytes(self_signed_pem())
+        # The document's policy, confined to a directory the chain is not in:
+        # the case that used to fail with a TypeError out of pem.unarmor.
+        self.document_policy = ResourceAccessPolicy(base_dir=SAMPLES)
+
+    def test_a_chain_outside_the_document_directory_is_read(self) -> None:
+        with use_policy(self.document_policy):
+            chains = PDFSignature.get_chains({"ca_chain": str(self.chain)}, "ca_chain")
+
+        self.assertEqual(1, len(chains or []))
+
+    def test_a_missing_input_is_a_clear_error(self) -> None:
+        missing = self.certs / "nowhere.pem"
+        with self.assertRaises(ValueError) as refused:
+            PDFSignature.get_chains({"ca_chain": str(missing)}, "ca_chain")
+
+        self.assertIn("ca_chain", str(refused.exception))
+        self.assertIn("nowhere.pem", str(refused.exception))
+
+    def test_the_caller_can_confine_signing_reads(self) -> None:
+        config = {
+            "ca_chain": str(self.chain),
+            "policy": ResourceAccessPolicy(base_dir=SAMPLES),
+        }
+        with self.assertRaises(ValueError) as refused:
+            PDFSignature.get_chains(config, "ca_chain")
+
+        self.assertIn("ca.pem", str(refused.exception))
+
+    def test_crls_and_ocsps_get_the_same_treatment(self) -> None:
+        missing = str(self.certs / "nowhere.der")
+        with self.assertRaises(ValueError) as crl_error:
+            PDFSignature.parse_crls([missing])
+        with self.assertRaises(ValueError) as ocsp_error:
+            PDFSignature.parse_oscp([missing])
+
+        self.assertIn("crls", str(crl_error.exception))
+        self.assertIn("ocsps", str(ocsp_error.exception))
