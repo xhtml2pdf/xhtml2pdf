@@ -42,6 +42,7 @@ from xhtml2pdf.charts import (
     PieChart,
     VerticalBar,
 )
+from xhtml2pdf.config.resources import ResourceAccessError
 from xhtml2pdf.default import DEFAULT_LANGUAGE_LIST
 from xhtml2pdf.paragraph import PageNumberFlowable
 from xhtml2pdf.util import (
@@ -395,8 +396,16 @@ class pisaTagLI(pisaTag):
         if frag.listStyleImage is not None:
             frag.text = ""
             f = frag.listStyleImage
+            img = None
             if f and (not f.notFound()):
-                img = PmlImage(f.getData(), src=f.uri, width=None, height=None)
+                try:
+                    img = PmlImage(f.getData(), src=f.uri, width=None, height=None)
+                except ResourceAccessError as e:
+                    log.warning("Blocked by the resource policy: %s", e)
+                    # Refused: the item keeps its ordinary marker.
+                    frag.listStyleImage = None
+                    frag.text = lst if isinstance(lst, str) else lst(c)
+            if img is not None:
                 img.drawHeight *= DPI96
                 img.drawWidth *= DPI96
                 img.pisaZoom = frag.zoom
@@ -554,6 +563,8 @@ class pisaTagIMG(pisaTag):
 
                 except ImageWarning as e:
                     log.warning(c.warning(f"{e}:"))
+                except ResourceAccessError as e:
+                    log.warning("Blocked by the resource policy: %s", e)
                 except Exception:
                     log.warning(c.warning("Error in handling image:"), exc_info=True)
             else:

@@ -132,6 +132,9 @@ class ResourceAccessPolicy:
     :param max_local_bytes: how large a local file or a decoded ``data:`` URI
         may be. ``None``, the default, removes the limit: the caller's own
         document is read under a policy too, and it may be large.
+    :param max_image_pixels: how many pixels an image may decode to, read
+        from its header before it is decoded. ``None``, the default, leaves
+        only Pillow's own decompression-bomb guard.
     """
 
     allow_remote: bool = True
@@ -155,6 +158,9 @@ class ResourceAccessPolicy:
     #: always been unbounded and documents rely on it: a large image beside
     #: the document is not an attack when the caller wrote the document.
     max_local_bytes: int | None = None
+    #: The byte limits do not bound an image: a 400-byte PNG can declare
+    #: 50,000 x 50,000 pixels, gigabytes once decoded.
+    max_image_pixels: int | None = None
 
     @property
     def roots(self) -> tuple[Path, ...]:
@@ -282,6 +288,17 @@ class ResourceAccessPolicy:
             msg = (
                 f"{str(where)[:120]!r} is larger than the {limit} bytes a local "
                 f"resource may take"
+            )
+            raise ResourceAccessError(msg)
+
+    def check_image_pixels(self, width: float, height: float, where: object) -> None:
+        """Raise :class:`ResourceAccessError` if an image is too large to decode."""
+        limit = self.max_image_pixels
+        pixels = int(width) * int(height)
+        if limit is not None and pixels > limit:
+            msg = (
+                f"{str(where)[:120]!r} is {int(width)} x {int(height)} = "
+                f"{pixels} pixels, more than the {limit} an image may decode to"
             )
             raise ResourceAccessError(msg)
 

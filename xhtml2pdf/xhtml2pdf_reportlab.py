@@ -47,6 +47,7 @@ from reportlab.platypus.tableofcontents import TableOfContents, drawPageNumbers
 from reportlab.platypus.tables import _SPECIALROWS, Table, TableStyle
 from reportlab.rl_config import register_reset
 
+from xhtml2pdf.config.resources import current_policy
 from xhtml2pdf.files import pisaFileObject, pisaTempFile
 from xhtml2pdf.reportlab_paragraph import Paragraph
 from xhtml2pdf.util import (
@@ -528,6 +529,15 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
                     # detect which library we are using and open the image
                     if not self._image:
                         self._image = self._read_image(self.fp)
+                        # Opening reads the header only; the pixels are
+                        # decoded when they are drawn. Refused here, that
+                        # decode never happens.
+                        width, height = self._image.size
+                        current_policy().check_image_pixels(
+                            width,
+                            height,
+                            fileName if isinstance(fileName, str) else "an image",
+                        )
                     if getattr(self._image, "format", None) == "JPEG":
                         self.jpeg_fh = self._jpeg_fh
                 else:
@@ -715,6 +725,9 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
                 0,
                 0,
             )
+            # Drawn as a raster at a point per pixel; refused now rather than
+            # when the page is drawn, which nothing would catch.
+            self.checkRasterSize(drawing)
         else:
             img = self.getImage()
             if img:
@@ -777,11 +790,18 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
                 return drawing
         return None
 
+    def checkRasterSize(self, drawing: Drawing) -> None:
+        """Refuse an SVG whose raster would be larger than the policy allows."""
+        current_policy().check_image_pixels(
+            drawing.width, drawing.height, self.src or "an SVG image"
+        )
+
     def getDrawingRaster(self) -> BytesIO | None:
         """If this image is a vector image and the libraries are available, returns a PNG raster."""
         if svg2rlg and renderPM:
             svg: Drawing = self.getDrawing()
             if svg:
+                self.checkRasterSize(svg)
                 imgdata = BytesIO()
                 renderPM.drawToFile(svg, imgdata, fmt="PNG")
                 return imgdata

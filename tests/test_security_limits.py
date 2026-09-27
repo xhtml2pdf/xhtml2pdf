@@ -11,10 +11,16 @@ Hitting one must be a logged refusal, never a crash or a hang.
 from __future__ import annotations
 
 import base64
+import io
+import struct
 import tempfile
+import zlib
 from pathlib import Path
 from unittest import TestCase, mock
 
+from pypdf import PdfReader
+
+from xhtml2pdf import pisa
 from xhtml2pdf.config.resources import (
     ResourceAccessError,
     ResourceAccessPolicy,
@@ -197,3 +203,113 @@ class SvgSniffingTest(TestCase):
                 mock.patch("builtins.open", side_effect=AssertionError("opened")),
             ):
                 PmlImage(svg)
+
+
+def blank_png(width: int, height: int) -> bytes:
+    """
+    A valid 1-bit PNG, a few hundred bytes on disk however many pixels.
+
+    Built by hand: Pillow holds a 1-bit image at a byte per pixel, so making
+    a large one with it would take the memory the test is about.
+    """
+
+    def chunk(kind: bytes, body: bytes) -> bytes:
+        return (
+            struct.pack(">I", len(body))
+            + kind
+            + body
+            + struct.pack(">I", zlib.crc32(kind + body))
+        )
+
+    row = b"\x00" * (1 + (width + 7) // 8)
+    idat = zlib.compressobj(9)
+    body = b"".join(idat.compress(row) for _ in range(height)) + idat.flush()
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 1, 0, 0, 0, 0))
+        + chunk(b"IDAT", body)
+        + chunk(b"IEND", b"")
+    )
+
+
+def image_count(pdf: bytes) -> int:
+    return sum(
+        len(page["/Resources"].get("/XObject", {}))
+        for page in PdfReader(io.BytesIO(pdf)).pages
+    )
+
+
+class ImagePixelLimitTest(TestCase):
+    """``max_image_pixels``: refused from the header, before decoding."""
+
+    def setUp(self) -> None:
+        self.png = base64.b64encode(blank_png(2000, 2000)).decode()
+        self.policy = ResourceAccessPolicy(max_image_pixels=1_000_000)
+
+    @staticmethod
+    def render(html: str, policy: ResourceAccessPolicy) -> bytes:
+        dest = io.BytesIO()
+        pisa.CreatePDF(html, dest=dest, resource_policy=policy)
+        return dest.getvalue()
+
+    def assert_refused(self, html: str, pixels: int = 2000 * 2000) -> None:
+        with self.assertLogs("xhtml2pdf", level="WARNING") as logs:
+            pdf = self.render(html, self.policy)
+
+        self.assertEqual(0, image_count(pdf))
+        self.assertTrue(
+            any("Blocked by the resource policy" in line for line in logs.output),
+            logs.output,
+        )
+        self.assertTrue(any(f"{pixels} pixels" in line for line in logs.output))
+
+    def test_an_img_over_the_limit_is_refused(self) -> None:
+        self.assert_refused(f'<img src="data:image/png;base64,{self.png}">')
+
+    def test_a_list_marker_over_the_limit_is_refused(self) -> None:
+        self.assert_refused(
+            f"<ul style=\"list-style-image: url('data:image/png;base64,{self.png}')\">"
+            "<li>item</li></ul>"
+        )
+
+    def test_a_background_over_the_limit_is_refused(self) -> None:
+        self.assert_refused(
+            "<p style=\"background-image: url('data:image/png;base64,"
+            f"{self.png}')\">text</p>"
+        )
+
+    def test_a_page_background_over_the_limit_is_refused(self) -> None:
+        for opacity in ("", "opacity: 0.5;"):
+            with self.subTest(opacity=opacity or None):
+                self.assert_refused(
+                    "<style>@page { background-image: url('data:image/png;base64,"
+                    f"{self.png}'); {opacity} }}</style><p>text</p>"
+                )
+
+    def test_an_svg_raster_over_the_limit_is_refused(self) -> None:
+        svg = (
+            b'<svg xmlns="http://www.w3.org/2000/svg" width="3000" height="3000">'
+            b'<rect width="3000" height="3000"/></svg>'
+        )
+        with mock.patch(
+            "xhtml2pdf.xhtml2pdf_reportlab.renderPM.drawToFile",
+            side_effect=AssertionError("rasterised"),
+        ):
+            # rasterised at a point per pixel, and 3000 CSS pixels are 2250pt
+            self.assert_refused(
+                f'<img src="data:image/svg+xml;base64,{base64.b64encode(svg).decode()}">',
+                pixels=2250 * 2250,
+            )
+
+    def test_the_decode_is_never_reached(self) -> None:
+        with mock.patch(
+            "PIL.ImageFile.ImageFile.load", side_effect=AssertionError("decoded")
+        ):
+            self.assert_refused(f'<img src="data:image/png;base64,{self.png}">')
+
+    def test_the_limit_is_off_by_default(self) -> None:
+        pdf = self.render(
+            f'<img src="data:image/png;base64,{self.png}">', ResourceAccessPolicy()
+        )
+
+        self.assertEqual(1, image_count(pdf))

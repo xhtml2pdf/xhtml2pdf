@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from io import BytesIO
 from typing import TYPE_CHECKING, cast
 
@@ -7,6 +8,7 @@ import pypdf
 from PIL import Image
 from reportlab.pdfgen.canvas import Canvas
 
+from xhtml2pdf.config.resources import ResourceAccessError, current_policy
 from xhtml2pdf.files import pisaFileObject
 
 if TYPE_CHECKING:
@@ -14,6 +16,9 @@ if TYPE_CHECKING:
     from tempfile import _TemporaryFileWrapper
 
     from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc
+
+
+log = logging.getLogger(__name__)
 
 
 class WaterMarks:
@@ -59,6 +64,8 @@ class WaterMarks:
         if opacity:
             file: BytesIO | _TemporaryFileWrapper | None = pisafile.getFile()
             img: Image.Image = Image.open(file)
+            width, height = img.size
+            current_policy().check_image_pixels(width, height, pisafile.uri)
             img = img.convert("RGBA")
             # Scale the alpha channel that is there rather than replacing it.
             # putalpha with a single number overwrites the whole channel, so
@@ -120,12 +127,16 @@ class WaterMarks:
                     if bgfile.getMimeType().startswith("image/"):
                         # The background is an image, we need to generate a PDF backdrop for this
                         # image.
-                        bgfile = WaterMarks.generate_pdf_background(
-                            bgfile,
-                            pagetemplate.pagesize,
-                            is_portrait=pagetemplate.isPortrait(),
-                            context=pagetemplate.backgroundContext,
-                        )
+                        try:
+                            bgfile = WaterMarks.generate_pdf_background(
+                                bgfile,
+                                pagetemplate.pagesize,
+                                is_portrait=pagetemplate.isPortrait(),
+                                context=pagetemplate.backgroundContext,
+                            )
+                        except ResourceAccessError as e:
+                            log.warning("Blocked by the resource policy: %s", e)
+                            continue
 
                     yield range(page, pages[counter]), bgfile, int(pgcontext["step"])
 

@@ -86,6 +86,15 @@ what it actually allows:
     a local read has always been unbounded and the document you render may
     sit beside large assets of its own.
 
+``max_image_pixels`` (default ``None``)
+    How many pixels an image may decode to: ``<img>``, a list marker, a
+    ``background-image``, a page background, and the raster an SVG is drawn
+    as. It is read from the image header, before anything is decoded. The
+    byte limits cannot do this: a PNG of a few hundred bytes can declare
+    50,000 x 50,000 pixels. With ``None`` only Pillow's own guard remains,
+    which refuses about 179 million pixels. A refused image is left out of
+    the document.
+
 A renderer with several entry points can set the policy once around a build
 instead of passing it to every call. The ``resource_policy`` argument still
 wins over it:

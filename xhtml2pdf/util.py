@@ -1116,9 +1116,17 @@ def getBackgroundImageReader(file_object):
 
     from reportlab.lib.utils import ImageReader
 
+    from xhtml2pdf.config.resources import ResourceAccessError, current_policy
+
     try:
         data = file_object.getData()
         reader = ImageReader(BytesIO(data)) if data else None
+        if reader is not None:
+            width, height = reader.getSize()
+            current_policy().check_image_pixels(width, height, key)
+    except ResourceAccessError as e:
+        log.warning("Blocked by the resource policy: %s", e)
+        reader = None
     except Exception:
         log.warning("Could not read background image %r", key, exc_info=True)
         reader = None
