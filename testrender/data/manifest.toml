@@ -709,3 +709,12 @@ document. The text was aligned right but every marker was drawn on the \
 left, and the list was indented from the left. The markers are drawn on \
 the right now, and DEFAULT_CSS indents a list from the right when it is \
 :dir(rtl), which _normalize.css mirrors."""
+
+[fixtures.css-position-relative]
+compare = ["pages", "ssim"]
+notes = """position: relative on blocks: top/left, bottom/right, a percentage \
+left, a relative block inside another (the offsets add up) and \
+position: static, which ignores left. The block is drawn where the \
+offsets say and laid out where it was: the next block does not move. \
+Text is not compared: the moved block overlaps its neighbour, and the \
+two engines' text layers interleave the overlapping lines differently."""

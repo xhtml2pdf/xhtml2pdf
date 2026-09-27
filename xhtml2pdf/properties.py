@@ -255,6 +255,20 @@ CSS_PROPERTIES += (
     CSSProperty("break-before", "page", consumer=LOOP, note="page-break-before"),
     CSSProperty("break-after", "page", consumer=LOOP, note="page-break-after"),
     CSSProperty("break-inside", "page", consumer=LOOP, note="page-break-inside"),
+    # ~ positioning ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Read by hand in pisaLoop; see xhtml2pdf/builders/position.py. The
+    # top/left/... of an @page or @frame rule never come through here:
+    # those rules are read by getFrameDimensions.
+    CSSProperty(
+        "position", "position", consumer=LOOP, note="relative, absolute, fixed"
+    ),
+    CSSProperty("top", "position", consumer=LOOP),
+    CSSProperty("right", "position", consumer=LOOP),
+    CSSProperty("bottom", "position", consumer=LOOP),
+    CSSProperty("left", "position", consumer=LOOP),
+    CSSProperty(
+        "z-index", "position", consumer=LOOP, note="orders absolute and fixed boxes"
+    ),
     # ~ proprietary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     CSSProperty("-pdf-page-break", "pdf", consumer=LOOP, note="before only"),
     CSSProperty("-pdf-frame-break", "pdf", consumer=LOOP),

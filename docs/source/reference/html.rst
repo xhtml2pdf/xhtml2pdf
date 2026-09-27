@@ -98,6 +98,7 @@ xhtml2pdf supports the following standard CSS properties
     order
     padding-bottom, padding-left, padding-right, padding-top
     page-break-after, page-break-before, page-break-inside
+    position, top, right, bottom, left, z-index
     text-align, text-decoration, text-indent, text-transform
     vertical-align
     white-space
@@ -121,6 +122,12 @@ Known limitations of the properties above:
 -  ``list-style-type``: ``circle`` draws a filled bullet, because no font
    in the base-14 set has a hollow circle.
 -  ``text-decoration``: ``overline`` is not drawn.
+-  ``position``: ``relative`` moves a block where ``top``/``left`` (or
+   ``bottom``/``right``) say without moving anything around it; the block
+   is laid out and paginated where it was. It applies to blocks only: an
+   inline element with ``position: relative`` keeps its place. ``sticky``
+   is laid out as ``relative``, as paged media has nothing to stick to.
+   Its ``z-index`` does not change what is painted over what.
 -  ``page-break-before``, ``page-break-after``: ``always``, ``left``,
    ``right`` and ``avoid``. ``avoid`` keeps the block on the same page as
    what comes before (or after) it, as ``-pdf-keep-with-next`` does.

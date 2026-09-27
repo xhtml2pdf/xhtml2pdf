@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>css-position-relative</title>
+<style type="text/css">
+body { font-size: 11pt; line-height: 15pt; }
+p { margin: 0 0 8pt 0; }
+.box { background-color: #fcaf3e; padding: 4pt; margin: 0 0 8pt 0; }
+.down { position: relative; top: 12pt; left: 40pt; margin-right: 50pt; background-color: #8ae234; }
+.up { position: relative; bottom: 6pt; right: 20pt; margin-left: 30pt; background-color: #729fcf; }
+.pct { position: relative; left: 25%; margin-right: 150pt; background-color: #ad7fa8; }
+.outer { position: relative; left: 20pt; margin-right: 50pt; }
+.inner { position: relative; left: 20pt; top: 4pt; background-color: #e9b96e; }
+.static { position: static; left: 100pt; background-color: #d3d7cf; }
+</style>
+</head>
+<body>
+<p class="box">A reference block where it always is, at the left margin.</p>
+<p class="box down">Moved down by 12pt and right by 40pt; the block after it does not move.</p>
+<p class="box">This block stays where the moved one would have left it, and the moved one overlaps it.</p>
+<p class="box up">Moved up by 6pt with bottom and left by 20pt with right, from a 30pt margin.</p>
+<p class="box pct">Moved right by a quarter of the containing block's width.</p>
+<div class="outer"><p class="box inner">A relative block inside another: the two offsets add up to 40pt.</p></div>
+<p class="box static">position: static ignores left, so this block stays at the margin.</p>
+<p>The last paragraph, in plain black, closes the page.</p>
+</body>
+</html>

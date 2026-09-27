@@ -789,6 +789,8 @@ class pisaContext:
         #: Characters already reported as having no glyph anywhere, so a
         #: paragraph of them says it once per character rather than per word.
         self._glyph_warned: set[str] = set()
+        #: Messages warnOnce has already logged.
+        self._said_once: set[str] = set()
         self.fontList: dict[str, str] = copy.copy(default.DEFAULT_FONT)
         self.asianFontList: dict[str, str] = copy.copy(get_default_asian_font())
         self.anchorFrag: list = []
@@ -1536,6 +1538,13 @@ class pisaContext:
 
     def context(self, msg: str) -> str:
         return f"{msg!s}\n{self._getFragment(50)}"
+
+    def warnOnce(self, msg: str) -> None:
+        """Log `msg` as a warning the first time this document says it."""
+        if msg in self._said_once:
+            return
+        self._said_once.add(msg)
+        log.warning(self.warning(msg))
 
     def warning(self, msg, *args):
         self.warn += 1

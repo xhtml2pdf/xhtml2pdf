@@ -33,6 +33,7 @@ from xhtml2pdf.builders.flex import (
     clear_box,
     inline_box_markers,
 )
+from xhtml2pdf.builders.position import read_offsets, read_position, shift_story
 from xhtml2pdf.default import (
     BOOL,
     BOX,
@@ -1111,6 +1112,18 @@ def pisaLoop(node, context, **kw):
         if node.tagName == "html":
             context.rootFontSize = context.frag.fontSize
 
+        position = read_position(context.cssAttr)
+        offsets = (
+            read_offsets(context.cssAttr, context.frag.fontSize)
+            if position != "static"
+            else None
+        )
+        if position == "relative" and not isBlock:
+            context.warnOnce(
+                "position: relative is applied to blocks only; an inline element"
+                " keeps its place"
+            )
+
         # <a href="#x"> reaches any element whose id is x, not only an
         # <a name="x">; only <a name> used to make a destination, and a link
         # to a heading's id was dropped as pointing nowhere.
@@ -1251,6 +1264,9 @@ def pisaLoop(node, context, **kw):
 
             # XXX Buggy!
 
+            if position == "relative":
+                # Drawn where top/left say, laid out and paginated where it is.
+                shift_story(context.story, blockStoryStart, offsets)
             if breakInsideAvoid and len(context.story) - blockStoryStart > 1:
                 context.story[blockStoryStart:] = [
                     KeepTogether(context.story[blockStoryStart:])
