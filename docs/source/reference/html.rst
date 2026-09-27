@@ -128,6 +128,17 @@ Known limitations of the properties above:
    inline element with ``position: relative`` keeps its place. ``sticky``
    is laid out as ``relative``, as paged media has nothing to stick to.
    Its ``z-index`` does not change what is painted over what.
+
+   ``absolute`` takes the element out of the flow into a box of its own,
+   sized to its content unless ``width``/``height`` (or both ``left`` and
+   ``right``, or both ``top`` and ``bottom``) say otherwise. With no
+   positioned ancestor its offsets are from the page area of the *first*
+   page -- the initial containing block, as in a browser -- and a ``top``
+   larger than that area carries on to the pages after it. An offset left
+   ``auto`` keeps the box at its static position, where the element would
+   have been. ``fixed`` is the same box on every page, from each page's
+   area. Such boxes are painted over the flow, in ``z-index`` order and
+   then in document order, and are never split across pages.
 -  ``page-break-before``, ``page-break-after``: ``always``, ``left``,
    ``right`` and ``avoid``. ``avoid`` keeps the block on the same page as
    what comes before (or after) it, as ``-pdf-keep-with-next`` does.

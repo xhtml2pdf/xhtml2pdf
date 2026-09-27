@@ -33,7 +33,12 @@ from xhtml2pdf.builders.flex import (
     clear_box,
     inline_box_markers,
 )
-from xhtml2pdf.builders.position import read_offsets, read_position, shift_story
+from xhtml2pdf.builders.position import (
+    PositionedBoxData,
+    read_offsets,
+    read_position,
+    shift_story,
+)
 from xhtml2pdf.default import (
     BOOL,
     BOX,
@@ -1107,12 +1112,17 @@ def pisaLoop(node, context, **kw):
         # own declarations apply.
         reset_non_inherited(context.frag)
 
+        # An absolute or fixed box is a block whatever its display (CSS 2.1
+        # 9.7), so its padding, borders and background are read as one.
+        position = read_position(context.cssAttr)
+        outOfFlow = position in {"absolute", "fixed"}
+        parentIndent = kw["margin-left"]
+
         # Map styles to Reportlab fragment properties
-        CSS2Frag(context, kw, isBlock=isBlock or isInlineBlock)
+        CSS2Frag(context, kw, isBlock=isBlock or isInlineBlock or outOfFlow)
         if node.tagName == "html":
             context.rootFontSize = context.frag.fontSize
 
-        position = read_position(context.cssAttr)
         offsets = (
             read_offsets(context.cssAttr, context.frag.fontSize)
             if position != "static"
@@ -1207,7 +1217,19 @@ def pisaLoop(node, context, **kw):
             kw["margin-left"] = kw["margin-right"] = 0
 
         inlineBox = None
-        if isInlineBlock:
+        positionedBox = None
+        if outOfFlow:
+            positionedBox = PositionedBoxData(
+                context,
+                context.frag,
+                context.cssAttr,
+                position,
+                offsets,
+                block_level=isBlock,
+                indent=parentIndent,
+            )
+            kw["margin-left"] = kw["margin-right"] = 0
+        elif isInlineBlock:
             inlineBox = InlineBoxData(context, context.frag, context.cssAttr)
             kw["margin-left"] = kw["margin-right"] = 0
 
@@ -1218,6 +1240,7 @@ def pisaLoop(node, context, **kw):
         if (
             display == Display.INLINE
             and not isBlock
+            and not outOfFlow
             and declaresInlineBox(context, node.tagName)
         ):
             markers = inlineBoxMarkers(context)
@@ -1254,6 +1277,8 @@ def pisaLoop(node, context, **kw):
 
         if inlineBox is not None:
             inlineBox.close(context)
+        if positionedBox is not None:
+            positionedBox.close(context)
 
         if inlineBoxClose is not None:
             context.fragList.append(inlineBoxClose)

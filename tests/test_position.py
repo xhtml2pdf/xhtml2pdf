@@ -107,3 +107,86 @@ class RelativeTest(TestCase):
         second = positions(html, 1)
         self.assertAlmostEqual(28.3 + 40, min(x for x, _y in first.values()), places=0)
         self.assertAlmostEqual(28.3 + 40, min(x for x, _y in second.values()), places=0)
+
+
+#: A4 less the default 1cm margins: the page area, where the initial
+#: containing block is.
+AREA_LEFT = 28.35
+AREA_TOP = 841.89 - 28.35
+AREA_RIGHT = 595.28 - 28.35
+AREA_BOTTOM = 28.35
+
+
+class AbsoluteTest(TestCase):
+    def test_top_left_from_the_page_area(self) -> None:
+        where = positions(
+            '<p>Alpha</p><div style="position: absolute; top: 100pt; left: 50pt">Boxed</div>'
+        )
+        self.assertAlmostEqual(AREA_LEFT + 50, where["Boxed"][0], places=0)
+        self.assertLess(where["Boxed"][1], AREA_TOP - 100)
+        self.assertGreater(where["Boxed"][1], AREA_TOP - 115)
+
+    def test_the_flow_does_not_move(self) -> None:
+        plain = positions("<p>Alpha</p><p>Charlie</p>")
+        with_box = positions(
+            '<p>Alpha</p><div style="position: absolute; top: 300pt">Boxed</div><p>Charlie</p>'
+        )
+        self.assertEqual(plain["Charlie"], with_box["Charlie"])
+
+    def test_bottom_right_from_the_page_area(self) -> None:
+        where = positions(
+            '<p>Alpha <span style="position: absolute; bottom: 0; right: 0">Corner</span></p>'
+        )
+        x, y = where["Corner"]
+        self.assertGreater(x, AREA_RIGHT - 40)
+        self.assertLess(y, AREA_BOTTOM + 10)
+
+    def test_left_and_right_stretch_the_box(self) -> None:
+        reader = render(
+            '<div style="position: absolute; top: 0; left: 100pt; right: 100pt;'
+            ' background-color: #ff0000">x</div>'
+        )
+        data = reader.pages[0].get_contents().get_data().decode("latin-1")
+        rect = next(line for line in data.splitlines() if " re " in line).split()
+        width = float(rect[rect.index("re") - 2])
+        self.assertAlmostEqual(AREA_RIGHT - AREA_LEFT - 200, width, places=0)
+
+    def test_the_static_position_is_where_the_element_was(self) -> None:
+        plain = positions("<p>Alpha</p><p>Static</p>")
+        where = positions('<p>Alpha</p><div style="position: absolute">Static</div>')
+        self.assertEqual(plain["Static"], where["Static"])
+
+    def test_z_index_orders_the_painting(self) -> None:
+        reader = render(
+            '<div style="position: absolute; top: 0; z-index: 2">Upper</div>'
+            '<div style="position: absolute; top: 0; z-index: 1">Lower</div>'
+        )
+        data = reader.pages[0].get_contents().get_data().decode("latin-1")
+        self.assertLess(data.index("(Lower)"), data.index("(Upper)"))
+
+    def test_a_top_past_the_first_page_goes_on_a_later_page(self) -> None:
+        paragraphs = "".join(f"<p>paragraph {i}</p>" for i in range(120))
+        reader = render(
+            f'<div style="position: absolute; top: 1000pt">Later</div>{paragraphs}'
+        )
+        pages = [
+            i for i, page in enumerate(reader.pages) if "Later" in page.extract_text()
+        ]
+        self.assertEqual([1], pages)
+
+
+class FixedTest(TestCase):
+    def test_on_every_page(self) -> None:
+        paragraphs = "".join(f"<p>paragraph {i}</p>" for i in range(150))
+        reader = render(
+            f'<div style="position: fixed; top: 0; right: 0">Stamp</div>{paragraphs}'
+        )
+        self.assertGreater(len(reader.pages), 2)
+        self.assertTrue(all("Stamp" in page.extract_text() for page in reader.pages))
+
+    def test_leaves_nothing_in_the_flow(self) -> None:
+        plain = positions("<p>Alpha</p><p>Charlie</p>")
+        where = positions(
+            '<p>Alpha</p><div style="position: fixed; bottom: 0">Stamp</div><p>Charlie</p>'
+        )
+        self.assertEqual(plain["Charlie"], where["Charlie"])

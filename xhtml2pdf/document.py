@@ -358,6 +358,7 @@ def _build(
         for template in templates:
             template.canvasBackground = context.pageCanvasBackground
     doc.addPageTemplates(templates)
+    doc.pisaPositioned = context.positioned
     start_on_mirrored_pair(doc, templates, declared_body=declared_body)
 
     # Use multibuild e.g. if a TOC has to be created

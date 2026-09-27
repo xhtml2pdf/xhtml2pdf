@@ -105,6 +105,11 @@ class PmlBaseDoc(BaseDocTemplate):
         # in a multiBuild rendering.
         self.pisaTemplateList = []
 
+        # The anchors of the positioned boxes fall where this pass puts them.
+        from xhtml2pdf.builders.position import reset_positioned
+
+        reset_positioned(self)
+
         # And the page template left pending by the previous pass. A
         # <pdf:nextpage name="x"/> onto a :left/:right pair leaves a cycle on
         # the document and reportlab never clears it, so on the second pass of
@@ -261,6 +266,13 @@ class PmlPageTemplate(PageTemplate):
 
     def isLandscape(self) -> bool:
         return self.pageorientation == self.LANDSCAPE
+
+    def afterDrawPage(self, canvas: Canvas, doc):
+        # After the page's flow, before showPage: the absolute and fixed
+        # boxes paint over everything in the flow, in z-index order.
+        from xhtml2pdf.builders.position import paint_positioned
+
+        paint_positioned(canvas, doc, self)
 
     def beforeDrawPage(self, canvas: Canvas, doc):
         canvas.saveState()

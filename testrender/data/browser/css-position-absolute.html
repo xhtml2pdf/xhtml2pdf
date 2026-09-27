@@ -1,0 +1,36 @@
+<!--
+  Browser equivalent of data/source/css-position-absolute.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>css-position-absolute</title>
+<style type="text/css">
+body { font-size: 11pt; line-height: 15pt; }
+p { margin: 0 0 8pt 0; }
+.tl { position: absolute; top: 120pt; left: 40pt; background-color: #fcaf3e; padding: 6pt; }
+.br { position: absolute; bottom: 20pt; right: 30pt; background-color: #8ae234; border: 2pt solid #4e9a06; padding: 4pt; }
+.pct { position: absolute; top: 40%; left: 50%; width: 30%; background-color: #729fcf; padding: 4pt; }
+.stretch { position: absolute; top: 200pt; left: 20pt; right: 20pt; background-color: #e9b96e; padding: 4pt; }
+.under { position: absolute; top: 300pt; left: 60pt; width: 150pt; height: 60pt; background-color: #ef2929; z-index: 1; }
+.over { position: absolute; top: 320pt; left: 100pt; width: 150pt; height: 60pt; background-color: #fce94f; z-index: 2; }
+.static { position: absolute; background-color: #ad7fa8; padding: 2pt; }
+</style>
+</head>
+<body>
+<p>This page holds boxes taken out of the flow. The paragraphs keep their places as if the boxes were not there.</p>
+<div class="over">Yellow, z-index 2, painted over the red one although it comes first.</div>
+<div class="tl">Orange: top 120pt, left 40pt from the page area.</div>
+<div class="br">Green: bottom 20pt, right 30pt, with a border.</div>
+<div class="pct">Blue: top 40%, left 50%, width 30% of the page area.</div>
+<div class="stretch">Sand: left and right both set, so the box fills the width between them.</div>
+<div class="under">Red, z-index 1.</div>
+<p>A second paragraph follows right after the first; none of the boxes above pushed it down. <span class="static">Purple at its static position</span> sits where it would have been in this line.</p>
+<p>The third paragraph closes the flow.</p>
+</body>
+</html>

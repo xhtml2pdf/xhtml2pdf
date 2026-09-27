@@ -718,3 +718,16 @@ position: static, which ignores left. The block is drawn where the \
 offsets say and laid out where it was: the next block does not move. \
 Text is not compared: the moved block overlaps its neighbour, and the \
 two engines' text layers interleave the overlapping lines differently."""
+
+[fixtures.css-position-absolute]
+compare = ["pages", "ssim"]
+notes = """position: absolute with no positioned ancestor: top/left, \
+bottom/right with a border, percentages of the page area, left and right \
+together stretching the box, two overlapping boxes ordered by z-index, \
+and an inline box at its static position. The flow does not move for any \
+of them. Text is not compared: the boxes overlap the flow's lines."""
+
+[fixtures.css-position-fixed]
+compare = ["pages", "ssim"]
+notes = """position: fixed: a band across the middle and a stamp in the \
+corner, repeated on every page of a three-page document."""

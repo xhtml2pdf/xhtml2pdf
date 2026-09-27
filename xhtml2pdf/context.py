@@ -791,6 +791,9 @@ class pisaContext:
         self._glyph_warned: set[str] = set()
         #: Messages warnOnce has already logged.
         self._said_once: set[str] = set()
+        #: The absolute and fixed boxes, painted by the page template; see
+        #: xhtml2pdf/builders/position.py.
+        self.positioned: list = []
         self.fontList: dict[str, str] = copy.copy(default.DEFAULT_FONT)
         self.asianFontList: dict[str, str] = copy.copy(get_default_asian_font())
         self.anchorFrag: list = []

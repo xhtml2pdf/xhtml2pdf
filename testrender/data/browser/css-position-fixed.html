@@ -1,0 +1,45 @@
+<!--
+  Browser equivalent of data/source/css-position-fixed.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>css-position-fixed</title>
+<style type="text/css">
+body { font-size: 11pt; line-height: 15pt; }
+p { margin: 0 0 8pt 0; }
+.head { position: fixed; top: 300pt; left: 0; right: 0; background-color: #d3d7cf; padding: 3pt; }
+.stamp { position: fixed; bottom: 0; right: 0; background-color: #fcaf3e; padding: 3pt; }
+.body { margin-top: 0; }
+</style>
+</head>
+<body>
+<div class="head">Fixed band across the page, repeated on every page</div>
+<div class="stamp">Fixed stamp</div>
+<div class="body">
+<p>Page 1, line 1: The harbour wakes before the town does, and the fishing boats slide out past the breakwater.</p>
+<p>Page 1, line 2: By eight the market square is full of trestle tables and crates of lemons.</p>
+<p>Page 1, line 3: The library opens at ten and its clock has been five minutes slow for years.</p>
+<p>Page 1, line 4: Behind the church a carpenter planes a table top by hand while a radio plays.</p>
+</div>
+<div style="break-after: page"></div>
+<div class="body">
+<p>Page 2, line 1: By eight the market square is full of trestle tables and crates of lemons.</p>
+<p>Page 2, line 2: The library opens at ten and its clock has been five minutes slow for years.</p>
+<p>Page 2, line 3: Behind the church a carpenter planes a table top by hand while a radio plays.</p>
+<p>Page 2, line 4: At noon the regional train stops for exactly two minutes and the guard waves a flag.</p>
+</div>
+<div style="break-after: page"></div>
+<div class="body">
+<p>Page 3, line 1: The library opens at ten and its clock has been five minutes slow for years.</p>
+<p>Page 3, line 2: Behind the church a carpenter planes a table top by hand while a radio plays.</p>
+<p>Page 3, line 3: At noon the regional train stops for exactly two minutes and the guard waves a flag.</p>
+<p>Page 3, line 4: The botanical garden keeps a glasshouse of cacti that flower once a year.</p>
+</div>
+</body>
+</html>
