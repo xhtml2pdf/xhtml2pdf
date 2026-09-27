@@ -1,0 +1,30 @@
+<!--
+  Browser equivalent of data/source/css-position-z-negative.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>css-position-z-negative</title>
+<style type="text/css">
+body { font-size: 11pt; line-height: 15pt; }
+p { margin: 0 0 8pt 0; }
+.behind { position: absolute; top: 10pt; left: 20pt; width: 300pt; height: 80pt; background-color: #fce94f; z-index: -1; }
+.further { position: absolute; top: 40pt; left: 150pt; width: 250pt; height: 90pt; background-color: #729fcf; z-index: -2; }
+.front { position: absolute; top: 60pt; left: 250pt; width: 150pt; height: 40pt; background-color: #ef2929; z-index: 1; }
+</style>
+</head>
+<body>
+<div class="behind"></div>
+<div class="further"></div>
+<div class="front">In front, z-index 1</div>
+<p>The yellow box has z-index -1 and the blue one -2, so both are painted under this text, the blue one under the yellow one.</p>
+<p>The red box has a positive z-index and is painted over the text, as every positioned box used to be.</p>
+<p>A third paragraph runs across the two boxes behind it, and stays readable on top of them.</p>
+<p>The last paragraph closes the page below the boxes.</p>
+</body>
+</html>

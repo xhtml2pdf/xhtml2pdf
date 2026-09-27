@@ -318,6 +318,12 @@ class PmlPageTemplate(PageTemplate):
         finally:
             canvas.restoreState()
 
+        # Room under the flow for the boxes with a negative z-index, filled in
+        # once the page is known; see builders/position.py.
+        from xhtml2pdf.builders.position import reserve_under_flow
+
+        reserve_under_flow(canvas, doc)
+
     def _firstComplaint(self, complaint: str, frame_id: str) -> bool:
         """Whether this is the first time a frame draws this complaint."""
         key = (complaint, frame_id)

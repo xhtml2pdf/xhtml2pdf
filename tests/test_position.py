@@ -249,3 +249,42 @@ class ContainingBlockTest(TestCase):
             '<div style="position: absolute; top: 0">Box</div></div><p>After</p>'
         )
         self.assertEqual(plain["After"], with_boxes["After"])
+
+
+class NegativeZIndexTest(TestCase):
+    """A negative z-index paints the box under the flow."""
+
+    def test_under_the_flow(self) -> None:
+        reader = render(
+            "<p>Flowing</p>"
+            '<div style="position: absolute; top: 0; z-index: -1">Under</div>'
+        )
+        page = reader.pages[0]
+        data = page.get_contents().get_data().decode("latin-1")
+        # The page draws the form before the flow's text; the box is in it.
+        self.assertLess(
+            data.index("/FormXob.pisaUnderFlow1 Do"), data.index("(Flowing)")
+        )
+        self.assertNotIn("(Under)", data)
+        self.assertIn("Under", page.extract_text())
+
+    def test_every_page_defines_its_form(self) -> None:
+        paragraphs = "".join(f"<p>paragraph {i}</p>" for i in range(150))
+        reader = render(
+            f'<div style="position: absolute; top: 0; z-index: -1">Under</div>{paragraphs}'
+        )
+        self.assertGreater(len(reader.pages), 1)
+        for page in reader.pages:
+            page.extract_text()  # a missing form would fail here
+
+    def test_no_form_without_a_negative_z_index(self) -> None:
+        reader = render('<p>x</p><div style="position: absolute; top: 0">Over</div>')
+        self.assertNotIn(b"pisaUnderFlow", reader.pages[0].get_contents().get_data())
+
+    def test_an_empty_box_with_a_size_is_painted(self) -> None:
+        reader = render(
+            '<div style="position: absolute; top: 0; width: 100pt; height: 50pt;'
+            ' background-color: #ff0000"></div><p>x</p>'
+        )
+        data = reader.pages[0].get_contents().get_data().decode("latin-1")
+        self.assertIn(" 100 50 re", data)

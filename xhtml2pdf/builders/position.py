@@ -453,7 +453,15 @@ class PositionedBoxData:
                 c.addStory(entry.anchor)
             else:
                 c.fragList.append(inline_box_frag(c.frag, entry.anchor, "top"))
-        if not content:
+        offsets = entry.offsets
+        sized = (
+            inner.width.kind != "auto"
+            or inner.height.kind != "auto"
+            or (offsets["left"].kind != "auto" and offsets["right"].kind != "auto")
+            or (offsets["top"].kind != "auto" and offsets["bottom"].kind != "auto")
+        )
+        if not content and not sized:
+            # Nothing inside and nothing to give it a size: an empty box.
             return
         left, right, top, bottom = inner.margins
         entry.width = inner.width
@@ -527,6 +535,31 @@ def reset_positioned(doc) -> None:
     doc.pisaInitialBlock = None
 
 
+def _under_flow_name(page: int) -> str:
+    return f"pisaUnderFlow{page}"
+
+
+def _is_under_flow(entry: PositionedEntry) -> bool:
+    """A negative z-index, its own or its outermost positioned ancestor's."""
+    return entry.key[0] < 0
+
+
+def reserve_under_flow(canvas, doc) -> None:
+    """
+    Put a form under the page's flow for the boxes with a negative z-index.
+
+    They belong under the flow (CSS 2.1 Appendix E), but which of them are
+    on a page is only known once the flow has been drawn: a box at its
+    static position is wherever its anchor fell. The page starts by drawing
+    a form XObject that does not exist yet, and paint_positioned defines it
+    at the end of the page -- reportlab resolves a form by name when the
+    document is saved, the way "page N of M" recipes use it.
+    """
+    entries = getattr(doc, "pisaPositioned", None)
+    if entries and any(_is_under_flow(entry) for entry in entries):
+        canvas.doForm(_under_flow_name(doc.page))
+
+
 def paint_positioned(canvas, doc, template) -> None:
     """Paint the positioned boxes that belong on this page, in painting order."""
     entries = getattr(doc, "pisaPositioned", None)
@@ -538,8 +571,21 @@ def paint_positioned(canvas, doc, template) -> None:
         doc.pisaInitialBlock = area
     # In painting order, which puts every box after the one it is inside:
     # its containing block is known by the time it is placed.
-    for entry in sorted(entries, key=attrgetter("key")):
-        placement = entry.place(page, area, doc.pisaInitialBlock)
+    ordered = sorted(entries, key=attrgetter("key"))
+    under = [entry for entry in ordered if _is_under_flow(entry)]
+    over = [entry for entry in ordered if not _is_under_flow(entry)]
+    if under:
+        # Defined on every page reserve_under_flow referred to it on, empty
+        # or not: a form that is drawn and never defined breaks the file.
+        canvas.beginForm(_under_flow_name(page))
+        _paint_entries(canvas, page, area, doc.pisaInitialBlock, under)
+        canvas.endForm()
+    _paint_entries(canvas, page, area, doc.pisaInitialBlock, over)
+
+
+def _paint_entries(canvas, page, area, initial, entries) -> None:
+    for entry in entries:
+        placement = entry.place(page, area, initial)
         if placement is not None:
             block, top = placement
             entry.paint(canvas, page, block, top)

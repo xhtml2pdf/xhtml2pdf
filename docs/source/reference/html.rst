@@ -141,7 +141,9 @@ Known limitations of the properties above:
    ``auto`` keeps the box at its static position, where the element would
    have been. ``fixed`` is the same box on every page, from each page's
    area. Such boxes are painted over the flow, in ``z-index`` order and
-   then in document order, and are never split across pages.
+   then in document order, and are never split across pages; one with a
+   negative ``z-index`` is painted under the flow instead. A box inside
+   another is painted right after it, whatever its own ``z-index``.
 -  ``page-break-before``, ``page-break-after``: ``always``, ``left``,
    ``right`` and ``avoid``. ``avoid`` keeps the block on the same page as
    what comes before (or after) it, as ``-pdf-keep-with-next`` does.

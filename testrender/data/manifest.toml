@@ -738,3 +738,9 @@ notes = """Issue #566: absolute boxes placed from a positioned ancestor. Text \
 over an image inside a relative block (top/left and bottom/right), a box \
 inside an absolute card, and a tag placed from a relative block that is \
 itself moved. Text is not compared: the boxes overlap."""
+
+[fixtures.css-position-z-negative]
+compare = ["pages", "ssim"]
+notes = """Negative z-index: two absolute boxes painted under the flow's text \
+(-2 under -1) and one with a positive z-index over it. Text is not \
+compared: the red box covers part of a line."""
