@@ -105,6 +105,9 @@ Unreleased
   signature then failed with an unrelated ``TypeError``. They are read as the
   caller's own files, ``signature["policy"]`` can confine them, and one that
   cannot be read is a ``ValueError`` that names it.
+* ``trust_roots``, ``extra_trust_roots`` and ``other_certs`` in a signature's
+  ``validation_context`` were loaded from ``ca_chain`` instead of from their
+  own files, and were dropped when there was no ``ca_chain``.
 * A PDF page background that pypdf could not read aborted the render; it
   is logged and left out.
 * ``color: transparent`` came out black. The text is drawn with no ink now,

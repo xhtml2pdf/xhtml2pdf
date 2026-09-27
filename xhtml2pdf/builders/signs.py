@@ -48,15 +48,24 @@ class PDFSignature:
         return data
 
     @staticmethod
-    def get_chains(config, _key):
+    def get_chains(config, key, source=None):
+        """
+        The certificates listed under ``key`` of ``source``, loaded.
+
+        ``source`` is the signature dict itself for ``ca_chain`` and its
+        ``validation_context`` for the lists that live there; ``config`` is
+        always the signature dict, for the policy to read files under.
+        """
+        if source is None:
+            source = config
         chains = []
-        if "ca_chain" in config:
-            chain = config["ca_chain"]
+        if key in source:
+            chain = source[key]
             if not isinstance(chain, list):
                 chain = [chain]
             for c in chain:
                 if isinstance(c, Path | str):
-                    data = PDFSignature.read_input(config, c, "ca_chain")
+                    data = PDFSignature.read_input(config, c, key)
                     _, _, digicert_ca_bytes = pem.unarmor(data)
                     chains.append(x509.Certificate.load(digicert_ca_bytes))
                 else:
@@ -185,17 +194,19 @@ class PDFSignature:
 
             if "trust_roots" in config["validation_context"]:
                 config["validation_context"]["trust_roots"] = PDFSignature.get_chains(
-                    config, "trust_roots"
+                    config, "trust_roots", config["validation_context"]
                 )
 
             if "extra_trust_roots" in config["validation_context"]:
                 config["validation_context"]["extra_trust_roots"] = (
-                    PDFSignature.get_chains(config, "extra_trust_roots")
+                    PDFSignature.get_chains(
+                        config, "extra_trust_roots", config["validation_context"]
+                    )
                 )
 
             if "other_certs" in config["validation_context"]:
                 config["validation_context"]["other_certs"] = PDFSignature.get_chains(
-                    config, "other_certs"
+                    config, "other_certs", config["validation_context"]
                 )
 
             context.update(config["validation_context"])

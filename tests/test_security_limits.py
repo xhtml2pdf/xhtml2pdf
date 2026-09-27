@@ -19,8 +19,10 @@ import tempfile
 import time
 import zlib
 from pathlib import Path
+from typing import Any
 from unittest import TestCase, mock
 
+from asn1crypto import pem
 from pypdf import PdfReader
 from reportlab.platypus import Spacer
 
@@ -630,3 +632,26 @@ class SigningInputTest(TestCase):
 
         self.assertIn("crls", str(crl_error.exception))
         self.assertIn("ocsps", str(ocsp_error.exception))
+
+    def test_each_certificate_list_reads_its_own_files(self) -> None:
+        """trust_roots, other_certs and the rest used to read ca_chain's."""
+        roots = self.certs / "roots.pem"
+        roots.write_bytes(self_signed_pem())
+        config: dict[str, Any] = {
+            "ca_chain": str(self.chain),
+            "validation_context": {
+                "trust_roots": [str(roots)],
+                "extra_trust_roots": [str(roots)],
+                "other_certs": [str(roots)],
+            },
+        }
+        PDFSignature.get_validation_context(config)
+
+        # asn1crypto objects compare by identity, so compare what they encode
+        expected = pem.unarmor(roots.read_bytes())[2]
+        for key in ("trust_roots", "extra_trust_roots", "other_certs"):
+            with self.subTest(key=key):
+                self.assertEqual(
+                    [expected],
+                    [cert.dump() for cert in config["validation_context"][key]],
+                )
