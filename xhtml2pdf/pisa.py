@@ -264,8 +264,10 @@ def execute():
             print("--------------------------------------------")
             print("OS:                %s" % sys.platform)
             print("Python:            %s" % sys.version)
-            print("html5lib:          ?")
             import reportlab
+            import turbohtml
+
+            print("turbohtml:         %s" % turbohtml.__version__)
 
             print("Reportlab:         %s" % reportlab.Version)
             sys.exit(0)

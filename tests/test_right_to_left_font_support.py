@@ -4,7 +4,6 @@ import os
 from pathlib import Path
 from unittest import TestCase
 
-import html5lib
 from pypdf import PdfReader
 
 from xhtml2pdf.document import pisaDocument, pisaStory
@@ -99,10 +98,6 @@ class RightToLeftFontSupportTests(TestCase):
     """
 
     def test_pdf_language_tag_in_html(self) -> None:
-        """
-        This function is used to check if the "Custom Tag" <pdf:language/>
-        is located in the HTML file through assertNotEqual()
-        """
         text = ""
         language_tag = '<pdf:language name=""/>'
 
@@ -116,10 +111,9 @@ class RightToLeftFontSupportTests(TestCase):
             language_tag=language_tag,
         )
 
-        parser = html5lib.HTMLParser(tree=html5lib.treebuilders.getTreeBuilder("dom"))
-        document = parser.parse(html)
-        tag_element = document.getElementsByTagName("pdf:language")
-        self.assertNotEqual(tag_element, [])
+        xml_output = io.BytesIO()
+        pisaStory(html, xml_output=xml_output)
+        self.assertIn(b'<pdf:language name="">', xml_output.getvalue())
 
     def test_language_attribute_in_pisaDocument(self) -> None:
         """Tests if the attribute 'language' is located in the pisaDocument."""
