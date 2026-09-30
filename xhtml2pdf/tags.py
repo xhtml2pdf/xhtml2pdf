@@ -116,7 +116,7 @@ class pisaTag:
 
 class pisaTagBODY(pisaTag):
     """
-    We can also assume that there is a BODY tag because html5lib
+    We can also assume that there is a BODY tag because the HTML parser
     adds it for us. Here we take the base font size for later calculations
     in the FONT tag.
     """

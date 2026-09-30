@@ -20,8 +20,7 @@ import xml.dom.minidom
 from typing import NamedTuple
 from xml.dom import Node
 
-import html5lib
-from html5lib import treebuilders
+import turbohtml
 from reportlab.lib.colors import Color
 from reportlab.platypus.doctemplate import FrameBreak, NextPageTemplate
 from reportlab.platypus.flowables import KeepInFrame, KeepTogether, PageBreak
@@ -56,7 +55,6 @@ from xhtml2pdf.default import (
     STRING,
     TAGS,
 )
-from xhtml2pdf.files import pisaTempFile
 from xhtml2pdf.properties import (
     FRAG_BLOCK_GROUPS,
     LOOP_GROUPS,
@@ -141,6 +139,7 @@ from xhtml2pdf.util import (
 )
 from xhtml2pdf.w3c import cssDOMElementInterface
 from xhtml2pdf.w3c.css import (
+    XHTML_NAMESPACE,
     CSSSelectorAttributeQualifier,
     CSSSelectorLogicalQualifier,
     CSSTerminalFunction,
@@ -1711,6 +1710,59 @@ def _check_depth(document, limit: int | None) -> None:
         )
 
 
+#: The namespace of each element, which the CSS selectors compare against.
+_NAMESPACE_URIS = {
+    turbohtml.Namespace.HTML: XHTML_NAMESPACE,
+    turbohtml.Namespace.SVG: "http://www.w3.org/2000/svg",
+    turbohtml.Namespace.MATHML: "http://www.w3.org/1998/Math/MathML",
+}
+_HTML_WHITESPACE = " \t\n\f\r"
+
+
+def buildMiniDOM(tree):
+    """Copy the parsed tree into the xml.dom.minidom shape the renderer walks."""
+    implementation = xml.dom.minidom.getDOMImplementation()
+    document = implementation.createDocument(None, None, None)
+    # A stack rather than recursion, so nesting depth is not bounded by the
+    # recursion limit.
+    pending = [(child, document) for child in reversed(tree.children)]
+    while pending:
+        node, parent = pending.pop()
+        if isinstance(node, turbohtml.Element):
+            element = document.createElementNS(
+                _NAMESPACE_URIS[node.namespace], node.tag
+            )
+            # Through the map, not setAttribute, which files xml:lang under
+            # the same key as lang and so keeps only one of the two.
+            for name in node.attrs:
+                element.attributes[name] = node.attr(name)
+            parent.appendChild(element)
+            pending.extend((child, element) for child in reversed(node.children))
+        elif isinstance(node, turbohtml.DocumentFragment):
+            # A <template>'s content, walked as its children.
+            pending.extend((child, parent) for child in reversed(node.children))
+        elif isinstance(node, turbohtml.Text):
+            # The whitespace that opens a text goes in a node of its own. Each
+            # node becomes a fragment, and an inline box followed by a
+            # fragment that starts with a space draws the rest of the line
+            # over its start.
+            data = node.data
+            if (text := data.lstrip(_HTML_WHITESPACE)) and text != data:
+                space = data[: len(data) - len(text)]
+                parent.appendChild(document.createTextNode(space))
+                data = text
+            parent.appendChild(document.createTextNode(data))
+        elif isinstance(node, turbohtml.Comment):
+            parent.appendChild(document.createComment(node.data))
+        elif isinstance(node, turbohtml.Doctype):
+            doctype = implementation.createDocumentType(
+                node.name, node.public_id, node.system_id
+            )
+            doctype.ownerDocument = document
+            document.appendChild(doctype)
+    return document
+
+
 def pisaParser(
     src,
     context,
@@ -1727,41 +1779,20 @@ def pisaParser(
     """
     if xhtml:
         log.warning("xhtml parameter will be removed on next release 0.2.8")
-        # TODO: XHTMLParser doesn't seem to exist...
-        parser = html5lib.XHTMLParser(tree=treebuilders.getTreeBuilder("dom"))
-    else:
-        parser = html5lib.HTMLParser(tree=treebuilders.getTreeBuilder("dom"))
-    parser_kwargs = {}
     policy = current_policy()
     src = _limit_source(src, policy.max_document_bytes)
-    if isinstance(src, str):
-        # Text has to become bytes for html5lib, and the encoding chosen here
-        # is the one it must decode with, so it is not a guess either way.
-        encoding = encoding or "utf-8"
-        src = src.encode(encoding)
-        src = pisaTempFile(src, capacity=context.capacity)
-    if encoding:
-        # An encoding the caller named is the answer, whatever the source was.
-        # Without this a bytes or file source fell through to html5lib's own
-        # sniffing, whose last resort is windows-1252, so UTF-8 bytes came out
-        # as mojibake -- a bullet as "\u00e2\u0080\u00a2". Sniffing is still what
-        # happens when the caller names nothing, which is how a document with
-        # its own <meta charset> keeps deciding for itself.
-        parser_kwargs["transport_encoding"] = encoding
-
-    # # Test for the restrictions of html5lib
-    # if encoding:
-    #     # Workaround for html5lib<0.11.1
-    #     if hasattr(inputstream, "isValidEncoding"):
-    #         if encoding.strip().lower() == "utf8":
-    #             encoding = "utf-8"
-    #         if not inputstream.isValidEncoding(encoding):
-    #             log.error("%r is not a valid encoding e.g. 'utf8' is not valid but 'utf-8' is!", encoding)
-    #     else:
-    #         if inputstream.codecName(encoding) is None:
-    #             log.error("%r is not a valid encoding", encoding)
-    document = parser.parse(src, **parser_kwargs)  # encoding=encoding)
-    _check_depth(document, policy.max_depth)
+    if hasattr(src, "read"):
+        src = src.read()
+    # Keep template content reachable by the renderer, including shadow templates.
+    try:
+        tree = turbohtml.parse(
+            src, encoding=encoding, allow_declarative_shadow_roots=False
+        )
+    except LookupError:
+        # html5lib sniffed bytes when the caller supplied an unknown encoding label.
+        tree = turbohtml.parse(src, allow_declarative_shadow_roots=False)
+    document = buildMiniDOM(tree)
+    _limit_dom_depth(document, policy.max_dom_depth)
 
     if xml_output:
         xml_output.write(document.toprettyxml(encoding=encoding or "utf-8"))
