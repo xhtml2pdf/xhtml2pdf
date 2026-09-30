@@ -3,7 +3,6 @@ import os
 from unittest import TestCase
 from uuid import uuid4
 
-import html5lib
 from reportlab.pdfbase import ttfonts
 
 from xhtml2pdf.document import pisaDocument
@@ -101,9 +100,7 @@ class TTFWithSameFaceName(TestCase):
         with io.BytesIO() as pdf_file:
             pisa_doc = pisaDocument(src=self.html, dest=pdf_file)
 
-        # Parse HTML
-        parser = html5lib.HTMLParser(tree=html5lib.treebuilders.getTreeBuilder("dom"))
-        document = parser.parse(self.html)
+        document = pisa_doc.node.ownerDocument
 
         for spanElement in document.getElementsByTagName("span"):
             spanElement = CSSDOMElementInterface(spanElement)
