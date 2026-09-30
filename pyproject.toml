@@ -48,11 +48,11 @@ classifiers = [
 requires-python = ">=3.10"
 dependencies = [
     "arabic-reshaper>=3.0.0",
-    "html5lib>=1.1",
     "Pillow>=8.1.1",
     "pypdf>=3.1.0",
     "reportlab>=4.4.9,<6",
     "svglib>=1.2.1",
+    "turbohtml>=1.14.0",
 ]
 dynamic = ["version"]
 

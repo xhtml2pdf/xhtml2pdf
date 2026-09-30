@@ -1,8 +1,6 @@
 from io import BytesIO
 from unittest import TestCase
 
-import html5lib
-
 from xhtml2pdf.context import pisaContext
 from xhtml2pdf.document import pisaDocument
 from xhtml2pdf.parser import pisaParser
@@ -43,8 +41,7 @@ class TableTest(TestCase):
         result = BytesIO()
         pdf = pisaDocument(BytesIO(html.encode("utf-8")), result)
 
-        parser = html5lib.HTMLParser(tree=html5lib.treebuilders.getTreeBuilder("dom"))
-        document = parser.parse(html)
+        document = pdf.node.ownerDocument
         th_element = document.getElementsByTagName("th")[0]
         th_element = CSSDOMElementInterface(th_element)
         attr_name = "background-color"

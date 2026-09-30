@@ -303,6 +303,6 @@ fixing either changes rendered output and this work was meant not to:
   and predates any of this work; `registerTTFont` documents it rather than
   changing it.
 - Neither the CSS parser nor `CSSSelectorBase.matches` lowercases a tag name,
-  while html5lib lowercases them in the DOM, so `DIV { color: red }` never
+  while the HTML parser lowercases them in the DOM, so `DIV { color: red }` never
   reaches a `<div>` while `div { ... }` does. `tests/test_selectors.py`
   records this as it stands rather than as it ought to be.
