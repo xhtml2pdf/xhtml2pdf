@@ -745,7 +745,7 @@ HTML_CASE_INSENSITIVE_ATTRIBUTES = frozenset(
         "vlink",
     ]
 )
-#: The namespace html5lib puts HTML elements in; SVG and MathML are elsewhere.
+#: The namespace HTML elements are in; SVG and MathML are elsewhere.
 XHTML_NAMESPACE = "http://www.w3.org/1999/xhtml"
 
 
