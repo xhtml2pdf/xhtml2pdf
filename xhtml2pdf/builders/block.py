@@ -254,6 +254,56 @@ class BlockBox(Flowable, PmlMaxHeightMixIn):
                 anchors.append(entry.flowable)
         return anchors
 
+    # An index inside the box. multiBuild looks for indexes only in the
+    # document's own story, where it calls them before and after each pass
+    # and passes them what the pages announce; a box holding one stands in
+    # for it there, so the index stays where it was written.
+
+    def _boxes(self) -> list[BlockBox]:
+        """This box and the boxes inside it."""
+        boxes = [self]
+        for flowable in self.content:
+            if isinstance(flowable, BlockBox):
+                boxes.extend(flowable._boxes())
+        return boxes
+
+    def _indexes(self) -> list[IndexingFlowable]:
+        return [
+            flowable
+            for box in self._boxes()
+            for flowable in box.content
+            if isinstance(flowable, IndexingFlowable)
+        ]
+
+    def isIndexing(self) -> bool:
+        return bool(self._indexes())
+
+    def isSatisfied(self) -> bool:
+        return all(index.isSatisfied() for index in self._indexes())
+
+    def notify(self, kind, stuff) -> None:
+        canv = getattr(self, "_canv", None)
+        for index in self._indexes():
+            if canv is not None:
+                index._canv = canv
+            try:
+                index.notify(kind, stuff)
+            finally:
+                if canv is not None:
+                    del index._canv
+
+    def beforeBuild(self) -> None:
+        # The same boxes are laid out again on every pass, and an index is
+        # as tall as the entries the last pass found.
+        for box in self._boxes():
+            box._key = None
+        for index in self._indexes():
+            index.beforeBuild()
+
+    def afterBuild(self) -> None:
+        for index in self._indexes():
+            index.afterBuild()
+
     def drawn_flowables(self) -> list[Flowable]:
         """What this part of the box drew, boxes inside it opened up."""
         drawn: list[Flowable] = []
@@ -273,15 +323,11 @@ class _UnsplittableBlockBox(BlockBox):
 def _breaks_the_flow(flowable: Flowable) -> bool:
     """
     A flowable that has to stay in the document's own story: a page or
-    frame break, a template change, an index. A frame acts on the first
-    three only where they are its own flowables, and multiBuild finds an
-    index only there.
+    frame break, a template change. A frame acts on them only where they
+    are its own flowables. An index stays in the box, which stands in for
+    it (see BlockBox.isIndexing).
     """
-    return (
-        getattr(flowable, "locChanger", False)
-        or hasattr(flowable, "frameAction")
-        or isinstance(flowable, IndexingFlowable)
-    )
+    return getattr(flowable, "locChanger", False) or hasattr(flowable, "frameAction")
 
 
 def block_box_style(c, kw: dict) -> BoxStyle | None:

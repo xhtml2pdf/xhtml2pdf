@@ -14,7 +14,7 @@ from xhtml2pdf import pisa
 from xhtml2pdf.builders import block
 from xhtml2pdf.builders.block import BlockBox
 from xhtml2pdf.document import pisaStory
-from xhtml2pdf.xhtml2pdf_reportlab import PmlParagraph, PmlTable
+from xhtml2pdf.xhtml2pdf_reportlab import PmlParagraph, PmlTable, PmlTableOfContents
 
 if TYPE_CHECKING:
     from xhtml2pdf.builders.flex import BoxStyle
@@ -44,12 +44,26 @@ class Drawn(NamedTuple):
     h: float
 
 
-def render(html: str) -> tuple[list[Box], list[Drawn], bytes]:
-    """The boxes BlockBox drew, the tables, and the PDF."""
+def render(
+    html: str, *, last_pass: bool = False
+) -> tuple[list[Box], list[Drawn], bytes]:
+    """
+    The boxes BlockBox drew, the tables, and the PDF.
+
+    A document with an index is built more than once; last_pass keeps only
+    what the last build drew.
+    """
     boxes: list[Box] = []
     tables: list[Drawn] = []
     borders = block.drawBoxBorders
     draw = Table.drawOn
+    before = PmlTableOfContents.beforeBuild
+
+    def spy_pass(self) -> None:
+        if last_pass:
+            boxes.clear()
+            tables.clear()
+        before(self)
 
     def spy_borders(canvas, x, y, w, h, style, *args, **kw):
         ax, ay = canvas.absolutePosition(x, y)
@@ -65,6 +79,7 @@ def render(html: str) -> tuple[list[Box], list[Drawn], bytes]:
     with (
         mock.patch.object(block, "drawBoxBorders", spy_borders),
         mock.patch.object(Table, "drawOn", spy_table),
+        mock.patch.object(PmlTableOfContents, "beforeBuild", spy_pass),
     ):
         result = pisa.CreatePDF(html, dest=dest)
     assert not result.err
@@ -252,6 +267,45 @@ class PageTestCase(TestCase):
 
         reader = PdfReader(io.BytesIO(pdf))
         self.assertIn("Chapter", reader.pages[0].extract_text())
+
+    def assertInside(self, box: Box, table: Drawn) -> None:
+        self.assertEqual(box.page, table.page)
+        self.assertGreaterEqual(table.x, box.x)
+        self.assertLessEqual(table.x + table.w, box.x + box.w + 0.01)
+        self.assertGreaterEqual(table.y, box.y - 0.01)
+        self.assertLessEqual(table.y + table.h, box.y + box.h + 0.01)
+
+    def test_an_index_is_drawn_inside_its_box(self) -> None:
+        for html in (DIV.format("<pdf:toc/>"), DIV.format(DIV.format("<pdf:toc/>"))):
+            with self.subTest(html=html):
+                boxes, tables, _ = render(
+                    html + '<h1 style="page-break-before: always">Chapter</h1>',
+                    last_pass=True,
+                )
+                # The index is the table of its entries; the box is not one
+                # around nothing, with the index below it.
+                (index,) = tables
+                self.assertTrue(boxes)
+                for box in boxes:
+                    self.assertInside(box, index)
+
+    def test_an_index_in_a_box_goes_on_to_the_next_page(self) -> None:
+        headings = "".join(f"<h1>Chapter {i}</h1>" for i in range(80))
+        boxes, tables, pdf = render(
+            DIV.format("<pdf:toc/>")
+            + f'<div style="page-break-before: always">{headings}</div>',
+            last_pass=True,
+        )
+
+        parts = [t for t in tables if t.page <= 2]
+        self.assertEqual(2, len(parts))
+        self.assertEqual([1, 2], [b.page for b in boxes])
+        for box, part in zip(boxes, parts, strict=True):
+            self.assertInside(box, part)
+        reader = PdfReader(io.BytesIO(pdf))
+        text = reader.pages[0].extract_text() + reader.pages[1].extract_text()
+        for i in range(80):
+            self.assertIn(f"Chapter {i}", text)
 
 
 class ListTestCase(TestCase):
