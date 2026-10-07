@@ -1,11 +1,13 @@
 import io
 import re
 from pathlib import Path
+from typing import NamedTuple
 from unittest import TestCase
 from xml.dom import minidom
 
 from pypdf import PdfReader
 from pypdf.generic import ArrayObject
+from reportlab.pdfbase.pdfmetrics import stringWidth
 
 from xhtml2pdf import pisa, tags
 from xhtml2pdf.context import pisaContext
@@ -369,27 +371,81 @@ class FormFieldTestCase(TestCase):
         )
 
 
-def toc_chunks(html: str, page: int = 0) -> list[tuple[float, str]]:
+class TocRun(NamedTuple):
+    """One run of text drawn on a page: where, at what size, what."""
+
+    x: float
+    y: float
+    size: float
+    text: str
+
+
+def toc_runs(html: str, page: int = 0) -> list[TocRun]:
     """
-    ``(x, text)`` for every chunk drawn on ``page``, left to right, top down.
+    Every run of text drawn on ``page``, left to right, top down.
 
     A table of contents is judged by where things land, not only by what the
     text says: whether the page number reaches the margin and whether a fill
     covers the gap are both positions, and extracted text alone shows neither.
+    The size tells a page number drawn properly from one shrunk to fit.
     """
     dest = io.BytesIO()
     result = pisa.pisaDocument(io.StringIO(html), dest)
     assert result.err == 0
-    out: list[tuple[float, float, str]] = []
+    out: list[TocRun] = []
 
     def visit(text, cm, tm, font_dict, font_size) -> None:  # noqa: ARG001
         if text and text.strip():
-            out.append((round(tm[4] * cm[0], 1), round(tm[5], 1), text.strip()))
+            out.append(
+                TocRun(
+                    round(tm[4] * cm[0], 1),
+                    round(tm[5] * cm[3] + cm[5], 1),
+                    round(font_size * tm[0], 2),
+                    text.strip(),
+                )
+            )
 
     dest.seek(0)
     reader = PdfReader(dest)
     reader.pages[page].extract_text(visitor_text=visit)
-    return [(x, text) for x, _, text in sorted(out, key=lambda c: (-c[1], c[0]))]
+    return sorted(out, key=lambda run: (-run.y, run.x))
+
+
+def toc_chunks(html: str, page: int = 0) -> list[tuple[float, str]]:
+    """``(x, text)`` for every chunk drawn on ``page``; see toc_runs."""
+    return [(run.x, run.text) for run in toc_runs(html, page)]
+
+
+def title_filling_the_line(html: str, word: str, filler: str) -> str:
+    """
+    A title for the index ``html`` lays out (``html % title``) that fits on
+    one line by itself but leaves less room than its page number takes: the
+    case where the number used to be shrunk to fit (#664).
+
+    The line's width is read off a one-word entry, from where its text
+    starts to where its number ends. The title is built out of ``word``, then
+    of ``filler``, a narrow word that lands it close to the edge.
+    """
+    (toc,) = [
+        flowable
+        for flowable in pisaStory(html % word).story
+        if isinstance(flowable, PmlTableOfContents)
+    ]
+    style = toc.levelStyles[0]
+
+    def width(text: str) -> float:
+        return stringWidth(text, style.fontName, style.fontSize)
+
+    runs = toc_runs(html % word)
+    line = max(run.x + width(run.text) for run in runs) - min(run.x for run in runs)
+
+    title = word
+    while width(f"{title} {word}") < line - 4 * width(word):
+        title = f"{title} {word}"
+    while width(f"{title} {filler}") <= line:
+        title = f"{title} {filler}"
+    assert line - width(title) < width("1"), (line, width(title))
+    return title
 
 
 class TocLeaderTestCase(TestCase):
@@ -513,6 +569,42 @@ class TocLeaderTestCase(TestCase):
         # the fill separates them; the number is never glued to the title
         self.assertNotIn(title + "1", joined)
         self.assertIn("..", joined)
+
+    LONG = (
+        '<html><body><div style="page-break-after:always"><pdf:toc leader="dots"/>'
+        "</div><h1>%s</h1></body></html>"
+    )
+
+    def assertNumberOnTheLastLine(self, runs: list[TocRun]) -> None:
+        """The number at the level's size, on the last line, after a fill."""
+        (number,) = [run for run in runs if run.text.endswith("2")]
+        lines = sorted({run.y for run in runs}, reverse=True)
+        self.assertEqual(2, len(lines), runs)
+        self.assertEqual(lines[-1], number.y, runs)
+        self.assertEqual(max(run.size for run in runs), number.size, runs)
+        self.assertIn("..", number.text)
+
+    def test_a_title_filling_its_last_line_keeps_a_full_size_number(self) -> None:
+        """
+        A title that fit the line by itself left the number no room, and
+        ReportLab shrank it in 10% steps to under a point (#664). Its last
+        word goes to a line of its own instead, with the number after it.
+        """
+        title = title_filling_the_line(self.LONG, "heading", "i")
+
+        self.assertNumberOnTheLastLine(toc_runs(self.LONG % title))
+
+    def test_a_title_ending_in_a_space_keeps_its_number_full_size(self) -> None:
+        """The marker sticks to the last word, not to a space after it."""
+        title = title_filling_the_line(self.LONG, "heading", "i")
+
+        self.assertNumberOnTheLastLine(toc_runs(self.LONG % f"{title} "))
+
+    def test_a_short_title_is_unchanged(self) -> None:
+        runs = toc_runs(self.LONG % "Short")
+
+        self.assertEqual(1, len({run.y for run in runs}), runs)
+        self.assertEqual(1, len({run.size for run in runs}), runs)
 
     def test_the_page_number_links_to_its_heading(self) -> None:
         """
@@ -950,6 +1042,26 @@ class RightToLeftTocTestCase(TestCase):
         chunks = self.render("ltr")
         self.assertEqual([], self.numbers(chunks))
         self.assertEqual(2, sum(text[-1].isdigit() for _, text in chunks), chunks)
+
+    def test_a_long_right_to_left_title_keeps_a_full_size_number(self) -> None:
+        """
+        The number of a title filling its last line shrank on the left just
+        as it did on the right; the last word moves down to leave it room.
+        """
+        html = self.HTML.format(
+            font=self.FONT / "MarkaziText-Regular.ttf", dir="rtl", h1="%s", h2="b"
+        ).replace("<h2>b</h2>", "")
+        title = title_filling_the_line(
+            html, "مقدمة", "\u0627"
+        )  # alef, the narrowest letter
+
+        runs = toc_runs(html % title)
+        (number,) = [run for run in runs if run.text[0].isdigit()]
+        lines = sorted({run.y for run in runs}, reverse=True)
+        self.assertEqual(2, len(lines), runs)
+        self.assertEqual(lines[-1], number.y, runs)
+        self.assertEqual(max(run.size for run in runs), number.size, runs)
+        self.assertLess(number.x, 40, runs)
 
     def test_levels_are_indented_from_the_right(self) -> None:
         html = self.HTML.format(

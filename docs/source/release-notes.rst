@@ -95,6 +95,10 @@ Unreleased.
 * The page numbers of a right-to-left table of contents were drawn under a
   point, over the titles, and its levels were not indented. They are drawn
   on the left, and the levels indented from the right (:issue:`664`).
+* A table of contents entry whose title filled its last line left its page
+  number no room, in either direction, and the number shrank to under a
+  point. The title's last word moves to the next line instead, and the
+  number keeps its size (:issue:`664`).
 
 **📘 Documentation**
 

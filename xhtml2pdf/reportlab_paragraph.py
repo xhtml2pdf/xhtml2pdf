@@ -654,6 +654,17 @@ def _splitLongWords(fragWords, maxWidth):
     return result
 
 
+def _reserved(words) -> float:
+    """
+    The room the markers on a line reserve, which counts as free space.
+
+    The line breaker counted it so that the line leaves it free, but nothing
+    is drawn there by the text: aligning the line as though it were text
+    would put the room on the wrong side of a line set flush right.
+    """
+    return sum(getattr(getattr(w, "cbDefn", None), "reserve", 0) for w in words)
+
+
 def _getFragWords(frags):
     """
     Given a Parafrag list return a list of fragwords
@@ -712,9 +723,12 @@ def _getFragWords(frags):
             else:
                 # A marker rides along with the word it sits in. An inline
                 # box's edge brings its padding and border with it: no word of
-                # its own, but width the line breaker has to count.
+                # its own, but width the line breaker has to count. A
+                # reserve is room kept free after the word for something the
+                # marker's callback draws there (a table of contents' page
+                # number); see _reserved.
                 W.append((f, ""))
-                n += getattr(f.cbDefn, "advance", 0)
+                n += getattr(f.cbDefn, "advance", 0) + getattr(f.cbDefn, "reserve", 0)
         elif hasattr(f, "lineBreak"):
             # pass the frag through.  The line breaker will scan for it.
             if W != []:
@@ -1820,7 +1834,7 @@ class Paragraph(Flowable):
                 # end of line
                 lines.append(
                     FragLine(
-                        extraSpace=maxWidth - currentWidth,
+                        extraSpace=maxWidth - currentWidth + _reserved(words),
                         wordCount=n,
                         lineBreak=lineBreak,
                         words=words,
@@ -1883,7 +1897,7 @@ class Paragraph(Flowable):
             self.width = max(currentWidth, self.width)
             lines.append(
                 ParaLines(
-                    extraSpace=(maxWidth - currentWidth),
+                    extraSpace=(maxWidth - currentWidth + _reserved(words)),
                     wordCount=n,
                     words=words,
                     fontSize=maxSize,

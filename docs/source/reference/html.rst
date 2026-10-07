@@ -517,6 +517,10 @@ pdf:toc
 
 Creates a Table of Contents. Entries come from the headings, whose page
 numbers are set flush right; the page number links to the heading it names.
+A title too long for its line wraps, and its last line always leaves room
+for the number and some of the fill: a title that would fill the line moves
+its last word down rather than shrink the number. In a right-to-left
+document the numbers are on the left.
 
 ``-pdf-toc-leader`` fills the gap between an entry and its page number. Give
 it one of the names below, or any other string to repeat as it is:

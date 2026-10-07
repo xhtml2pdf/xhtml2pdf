@@ -1362,6 +1362,36 @@ def drawPageNumbersRTL(canvas, style, pages, dot) -> None:
         pagex += w + commaw
 
 
+def reserveForPageNumber(paragraph, style, pagestr: str, leader: str) -> None:
+    """
+    Keep the room for an entry's page number free on its last line.
+
+    drawPageNumbers puts the number after wherever the title stopped, and a
+    title that filled its last line left it nothing: the number shrank in 10%
+    steps to under a point (#664). The marker that calls it is a frag with no
+    width of its own, and the line breaker counts a marker's ``reserve``
+    against the word it rides on, so giving it the number's width plus one
+    unit of the fill moves the title's last word to a line of its own
+    whenever the two would not fit together. The reserve is free space to
+    the line's alignment, so a title set flush right (right to left) stays
+    flush right and keeps the room on its left, where its number goes.
+
+    Only the last line is narrowed. Chinese/Japanese line breaking does not
+    count the reserve, and keeps the old shrinking.
+    """
+    reserve = stringWidth(pagestr, style.fontName, style.fontSize) + stringWidth(
+        leader or " ", style.fontName, style.fontSize
+    )
+    for frag in paragraph.frags:
+        cbDefn = getattr(frag, "cbDefn", None)
+        if (
+            cbDefn is not None
+            and getattr(cbDefn, "kind", None) == "onDraw"
+            and getattr(cbDefn, "name", None) == "drawTOCEntryEnd"
+        ):
+            cbDefn.reserve = reserve
+
+
 class PmlTableOfContents(TableOfContents):
     """
     A table of contents whose page numbers are flush right, with an optional
@@ -1378,8 +1408,9 @@ class PmlTableOfContents(TableOfContents):
     one column, an ``<onDraw>`` marker at the end of each entry, and
     ``drawPageNumbers`` measuring from wherever the text left off to the right
     margin. It repeats the fill string to cover the gap, sets the number flush
-    right, shrinks it rather than colliding when the title fills the line, and
-    links it to the entry's destination.
+    right and links it to the entry's destination. Where the title would fill
+    its last line, reserveForPageNumber breaks it a word earlier instead of
+    letting ReportLab shrink the number.
     """
 
     def __init__(self, **kwds) -> None:
@@ -1488,7 +1519,12 @@ class PmlTableOfContents(TableOfContents):
                 level,
                 key,
             )
-            tableData.append([Paragraph(text + marker, style)])
+            # The marker sticks to the title's last word, so the room it
+            # reserves goes with that word to the next line when the line is
+            # full.
+            entry = Paragraph(text.rstrip() + marker, style)
+            reserveForPageNumber(entry, style, str(pageNum), self.leaderFor(style))
+            tableData.append([entry])
 
         self._table = Table(
             tableData, colWidths=(availWidth,), style=TableStyle(tableStyle)
