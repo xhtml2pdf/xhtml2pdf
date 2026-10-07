@@ -602,27 +602,58 @@ def _sameFrag(f, g):
     return 1
 
 
+def _breakable(f) -> bool:
+    """Whether a piece's text may be broken between any two characters."""
+    return getattr(f, "splitLongWords", False) and not hasattr(f, "cbDefn")
+
+
 def _chunkWord(pieces, maxWidth):
     """
     Split one word, given as its (frag, text) pieces, into words no wider than
     maxWidth, in the fragword shape _getFragWords returns.
+
+    The word may only be broken between two characters of breakable pieces:
+    the text of an element without overflow-wrap that is glued to one with
+    it, a "." after a link or a "(" before it, stays with the character it
+    touches. A marker is kept, with the room it takes.
     """
-    chunks = []
-    chunk: list = []
-    width = 0
+    # Runs that cannot be broken, each a list of (frag, text, width).
+    runs: list[list] = []
+    previous = False
     for f, text in pieces:
         if isinstance(text, bytes):
             text = text.decode("utf8")
-        for ch in text:
-            charWidth = stringWidth(ch, f.fontName, f.fontSize)
-            if chunk and width + charWidth > maxWidth:
-                chunks.append([width, *chunk])
-                chunk, width = [], 0
-            if chunk and chunk[-1][0] is f:
-                chunk[-1] = (f, chunk[-1][1] + ch)
+        if hasattr(f, "cbDefn"):
+            cb = f.cbDefn
+            atoms = [(f, text, getattr(cb, "advance", 0) + getattr(cb, "reserve", 0))]
+            breakable = False
+        elif _breakable(f):
+            atoms = [(f, ch, stringWidth(ch, f.fontName, f.fontSize)) for ch in text]
+            breakable = True
+        else:
+            atoms = [(f, text, stringWidth(text, f.fontName, f.fontSize))]
+            breakable = False
+        for atom in atoms:
+            if not runs or (breakable and previous):
+                runs.append([atom])
             else:
-                chunk.append((f, ch))
-            width += charWidth
+                runs[-1].append(atom)
+            previous = breakable
+
+    chunks = []
+    chunk: list = []
+    width = 0
+    for run in runs:
+        runWidth = sum(atom[2] for atom in run)
+        if chunk and width + runWidth > maxWidth:
+            chunks.append([width, *chunk])
+            chunk, width = [], 0
+        for f, text, _w in run:
+            if chunk and chunk[-1][0] is f and text and chunk[-1][1]:
+                chunk[-1] = (f, chunk[-1][1] + text)
+            else:
+                chunk.append((f, text))
+        width += runWidth
     if chunk:
         chunks.append([width, *chunk])
     return chunks
@@ -635,18 +666,18 @@ def _splitLongWords(fragWords, maxWidth):
 
     A piece fills a line of its own, so the space a line break stands for
     is never put between two of them, and the last one is followed by the
-    space the word was followed by. An image or a line break is left alone.
+    space the word was followed by. Only the text that may be broken is
+    broken; a word with a line break in it is left alone.
     """
     if maxWidth <= 0:
         return fragWords
     result = []
     for word in fragWords:
         pieces = word[1:]
-        if word[0] > maxWidth and all(
-            getattr(f, "splitLongWords", False)
-            and not hasattr(f, "cbDefn")
-            and not hasattr(f, "lineBreak")
-            for f, _text in pieces
+        if (
+            word[0] > maxWidth
+            and any(_breakable(f) for f, _text in pieces)
+            and not any(hasattr(f, "lineBreak") for f, _text in pieces)
         ):
             result.extend(_chunkWord(pieces, maxWidth))
         else:
@@ -1754,7 +1785,9 @@ class Paragraph(Flowable):
                     continue  # throw it away
                 nText = w[1][1] if isinstance(w[1][1], str) else str(w[1][1], "utf-8")
 
-                if nText:
+                # A word that starts with a marker (an anchor) still puts
+                # text on the line, after which the next word may wrap.
+                if any(piece[1] for piece in w[1:]):
                     n += 1
                 fontSize = f.fontSize
                 if calcBounds:

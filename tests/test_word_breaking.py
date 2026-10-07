@@ -68,6 +68,41 @@ class OverflowWrapTest(TestCase):
         )
         self.assertTrue(all(extra >= -0.01 for extra, _ in lines), lines)
 
+    def test_with_text_glued_to_the_element(self) -> None:
+        # The "." after the link, or the "(" before it, is the same word as
+        # the link's text but is not the link's: it is never broken off.
+        url = f"https://x.org/{LONG}"
+        cases = {
+            "after a link": (f'<a href="{url}" class="w">{url}</a>. end', f"{url}.end"),
+            "after a span": (f'<span class="w">{url}</span>. end', f"{url}.end"),
+            "before a link": (
+                f'(<a href="{url}" class="w">{url}</a> end',
+                f"({url}end",
+            ),
+        }
+        for name, (body, text) in cases.items():
+            with self.subTest(name):
+                lines = _lines(
+                    f"<style>.w {{ overflow-wrap: anywhere }}</style><p>{body}</p>"
+                )
+                self.assertGreater(len(lines), 2)
+                self.assertTrue(all(extra >= -0.01 for extra, _ in lines), lines)
+                self.assertEqual(text, "".join(t for _, t in lines).replace(" ", ""))
+                if name.startswith("after"):
+                    self.assertTrue(lines[-1][1].startswith("m"), lines)
+                    self.assertIn("m. end", lines[-1][1])
+                else:
+                    self.assertTrue(lines[0][1].startswith("(h"), lines)
+
+    def test_with_an_anchor_inside(self) -> None:
+        # A marker inside the word, here a named anchor, is kept and does not
+        # stop the word from being broken.
+        lines = _lines(
+            f'<p style="overflow-wrap: anywhere">{LONG}<a name="here"></a>{LONG}</p>'
+        )
+        self.assertTrue(all(extra >= -0.01 for extra, _ in lines), lines)
+        self.assertEqual(LONG * 2, "".join(t for _, t in lines).replace(" ", ""))
+
     def test_across_fragments(self) -> None:
         lines = _lines(
             f'<p style="overflow-wrap: break-word">a <b>{LONG}</b>{LONG} b</p>'
