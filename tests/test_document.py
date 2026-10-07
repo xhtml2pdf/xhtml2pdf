@@ -1,5 +1,6 @@
 import base64
 import io
+import logging
 import os
 import tempfile
 from importlib.util import find_spec
@@ -770,6 +771,26 @@ class PageTemplateTestCase(TestCase):
             '<pdf:nexttemplate name="rest"/><h1>cover</h1><pdf:nextpage/><h1>rest</h1>'
         )
         self.assertEqual([85, 28], [left for _, left in pages])
+
+    def test_with_a_page_named_body_it_says_so(self) -> None:
+        # "@page body" is the unnamed @page by name, and reads as one more
+        # named template; the cover is not the first page, and a warning
+        # says why.
+        html = (
+            "<style>@page cover { size: a5 landscape } @page body { size: a4 }"
+            '</style><pdf:nexttemplate name="cover"/><p>Cover?</p>'
+        )
+        with self.assertLogs("xhtml2pdf", logging.WARNING) as logs:
+            pages = self.pages(html)
+        self.assertEqual([(595, 842)], [size for size, _ in pages])
+        self.assertIn('"@page body" is the unnamed @page', "\n".join(logs.output))
+
+    def test_with_an_unnamed_page_it_says_nothing(self) -> None:
+        with self.assertNoLogs("xhtml2pdf", logging.WARNING):
+            self.pages(
+                "<style>@page { margin: 3cm } @page rest { margin: 1cm }</style>"
+                '<pdf:nexttemplate name="rest"/><h1>cover</h1>'
+            )
 
     def test_a_named_page_starts_from_the_unnamed_size(self) -> None:
         pages = self.pages(

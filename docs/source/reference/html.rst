@@ -457,7 +457,8 @@ Defaults
 --------
 
 -  The unnamed ``@page`` defines the template called ``body``, which the
-   first page uses. Without one, the first page is A4 with 1cm margins, or
+   first page uses; ``@page body`` is the same rule by name, not one more
+   named template. Without one, the first page is A4 with 1cm margins, or
    the template a ``<pdf:nexttemplate>`` written before any content names.
 
 Tag-Definitions
@@ -503,8 +504,8 @@ template is passed via the ``name`` property and refers to a
 
 It takes effect at the next page break, so it is usually followed by
 ``<pdf:nextpage/>``. Before any content, in a stylesheet with no unnamed
-``@page``, it names the first page's template instead; see
-:doc:`/format_html`.
+``@page`` (nor ``@page body``, which is the same), it names the first
+page's template instead; see :doc:`/format_html`.
 
 pdf:nextpage
 ~~~~~~~~~~~~

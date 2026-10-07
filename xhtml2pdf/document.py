@@ -179,7 +179,9 @@ def start_on_mirrored_pair(doc, templates, *, declared_body: bool) -> None:
         doc._firstPageTemplateIndex = mirrored
 
 
-def start_on_leading_template(doc, templates, story, *, declared_body: bool) -> None:
+def start_on_leading_template(
+    doc, templates, story, *, declared_body: bool, body_named: bool = False
+) -> None:
     """
     Begin the document on the template a leading <pdf:nexttemplate> names.
 
@@ -198,9 +200,12 @@ def start_on_leading_template(doc, templates, story, *, declared_body: bool) -> 
     With an unnamed @page the first page is that, as it always was, and a
     leading <pdf:nexttemplate> keeps its reportlab meaning, "from the second
     page on" -- a cover followed by the rest is written that way.
+
+    "@page body" is the unnamed @page by its own name, which reads as one
+    more named template: whoever wrote it next to "@page cover" and began
+    with <pdf:nexttemplate name="cover"/> is told why the cover is not the
+    first page.
     """
-    if declared_body:
-        return
     leading = 0
     name = None
     while leading < len(story) and isinstance(story[leading], NextPageTemplate):
@@ -208,6 +213,17 @@ def start_on_leading_template(doc, templates, story, *, declared_body: bool) -> 
         leading += 1
     ids = [template.id for template in templates]
     if not isinstance(name, str) or name not in ids:
+        return
+    if declared_body:
+        if body_named and name != DEFAULT_PAGE_NAME:
+            log.warning(
+                '<pdf:nexttemplate name="%s"/> before any content applies from'
+                ' the second page: "@page body" is the unnamed @page, which'
+                " the first page uses. Give that @page another name for the"
+                ' first page to be "%s".',
+                name,
+                name,
+            )
         return
     doc._firstPageTemplateIndex = ids.index(name)
     del story[:leading]
@@ -414,7 +430,11 @@ def _build(
     doc.pisaPositioned = context.positioned
     start_on_mirrored_pair(doc, templates, declared_body=declared_body)
     start_on_leading_template(
-        doc, templates, context.story, declared_body=declared_body
+        doc,
+        templates,
+        context.story,
+        declared_body=declared_body,
+        body_named=context.bodyPageNamed,
     )
 
     # Use multibuild e.g. if a TOC has to be created

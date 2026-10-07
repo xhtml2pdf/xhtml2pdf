@@ -464,6 +464,8 @@ class pisaCSSBuilder(css.CSSBuilder):
         pageBorder,
     ) -> tuple[dict, dict]:
         c = self.c
+        if name == "body" and pseudopage is None:
+            c.bodyPageNamed = True
         name = name or "body"
 
         if name in c.templateList:
@@ -893,6 +895,9 @@ class pisaContext:
         self.frameStatic: dict = {}
         self.imageData: dict = {}
         self.templateList: dict = {}
+        #: Whether the stylesheet wrote "@page body", which is the unnamed
+        #: @page under its own name; see document.start_on_leading_template.
+        self.bodyPageNamed: bool = False
         self.capacity: int = capacity
         #: Every table of contents in the document, by name; the unnamed one
         #: is under "". One instance per <pdf:toc>, because ReportLab keeps

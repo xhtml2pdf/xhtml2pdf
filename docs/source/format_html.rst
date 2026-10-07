@@ -362,7 +362,11 @@ What the first page is:
 -  With an unnamed ``@page``, the first page is that one. A
    ``<pdf:nexttemplate>`` before any content then means what it says, the
    *next* page -- the way to have a cover on the unnamed template and every
-   page after it on another.
+   page after it on another. ``@page body`` *is* the unnamed ``@page``,
+   written by its name: with it, a leading ``<pdf:nexttemplate>`` also
+   waits for the second page, and a warning says so. Give the rule another
+   name for the template a leading ``<pdf:nexttemplate>`` names to be the
+   first page's.
 -  Without one, a ``<pdf:nexttemplate>`` written before any content, as
    above, names the first page's template. Otherwise the first page is a
    default one, A4 with 1cm margins.
