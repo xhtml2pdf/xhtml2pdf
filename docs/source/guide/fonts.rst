@@ -72,6 +72,11 @@ Korean
 -  **HYSMyeongJo-Medium**
 -  **HYGothic-Medium**
 
+Text in these languages has no spaces to break a line at. Lay its
+paragraphs out with ``-pdf-word-wrap: CJK`` (or ``word-break: break-all``),
+which lets a line break between any two characters; see
+:doc:`/reference/html`.
+
 RTL (Arabic, Hebrew, Persian, etc.) fonts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

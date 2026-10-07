@@ -976,6 +976,34 @@ def pageBreakValue(cssAttr, side: str) -> str | None:
     return None
 
 
+def applyWordBreaking(frag, cssAttr) -> None:
+    """
+    Where a word may be broken: overflow-wrap, word-break and -pdf-word-wrap.
+
+    A word was never broken, however long, unless the whole paragraph was laid
+    out with -pdf-word-wrap: CJK; one wider than its line ran off the page.
+    overflow-wrap: break-word or anywhere -- and word-wrap, its old name --
+    split such a word into pieces that fit, and leave every other word whole.
+    It is a property of the text rather than of the paragraph, so it works on
+    an <a> inside one. word-break: break-all is -pdf-word-wrap: CJK under its
+    standard name: the paragraph breaks between any two characters.
+    """
+    for name in ("word-wrap", "overflow-wrap"):
+        if name in cssAttr:
+            value = str(cssAttr[name]).strip().lower()
+            frag.splitLongWords = value in {"break-word", "anywhere"}
+    if "word-break" in cssAttr:
+        value = str(cssAttr["word-break"]).strip().lower()
+        if value == "break-all":
+            frag.wordWrap = "CJK"
+            frag.splitLongWords = True
+        elif value == "break-word":
+            # Deprecated, and defined as overflow-wrap: anywhere.
+            frag.splitLongWords = True
+    if "-pdf-word-wrap" in cssAttr:
+        frag.wordWrap = cssAttr["-pdf-word-wrap"]
+
+
 def pisaPreLoop(node, context, *, collect=False):
     """Collect all CSS definitions."""
     data = ""
@@ -1178,8 +1206,7 @@ def pisaLoop(node, context, **kw):
         if "-pdf-outline-level" in context.cssAttr:
             context.frag.outlineLevel = int(context.cssAttr["-pdf-outline-level"])
 
-        if "-pdf-word-wrap" in context.cssAttr:
-            context.frag.wordWrap = context.cssAttr["-pdf-word-wrap"]
+        applyWordBreaking(context.frag, context.cssAttr)
 
         # handle keep-in-frame
         keepInFrameMode = None

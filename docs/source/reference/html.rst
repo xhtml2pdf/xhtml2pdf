@@ -96,6 +96,7 @@ xhtml2pdf supports the following standard CSS properties
     margin-bottom, margin-left, margin-right, margin-top
     max-height, max-width, min-height, min-width
     order
+    overflow-wrap, word-break, word-wrap
     padding-bottom, padding-left, padding-right, padding-top
     page-break-after, page-break-before, page-break-inside
     position, top, right, bottom, left, z-index
@@ -154,6 +155,16 @@ Known limitations of the properties above:
    ``avoid-page`` for ``avoid``.
 -  ``white-space``: ``pre-wrap`` keeps its spaces unbreakable, so a line
    will not wrap inside a run of them.
+-  ``overflow-wrap`` (and ``word-wrap``, its old name): ``break-word`` and
+   ``anywhere`` split a word that is wider than its line -- a long URL, a
+   hash -- into pieces that fit, and leave every other word whole. Without
+   it such a word runs past the edge of the frame. It applies to the text it
+   is set on, so ``a { overflow-wrap: anywhere }`` breaks the links of a
+   paragraph and nothing else. Unlike in a browser, it breaks the long lines
+   of a ``<pre>`` too, which a page has no way to scroll.
+-  ``word-break``: ``break-all`` breaks the paragraph between any two
+   characters, as ``-pdf-word-wrap: CJK`` does; ``break-word`` is
+   ``overflow-wrap: anywhere``. ``keep-all`` is ignored.
 -  ``width`` and ``height`` apply to images, table cells and barcodes
    only, not to blocks.
 -  ``display``: ``block``, ``inline``, ``inline-block``, ``flex`` and
@@ -378,6 +389,14 @@ xhtml2pdf adds the following vendor-specific properties:
      -pdf-toc-leader
      -pdf-toc-name
      -pdf-word-wrap
+
+``-pdf-word-wrap: CJK`` lays the paragraph out the way Chinese, Japanese and
+Korean text is: a line may break between any two characters, not only at a
+space. Text in those languages needs it, as it has no spaces to break at;
+it is also what ``word-break: break-all`` does. It is read for a whole
+paragraph, from the block that holds it, so on an inline element such as
+``<a>`` it does nothing -- ``overflow-wrap: anywhere`` is the property for
+that.
 
 Defaults
 --------

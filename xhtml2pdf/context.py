@@ -220,7 +220,15 @@ def getParaFrag(style) -> ParaFrag:
     frag.tocName = ""
     set_value(
         frag,
-        ("pageNumber", "pageCount", "outline", "outlineOpen", "keepWithNext", "rtl"),
+        (
+            "pageNumber",
+            "pageCount",
+            "outline",
+            "outlineOpen",
+            "keepWithNext",
+            "rtl",
+            "splitLongWords",
+        ),
         False,  # noqa: FBT003
     )
 

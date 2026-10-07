@@ -597,6 +597,58 @@ def _sameFrag(f, g):
     return 1
 
 
+def _chunkWord(pieces, maxWidth):
+    """
+    Split one word, given as its (frag, text) pieces, into words no wider than
+    maxWidth, in the fragword shape _getFragWords returns.
+    """
+    chunks = []
+    chunk: list = []
+    width = 0
+    for f, text in pieces:
+        if isinstance(text, bytes):
+            text = text.decode("utf8")
+        for ch in text:
+            charWidth = stringWidth(ch, f.fontName, f.fontSize)
+            if chunk and width + charWidth > maxWidth:
+                chunks.append([width, *chunk])
+                chunk, width = [], 0
+            if chunk and chunk[-1][0] is f:
+                chunk[-1] = (f, chunk[-1][1] + ch)
+            else:
+                chunk.append((f, ch))
+            width += charWidth
+    if chunk:
+        chunks.append([width, *chunk])
+    return chunks
+
+
+def _splitLongWords(fragWords, maxWidth):
+    """
+    Break each word wider than maxWidth whose text says it may be broken
+    (overflow-wrap: break-word), into pieces that fit.
+
+    A piece fills a line of its own, so the space a line break stands for
+    is never put between two of them, and the last one is followed by the
+    space the word was followed by. An image or a line break is left alone.
+    """
+    if maxWidth <= 0:
+        return fragWords
+    result = []
+    for word in fragWords:
+        pieces = word[1:]
+        if word[0] > maxWidth and all(
+            getattr(f, "splitLongWords", False)
+            and not hasattr(f, "cbDefn")
+            and not hasattr(f, "lineBreak")
+            for f, _text in pieces
+        ):
+            result.extend(_chunkWord(pieces, maxWidth))
+        else:
+            result.append(word)
+    return result
+
+
 def _getFragWords(frags):
     """
     Given a Parafrag list return a list of fragwords
@@ -1573,6 +1625,13 @@ class Paragraph(Flowable):
             fontName = f.fontName
             ascent, descent = getAscentDescent(fontName, fontSize)
             words = (hasattr(f, "text") and split(f.text, " ")) or f.words
+            if getattr(f, "splitLongWords", False):
+                fragWords = [
+                    [stringWidth(w, fontName, fontSize), (f, w)] for w in words
+                ]
+                words = [
+                    piece[1][1] for piece in _splitLongWords(fragWords, min(maxWidths))
+                ]
             spaceWidth = stringWidth(" ", fontName, fontSize, self.encoding)
             cLine = []
             currentWidth = -spaceWidth  # hack to get around extra space for word 1
@@ -1628,6 +1687,8 @@ class Paragraph(Flowable):
         # which flipped the Latin words of a right-to-left document letter by
         # letter -- "and Latin text" came out "dna nitaL txet".
         frag_words = _getFragWords(frags)
+        if any(getattr(f, "splitLongWords", False) for f in frags):
+            frag_words = _splitLongWords(frag_words, min(maxWidths))
         for w in frag_words:
             f = w[-1][0]
             fontName = f.fontName

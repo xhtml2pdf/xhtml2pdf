@@ -125,6 +125,19 @@ CSS_PROPERTIES: tuple[CSSProperty, ...] = (
     CSSProperty("vertical-align", "text", note="table cells and inline images"),
     CSSProperty("white-space", "text", note="pre, pre-wrap, pre-line, nowrap"),
     CSSProperty(
+        "overflow-wrap",
+        "text",
+        consumer=LOOP,
+        note="break-word/anywhere split a word wider than its line",
+    ),
+    CSSProperty("word-wrap", "text", consumer=LOOP, note="overflow-wrap's old name"),
+    CSSProperty(
+        "word-break",
+        "text",
+        consumer=LOOP,
+        note="break-all breaks anywhere, as -pdf-word-wrap: CJK",
+    ),
+    CSSProperty(
         "text-indent",
         "text",
         frag="firstLineIndent",
