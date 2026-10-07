@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, NamedTuple
 from unittest import TestCase
 from xml.dom import minidom
 
@@ -791,3 +791,192 @@ class TableMarginTestCase(TestCase):
             "<tr><td>x</td></tr></table></div>"
         )
         self.assertBox((self.left + 72, self.width - 72), box)
+
+
+class DrawnTable(NamedTuple):
+    """A table, or one part of a split one, as it was drawn."""
+
+    page: int
+    left: float
+    width: float
+    columns: list[float]
+    rows: list[float]
+
+
+def drawn_tables(html: str) -> list[DrawnTable]:
+    """Every table, or part of one, in the order it was drawn."""
+    from io import BytesIO
+    from unittest import mock
+
+    from reportlab.platypus.tables import Table
+
+    from xhtml2pdf import pisa
+
+    seen = []
+    draw = Table.drawOn
+
+    def spy(self, canvas, x, y, _sW=0):
+        seen.append(
+            DrawnTable(
+                canvas.getPageNumber(),
+                self._hAlignAdjust(x, _sW),
+                self._width,
+                list(self._colWidths),
+                list(self._rowHeights),
+            )
+        )
+        return draw(self, canvas, x, y, _sW)
+
+    with mock.patch.object(Table, "drawOn", spy):
+        pisa.CreatePDF(html, dest=BytesIO())
+    return seen
+
+
+class TableShrinkToFitTestCase(TestCase):
+    """
+    An auto margin on a table with no width of its own makes it as wide as
+    its content, not as the frame (#562); a table without one still fills
+    the frame, and a declared width is kept.
+    """
+
+    def setUp(self) -> None:
+        ((_, self.left, self.width, _, _),) = drawn_tables(
+            "<table><tr><td>x</td></tr></table>"
+        )
+
+    @staticmethod
+    def table(css: str, cells: str = "<td>x</td>") -> DrawnTable:
+        (drawn,) = drawn_tables(f'<table style="{css}"><tr>{cells}</tr></table>')
+        return drawn
+
+    def test_centred_without_a_width_it_shrinks_to_its_content(self) -> None:
+        drawn = self.table("margin: 0 auto")
+
+        self.assertLess(drawn.width, 40)
+        self.assertAlmostEqual(self.left + (self.width - drawn.width) / 2, drawn.left)
+
+    def test_margin_left_auto_shrinks_it_to_the_right(self) -> None:
+        drawn = self.table("margin-left: auto")
+
+        self.assertLess(drawn.width, 40)
+        self.assertAlmostEqual(self.left + self.width, drawn.left + drawn.width)
+
+    def test_margin_right_auto_shrinks_it_on_the_left(self) -> None:
+        drawn = self.table("margin-right: auto")
+
+        self.assertLess(drawn.width, 40)
+        self.assertAlmostEqual(self.left, drawn.left)
+
+    def test_without_an_auto_margin_it_still_fills_the_frame(self) -> None:
+        drawn = self.table("margin-left: 0")
+
+        self.assertAlmostEqual(self.width, drawn.width)
+
+    def test_a_declared_width_is_kept(self) -> None:
+        for css in ("width: 300pt; margin: 0 auto", "margin: 0 auto"):
+            with self.subTest(css=css):
+                (drawn,) = drawn_tables(
+                    f'<table width="300pt" style="{css}"><tr><td>x</td></tr></table>'
+                )
+                self.assertAlmostEqual(300, drawn.width)
+
+    def test_each_column_is_as_wide_as_its_content(self) -> None:
+        drawn = self.table(
+            "margin: 0 auto", "<td>a</td><td>a much longer piece of text</td>"
+        )
+
+        narrow, wide = drawn.columns
+        self.assertLess(narrow, wide)
+        self.assertAlmostEqual(drawn.width, narrow + wide)
+        self.assertLess(drawn.width, self.width / 2)
+
+    def test_content_wider_than_the_frame_fills_it_and_wraps(self) -> None:
+        text = "word " * 200
+        drawn = self.table("margin: 0 auto", f"<td>short</td><td>{text}</td>")
+
+        self.assertAlmostEqual(self.width, drawn.width, places=3)
+        short, long = drawn.columns
+        self.assertLess(short, long)
+
+    def test_a_fixed_column_keeps_its_width(self) -> None:
+        drawn = self.table(
+            "margin: 0 auto", '<td style="width: 100pt">a</td><td>b</td>'
+        )
+
+        self.assertAlmostEqual(100, drawn.columns[0])
+        self.assertLess(drawn.width, 140)
+
+    def test_a_spanning_cell_widens_every_column_it_spans(self) -> None:
+        (drawn,) = drawn_tables(
+            '<table style="margin: 0 auto"><tr><td colspan="2">'
+            "a rather long heading over both</td></tr>"
+            "<tr><td>a</td><td>b</td></tr></table>"
+        )
+
+        first, second = drawn.columns
+        self.assertAlmostEqual(first, second)
+        self.assertLess(drawn.width, self.width / 2)
+
+    def test_a_percentage_column_keeps_the_table_full_width(self) -> None:
+        drawn = self.table("margin: 0 auto", '<td style="width: 50%">a</td><td>b</td>')
+
+        self.assertAlmostEqual(self.width, drawn.width)
+
+    def test_every_page_of_a_split_table_keeps_its_width_and_place(self) -> None:
+        rows = "<tr><td>x</td></tr>" * 150
+        parts = drawn_tables(f'<table style="margin: 0 auto">{rows}</table>')
+
+        self.assertGreater(len(parts), 1)
+        for part in parts:
+            self.assertAlmostEqual(parts[0].width, part.width)
+            self.assertAlmostEqual(parts[0].left, part.left)
+        self.assertLess(parts[0].width, 40)
+
+
+class TableHeightTestCase(TestCase):
+    """A CSS height on a <table> is the least it is high, as in a browser."""
+
+    ROWS = "<tr><td>a</td></tr><tr><td>b</td></tr>"
+
+    def test_the_rows_share_what_the_height_adds(self) -> None:
+        (drawn,) = drawn_tables(f'<table style="height: 300pt">{self.ROWS}</table>')
+
+        self.assertAlmostEqual(300, sum(drawn.rows))
+        self.assertAlmostEqual(drawn.rows[0], drawn.rows[1])
+
+    def test_taller_content_makes_it_taller(self) -> None:
+        (natural,) = drawn_tables(f"<table>{self.ROWS}</table>")
+        (drawn,) = drawn_tables(f'<table style="height: 2pt">{self.ROWS}</table>')
+
+        self.assertEqual(natural.rows, drawn.rows)
+
+    def test_a_percentage_height_is_ignored(self) -> None:
+        (natural,) = drawn_tables(f"<table>{self.ROWS}</table>")
+        (drawn,) = drawn_tables(f'<table style="height: 50%">{self.ROWS}</table>')
+
+        self.assertEqual(natural.rows, drawn.rows)
+
+    def test_a_height_and_a_width_are_both_kept(self) -> None:
+        (drawn,) = drawn_tables(
+            f'<table style="width: 200pt; height: 100pt; margin: 0 auto">{self.ROWS}'
+            "</table>"
+        )
+
+        self.assertAlmostEqual(200, drawn.width)
+        self.assertAlmostEqual(100, sum(drawn.rows))
+
+    def test_a_table_that_fits_only_without_its_height_moves_on(self) -> None:
+        """It goes whole to the next page, where it gets its height."""
+        filler = '<div style="height: 500pt"></div>' + "<p>filler</p>" * 40
+        (drawn,) = drawn_tables(
+            f'{filler}<table style="height: 300pt">{self.ROWS}</table>'
+        )
+
+        self.assertEqual(2, drawn.page)
+        self.assertAlmostEqual(300, sum(drawn.rows))
+
+    def test_a_table_taller_than_a_page_splits_at_its_own_height(self) -> None:
+        rows = "<tr><td>x</td></tr>" * 150
+        parts = drawn_tables(f'<table style="height: 2000pt">{rows}</table>')
+
+        self.assertGreater(len(parts), 1)

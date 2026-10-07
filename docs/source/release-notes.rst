@@ -76,6 +76,11 @@ Unreleased.
   page it is split across, and ``margin: 0 auto`` centres it; a CSS
   ``width`` on a ``<table>`` is read, and wins over the attribute
   (:issue:`386`).
+* A ``<table>`` with an ``auto`` margin and no width of its own is as wide
+  as its content, each column as wide as what it holds, and is centred or
+  aligned in what is left; it used to fill the frame. A ``height`` on a
+  ``<table>`` is its minimum, shared among the rows; it was ignored
+  (:issue:`562`).
 
 **💪🏼 Improvements**
 

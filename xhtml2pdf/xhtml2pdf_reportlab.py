@@ -1126,11 +1126,30 @@ class PmlTable(Table, PmlMaxHeightMixIn):
     #: width is of that narrower box, as in a browser.
     marginLeft = 0.0
     marginRight = 0.0
+    #: Whether the table is as wide as its content rather than the frame:
+    #: what an auto margin asks of a table with no width of its own (#562).
+    shrinkToFit = False
+    #: A CSS height, in points: the least the table is high. Rows shorter
+    #: than that share the difference, as in a browser; content taller than
+    #: that makes the table taller.
+    minHeight: float | None = None
 
     def _margins(self) -> float:
         return self.marginLeft + self.marginRight
 
     def split(self, availWidth, availHeight):
+        if self.minHeight and self._height > availHeight:
+            # Stretched, the table does not fit here. Its rows at their own
+            # height might, and ReportLab's split would then hand it back
+            # whole, which platypus takes for a split that went nowhere. A
+            # table that was already moved on once is cut at its natural
+            # height instead: the height is a minimum, not a reason to
+            # leave a page empty.
+            if not getattr(self, "_postponed", False):
+                natural = sum(getattr(self, "_naturalRowHeights", self._rowHeights))
+                if natural <= availHeight:
+                    return []
+            self.minHeight = None
         parts = Table.split(self, availWidth - self._margins(), availHeight)
         for part in parts:
             part.marginLeft, part.marginRight = self.marginLeft, self.marginRight
@@ -1236,6 +1255,40 @@ class PmlTable(Table, PmlMaxHeightMixIn):
     def drawOn(self, canvas, x, y, _sW=0):
         Table.drawOn(self, canvas, x + self.marginLeft, y, _sW)
 
+    def _contentColumnWidths(self, availWidth: float) -> list[float] | None:
+        """
+        Column widths that follow the content, for a table that shrinks to
+        fit; None when the columns are not the content's to decide.
+
+        The CSS automatic layout, roughly: every column as wide as its
+        content unset (max-content) when that fits, as narrow as its longest
+        word (min-content) when even that does not, and in between the room
+        left shared in proportion to what each would still take. Percentage
+        columns keep the table at its width: they are a share of it, and
+        there is no width to take a share of.
+        """
+        widths = self._colWidths
+        if any(isinstance(w, str) for w in widths) or None not in widths:
+            return None
+        # Here, not at the top: builders.flex imports this module.
+        from xhtml2pdf.builders.flex import table_column_widths
+
+        lows, highs = table_column_widths(self, self.canv, widths, spans=True)
+        auto = [i for i, w in enumerate(widths) if w is None]
+        room = availWidth - sum(w for w in widths if w is not None)
+        autoMin = sum(lows[i] for i in auto)
+        autoMax = sum(highs[i] for i in auto)
+        result = list(widths)
+        for i in auto:
+            if autoMax <= room:
+                result[i] = highs[i]
+            elif autoMin < room:
+                share = (room - autoMin) / (autoMax - autoMin)
+                result[i] = lows[i] + (highs[i] - lows[i]) * share
+            else:
+                result[i] = lows[i]
+        return result
+
     def _wrapInside(self, availWidth, availHeight):
         self.setMaxHeight(availHeight)
 
@@ -1243,11 +1296,17 @@ class PmlTable(Table, PmlMaxHeightMixIn):
         if not hasattr(self, "totalWidth"):
             self.totalWidth = availWidth
 
+        newColWidths = self._colWidths
+        if self.shrinkToFit and self.totalWidth is None:
+            content = self._contentColumnWidths(availWidth)
+            if content is not None:
+                newColWidths[:] = content
+                self.totalWidth = min(sum(content), availWidth)
+
         # Prepare values
         totalWidth = self._normWidth(self.totalWidth, availWidth)
         remainingWidth = totalWidth
         remainingCols = 0
-        newColWidths = self._colWidths
 
         # Calculate widths that are fix
         # IMPORTANT!!! We can not substitute the private value
@@ -1282,7 +1341,37 @@ class PmlTable(Table, PmlMaxHeightMixIn):
         if diff > 0:
             newColWidths[0] -= diff
 
-        return Table.wrap(self, availWidth, availHeight)
+        width, height = Table.wrap(self, availWidth, availHeight)
+        self._naturalRowHeights = list(self._rowHeights)
+        if self.minHeight and height < self.minHeight:
+            width, height = self._stretch(availWidth, availHeight)
+        return width, height
+
+    def _stretch(self, availWidth, availHeight):
+        """
+        Lay the table out again with its rows sharing what it lacks of its
+        minimum height, in proportion to their own; an empty row stays
+        empty unless every row is.
+
+        The stretched heights go in for this one layout and the declared
+        ones come back after it, so a second wrap starts from the content
+        again instead of from a table already stretched.
+        """
+        natural = self._naturalRowHeights
+        extra = self.minHeight - sum(natural)
+        total = sum(natural)
+        if total > 0:
+            stretched = [h + extra * h / total for h in natural]
+        else:
+            stretched = [self.minHeight / len(natural)] * len(natural)
+        declared = self._argH
+        # With no row left to measure, _calc_height takes _rowHeights as
+        # they are; it reads _argH only to see whether any is.
+        self._argH = self._rowHeights = stretched
+        try:
+            return Table.wrap(self, availWidth, availHeight)
+        finally:
+            self._argH = declared
 
 
 class PmlPageCount(IndexingFlowable):

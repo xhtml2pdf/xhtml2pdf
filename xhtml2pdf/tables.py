@@ -111,6 +111,11 @@ class TableData:
             tuple[str, tuple[int, int], tuple[int, int], str, str, str]
         ] = []
         self.width: str | float = 0
+        #: Whether a horizontal margin is auto, which lets a table with no
+        #: width of its own shrink to its content (#562).
+        self.auto_margins: bool = False
+        #: The table's CSS height: its minimum.
+        self.height: str | float | None = None
 
     def add_cell(self, data=None):
         self.col += 1
@@ -270,6 +275,7 @@ class pisaTagTABLE(pisaTag):
         # a presentational hint. It used to be ignored on a <table>.
         tdata.width = _width(c.frag.width or attrs.width)
         tdata.margins = self._horizontal_margins(c, tdata)
+        tdata.height = _height(c.frag.height)
 
     @staticmethod
     def _horizontal_margins(c, tdata) -> tuple[float, float]:
@@ -280,7 +286,10 @@ class pisaTagTABLE(pisaTag):
         Only the table's own: the indent of a block around it is still not
         applied, as it never was, so a table in an indented <div> does not
         move. An `auto` margin aligns the table instead -- both centre it,
-        as `margin: 0 auto` does in a browser.
+        as `margin: 0 auto` does in a browser -- and a table with no width
+        of its own shrinks to its content, which is what leaves the margin
+        anything to take (#562). Without one, a table fills its frame as it
+        always has.
         """
         margins = []
         for side in ("margin-left", "margin-right"):
@@ -293,6 +302,7 @@ class pisaTagTABLE(pisaTag):
             str(c.cssAttr.get(side, "")).strip().lower() == "auto"
             for side in ("margin-left", "margin-right")
         ]
+        tdata.auto_margins = any(auto)
         if auto == [True, True]:
             tdata.align = "CENTER"
         elif auto == [True, False]:
@@ -356,6 +366,10 @@ class pisaTagTABLE(pisaTag):
             )
             t.totalWidth = _width(tdata.width)
             t.marginLeft, t.marginRight = tdata.margins
+            t.shrinkToFit = tdata.auto_margins and t.totalWidth is None
+            # A percentage height has nothing definite to be a share of.
+            if isinstance(tdata.height, float):
+                t.minHeight = tdata.height
             t.spaceBefore = c.frag.spaceBefore
             t.spaceAfter = c.frag.spaceAfter
 

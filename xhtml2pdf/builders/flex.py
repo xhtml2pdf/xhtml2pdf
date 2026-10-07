@@ -441,31 +441,79 @@ def _cell_widths(value, style, canv) -> tuple[float, float]:
     return max(words), max(lines)
 
 
-def _table_widths(table: Table, canv) -> tuple[float, float]:
+def _span_rectangles(table: Table) -> dict[tuple[int, int], tuple[int, int]]:
+    """Each spanning cell's (row, column) to the (last row, last column) it covers."""
+    nrows, ncols = len(table._cellvalues), len(table._argW or [])
+    spans = {}
+    for _name, (sc, sr), (ec, er), *_rest in getattr(table, "_spanCmds", []):
+        sc, ec = (c + ncols if c < 0 else c for c in (sc, ec))
+        sr, er = (r + nrows if r < 0 else r for r in (sr, er))
+        if (sc, sr) != (ec, er):
+            spans[min(sr, er), min(sc, ec)] = (max(sr, er), max(sc, ec))
+    return spans
+
+
+def table_column_widths(
+    table: Table, canv, widths=None, *, spans: bool = False
+) -> tuple[list[float], list[float]]:
     """
-    (min-content, max-content) of a table, column by column from its cells.
+    (min-content, max-content) of each of a table's columns, from its cells.
 
     Not Table.minWidth(): that asks each cell flowable for its minWidth, and
     the cells this library builds are KeepInFrames, which answer with a
     width they have not measured. A column with a width in points is that
     wide; one given as a percentage or left open is as wide as its cells.
+
+    ``widths`` are the column widths the table was declared with, for a
+    table that has since been laid out and holds points in their place.
+    With ``spans``, a cell spanning several columns does not size the first
+    of them alone: what it needs beyond what they already have is shared
+    among the ones without a width of their own.
     """
-    widths = list(table._argW or [])
-    if not widths:
-        return 0.0, 0.0
+    widths = list(table._argW if widths is None else widths)
     lows = [0.0] * len(widths)
     highs = [0.0] * len(widths)
-    for row, styles in zip(table._cellvalues, table._cellStyles, strict=False):
-        for column, (value, style) in enumerate(zip(row, styles, strict=False)):
+    if not widths:
+        return lows, highs
+    spanned = _span_rectangles(table) if spans else {}
+    covered = {
+        (row, column)
+        for (sr, sc), (er, ec) in spanned.items()
+        for row in range(sr, er + 1)
+        for column in range(sc, ec + 1)
+    }
+    wide = []
+    for row, (values, styles) in enumerate(
+        zip(table._cellvalues, table._cellStyles, strict=False)
+    ):
+        for column, (value, style) in enumerate(zip(values, styles, strict=False)):
             if column >= len(widths):
                 break
             padding = style.leftPadding + style.rightPadding
             low, high = _cell_widths(value, style, canv)
-            lows[column] = max(lows[column], low + padding)
-            highs[column] = max(highs[column], high + padding)
+            if (row, column) in spanned:
+                last = spanned[row, column][1]
+                wide.append((column, last, low + padding, high + padding))
+            elif (row, column) not in covered:
+                lows[column] = max(lows[column], low + padding)
+                highs[column] = max(highs[column], high + padding)
     for column, width in enumerate(widths):
         if isinstance(width, int | float):
             lows[column] = highs[column] = float(width)
+    for first, last, low, high in wide:
+        columns = range(first, min(last, len(widths) - 1) + 1)
+        open_ = [c for c in columns if not isinstance(widths[c], int | float)]
+        for measured, needed in ((lows, low), (highs, high)):
+            short = needed - sum(measured[c] for c in columns)
+            if short > 0 and open_:
+                for c in open_:
+                    measured[c] += short / len(open_)
+    return lows, highs
+
+
+def _table_widths(table: Table, canv) -> tuple[float, float]:
+    """(min-content, max-content) of a table; see table_column_widths."""
+    lows, highs = table_column_widths(table, canv)
     return sum(lows), sum(highs)
 
 
