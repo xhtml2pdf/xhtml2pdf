@@ -229,12 +229,14 @@ class SvgSniffingTest(TestCase):
                 PmlImage(svg)
 
 
-def blank_png(width: int, height: int) -> bytes:
+def blank_png(width: int, height: int, *, header_only: bool = False) -> bytes:
     """
     A valid 1-bit PNG, a few hundred bytes on disk however many pixels.
 
     Built by hand: Pillow holds a 1-bit image at a byte per pixel, so making
-    a large one with it would take the memory the test is about.
+    a large one with it would take the memory the test is about. With
+    `header_only` it has no pixel data at all, which is all Pillow reads
+    before refusing an image too large to open.
     """
 
     def chunk(kind: bytes, body: bytes) -> bytes:
@@ -245,15 +247,15 @@ def blank_png(width: int, height: int) -> bytes:
             + struct.pack(">I", zlib.crc32(kind + body))
         )
 
+    header = b"\x89PNG\r\n\x1a\n" + chunk(
+        b"IHDR", struct.pack(">IIBBBBB", width, height, 1, 0, 0, 0, 0)
+    )
+    if header_only:
+        return header + chunk(b"IEND", b"")
     row = b"\x00" * (1 + (width + 7) // 8)
     idat = zlib.compressobj(9)
     body = b"".join(idat.compress(row) for _ in range(height)) + idat.flush()
-    return (
-        b"\x89PNG\r\n\x1a\n"
-        + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 1, 0, 0, 0, 0))
-        + chunk(b"IDAT", body)
-        + chunk(b"IEND", b"")
-    )
+    return header + chunk(b"IDAT", body) + chunk(b"IEND", b"")
 
 
 def image_count(pdf: bytes) -> int:
@@ -344,6 +346,24 @@ class ImagePixelLimitTest(TestCase):
         )
 
         self.assertEqual(1, image_count(pdf))
+
+    def test_the_refusal_names_the_image(self) -> None:
+        """It said 'an image' for every <img>: the reader gets a buffer."""
+        with self.assertLogs("xhtml2pdf", level="WARNING") as logs:
+            self.render(f'<img src="data:image/png;base64,{self.png}">', self.policy)
+        self.assertTrue(
+            any("'data:image/png;base64," in line for line in logs.output), logs.output
+        )
+
+    def test_an_image_pillow_will_not_open_is_refused_too(self) -> None:
+        """
+        Over ~179 million pixels Pillow refuses first, while reading the header.
+
+        That surfaced as "Error in handling image" with a traceback rather than
+        as the policy's refusal. Only the header is needed: Pillow stops there.
+        """
+        png = base64.b64encode(blank_png(50_000, 50_000, header_only=True)).decode()
+        self.assert_refused(f'<img src="data:image/png;base64,{png}">', 50_000**2)
 
 
 class RenderBudgetTest(LocalServerMixin, TestCase):

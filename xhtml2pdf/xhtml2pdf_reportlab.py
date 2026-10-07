@@ -48,7 +48,11 @@ from reportlab.platypus.tableofcontents import TableOfContents, drawPageNumbers
 from reportlab.platypus.tables import _SPECIALROWS, Table, TableStyle
 from reportlab.rl_config import register_reset
 
-from xhtml2pdf.config.resources import check_deadline, current_policy
+from xhtml2pdf.config.resources import (
+    ResourceAccessError,
+    check_deadline,
+    current_policy,
+)
 from xhtml2pdf.files import pisaFileObject, pisaTempFile
 from xhtml2pdf.reportlab_paragraph import Paragraph
 from xhtml2pdf.util import (
@@ -491,7 +495,13 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
                 raise OSError(msg) from None
             return stream, True
 
-    def __init__(self, fileName: PmlImage | Image | str) -> None:
+    def __init__(
+        self, fileName: PmlImage | Image | str, label: str | None = None
+    ) -> None:
+        """
+        `label` names the image in a refusal when fileName cannot: an image
+        from a data: URI or a fetched resource arrives as a buffer.
+        """
         if isinstance(fileName, PmlImage):
             self.__dict__ = fileName.__dict__  # borgize
             return
@@ -539,16 +549,15 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
                 if haveImages:
                     # detect which library we are using and open the image
                     if not self._image:
-                        self._image = self._read_image(self.fp)
+                        where = label or (
+                            fileName if isinstance(fileName, str) else "an image"
+                        )
+                        self._image = self._read_bounded_image(self.fp, where)
                         # Opening reads the header only; the pixels are
                         # decoded when they are drawn. Refused here, that
                         # decode never happens.
                         width, height = self._image.size
-                        current_policy().check_image_pixels(
-                            width,
-                            height,
-                            fileName if isinstance(fileName, str) else "an image",
-                        )
+                        current_policy().check_image_pixels(width, height, where)
                     if getattr(self._image, "format", None) == "JPEG":
                         self.jpeg_fh = self._jpeg_fh
                 else:
@@ -569,6 +578,29 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
             except UnidentifiedImageError as e:
                 msg = "Cannot identify image file"
                 raise ImageWarning(msg) from e
+
+    @classmethod
+    def _read_bounded_image(cls, fp, where: str) -> Image:
+        """
+        Open an image, as the pixel limit's refusal when Pillow refuses it.
+
+        Pillow refuses on its own, while still reading the header, an image
+        of more than about 179 million pixels. That came before the policy's
+        check and surfaced as "Error in handling image" with a traceback;
+        it is the same refusal, so it is now reported as one.
+        """
+        try:
+            return cls._read_image(fp)
+        except PILImage.DecompressionBombError as e:
+            limit = current_policy().max_image_pixels
+            if limit is not None:
+                msg = (
+                    f"{str(where)[:120]!r} is too large for Pillow to open ({e}),"
+                    f" more than the {limit} pixels an image may decode to"
+                )
+                raise ResourceAccessError(msg) from None
+            msg = f"Cannot open {str(where)[:120]!r}: {e}"
+            raise ImageWarning(msg) from None
 
     @staticmethod
     def _read_image(fp) -> Image:
@@ -822,7 +854,7 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         """Return a raster image."""
         vectorRaster = self.getDrawingRaster()
         imgdata = vectorRaster or BytesIO(self._imgdata)
-        return PmlImageReader(imgdata)
+        return PmlImageReader(imgdata, label=self.src)
 
     def draw(self) -> None:
         # TODO this code should work, but untested
