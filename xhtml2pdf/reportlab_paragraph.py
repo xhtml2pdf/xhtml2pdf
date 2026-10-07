@@ -1163,12 +1163,16 @@ def _do_post_text(tx):
             )
     xs.inlineBoxSpans = []
 
-    # Background
+    # Background. In its own graphics state: a colour with an alpha sets the
+    # fill opacity too, and the line's text, which resets only the colour,
+    # came out as translucent as its background.
     for x1, x2, c, fs in xs.backgrounds:
         inlineFF = fs * 0.125
         gap = inlineFF * 1.25
+        tx._canvas.saveState()
         tx._canvas.setFillColor(c)
         tx._canvas.rect(x1, y - gap, x2 - x1, fs + 1, fill=1, stroke=0)
+        tx._canvas.restoreState()
     xs.backgrounds = []
     xs.background = 0
     xs.backgroundColor = None

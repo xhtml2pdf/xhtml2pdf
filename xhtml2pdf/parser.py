@@ -1522,6 +1522,12 @@ def pisaLoop(node, context, **kw):
 
         # Visit child nodes
         context.fragBlock = fragBlock = copy.copy(context.frag)
+        if isBlock:
+            # A block's background belongs to its box, which fragBlock (or the
+            # block box) paints. Inherited by the words inside, it was painted
+            # a second time behind every line: invisible while opaque, twice
+            # as dark with an alpha.
+            context.frag.backColor = None
         for nnode in node.childNodes:
             if isFlex:
                 context.flexData.begin_item(context)

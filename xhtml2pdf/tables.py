@@ -596,9 +596,10 @@ class pisaTagTD(pisaTag):
             ),
             None,
         )
+        # The table paints the cell's colour; the paragraphs in it would paint
+        # it again -- square over a rounded box, twice as dark with an alpha.
+        frag.backColor = None
         if rounded:
-            # The paragraphs in the cell would paint its colour square.
-            frag.backColor = None
             for corner in RADIUS_CORNERS:
                 setattr(frag, f"border{corner}Radius", NO_RADIUS)
 
