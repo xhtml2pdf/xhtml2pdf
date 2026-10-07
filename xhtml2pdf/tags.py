@@ -167,15 +167,19 @@ class pisaTagSUB(pisaTag):
 
 
 class pisaTagA(pisaTag):
-    rxLink = r"^(#|[a-z]+\:).*"
+    #: What is not a link, of what an href can say. A relative reference --
+    #: "other.pdf", "page.html" -- used to be dropped as well, because only an
+    #: anchor or a URL with a scheme was taken; it becomes a link to that file.
+    rxNotALink = re.compile(r"^\s*javascript:", re.IGNORECASE)
 
     def start(self, c: pisaContext) -> None:
         attr = self.attr
         # An id is a target too; pisaLoop adds it for every element.
         if attr.name:
             c.addAnchor(attr.name)
-        if attr.href and re.match(self.rxLink, attr.href):
-            c.frag.link = attr.href
+        href = (attr.href or "").strip()
+        if href and not self.rxNotALink.match(href):
+            c.frag.link = href
 
     def end(self, c: pisaContext) -> None:
         pass

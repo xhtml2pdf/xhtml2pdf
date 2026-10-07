@@ -10,6 +10,7 @@ from copy import deepcopy
 from operator import truth
 from string import whitespace
 from typing import TYPE_CHECKING
+from urllib.parse import unquote
 
 from bidi import get_display
 from reportlab.graphics import renderPDF
@@ -1010,6 +1011,23 @@ def _do_under_line(i, t_off, ws, tx, lm=-0.125):
 _scheme_re = re.compile(r"^[a-zA-Z][-+a-zA-Z0-9]+$")
 
 
+def _doRelativeLink(canvas, link, rect):
+    """
+    Link to another file, named relative to this one: <a href="other.pdf">.
+
+    It used to be no link at all. A PDF is opened with a /GoToR action, as
+    the vendor "pdf:" scheme already did, which a viewer resolves against the
+    directory of the PDF holding the link; anything else -- page.html, a
+    PDF with a fragment, which /GoToR cannot carry -- is a /URI with the
+    reference as written, the way a browser would keep it.
+    """
+    path, _, fragment = link.partition("#")
+    if not fragment and path.lower().endswith(".pdf"):
+        canvas.linkURL(unquote(path), rect, relative=1, kind="GoToR")
+    else:
+        canvas.linkURL(link, rect, relative=1, kind="URI")
+
+
 def _doLink(tx, link, rect):
     parts = link.split(":", 1)
     scheme = (len(parts) == 2 and parts[0].lower()) or ""
@@ -1018,6 +1036,8 @@ def _doLink(tx, link, rect):
         if kind == "GoToR":
             link = parts[1]
         tx._canvas.linkURL(link, rect, relative=1, kind=kind)
+    elif scheme != "document" and not link.startswith("#"):
+        _doRelativeLink(tx._canvas, link, rect)
     else:
         if link[0] == "#":
             link = link[1:]

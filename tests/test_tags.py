@@ -830,6 +830,47 @@ class LinkTargetTestCase(TestCase):
         self.assertEqual([], targets)
 
 
+class RelativeLinkTestCase(TestCase):
+    """<a href="other.pdf"> links to that file (#660); it used to be no link."""
+
+    @staticmethod
+    def actions(html: str) -> list[dict]:
+        out = io.BytesIO()
+        pisa.CreatePDF(html, dest=out)
+        page = PdfReader(io.BytesIO(out.getvalue())).pages[0]
+        return [
+            {k: v for k, v in annot.get_object()["/A"].items() if k != "/D"}
+            for annot in page.get("/Annots", [])
+            if "/A" in annot.get_object()
+        ]
+
+    def test_a_pdf_is_opened(self) -> None:
+        self.assertEqual(
+            [{"/Type": "/Action", "/S": "/GoToR", "/F": "my file.pdf"}],
+            self.actions('<p><a href="my%20file.pdf">x</a></p>'),
+        )
+
+    def test_anything_else_is_a_uri(self) -> None:
+        for href in ("page.html", "docs/a.pdf#page=2", "../up.txt"):
+            with self.subTest(href=href):
+                self.assertEqual(
+                    [{"/Type": "/Action", "/S": "/URI", "/URI": href}],
+                    self.actions(f'<p><a href="{href}">x</a></p>'),
+                )
+
+    def test_on_an_image(self) -> None:
+        image = Path(__file__).parent / "samples" / "img" / "denker.png"
+        (action,) = self.actions(
+            f'<p><a href="b.pdf"><img src="{image}" width="20" height="20"></a></p>'
+        )
+        self.assertEqual("/GoToR", action["/S"])
+
+    def test_javascript_is_not_a_link(self) -> None:
+        self.assertEqual(
+            [], self.actions('<p><a href=" JavaScript:alert(1)">x</a></p>')
+        )
+
+
 class ImageLinkTestCase(TestCase):
     """<a href><img></a> is a link over the image (#491)."""
 

@@ -398,6 +398,22 @@ paragraph, from the block that holds it, so on an inline element such as
 ``<a>`` it does nothing -- ``overflow-wrap: anywhere`` is the property for
 that.
 
+Links
+-----
+
+``<a href>`` is a link over its text, or over the image inside it:
+
+-  ``href="#x"`` goes to the element with ``id="x"`` (or ``<a name="x">``)
+   in the same document; a link to an id that is not there is dropped.
+-  A URL with a scheme -- ``https:``, ``mailto:`` -- is opened as such.
+-  A reference with no scheme names a file next to the PDF. One ending in
+   ``.pdf`` is opened in the viewer (a PDF ``/GoToR`` action, which the
+   viewer resolves against the directory the PDF is in, so keep the two
+   files together); anything else, ``page.html`` or a PDF with a
+   ``#fragment``, is handed over as the relative URL it is. ``pdf:name.pdf``
+   is the older way to write the first and still works.
+-  ``javascript:`` is never a link.
+
 Defaults
 --------
 
