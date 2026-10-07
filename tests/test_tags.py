@@ -1,3 +1,4 @@
+import base64
 import io
 import re
 from pathlib import Path
@@ -149,6 +150,54 @@ class BadInputKeepsTheDocumentTestCase(TestCase):
         """Spacer(1, None) raised TypeError on None + int."""
         self.assert_warns_and_converts(
             "<p>a</p><pdf:spacer/><p>b</p>", "Ignoring <pdf:spacer> with no height"
+        )
+
+
+class CorruptImageTestCase(TestCase):
+    """
+    An image that cannot be decoded is left out, not the whole document.
+
+    Its header is all that is read until it is drawn, so a truncated PNG got
+    through and then raised from inside ReportLab's drawImage, ending the
+    conversion -- as an <img>, a list marker, a background or a page
+    background alike.
+    """
+
+    PNG = (Path(__file__).parent / "samples" / "img" / "denker.png").read_bytes()
+
+    def assert_left_out(self, html: str) -> None:
+        uri = (
+            "data:image/png;base64,"
+            + base64.b64encode(self.PNG[: len(self.PNG) // 2]).decode()
+        )
+        dest = io.BytesIO()
+        with self.assertLogs("xhtml2pdf", level="WARNING") as logged:
+            result = pisa.pisaDocument(
+                io.StringIO(f"<html><body>{html.format(uri=uri)}</body></html>"), dest
+            )
+        self.assertEqual(0, result.err)
+        self.assertIn(
+            "after", PdfReader(io.BytesIO(dest.getvalue())).pages[0].extract_text()
+        )
+        self.assertTrue(
+            any("decode" in line or "background" in line for line in logged.output),
+            logged.output,
+        )
+
+    def test_an_img(self) -> None:
+        self.assert_left_out('<img src="{uri}"><p>after</p>')
+
+    def test_a_list_marker(self) -> None:
+        self.assert_left_out(
+            "<ul style=\"list-style-image: url('{uri}')\"><li>after</li></ul>"
+        )
+
+    def test_a_background(self) -> None:
+        self.assert_left_out("<p style=\"background-image: url('{uri}')\">after</p>")
+
+    def test_a_page_background(self) -> None:
+        self.assert_left_out(
+            "<style>@page {{ background-image: url('{uri}') }}</style><p>after</p>"
         )
 
 

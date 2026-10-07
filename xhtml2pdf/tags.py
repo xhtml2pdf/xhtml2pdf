@@ -434,9 +434,12 @@ class pisaTagLI(pisaTag):
             if f and (not f.notFound()):
                 try:
                     img = PmlImage(f.getData(), src=f.uri, width=None, height=None)
-                except ResourceAccessError as e:
-                    log.warning("Blocked by the resource policy: %s", e)
-                    # Refused: the item keeps its ordinary marker.
+                except (ResourceAccessError, ImageWarning) as e:
+                    if isinstance(e, ResourceAccessError):
+                        log.warning("Blocked by the resource policy: %s", e)
+                    else:
+                        log.warning(c.warning(f"{e}:"))
+                    # Refused or unreadable: the item keeps its ordinary marker.
                     frag.listStyleImage = None
                     frag.text = lst if isinstance(lst, str) else lst(c)
             if img is not None:

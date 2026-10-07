@@ -558,6 +558,8 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
                         # decode never happens.
                         width, height = self._image.size
                         current_policy().check_image_pixels(width, height, where)
+                        if getattr(self._image, "format", None) != "JPEG":
+                            self._decode(where)
                     if getattr(self._image, "format", None) == "JPEG":
                         self.jpeg_fh = self._jpeg_fh
                 else:
@@ -578,6 +580,20 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
             except UnidentifiedImageError as e:
                 msg = "Cannot identify image file"
                 raise ImageWarning(msg) from e
+
+    def _decode(self, where: str) -> None:
+        """
+        Decode the pixels now, as a warning if they cannot be.
+
+        Left to the drawing, a truncated or corrupt image raised from inside
+        ReportLab's drawImage and took the whole document with it. A JPEG is
+        not decoded: ReportLab embeds its bytes as they are.
+        """
+        try:
+            self._image.load()
+        except (OSError, SyntaxError, ValueError) as e:
+            msg = f"Cannot decode {str(where)[:120]!r}: {e}"
+            raise ImageWarning(msg) from None
 
     @classmethod
     def _read_bounded_image(cls, fp, where: str) -> Image:

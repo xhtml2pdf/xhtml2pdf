@@ -1124,8 +1124,14 @@ def getBackgroundImageReader(file_object):
         if reader is not None:
             width, height = reader.getSize()
             current_policy().check_image_pixels(width, height, key)
+            # Decoded now, once: a truncated or corrupt file left to the
+            # drawing raised from inside ReportLab and ended the document.
+            reader.getRGBData()
     except ResourceAccessError as e:
         log.warning("Blocked by the resource policy: %s", e)
+        reader = None
+    except (OSError, SyntaxError) as e:
+        log.warning("Cannot decode background image %r: %s", key[:120], e)
         reader = None
     except Exception:
         log.warning("Could not read background image %r", key, exc_info=True)

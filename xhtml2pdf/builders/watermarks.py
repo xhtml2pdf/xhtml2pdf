@@ -10,6 +10,7 @@ from reportlab.pdfgen.canvas import Canvas
 
 from xhtml2pdf.config.resources import ResourceAccessError, current_policy
 from xhtml2pdf.files import InlineDataURI, NetworkFileUri, pisaFileObject
+from xhtml2pdf.util import ImageWarning
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -138,6 +139,16 @@ class WaterMarks:
                             )
                         except ResourceAccessError as e:
                             log.warning("Blocked by the resource policy: %s", e)
+                            continue
+                        except (ImageWarning, OSError, SyntaxError) as e:
+                            # A truncated or corrupt image: the page goes
+                            # without its background rather than the document
+                            # without its pages.
+                            log.warning(
+                                "Cannot use the page background %r: %s",
+                                str(bgfile.uri)[:120],
+                                e,
+                            )
                             continue
 
                     yield range(page, pages[counter]), bgfile, int(pgcontext["step"])
