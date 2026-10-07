@@ -166,7 +166,12 @@ Known limitations of the properties above:
    characters, as ``-pdf-word-wrap: CJK`` does; ``break-word`` is
    ``overflow-wrap: anywhere``. ``keep-all`` is ignored.
 -  ``width`` and ``height`` apply to images, table cells and barcodes
-   only, not to blocks.
+   only, not to blocks. ``width`` applies to a ``<table>`` too, and wins
+   over its ``width`` attribute.
+-  ``margin-left`` and ``margin-right`` on a ``<table>`` narrow it from that
+   side, and a percentage ``width`` is a share of what they leave; ``auto``
+   on both sides centres the table, on the left alone moves it right. The
+   margins of a block *around* a table are not applied to it.
 -  ``display``: ``block``, ``inline``, ``inline-block``, ``flex`` and
    ``none`` are laid out as such; ``inline-flex`` is laid out as
    ``flex``, block-level (see :ref:`inline-block` for how to get an

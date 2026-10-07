@@ -266,7 +266,40 @@ class pisaTagTABLE(pisaTag):
         tdata.colw = []
         tdata.rowh = []
         tdata.repeat = attrs.repeat
-        tdata.width = _width(attrs.width)
+        # A CSS width wins over the width attribute, as author CSS does over
+        # a presentational hint. It used to be ignored on a <table>.
+        tdata.width = _width(c.frag.width or attrs.width)
+        tdata.margins = self._horizontal_margins(c, tdata)
+
+    @staticmethod
+    def _horizontal_margins(c, tdata) -> tuple[float, float]:
+        """
+        The table's own margin-left and margin-right (#386), which used to be
+        read into the running indent and then never applied to the table.
+
+        Only the table's own: the indent of a block around it is still not
+        applied, as it never was, so a table in an indented <div> does not
+        move. An `auto` margin aligns the table instead -- both centre it,
+        as `margin: 0 auto` does in a browser.
+        """
+        margins = []
+        for side in ("margin-left", "margin-right"):
+            value = c.cssAttr.get(side)
+            if value is None or str(value).strip().lower() == "auto":
+                margins.append(0.0)
+            else:
+                margins.append(getSize(value, c.frag.fontSize))
+        auto = [
+            str(c.cssAttr.get(side, "")).strip().lower() == "auto"
+            for side in ("margin-left", "margin-right")
+        ]
+        if auto == [True, True]:
+            tdata.align = "CENTER"
+        elif auto == [True, False]:
+            tdata.align = "RIGHT"
+        elif auto == [False, True]:
+            tdata.align = "LEFT"
+        return margins[0], margins[1]
 
     def end(self, c):
         tdata = c.tableData
@@ -322,6 +355,7 @@ class pisaTagTABLE(pisaTag):
                 style=TableStyle(tdata.styles),
             )
             t.totalWidth = _width(tdata.width)
+            t.marginLeft, t.marginRight = tdata.margins
             t.spaceBefore = c.frag.spaceBefore
             t.spaceAfter = c.frag.spaceAfter
 

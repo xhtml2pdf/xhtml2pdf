@@ -715,3 +715,79 @@ class CellKeepInFrameModeTestCase(TestCase):
                 '<table><tr><td style="-pdf-keep-in-frame-mode: overflow">x</td></tr></table>'
             ),
         )
+
+
+class TableMarginTestCase(TestCase):
+    """A table's own margin-left/right and CSS width are applied (#386)."""
+
+    @staticmethod
+    def boxes(html: str) -> list[tuple[float, float]]:
+        """(left, width) of each table, or each part of one, as drawn."""
+        from io import BytesIO
+        from unittest import mock
+
+        from reportlab.platypus.tables import Table
+
+        from xhtml2pdf import pisa
+
+        seen = []
+        draw = Table.drawOn
+
+        def spy(self, canvas, x, y, _sW=0):
+            seen.append((self._hAlignAdjust(x, _sW), self._width))
+            return draw(self, canvas, x, y, _sW)
+
+        with mock.patch.object(Table, "drawOn", spy):
+            pisa.CreatePDF(html, dest=BytesIO())
+        return seen
+
+    def setUp(self) -> None:
+        ((self.left, self.width),) = self.boxes("<table><tr><td>x</td></tr></table>")
+
+    def assertBox(self, expected, actual) -> None:
+        for e, a in zip(expected, actual, strict=True):
+            self.assertAlmostEqual(e, a, places=3)
+
+    def test_margins_narrow_the_table(self) -> None:
+        (box,) = self.boxes(
+            '<table style="margin-left: 72pt; margin-right: 36pt"><tr><td>x</td></tr></table>'
+        )
+        self.assertBox((self.left + 72, self.width - 108), box)
+
+    def test_a_css_width_is_a_share_of_what_the_margins_leave(self) -> None:
+        (box,) = self.boxes(
+            '<table style="width: 50%; margin-left: 72pt"><tr><td>x</td></tr></table>'
+        )
+        self.assertBox((self.left + 72, (self.width - 72) / 2), box)
+
+    def test_a_css_width_wins_over_the_attribute(self) -> None:
+        (box,) = self.boxes(
+            '<table width="10%" style="width: 200pt"><tr><td>x</td></tr></table>'
+        )
+        self.assertBox((self.left, 200), box)
+
+    def test_auto_margins_align_the_table(self) -> None:
+        cases = {
+            "margin: 0 auto": self.left + (self.width - 200) / 2,
+            "margin-left: auto": self.left + self.width - 200,
+        }
+        for css, left in cases.items():
+            with self.subTest(css=css):
+                (box,) = self.boxes(
+                    f'<table style="width: 200pt; {css}"><tr><td>x</td></tr></table>'
+                )
+                self.assertBox((left, 200), box)
+
+    def test_every_page_of_a_split_table_keeps_them(self) -> None:
+        rows = "<tr><td>x</td></tr>" * 150
+        parts = self.boxes(f'<table style="margin-left: 72pt">{rows}</table>')
+        self.assertGreater(len(parts), 1)
+        for part in parts:
+            self.assertBox((self.left + 72, self.width - 72), part)
+
+    def test_the_indent_of_a_block_around_it_is_not_added(self) -> None:
+        (box,) = self.boxes(
+            '<div style="margin-left: 50pt"><table style="margin-left: 72pt">'
+            "<tr><td>x</td></tr></table></div>"
+        )
+        self.assertBox((self.left + 72, self.width - 72), box)

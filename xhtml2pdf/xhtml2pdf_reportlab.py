@@ -1120,9 +1120,19 @@ class PmlTable(Table, PmlMaxHeightMixIn):
     #: bottom; the table's box has no edge and no rounded corners there.
     _cutTop = False
     _cutBottom = False
+    #: The table's own margin-left and margin-right. The table is laid out
+    #: in what the frame has less these, and drawn that far in; a percentage
+    #: width is of that narrower box, as in a browser.
+    marginLeft = 0.0
+    marginRight = 0.0
+
+    def _margins(self) -> float:
+        return self.marginLeft + self.marginRight
 
     def split(self, availWidth, availHeight):
-        parts = Table.split(self, availWidth, availHeight)
+        parts = Table.split(self, availWidth - self._margins(), availHeight)
+        for part in parts:
+            part.marginLeft, part.marginRight = self.marginLeft, self.marginRight
         if len(parts) == 2:
             parts[0]._cutTop, parts[0]._cutBottom = self._cutTop, True
             parts[1]._cutTop, parts[1]._cutBottom = True, self._cutBottom
@@ -1219,6 +1229,13 @@ class PmlTable(Table, PmlMaxHeightMixIn):
         return Table._listCellGeom(self, V, w, s, W=W, H=H, aH=aH)
 
     def wrap(self, availWidth, availHeight):
+        width, height = self._wrapInside(availWidth - self._margins(), availHeight)
+        return width + self._margins(), height
+
+    def drawOn(self, canvas, x, y, _sW=0):
+        Table.drawOn(self, canvas, x + self.marginLeft, y, _sW)
+
+    def _wrapInside(self, availWidth, availHeight):
         self.setMaxHeight(availHeight)
 
         # Strange bug, sometime the totalWidth is not set !?
