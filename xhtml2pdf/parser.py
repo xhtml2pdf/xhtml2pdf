@@ -26,6 +26,7 @@ from reportlab.lib.colors import Color
 from reportlab.platypus.doctemplate import FrameBreak, NextPageTemplate
 from reportlab.platypus.flowables import KeepInFrame, KeepTogether, PageBreak
 
+from xhtml2pdf.builders.block import BlockBoxData, block_box_style
 from xhtml2pdf.builders.flex import (
     BoxStyle,
     FlexData,
@@ -991,6 +992,67 @@ def declaresInlineBox(context, tagName: str) -> bool:
     )
 
 
+#: Elements that never get a block box: the page itself, whose background
+#: is the canvas's, and a table and its parts, which draw their own.
+_NO_BLOCK_BOX_TAGS = frozenset(
+    {
+        "html",
+        "body",
+        "table",
+        "thead",
+        "tbody",
+        "tfoot",
+        "tr",
+        "td",
+        "th",
+        "hr",
+        "pdftoc",
+    }
+)
+
+#: Tags that put something other than text into a block's story, whatever
+#: their display: a table, a rule, a break, a spacer, an index.
+_BLOCK_CONTENT_TAGS = frozenset(
+    {
+        "table",
+        "hr",
+        "pdfnextpage",
+        "pdfnextframe",
+        "pdfnexttemplate",
+        "pdfspacer",
+        "pdftoc",
+    }
+)
+
+
+def hasBlockContent(node, context) -> bool:
+    """
+    Whether an element holds a block, looking down through inline elements.
+
+    A block of text is one paragraph, which draws its own box; only a block
+    holding blocks needs a box drawn around them (BlockBox). Asked before
+    the children are visited, so it reads their display from the stylesheet
+    as pisaLoop will.
+    """
+    for child in node.childNodes:
+        if child.nodeType != Node.ELEMENT_NODE:
+            continue
+        tag = child.tagName.replace(":", "").lower()
+        if tag in {"style", "script"}:
+            continue
+        if tag in _BLOCK_CONTENT_TAGS:
+            return True
+        css = CSSCollect(child, context)
+        display = getDisplay(css.get("display", "inline"))
+        if display == Display.NONE or read_position(css) in {"absolute", "fixed"}:
+            continue
+        if display in {Display.BLOCK, Display.FLEX}:
+            return True
+        if display == Display.INLINE and hasBlockContent(child, context):
+            return True
+    return False
+
+
 #: The block groups that make an element's box: padding and borders, without
 #: the text-indent and vertical margins that travel with them for a block.
 _INLINE_BOX_GROUPS = tuple(
@@ -1376,6 +1438,21 @@ def pisaLoop(node, context, **kw):
             clear_box(context.frag)
             kw["margin-left"] = kw["margin-right"] = 0
 
+        # A block whose padding, border or background goes round other
+        # blocks: they are collected into a box drawn once around them all,
+        # rather than each drawing the box around itself (#627).
+        blockBox = None
+        if (
+            isBlock
+            and not isFlex
+            and not outOfFlow
+            and not context.flexData.collecting_item
+            and node.tagName not in _NO_BLOCK_BOX_TAGS
+        ):
+            boxStyle = block_box_style(context, kw)
+            if boxStyle is not None and hasBlockContent(node, context):
+                blockBox = BlockBoxData(context, kw, boxStyle)
+
         inlineBox = None
         positionedBox = None
         if outOfFlow:
@@ -1435,6 +1512,10 @@ def pisaLoop(node, context, **kw):
             if container is not None:
                 context.addStory(container)
 
+        if blockBox is not None:
+            for flowable in blockBox.close(context):
+                context.addStory(flowable)
+
         if inlineBox is not None:
             inlineBox.close(context)
         if positionedBox is not None:
@@ -1456,7 +1537,9 @@ def pisaLoop(node, context, **kw):
             if position == "relative":
                 # Drawn where top/left say, laid out and paginated where it is.
                 shift_story(context.story, blockStoryStart, offsets)
-            if breakInsideAvoid and len(context.story) - blockStoryStart > 1:
+            if breakInsideAvoid and (
+                len(context.story) - blockStoryStart > 1 or blockBox is not None
+            ):
                 context.story[blockStoryStart:] = [
                     KeepTogether(context.story[blockStoryStart:])
                 ]

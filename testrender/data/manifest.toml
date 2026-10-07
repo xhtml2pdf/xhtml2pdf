@@ -744,3 +744,15 @@ compare = ["pages", "ssim"]
 notes = """Negative z-index: two absolute boxes painted under the flow's text \
 (-2 under -1) and one with a positive z-index over it. Text is not \
 compared: the red box covers part of a line."""
+
+[fixtures.block-box-table]
+compare = ["pages", "text", "ssim"]
+notes = """A bordered, padded block round text, a table and text draws one box \
+round all three, with the table inside its padding and keeping its own border \
+colour (#627); a box whose only content is a centred table."""
+
+[fixtures.table-shrink-auto-margins]
+compare = ["pages", "text", "ssim"]
+notes = """A table with an auto margin and no width is as wide as its content \
+(#562); with a width and a height both are kept; without an auto margin it \
+fills the line."""

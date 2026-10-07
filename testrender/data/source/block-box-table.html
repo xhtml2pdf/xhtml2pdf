@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>block-box-table</title>
+<style type="text/css">
+body { font-size: 11pt; line-height: 15pt; }
+p { margin: 0 0 8pt 0; }
+table { border-collapse: collapse; }
+td { padding: 2pt 4pt; }
+.frame { border: 2pt solid #cc0000; padding: 12pt; margin: 0 0 12pt 30pt; background-color: #fde9d9; }
+.frame table { border: 1pt solid #3465a4; }
+.frame td { border: 1pt solid #3465a4; }
+.plain { border: 2pt solid #4e9a06; padding: 18pt; margin: 0 0 12pt 0; }
+.centred { margin: 0 auto; border: 1pt solid #3465a4; }
+.centred td { border: 1pt solid #3465a4; }
+</style>
+</head>
+<body>
+<p>A bordered, padded block with text on both sides of a table: one red box round all three, the table inside its padding with blue borders of its own.</p>
+<div class="frame">
+<p>Text before the table, inside the box.</p>
+<table width="100%"><tr><td>North</td><td>Eleven</td></tr><tr><td>South</td><td>Twenty-three</td></tr></table>
+<p style="margin: 8pt 0 0 0">Text after the table, inside the box.</p>
+</div>
+<p>A green box whose only content is a table centred with auto margins, as wide as its cells.</p>
+<div class="plain">
+<table class="centred"><tr><td>Left cell</td><td>A somewhat longer right cell</td></tr></table>
+</div>
+<p>The last paragraph closes the page.</p>
+</body>
+</html>

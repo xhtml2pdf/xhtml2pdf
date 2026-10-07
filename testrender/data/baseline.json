@@ -13,6 +13,14 @@
       "text": 0.7065,
       "text_doc": 0.8342
     },
+    "block-box-table": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.8744,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
     "css-background": {
       "pages": {
         "xhtml2pdf": 1
@@ -88,7 +96,7 @@
       "pages": {
         "xhtml2pdf": 1
       },
-      "ssim": 0.8992
+      "ssim": 0.8994
     },
     "css-position-relative": {
       "pages": {
@@ -106,7 +114,7 @@
       "pages": {
         "xhtml2pdf": 1
       },
-      "ssim": 0.9375,
+      "ssim": 0.9441,
       "text": 1.0,
       "text_doc": 1.0
     },
@@ -384,7 +392,7 @@
       "pages": {
         "xhtml2pdf": 1
       },
-      "ssim": 0.9483,
+      "ssim": 0.9502,
       "text": 1.0,
       "text_doc": 1.0
     },
@@ -553,6 +561,14 @@
       "text": 1.0,
       "text_doc": 1.0
     },
+    "table-shrink-auto-margins": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9054,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
     "test-align": {
       "pages": {
         "xhtml2pdf": 1
@@ -581,7 +597,7 @@
       "pages": {
         "xhtml2pdf": 4
       },
-      "ssim": 0.9309,
+      "ssim": 0.9316,
       "text": 1.0,
       "text_doc": 0.6074
     },
@@ -589,7 +605,7 @@
       "pages": {
         "xhtml2pdf": 1
       },
-      "ssim": 0.9207,
+      "ssim": 0.9204,
       "text": 1.0,
       "text_doc": 1.0
     },
@@ -668,9 +684,9 @@
       "pages": {
         "xhtml2pdf": 4
       },
-      "ssim": 0.9576,
-      "text": 0.9091,
-      "text_doc": 0.9744
+      "ssim": 0.9594,
+      "text": 1.0,
+      "text_doc": 1.0
     },
     "test-svg": {
       "pages": {

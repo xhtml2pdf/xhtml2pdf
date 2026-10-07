@@ -177,7 +177,14 @@ Known limitations of the properties above:
    content, up to the frame's width; without an ``auto`` margin a table
    fills the frame, and a ``width`` is always kept. A column given as a
    percentage keeps the table at the frame's width. The margins of a block
-   *around* a table are not applied to it.
+   *around* a table are not applied to it, unless that block has a padding,
+   a border or a background: then the table is laid out inside it.
+-  A block with a ``padding``, a ``border`` or a background of its own is
+   one box around everything it holds: its paragraphs, tables and the
+   blocks inside it are laid out in its content area, and nothing inside
+   repeats its border, padding or background. Cut by a page break, each
+   part has its edges but the cut one. A list marker hangs outside a
+   bordered ``<li>``, at the indent the list gives it.
 -  ``display``: ``block``, ``inline``, ``inline-block``, ``flex`` and
    ``none`` are laid out as such; ``inline-flex`` is laid out as
    ``flex``, block-level (see :ref:`inline-block` for how to get an
@@ -327,10 +334,6 @@ side tapers into a thin one through the corner. It applies to:
 
 Differences from a browser:
 
--  A ``<div>`` that holds other blocks has no box of its own: each block
-   inside it paints its border and background, so a radius on the
-   ``<div>`` rounds nothing. A ``display: flex; flex-direction: column``
-   container around the blocks is one box, and rounds as expected.
 -  An image's radius only clips it; an image draws no border or
    background of its own.
 -  Like a straight border, a rounded one is centred on the edge of the
@@ -339,9 +342,10 @@ Differences from a browser:
    the line from the outer corner to the inner one, as in a browser; a
    dashed or dotted side is stroked along the middle of the border and
    meets its neighbour half way round the corner.
--  A block split between pages is rounded at both ends of each part
-   (``box-decoration-break: clone``). A flex container or item, an inline
-   box and a table are square at the cut (``slice``), as in a browser.
+-  A block of text alone split between pages is rounded at both ends of
+   each part (``box-decoration-break: clone``). A block holding other
+   blocks, a flex container or item, an inline box and a table are square
+   at the cut (``slice``), as in a browser.
 -  In a table, a rounded cell draws its own border, and the grid line of
    the neighbour it shares an edge with gives way to it. A corner cell's
    background is not clipped by a rounded table, as a browser does not

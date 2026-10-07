@@ -153,6 +153,13 @@ class PmlBaseDoc(BaseDocTemplate):
         # The build is most of a long render's time, and this runs for every
         # flowable placed, including each part of one split across pages.
         check_deadline()
+        # A block's box holds what it drew; a heading in it is an entry of
+        # the index as much as one in the story.
+        inner = getattr(flowable, "drawn_flowables", None)
+        if inner is not None:
+            for drawn in inner():
+                self.afterFlowable(drawn)
+            return
         # Does the flowable contain fragments?
         if getattr(flowable, "outline", False):
             self.notify(

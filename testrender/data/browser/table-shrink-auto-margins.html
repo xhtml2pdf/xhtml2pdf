@@ -1,0 +1,35 @@
+<!--
+  Browser equivalent of data/source/table-shrink-auto-margins.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles. The last table
+  is given width: 100% here: xhtml2pdf fills the line with a table that has
+  no auto margin, by design, where a browser would shrink it.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>table-shrink-auto-margins</title>
+<style type="text/css">
+body { font-size: 11pt; line-height: 15pt; }
+p { margin: 0 0 8pt 0; }
+table { border-collapse: collapse; margin-bottom: 12pt; }
+td { border: 1pt solid #3465a4; padding: 2pt 4pt; }
+.centre { margin-left: auto; margin-right: auto; }
+.right { margin-left: auto; }
+.sized { margin-left: auto; margin-right: auto; width: 300pt; height: 90pt; }
+</style>
+</head>
+<body>
+<p>Centred with auto margins and no width: as wide as its content.</p>
+<table class="centre"><tr><td>Name</td><td>A longer description of the item</td></tr><tr><td>Size</td><td>Small</td></tr></table>
+<p>margin-left: auto alone: as wide as its content, against the right margin.</p>
+<table class="right"><tr><td>Total</td><td>42</td></tr></table>
+<p>Auto margins with a width and a height of its own: both are kept.</p>
+<table class="sized"><tr><td>One</td><td>Two</td></tr><tr><td>Three</td><td>Four</td></tr></table>
+<p>No auto margin: the table fills the line.</p>
+<table style="width: 100%"><tr><td>Full</td><td>width</td></tr></table>
+</body>
+</html>

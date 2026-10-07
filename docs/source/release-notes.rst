@@ -81,6 +81,15 @@ Unreleased.
   aligned in what is left; it used to fill the frame. A ``height`` on a
   ``<table>`` is its minimum, shared among the rows; it was ignored
   (:issue:`562`).
+* **A block's box goes round all it holds.** A ``<div>`` (or any block)
+  with a ``padding``, a ``border`` or a background draws it once, around
+  its text, tables and inner blocks, which are laid out inside its
+  padding. Its border and padding used to be copied onto every paragraph,
+  and onto the table, its rows and cells, so a bordered ``<div>`` round a
+  table drew the border round the table and each cell, and a box round
+  each paragraph. A page break inside the block cuts the box, with no edge
+  at the cut, and a heading inside it still reaches the table of contents
+  (:issue:`627`, :issue:`386`).
 
 **💪🏼 Improvements**
 
