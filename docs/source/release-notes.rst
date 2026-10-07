@@ -108,11 +108,6 @@ Unreleased
   process, so an application also using reportlab directly lost a fragment's
   bullet, and the inline image or anchor of one cloned with changes. The
   behaviour is kept for xhtml2pdf's own fragments, now a subclass.
-* ReportLab 4.4.9 is now the lowest version required. xhtml2pdf has needed
-  it since 0.2.19 -- the table of contents uses ``TableOfContents``'
-  ``notifyKind`` (4.2.2) and ``Canvas.setNamedCB`` (4.4.9) -- while still
-  declaring 4.0.4, so with 4.0.4 to 4.4.7 installed every document with a
-  ``<pdf:toc>`` failed. The lowest version is now tested as well.
 * A signing input -- ``ca_chain``, a CRL, an OCSP response -- outside the
   document's directory was refused by the document's resource policy, and the
   signature then failed with an unrelated ``TypeError``. They are read as the
@@ -161,6 +156,33 @@ Unreleased
   CSS rather than adding to it, and how to extend it (:issue:`735`).
 * The HTML reference lists ``page-break-inside`` and the ``break-*``
   properties.
+* The HTML reference describes ``position``, its offsets and ``z-index``,
+  and what differs from a browser.
+* The security guide has a checklist for deploying on a server and lists
+  the limits ``ResourceAccessPolicy.server()`` turns on.
+* The signatures guide says how the signing inputs are read, how to confine
+  them with ``signature["policy"]``, and what pyHanko fetches from the
+  network on its own.
+
+**⚠️ Deprecation**
+
+* ReportLab 4.4.9 is now the lowest version required. xhtml2pdf has needed
+  it since 0.2.19 -- the table of contents uses ``TableOfContents``'
+  ``notifyKind`` (4.2.2) and ``Canvas.setNamedCB`` (4.4.9) -- while still
+  declaring 4.0.4, so with 4.0.4 to 4.4.7 installed every document with a
+  ``<pdf:toc>`` failed. The lowest version is now tested as well.
+
+**🧹 Cleanup**
+
+* Importing xhtml2pdf no longer sets reportlab's
+  ``rl_settings.warnOnMissingFontGlyphs``, a process-wide change that never
+  took effect anyway.
+* The PDF producer is set with ``Canvas.setProducer`` and the font registry
+  is queried with ``getRegisteredFontNames()``, reportlab's public API,
+  instead of private attributes.
+* A contract test covers every reportlab import and private attribute
+  xhtml2pdf relies on, and fails on an import that is not registered; CI
+  runs a ``py3.10-rlmin`` leg with the lowest supported reportlab.
 
 --------------------------------------------
 
