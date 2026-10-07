@@ -534,6 +534,37 @@ class SourceTest(ParserTestCase):
         self.assertIn("<style> block 2: Ignoring CSS declaration", messages)
         self.assertIn("the style attribute of <p>: Ignoring", messages)
 
+    def test_unimplemented_properties_are_named_by_source(self) -> None:
+        output, _ = self._render(
+            '<style>p { box-shadow: 1px 1px red }</style><link rel="stylesheet"'
+            ' href="ext.css"><p style="opacity: 0.5; width: min(1pt, 2pt)">y</p>',
+            {"ext.css": "p { float: left }"},
+        )
+        unimplemented = [
+            # "WARNING:logger:message"
+            line.split(":", 2)[2]
+            for line in output
+            if "does not implement" in line
+        ]
+        self.assertEqual(3, len(unimplemented), output)
+        style, ext, attribute = unimplemented
+        self.assertTrue(style.startswith("<style> block 1: "), style)
+        self.assertTrue(style.endswith(": box-shadow"), style)
+        self.assertIn("ext.css: ", ext)
+        self.assertTrue(ext.endswith(": float"), ext)
+        # A style attribute used to be read without a word about it.
+        self.assertTrue(attribute.startswith("the style attribute of <p>: "))
+        self.assertTrue(attribute.endswith(": opacity"), attribute)
+        self.assertIn(
+            "the style attribute of <p>: Ignoring CSS declarations whose value"
+            " xhtml2pdf cannot evaluate: width: min()",
+            "\n".join(output),
+        )
+
+    def test_the_default_css_is_not_reported(self) -> None:
+        output, _ = self._render("<p>x</p>", {})
+        self.assertFalse([line for line in output if "does not implement" in line])
+
     def test_a_link_after_a_style_applies(self) -> None:
         # Both used to be one source, the <link> an "@import" in the middle
         # of it, and an @import after a rule is ignored.

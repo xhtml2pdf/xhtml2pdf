@@ -880,6 +880,8 @@ class pisaContext:
         #: parser.CSSCollect and reported once when the document is done, the
         #: way unimplemented property names are.
         self.cssDroppedFunctions: set[str] = set()
+        #: The same, by the source each was written in.
+        self.cssDroppedFunctionSources: dict[str | None, set[str]] = {}
         #: The RTL language *name* ("arabic", "hebrew", ...) that drives text
         #: reshaping. Not a BCP 47 tag, so it is not what goes in /Lang.
         self.language: str = ""
@@ -1062,7 +1064,9 @@ class pisaContext:
         self.css = self.cssBuilder.stylesheet(
             list(starmap(self._parseCSSSource, self.cssSources)), []
         )
-        self.cssDefault = self._parseCSSSource(self.cssDefaultText, "the default CSS")
+        self.cssDefault = self._parseCSSSource(
+            self.cssDefaultText, parser.DEFAULT_CSS_SOURCE
+        )
         self.cssCascade = css.CSSCascadeStrategy(
             userAgent=self.cssDefault, user=self.css
         )
@@ -1075,7 +1079,6 @@ class pisaContext:
         self.cssCustomNames = frozenset(
             name for name in self.cssCascade.propertyNames if name.startswith("--")
         )
-        parser.warnUnsupportedProperties(self.css)
 
     def _parseCSSSource(self, text, sourceName):
         self.cssParser.sourceName = sourceName

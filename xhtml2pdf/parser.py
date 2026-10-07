@@ -247,31 +247,37 @@ def pisaGetAttributes(c, tag, attributes):
 #: is uniform -- the frag attribute and converter that apply it.
 attrNames = PROPERTY_NAMES
 
+#: The name the library's own stylesheet is parsed under, which declares
+#: properties for the author's benefit and is never warned about.
+DEFAULT_CSS_SOURCE = "the default CSS"
 
-def warnUnsupportedProperties(rulesets) -> None:
+
+def warnUnsupportedProperties(declaredBySource: dict[str, set[str]]) -> None:
     """
-    Say once which declared properties this library will not act on.
+    Say once per source which declared properties this library will not act on.
 
     CSSCollect asks the cascade only for the names in attrNames, so anything
     else is parsed, cascaded, stored in the ruleset and then quietly ignored,
     with not even a debug line to say so. Naming them is the difference
     between "xhtml2pdf renders my CSS wrong" and "xhtml2pdf does not
-    implement float".
+    implement float"; naming where they are written, in a document with
+    several stylesheets, says which one to look in.
     """
-    declared: set[str] = set()
-    for ruleset in rulesets:
-        for declarations in ruleset.values():
-            declared.update(declarations)
-
-    # A custom property is the author's own name, read through var().
-    unsupported = sorted(
-        name for name in declared - SUPPORTED_PROPERTIES if not name.startswith("--")
-    )
-    if unsupported:
-        log.warning(
-            "Ignoring CSS properties xhtml2pdf does not implement: %s",
-            ", ".join(unsupported),
+    for source, declared in declaredBySource.items():
+        if source == DEFAULT_CSS_SOURCE:
+            continue
+        # A custom property is the author's own name, read through var().
+        unsupported = sorted(
+            name
+            for name in declared - SUPPORTED_PROPERTIES
+            if not name.startswith("--")
         )
+        if unsupported:
+            log.warning(
+                "%s: Ignoring CSS properties xhtml2pdf does not implement: %s",
+                source,
+                ", ".join(unsupported),
+            )
 
 
 #: The CSS functions the rest of the library can actually read. `url()` never
@@ -295,7 +301,9 @@ def firstUnreadableFunction(value) -> CSSTerminalFunction | None:
     )
 
 
-def dropUnreadableFunctions(cssAttrs, dropped: set[str]) -> None:
+def dropUnreadableFunctions(
+    cssAttrs, dropped: set[str], bySource: dict[str | None, set[str]] | None = None
+) -> None:
     """
     Discard declarations whose value is a CSS function we cannot evaluate.
 
@@ -317,15 +325,25 @@ def dropUnreadableFunctions(cssAttrs, dropped: set[str]) -> None:
     ]
     for name, function in unreadable:
         del cssAttrs[name]
-        dropped.add(f"{name}: {function.name}()")
+        declaration = f"{name}: {function.name}()"
+        dropped.add(declaration)
+        if bySource is not None:
+            bySource.setdefault(function.source, set()).add(declaration)
 
 
-def warnDroppedFunctions(dropped: set[str]) -> None:
-    """Say once which declarations were dropped for holding a CSS function."""
-    if dropped:
+def warnDroppedFunctions(
+    dropped: set[str], bySource: dict[str | None, set[str]] | None = None
+) -> None:
+    """
+    Say once which declarations were dropped for holding a CSS function,
+    one line for each source they were written in when bySource says.
+    """
+    groups = bySource or ({None: dropped} if dropped else {})
+    for source, declarations in groups.items():
         log.warning(
-            "Ignoring CSS declarations whose value xhtml2pdf cannot evaluate: %s",
-            ", ".join(sorted(dropped)),
+            "%sIgnoring CSS declarations whose value xhtml2pdf cannot evaluate: %s",
+            f"{source}: " if source else "",
+            ", ".join(sorted(declarations)),
         )
 
 
@@ -346,7 +364,9 @@ def parseStyleAttr(node, cssCascade) -> dict:
     sourceName = parser.sourceName
     parser.sourceName = f"the style attribute of <{node.tagName.lower()}>"
     try:
-        return parser.parseInline(node.cssElement.getStyleAttr() or "")[0]
+        style = parser.parseInline(node.cssElement.getStyleAttr() or "")[0]
+        parser.noteDeclared(style)
+        return style
     finally:
         parser.sourceName = sourceName
 
@@ -772,7 +792,9 @@ def CSSCollect(node, c):
         collectCSSAttrs(node, c.cssCascade, PROPERTY_NAMES)
         resolvePendingValues(node, node.cssAttrs, c)
 
-        dropUnreadableFunctions(node.cssAttrs, c.cssDroppedFunctions)
+        dropUnreadableFunctions(
+            node.cssAttrs, c.cssDroppedFunctions, c.cssDroppedFunctionSources
+        )
 
         c.cssAttrCache[key] = node.cssAttrs
         node.cssAttrs = resolveRootEm(node.cssAttrs, c)
@@ -1714,7 +1736,8 @@ def pisaParser(
     pisaLoop(document, context)
     # After the walk, not before: an inline style="" reaches the cascade only
     # while its element is being visited, so the set is not complete until now.
-    warnDroppedFunctions(context.cssDroppedFunctions)
+    warnDroppedFunctions(context.cssDroppedFunctions, context.cssDroppedFunctionSources)
+    warnUnsupportedProperties(context.cssParser.declaredBySource)
     # Same reason, the other way round: a <pdf:toc> may legitimately be
     # written after the entries that feed it, so neither side of the binding
     # is complete until the walk is over. An entry naming an index that never

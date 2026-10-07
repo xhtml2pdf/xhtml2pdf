@@ -993,6 +993,10 @@ class CSSSelectorCombinationQualifier(CSSSelectorQualifierBase):
 
 
 class CSSTerminalFunction:
+    #: The source it was written in (see CSSParser.sourceName), for the
+    #: warning that drops a function nothing can evaluate.
+    source: str | None = None
+
     def __init__(self, name, params) -> None:
         self.name = name
         self.params = [

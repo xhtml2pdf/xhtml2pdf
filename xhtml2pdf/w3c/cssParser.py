@@ -457,6 +457,15 @@ class CSSParser:
 
     def __init__(self, cssBuilder=None) -> None:
         self.setCSSBuilder(cssBuilder)
+        #: The properties each named source declares for elements, shorthands
+        #: expanded, in the order the sources were read: what the warning
+        #: about the properties xhtml2pdf does not implement is made from.
+        self.declaredBySource: dict[str, set[str]] = {}
+
+    def noteDeclared(self, names) -> None:
+        """Remember the property names as declared by the current source."""
+        if self.sourceName:
+            self.declaredBySource.setdefault(self.sourceName, set()).update(names)
 
     def _warn(self, msg, *args):
         """Log msg about the source being parsed, naming it when it is known."""
@@ -1127,6 +1136,13 @@ class CSSParser:
         src, selectors = self._parseSelectorGroup(src)
         src, properties = self._parseDeclarationGroup(src.lstrip())
         result = self.cssBuilder.ruleset(selectors, properties)
+        # Read off the result, where shorthands are already expanded.
+        self.noteDeclared(
+            name
+            for rules in (result if isinstance(result, tuple) else (result,))
+            for declarations in rules.values()
+            for name in declarations
+        )
         return src, result
 
     # ~ selector parsing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1570,6 +1586,8 @@ class CSSParser:
                 raise self.ParseError(msg, src, ctxsrc)
             src = src[1:].lstrip()
             term = self.cssBuilder.termFunction(result, params)
+            if hasattr(term, "source"):
+                term.source = self.sourceName
             return src, term
 
         result, src = self._getMatchResult(self.re_rgbcolor, src)
