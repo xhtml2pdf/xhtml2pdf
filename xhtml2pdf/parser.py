@@ -335,6 +335,17 @@ def warnUnknownTocNames(context) -> None:
         )
 
 
+def parseStyleAttr(node, cssCascade) -> dict:
+    """The declarations of node's style attribute, warnings naming the element."""
+    parser = cssCascade.parser
+    sourceName = parser.sourceName
+    parser.sourceName = f"the style attribute of <{node.tagName.lower()}>"
+    try:
+        return parser.parseInline(node.cssElement.getStyleAttr() or "")[0]
+    finally:
+        parser.sourceName = sourceName
+
+
 def getCSSAttr(self, cssCascade, attrName, default=NotImplemented):
     if attrName in self.cssAttrs:
         return self.cssAttrs[attrName]
@@ -348,9 +359,7 @@ def getCSSAttr(self, cssCascade, attrName, default=NotImplemented):
     try:
         style = self.cssStyle
     except Exception:
-        style = self.cssStyle = cssCascade.parser.parseInline(
-            self.cssElement.getStyleAttr() or ""
-        )[0]
+        style = self.cssStyle = parseStyleAttr(self, cssCascade)
     if attrName in style:
         result = style[attrName]
 
@@ -392,9 +401,7 @@ def collectCSSAttrs(node, cssCascade, attrNames) -> None:
     try:
         style = node.cssStyle
     except AttributeError:
-        style = node.cssStyle = cssCascade.parser.parseInline(
-            node.cssElement.getStyleAttr() or ""
-        )[0]
+        style = node.cssStyle = parseStyleAttr(node, cssCascade)
 
     attrs = node.cssAttrs
     for attrName in attrNames:
@@ -999,7 +1006,8 @@ def pisaPreLoop(node, context, *, collect=False):
                 if name == "link" and attr.href and attr.rel.lower() == "stylesheet":
                     # print "CSS LINK", attr
                     context.addCSS(
-                        '\n@import "{}" {};'.format(attr.href, ",".join(media))
+                        '\n@import "{}" {};'.format(attr.href, ",".join(media)),
+                        sourceName=f'<link href="{attr.href}">',
                     )
 
     for child in node.childNodes:

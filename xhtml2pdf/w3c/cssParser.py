@@ -440,8 +440,21 @@ class CSSParser:
     # ~ Public
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    #: Where the source being parsed came from -- a stylesheet's URL, "<style>
+    #: block 2" -- for the warnings about what in it was dropped. They used to
+    #: quote the offending text alone, which in a document pulling in several
+    #: framework stylesheets does not say which one to look in.
+    sourceName: str | None = None
+
     def __init__(self, cssBuilder=None) -> None:
         self.setCSSBuilder(cssBuilder)
+
+    def _warn(self, msg, *args):
+        """Log msg about the source being parsed, naming it when it is known."""
+        if self.sourceName:
+            log.warning("%s: %s", self.sourceName, msg % args)
+        else:
+            log.warning(msg, *args)
 
     # ~ CSS Builder to delegate to ~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -653,7 +666,7 @@ class CSSParser:
         try:
             rest, atResults = self._parseAtKeyword(src)
         except self.ParseError as exc:
-            log.warning("Ignoring CSS at-rule that could not be parsed: %s", exc)
+            self._warn("Ignoring CSS at-rule that could not be parsed: %s", exc)
             return self._skipAtRule(src)
         if atResults is not None and atResults is not NotImplemented:
             stylesheetElements.extend(atResults)
@@ -662,7 +675,7 @@ class CSSParser:
     def _skipInvalidAtRule(self, msg, src, ctxsrc):
         """Drop the at-rule ctxsrc starts with, which msg says is malformed."""
         error = self.ParseError(msg, src, ctxsrc)
-        log.warning("Ignoring CSS at-rule that could not be parsed: %s", error)
+        self._warn("Ignoring CSS at-rule that could not be parsed: %s", error)
         return self._skipAtRule(ctxsrc)
 
     def _parseRulesetOrSkip(self, src, stylesheetElements):
@@ -670,7 +683,7 @@ class CSSParser:
         try:
             src, ruleset = self._parseRuleset(src)
         except self.ParseError as exc:
-            log.warning("Ignoring CSS rule that could not be parsed: %s", exc)
+            self._warn("Ignoring CSS rule that could not be parsed: %s", exc)
             return self._skipMalformedRuleset(src)
         stylesheetElements.append(ruleset)
         return src
@@ -714,7 +727,7 @@ class CSSParser:
                 # _skipMalformedRuleset hands a leading "}" back unconsumed for
                 # an enclosing block to close; here nothing would ever
                 # consume it.
-                log.warning("Ignoring CSS rule after an unmatched '}': %.40r", src)
+                self._warn("Ignoring CSS rule after an unmatched '}': %.40r", src)
                 src = self._skipBlock(src[1:])
             else:
                 # ruleset
@@ -847,7 +860,7 @@ class CSSParser:
         elif isAtRuleIdent(src, "import"):
             # CSS 2.1 6.3: an @import after any rule other than @charset or
             # another @import is ignored.
-            log.warning("Ignoring @import after the first rule: %.40r", src)
+            self._warn("Ignoring @import after the first rule: %.40r", src)
             src, result = self._skipAtRule(src), None
         elif isAtRuleIdent(src, "frame"):
             src, result = self._parseAtFrame(src)
@@ -937,7 +950,7 @@ class CSSParser:
                 # Registered all the same, so that any @frame declared inside
                 # is consumed and does not leak into the next @page, but
                 # nothing will ever select it.
-                log.warning(
+                self._warn(
                     "Unsupported pseudo page :%s, the rules in it will not be"
                     " used. Only :left and :right are honoured.",
                     pseudopage,
@@ -1009,7 +1022,7 @@ class CSSParser:
                             # unreadable value in a stylesheet is dropped with
                             # a warning, and this used to be the one that threw
                             # the whole document away instead.
-                            log.warning(
+                            self._warn(
                                 "Unknown size value for @page: %r, keeping %r",
                                 value,
                                 self.c.pageSize,
@@ -1356,7 +1369,7 @@ class CSSParser:
                 # ";" that ends it, and the rest of the block still applies.
                 # This used to drop the whole rule, or with an inline style
                 # raise out of the document.
-                log.warning(
+                self._warn(
                     "Ignoring CSS declaration that could not be parsed: %.40r", start
                 )
                 src = self._skipDeclaration(start).lstrip()

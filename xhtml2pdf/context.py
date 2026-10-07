@@ -35,6 +35,8 @@ except ImportError:  # pragma: no cover
     # reportlab < 4.0.9.1; the class was removed from platypus.frames in
     # reportlab 5, so this branch only ever runs on the oldest supported 4.x
     from reportlab.platypus.frames import ShowBoundaryValue
+from itertools import starmap
+
 from reportlab.platypus.paraparser import ABag, ParaFrag, ps2tt, tt2ps
 
 from xhtml2pdf import default, parser
@@ -691,6 +693,7 @@ class pisaCSSBuilder(css.CSSBuilder):
 class pisaCSSParser(css.CSSParser):
     def parseExternal(self, cssResourceName):
         oldRootPath = self.rootPath
+        oldSourceName = self.sourceName
         cssFile = self.c.getFile(cssResourceName, relative=self.rootPath)
         if not cssFile:
             return None
@@ -716,15 +719,17 @@ class pisaCSSParser(css.CSSParser):
             else:
                 self.rootPath = getDirName(cssFile.getAbsPath() or cssFile.uri)
 
+            self.sourceName = str(cssFile.getAbsPath() or cssResourceName)
             return self.parse(data)
         except Exception:
-            log.exception("Error while parsing CSS file")
+            log.exception("Error while parsing CSS file %r", cssResourceName)
             return None
         finally:
             # In a finally, because this used to sit inside the try: a sheet
             # that failed to parse left rootPath pointing at itself, and every
             # url() that came after was resolved against it.
             self.rootPath = oldRootPath
+            self.sourceName = oldSourceName
 
 
 class PageNumberText:
@@ -834,6 +839,12 @@ class pisaContext:
         self.warn: int = 0
         self.cssDefaultText: str = ""
         self.cssText: str = ""
+        #: Each stylesheet of the document as (text, name), in document order.
+        #: Parsed one by one, so that a warning can say which one it is about
+        #: and an @import -- what a <link> becomes -- is still at the top of
+        #: its own sheet. Concatenated, a <link> after a <style> was an
+        #: @import after the first rule and was dropped.
+        self.cssSources: list[tuple[str, str]] = []
         #: Tags some rule selects by position; see parser.getCSSAttrCacheKey.
         self.cssPositionalTags: set[str] = set()
         #: Attributes some rule selects by; see parser.getCSSAttrCacheKey.
@@ -995,13 +1006,16 @@ class pisaContext:
         return self.uidctr
 
     # METHODS FOR CSS
-    def addCSS(self, value):
+    def addCSS(self, value, sourceName: str | None = None):
         value = value.strip()
         if value.startswith("<![CDATA["):
             value = value[9:-3]
         if value.startswith("<!--"):
             value = value[4:-3]
         self.cssText += value.strip() + "\n"
+        if sourceName is None:
+            sourceName = f"<style> block {len(self.cssSources) + 1}"
+        self.cssSources.append((value.strip(), sourceName))
 
     # METHODS FOR CSS
     def addDefaultCSS(self, value):
@@ -1030,8 +1044,10 @@ class pisaContext:
         self.cssParser._c = weakref.ref(self)
         pisaCSSParser.c = property(lambda self: self._c())
 
-        self.css = self.cssParser.parse(self.cssText)
-        self.cssDefault = self.cssParser.parse(self.cssDefaultText)
+        self.css = self.cssBuilder.stylesheet(
+            list(starmap(self._parseCSSSource, self.cssSources)), []
+        )
+        self.cssDefault = self._parseCSSSource(self.cssDefaultText, "the default CSS")
         self.cssCascade = css.CSSCascadeStrategy(
             userAgent=self.cssDefault, user=self.css
         )
@@ -1040,6 +1056,13 @@ class pisaContext:
         self.cssPositionalTags = parser.getPositionalTagNames(self.cssCascade)
         self.cssAttributeNames = parser.getAttributeSelectorNames(self.cssCascade)
         parser.warnUnsupportedProperties(self.css)
+
+    def _parseCSSSource(self, text, sourceName):
+        self.cssParser.sourceName = sourceName
+        try:
+            return self.cssParser.parse(text)
+        finally:
+            self.cssParser.sourceName = None
 
     # METHODS FOR STORY
     def addStory(self, data):
