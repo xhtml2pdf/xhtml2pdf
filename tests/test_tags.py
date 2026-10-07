@@ -119,6 +119,76 @@ class BadInputKeepsTheDocumentTestCase(TestCase):
         )
 
 
+class ChartParametersTestCase(TestCase):
+    """
+    What a chart's JSON declares reaches the drawing as a value it can use.
+
+    barWidth and barSpacing were read as strings, which the bar chart then
+    added to numbers: the conversion ended in a TypeError. fontName had to be
+    the face ReportLab registered ("noto sans_00"), not the family the
+    stylesheet names; and a line chart's strokeColor was read as an int, so
+    any colour was dropped without a word.
+    """
+
+    FONT = (
+        Path(__file__).parent
+        / "samples"
+        / "font"
+        / "Noto_Sans"
+        / "NotoSans-Regular.ttf"
+    )
+
+    def convert(self, chart: str, head: str = "") -> bytes:
+        dest = io.BytesIO()
+        html = (
+            f"<html><head>{head}</head><body>"
+            f'<canvas type="graph" width="300" height="200">{chart}</canvas>'
+            "</body></html>"
+        )
+        result = pisa.pisaDocument(io.StringIO(html), dest)
+        self.assertEqual(0, result.err)
+        return dest.getvalue()
+
+    @staticmethod
+    def fonts(pdf: bytes) -> set[str]:
+        page = PdfReader(io.BytesIO(pdf)).pages[0]
+        return {
+            str(font.get_object()["/BaseFont"])
+            for font in page["/Resources"]["/Font"].values()
+        }
+
+    def test_bar_lengths_are_numbers(self) -> None:
+        for key in ("barWidth", "barSpacing"):
+            with self.subTest(key):
+                self.convert(
+                    f'{{"type": "verticalbar", "data": [[1, 2, 3]], "{key}": 10}}'
+                )
+
+    def test_a_line_colour_is_kept(self) -> None:
+        pdf = self.convert(
+            '{"type": "horizontalline", "data": [[1, 2, 3]],'
+            ' "strokeColor": "#ff00ff"}'
+        )
+        stream = PdfReader(io.BytesIO(pdf)).pages[0].get_contents().get_data()
+        self.assertIn(b"1 0 1 RG", stream)
+
+    def test_a_font_is_named_by_its_family(self) -> None:
+        face = f'<style>@font-face {{ font-family: "Noto Sans"; src: url("{self.FONT}") }}</style>'
+        pdf = self.convert(
+            '{"type": "verticalbar", "data": [[1, 2]], "labels": ["a", "b"],'
+            ' "categoryAxis": {"labels": {"fontName": "Noto Sans"}}}',
+            head=face,
+        )
+        self.assertTrue(any("NotoSans" in name for name in self.fonts(pdf)))
+
+    def test_a_base_14_face_is_left_alone(self) -> None:
+        pdf = self.convert(
+            '{"type": "verticalbar", "data": [[1, 2]], "labels": ["a", "b"],'
+            ' "categoryAxis": {"labels": {"fontName": "Helvetica-Bold"}}}'
+        )
+        self.assertIn("/Helvetica-Bold", self.fonts(pdf))
+
+
 class SelfClosingTocTestCase(TestCase):
     """
     <pdf:toc /> puts the table of contents where it is written.

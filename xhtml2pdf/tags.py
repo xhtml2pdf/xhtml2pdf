@@ -28,6 +28,7 @@ from reportlab.graphics.charts.textlabels import Label
 from reportlab.graphics.shapes import Rect
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import inch, mm
+from reportlab.pdfbase import pdfmetrics
 from reportlab.platypus.doctemplate import FrameBreak, NextPageTemplate
 from reportlab.platypus.flowables import Flowable, HRFlowable, PageBreak, Spacer
 from reportlab.platypus.frames import Frame
@@ -41,6 +42,7 @@ from xhtml2pdf.charts import (
     LegendedPieChart,
     PieChart,
     VerticalBar,
+    font_resolver,
 )
 from xhtml2pdf.config.resources import ResourceAccessError
 from xhtml2pdf.default import DEFAULT_LANGUAGE_LIST
@@ -1063,6 +1065,25 @@ class pisaTagPDFBARCODE(pisaTag):
         c.fragList.append(afrag)
 
 
+def _chart_font(c: pisaContext, name: object) -> str:
+    """
+    The face a chart's JSON `fontName` names, as ReportLab registered it.
+
+    A family the document knows -- "Noto Sans" from a @font-face -- is the
+    face "noto sans_00"; a name ReportLab already has, such as
+    "Helvetica-Bold", stays as it is. Anything else is the document's
+    unknown-font warning and Helvetica, rather than ReportLab raising while
+    it draws.
+    """
+    if c.getFontNames(name):
+        return tt2ps(c.getFontName(name), 0, 0)
+    try:
+        pdfmetrics.getFont(str(name))
+    except Exception:
+        return tt2ps(c.getFontName(name), 0, 0)
+    return str(name)
+
+
 class pisaTagCANVAS(pisaTag):
     #: Default size of the box a <canvas> reserves, in points.
     DEFAULT_WIDTH: int = 350
@@ -1178,20 +1199,24 @@ class pisaTagCANVAS(pisaTag):
             if background:
                 draw.background = Rect(0, 0, width, height, **background)
 
-            # REQUIRED DATA
-            self.chart.set_properties(data)
+            token = font_resolver.set(lambda name: _chart_font(c, name))
+            try:
+                # REQUIRED DATA
+                self.chart.set_properties(data)
 
-            # OPTIONAL DATA
-            if "title" in data:
-                title = Label()
-                self.chart.set_title_properties(data["title"], title)
-                draw.add(title)
+                # OPTIONAL DATA
+                if "title" in data:
+                    title = Label()
+                    self.chart.set_title_properties(data["title"], title)
+                    draw.add(title)
 
-            if data.get("legend"):
-                legend = Legend()
-                self.chart.set_legend(data["legend"], legend)
-                self.chart.load_data_legend(data, legend)
-                draw.add(legend)
+                if data.get("legend"):
+                    legend = Legend()
+                    self.chart.set_legend(data["legend"], legend)
+                    self.chart.load_data_legend(data, legend)
+                    draw.add(legend)
+            finally:
+                font_resolver.reset(token)
 
             # ADD CHART TO DRAW OBJECT
             draw.add(self.chart)

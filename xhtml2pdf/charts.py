@@ -1,3 +1,6 @@
+from collections.abc import Callable
+from contextvars import ContextVar
+
 from reportlab.graphics.charts.barcharts import HorizontalBarChart, VerticalBarChart
 from reportlab.graphics.charts.doughnut import Doughnut
 from reportlab.graphics.charts.linecharts import HorizontalLineChart
@@ -5,6 +8,14 @@ from reportlab.graphics.charts.piecharts import LegendedPie, Pie
 from reportlab.graphics.widgets.markers import makeMarker
 
 from xhtml2pdf.util import getColor
+
+#: Turns the fontName a chart's JSON gives into a face ReportLab registered.
+#: A font-family as the stylesheet names it -- "Noto Sans" -- is registered as
+#: "noto sans_00", and only the <canvas> tag, which has the document's fonts,
+#: can tell; it sets this while it reads the JSON.
+font_resolver: ContextVar[Callable[[object], str]] = ContextVar(
+    "font_resolver", default=str
+)
 
 
 def set_properties(obj, data, prop_map):
@@ -21,6 +32,7 @@ def set_properties(obj, data, prop_map):
 
 class Props:
     def __init__(self, instance) -> None:
+        font = font_resolver.get()
         self.prop_map = [
             ("x", int),
             ("y", int),
@@ -45,12 +57,16 @@ class Props:
             ("columnMaximum", int),
             ("variColumn", int),
             ("deltax", int),
-            ("fontName", str),
+            ("fontName", font),
             ("colorNamePairs", list),
         ]
         self.prop_map_legend1 = [("x", int), ("y", int)]
         self.prop_map_bars = [("strokeWidth", int)]
-        self.prop_map_barLabels = [("nudge", int), ("fontSize", int), ("fontName", str)]
+        self.prop_map_barLabels = [
+            ("nudge", int),
+            ("fontSize", int),
+            ("fontName", font),
+        ]
         self.prop_map_categoryAxis = [
             ("visibleTicks", int),
             ("strokeWidth", int),
@@ -62,14 +78,14 @@ class Props:
             ("dy", int),
             ("fontSize", int),
             ("boxAnchor", str),
-            ("fontName", str),
+            ("fontName", font),
             ("textAnchor", str),
         ]
         self.prop_map_slices = [
             ("strokeWidth", int),
             ("labelRadius", float),
             ("poput", int),
-            ("fontName", str),
+            ("fontName", font),
             ("fontSize", int),
             ("strokeDashArray", str),
         ]
@@ -138,8 +154,10 @@ class BaseBarChart(BaseChart):
 
     def set_properties(self, data, props=None):
         props = Props(self)
-        props.add_prop(props.prop_map, [("barWidth", str)])
-        props.add_prop(props.prop_map, [("barSpacing", str)])
+        # Lengths: as strings they passed here and broke the drawing, which
+        # adds them to numbers.
+        props.add_prop(props.prop_map, [("barWidth", float)])
+        props.add_prop(props.prop_map, [("barSpacing", float)])
         props.add_prop(props.prop_map, [("barLabelFormat", str)])
         props.add_prop(props.prop_map, [("strokeColor", getColor)])
         props.add_prop(props.prop_map, [("groupSpacing", int)])
@@ -207,7 +225,7 @@ class HorizontalLine(HorizontalLineChart, BaseChart):
         props = Props(self)
         props.add_prop(props.prop_map, [("fillColor", getColor)])
         props.add_prop(props.prop_map, [("lineLabelFormat", str)])
-        props.add_prop(props.prop_map, [("strokeColor", int)])
+        props.add_prop(props.prop_map, [("strokeColor", getColor)])
         props.add_prop(props.prop_map, [("joinedLines", int)])
         props.add_prop(props.prop_map, [("marker", self.fill_marker)])
         super().set_properties(data, props=props)
