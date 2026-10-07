@@ -94,7 +94,14 @@ Unreleased.
 **💪🏼 Improvements**
 
 * A warning about a stylesheet names it: its path or URL, ``<style> block
-  2``, or ``the style attribute of <p>`` (:issue:`780`).
+  2``, or ``the style attribute of <p>`` (:issue:`780`). That includes the
+  warnings about properties xhtml2pdf does not implement and values it
+  cannot evaluate, now one line per source, and a property in a ``style``
+  attribute, such as ``opacity``, is reported too; it used to be dropped
+  without a word.
+* ``"@page body"`` with a ``<pdf:nexttemplate>`` before any content warns
+  that the template it names begins on the second page: ``@page body`` is
+  the unnamed ``@page`` by its name.
 
 **🐛 Bug-Fixes**
 
@@ -113,6 +120,19 @@ Unreleased.
   number no room, in either direction, and the number shrank to under a
   point. The title's last word moves to the next line instead, and the
   number keeps its size (:issue:`664`).
+* The text of a cell in a ``<table>`` with a ``margin-left`` or
+  ``margin-right`` was indented by that margin as well, and squeezed into
+  a cell that much narrower; inside a block with a margin it was indented
+  by the block's, though the table was not. A cell's text starts at the
+  cell (:issue:`386`).
+* A cell's ``padding`` was applied twice, by the cell and again by its
+  text, so a cell with ``padding: 6pt`` had its text 12pt in from each
+  side, and rows that much taller.
+* A ``<pdf:toc>`` inside a block with a box was drawn below an empty box.
+  It is drawn inside it (:issue:`627`).
+* ``overflow-wrap`` on a link did not break it when text was glued to it,
+  as in ``<a>…</a>.`` or ``(<a>…</a>``. It breaks within the link, and
+  the glued text stays with it (:issue:`339`).
 
 **📘 Documentation**
 
@@ -123,8 +143,8 @@ Unreleased.
 * ``-pdf-word-wrap`` is explained, as are ``overflow-wrap`` and
   ``word-break`` (:issue:`532`).
 * The HTML reference has sections on links and on custom properties, and
-  says what the first page of a document is; the page-template example
-  works as written.
+  says what the first page of a document is, ``@page body`` included; the
+  page-template example works as written.
 
 --------------------------------------------
 
