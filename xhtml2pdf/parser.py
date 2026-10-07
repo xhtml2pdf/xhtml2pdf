@@ -1378,6 +1378,14 @@ def pisaLoop(node, context, **kw):
             context.flexData.set_item_style(context.frag, context.cssAttr)
             kw["margin-left"] = kw["margin-right"] = 0
 
+        if node.tagName == "table":
+            # The table's own margins place the table (tables.py reads them),
+            # and the indent of a block around it is not applied to it. The
+            # content of a cell starts at the cell, indented by neither.
+            context.frag.leftIndent = context.frag.rightIndent = 0
+            context.frag.bulletIndent = context.frag.bulletRightIndent = 0
+            kw["margin-left"] = kw["margin-right"] = 0
+
         if "-pdf-outline-level" in context.cssAttr:
             context.frag.outlineLevel = int(context.cssAttr["-pdf-outline-level"])
 

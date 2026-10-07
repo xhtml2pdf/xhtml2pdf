@@ -793,6 +793,61 @@ class TableMarginTestCase(TestCase):
         self.assertBox((self.left + 72, self.width - 72), box)
 
 
+class CellTextIndentTestCase(TestCase):
+    """The text of a cell starts at the cell, whatever the table's margins."""
+
+    TEXT = "MSKU 708 412 3"
+    CELL = f'<tr><td style="padding: 0 6pt">{TEXT}</td><td>x</td></tr>'
+
+    @staticmethod
+    def positions(html: str, page: int = 0) -> dict[str, tuple[float, float]]:
+        from tests.test_position import positions
+
+        return positions(html, page)
+
+    def setUp(self) -> None:
+        ((self.left, _),) = TableMarginTestCase.boxes(f"<table>{self.CELL}</table>")
+
+    def test_the_table_margin_is_not_an_indent_too(self) -> None:
+        words = self.positions(
+            f'<table style="margin-left: 72pt; margin-right: 36pt">{self.CELL}</table>'
+        )
+        # On one line: the cell's width is not taken by an indent.
+        self.assertAlmostEqual(self.left + 72 + 6, words[self.TEXT][0], places=0)
+
+    def test_the_indent_of_a_block_around_it_is_not_either(self) -> None:
+        words = self.positions(
+            f'<div style="margin-left: 72pt"><table>{self.CELL}</table></div>'
+        )
+        self.assertAlmostEqual(self.left + 6, words[self.TEXT][0], places=0)
+
+    def test_every_page_of_a_split_table(self) -> None:
+        rows = "".join(
+            f'<tr><td style="padding: 0 6pt">row{i}</td></tr>' for i in range(150)
+        )
+        html = f'<table style="margin-left: 72pt">{rows}</table>'
+        first, second = self.positions(html, 0), self.positions(html, 1)
+        self.assertAlmostEqual(self.left + 78, first["row0"][0], places=0)
+        last = max(second, key=lambda word: int(word[3:]))
+        self.assertAlmostEqual(self.left + 78, second[last][0], places=0)
+
+    def test_a_margin_inside_the_cell_still_indents(self) -> None:
+        words = self.positions(
+            '<table style="margin-left: 72pt"><tr><td style="padding: 0 6pt">'
+            '<p style="margin-left: 10pt">Inside</p></td></tr></table>'
+        )
+        self.assertAlmostEqual(self.left + 72 + 6 + 10, words["Inside"][0], places=0)
+
+    def test_the_cell_padding_is_applied_once(self) -> None:
+        for html in (
+            '<td style="padding: 10pt">Text</td>',
+            '<td style="padding: 10pt"><p>Text</p></td>',
+        ):
+            with self.subTest(html=html):
+                words = self.positions(f"<table><tr>{html}</tr></table>")
+                self.assertAlmostEqual(self.left + 10, words["Text"][0], places=0)
+
+
 class DrawnTable(NamedTuple):
     """A table, or one part of a split one, as it was drawn."""
 

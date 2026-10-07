@@ -563,7 +563,8 @@ class pisaTagTD(pisaTag):
         if valign is not None:
             tdata.add_style(("VALIGN", begin, end, valign.upper()))
 
-        # Reset border, otherwise the paragraph block will have borders too
+        # Reset border and padding, otherwise the paragraph block will have
+        # them too: the table already draws the one and leaves the other.
         frag = c.frag
 
         set_value(
@@ -573,6 +574,10 @@ class pisaTagTD(pisaTag):
                 "borderRightWidth",
                 "borderTopWidth",
                 "borderBottomWidth",
+                "paddingLeft",
+                "paddingRight",
+                "paddingTop",
+                "paddingBottom",
             ),
             0,
         )
