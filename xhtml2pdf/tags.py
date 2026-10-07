@@ -53,6 +53,7 @@ from xhtml2pdf.util import (
     RADIUS_CORNERS,
     RADIUS_PROPERTIES,
     ImageWarning,
+    font_has_glyph,
     getAlign,
     getBorderRadius,
     getColor,
@@ -369,6 +370,33 @@ _list_style_font: dict[str, tuple[str, float]] = {
 }
 
 
+def _marker_face(c: pisaContext, frag: ParaFrag) -> str:
+    """
+    The face a text marker is drawn in: the first of the list that has it all.
+
+    A marker is drawn in one face, so it cannot be split per character the
+    way a line is; it takes the first family of the font-family list that
+    can draw every character of it. The first family alone, as it used to
+    be, put "1." in a Hebrew face without digits and drew it blank, and the
+    missing-glyph warning, which only ever saw the text, said nothing.
+    """
+    first = frag.fontName
+    text = frag.text if isinstance(frag.text, str) else ""
+    families = getattr(frag, "fontFamilies", None) or []
+    candidates = [first]
+    for family in families:
+        name = tt2ps(family, frag.bold, frag.italic)
+        if name not in candidates:
+            candidates.append(name)
+    if not text.strip():
+        return first
+    c._warn_missing_glyphs(text, candidates)
+    for name in candidates:
+        if all(char.isspace() or font_has_glyph(name, char) for char in text):
+            return name
+    return first
+
+
 class pisaTagUL(pisaTagP):
     def start(self, c: pisaContext) -> None:
         self.counter, c.listCounter = c.listCounter, 0
@@ -437,6 +465,8 @@ class pisaTagLI(pisaTag):
             marker_font, size_factor = marker
             frag.fontName = frag.bulletFontName = marker_font
             frag.fontSize *= size_factor
+        elif frag.listStyleImage is None:
+            frag.fontName = frag.bulletFontName = _marker_face(c, frag)
 
         # Left pending on the context rather than set on the frag: the frag is
         # cloned for every child of the <li> and clone drops bulletText, so a

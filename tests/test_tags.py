@@ -39,6 +39,39 @@ class PisaTagOLTestCase(TestCase):
         self.assertEqual(context.listCounter, 9)
 
 
+class ListMarkerFaceTestCase(TestCase):
+    """
+    A list's number is drawn by the first family of the list that has it.
+
+    The marker took the first family alone, so with a face that has no digits
+    first -- a Hebrew subset, or ZapfDingbats here -- "1." came out blank or
+    as dingbats, with no warning, while the item's text fell back as CSS says.
+    """
+
+    @staticmethod
+    def marker_run(family: str) -> str:
+        dest = io.BytesIO()
+        pisa.CreatePDF(
+            f'<ol style="font-family: {family}"><li>uno</li></ol>', dest=dest
+        )
+        page = PdfReader(io.BytesIO(dest.getvalue())).pages[0]
+        fonts = {
+            str(name): str(font.get_object()["/BaseFont"])
+            for name, font in page["/Resources"]["/Font"].items()
+        }
+        stream = page.get_contents().get_data().decode("latin-1")
+        name, text = re.findall(r"(/F\d+) [\d.]+ Tf[^()]*\(([^)]*)\) Tj", stream)[0]
+        return f"{fonts[name]} {text}"
+
+    def test_the_number_falls_back_with_the_text(self) -> None:
+        self.assertEqual("/Helvetica 1.", self.marker_run("ZapfDingbats, Helvetica"))
+
+    def test_a_number_no_family_can_draw_is_announced(self) -> None:
+        with self.assertLogs("xhtml2pdf", level="WARNING") as logged:
+            self.marker_run("ZapfDingbats")
+        self.assertTrue(any("'1' (U+0031)" in line for line in logged.output))
+
+
 class BadInputKeepsTheDocumentTestCase(TestCase):
     """
     Three tags used to let an exception from the value they were given escape
