@@ -15,34 +15,40 @@ def index(request):
     return render(request, "index.html")
 
 
+def url_prefix(url):
+    # Projects made with Django 4 or later set STATIC_URL = "static/", without
+    # the leading slash; {% static %} still writes "/static/...".
+    return "/" + url.lstrip("/")
+
+
 def link_callback(uri, _rel):
     """
     Convert HTML URIs to absolute system paths so xhtml2pdf can access those
     resources.
     """
-    result = finders.find(uri)
-    if result:
-        if not isinstance(result, list | tuple):
-            result = [result]
-        result = [os.path.realpath(path) for path in result]
-        path = result[0]
+    if uri.startswith(("http://", "https://", "data:")):
+        return uri
+
+    static_url = url_prefix(settings.STATIC_URL)
+    media_url = url_prefix(settings.MEDIA_URL)
+
+    if uri.startswith(media_url):
+        path = os.path.join(settings.MEDIA_ROOT, uri.removeprefix(media_url))
+    elif uri.startswith(static_url):
+        name = uri.removeprefix(static_url)
+        # finders.find wants the name below STATIC_URL, not the URL: given
+        # "/static/logo.png" it raises SuspiciousFileOperation.
+        path = finders.find(name) or os.path.join(settings.STATIC_ROOT, name)
+    elif not os.path.isabs(uri):
+        # A bare "logo.png" would be looked for in the working directory of
+        # the server process, which is rarely the project.
+        path = os.path.join(settings.BASE_DIR, uri)
     else:
-        sUrl = settings.STATIC_URL  # Typically /static/
-        sRoot = settings.STATIC_ROOT  # Typically /home/userX/project_static/
-        mUrl = settings.MEDIA_URL  # Typically /media/
-        mRoot = settings.MEDIA_ROOT  # Typically /home/userX/project_static/media/
+        return uri
 
-        if uri.startswith(mUrl):
-            path = os.path.join(mRoot, uri.replace(mUrl, ""))
-        elif uri.startswith(sUrl):
-            path = os.path.join(sRoot, uri.replace(sUrl, ""))
-        else:
-            return uri
-
-    # make sure that file exists
     if not os.path.isfile(path):
-        msg = f"media URI must start with {sUrl} or {mUrl}"
-        raise RuntimeError(msg)
+        msg = f"{uri!r} was resolved to {path}, which does not exist"
+        raise FileNotFoundError(msg)
     return path
 
 

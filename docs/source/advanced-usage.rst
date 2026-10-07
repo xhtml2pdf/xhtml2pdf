@@ -41,6 +41,13 @@ and :setting:`MEDIA_URL` settings, xhtml2pdf allows users to specify
 a ``link_callback`` parameter to point to a function that converts relative URLs
 to absolute system paths.
 
+The callback is called as ``link_callback(uri, rel)`` for every image,
+stylesheet, font and background in the document. ``uri`` is the reference as
+it is written in the HTML, ``rel`` the directory it would otherwise be resolved
+against: the directory of the document, or the current working directory when
+the source is an HTML string, as it is in a Django view. Whatever the callback
+returns is used instead of ``uri``; returning ``uri`` itself leaves it alone.
+
 .. code:: python
 
     import os
@@ -51,36 +58,41 @@ to absolute system paths.
     from xhtml2pdf import pisa
 
 
+    def url_prefix(url):
+        # Projects made with Django 4 or later set STATIC_URL = "static/",
+        # without the leading slash; {% static %} still writes "/static/...".
+        return "/" + url.lstrip("/")
+
+
     def link_callback(uri, rel):
         """
         Convert HTML URIs to absolute system paths so xhtml2pdf can access those
         resources
         """
-        result = finders.find(uri)
+        if uri.startswith(("http://", "https://", "data:")):
+            return uri
 
-        if result:
-            if not isinstance(result, (list, tuple)):
-                result = [result]
-            result = list(os.path.realpath(path) for path in result)
-            path = result[0]
+        static_url = url_prefix(settings.STATIC_URL)  # Usually /static/
+        media_url = url_prefix(settings.MEDIA_URL)    # Usually /media/
+
+        if uri.startswith(media_url):
+            path = os.path.join(settings.MEDIA_ROOT, uri.removeprefix(media_url))
+        elif uri.startswith(static_url):
+            name = uri.removeprefix(static_url)
+            # finders.find wants the name below STATIC_URL, not the URL: given
+            # "/static/logo.png" it raises SuspiciousFileOperation. It also
+            # looks in each app's static/ directory, which is where the file
+            # is before collectstatic has copied it to STATIC_ROOT.
+            path = finders.find(name) or os.path.join(settings.STATIC_ROOT, name)
+        elif not os.path.isabs(uri):
+            # A bare "logo.png" would be looked for in `rel`, the working
+            # directory of the server process, which is rarely the project.
+            path = os.path.join(settings.BASE_DIR, uri)
         else:
-            static_url = settings.STATIC_URL    # Usually /static/
-            static_root = settings.STATIC_ROOT  # Usually /home/user/project_static/
-            media_url = settings.MEDIA_URL      # Usually /media/
-            media_root = settings.MEDIA_ROOT    # Usually /home/user/project_static/media/
+            return uri
 
-            if uri.startswith(media_url):
-                path = os.path.join(media_root, uri.replace(media_url, ""))
-            elif uri.startswith(static_url):
-                path = os.path.join(static_root, uri.replace(static_url, ""))
-            else:
-                return uri
-
-        # make sure that file exists
         if not os.path.isfile(path):
-            raise RuntimeError(
-                f'media URI must start with {static_url} or {media_url}'
-            )
+            raise FileNotFoundError(f"{uri!r} was resolved to {path}, which does not exist")
         return path
 
 Then, in your Django view:
@@ -119,7 +131,8 @@ You can see it in action in :source:`demo/djangoproject` folder.
    Since 0.2.19 this example needs one more argument. ``STATIC_ROOT`` and
    ``MEDIA_ROOT`` are outside the directory of the document being rendered, so
    the resource policy refuses what the callback resolves and every image is
-   dropped. Name those directories:
+   dropped. Name those directories -- and, if the callback also returns files
+   from the apps' ``static/`` directories or from ``BASE_DIR``, those too:
 
    .. code:: python
 
