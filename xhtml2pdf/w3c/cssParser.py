@@ -932,10 +932,6 @@ class CSSParser:
             '{' S* declaration [ ';' S* declaration ]* '}' S*
         ;
         """
-        data = {}
-        pageBorder = None
-        isLandscape = False
-
         ctxsrc = src
         src = src[len("@page") :].lstrip()
         page, src = self._getIdent(src)
@@ -957,6 +953,32 @@ class CSSParser:
                 )
         else:
             pseudopage = None
+
+        # Every @page starts from the size of the unnamed one, A4 until one
+        # says otherwise, and only the unnamed one changes it. The size used
+        # to be one value for the whole stylesheet, overwritten by each rule
+        # in turn, so "@page first { size: a4 } @page second { size: a5
+        # landscape }" left the document -- and its first page -- A5
+        # landscape (#455), and a named rule without a size took the
+        # previous rule's.
+        isBody = pseudopage is None and page in {
+            None,
+            xhtml2pdf.default.DEFAULT_PAGE_NAME,
+        }
+        self.c.pageSize = self.c.bodyPageSize
+        try:
+            src, result = self._parseAtPageBlock(
+                src, ctxsrc, page, pseudopage, isBody=isBody
+            )
+        finally:
+            self.c.pageSize = self.c.bodyPageSize
+        return src, result
+
+    def _parseAtPageBlock(self, src, ctxsrc, page, pseudopage, *, isBody):
+        """The block of an @page rule, from its "{"."""
+        data = {}
+        pageBorder = None
+        isLandscape = False
 
         # src, properties = self._parseDeclarationGroup(src.lstrip())
 
@@ -1041,6 +1063,8 @@ class CSSParser:
                 page, pseudopage, data, isLandscape=isLandscape, pageBorder=pageBorder
             )
         ]
+        if isBody:
+            self.c.bodyPageSize = self.c.pageSize
 
         return src[1:].lstrip(), result
 

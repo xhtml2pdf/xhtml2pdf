@@ -19,6 +19,7 @@ import warnings
 from html import escape as html_escape
 
 from reportlab.lib import pdfencrypt
+from reportlab.platypus.doctemplate import NextPageTemplate
 from reportlab.platypus.flowables import Spacer
 from reportlab.platypus.frames import Frame
 
@@ -176,6 +177,40 @@ def start_on_mirrored_pair(doc, templates, *, declared_body: bool) -> None:
         # Names, not indexes: PmlBaseDoc.handle_nextPageTemplate resolves a
         # list of template ids into the cycle.
         doc._firstPageTemplateIndex = mirrored
+
+
+def start_on_leading_template(doc, templates, story, *, declared_body: bool) -> None:
+    """
+    Begin the document on the template a leading <pdf:nexttemplate> names.
+
+    A <pdf:nexttemplate> is reportlab's NextPageTemplate: it takes effect at
+    the next page break. Written before any content, as in
+
+        <body><pdf:nexttemplate name="cover"/><h1>Title</h1>
+
+    it came too late for the first page, which had already begun on the
+    synthetic body template -- 1cm margins -- so the template it named was
+    never used for the page it was written on (#455). When the stylesheet has
+    no unnamed @page, nothing else says what the first page is, and this is
+    taken to: the last of the leading ones names the first page's template,
+    and they are dropped from the story, having done their work.
+
+    With an unnamed @page the first page is that, as it always was, and a
+    leading <pdf:nexttemplate> keeps its reportlab meaning, "from the second
+    page on" -- a cover followed by the rest is written that way.
+    """
+    if declared_body:
+        return
+    leading = 0
+    name = None
+    while leading < len(story) and isinstance(story[leading], NextPageTemplate):
+        name = story[leading].action[1]
+        leading += 1
+    ids = [template.id for template in templates]
+    if not isinstance(name, str) or name not in ids:
+        return
+    doc._firstPageTemplateIndex = ids.index(name)
+    del story[:leading]
 
 
 def pisaDocument(
@@ -378,6 +413,9 @@ def _build(
     doc.addPageTemplates(templates)
     doc.pisaPositioned = context.positioned
     start_on_mirrored_pair(doc, templates, declared_body=declared_body)
+    start_on_leading_template(
+        doc, templates, context.story, declared_body=declared_body
+    )
 
     # Use multibuild e.g. if a TOC has to be created
     if context.multiBuild:

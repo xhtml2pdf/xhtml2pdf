@@ -422,9 +422,9 @@ Links
 Defaults
 --------
 
--  The name of the first layout template is ``body``, but you better
-   leave the name empty for defining the default template (XXX May be
-   changed in the future!)
+-  The unnamed ``@page`` defines the template called ``body``, which the
+   first page uses. Without one, the first page is A4 with 1cm margins, or
+   the template a ``<pdf:nexttemplate>`` written before any content names.
 
 Tag-Definitions
 ---------------
@@ -466,6 +466,11 @@ template is passed via the ``name`` property and refers to a
 ::
 
     <pdf:nexttemplate name="templateName">
+
+It takes effect at the next page break, so it is usually followed by
+``<pdf:nextpage/>``. Before any content, in a stylesheet with no unnamed
+``@page``, it names the first page's template instead; see
+:doc:`/format_html`.
 
 pdf:nextpage
 ~~~~~~~~~~~~

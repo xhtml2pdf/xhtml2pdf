@@ -714,3 +714,66 @@ class DefaultCssTest(TestCase):
             "visible text",
             self.text(default_css=DEFAULT_CSS + "body { font-size: 12pt; }"),
         )
+
+
+class PageTemplateTestCase(TestCase):
+    """Which template the first page uses, and what size each one is (#455)."""
+
+    @staticmethod
+    def pages(html: str) -> list[tuple[tuple[int, int], int]]:
+        """(page size, left edge of its first line of text) of each page."""
+        out = io.BytesIO()
+        pisa.CreatePDF(html, dest=out)
+        result = []
+        for page in PdfReader(out).pages:
+            lefts: list[float] = []
+
+            def visit(text, cm, tm, *_, lefts=lefts) -> None:
+                if text.strip():
+                    lefts.append(cm[4] + tm[4])
+
+            page.extract_text(visitor_text=visit)
+            size = (round(float(page.mediabox[2])), round(float(page.mediabox[3])))
+            result.append((size, round(lefts[0])))
+        return result
+
+    def test_a_leading_nexttemplate_names_the_first_page(self) -> None:
+        # The example in the documentation, 5cm then 2cm.
+        pages = self.pages(
+            "<style>@page title { margin: 5cm } @page regular { margin: 2cm }</style>"
+            '<pdf:nexttemplate name="title"/><h1>Title</h1>'
+            '<pdf:nexttemplate name="regular"/><pdf:nextpage/><h1>Chapter</h1>'
+        )
+        self.assertEqual([((595, 842), 142), ((595, 842), 57)], pages)
+
+    def test_a_named_size_is_its_own(self) -> None:
+        # The first page used to be A5 landscape: the size of the last @page.
+        pages = self.pages(
+            "<style>@page first { size: a4 portrait; margin: 2cm }"
+            " @page second { size: a5 landscape; margin: 2cm }</style>"
+            '<pdf:nexttemplate name="first"/><h1>first</h1>'
+            '<pdf:nexttemplate name="second"/><pdf:nextpage/><h1>second</h1>'
+        )
+        self.assertEqual([(595, 842), (595, 420)], [size for size, _ in pages])
+
+    def test_without_a_leading_nexttemplate_the_default_page_is_a4(self) -> None:
+        pages = self.pages(
+            "<style>@page appendix { size: a4 landscape }</style><h1>main</h1>"
+            '<pdf:nexttemplate name="appendix"/><pdf:nextpage/><h1>appendix</h1>'
+        )
+        self.assertEqual([(595, 842), (842, 595)], [size for size, _ in pages])
+
+    def test_with_an_unnamed_page_it_still_means_the_next_page(self) -> None:
+        # A cover on the unnamed template, the rest on another.
+        pages = self.pages(
+            "<style>@page { margin: 3cm } @page rest { margin: 1cm }</style>"
+            '<pdf:nexttemplate name="rest"/><h1>cover</h1><pdf:nextpage/><h1>rest</h1>'
+        )
+        self.assertEqual([85, 28], [left for _, left in pages])
+
+    def test_a_named_page_starts_from_the_unnamed_size(self) -> None:
+        pages = self.pages(
+            "<style>@page { size: a5 } @page other { margin: 1cm }</style>"
+            '<h1>one</h1><pdf:nexttemplate name="other"/><pdf:nextpage/><h1>two</h1>'
+        )
+        self.assertEqual([(420, 595), (420, 595)], [size for size, _ in pages])

@@ -339,16 +339,36 @@ large 5cm margins and regular pages with regular 2cm margins.
     </head>
 
     <body>
+        <!-- the first page -->
+        <pdf:nexttemplate name="title_template" />
         <h1>Title Page</h1>
         This is a title page with a large 5cm margin.
 
-        <!-- switch page templates -->
+        <!-- switch page templates: from the next page on -->
         <pdf:nexttemplate name="regular_template" />
+        <pdf:nextpage />
 
         <h1>Chapter 1</h1>
         This is a regular page with a regular 2cm margin.
     </body>
     </html>
+
+``<pdf:nexttemplate>`` takes effect at the next page break, which is why the
+switch is followed by ``<pdf:nextpage />``; without one, the new template
+waits for the page the content overflows onto.
+
+What the first page is:
+
+-  With an unnamed ``@page``, the first page is that one. A
+   ``<pdf:nexttemplate>`` before any content then means what it says, the
+   *next* page -- the way to have a cover on the unnamed template and every
+   page after it on another.
+-  Without one, a ``<pdf:nexttemplate>`` written before any content, as
+   above, names the first page's template. Otherwise the first page is a
+   default one, A4 with 1cm margins.
+
+Each ``@page`` starts from the size of the unnamed one (A4 if there is
+none), so a named template's ``size`` changes that template only.
 
 Demonstration
 -------------

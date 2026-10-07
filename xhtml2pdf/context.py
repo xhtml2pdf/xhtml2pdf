@@ -900,6 +900,8 @@ class pisaContext:
         self.tocNamesUsed: set[str] = set()
         self.multiBuild: bool = False
         self.pageSize: tuple[float, float] = A4
+        #: The size the unnamed @page gives, which every @page starts from.
+        self.bodyPageSize: tuple[float, float] = A4
         #: Background colour propagated from <body> to the page canvas,
         #: per CSS 2.1 14.2. None when body declares no background.
         self.pageCanvasBackground = None
