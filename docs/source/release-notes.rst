@@ -51,6 +51,66 @@ Versions >= 0.2
     --------------------------------------------
 
 
+Unreleased
+====================
+
+Unreleased.
+
+**🎉 New**
+
+* **CSS custom properties.** ``--name: value`` is declared and inherited
+  like any property, and ``var(--name)`` or ``var(--name, fallback)``
+  reads it anywhere a value goes, shorthands included; ``@page``,
+  ``@frame`` and ``@font-face`` read the ones declared for ``:root`` or
+  ``html``. A ``var()`` used to drop its declaration, with "cannot
+  evaluate: var()" (:issue:`743`).
+* ``overflow-wrap: break-word`` (or ``anywhere``, or ``word-wrap``, its
+  old name) breaks a word wider than its line -- a URL, a hash -- into
+  pieces that fit, and works on an inline element such as ``<a>``.
+  ``word-break: break-all`` is ``-pdf-word-wrap: CJK`` under its standard
+  name. A long word used to run off the page (:issue:`339`).
+* ``<a href="other.pdf">`` opens that file, next to the PDF, and any other
+  relative ``href`` is a link with the reference as written. They used to
+  be no link at all (:issue:`660`).
+* ``margin-left`` and ``margin-right`` on a ``<table>`` narrow it, on every
+  page it is split across, and ``margin: 0 auto`` centres it; a CSS
+  ``width`` on a ``<table>`` is read, and wins over the attribute
+  (:issue:`386`).
+
+**💪🏼 Improvements**
+
+* A warning about a stylesheet names it: its path or URL, ``<style> block
+  2``, or ``the style attribute of <p>`` (:issue:`780`).
+
+**🐛 Bug-Fixes**
+
+* A ``<link rel="stylesheet">`` after a ``<style>`` was dropped with
+  "Ignoring @import after the first rule".
+* A stylesheet with only named ``@page`` rules: the first page took the
+  size of the last of them, and a ``<pdf:nexttemplate>`` before any content
+  could not reach it, so the first page was always the default one. Each
+  ``@page`` now starts from the unnamed one's size, and a leading
+  ``<pdf:nexttemplate>`` names the first page's template when there is no
+  unnamed ``@page`` (:issue:`455`).
+* The page numbers of a right-to-left table of contents were drawn under a
+  point, over the titles, and its levels were not indented. They are drawn
+  on the left, and the levels indented from the right (:issue:`664`).
+
+**📘 Documentation**
+
+* The Django ``link_callback`` example works on a current Django: it hands
+  ``finders.find`` a name rather than a URL, copes with ``STATIC_URL =
+  "static/"`` and resolves a bare file name against ``BASE_DIR``
+  (:issue:`548`).
+* ``-pdf-word-wrap`` is explained, as are ``overflow-wrap`` and
+  ``word-break`` (:issue:`532`).
+* The HTML reference has sections on links and on custom properties, and
+  says what the first page of a document is; the page-template example
+  works as written.
+
+--------------------------------------------
+
+
 0.2.22
 ====================
 
