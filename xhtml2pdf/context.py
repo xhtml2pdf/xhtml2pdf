@@ -1223,6 +1223,16 @@ class pisaContext:
                     isBlock=True,
                 )
                 pstyle = self.toParagraphStyle(self.frag)
+                # A right-to-left index has its page numbers on the left and
+                # its levels indented from the right. The stylesheet's
+                # margin-left is a physical left: on a line set flush right
+                # it only shortened the line, so every level lined up.
+                pstyle.tocRTL = bool(self.frag.rtl)
+                if pstyle.tocRTL:
+                    pstyle.leftIndent, pstyle.rightIndent = (
+                        pstyle.rightIndent,
+                        pstyle.leftIndent,
+                    )
                 styles.append(pstyle)
         finally:
             # In a finally because CSS2Frag, unlike CSSCollect, does not

@@ -31,6 +31,7 @@ from PIL.Image import Image
 from reportlab.graphics.shapes import Drawing
 from reportlab.lib.utils import LazyImageReader, flatten, haveImages, open_for_read
 from reportlab.pdfbase import pdfform
+from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.platypus.doctemplate import (
     BaseDocTemplate,
     IndexingFlowable,
@@ -1318,6 +1319,49 @@ def tocNotifyKind(name: str = "") -> str:
     return f"TOCEntry:{name}" if name else "TOCEntry"
 
 
+def drawPageNumbersRTL(canvas, style, pages, dot) -> None:
+    """
+    Reportlab's drawPageNumbers for a right-to-left entry: the number flush
+    left, the fill from it to where the title ends.
+
+    drawPageNumbers measures from where the text stopped to the right margin.
+    A right-to-left title is set flush right, so there was no room left
+    there: the number shrank below a point and was drawn on top of the
+    title's last letter (#664). Here the room is what lies left of the
+    title's last line.
+    """
+    pagestr = ", ".join(str(p) for p, _ in pages)
+    end = canvas._curr_tx_info["line_x"]
+    y = canvas._curr_tx_info["cur_y"]
+
+    fontSize = style.fontSize
+    pagestrw = stringWidth(pagestr, style.fontName, fontSize)
+    while pagestrw > end and fontSize >= 1.0:
+        fontSize *= 0.9
+        pagestrw = stringWidth(pagestr, style.fontName, fontSize)
+
+    dots = 0
+    if dot:
+        dotw = stringWidth(dot, style.fontName, fontSize)
+        dots = max(int((end - pagestrw) / dotw), 0)
+
+    tx = canvas.beginText(0, y)
+    tx.setFont(style.fontName, fontSize)
+    tx.setFillColor(style.textColor)
+    tx.textLine(pagestr + dots * dot)
+    canvas.drawText(tx)
+
+    pagex = 0
+    commaw = stringWidth(", ", style.fontName, fontSize)
+    for p, key in pages:
+        w = stringWidth(str(p), style.fontName, fontSize)
+        if key:
+            canvas.linkRect(
+                "", key, (pagex, y, pagex + w, y + style.leading), relative=1
+            )
+        pagex += w + commaw
+
+
 class PmlTableOfContents(TableOfContents):
     """
     A table of contents whose page numbers are flush right, with an optional
@@ -1402,14 +1446,13 @@ class PmlTableOfContents(TableOfContents):
             """Draw the fill and the page number after an entry's text."""
             page, level, key = label.split(",", 2)
             style = self.levelStyles[int(level)]
-            drawPageNumbers(
-                canvas,
-                style,
-                [(int(page), None if key == "None" else key)],
-                availWidth,
-                availHeight,
-                self.leaderFor(style),
-            )
+            pages = [(int(page), None if key == "None" else key)]
+            if getattr(style, "tocRTL", False):
+                drawPageNumbersRTL(canvas, style, pages, self.leaderFor(style))
+            else:
+                drawPageNumbers(
+                    canvas, style, pages, availWidth, availHeight, self.leaderFor(style)
+                )
 
         self.canv.setNamedCB("drawTOCEntryEnd", drawTOCEntryEnd)
 

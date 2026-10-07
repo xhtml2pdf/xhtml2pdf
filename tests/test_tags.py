@@ -9,8 +9,9 @@ from pypdf.generic import ArrayObject
 
 from xhtml2pdf import pisa, tags
 from xhtml2pdf.context import pisaContext
+from xhtml2pdf.document import pisaStory
 from xhtml2pdf.parser import AttrContainer, pisaGetAttributes
-from xhtml2pdf.xhtml2pdf_reportlab import tocNotifyKind
+from xhtml2pdf.xhtml2pdf_reportlab import PmlTableOfContents, tocNotifyKind
 
 
 class PisaTagTestCase(TestCase):
@@ -906,3 +907,60 @@ class ImageLinkTestCase(TestCase):
                 '<p><a href="#missing"><img src="IMG" width="20" height="20"></a></p>'
             ),
         )
+
+
+class RightToLeftTocTestCase(TestCase):
+    """
+    A right-to-left table of contents (#664): its page numbers were measured
+    from the end of a title set flush right, found no room, shrank below a
+    point and landed on the title's last letter; its levels were indented
+    from the left, which a right-aligned line does not show.
+    """
+
+    FONT = Path(__file__).parent / "samples" / "font" / "Arabic_font"
+    HTML = (
+        "<html><head><style>@font-face {{ font-family: A; src: url({font}) }}"
+        " body {{ font-family: A }}</style></head>"
+        '<body dir="{dir}"><div style="page-break-after:always">'
+        '<pdf:toc leader="dots"/></div>'
+        "<h1>{h1}</h1><h2>{h2}</h2></body></html>"
+    )
+
+    def render(self, direction: str) -> list[tuple[float, str]]:
+        h1, h2 = ("مقدمة", "الفصل") if direction == "rtl" else ("One", "Sub")
+        return toc_chunks(
+            self.HTML.format(
+                font=self.FONT / "MarkaziText-Regular.ttf", dir=direction, h1=h1, h2=h2
+            )
+        )
+
+    @staticmethod
+    def numbers(chunks: list[tuple[float, str]]) -> list[tuple[float, str]]:
+        return [(x, text) for x, text in chunks if text[0].isdigit()]
+
+    def test_the_page_numbers_are_on_the_left(self) -> None:
+        numbers = self.numbers(self.render("rtl"))
+        self.assertEqual(2, len(numbers), self.render("rtl"))
+        for x, text in numbers:
+            # The left margin, with the fill running on from the number.
+            self.assertLess(x, 40, numbers)
+            self.assertIn(".", text)
+
+    def test_left_to_right_is_unchanged(self) -> None:
+        chunks = self.render("ltr")
+        self.assertEqual([], self.numbers(chunks))
+        self.assertEqual(2, sum(text[-1].isdigit() for _, text in chunks), chunks)
+
+    def test_levels_are_indented_from_the_right(self) -> None:
+        html = self.HTML.format(
+            font=self.FONT / "MarkaziText-Regular.ttf", dir="rtl", h1="a", h2="b"
+        )
+        (toc,) = [
+            flowable
+            for flowable in pisaStory(html).story
+            if isinstance(flowable, PmlTableOfContents)
+        ]
+        level0, level1 = toc.levelStyles[:2]
+        self.assertTrue(level1.tocRTL)
+        self.assertEqual(0, level1.leftIndent)
+        self.assertGreater(level1.rightIndent, level0.rightIndent)

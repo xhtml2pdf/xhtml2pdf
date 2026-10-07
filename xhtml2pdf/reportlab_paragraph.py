@@ -232,6 +232,7 @@ def _putFragLine(cur_x, tx, line):
     autoLeading = xs.autoLeading
     leading = xs.leading
     cur_x += xs.leftIndent
+    line_x = cur_x
     dal = autoLeading in {"min", "max"}
     if dal:
         if autoLeading == "max":
@@ -395,9 +396,12 @@ def _putFragLine(cur_x, tx, line):
                     # Where the text has reached, which is what a callback
                     # that fills the rest of the line needs -- the table of
                     # contents draws its leader and page number from here.
+                    # line_x is where the line began, which is where the text
+                    # of a right-to-left line ends.
                     tx._canvas._curr_tx_info = {
                         "tx": tx,
                         "cur_x": cur_x,
+                        "line_x": line_x,
                         "cur_y": cur_y,
                         "leading": leading,
                         "xs": tx.XtraState,
