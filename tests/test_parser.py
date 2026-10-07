@@ -181,7 +181,8 @@ class CSSFunctionValueTest(TestCase):
             "list-style-image: linear-gradient()",
         ),
         ("color", "color: hsl(120, 50%, 50%)", "color: hsl()"),
-        ("color", "color: var(--brand, #000)", "color: var()"),
+        # var() is substituted now; what it leaves is judged like any value.
+        ("width", "width: calc(var(--w, 10pt) + 2pt)", "width: calc()"),
         ("width", "width: min(100pt, 50%)", "width: min()"),
         ("margin-left", "margin-left: clamp(1pt, 2pt, 3pt)", "margin-left: clamp()"),
     )

@@ -23,6 +23,7 @@ import logging
 import re
 
 from xhtml2pdf.util import isRadiusPart, toList
+from xhtml2pdf.w3c.css_variables import SHORTHAND_LONGHANDS, CSSPendingValue
 
 log = logging.getLogger(__name__)
 
@@ -404,6 +405,21 @@ def parseSpecialRules(declarations, debug=0):
             log.debug("CSS special  IN: %r", d)
 
         name, parts, last = d
+        if isinstance(parts, CSSPendingValue):
+            # Which longhands a shorthand sets depends on its values, which
+            # are not known until var() is replaced. Each longhand it can set
+            # holds the whole shorthand until then; see css_variables.
+            dd.extend(
+                (
+                    longhand,
+                    CSSPendingValue(parts, shorthand=name, source=parts.source),
+                    last,
+                )
+                for longhand in SHORTHAND_LONGHANDS.get(name, ())
+            )
+            if name not in SHORTHAND_LONGHANDS:
+                dd.append(d)
+            continue
         parts = toList(parts, cast_tuple=False)
 
         # FONT

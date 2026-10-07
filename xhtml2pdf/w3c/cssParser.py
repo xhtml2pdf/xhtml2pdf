@@ -38,6 +38,12 @@ from reportlab.lib.pagesizes import landscape
 import xhtml2pdf.default
 from xhtml2pdf.util import getSize
 from xhtml2pdf.w3c import cssSpecial
+from xhtml2pdf.w3c.css_variables import (
+    CSSCustomValue,
+    CSSPendingValue,
+    InvalidVarError,
+    substituteFrom,
+)
 
 log = logging.getLogger("xhtml2pdf")
 
@@ -435,6 +441,9 @@ class CSSParser:
     re_comment = re.compile(i_comment, _reflags)
     i_important = r"!\s*(important)"
     re_important = re.compile(i_important, _reflags)
+    re_important_at_end = re.compile(r"!\s*important\s*$", _reflags)
+    #: A declaration value with var() in it, before the ";" or "}" ending it.
+    re_var_ahead = re.compile(r"[^;{}]*\bvar\s*\(", _reflags)
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # ~ Public
@@ -965,13 +974,17 @@ class CSSParser:
             None,
             xhtml2pdf.default.DEFAULT_PAGE_NAME,
         }
-        self.c.pageSize = self.c.bodyPageSize
+        # The plain parser has no document to size; only pisaCSSParser does.
+        context = getattr(self, "c", None)
+        if context is None:
+            return self._parseAtPageBlock(src, ctxsrc, page, pseudopage, isBody=False)
+        context.pageSize = context.bodyPageSize
         try:
             src, result = self._parseAtPageBlock(
                 src, ctxsrc, page, pseudopage, isBody=isBody
             )
         finally:
-            self.c.pageSize = self.c.bodyPageSize
+            context.pageSize = context.bodyPageSize
         return src, result
 
     def _parseAtPageBlock(self, src, ctxsrc, page, pseudopage, *, isBody):
@@ -1007,6 +1020,7 @@ class CSSParser:
                 data = {}
                 pageBorder = None
 
+                properties = self._resolveRootVars(properties)
                 if properties:
                     result = self.cssBuilder.ruleset(
                         [self.cssBuilder.selector("*")], properties
@@ -1073,12 +1087,14 @@ class CSSParser:
         src = src[len("@frame ") :].lstrip()
         box, src = self._getIdent(src)
         src, properties = self._parseDeclarationGroup(src.lstrip())
+        properties = self._resolveRootVars(properties)
         result = [self.cssBuilder.atFrame(box, properties)]
         return src.lstrip(), result
 
     def _parseAtFontFace(self, src):
         src = src[len("@font-face") :].lstrip()
         src, properties = self._parseDeclarationGroup(src)
+        properties = self._resolveRootVars(properties)
         result = [self.cssBuilder.atFontFace(properties)]
         return src, result
 
@@ -1434,6 +1450,9 @@ class CSSParser:
         return src, single_property
 
     def _parseDeclarationProperty(self, src, property_name):
+        if property_name.startswith("--") or self.re_var_ahead.match(src):
+            return self._parseRawDeclaration(src, property_name)
+
         # expr
         src, expr = self._parseExpression(src)
 
@@ -1445,6 +1464,50 @@ class CSSParser:
             property_name, expr, important=important
         )
         return src, single_property
+
+    def _parseRawDeclaration(self, src, property_name):
+        """
+        A custom property, or a value holding var(), kept as written.
+
+        Neither can be parsed into terms here: a custom property's value is
+        any text at all, and what a var() stands for depends on the element.
+        See css_variables.
+        """
+        end = self._findAtTopLevel(src, {";", "}"})
+        raw, src = (src, "") if end < 0 else (src[:end], src[end:])
+        important = self.re_important_at_end.search(raw)
+        if important:
+            raw = raw[: important.start()]
+        raw = raw.strip()
+        if property_name.startswith("--"):
+            value = CSSCustomValue(raw)
+        else:
+            value = CSSPendingValue(raw, source=self.sourceName)
+        single_property = self.cssBuilder.property(
+            property_name, value, important=bool(important)
+        )
+        return src, single_property
+
+    def _resolveRootVars(self, properties):
+        """
+        The declarations of an at-rule -- @page, @frame, @font-face -- with
+        their var() replaced from the custom properties of :root and html.
+
+        An at-rule belongs to no element, so the only custom properties it can
+        see are the document-wide ones, those declared before it.
+        """
+        resolved = []
+        for declaration in properties:
+            name, value, *rest = declaration
+            if isinstance(value, CSSPendingValue):
+                try:
+                    text = substituteFrom(value, self.cssBuilder.rootCustomProperties)
+                    _, value = self._parseExpression(text.strip())
+                except (InvalidVarError, self.ParseError) as exc:
+                    self._warn("Ignoring %s: %s, %s", name, str(value), exc)
+                    continue
+            resolved.append((name, value, *rest))
+        return resolved
 
     def _parseExpression(self, src, *, return_list=False):
         """

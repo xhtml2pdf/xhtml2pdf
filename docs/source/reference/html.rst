@@ -343,6 +343,30 @@ Differences from a browser:
 -  The radius is not inherited, as CSS says; ``inherit`` takes the
    parent's, for the shorthand and each corner.
 
+Custom properties and var()
+---------------------------
+
+A custom property, ``--name: value``, is declared like any other and
+inherited by everything inside the element; ``var(--name)`` reads it, and
+``var(--name, fallback)`` gives a value for when it is not there. Every
+property above can use them, shorthands included:
+
+::
+
+    :root { --brand: #0b5394; --gap: 6pt 12pt }
+    h1 { color: var(--brand) }
+    .card { margin: var(--gap); border: 1pt solid var(--brand) }
+    .card.warning { --brand: #cc0000 }
+
+A ``var()`` that names a property nobody declared and has no fallback, or
+properties that refer to each other in a circle, leave the declaration out,
+with a warning: the element keeps what it inherits, or the initial value.
+``@page``, ``@frame`` and ``@font-face`` belong to no element, so a
+``var()`` in them reads the properties declared for ``:root`` or ``html``
+before them.
+
+``calc()`` is not evaluated, with or without a ``var()`` in it.
+
 Selectors
 ---------
 

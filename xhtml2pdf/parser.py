@@ -143,6 +143,7 @@ from xhtml2pdf.w3c.css import (
     CSSSelectorLogicalQualifier,
     CSSTerminalFunction,
 )
+from xhtml2pdf.w3c.css_variables import CSSPendingValue, InvalidVarError, substituteFrom
 from xhtml2pdf.xhtml2pdf_reportlab import PmlLeftPageBreak, PmlRightPageBreak
 
 log = logging.getLogger(__name__)
@@ -261,7 +262,10 @@ def warnUnsupportedProperties(rulesets) -> None:
         for declarations in ruleset.values():
             declared.update(declarations)
 
-    unsupported = sorted(declared - SUPPORTED_PROPERTIES)
+    # A custom property is the author's own name, read through var().
+    unsupported = sorted(
+        name for name in declared - SUPPORTED_PROPERTIES if not name.startswith("--")
+    )
     if unsupported:
         log.warning(
             "Ignoring CSS properties xhtml2pdf does not implement: %s",
@@ -646,6 +650,114 @@ def getCSSAttrCacheKey(
     )
 
 
+def customProperties(node, c) -> dict[str, str]:
+    """
+    The custom properties of node: every one its parent has, and its own
+    declarations over them, since custom properties are always inherited.
+
+    Worked out on demand and kept on the element. A parent's are usually
+    already there, but an element whose styles came from the cache never had
+    them worked out, so the walk goes up as far as it must.
+    """
+    chain = []
+    node_ = node
+    while (
+        node_ is not None
+        and node_.nodeType == Node.ELEMENT_NODE
+        and getattr(node_, "cssCustomProps", None) is None
+    ):
+        chain.append(node_)
+        node_ = node_.parentNode
+    inherited: dict[str, str] = {}
+    if node_ is not None and node_.nodeType == Node.ELEMENT_NODE:
+        inherited = node_.cssCustomProps
+
+    for element in reversed(chain):
+        own: dict[str, str] = {}
+        if c.cssCustomNames:
+            if getattr(element, "cssElement", None) is None:
+                element.cssElement = cssDOMElementInterface.CSSDOMElementInterface(
+                    element
+                )
+            own = c.cssCascade.findStylesForElement(
+                element.cssElement, c.cssCustomNames
+            )
+        style = getattr(element, "cssStyle", None)
+        if style is None:
+            style = element.cssStyle = parseStyleAttr(element, c.cssCascade)
+        own.update((k, v) for k, v in style.items() if k.startswith("--"))
+
+        props = inherited
+        if own:
+            props = dict(inherited)
+            for name, value in own.items():
+                keyword = str(value).strip().lower()
+                if keyword in {"initial", "unset"}:
+                    props.pop(name, None)
+                elif keyword != "inherit":
+                    props[name] = value
+        element.cssCustomProps = props
+        inherited = props
+    return node.cssCustomProps
+
+
+def resolvePendingValues(node, attrs, c) -> None:
+    """
+    Replace the var() in node's declarations with its custom properties, and
+    parse what comes out (#743).
+
+    A declaration whose var() resolves to nothing -- an undefined property
+    with no fallback, a cycle -- or to something its property cannot read is
+    dropped, which leaves the element with what it inherits or with the
+    initial value: what CSS calls invalid at computed-value time. It used to
+    be dropped whatever it said, with "cannot evaluate: var()".
+    """
+    pending = [
+        name for name, value in attrs.items() if isinstance(value, CSSPendingValue)
+    ]
+    if not pending:
+        return
+    props = customProperties(node, c)
+    for name in pending:
+        value = attrs[name]
+        declared = value.shorthand or name
+        try:
+            text = substituteFrom(value, props)
+        except InvalidVarError as exc:
+            _warnInvalidVar(c, declared, value, str(exc))
+            del attrs[name]
+            continue
+        parsed = _parseSubstituted(c, declared, text, value.source)
+        if name in parsed:
+            attrs[name] = parsed[name]
+        else:
+            del attrs[name]
+
+
+def _parseSubstituted(c, declared: str, text: str, source: str | None) -> dict:
+    """The longhands of `declared: text`, parsed once per document."""
+    key = (declared, text)
+    cached = c.cssVarCache.get(key)
+    if cached is None:
+        parser = c.cssCascade.parser
+        sourceName = parser.sourceName
+        parser.sourceName = ", ".join(filter(None, (source, f"var() in {declared}")))
+        try:
+            cached = parser.parseInline(f"{declared}: {text}")[0]
+        finally:
+            parser.sourceName = sourceName
+        c.cssVarCache[key] = cached
+    return cached
+
+
+def _warnInvalidVar(c, declared: str, value, reason: str) -> None:
+    key = (declared, str(value))
+    if key not in c.cssVarWarned:
+        c.cssVarWarned.add(key)
+        where = f"{value.source}: " if value.source else ""
+        log.warning("%sIgnoring %s: %s, as %s", where, declared, value, reason)
+
+
 def CSSCollect(node, c):
     if c.css:
         key = getCSSAttrCacheKey(node, c.cssPositionalTags, c.cssAttributeNames)
@@ -657,6 +769,7 @@ def CSSCollect(node, c):
         node.cssElement = cssDOMElementInterface.CSSDOMElementInterface(node)
         node.cssAttrs = CSSAttrs()
         collectCSSAttrs(node, c.cssCascade, PROPERTY_NAMES)
+        resolvePendingValues(node, node.cssAttrs, c)
 
         dropUnreadableFunctions(node.cssAttrs, c.cssDroppedFunctions)
 

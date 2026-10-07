@@ -522,11 +522,15 @@ class SourceTest(ParserTestCase):
     def test_a_warning_names_the_stylesheet(self) -> None:
         output, _ = self._render(
             '<link rel="stylesheet" href="fa.css"><style>p { width: calc(1px }</style>'
-            '<p style="color: calc(2px">x</p>',
+            '<p class="fa" style="color: calc(2px">x</p>',
             {"fa.css": ".fa { margin-left: calc(var(--w, 2em) * -1) }"},
         )
         messages = "\n".join(output)
-        self.assertRegex(messages, r"fa\.css: Ignoring CSS declaration .*margin-left")
+        # The issue's own declaration: var() is substituted when an element
+        # uses it, and what comes out is still traced to its stylesheet.
+        self.assertRegex(
+            messages, r"fa\.css, var\(\) in margin-left: Ignoring CSS declaration"
+        )
         self.assertIn("<style> block 2: Ignoring CSS declaration", messages)
         self.assertIn("the style attribute of <p>: Ignoring", messages)
 

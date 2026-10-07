@@ -847,6 +847,11 @@ class pisaContext:
         self.warn: int = 0
         self.cssDefaultText: str = ""
         self.cssText: str = ""
+        self.cssCustomNames: frozenset[str] = frozenset()
+        #: Each `property: value` var() substitution produced, parsed.
+        self.cssVarCache: dict[tuple[str, str], dict] = {}
+        #: The var() declarations already reported as unusable.
+        self.cssVarWarned: set[tuple[str, str]] = set()
         #: Each stylesheet of the document as (text, name), in document order.
         #: Parsed one by one, so that a warning can say which one it is about
         #: and an @import -- what a <link> becomes -- is still at the top of
@@ -1065,6 +1070,11 @@ class pisaContext:
         # Which tags any rule selects by position; see getCSSAttrCacheKey.
         self.cssPositionalTags = parser.getPositionalTagNames(self.cssCascade)
         self.cssAttributeNames = parser.getAttributeSelectorNames(self.cssCascade)
+        #: Every custom property some rule declares, which is all an element
+        #: can have besides those in its style attribute.
+        self.cssCustomNames = frozenset(
+            name for name in self.cssCascade.propertyNames if name.startswith("--")
+        )
         parser.warnUnsupportedProperties(self.css)
 
     def _parseCSSSource(self, text, sourceName):
