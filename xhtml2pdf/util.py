@@ -2101,6 +2101,26 @@ class ImageWarning(Exception):  # noqa: N818
 _font_coverage: dict[str, frozenset[int] | None] = {}
 
 
+#: The two base-14 faces with an encoding of their own, and ReportLab's codec
+#: for it. Their glyph names -- "a1" to "a191" in ZapfDingbats -- are not in
+#: the Adobe glyph list, so read by name ZapfDingbats covered only the space
+#: and every dingbat was reported missing. The codec is what ReportLab itself
+#: encodes their text with.
+_SYMBOLIC_CODECS: dict[str, str] = {
+    "SymbolEncoding": "symbol",
+    "ZapfDingbatsEncoding": "zapfdingbats",
+}
+
+
+def _codec_coverage(codec: str) -> frozenset[int]:
+    """Every codepoint one of the 256 codes of `codec` decodes to."""
+    codepoints: set[int] = set()
+    for code in range(256):
+        with contextlib.suppress(UnicodeDecodeError):
+            codepoints.update(ord(char) for char in bytes([code]).decode(codec))
+    return frozenset(codepoints)
+
+
 def _coverage(font_name: str) -> frozenset[int] | None:
     """
     Every codepoint `font_name` has a glyph for, or None if it cannot be told.
@@ -2127,6 +2147,8 @@ def _coverage(font_name: str) -> frozenset[int] | None:
     char_to_glyph = getattr(face, "charToGlyph", None)
     if char_to_glyph is not None:
         coverage = frozenset(char_to_glyph)
+    elif getattr(font, "encName", None) in _SYMBOLIC_CODECS:
+        coverage = _codec_coverage(_SYMBOLIC_CODECS[font.encName])
     else:
         vector = getattr(getattr(font, "encoding", None), "vector", None)
         if vector is not None:

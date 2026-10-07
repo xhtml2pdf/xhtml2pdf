@@ -214,6 +214,22 @@ class GlyphFallbackTest(TestCase):
         with self.assertNoLogs("xhtml2pdf", level=logging.WARNING):
             self.declaring("Arial, Fallback")
 
+    def test_a_dingbat_is_covered(self) -> None:
+        """
+        ZapfDingbats names its glyphs a1..a191, which no glyph list maps.
+
+        Every dingbat used to be reported missing although it was drawn.
+        """
+        with self.assertNoLogs("xhtml2pdf", level=logging.WARNING):
+            render(document("ZapfDingbats", text="✓ ✔ ❤ ➔"))
+        with self.assertNoLogs("xhtml2pdf", level=logging.WARNING):
+            render(document("Symbol", text="\u03b1 \u03b2 \u2022"))
+
+    def test_a_letter_in_a_symbol_face_is_still_reported(self) -> None:
+        with self.assertLogs("xhtml2pdf", level=logging.WARNING) as caught:
+            render(document("ZapfDingbats", text="a"))
+        self.assertTrue(any("U+0061" in m for m in caught.output), caught.output)
+
 
 class HashPrefixedFamilyTest(TestCase):
     """
