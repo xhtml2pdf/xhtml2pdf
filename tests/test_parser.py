@@ -27,6 +27,8 @@ from xhtml2pdf.properties import (
     PROPERTY_NAMES,
     SUPPORTED_PROPERTIES,
     CSSAttrs,
+    compact_frag,
+    reset_non_inherited,
 )
 
 #: The two literal blocks in the reference documentation that list properties.
@@ -511,12 +513,60 @@ class CSSAttrCacheTest(TestCase):
         document that filled them.
         """
         first, second = pisaContext("."), pisaContext(".")
-        pisaParser(b"<p>one</p>", first)
-        pisaParser(b"<p>two</p>", second)
+        self.assertIsNot(first.cssAttrCache, second.cssAttrCache)
 
-        self.assertTrue(first.cssAttrCache)
-        self.assertTrue(second.cssAttrCache)
-        self.assertFalse(set(first.cssAttrCache) & set(second.cssAttrCache))
+    def test_the_walk_lets_go_of_the_document(self) -> None:
+        """
+        The cache's keys name each element's parent, and the context kept the
+        last element visited, so the whole DOM used to live on through the
+        ReportLab build, where the story is at its largest.
+        """
+        context = pisaContext(".")
+        pisaParser(b"<div><p>one</p><p>two</p></div>", context)
+
+        self.assertIsNone(context.node)
+        self.assertEqual(context.cssAttrCache, {})
+
+
+class FragDefaultsTest(TestCase):
+    """A frag holds what its element changed and reads the rest as defaults."""
+
+    def test_a_clone_copies_only_what_was_changed(self) -> None:
+        context = pisaContext(".")
+        root = context.frag
+        self.assertEqual({}, root.__dict__)
+        self.assertEqual(10, root.fontSize)
+
+        # clone() always writes bulletText: a clone never carries the bullet.
+        child = root.clone(fontSize=20)
+        self.assertEqual({"fontSize": 20, "bulletText": None}, child.__dict__)
+        self.assertEqual(root.leading, child.leading)
+
+    def test_resetting_drops_a_copy_of_the_initial_value(self) -> None:
+        context = pisaContext(".")
+        frag = context.frag.clone()
+        frag.flexGrow = 2.0
+        reset_non_inherited(frag)
+        self.assertNotIn("flexGrow", frag.__dict__)
+        self.assertEqual(0.0, frag.flexGrow)
+
+    def test_compacting_keeps_what_only_looks_equal(self) -> None:
+        context = pisaContext(".")
+        defaults = type(context.frag)
+        frag = context.frag.clone()
+        defaults.offset = 0.0
+        frag.fontSize = defaults.fontSize  # the same value: dropped
+        frag.offset = -0.0  # equal to 0.0, printed apart: kept
+        frag.bold = 0.0  # equal to 0, another type: kept
+        frag.fontFamilies = list(defaults.fontFamilies)  # mutable: kept
+        compact_frag(frag)
+        self.assertEqual({"offset", "bold", "fontFamilies"}, set(frag.__dict__))
+
+    def test_each_render_has_its_own_defaults(self) -> None:
+        first, second = pisaContext("."), pisaContext(".")
+        self.assertIsNot(type(first.frag), type(second.frag))
+        first.frag.__class__.fontSize = 99
+        self.assertNotEqual(99, second.frag.fontSize)
 
 
 class InlineOnlyPropertyTest(TestCase):

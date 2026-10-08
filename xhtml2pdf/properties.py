@@ -513,9 +513,44 @@ def reset_non_inherited(frag) -> None:
     element's own declarations apply, so a value set on the parent does not
     reach the child unless the child declares it too. getParaFrag calls it
     on the root frag so the attributes exist from the start.
+
+    A frag whose class already holds the initial value (see
+    context._with_defaults) drops its own copy instead of writing another.
     """
+    own = frag.__dict__
+    defaults = type(frag)
     for name, value in NON_INHERITED_FRAG_INITIALS.items():
-        setattr(frag, name, value)
+        if getattr(defaults, name, _NO_DEFAULT) is value:
+            own.pop(name, None)
+        else:
+            setattr(frag, name, value)
+
+
+_NO_DEFAULT = object()
+
+
+#: Values that cannot change once made, so a frag can share its class's copy
+#: of an equal one instead of keeping its own.
+_IMMUTABLE = (str, int, float, bool, type(None))
+
+
+def compact_frag(frag) -> None:
+    """
+    Drop what `frag` holds that its class already holds, the same value.
+
+    CSS2Frag and the tags write a value for much of what they read even when
+    it comes out as the default, so an element's frag would carry a few dozen
+    copies of the class's own values into every clone made from it. Only
+    immutable values go: a list equal today could be appended to tomorrow.
+    """
+    defaults = type(frag)
+    own = frag.__dict__
+    for name, value in list(own.items()):
+        if type(value) in _IMMUTABLE:
+            default = getattr(defaults, name, _NO_DEFAULT)
+            # repr tells 0.0 from -0.0, which compare equal and print apart.
+            if type(default) is type(value) and repr(default) == repr(value):
+                del own[name]
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

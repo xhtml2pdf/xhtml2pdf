@@ -65,6 +65,7 @@ from xhtml2pdf.properties import (
     CSSAttrs,
     UniformGroup,
     apply_uniform_groups,
+    compact_frag,
     reset_non_inherited,
 )
 
@@ -1544,7 +1545,9 @@ def pisaLoop(node, context, **kw):
             obj = klass(node, attr)
             obj.start(context)
 
-        # Visit child nodes
+        # Visit child nodes, with a frag that carries only what this element
+        # changed: every clone of it below copies what it holds.
+        compact_frag(context.frag)
         context.fragBlock = fragBlock = copy.copy(context.frag)
         if isBlock:
             # A block's background belongs to its box, which fragBlock (or the
@@ -1780,6 +1783,15 @@ def pisaParser(
     # a kind nobody listens for goes nowhere -- so this warning is its only
     # trace. The bookmark and the link destination still happen.
     warnUnknownTocNames(context)
+    # The walk is over and the story is all ReportLab needs from here on. The
+    # last element visited and the cascade cache, whose keys name each
+    # element's parent, would otherwise keep the whole DOM alive through the
+    # build -- the moment the story is at its largest. Unlinking breaks the
+    # parent/child cycles too, so the tree goes now rather than whenever the
+    # cyclic collector next runs. It was parsed above; nothing else has it.
+    context.node = None
+    context.cssAttrCache.clear()
+    document.unlink()
     return context
 
 

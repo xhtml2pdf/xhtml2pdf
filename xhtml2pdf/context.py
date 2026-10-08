@@ -270,7 +270,23 @@ def getParaFrag(style) -> ParaFrag:
     frag.bulletFontName = "Helvetica"
     frag.zoom = 1.0
 
-    return frag
+    return _with_defaults(frag)
+
+
+def _with_defaults(frag: PmlParaFrag) -> PmlParaFrag:
+    """
+    An empty frag that reads every attribute of `frag` as its default.
+
+    A frag carries some ninety attributes and every element clones one, so a
+    long document used to hold ninety-odd copies of the same values per run
+    of text -- 3 KB a fragment, most of a render's memory. The values move
+    onto a class made for this render, and a clone copies only what an
+    element changed. Reading an attribute is unchanged: Python finds it on
+    the instance or, failing that, on the class.
+    """
+    defaults = type(PmlParaFrag.__name__, (PmlParaFrag,), dict(frag.__dict__))
+    defaults.__qualname__ = PmlParaFrag.__qualname__
+    return defaults()
 
 
 def _is_windows_drive_path(path: str) -> bool:
