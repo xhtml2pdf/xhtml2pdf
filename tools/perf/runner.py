@@ -126,9 +126,10 @@ COUNTERS = (
 
 #: Every module that holds its own reference to pdfmetrics.stringWidth, so that
 #: counting it means replacing each of those names, not just the original.
+#: xhtml2pdf.util's cached stringWidth reaches it through the module, so what
+#: is counted is a width actually measured, not one remembered.
 _STRING_WIDTH_HOLDERS = (
     "reportlab.pdfbase.pdfmetrics",
-    "xhtml2pdf.reportlab_paragraph",
     "xhtml2pdf.xhtml2pdf_reportlab",
     "xhtml2pdf.paragraph",
     "xhtml2pdf.builders.flex",

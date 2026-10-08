@@ -2,8 +2,8 @@
 """
 A cProfile run over one document of the corpus.
 
-    python tools/perf/profile.py test-loremipsum
-    python tools/perf/profile.py test-list --sort cumulative --lines 30
+    python tools/perf/profile_doc.py test-loremipsum
+    python tools/perf/profile_doc.py test-list --sort cumulative --lines 30
 
 The CLI's own --profile flag (xhtml2pdf/pisa.py) profiles whatever document it
 was pointed at, including the interpreter start-up and the first-render
@@ -27,7 +27,9 @@ import runner
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("name", help="part of a fixture's file name")
+    parser.add_argument(
+        "name", help="part of a fixture's file name, or of a --large document's"
+    )
     parser.add_argument("--sort", default="tottime", choices=("tottime", "cumulative"))
     parser.add_argument("--lines", type=int, default=25)
     parser.add_argument(
@@ -35,7 +37,7 @@ def main(argv=None) -> int:
     )
     args = parser.parse_args(argv)
 
-    docs = corpus.fixtures([args.name])
+    docs = corpus.fixtures([args.name]) or corpus.large([args.name])
     if not docs:
         print(f"no fixture matching {args.name!r}", file=sys.stderr)
         return 1

@@ -624,6 +624,45 @@ class MemoizedTest(TestCase):
         self.assertEqual({}, utils.getSize.cache)
 
 
+class StringWidthCacheTest(TestCase):
+    def tearDown(self) -> None:  # noqa: PLR6301
+        utils.reset_caches()
+
+    def test_a_width_is_the_one_reportlab_measures(self) -> None:
+        from reportlab.pdfbase import pdfmetrics
+
+        for text in ("word", "Ünïcode", ""):
+            with self.subTest(text=text):
+                self.assertEqual(
+                    pdfmetrics.stringWidth(text, "Helvetica", 11),
+                    utils.stringWidth(text, "Helvetica", 11),
+                )
+
+    def test_a_word_is_measured_once_per_render(self) -> None:
+        from unittest import mock
+
+        from reportlab.pdfbase import pdfmetrics
+
+        with mock.patch.object(
+            pdfmetrics, "stringWidth", wraps=pdfmetrics.stringWidth
+        ) as measure:
+            utils.stringWidth("again", "Helvetica", 11)
+            utils.stringWidth("again", "Helvetica", 11)
+            utils.stringWidth("again", "Helvetica", 12)
+            self.assertEqual(2, measure.call_count)
+            utils.reset_caches()
+            utils.stringWidth("again", "Helvetica", 11)
+            self.assertEqual(3, measure.call_count)
+
+    def test_the_cache_is_bounded(self) -> None:
+        from unittest import mock
+
+        with mock.patch.object(utils, "STRING_WIDTHS_MAX", 3):
+            for text in "abcde":
+                utils.stringWidth(text, "Helvetica", 11)
+            self.assertLessEqual(len(utils._string_widths), 3)
+
+
 class _RecordingCanvas:
     """Records the drawing calls a box helper makes, in order."""
 

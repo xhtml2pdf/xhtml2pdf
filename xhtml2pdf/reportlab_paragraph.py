@@ -18,12 +18,18 @@ from reportlab.lib.abag import ABag
 from reportlab.lib.colors import Color
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.lib.textsplit import ALL_CANNOT_START
-from reportlab.pdfbase.pdfmetrics import getAscentDescent, stringWidth
+from reportlab.pdfbase.pdfmetrics import getAscentDescent
 from reportlab.platypus.flowables import Flowable
 from reportlab.platypus.paraparser import ParaParser
 from reportlab.rl_settings import _FUZZ
 
-from xhtml2pdf.util import drawBoxBackground, drawBoxBorders, getSize, roundedClip
+from xhtml2pdf.util import (
+    drawBoxBackground,
+    drawBoxBorders,
+    getSize,
+    roundedClip,
+    stringWidth,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -587,19 +593,26 @@ def _sameFrag(f, g):
         or hasattr(g, "lineBreak")
     ):
         return 0
-    for a in (
-        "fontName",
-        "fontSize",
-        "textColor",
-        "backColor",
-        "rise",
-        "underline",
-        "strike",
-        "link",
-    ):
-        if getattr(f, a, None) != getattr(g, a, None):
+    for a in _SAME_FRAG_ATTRIBUTES:
+        x = getattr(f, a, None)
+        y = getattr(g, a, None)
+        # Frags of one render mostly share their values, and a colour's == is
+        # a method call that builds two tuples.
+        if x is not y and x != y:
             return 0
     return 1
+
+
+_SAME_FRAG_ATTRIBUTES = (
+    "fontName",
+    "fontSize",
+    "textColor",
+    "backColor",
+    "rise",
+    "underline",
+    "strike",
+    "link",
+)
 
 
 def _breakable(f) -> bool:
@@ -1536,13 +1549,13 @@ class Paragraph(Flowable):
             fN = f.fontName
             words = (hasattr(f, "text") and split(f.text, " ")) or f.words
 
-            def func(w: list, fS=fS, fN=fN) -> int:
+            def func(w: list, fS=fS, fN=fN) -> float:
                 return stringWidth(w, fN, fS)
 
         else:
             words = _getFragWords(frags)
 
-            def func(w: list, fS=None, fN=None) -> int:  # noqa: ARG001
+            def func(w: list, fS=None, fN=None) -> float:  # noqa: ARG001
                 return w[0]
 
         return max(map(func, words))

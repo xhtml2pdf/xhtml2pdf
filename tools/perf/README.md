@@ -13,7 +13,7 @@ make perf-golden           # check it still renders byte for byte
 python tools/perf/bench.py --counters        # work done, not time taken
 python tools/perf/bench.py --json after.json
 python tools/perf/bench.py --compare after.json
-python tools/perf/profile.py test-loremipsum
+python tools/perf/profile_doc.py test-loremipsum
 ```
 
 ## Why there are two kinds of number

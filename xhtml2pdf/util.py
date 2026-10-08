@@ -130,10 +130,44 @@ class Memoized:
             return self.func(*args, **kwargs)
 
 
+#: (text, font name, size, encoding) -> width, for stringWidth below.
+_string_widths: dict[tuple, float] = {}
+
+#: Entries kept before the cache starts over. A long book reaches a few tens
+#: of thousands of distinct words; this keeps a pathological document from
+#: holding more than some megabytes.
+STRING_WIDTHS_MAX: int = 100_000
+
+
+def stringWidth(text, fontName, fontSize, encoding="utf8") -> float:
+    """
+    pdfmetrics.stringWidth, remembered for the length of a render.
+
+    Breaking a paragraph into lines measures every word, again for every
+    width it is tried at, and ReportLab without its C accelerator measures
+    in Python: encode the word, then sum a width per byte. The same words
+    recur all through a document, so most of those were measured before.
+
+    The cache is dropped at the end of each render, with the memoized
+    results, so a font registered again under the same name between two
+    documents is measured afresh.
+    """
+    key = (text, fontName, fontSize, encoding)
+    width = _string_widths.get(key)
+    if width is None:
+        if len(_string_widths) >= STRING_WIDTHS_MAX:
+            _string_widths.clear()
+        width = _string_widths[key] = pdfmetrics.stringWidth(
+            text, fontName, fontSize, encoding
+        )
+    return width
+
+
 def reset_caches() -> None:
     """Drop every memoized result. Called at the end of each render."""
     for memoized in Memoized._instances:
         memoized.clear()
+    _string_widths.clear()
 
 
 def toList(value: Any, *, cast_tuple: bool = True) -> list:
