@@ -663,6 +663,20 @@ class StringWidthCacheTest(TestCase):
             self.assertLessEqual(len(utils._string_widths), 3)
 
 
+class SplitByCoverageTest(TestCase):
+    def test_text_the_first_face_covers_is_one_run(self) -> None:
+        self.assertEqual(
+            [("plain text", "Helvetica")],
+            utils.split_by_coverage("plain text", ["Helvetica", "Symbol"]),
+        )
+
+    def test_a_character_only_a_later_face_has_gets_its_own_run(self) -> None:
+        self.assertEqual(
+            [("a ", "Helvetica"), ("\u03b1 ", "Symbol"), ("b", "Helvetica")],
+            utils.split_by_coverage("a \u03b1 b", ["Helvetica", "Symbol"]),
+        )
+
+
 class _RecordingCanvas:
     """Records the drawing calls a box helper makes, in order."""
 

@@ -2243,6 +2243,11 @@ def split_by_coverage(text: str, font_names: Sequence[str]) -> list[tuple[str, s
         return [(text, font_names[0])] if text and font_names else []
 
     first = font_names[0]
+    # Nearly always the first face has every character, and a set answers
+    # that in one call where the loop below asks once per character.
+    coverage = _coverage(first)
+    if coverage is None or coverage.issuperset(map(ord, text)):
+        return [(text, first)]
     runs: list[tuple[str, str]] = []
     start = 0
     current = None

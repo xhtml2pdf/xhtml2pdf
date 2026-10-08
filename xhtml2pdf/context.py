@@ -827,6 +827,9 @@ class pisaContext:
         #: Characters already reported as having no glyph anywhere, so a
         #: paragraph of them says it once per character rather than per word.
         self._glyph_warned: set[str] = set()
+        #: The characters _warn_missing_glyphs has looked at, per list of
+        #: candidate faces.
+        self._glyph_checked: dict[tuple, set[str]] = {}
         #: Messages warnOnce has already logged.
         self._said_once: set[str] = set()
         #: The absolute and fixed boxes, painted by the page template; see
@@ -1488,7 +1491,12 @@ class pisaContext:
 
     def _warn_missing_glyphs(self, text: str, candidates: list) -> None:
         """Say once per character that no family named has a glyph for it."""
-        for char in set(text):
+        # Every fragment comes through here, and its characters are mostly
+        # ones an earlier fragment in the same families already had looked at.
+        checked = self._glyph_checked.setdefault(tuple(candidates), set())
+        unchecked = set(text).difference(checked)
+        checked.update(unchecked)
+        for char in unchecked:
             if char.isspace() or char in self._glyph_warned:
                 continue
             if any(font_has_glyph(name, char) for name in candidates):
