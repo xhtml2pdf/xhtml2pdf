@@ -188,7 +188,8 @@ CSS_PROPERTIES: tuple[CSSProperty, ...] = (
         frag="height",
         initial=None,
         applied_by_hand=True,
-        note="images, table cells, flex items and barcodes",
+        note="images, table cells, flex items, barcodes, positioned boxes and"
+        " blocks, where it is the least the content takes",
     ),
     CSSProperty("zoom", "box", note="not CSS; scales images"),
 )

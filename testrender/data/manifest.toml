@@ -756,3 +756,9 @@ compare = ["pages", "text", "ssim"]
 notes = """A table with an auto margin and no width is as wide as its content \
 (#562); with a width and a height both are kept; without an auto margin it \
 fills the line."""
+
+[fixtures.block-box-height]
+compare = ["pages", "text", "ssim"]
+notes = """An empty block with a border or a background is drawn, padding and \
+borders tall, and a block's CSS height is the least its content area takes, \
+for an empty block, a block of blocks and a block of text alike."""

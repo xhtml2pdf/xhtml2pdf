@@ -26,7 +26,7 @@ from reportlab.lib.colors import Color
 from reportlab.platypus.doctemplate import FrameBreak, NextPageTemplate
 from reportlab.platypus.flowables import KeepInFrame, KeepTogether, PageBreak
 
-from xhtml2pdf.builders.block import BlockBoxData, block_box_style
+from xhtml2pdf.builders.block import BlockBoxData, block_box_style, declared_height
 from xhtml2pdf.builders.flex import (
     BoxStyle,
     FlexData,
@@ -1409,7 +1409,8 @@ def pisaLoop(node, context, **kw):
         # should not pick up an outline flag from them.
         apply_uniform_groups(context.frag, context.cssAttr, LOOP_GROUPS)
 
-        if context.flexData.collecting_item:
+        isFlexItem = context.flexData.collecting_item
+        if isFlexItem:
             # This element is a flex item. Its properties are read off its
             # own frag, and its margins are the item's place in the row, not
             # an indent for the paragraphs inside it.
@@ -1498,9 +1499,11 @@ def pisaLoop(node, context, **kw):
             boxStyle = block_box_style(context, kw)
             # A block of text alone is one paragraph, which draws its own
             # box -- unless the block is empty, when there is no paragraph
-            # to draw it.
+            # to draw it, or declares a height, which a paragraph ignores.
+            # Not a flex item: the container sizes and draws its items.
             if boxStyle is not None and (
-                hasBlockContent(node, context) or isEmptyBlock(node)
+                hasBlockContent(node, context)
+                or (not isFlexItem and (isEmptyBlock(node) or declared_height(context)))
             ):
                 blockBox = BlockBoxData(context, kw, boxStyle)
 

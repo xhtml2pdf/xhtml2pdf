@@ -247,7 +247,8 @@ class PageTestCase(TestCase):
             + "</div>"
         )
 
-        self.assertEqual([2], [b.page for b in boxes])
+        # The 1pt filler is a box of its own now that a height makes one.
+        self.assertEqual([2], [b.page for b in boxes if b.style.border("Top")])
 
     def test_a_heading_inside_reaches_the_index(self) -> None:
         _, _, pdf = render(
@@ -405,5 +406,81 @@ class EmptyBoxTestCase(TestCase):
 
     def test_a_block_of_text_keeps_its_paragraph_box(self) -> None:
         boxes, _, _ = render('<div style="border: 1pt solid red">text</div>')
+
+        self.assertEqual([], boxes)
+
+
+class HeightTestCase(TestCase):
+    """
+    A block's CSS height is the least its content area takes.
+
+    It was read only for images, cells, flex items, barcodes and positioned
+    boxes; a block in the flow was as tall as its content whatever it said.
+    """
+
+    TWENTY_MM = 20 * 72 / 25.4
+
+    def test_an_empty_block(self) -> None:
+        boxes, _, _ = render('<div style="border: 1pt solid red; height: 20mm"></div>')
+
+        (box,) = boxes
+        self.assertAlmostEqual(self.TWENTY_MM + 2, box.h, places=3)
+
+    def test_a_block_of_blocks(self) -> None:
+        boxes, _, _ = render(
+            '<div style="border: 1pt solid red; height: 20mm"><p>a</p><p>b</p></div>'
+        )
+
+        (box,) = boxes
+        self.assertAlmostEqual(self.TWENTY_MM + 2, box.h, places=3)
+
+    def test_a_block_of_text(self) -> None:
+        boxes, _, _ = render('<div style="border: 1pt solid red; height: 20mm">a</div>')
+
+        (box,) = boxes
+        self.assertAlmostEqual(self.TWENTY_MM + 2, box.h, places=3)
+
+    def test_content_taller_than_the_height_wins(self) -> None:
+        boxes, _, _ = render(
+            '<div style="border: 1pt solid red; height: 5pt">'
+            + "<p>line</p>" * 5
+            + "</div>"
+        )
+
+        (box,) = boxes
+        self.assertGreater(box.h, 50)
+
+    def test_a_percentage_is_ignored(self) -> None:
+        boxes, _, _ = render(
+            '<div style="border: 1pt solid red; height: 50%"><p>a</p><p>b</p></div>'
+        )
+
+        (box,) = boxes
+        self.assertLess(box.h, 100)
+
+    def test_a_block_without_a_box_still_takes_the_room(self) -> None:
+        def after(html: str) -> float:
+            from pypdf import PdfReader
+
+            ys: list[float] = []
+            page = PdfReader(io.BytesIO(render(html)[2])).pages[0]
+            page.extract_text(
+                visitor_text=lambda text, cm, tm, *_: (
+                    ys.append(tm[5] * cm[3] + cm[5]) if "after" in text else None
+                )
+            )
+            return ys[0]
+
+        spaced = after('<p>before</p><div style="height: 20mm"></div><p>after</p>')
+        plain = after("<p>before</p><p>after</p>")
+        self.assertGreater(plain - spaced, self.TWENTY_MM)
+
+    def test_a_flex_item_is_left_to_its_container(self) -> None:
+        """The container sizes and draws an item; a box inside it was drawn too."""
+        boxes, _, _ = render(
+            '<div style="display: flex">'
+            '<div style="border: 1pt solid red; height: 20mm">a</div>'
+            '<div style="border: 1pt solid red"></div></div>'
+        )
 
         self.assertEqual([], boxes)

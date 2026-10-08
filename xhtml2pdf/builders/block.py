@@ -33,7 +33,7 @@ from xhtml2pdf.builders.flex import (
     split_stack,
 )
 from xhtml2pdf.builders.position import PositionAnchor
-from xhtml2pdf.util import drawBoxBackground, drawBoxBorders
+from xhtml2pdf.util import drawBoxBackground, drawBoxBorders, getSize, toList
 from xhtml2pdf.xhtml2pdf_reportlab import PmlKeepInFrame, PmlMaxHeightMixIn
 
 if TYPE_CHECKING:
@@ -102,11 +102,18 @@ class BlockBox(Flowable, PmlMaxHeightMixIn):
     _SPACETRANSFER = False
 
     def __init__(
-        self, content: Sequence[Flowable], style: BoxStyle, *, keep_together=False
+        self,
+        content: Sequence[Flowable],
+        style: BoxStyle,
+        *,
+        keep_together=False,
+        min_height: float = 0.0,
     ) -> None:
         super().__init__()
         self.content = list(content)
         self.style = style
+        #: The CSS height: the content area is at least this tall.
+        self.min_height = min_height
         #: page-break-inside: avoid on a block inside this one. Moved to the
         #: next page whole when it does not fit, if a page can hold it.
         self.keep_together = keep_together
@@ -162,7 +169,7 @@ class BlockBox(Flowable, PmlMaxHeightMixIn):
             )
             self._key = key
         self.width = availWidth
-        self.height = self._stacked + style.vertical
+        self.height = max(self._stacked, self.min_height) + style.vertical
         return self.width, self.height
 
     def split(self, availWidth: float, availHeight: float) -> list:
@@ -357,10 +364,31 @@ def block_box_style(c, kw: dict) -> BoxStyle | None:
     if "background-image" not in css:
         style.backgroundImage = None
     if not (
-        style.horizontal or style.vertical or style.backColor or style.backgroundImage
+        style.horizontal
+        or style.vertical
+        or style.backColor
+        or style.backgroundImage
+        or declared_height(c)
     ):
         return None
     return style
+
+
+def declared_height(c) -> float:
+    """
+    The element's own CSS height in points, or 0 for none, auto or a
+    percentage: a block's containing block has no height to take one of.
+    """
+    value = c.cssAttr.get("height")
+    if value is None:
+        return 0.0
+    text = "".join(str(part) for part in toList(value)).strip().lower()
+    if not text or text == "auto" or text.endswith("%"):
+        return 0.0
+    try:
+        return max(getSize(text, c.frag.fontSize), 0.0)
+    except Exception:
+        return 0.0
 
 
 class BlockBoxData:
@@ -378,6 +406,7 @@ class BlockBoxData:
         c.addPara()
         frag = c.frag
         self.style = style
+        self.min_height = declared_height(c)
         self.keep_with_next = bool(getattr(frag, "keepWithNext", False))
 
         self._outer = c.swapStory()
@@ -438,7 +467,13 @@ class BlockBoxData:
             if n < last:
                 style = cut_style(style, "Bottom")
             if segment or len(segments) == 1:
-                box = BlockBox(segment, style)
+                # The height is the whole block's; a block cut by a page
+                # break inside it is not one box to give it to.
+                box = BlockBox(
+                    segment,
+                    style,
+                    min_height=self.min_height if len(segments) == 1 else 0.0,
+                )
                 boxes.append(box)
                 out.append(box)
             out.extend(breaks)

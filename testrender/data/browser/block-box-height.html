@@ -1,0 +1,39 @@
+<!--
+  Browser equivalent of data/source/block-box-height.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>block-box-height</title>
+<style type="text/css">
+body { font-size: 11pt; line-height: 15pt; }
+p { margin: 0 0 8pt 0; }
+.rule { border-top: 2pt dotted #cc0000; margin: 0 0 12pt 0; }
+.empty { border: 2pt solid #3465a4; padding: 6pt; margin: 0 0 12pt 0; background-color: #dbe5f1; }
+.tall { height: 20mm; border: 1pt solid #4e9a06; background-color: #e2f0d9; margin: 0 0 12pt 0; }
+.tall-blocks { height: 40mm; border: 2pt solid #cc0000; padding: 6pt; margin: 0 0 12pt 0; }
+.tall-text { height: 15mm; border: 1pt solid #75507b; margin: 0 0 12pt 0; }
+.spacer { height: 25mm; }
+</style>
+</head>
+<body>
+<p>An empty block with a dotted top border is a rule, the way a receipt separates its sections:</p>
+<div class="rule"></div>
+<p>An empty block with padding, a border and a background is drawn padding and borders tall:</p>
+<div class="empty"></div>
+<p>An empty block with a height of 20mm is a box 20mm tall:</p>
+<div class="tall"></div>
+<p>A block of two paragraphs with a height of 40mm keeps its height below the text:</p>
+<div class="tall-blocks"><p>First paragraph inside the tall box.</p><p>Second paragraph inside the tall box.</p></div>
+<p>A block of text alone with a height of 15mm:</p>
+<div class="tall-text">Only text in this block.</div>
+<p>An empty block with only a height of 25mm leaves that room below this line.</p>
+<div class="spacer"></div>
+<p>This line comes after the room the empty block took.</p>
+</body>
+</html>
