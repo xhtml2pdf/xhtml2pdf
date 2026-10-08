@@ -4,6 +4,9 @@ Where the time goes when xhtml2pdf renders a document.
 
     python tools/perf/bench.py                      # the fixture corpus
     python tools/perf/bench.py --scaling            # the growth curve
+    python tools/perf/bench.py --large              # big documents
+    python tools/perf/bench.py --memory             # peak memory per render
+    python tools/perf/bench.py --leak 20            # what 20 renders leave behind
     python tools/perf/bench.py --json before.json
     python tools/perf/bench.py --compare before.json
 
@@ -72,17 +75,31 @@ def report_counters(results: dict) -> None:
         print(f"{name:<{width}} {cells}")
 
 
-def compare(results: dict, baseline: dict) -> None:
+MEMORY = ("peak_mb", "retained_mb", "rss_mb", "pdf_kb")
+LEAK = ("objects", "rss_mb", "memoized", "fonts")
+
+
+def report_table(results: dict, columns: tuple[str, ...], fmt: str) -> None:
+    width = max(len(name) for name in results) + 1
+    header = " ".join(f"{c:>12}" for c in columns)
+    print(f"{'document':<{width}} {header}")
+    print("-" * (width + 13 * len(columns)))
+    for name, values in results.items():
+        cells = " ".join(f"{values.get(c, 0):>12{fmt}}" for c in columns)
+        print(f"{name:<{width}} {cells}")
+
+
+def compare(results: dict, baseline: dict, key: str = "total_ms") -> None:
     width = max(len(name) for name in results) + 1
     print(f"{'document':<{width}} {'before':>10} {'after':>10} {'change':>10}")
     print("-" * (width + 33))
     for name, result in results.items():
         before = baseline.get(name)
-        if before is None or "total_ms" not in before:
-            print(f"{name:<{width}} {'-':>10} {result['total_ms']:>9.1f} {'new':>10}")
+        if before is None or key not in before:
+            print(f"{name:<{width}} {'-':>10} {result[key]:>9.1f} {'new':>10}")
             continue
-        after = result["total_ms"]
-        change = (after - before["total_ms"]) / before["total_ms"] * 100
+        after = result[key]
+        change = (after - before[key]) / before[key] * 100 if before[key] else 0.0
         print(
             f"{name:<{width}} {before['total_ms']:>9.1f} {after:>9.1f} {change:>+9.1f}%"
         )
@@ -98,7 +115,23 @@ def main(argv=None) -> int:
         action="store_true",
         help="render the synthetic ladder instead of the fixtures",
     )
+    parser.add_argument(
+        "--large",
+        action="store_true",
+        help="render the big synthetic documents instead of the fixtures",
+    )
     parser.add_argument("--repeat", type=int, default=5)
+    parser.add_argument(
+        "--memory",
+        action="store_true",
+        help="measure peak and retained memory instead of time",
+    )
+    parser.add_argument(
+        "--leak",
+        type=int,
+        metavar="N",
+        help="render each document N times and report what grew",
+    )
     parser.add_argument(
         "--counters",
         action="store_true",
@@ -108,19 +141,36 @@ def main(argv=None) -> int:
     parser.add_argument("--compare", type=Path, help="read a previous --json and diff")
     args = parser.parse_args(argv)
 
-    docs = corpus.scaling() if args.scaling else corpus.fixtures(args.names)
+    if args.scaling:
+        docs = corpus.scaling()
+    elif args.large:
+        docs = corpus.large(args.names)
+    else:
+        docs = corpus.fixtures(args.names)
     if not docs:
         print("nothing to render", file=sys.stderr)
         return 1
 
+    key = "total_ms"
+    results: dict[str, dict]
     if args.counters:
         results = {doc.name: runner.counted_render(doc) for doc in docs}
         report_counters(results)
+    elif args.leak:
+        results = {doc.name: runner.leak_check(doc, args.leak) for doc in docs}
+        report_table(results, LEAK, ",.1f")
+    elif args.memory:
+        results = {}
+        for doc in docs:
+            runner.render(doc, runner._Sink())  # warm-up, discarded
+            results[doc.name] = runner.memory_render(doc)
+        report_table(results, MEMORY, ",.1f")
+        key = "peak_mb"
     else:
         results = {doc.name: measure(doc, args.repeat) for doc in docs}
         report(results)
 
-    if args.scaling and not args.counters:
+    if args.scaling and not (args.counters or args.memory or args.leak):
         print()
         print(f"{'document':<26} {'ms/node':>9}")
         for doc, (nodes, _rules) in zip(docs, corpus.SCALING, strict=True):
@@ -128,7 +178,7 @@ def main(argv=None) -> int:
 
     if args.compare:
         print()
-        compare(results, json.loads(args.compare.read_text()))
+        compare(results, json.loads(args.compare.read_text()), key)
 
     if args.json:
         args.json.write_text(json.dumps(results, indent=2, sort_keys=True))

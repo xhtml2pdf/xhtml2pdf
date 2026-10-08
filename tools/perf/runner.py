@@ -116,7 +116,23 @@ def timed_render(doc) -> tuple[float, dict[str, float]]:
 #: work shows up here first and in the clock second.
 counters: dict[str, int] = defaultdict(int)
 
-COUNTERS = ("CSSCollect", "CSSCollect (miss)", "ruleset lookups", "selector matches")
+COUNTERS = (
+    "CSSCollect",
+    "CSSCollect (miss)",
+    "ruleset lookups",
+    "selector matches",
+    "stringWidth",
+)
+
+#: Every module that holds its own reference to pdfmetrics.stringWidth, so that
+#: counting it means replacing each of those names, not just the original.
+_STRING_WIDTH_HOLDERS = (
+    "reportlab.pdfbase.pdfmetrics",
+    "xhtml2pdf.reportlab_paragraph",
+    "xhtml2pdf.xhtml2pdf_reportlab",
+    "xhtml2pdf.paragraph",
+    "xhtml2pdf.builders.flex",
+)
 
 
 def _counted(name, func):
@@ -131,12 +147,18 @@ def _counted(name, func):
 @contextmanager
 def work_counters():
     """Count the units of work a render does, for the duration of the block."""
+    import importlib
+
     from xhtml2pdf.w3c import css
 
     originals = [
         (_parser, "CSSCollect", "CSSCollect"),
         (css.CSSRuleset, "findCSSRulesFor", "ruleset lookups"),
         (css.CSSSelectorBase, "matches", "selector matches"),
+    ]
+    originals += [
+        (importlib.import_module(name), "stringWidth", "stringWidth")
+        for name in _STRING_WIDTH_HOLDERS
     ]
     saved = [(obj, attr, getattr(obj, attr)) for obj, attr, _ in originals]
     try:
@@ -170,6 +192,85 @@ def counted_render(doc) -> dict[str, int]:
     result = dict(counters)
     result["CSSCollect (miss)"] = len(cache_misses)
     return result
+
+
+def _rss_mb() -> float:
+    """The resident set size of this process now, in MB (Linux only)."""
+    try:
+        with open("/proc/self/status", encoding="ascii") as status:
+            for line in status:
+                if line.startswith("VmRSS:"):
+                    return int(line.split()[1]) / 1024
+    except OSError:
+        pass
+    return float("nan")
+
+
+def memory_render(doc) -> dict[str, float]:
+    """
+    Render once under tracemalloc and report what the render held at its peak.
+
+    `peak_mb` is the most Python-allocated memory alive at any moment of the
+    render, net of what was alive before it started -- the number that decides
+    how many renders fit on a server. `retained_mb` is what was still alive
+    after the render and a collection: anything other than about zero means a
+    render leaves something behind. `rss_mb` is the process's resident size
+    after the render, which also counts what C extensions allocate and what
+    the allocator has not handed back. The caller warms up first.
+    """
+    import gc
+    import tracemalloc
+
+    gc.collect()
+    tracemalloc.start()
+    base, _ = tracemalloc.get_traced_memory()
+    tracemalloc.reset_peak()
+    dest = io.BytesIO()
+    render(doc, dest)
+    _, peak = tracemalloc.get_traced_memory()
+    size = len(dest.getvalue())
+    del dest
+    gc.collect()
+    after, _ = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    return {
+        "peak_mb": (peak - base) / 1e6,
+        "retained_mb": (after - base) / 1e6,
+        "rss_mb": _rss_mb(),
+        "pdf_kb": size / 1e3,
+    }
+
+
+def leak_check(doc, renders: int) -> dict[str, float]:
+    """
+    Render the same document `renders` times and report what grew.
+
+    A server converts documents for as long as it runs, so whatever a render
+    leaves behind -- an object in a module-level cache, a font in reportlab's
+    registry -- adds up. Reports the growth between the first render and the
+    last, after a collection each time, so a steady state reads as zero.
+    """
+    import gc
+
+    from reportlab.pdfbase import pdfmetrics
+
+    from xhtml2pdf.util import Memoized
+
+    def state():
+        gc.collect()
+        return {
+            "objects": len(gc.get_objects()),
+            "rss_mb": _rss_mb(),
+            "memoized": sum(len(m.cache) for m in Memoized._instances),
+            "fonts": len(pdfmetrics.getRegisteredFontNames()),
+        }
+
+    render(doc, _Sink())
+    first = state()
+    for _ in range(renders - 1):
+        render(doc, _Sink())
+    last = state()
+    return {key: last[key] - first[key] for key in first}
 
 
 class _Sink:
