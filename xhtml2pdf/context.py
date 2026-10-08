@@ -64,11 +64,13 @@ from xhtml2pdf.util import (
 )
 from xhtml2pdf.w3c import css
 from xhtml2pdf.xhtml2pdf_reportlab import (
+    DeepCopiedDirectly,
     PmlFrame,
     PmlPageCount,
     PmlPageTemplate,
     PmlParagraph,
     PmlParagraphAndImage,
+    PmlParagraphStyle,
     PmlTableOfContents,
     tocNotifyKind,
 )
@@ -96,7 +98,7 @@ _NEWLINES = re.compile(r"(\r\n|\n|\r)")
 _NBSP = re.compile("(" + NBSP + ")")
 
 
-class PmlParaFrag(ParaFrag):
+class PmlParaFrag(DeepCopiedDirectly, ParaFrag):
     """
     A fragment of xhtml2pdf's, cloned the way the story builder expects.
 
@@ -1118,7 +1120,7 @@ class pisaContext:
         return story
 
     def toParagraphStyle(self, first) -> ParagraphStyle:
-        style = ParagraphStyle(
+        style = PmlParagraphStyle(
             "default%d" % self.UID(), keepWithNext=first.keepWithNext
         )
 

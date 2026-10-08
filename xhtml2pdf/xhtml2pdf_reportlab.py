@@ -29,6 +29,7 @@ from PIL import Image as PILImage
 from PIL import UnidentifiedImageError
 from PIL.Image import Image
 from reportlab.graphics.shapes import Drawing
+from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.utils import LazyImageReader, flatten, haveImages, open_for_read
 from reportlab.pdfbase import pdfform
 from reportlab.pdfbase.pdfmetrics import stringWidth
@@ -242,16 +243,17 @@ class PmlBaseDoc(BaseDocTemplate):
 _ATOMIC = frozenset((int, float, str, bool, type(None)))
 
 
-class PmlFrame(Frame):
+class DeepCopiedDirectly:
     """
-    A Frame that deep-copies itself without copy's general machinery.
+    Deep-copied by copying its own dict, without copy's general machinery.
 
     ReportLab deep-copies the current frame every time it measures a list of
     flowables (flowables._listWrapOn) -- once per table cell, per wrap -- and
-    xhtml2pdf copies a static frame for every page it draws one on. Through
-    __reduce_ex__ that cost tens of microseconds a copy, a fifth of the
-    render of a long table. The result is the same: atomic values shared,
-    everything else deep-copied with the same memo.
+    xhtml2pdf copies each static frame's story, paragraphs, styles and frags
+    included, for every page it draws one on. Through __reduce_ex__ and
+    _reconstruct each of those objects cost tens of microseconds. The result
+    is the same: atomic values shared, which is what deepcopy does with them
+    anyway, everything else deep-copied with the same memo.
     """
 
     def __deepcopy__(self, memo):
@@ -264,6 +266,14 @@ class PmlFrame(Frame):
             }
         )
         return new
+
+
+class PmlFrame(DeepCopiedDirectly, Frame):
+    """Every frame xhtml2pdf makes; see DeepCopiedDirectly."""
+
+
+class PmlParagraphStyle(DeepCopiedDirectly, ParagraphStyle):
+    """Every paragraph style xhtml2pdf makes; see DeepCopiedDirectly."""
 
 
 class PmlPageTemplate(PageTemplate):
@@ -931,7 +941,7 @@ class PmlParagraphAndImage(ParagraphAndImage, PmlMaxHeightMixIn):
         return ParagraphAndImage.split(self, availWidth, availHeight)
 
 
-class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
+class PmlParagraph(DeepCopiedDirectly, Paragraph, PmlMaxHeightMixIn):
     def _calcImageMaxSizes(self, availWidth, availHeight):
         """
         Fit every inline image into the space the paragraph is offered.
