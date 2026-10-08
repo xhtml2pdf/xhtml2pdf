@@ -119,6 +119,28 @@ and under ``labels`` the font, size, colour, angle and placement of the tick
 labels. ``fontName`` anywhere in a chart is a font-family the document knows,
 such as one from ``@font-face``, or a base-14 face.
 
+Series and legend
+=================
+
+A bar or line chart has one row of ``data`` per series. ``seriesNames`` names
+them in the legend -- "Series 1", "Series 2" and so on without it -- and
+``seriesColors`` colours them; without it reportlab's red, green and blue are
+used in turn, so a fourth series is red again. A pie or a doughnut lists its
+slices instead. A legend's own ``colorNamePairs`` is kept as written:
+
+.. code:: html
+
+    <canvas type="graph" width="400" height="200">
+          {
+                "type": "verticalbar",
+                "data": [[12, 15, 9], [8, 11, 14]],
+                "labels": ["Q1", "Q2", "Q3"],
+                "seriesNames": ["North", "South"],
+                "seriesColors": ["#3465a4", "#f57900"],
+                "legend": {"x": 330, "y": 150}
+          }
+    </canvas>
+
 See more in examples.
 
 Demonstration

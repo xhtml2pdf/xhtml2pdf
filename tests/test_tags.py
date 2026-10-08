@@ -302,6 +302,53 @@ class ChartParametersTestCase(TestCase):
         self.assertIn(b"1 0 1 RG", page.get_contents().get_data())
         self.assertIn("50%", page.extract_text())
 
+    LEGEND = '"legend": {"x": 230, "y": 150}'
+
+    def test_a_bar_chart_has_a_legend_per_series(self) -> None:
+        """The legend of a bar or line chart was always empty."""
+        for kind in ("verticalbar", "horizontalline"):
+            with self.subTest(kind):
+                labels = self.axis_labels(
+                    f'{{"type": "{kind}", "data": [[1, 2], [3, 4]],'
+                    f' "labels": ["a", "b"], {self.LEGEND},'
+                    ' "seriesNames": ["North", "South"]}'
+                )
+                self.assertEqual(["North", "South"], labels[:2])
+
+    def test_a_series_without_a_name_is_numbered(self) -> None:
+        labels = self.axis_labels(
+            '{"type": "verticalbar", "data": [[1, 2], [3, 4]],'
+            f' "labels": ["a", "b"], {self.LEGEND}}}'
+        )
+        self.assertEqual(["Series", "1", "Series", "2"], labels[:4])
+
+    def test_the_authors_legend_is_kept(self) -> None:
+        """ColorNamePairs from the JSON was emptied and refilled."""
+        pdf = self.convert(
+            '{"type": "verticalbar", "data": [[1, 2]], "labels": ["a", "b"],'
+            ' "legend": {"x": 230, "y": 150,'
+            ' "colorNamePairs": [["#ff00ff", "Mine"]]}}'
+        )
+        page = PdfReader(io.BytesIO(pdf)).pages[0]
+        self.assertEqual("Mine", page.extract_text().split()[0])
+        self.assertIn(b"1 0 1 rg", page.get_contents().get_data())
+
+    def test_a_fourth_series_has_a_colour_of_its_own(self) -> None:
+        """Three series styles, picked modulo three: the fourth was red again."""
+        pdf = self.convert(
+            '{"type": "verticalbar", "data": [[1], [2], [3], [4]], "labels": ["a"],'
+            ' "seriesColors": ["#ff0000", "#00ff00", "#0000ff", "#ff00ff"]}'
+        )
+        stream = PdfReader(io.BytesIO(pdf)).pages[0].get_contents().get_data()
+        self.assertIn(b"1 0 1 rg", stream)
+
+    def test_a_pie_legend_is_unchanged(self) -> None:
+        labels = self.axis_labels(
+            '{"type": "pie", "data": [[1, 2, 3]], "labels": ["a", "b", "c"],'
+            f" {self.LEGEND}}}"
+        )
+        self.assertEqual(["a", "1", "b", "2", "c", "3"], labels[:6])
+
 
 class SelfClosingTocTestCase(TestCase):
     """

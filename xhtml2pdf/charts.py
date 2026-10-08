@@ -30,6 +30,11 @@ def set_properties(obj, data, prop_map):
                 continue
 
 
+def _color_name_pairs(pairs) -> list:
+    """A legend's [colour, name] pairs from JSON, the colours read as colours."""
+    return [(getColor(color), str(name)) for color, name in pairs]
+
+
 class Props:
     def __init__(self, instance) -> None:
         font = font_resolver.get()
@@ -58,7 +63,7 @@ class Props:
             ("variColumn", int),
             ("deltax", int),
             ("fontName", font),
-            ("colorNamePairs", list),
+            ("colorNamePairs", _color_name_pairs),
         ]
         self.prop_map_legend1 = [("x", int), ("y", int)]
         self.prop_map_bars = [("strokeWidth", int)]
@@ -136,6 +141,15 @@ class BaseChart:
         return legend
 
     def load_data_legend(self, data, legend):
+        if isinstance(data.get("legend"), dict) and data["legend"].get(
+            "colorNamePairs"
+        ):
+            # The author's own entries, which set_legend has read.
+            return
+        series = self.series_legend(data)
+        if series is not None:
+            legend.colorNamePairs = series
+            return
         legend.colorNamePairs = []
         color = self.get_colors()
 
@@ -155,6 +169,57 @@ class BaseChart:
                 legend.colorNamePairs.append(
                     (color[x], (data["labels"][x], " ", str(obj)))
                 )
+
+    #: The collection that styles each series of a bar or line chart, and
+    #: the attribute of an entry that is the series' colour. A pie or a
+    #: doughnut colours by slice and has none.
+    SERIES_STYLES: str | None = None
+    SERIES_COLOR: str = "fillColor"
+
+    def series_styles(self):
+        """The collection whose entries style each series, or None."""
+        return getattr(self, self.SERIES_STYLES) if self.SERIES_STYLES else None
+
+    def series_legend(self, data) -> list | None:
+        """
+        One legend entry per series, for a chart that colours by series.
+
+        None for a pie or a doughnut, which colour by slice.
+        """
+        if self.series_styles() is None:
+            return None
+        return self._series_legend(data)
+
+    def set_series(self, data) -> None:
+        """
+        Colour each series as `seriesColors` says.
+
+        ReportLab has three series styles and picks one with the series
+        number modulo how many there are, so a fourth series came out red
+        again; each colour given here is a style of its own.
+        """
+        styles = self.series_styles()
+        colors = data.get("seriesColors")
+        if styles is None or not isinstance(colors, list):
+            return
+        attribute = self.SERIES_COLOR
+        for index, color in enumerate(colors):
+            value = getColor(color, None)
+            if value is not None:
+                setattr(styles[index], attribute, value)
+
+    def _series_legend(self, data) -> list:
+        styles = self.series_styles()
+        rows = [row for row in data.get("data", []) if isinstance(row, list)]
+        names = data.get("seriesNames")
+        if not isinstance(names, list):
+            names = []
+        pairs = []
+        for index in range(len(rows)):
+            style = styles[index % len(styles)]
+            name = str(names[index]) if index < len(names) else f"Series {index + 1}"
+            pairs.append((getattr(style, self.SERIES_COLOR), name))
+        return pairs
 
     def set_title_properties(self, data, title, props=None):
         if props is None:
@@ -209,6 +274,8 @@ class BaseBarChart(BaseChart):
         if "barLabels" in data:
             self.set_barLabels(data["barLabels"], props=props)
 
+        self.set_series(data)
+
         if isinstance(data.get("valueAxis"), dict):
             self.set_valueAxis(data["valueAxis"], props=props)
 
@@ -222,6 +289,8 @@ class BaseBarChart(BaseChart):
 
     def assign_labels(self, labels):
         self.categoryAxis.categoryNames = labels
+
+    SERIES_STYLES = "bars"
 
     def set_bars(self, data, props=None):
         if props is None:
@@ -272,9 +341,13 @@ class HorizontalLine(HorizontalLineChart, BaseChart):
         props.add_prop(props.prop_map, [("joinedLines", int)])
         props.add_prop(props.prop_map, [("marker", self.fill_marker)])
         super().set_properties(data, props=props)
+        self.set_series(data)
 
         if isinstance(data.get("valueAxis"), dict):
             self.set_valueAxis(data["valueAxis"], props=props)
+
+    SERIES_STYLES = "lines"
+    SERIES_COLOR = "strokeColor"
 
     def fill_marker(self, fill_type):
         for x in range(len(self.data)):
