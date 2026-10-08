@@ -1,0 +1,45 @@
+<!--
+  Browser equivalent of data/source/flex-table-cell-percent.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>flex-table-cell-percent</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 15pt; }
+p { margin: 0 0 6pt 0; }
+table { border-collapse: collapse; margin: 0 0 12pt 0; }
+td { border: 1pt solid #888a85; padding: 4pt; vertical-align: top; }
+.chip { padding: 5pt 8pt; font-size: 8.5pt; line-height: 12pt; color: #ffffff; background-color: #0b5e9b; text-align: center; }
+.wrap { display: flex; flex-wrap: wrap; gap: 5pt; }
+.wrap .chip { flex: 0 0 30%; }
+.tall { display: flex; flex-wrap: wrap; align-content: space-between; height: 70pt; gap: 4pt; }
+.tall .chip { flex: 0 0 40%; }
+.basis { display: flex; gap: 5pt; }
+.basis .a { flex-basis: 20%; }
+.basis .b { flex: 1 1 auto; }
+</style>
+</head>
+<body>
+<p>Items of flex: 0 0 30% with padding wrap in a cell 55% of the page wide, as they do in the frame.</p>
+<table width="100%"><tr>
+<td width="55%"><div class="wrap"><div class="chip">one</div><div class="chip">two</div><div class="chip">three</div><div class="chip">four</div><div class="chip">five</div></div></td>
+<td width="45%">A note beside the cell.</td>
+</tr></table>
+<p>Items of 40% in a wrapped container 70pt tall with align-content: space-between, in a cell.</p>
+<table width="100%"><tr>
+<td width="55%"><div class="tall"><div class="chip">1</div><div class="chip">2</div><div class="chip">3</div><div class="chip">4</div></div></td>
+<td width="45%">A note beside the cell.</td>
+</tr></table>
+<p>A flex-basis of 20% next to an item that grows, in a cell.</p>
+<table width="100%"><tr>
+<td width="55%"><div class="basis"><div class="chip a">20%</div><div class="chip b">grows</div></div></td>
+<td width="45%">A note beside the cell.</td>
+</tr></table>
+</body>
+</html>

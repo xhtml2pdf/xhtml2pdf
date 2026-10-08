@@ -762,3 +762,9 @@ compare = ["pages", "text", "ssim"]
 notes = """An empty block with a border or a background is drawn, padding and \
 borders tall, and a block's CSS height is the least its content area takes, \
 for an empty block, a block of blocks and a block of text alike."""
+
+[fixtures.flex-table-cell-percent]
+compare = ["pages", "text", "ssim"]
+notes = """Flex items sized with a percentage flex-basis inside a table cell: a \
+wrapped row of 30% items with padding, 40% items in a container with a height \
+and align-content, and a 20% basis next to an item that grows."""
