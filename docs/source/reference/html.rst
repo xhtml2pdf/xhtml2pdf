@@ -138,7 +138,9 @@ Known limitations of the properties above:
    is painted after it. With no
    positioned ancestor its offsets are from the page area of the *first*
    page -- the initial containing block, as in a browser -- and a ``top``
-   larger than that area carries on to the pages after it. An offset left
+   larger than that area carries on to the pages after it, so ``top: 20mm``
+   written on page five is drawn on page one. To place a box on the page it
+   is written on, put it inside a ``relative`` block there. An offset left
    ``auto`` keeps the box at its static position, where the element would
    have been. ``fixed`` is the same box on every page, from each page's
    area. Such boxes are painted over the flow, in ``z-index`` order and
