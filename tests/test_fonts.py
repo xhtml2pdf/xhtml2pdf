@@ -225,6 +225,11 @@ class GlyphFallbackTest(TestCase):
         with self.assertNoLogs("xhtml2pdf", level=logging.WARNING):
             render(document("Symbol", text="\u03b1 \u03b2 \u2022"))
 
+    def test_a_greek_letter_symbol_reaches_two_ways(self) -> None:
+        """Symbol's mu decodes to the micro sign; the Greek mu encodes too."""
+        with self.assertNoLogs("xhtml2pdf", level=logging.WARNING):
+            render(document("Symbol", text="\u03bc \u0394 \u03a9 \u00b5"))
+
     def test_a_letter_in_a_symbol_face_is_still_reported(self) -> None:
         with self.assertLogs("xhtml2pdf", level=logging.WARNING) as caught:
             render(document("ZapfDingbats", text="a"))

@@ -2119,11 +2119,25 @@ _SYMBOLIC_CODECS: dict[str, str] = {
 
 
 def _codec_coverage(codec: str) -> frozenset[int]:
-    """Every codepoint one of the 256 codes of `codec` decodes to."""
-    codepoints: set[int] = set()
+    """
+    Every codepoint `codec` can encode.
+
+    Decoding its 256 codes finds one codepoint per glyph, but a glyph can be
+    reached from more than one: Symbol's mu decodes to the micro sign and
+    encodes from the Greek letter too. Those others are in the same Unicode
+    blocks, so every codepoint of the blocks the decoded ones touch is tried.
+    """
+    decoded: set[int] = set()
     for code in range(256):
         with contextlib.suppress(UnicodeDecodeError):
-            codepoints.update(ord(char) for char in bytes([code]).decode(codec))
+            decoded.update(ord(char) for char in bytes([code]).decode(codec))
+    codepoints = set(decoded)
+    for block in {cp >> 8 for cp in decoded}:
+        for cp in range(block << 8, (block + 1) << 8):
+            if cp not in codepoints and not 0xD800 <= cp < 0xE000:
+                with contextlib.suppress(UnicodeEncodeError):
+                    chr(cp).encode(codec)
+                    codepoints.add(cp)
     return frozenset(codepoints)
 
 
