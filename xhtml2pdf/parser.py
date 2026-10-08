@@ -1573,9 +1573,9 @@ def pisaLoop(node, context, **kw):
             if position == "relative":
                 # Drawn where top/left say, laid out and paginated where it is.
                 shift_story(context.story, blockStoryStart, offsets)
-            if breakInsideAvoid and (
-                len(context.story) - blockStoryStart > 1 or blockBox is not None
-            ):
+            if breakInsideAvoid and len(context.story) > blockStoryStart:
+                # Even round a single flowable: a lone paragraph is split
+                # line by line otherwise.
                 context.story[blockStoryStart:] = [
                     KeepTogether(context.story[blockStoryStart:])
                 ]

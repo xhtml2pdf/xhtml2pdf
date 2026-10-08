@@ -1469,6 +1469,26 @@ class PageBreakAvoidTest(TestCase):
         story = self.story("<h2>T</h2><p>text</p>")
         self.assertFalse(any(getattr(f, "keepWithNext", False) for f in story))
 
+    @staticmethod
+    def pages_with(html: str, *needles: str) -> list[tuple[bool, ...]]:
+        dest = io.BytesIO()
+        pisa.pisaDocument(io.StringIO(html), dest)
+        dest.seek(0)
+        return [
+            tuple(needle in (page.extract_text() or "") for needle in needles)
+            for page in PdfReader(dest).pages
+        ]
+
+    def test_inside_avoid_keeps_a_single_paragraph_whole(self) -> None:
+        """It wrapped only a block of two flowables or more."""
+        html = (
+            "<p>filler</p>" * 30
+            + '<p style="page-break-inside: avoid">'
+            + "a long paragraph of text " * 200
+            + "</p>"
+        )
+        self.assertEqual([(False,), (True,)], self.pages_with(html, "long paragraph"))
+
 
 class RightToLeftListMarkerTest(TestCase):
     """In a right-to-left list the marker is on the right, in visual order (#663)."""
