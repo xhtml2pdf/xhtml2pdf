@@ -13,7 +13,12 @@ make perf-golden           # check it still renders byte for byte
 python tools/perf/bench.py --counters        # work done, not time taken
 python tools/perf/bench.py --json after.json
 python tools/perf/bench.py --compare after.json
+python tools/perf/bench.py --memory               # peak memory, not time
+python tools/perf/bench.py --large                # documents that grow until they hurt
+python tools/perf/bench.py --large --memory
+python tools/perf/bench.py --leak 20              # what 20 renders leave behind
 python tools/perf/profile_doc.py test-loremipsum
+python tools/perf/profile_doc.py large-table-256
 ```
 
 ## Why there are two kinds of number
@@ -186,7 +191,91 @@ timestamp and differs from itself).
 The gain is across documents, not within one: a process that converts a single
 file still parses each font once, because it has to.
 
+## Second round: memory, and what ReportLab is asked twice
+
+October 2026, after flex, inline-block, positioning, block boxes and two
+rounds of findings had landed. Nothing measured memory until then, and the
+fixtures are too small to show it, so `bench.py` grew `--memory` (tracemalloc
+peak, what is still alive after the render, RSS), `--leak N`, and `--large`:
+1,000-10,000 paragraphs, a table of 256-4,096 rows, 200 pages under a header
+and footer with `pdf:pagecount`, 200 repeated images.
+
+### Memory
+
+A long document cost about 37 KB a paragraph and 100 KB a table row. Nearly
+all of it was frags: each carried all 93 of its attributes, 3.3 KB of dict,
+and every element and every run of text clones one. The root frag's values
+now live on a class made for each render (`context._with_defaults`), a clone
+copies only what its element changed, and `properties.compact_frag` drops the
+immutable values an element wrote back unchanged. A text frag holds about 17
+attributes. Separately, the DOM outlived the walk -- `context.node` and the
+cascade cache's keys, which name each element's parent, kept it reachable
+through the whole build -- and is now released and unlinked once the story is
+built.
+
+| document | peak before | after |
+|---|---:|---:|
+| large-text-1000 | 37.4 MB | 14.4 MB |
+| large-text-10000 | 371.4 MB | 141.7 MB |
+| large-table-256 | 26.2 MB | 14.3 MB |
+| large-pages-200 | 32.2 MB | 16.0 MB |
+| large-images-200 | 9.0 MB | 5.8 MB |
+| gallery, 59 documents summed | 499 MB | 427 MB |
+
+`--leak 20` finds nothing growing across renders: objects, memoized entries
+and registered fonts stay flat.
+
+### Time
+
+Four things, each byte for byte the same output:
+
+1. **Each word measured once per render** (`util.stringWidth`, dropped by
+   `reset_caches`). `utf8.html` went from 31,566 width computations to 3,780.
+2. **A paragraph's lines broken once per width** (`Paragraph._brokenLines`).
+   A table sizes and then places each cell, a frame measures what it then
+   adds, `multiBuild` lays the story out once per pass: 40% of `breakLines`
+   calls in a long table and 59% in the paged document were exact repeats.
+3. **Frames, paragraphs, styles and frags deep-copied directly**
+   (`DeepCopiedDirectly`). ReportLab deep-copies the current frame for every
+   cell it measures, and every page copies each static frame's story;
+   through `__reduce_ex__` that was a fifth of a long table's profile.
+4. **Glyph coverage asked per set, not per character**, for every fragment.
+
+Fastest of five renders, three rounds, revisions alternated, against the
+commit before this round:
+
+| document | before | after | |
+|---|---:|---:|---:|
+| utf8.html | 229.4 ms | 141.5 ms | -38% |
+| test-keep-in-frame.html | 97.7 ms | 60.0 ms | -39% |
+| test-keep-with-next.html | 64.2 ms | 39.5 ms | -38% |
+| test-letter.html | 39.4 ms | 27.0 ms | -32% |
+| test-tables.html | 42.7 ms | 32.5 ms | -24% |
+| test-loremipsum.html | 262.3 ms | 228.6 ms | -13% |
+| test-list.html | 46.1 ms | 41.4 ms | -10% |
+| large-pages-200 | 2,531 ms | 1,586 ms | -37% |
+| large-table-1024 | 4,980 ms | 3,412 ms | -31% |
+| large-text-10000 | 14,362 ms | 10,948 ms | -24% |
+| large-images-200 | 468 ms | 375 ms | -20% |
+
+### Checking the gallery
+
+Byte comparison does not work there: 23 of its documents differ from
+themselves between two processes even with `PYTHONHASHSEED` pinned (an image
+XObject is named after an object's address, see the caveat above). They were
+compared as rasters at 60 dpi instead, page by page, and only
+`security-limits` differs -- from itself as well.
+
 ## What is still on the table
+
+**Left after the second round, each changing bytes on purpose:** ReportLab
+encodes every stream in ASCII85, in pure Python -- `rl_config.useA85 = 0`
+was 3-12% faster and 12-20% smaller in a trial, but it is a process-wide
+switch. A static frame with no page number is laid out and drawn again on
+every page, where it could be drawn once into a form XObject. And a
+`<pdf:nextpage />` is not a void element to html5lib, so everything after
+it nests one level deeper; 200 of them made `elementInScope` a tenth of the
+parse.
 
 **ReportLab is now the ceiling.** In `utf8.html` 213 ms of 225 ms is
 ReportLab, and in `test-keep-in-frame.html` 70 ms of 89 ms. Inside it the cost
