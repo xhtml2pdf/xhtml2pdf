@@ -285,6 +285,9 @@ TAGS = {
             "align": ["left", "center", "right", "justify"],
             "valign": ["top", "bottom", "middle"],
             "width": STRING,
+            # Read as the row's height, as CSS height is. Undeclared, it was
+            # dropped here and never reached the cell.
+            "height": STRING,
             "bgcolor": COLOR,
             "border": SIZE,
             "bordercolor": (COLOR, "#000000"),
@@ -298,6 +301,9 @@ TAGS = {
             "align": ["left", "center", "right", "justify"],
             "valign": ["top", "bottom", "middle"],
             "width": STRING,
+            # Read as the row's height, as CSS height is. Undeclared, it was
+            # dropped here and never reached the cell.
+            "height": STRING,
             "bgcolor": COLOR,
             "border": SIZE,
             "bordercolor": (COLOR, "#000000"),

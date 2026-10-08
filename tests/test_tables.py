@@ -1035,3 +1035,42 @@ class TableHeightTestCase(TestCase):
         parts = drawn_tables(f'<table style="height: 2000pt">{rows}</table>')
 
         self.assertGreater(len(parts), 1)
+
+
+class CellHeightAttributeTestCase(TestCase):
+    """
+    <td height="..."> sets the row's height, as style="height: ..." does.
+
+    The cell looked the attribute up, but td and th did not declare it, so it
+    was dropped before it got there: only the CSS property ever worked.
+    """
+
+    @staticmethod
+    def row_heights(html: str) -> list:
+        (table,) = [f for f in pisaStory(html).story if isinstance(f, PmlTable)]
+        return table._argH
+
+    def test_the_attribute_is_read(self) -> None:
+        for tag in ("td", "th"):
+            with self.subTest(tag):
+                (height,) = self.row_heights(
+                    f'<table><tr><{tag} height="32mm">a</{tag}></tr></table>'
+                )
+                self.assertAlmostEqual(32 * 72 / 25.4, height)
+
+    def test_as_the_property_is(self) -> None:
+        self.assertEqual(
+            self.row_heights('<table><tr><td style="height: 32mm">a</td></tr></table>'),
+            self.row_heights('<table><tr><td height="32mm">a</td></tr></table>'),
+        )
+
+    def test_a_number_is_points_as_for_width(self) -> None:
+        self.assertEqual(
+            [90.0], self.row_heights('<table><tr><td height="90">a</td></tr></table>')
+        )
+
+    def test_the_property_wins(self) -> None:
+        (height,) = self.row_heights(
+            '<table><tr><td height="90" style="height: 20pt">a</td></tr></table>'
+        )
+        self.assertAlmostEqual(20, height)

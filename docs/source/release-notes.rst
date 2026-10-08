@@ -168,6 +168,9 @@ Unreleased.
 * A truncated or corrupt image ended the conversion with an OSError when it
   was drawn. It is left out with a warning, and a list falls back to its
   ordinary marker.
+* The ``height`` attribute of a ``<td>`` or ``<th>`` was never read; only
+  the CSS ``height`` set a row's height. The attribute sets it too, a bare
+  number in points as for ``width``, and the CSS property still wins.
 
 **📘 Documentation**
 
