@@ -90,6 +90,17 @@ Unreleased.
   each paragraph. A page break inside the block cuts the box, with no edge
   at the cut, and a heading inside it still reaches the table of contents
   (:issue:`627`, :issue:`386`).
+* A block's CSS ``height`` is the least its content area takes; it was read
+  only for images, cells, flex items, barcodes and positioned boxes. An
+  empty block with a border or a background is drawn, padding and borders
+  tall, so a bordered empty ``<div>`` is a rule and one with a height is a
+  spacer.
+* A bar or line chart reads ``valueAxis``: ``valueMin``, ``valueMax``,
+  ``valueStep``, ``forceZero``, the grid and the label format, so bars can
+  start at zero. Its legend has an entry per series, named by the new
+  ``seriesNames`` and coloured by the new ``seriesColors``, which also gives
+  a fourth series a colour of its own; the legend used to be empty, and a
+  ``colorNamePairs`` written in the JSON is now kept.
 
 **💪🏼 Improvements**
 
@@ -102,6 +113,12 @@ Unreleased.
 * ``"@page body"`` with a ``<pdf:nexttemplate>`` before any content warns
   that the template it names begins on the second page: ``@page body`` is
   the unnamed ``@page`` by its name.
+* An image Pillow refuses to open for its size is refused as
+  ``max_image_pixels`` refuses one, and every pixel refusal names its image;
+  it was a traceback, or "an image".
+* A heading inside a table cell or a ``-pdf-keep-in-frame-mode`` block has
+  its entry in ``<pdf:toc>``, as it had in the outline; a header row a split
+  table repeats counts once.
 
 **🐛 Bug-Fixes**
 
@@ -133,6 +150,24 @@ Unreleased.
 * ``overflow-wrap`` on a link did not break it when text was glued to it,
   as in ``<a>…</a>.`` or ``(<a>…</a>``. It breaks within the link, and
   the glued text stays with it (:issue:`339`).
+* A background with an alpha, ``#rrggbbaa``, was painted twice behind
+  each line of text, and the text over it came out as translucent as the
+  background.
+* ``barWidth`` or ``barSpacing`` in a chart's JSON ended the conversion
+  with a TypeError; ``fontName`` raised unless it was the internal name of
+  the face, and now takes a font-family; a line chart's ``strokeColor`` was
+  dropped.
+* A list's number was drawn in the first family of its font-family list,
+  blank if that face had no digits and without a warning. It takes the
+  first family that has its characters, and says so if none does.
+* Every dingbat in ZapfDingbats, and the Greek mu, Delta and Omega in
+  Symbol, were reported as characters no font could draw.
+* ``page-break-inside: avoid`` did nothing on a block of one paragraph, and
+  a heading with ``page-break-after: avoid`` before a block kept whole was
+  left alone at the foot of the page. Both stay together now.
+* A truncated or corrupt image ended the conversion with an OSError when it
+  was drawn. It is left out with a warning, and a list falls back to its
+  ordinary marker.
 
 **📘 Documentation**
 
@@ -145,6 +180,10 @@ Unreleased.
 * The HTML reference has sections on links and on custom properties, and
   says what the first page of a document is, ``@page body`` included; the
   page-template example works as written.
+* The reference says how to put an absolutely positioned box on the page
+  it is written on, and no longer says a block's background is painted
+  paragraph by paragraph; the graphics guide documents ``valueAxis``,
+  ``seriesNames`` and ``seriesColors``.
 
 --------------------------------------------
 
