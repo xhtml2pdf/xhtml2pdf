@@ -31,7 +31,6 @@ from reportlab.lib.units import inch, mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.platypus.doctemplate import FrameBreak, NextPageTemplate
 from reportlab.platypus.flowables import Flowable, HRFlowable, PageBreak, Spacer
-from reportlab.platypus.frames import Frame
 from reportlab.platypus.paraparser import ABag, tt2ps
 
 from xhtml2pdf.charts import (
@@ -62,6 +61,7 @@ from xhtml2pdf.util import (
 )
 from xhtml2pdf.xhtml2pdf_reportlab import (
     PmlDrawing,
+    PmlFrame,
     PmlImage,
     PmlInput,
     PmlPageTemplate,
@@ -881,7 +881,7 @@ class pisaTagPDFFRAME(pisaTag):
             name = f"frame{c.UID()}"
 
         x, y, w, h = attrs.box
-        self.frame = Frame(
+        self.frame = PmlFrame(
             x,
             y,
             w,

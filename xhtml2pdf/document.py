@@ -21,7 +21,6 @@ from html import escape as html_escape
 from reportlab.lib import pdfencrypt
 from reportlab.platypus.doctemplate import NextPageTemplate
 from reportlab.platypus.flowables import Spacer
-from reportlab.platypus.frames import Frame
 
 from xhtml2pdf.builders.position import PositionAnchor
 from xhtml2pdf.builders.signs import PDFSignature
@@ -37,7 +36,7 @@ from xhtml2pdf.default import DEFAULT_CSS, DEFAULT_PAGE_NAME
 from xhtml2pdf.files import cleanFiles, pisaTempFile
 from xhtml2pdf.parser import pisaParser
 from xhtml2pdf.util import getBox, reset_caches
-from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlPageTemplate
+from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlFrame, PmlPageTemplate
 
 log = logging.getLogger(__name__)
 
@@ -406,7 +405,7 @@ def _build(
         body = PmlPageTemplate(
             id="body",
             frames=[
-                Frame(
+                PmlFrame(
                     x,
                     y,
                     w,

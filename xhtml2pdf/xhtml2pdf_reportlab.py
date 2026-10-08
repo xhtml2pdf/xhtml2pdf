@@ -44,6 +44,7 @@ from reportlab.platypus.flowables import (
     KeepInFrame,
     ParagraphAndImage,
 )
+from reportlab.platypus.frames import Frame
 from reportlab.platypus.tableofcontents import TableOfContents, drawPageNumbers
 from reportlab.platypus.tables import _SPECIALROWS, Table, TableStyle
 from reportlab.rl_config import register_reset
@@ -235,6 +236,34 @@ class PmlBaseDoc(BaseDocTemplate):
 
     def _has_template_for_name(self, name: str) -> bool:
         return any(template.id == name.strip() for template in self.pageTemplates)
+
+
+#: What copy.deepcopy hands back unchanged, so a copy can share it.
+_ATOMIC = frozenset((int, float, str, bool, type(None)))
+
+
+class PmlFrame(Frame):
+    """
+    A Frame that deep-copies itself without copy's general machinery.
+
+    ReportLab deep-copies the current frame every time it measures a list of
+    flowables (flowables._listWrapOn) -- once per table cell, per wrap -- and
+    xhtml2pdf copies a static frame for every page it draws one on. Through
+    __reduce_ex__ that cost tens of microseconds a copy, a fifth of the
+    render of a long table. The result is the same: atomic values shared,
+    everything else deep-copied with the same memo.
+    """
+
+    def __deepcopy__(self, memo):
+        new = self.__class__.__new__(self.__class__)
+        memo[id(self)] = new
+        new.__dict__.update(
+            {
+                name: value if type(value) in _ATOMIC else copy.deepcopy(value, memo)
+                for name, value in self.__dict__.items()
+            }
+        )
+        return new
 
 
 class PmlPageTemplate(PageTemplate):

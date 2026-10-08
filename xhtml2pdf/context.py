@@ -27,7 +27,6 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus.frames import Frame
 
 try:
     from reportlab.pdfgen.canvas import ShowBoundaryValue
@@ -65,6 +64,7 @@ from xhtml2pdf.util import (
 )
 from xhtml2pdf.w3c import css
 from xhtml2pdf.xhtml2pdf_reportlab import (
+    PmlFrame,
     PmlPageCount,
     PmlPageTemplate,
     PmlParagraph,
@@ -605,7 +605,7 @@ class pisaCSSBuilder(css.CSSBuilder):
                     )
                 )
 
-            frame = Frame(
+            frame = PmlFrame(
                 x,
                 y,
                 w,
@@ -669,7 +669,7 @@ class pisaCSSBuilder(css.CSSBuilder):
             )
 
             frameList.append(
-                Frame(
+                PmlFrame(
                     x,
                     y,
                     w,
