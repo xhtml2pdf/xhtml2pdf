@@ -13,6 +13,14 @@
       "text": 0.7065,
       "text_doc": 0.8342
     },
+    "block-box-height": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.8795,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
     "block-box-table": {
       "pages": {
         "xhtml2pdf": 1
@@ -25,7 +33,7 @@
       "pages": {
         "xhtml2pdf": 1
       },
-      "ssim": 0.9697,
+      "ssim": 0.9707,
       "text": 1.0,
       "text_doc": 1.0
     },
@@ -33,7 +41,7 @@
       "pages": {
         "xhtml2pdf": 1
       },
-      "ssim": 0.9234,
+      "ssim": 0.9255,
       "text": 1.0,
       "text_doc": 1.0
     },
@@ -71,7 +79,7 @@
       "pages": {
         "xhtml2pdf": 1
       },
-      "ssim": 0.9447,
+      "ssim": 0.9459,
       "text": 1.0,
       "text_doc": 1.0
     },
@@ -130,7 +138,7 @@
       "pages": {
         "xhtml2pdf": 1
       },
-      "ssim": 0.9813,
+      "ssim": 0.9818,
       "text": 1.0,
       "text_doc": 1.0
     },
@@ -372,6 +380,14 @@
       "text": 1.0,
       "text_doc": 1.0
     },
+    "flex-table-cell-percent": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.8874,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
     "flex-wrap": {
       "pages": {
         "xhtml2pdf": 1
@@ -520,7 +536,7 @@
       "pages": {
         "xhtml2pdf": 1
       },
-      "ssim": 0.8192,
+      "ssim": 0.821,
       "text": 1.0,
       "text_doc": 1.0
     },
@@ -597,7 +613,7 @@
       "pages": {
         "xhtml2pdf": 4
       },
-      "ssim": 0.9316,
+      "ssim": 0.9326,
       "text": 1.0,
       "text_doc": 0.6074
     },
