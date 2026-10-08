@@ -34,7 +34,7 @@ from xhtml2pdf.builders.flex import (
 )
 from xhtml2pdf.builders.position import PositionAnchor
 from xhtml2pdf.util import drawBoxBackground, drawBoxBorders, getSize, toList
-from xhtml2pdf.xhtml2pdf_reportlab import PmlKeepInFrame, PmlMaxHeightMixIn
+from xhtml2pdf.xhtml2pdf_reportlab import PmlKeepInFrame, PmlMaxHeightMixIn, opened_up
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -313,11 +313,7 @@ class BlockBox(Flowable, PmlMaxHeightMixIn):
 
     def drawn_flowables(self) -> list[Flowable]:
         """What this part of the box drew, boxes inside it opened up."""
-        drawn: list[Flowable] = []
-        for entry in self._entries:
-            inner = getattr(entry.flowable, "drawn_flowables", None)
-            drawn.extend(inner() if inner is not None else [entry.flowable])
-        return drawn
+        return opened_up(entry.flowable for entry in self._entries)
 
 
 class _UnsplittableBlockBox(BlockBox):

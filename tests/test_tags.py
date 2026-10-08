@@ -1031,6 +1031,48 @@ class TocWithoutEntriesTestCase(TestCase):
         self.assertIn("One", text)
 
 
+class TocFromContainersTestCase(TestCase):
+    """
+    A heading inside a table cell is an entry of the index.
+
+    Its outline entry was made as it was drawn, but the index heard only of
+    what the frame placed -- the table -- so the heading was in the PDF's
+    outline and missing from <pdf:toc>. A cell's content is also wrapped in
+    a keep-in-frame, which hid it the same way.
+    """
+
+    def index(self, body: str) -> str:
+        dest = io.BytesIO()
+        result = pisa.pisaDocument(
+            io.StringIO(f"<html><body><pdf:toc /><pdf:nextpage />{body}</body></html>"),
+            dest,
+        )
+        self.assertEqual(0, result.err)
+        dest.seek(0)
+        return PdfReader(dest).pages[0].extract_text()
+
+    def test_a_heading_in_a_cell(self) -> None:
+        index = self.index(
+            "<h2>Outside</h2><table><tr><td><h2>Inside</h2></td></tr></table>"
+        )
+        self.assertIn("Outside", index)
+        self.assertIn("Inside", index)
+
+    def test_a_repeated_header_row_is_one_entry(self) -> None:
+        rows = "".join(f"<tr><td>row {i}</td></tr>" for i in range(80))
+        index = self.index(
+            '<table repeat="1"><thead><tr><th><h3>Header</h3></th></tr></thead>'
+            f"{rows}</table>"
+        )
+        self.assertEqual(1, index.count("Header"))
+
+    def test_a_heading_in_a_keep_in_frame_block(self) -> None:
+        index = self.index(
+            '<div style="-pdf-keep-in-frame-mode: shrink"><h2>Kept</h2><p>x</p></div>'
+        )
+        self.assertIn("Kept", index)
+
+
 class TocLevelStylesTestCase(TestCase):
     """
     addTOC reads the .pdftoclevelN styles by rewriting the class of the

@@ -157,11 +157,11 @@ class PmlBaseDoc(BaseDocTemplate):
         # The build is most of a long render's time, and this runs for every
         # flowable placed, including each part of one split across pages.
         check_deadline()
-        # A block's box holds what it drew; a heading in it is an entry of
-        # the index as much as one in the story.
-        inner = getattr(flowable, "drawn_flowables", None)
+        # A block's box, a table or a keep-in-frame holds what it drew; a
+        # heading in one is an entry of the index as much as one in the story.
+        inner = drawn_inside(flowable)
         if inner is not None:
-            for drawn in inner():
+            for drawn in inner:
                 self.afterFlowable(drawn)
             return
         # Does the flowable contain fragments?
@@ -1085,6 +1085,32 @@ class PmlParagraph(Paragraph, PmlMaxHeightMixIn):
         drawBoxBorders(canvas, x, y, w, h, style)
 
 
+def drawn_inside(flowable: Flowable) -> list[Flowable] | None:
+    """
+    What a container drew inside itself, or None for any other flowable.
+
+    The document hears about what a frame placed, not about what a table
+    cell, a keep-in-frame or a block's box drew inside it; a heading in one
+    of those reaches the index only through here.
+    """
+    inner = getattr(flowable, "drawn_flowables", None)
+    if inner is not None:
+        return inner()
+    if isinstance(flowable, KeepInFrame):
+        # Shrunk or not, all of its content is drawn.
+        return opened_up(flowable._content)
+    return None
+
+
+def opened_up(flowables) -> list[Flowable]:
+    """`flowables` with every container in it opened up."""
+    drawn: list[Flowable] = []
+    for flowable in flowables:
+        inner = drawn_inside(flowable)
+        drawn.extend(inner if inner is not None else [flowable])
+    return drawn
+
+
 class PmlKeepInFrame(KeepInFrame, PmlMaxHeightMixIn):
     def wrap(self, availWidth, availHeight):
         availWidth = max(availWidth, 1.0)
@@ -1191,6 +1217,29 @@ class PmlTable(Table, PmlMaxHeightMixIn):
 
     def _margins(self) -> float:
         return self.marginLeft + self.marginRight
+
+    def drawn_flowables(self) -> list[Flowable]:
+        """
+        What this part of the table drew, cell by cell, row by row.
+
+        A heading in a cell was bookmarked in the outline as it was drawn,
+        but its index entry is notified by afterFlowable, which saw only the
+        table. The header rows a continued part repeats are not counted
+        again.
+        """
+        rows = self._cellvalues
+        if self._cutTop:
+            repeat = self.repeatRows
+            skip = len(repeat) if isinstance(repeat, (list, tuple)) else repeat
+            rows = rows[skip or 0 :]
+        drawn: list[Flowable] = []
+        for row in rows:
+            for cell in row:
+                if isinstance(cell, Flowable):
+                    drawn.extend(opened_up([cell]))
+                elif isinstance(cell, (list, tuple)):
+                    drawn.extend(opened_up(cell))
+        return drawn
 
     def split(self, availWidth, availHeight):
         if self.minHeight and self._height > availHeight:
