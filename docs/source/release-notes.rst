@@ -104,6 +104,15 @@ Unreleased.
 
 **💪🏼 Improvements**
 
+* **Less memory, and faster.** A long document peaks at about 40% of the
+  memory it used to: 10,000 paragraphs at 142 MB rather than 371 MB, a
+  256-row table at 14 MB rather than 26 MB. A fragment of text holds only
+  what its element changed, not all of its 93 attributes, and the parsed
+  HTML is released before the PDF is laid out rather than after. Rendering
+  is 10-39% faster: each word is measured once per document, a paragraph's
+  lines are broken once per width however often a table or frame asks, and
+  frames, paragraphs and styles copy themselves directly. The PDF that comes
+  out is the same, byte for byte.
 * A warning about a stylesheet names it: its path or URL, ``<style> block
   2``, or ``the style attribute of <p>`` (:issue:`780`). That includes the
   warnings about properties xhtml2pdf does not implement and values it
@@ -174,6 +183,10 @@ Unreleased.
 
 **📘 Documentation**
 
+* ``tools/perf`` measures memory (``bench.py --memory``), what repeated
+  renders leave behind (``--leak``) and large documents (``--large``);
+  ``profile.py`` is ``profile_doc.py``, as on Python 3.13 the old name hid
+  the standard ``profile`` module and the script could not start.
 * The Django ``link_callback`` example works on a current Django: it hands
   ``finders.find`` a name rather than a URL, copes with ``STATIC_URL =
   "static/"`` and resolves a bare file name against ``BASE_DIR``
