@@ -1489,6 +1489,24 @@ class PageBreakAvoidTest(TestCase):
         )
         self.assertEqual([(False,), (True,)], self.pages_with(html, "long paragraph"))
 
+    def test_a_heading_stays_with_a_block_kept_whole(self) -> None:
+        """
+        ReportLab does not group a keepWithNext flowable with a KeepTogether.
+
+        The heading stayed alone at the foot of the page the block had left.
+        """
+        block = (
+            '<div style="page-break-inside: avoid">'
+            "<p>A</p><p>B</p><p>C</p><p>D</p><p>E</p></div>"
+        )
+        for keep in ("page-break-after: avoid", "-pdf-keep-with-next: true"):
+            with self.subTest(keep):
+                html = "<p>filler</p>" * 38 + f'<h2 style="{keep}">HEADING</h2>' + block
+                self.assertEqual(
+                    [(False, False), (True, True)],
+                    self.pages_with(html, "HEADING", "\nE"),
+                )
+
 
 class RightToLeftListMarkerTest(TestCase):
     """In a right-to-left list the marker is on the right, in visual order (#663)."""

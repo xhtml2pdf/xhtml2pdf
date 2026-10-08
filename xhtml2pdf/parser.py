@@ -1243,6 +1243,12 @@ def pisaPreLoop(node, context, *, collect=False):
     return data
 
 
+def _keeps_with_next(flowable) -> bool:
+    """Whether `flowable` asks to stay on the page of the one after it."""
+    get = getattr(flowable, "getKeepWithNext", None)
+    return bool(get() if get is not None else getattr(flowable, "keepWithNext", 0))
+
+
 def pisaLoop(node, context, **kw):
     # Once per element: a render's time limit is checked as it goes.
     check_deadline()
@@ -1575,10 +1581,15 @@ def pisaLoop(node, context, **kw):
                 shift_story(context.story, blockStoryStart, offsets)
             if breakInsideAvoid and len(context.story) > blockStoryStart:
                 # Even round a single flowable: a lone paragraph is split
-                # line by line otherwise.
-                context.story[blockStoryStart:] = [
-                    KeepTogether(context.story[blockStoryStart:])
-                ]
+                # line by line otherwise. And with the blocks before it that
+                # must stay with it -- a heading with page-break-after: avoid
+                # -- inside: ReportLab never groups a keepWithNext flowable
+                # with a KeepTogether that follows, so the heading was left
+                # at the foot of the page the block had left.
+                start = blockStoryStart
+                while start > 0 and _keeps_with_next(context.story[start - 1]):
+                    start -= 1
+                context.story[start:] = [KeepTogether(context.story[start:])]
             if pageBreakAfter == PAGE_BREAK_AVOID:
                 if len(context.story) > blockStoryStart:
                     # The block stays on the page what follows it starts on.
