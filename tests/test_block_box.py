@@ -380,3 +380,30 @@ class PlacesTestCase(TestCase):
         )
 
         self.assertEqual(1, len(boxes))
+
+
+class EmptyBoxTestCase(TestCase):
+    """
+    A block with a border or a background and nothing in it is drawn.
+
+    It made no flowable at all: no block content for a box, and no text for
+    a paragraph to draw one round. CSS draws it, padding and borders tall.
+    """
+
+    def test_an_empty_div(self) -> None:
+        boxes, _, _ = render(
+            '<div style="border: 2pt solid red; padding: 3pt"></div><p>after</p>'
+        )
+
+        (box,) = boxes
+        self.assertAlmostEqual(2 * (2 + 3), box.h)
+
+    def test_an_empty_paragraph(self) -> None:
+        boxes, _, _ = render('<p style="border-bottom: 1pt solid red"></p>')
+
+        self.assertEqual(1, len(boxes))
+
+    def test_a_block_of_text_keeps_its_paragraph_box(self) -> None:
+        boxes, _, _ = render('<div style="border: 1pt solid red">text</div>')
+
+        self.assertEqual([], boxes)

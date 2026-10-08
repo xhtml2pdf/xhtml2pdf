@@ -1047,6 +1047,16 @@ _BLOCK_CONTENT_TAGS = frozenset(
 )
 
 
+def isEmptyBlock(node) -> bool:
+    """Whether an element holds neither an element nor any text."""
+    for child in node.childNodes:
+        if child.nodeType == Node.ELEMENT_NODE:
+            return False
+        if child.nodeType == Node.TEXT_NODE and child.data.strip():
+            return False
+    return True
+
+
 def hasBlockContent(node, context) -> bool:
     """
     Whether an element holds a block, looking down through inline elements.
@@ -1486,7 +1496,12 @@ def pisaLoop(node, context, **kw):
             and node.tagName not in _NO_BLOCK_BOX_TAGS
         ):
             boxStyle = block_box_style(context, kw)
-            if boxStyle is not None and hasBlockContent(node, context):
+            # A block of text alone is one paragraph, which draws its own
+            # box -- unless the block is empty, when there is no paragraph
+            # to draw it.
+            if boxStyle is not None and (
+                hasBlockContent(node, context) or isEmptyBlock(node)
+            ):
                 blockBox = BlockBoxData(context, kw, boxStyle)
 
         inlineBox = None
