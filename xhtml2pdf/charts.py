@@ -81,6 +81,30 @@ class Props:
             ("fontName", font),
             ("textAnchor", str),
         ]
+        self.prop_map_valueAxis = [
+            ("valueMin", float),
+            ("valueMax", float),
+            ("valueStep", float),
+            ("forceZero", bool),
+            ("visible", bool),
+            ("visibleTicks", bool),
+            ("visibleGrid", bool),
+            ("gridStrokeWidth", float),
+            ("gridStrokeColor", getColor),
+            ("strokeWidth", float),
+            ("strokeColor", getColor),
+            ("labelTextFormat", str),
+        ]
+        self.prop_map_valueAxis_labels = [
+            ("angle", int),
+            ("dx", int),
+            ("dy", int),
+            ("fontSize", int),
+            ("fontName", font),
+            ("fillColor", getColor),
+            ("boxAnchor", str),
+            ("textAnchor", str),
+        ]
         self.prop_map_slices = [
             ("strokeWidth", int),
             ("labelRadius", float),
@@ -143,6 +167,22 @@ class BaseChart:
             props = Props(self)
         set_properties(self, data, props.prop_map)
 
+    def set_valueAxis(self, data, props=None):
+        """
+        The value axis of a bar or line chart: its range, ticks and grid.
+
+        Left alone, ReportLab scales the axis from the smallest value, so a
+        bar chart whose data does not reach zero is drawn with a truncated
+        axis and bars whose lengths do not compare.
+        """
+        if props is None:
+            props = Props(self)
+        set_properties(self.valueAxis, data, props.prop_map_valueAxis)
+        if isinstance(data.get("labels"), dict):
+            set_properties(
+                self.valueAxis.labels, data["labels"], props.prop_map_valueAxis_labels
+            )
+
     @staticmethod
     def get_colors():
         return []
@@ -168,6 +208,9 @@ class BaseBarChart(BaseChart):
 
         if "barLabels" in data:
             self.set_barLabels(data["barLabels"], props=props)
+
+        if isinstance(data.get("valueAxis"), dict):
+            self.set_valueAxis(data["valueAxis"], props=props)
 
         if "categoryAxis" in data:
             self.set_categoryAxis(data["categoryAxis"], props=props)
@@ -229,6 +272,9 @@ class HorizontalLine(HorizontalLineChart, BaseChart):
         props.add_prop(props.prop_map, [("joinedLines", int)])
         props.add_prop(props.prop_map, [("marker", self.fill_marker)])
         super().set_properties(data, props=props)
+
+        if isinstance(data.get("valueAxis"), dict):
+            self.set_valueAxis(data["valueAxis"], props=props)
 
     def fill_marker(self, fill_type):
         for x in range(len(self.data)):

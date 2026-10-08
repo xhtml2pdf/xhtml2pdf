@@ -270,6 +270,38 @@ class ChartParametersTestCase(TestCase):
         )
         self.assertIn("/Helvetica-Bold", self.fonts(pdf))
 
+    def axis_labels(self, chart: str) -> list[str]:
+        text = PdfReader(io.BytesIO(self.convert(chart))).pages[0].extract_text()
+        return text.split()
+
+    def test_the_value_axis_starts_where_it_is_told(self) -> None:
+        """The axis began at the smallest value, 40: valueAxis was not read."""
+        for kind in ("verticalbar", "horizontalline"):
+            with self.subTest(kind):
+                labels = self.axis_labels(
+                    f'{{"type": "{kind}", "data": [[40, 45, 50]],'
+                    ' "labels": ["a", "b", "c"],'
+                    ' "valueAxis": {"valueMin": 0, "valueMax": 60, "valueStep": 20}}'
+                )
+                self.assertEqual(["0", "20", "40", "60"], labels[3:])
+
+    def test_the_value_axis_can_be_forced_to_zero(self) -> None:
+        labels = self.axis_labels(
+            '{"type": "verticalbar", "data": [[40, 45, 50]],'
+            ' "labels": ["a", "b", "c"], "valueAxis": {"forceZero": true}}'
+        )
+        self.assertEqual("0", labels[3])
+
+    def test_the_value_axis_grid_and_label_format(self) -> None:
+        pdf = self.convert(
+            '{"type": "verticalbar", "data": [[40, 50]], "labels": ["a", "b"],'
+            ' "valueAxis": {"visibleGrid": true, "gridStrokeColor": "#ff00ff",'
+            ' "labelTextFormat": "%d%%"}}'
+        )
+        page = PdfReader(io.BytesIO(pdf)).pages[0]
+        self.assertIn(b"1 0 1 RG", page.get_contents().get_data())
+        self.assertIn("50%", page.extract_text())
+
 
 class SelfClosingTocTestCase(TestCase):
     """

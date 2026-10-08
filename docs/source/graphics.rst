@@ -89,6 +89,36 @@ For example:
           }
     </canvas>
 
+Value axis
+==========
+
+A bar or line chart's ``valueAxis`` sets the range, the ticks and the grid of
+the axis the values are read on. Left alone, reportlab scales it from the
+smallest value, so bars whose data does not reach zero are drawn on a
+truncated axis and their lengths stop comparing; ``valueMin`` or
+``forceZero`` puts the zero back:
+
+.. code:: html
+
+    <canvas type="graph" width="350" height="180">
+          {
+                "type": "verticalbar",
+                "data": [[40, 45, 50]],
+                "labels": ["2024", "2025", "2026"],
+                "valueAxis": {"valueMin": 0, "valueMax": 60, "valueStep": 20,
+                              "visibleGrid": true, "gridStrokeColor": "#dddddd",
+                              "labelTextFormat": "%d%%",
+                              "labels": {"fontSize": 8}}
+          }
+    </canvas>
+
+Its keys are ``valueMin``, ``valueMax``, ``valueStep``, ``forceZero``,
+``visible``, ``visibleTicks``, ``visibleGrid``, ``gridStrokeWidth``,
+``gridStrokeColor``, ``strokeWidth``, ``strokeColor`` and ``labelTextFormat``,
+and under ``labels`` the font, size, colour, angle and placement of the tick
+labels. ``fontName`` anywhere in a chart is a font-family the document knows,
+such as one from ``@font-face``, or a base-14 face.
+
 See more in examples.
 
 Demonstration
