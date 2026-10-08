@@ -208,3 +208,46 @@ class RenderTest(TestCase):
             ]
         )
         self.assertTrue(target.getvalue().startswith(b"%PDF"))
+
+
+class BrokenLinesCacheTest(TestCase):
+    """Wrapping again at the same width reuses the lines; a change breaks anew."""
+
+    @staticmethod
+    def counted(para: Paragraph) -> list[int]:
+        calls: list[int] = []
+        real = para.breakLines
+
+        def breakLines(widths):
+            calls.append(1)
+            return real(widths)
+
+        para.breakLines = breakLines  # type: ignore[method-assign]
+        return calls
+
+    def test_the_same_width_breaks_once(self) -> None:
+        para = Paragraph(LOREM, style())
+        calls = self.counted(para)
+        first = para.wrap(200, 1000)
+        lines = para.blPara
+        self.assertEqual(first, para.wrap(200, 1000))
+        self.assertIs(lines, para.blPara)
+        self.assertEqual(1, len(calls))
+
+    def test_another_width_breaks_again(self) -> None:
+        para = Paragraph(LOREM, style())
+        calls = self.counted(para)
+        narrow = para.wrap(100, 1000)
+        para.wrap(300, 1000)
+        self.assertEqual(narrow, para.wrap(100, 1000))
+        self.assertEqual(3, len(calls))
+
+    def test_changed_text_breaks_again(self) -> None:
+        """A page number is written into its frag between two wraps."""
+        para = Paragraph(LOREM, style())
+        calls = self.counted(para)
+        _, before = para.wrap(200, 1000)
+        para.frags[0].text += " " + LOREM
+        _, after = para.wrap(200, 1000)
+        self.assertEqual(2, len(calls))
+        self.assertGreater(after, before)

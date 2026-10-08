@@ -1509,11 +1509,7 @@ class Paragraph(Flowable):
         )
         later_widths = availWidth - leftIndent - style.rightIndent
 
-        if style.wordWrap == "CJK":
-            # use Asian text wrap algorithm to break characters
-            blPara = self.breakLinesCJK([first_line_width, later_widths])
-        else:
-            blPara = self.breakLines([first_line_width, later_widths])
+        blPara = self._brokenLines(first_line_width, later_widths)
         self.blPara = blPara
         autoLeading = getattr(self, "autoLeading", getattr(style, "autoLeading", ""))
         leading = style.leading
@@ -1536,6 +1532,53 @@ class Paragraph(Flowable):
         self.height = height
 
         return self.width, height
+
+    def _brokenLines(self, first_line_width, later_widths):
+        """
+        The lines broken at these widths, remembered while nothing changes.
+
+        A paragraph is asked to wrap at the same width over and over: a table
+        sizes and then places each cell, a frame measures what it then adds,
+        and multiBuild lays the whole story out once per pass. Breaking the
+        lines is what that costs, so the last answer is kept with what it was
+        computed from -- the widths, and each fragment's identity, text and
+        inline object size, which _calcImageMaxSizes changes with the height
+        offered -- and handed back while they still match. breakLines leaves
+        nothing else behind than its answer and self.width.
+        """
+        style = self.style
+        key = (
+            first_line_width,
+            later_widths,
+            style.wordWrap,
+            getattr(self, "autoLeading", getattr(style, "autoLeading", "")),
+            self.dir,
+            tuple(
+                (
+                    id(f),
+                    getattr(f, "text", None),
+                    getattr(getattr(f, "cbDefn", None), "width", None),
+                    getattr(getattr(f, "cbDefn", None), "height", None),
+                )
+                for f in self.frags
+            ),
+        )
+        cached = self.__dict__.get("_brokenLinesCache")
+        if (
+            cached is not None
+            and cached[0] == key
+            and not getattr(self, "_splitpara", 0)
+        ):
+            self.width = cached[2]
+            self.height = 0
+            return cached[1]
+        if style.wordWrap == "CJK":
+            # use Asian text wrap algorithm to break characters
+            blPara = self.breakLinesCJK([first_line_width, later_widths])
+        else:
+            blPara = self.breakLines([first_line_width, later_widths])
+        self._brokenLinesCache = (key, blPara, self.width)
+        return blPara
 
     def minWidth(self):
         """Attempt to determine a minimum sensible width."""
