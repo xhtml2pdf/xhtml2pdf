@@ -2,6 +2,7 @@ import io
 import os
 from unittest import TestCase
 from uuid import uuid4
+from xml.dom.minidom import parseString
 
 from reportlab.pdfbase import ttfonts
 
@@ -98,9 +99,10 @@ class TTFWithSameFaceName(TestCase):
         """
         # Create the pisaDocument in memory from the HTML
         with io.BytesIO() as pdf_file:
-            pisa_doc = pisaDocument(src=self.html, dest=pdf_file)
+            xml_output = io.BytesIO()
+            pisa_doc = pisaDocument(src=self.html, dest=pdf_file, xml_output=xml_output)
 
-        document = pisa_doc.node.ownerDocument
+        document = parseString(xml_output.getvalue())
 
         for spanElement in document.getElementsByTagName("span"):
             spanElement = CSSDOMElementInterface(spanElement)

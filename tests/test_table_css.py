@@ -1,5 +1,6 @@
 from io import BytesIO
 from unittest import TestCase
+from xml.dom.minidom import parseString
 
 from xhtml2pdf.context import pisaContext
 from xhtml2pdf.document import pisaDocument
@@ -39,9 +40,10 @@ class TableTest(TestCase):
         html = HTML_CONTENT
 
         result = BytesIO()
-        pdf = pisaDocument(BytesIO(html.encode("utf-8")), result)
+        xml_output = BytesIO()
+        pdf = pisaDocument(BytesIO(html.encode("utf-8")), result, xml_output=xml_output)
 
-        document = pdf.node.ownerDocument
+        document = parseString(xml_output.getvalue())
         th_element = document.getElementsByTagName("th")[0]
         th_element = CSSDOMElementInterface(th_element)
         attr_name = "background-color"

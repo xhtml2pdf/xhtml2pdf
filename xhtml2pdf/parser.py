@@ -489,29 +489,27 @@ def mapNonStandardAttrs(c, node, attrList):
 #: Pseudo-classes whose answer depends on where an element sits among its
 #: siblings, or on what it contains. Two siblings with the same tag, class,
 #: id and style can differ on these, so they must not share a cached result.
-POSITIONAL_PSEUDO_CLASSES: frozenset[str] = frozenset(
-    {
-        "empty",
-        "first-child",
-        "first-of-type",
-        "last-child",
-        "last-of-type",
-        "middle-child",
-        "not-first-child",
-        "not-last-child",
-        "not-middle-child",
-        "nth-child",
-        "nth-last-child",
-        "nth-last-of-type",
-        "nth-of-type",
-        "only-child",
-        "only-of-type",
-        # What the element contains: its descendants and later siblings, and
-        # the text of a textarea.
-        "has",
-        "placeholder-shown",
-    }
-)
+POSITIONAL_PSEUDO_CLASSES: frozenset[str] = frozenset({
+    "empty",
+    "first-child",
+    "first-of-type",
+    "last-child",
+    "last-of-type",
+    "middle-child",
+    "not-first-child",
+    "not-last-child",
+    "not-middle-child",
+    "nth-child",
+    "nth-last-child",
+    "nth-last-of-type",
+    "nth-of-type",
+    "only-child",
+    "only-of-type",
+    # What the element contains: its descendants and later siblings, and
+    # the text of a textarea.
+    "has",
+    "placeholder-shown",
+})
 
 #: The attributes a pseudo-class reads on the element itself. Two siblings
 #: that differ in one of them must not share a cached result either.
@@ -1016,35 +1014,31 @@ def declaresInlineBox(context, tagName: str) -> bool:
 
 #: Elements that never get a block box: the page itself, whose background
 #: is the canvas's, and a table and its parts, which draw their own.
-_NO_BLOCK_BOX_TAGS = frozenset(
-    {
-        "html",
-        "body",
-        "table",
-        "thead",
-        "tbody",
-        "tfoot",
-        "tr",
-        "td",
-        "th",
-        "hr",
-        "pdftoc",
-    }
-)
+_NO_BLOCK_BOX_TAGS = frozenset({
+    "html",
+    "body",
+    "table",
+    "thead",
+    "tbody",
+    "tfoot",
+    "tr",
+    "td",
+    "th",
+    "hr",
+    "pdftoc",
+})
 
 #: Tags that put something other than text into a block's story, whatever
 #: their display: a table, a rule, a break, a spacer, an index.
-_BLOCK_CONTENT_TAGS = frozenset(
-    {
-        "table",
-        "hr",
-        "pdfnextpage",
-        "pdfnextframe",
-        "pdfnexttemplate",
-        "pdfspacer",
-        "pdftoc",
-    }
-)
+_BLOCK_CONTENT_TAGS = frozenset({
+    "table",
+    "hr",
+    "pdfnextpage",
+    "pdfnextframe",
+    "pdfnexttemplate",
+    "pdfspacer",
+    "pdftoc",
+})
 
 
 def isEmptyBlock(node) -> bool:
@@ -1792,7 +1786,7 @@ def pisaParser(
         # html5lib sniffed bytes when the caller supplied an unknown encoding label.
         tree = turbohtml.parse(src, allow_declarative_shadow_roots=False)
     document = buildMiniDOM(tree)
-    _limit_dom_depth(document, policy.max_dom_depth)
+    _check_depth(document, policy.max_depth)
 
     if xml_output:
         xml_output.write(document.toprettyxml(encoding=encoding or "utf-8"))
