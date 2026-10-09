@@ -51,7 +51,7 @@ Versions >= 0.2
     --------------------------------------------
 
 
-0.2.22
+0.2.24
 ====================
 
 Unreleased.
@@ -81,6 +81,8 @@ Unreleased.
   ``XHTMLParser``. It still logs the deprecation warning, and parses the
   source as HTML.
 * An element with both ``lang`` and ``xml:lang`` kept only one of them.
+
+
 0.2.23
 ====================
 
