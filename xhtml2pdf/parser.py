@@ -17,7 +17,7 @@ import copy
 import logging
 import re
 import xml.dom.minidom
-from typing import NamedTuple
+from typing import Final, NamedTuple
 from xml.dom import Node
 
 import turbohtml
@@ -1711,9 +1711,14 @@ _NAMESPACE_URIS = {
     turbohtml.Namespace.MATHML: "http://www.w3.org/1998/Math/MathML",
 }
 _HTML_WHITESPACE = " \t\n\f\r"
+_ATTRIBUTE_NAMESPACE_URIS: Final[dict[str, str]] = {
+    "xml": "http://www.w3.org/XML/1998/namespace",
+    "xmlns": "http://www.w3.org/2000/xmlns/",
+    "xlink": "http://www.w3.org/1999/xlink",
+}
 
 
-def buildMiniDOM(tree):
+def buildMiniDOM(tree: turbohtml.Document) -> xml.dom.minidom.Document:
     """Copy the parsed tree into the xml.dom.minidom shape the renderer walks."""
     implementation = xml.dom.minidom.getDOMImplementation()
     document = implementation.createDocument(None, None, None)
@@ -1726,10 +1731,13 @@ def buildMiniDOM(tree):
             element = document.createElementNS(
                 _NAMESPACE_URIS[node.namespace], node.tag
             )
-            # Through the map, not setAttribute, which files xml:lang under
-            # the same key as lang and so keeps only one of the two.
+            # minidom cleans up by (namespace, local name); xml:lang must have its own key.
             for name in node.attrs:
-                element.attributes[name] = node.attr(name)
+                element.setAttributeNS(
+                    _ATTRIBUTE_NAMESPACE_URIS.get(name.partition(":")[0]),
+                    name,
+                    node.attr(name),
+                )
             parent.appendChild(element)
             pending.extend((child, element) for child in reversed(node.children))
         elif isinstance(node, turbohtml.DocumentFragment):
