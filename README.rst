@@ -39,7 +39,7 @@ As with all open-source software, its use in production depends on many factors,
 About
 =====
 
-xhtml2pdf is a HTML to PDF converter using Python, the ReportLab Toolkit, turbohtml and pypdf. It supports HTML5 and CSS 2.1 (and some of CSS 3). xhtml2pdf's own code is Python. turbohtml is a compiled dependency, so installation needs a compatible wheel or a C build toolchain.
+xhtml2pdf is a HTML to PDF converter using Python, the ReportLab Toolkit, turbohtml and pypdf. It supports HTML5 and CSS 2.1 (and some of CSS 3). Python 3.10 uses html5lib; Python 3.11 and later use turbohtml, which needs a compatible wheel or a C build toolchain.
 
 The main benefit of this tool is that a user with web skills like HTML and CSS is able to generate PDF templates very quickly without learning new technologies.
 

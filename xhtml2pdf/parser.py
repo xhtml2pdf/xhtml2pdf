@@ -16,14 +16,19 @@ from __future__ import annotations
 import copy
 import logging
 import re
+import sys
 import xml.dom.minidom
 from typing import Final, NamedTuple, cast
 from xml.dom import Node
 
-import turbohtml
 from reportlab.lib.colors import Color
 from reportlab.platypus.doctemplate import FrameBreak, NextPageTemplate
 from reportlab.platypus.flowables import KeepInFrame, KeepTogether, PageBreak
+
+if sys.version_info >= (3, 11):
+    import turbohtml
+else:
+    import html5lib
 
 from xhtml2pdf.builders.block import BlockBoxData, block_box_style, declared_height
 from xhtml2pdf.builders.flex import (
@@ -489,27 +494,29 @@ def mapNonStandardAttrs(c, node, attrList):
 #: Pseudo-classes whose answer depends on where an element sits among its
 #: siblings, or on what it contains. Two siblings with the same tag, class,
 #: id and style can differ on these, so they must not share a cached result.
-POSITIONAL_PSEUDO_CLASSES: frozenset[str] = frozenset({
-    "empty",
-    "first-child",
-    "first-of-type",
-    "last-child",
-    "last-of-type",
-    "middle-child",
-    "not-first-child",
-    "not-last-child",
-    "not-middle-child",
-    "nth-child",
-    "nth-last-child",
-    "nth-last-of-type",
-    "nth-of-type",
-    "only-child",
-    "only-of-type",
-    # What the element contains: its descendants and later siblings, and
-    # the text of a textarea.
-    "has",
-    "placeholder-shown",
-})
+POSITIONAL_PSEUDO_CLASSES: frozenset[str] = frozenset(
+    {
+        "empty",
+        "first-child",
+        "first-of-type",
+        "last-child",
+        "last-of-type",
+        "middle-child",
+        "not-first-child",
+        "not-last-child",
+        "not-middle-child",
+        "nth-child",
+        "nth-last-child",
+        "nth-last-of-type",
+        "nth-of-type",
+        "only-child",
+        "only-of-type",
+        # What the element contains: its descendants and later siblings, and
+        # the text of a textarea.
+        "has",
+        "placeholder-shown",
+    }
+)
 
 #: The attributes a pseudo-class reads on the element itself. Two siblings
 #: that differ in one of them must not share a cached result either.
@@ -1014,31 +1021,35 @@ def declaresInlineBox(context, tagName: str) -> bool:
 
 #: Elements that never get a block box: the page itself, whose background
 #: is the canvas's, and a table and its parts, which draw their own.
-_NO_BLOCK_BOX_TAGS = frozenset({
-    "html",
-    "body",
-    "table",
-    "thead",
-    "tbody",
-    "tfoot",
-    "tr",
-    "td",
-    "th",
-    "hr",
-    "pdftoc",
-})
+_NO_BLOCK_BOX_TAGS = frozenset(
+    {
+        "html",
+        "body",
+        "table",
+        "thead",
+        "tbody",
+        "tfoot",
+        "tr",
+        "td",
+        "th",
+        "hr",
+        "pdftoc",
+    }
+)
 
 #: Tags that put something other than text into a block's story, whatever
 #: their display: a table, a rule, a break, a spacer, an index.
-_BLOCK_CONTENT_TAGS = frozenset({
-    "table",
-    "hr",
-    "pdfnextpage",
-    "pdfnextframe",
-    "pdfnexttemplate",
-    "pdfspacer",
-    "pdftoc",
-})
+_BLOCK_CONTENT_TAGS = frozenset(
+    {
+        "table",
+        "hr",
+        "pdfnextpage",
+        "pdfnextframe",
+        "pdfnexttemplate",
+        "pdfspacer",
+        "pdftoc",
+    }
+)
 
 
 def isEmptyBlock(node) -> bool:
@@ -1704,11 +1715,12 @@ def _check_depth(document, limit: int | None) -> None:
         )
 
 
-_NAMESPACE_URIS: Final = {
-    turbohtml.Namespace.HTML: XHTML_NAMESPACE,
-    turbohtml.Namespace.SVG: "http://www.w3.org/2000/svg",
-    turbohtml.Namespace.MATHML: "http://www.w3.org/1998/Math/MathML",
-}
+if sys.version_info >= (3, 11):
+    _NAMESPACE_URIS: Final = {
+        turbohtml.Namespace.HTML: XHTML_NAMESPACE,
+        turbohtml.Namespace.SVG: "http://www.w3.org/2000/svg",
+        turbohtml.Namespace.MATHML: "http://www.w3.org/1998/Math/MathML",
+    }
 _HTML_WHITESPACE: Final = " \t\n\f\r"
 _ATTRIBUTE_NAMESPACE_URIS: Final[dict[str, str]] = {
     "xml": "http://www.w3.org/XML/1998/namespace",
@@ -1737,15 +1749,7 @@ def pisaParser(
     src = _limit_source(src, policy.max_document_bytes)
     if hasattr(src, "read"):
         src = src.read()
-    # Keep template content reachable by the renderer, including shadow templates.
-    try:
-        tree = turbohtml.parse(
-            src, encoding=encoding, allow_declarative_shadow_roots=False
-        )
-    except LookupError:
-        # html5lib sniffed bytes when the caller supplied an unknown encoding label.
-        tree = turbohtml.parse(src, allow_declarative_shadow_roots=False)
-    document: Final = buildMiniDOM(tree)
+    document: Final = parseHTML(src, encoding)
     _check_depth(document, policy.max_depth)
 
     if xml_output:
@@ -1778,6 +1782,29 @@ def pisaParser(
     context.cssAttrCache.clear()
     document.unlink()
     return context
+
+
+def parseHTML(
+    src: str | bytes, encoding: str | None = None
+) -> xml.dom.minidom.Document:
+    if sys.version_info < (3, 11):
+        return html5lib.HTMLParser(tree=html5lib.getTreeBuilder("dom")).parse(
+            src,
+            **(
+                {"transport_encoding": encoding}
+                if encoding and isinstance(src, bytes)
+                else {}
+            ),
+        )
+    # Keep template content reachable by the renderer, including shadow templates.
+    try:
+        tree = turbohtml.parse(
+            src, encoding=encoding, allow_declarative_shadow_roots=False
+        )
+    except LookupError:
+        # html5lib sniffs bytes when the caller supplies an unknown encoding label.
+        tree = turbohtml.parse(src, allow_declarative_shadow_roots=False)
+    return buildMiniDOM(tree)
 
 
 def buildMiniDOM(tree: turbohtml.Document) -> xml.dom.minidom.Document:
@@ -1847,6 +1874,7 @@ __all__ = [
     "buildMiniDOM",
     "getCSSAttrCacheKey",
     "pageBreakValue",
+    "parseHTML",
     "pisaGetAttributes",
     "pisaParser",
 ]
