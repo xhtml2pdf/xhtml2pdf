@@ -58,9 +58,10 @@ Unreleased.
 
 **💪🏼 Improvements**
 
-* Use turbohtml for HTML parsing and copy its tree into the ``xml.dom.minidom``
-  document required by the CSS and PDF renderer. Installation needs a compatible
-  turbohtml wheel or a C build toolchain.
+* Use turbohtml for HTML parsing on Python 3.11 and later, and copy its tree into
+  the ``xml.dom.minidom`` document required by the CSS and PDF renderer. Python 3.10
+  keeps html5lib. Installing turbohtml needs a compatible wheel or a C build
+  toolchain.
 
 **🐛 Bug-Fixes**
 
