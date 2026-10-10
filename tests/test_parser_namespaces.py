@@ -4,7 +4,8 @@ from xml.dom.minidom import parseString
 
 import pytest
 
-from xhtml2pdf.document import pisaStory
+from xhtml2pdf.document import pisaDocument, pisaStory
+from xhtml2pdf.w3c.cssDOMElementInterface import CSSDOMElementInterface
 
 
 @pytest.mark.parametrize(
@@ -29,3 +30,47 @@ def test_parser_keeps_namespaced_attributes(attribute: str, namespace: str) -> N
             paragraph.getAttribute("lang"),
             paragraph.getAttributeNS(namespace, "lang"),
         ) == ("en", "ar")
+
+
+def test_parser_retains_pdf_language_tag() -> None:
+    output: Final = io.BytesIO()
+    pisaStory('<pdf:language name=""/><p>Garden</p>', xml_output=output)
+    assert b'<pdf:language name="">' in output.getvalue()
+
+
+def test_parser_keeps_table_selector_ancestry() -> None:
+    output: Final = io.BytesIO()
+    result: Final = pisaDocument(
+        "<style>div#foo #bar-table th {background-color:#F0F0F0}</style>"
+        '<div id="foo"><table id="foofoo"><tr><th>Foo</th><td>Bar</td></tr></table></div>',
+        dest=io.BytesIO(),
+        xml_output=output,
+    )
+    with parseString(output.getvalue()) as document:
+        assert (
+            result.cssCascade.findCSSRulesFor(
+                CSSDOMElementInterface(document.getElementsByTagName("th")[0]),
+                "background-color",
+            )
+            == []
+        )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    [
+        pytest.param("", id="template"),
+        pytest.param(' shadowrootmode="open"', id="shadow-template"),
+    ],
+)
+def test_parser_keeps_template_content(attribute: str) -> None:
+    output: Final = io.BytesIO()
+    pisaStory(f"<template{attribute}><p>Garden</p></template>", xml_output=output)
+    with parseString(output.getvalue()) as document:
+        assert (
+            document
+            .getElementsByTagName("template")[0]
+            .getElementsByTagName("p")[0]
+            .toxml()
+            == "<p>Garden</p>"
+        )
