@@ -667,9 +667,7 @@ class SourceEncodingTest(TestCase):
         )
 
     def test_without_an_encoding_the_document_still_decides(self) -> None:
-        # No encoding named, so the parser sniffs and the <meta> wins. This is
-        # what must keep working: naming nothing is not the same as naming
-        # UTF-8, and a document that declares windows-1252 means it.
+        # An omitted encoding must let the document charset declaration win.
         declared = '<meta charset="windows-1252">'
         html = f"<html><head>{declared}</head><body><span>Ä-ö-ü</span></body></html>"
         self.assertEqual("Ä-ö-ü", self.text(html.encode("cp1252")))

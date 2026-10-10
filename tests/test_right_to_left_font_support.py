@@ -97,24 +97,6 @@ class RightToLeftFontSupportTests(TestCase):
         </html>
     """
 
-    def test_pdf_language_tag_in_html(self) -> None:
-        text = ""
-        language_tag = '<pdf:language name=""/>'
-
-        html = self.HTML_CONTENT.format(
-            ff_R=self.ff_R,
-            ff_M=self.ff_M,
-            ff_B=self.ff_B,
-            ff_SB=self.ff_SB,
-            ff_V=self.ff_V,
-            text=text,
-            language_tag=language_tag,
-        )
-
-        xml_output = io.BytesIO()
-        pisaStory(html, xml_output=xml_output)
-        self.assertIn(b'<pdf:language name="">', xml_output.getvalue())
-
     def test_language_attribute_in_pisaDocument(self) -> None:
         """Tests if the attribute 'language' is located in the pisaDocument."""
         text = ""

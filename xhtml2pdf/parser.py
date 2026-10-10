@@ -17,7 +17,7 @@ import copy
 import logging
 import re
 import xml.dom.minidom
-from typing import Final, NamedTuple
+from typing import Final, NamedTuple, cast
 from xml.dom import Node
 
 import turbohtml
@@ -1704,65 +1704,17 @@ def _check_depth(document, limit: int | None) -> None:
         )
 
 
-#: The namespace of each element, which the CSS selectors compare against.
-_NAMESPACE_URIS = {
+_NAMESPACE_URIS: Final = {
     turbohtml.Namespace.HTML: XHTML_NAMESPACE,
     turbohtml.Namespace.SVG: "http://www.w3.org/2000/svg",
     turbohtml.Namespace.MATHML: "http://www.w3.org/1998/Math/MathML",
 }
-_HTML_WHITESPACE = " \t\n\f\r"
+_HTML_WHITESPACE: Final = " \t\n\f\r"
 _ATTRIBUTE_NAMESPACE_URIS: Final[dict[str, str]] = {
     "xml": "http://www.w3.org/XML/1998/namespace",
     "xmlns": "http://www.w3.org/2000/xmlns/",
     "xlink": "http://www.w3.org/1999/xlink",
 }
-
-
-def buildMiniDOM(tree: turbohtml.Document) -> xml.dom.minidom.Document:
-    """Copy the parsed tree into the xml.dom.minidom shape the renderer walks."""
-    implementation = xml.dom.minidom.getDOMImplementation()
-    document = implementation.createDocument(None, None, None)
-    # A stack rather than recursion, so nesting depth is not bounded by the
-    # recursion limit.
-    pending = [(child, document) for child in reversed(tree.children)]
-    while pending:
-        node, parent = pending.pop()
-        if isinstance(node, turbohtml.Element):
-            element = document.createElementNS(
-                _NAMESPACE_URIS[node.namespace], node.tag
-            )
-            # minidom cleans up by (namespace, local name); xml:lang must have its own key.
-            for name in node.attrs:
-                element.setAttributeNS(
-                    _ATTRIBUTE_NAMESPACE_URIS.get(name.partition(":")[0]),
-                    name,
-                    node.attr(name),
-                )
-            parent.appendChild(element)
-            pending.extend((child, element) for child in reversed(node.children))
-        elif isinstance(node, turbohtml.DocumentFragment):
-            # A <template>'s content, walked as its children.
-            pending.extend((child, parent) for child in reversed(node.children))
-        elif isinstance(node, turbohtml.Text):
-            # The whitespace that opens a text goes in a node of its own. Each
-            # node becomes a fragment, and an inline box followed by a
-            # fragment that starts with a space draws the rest of the line
-            # over its start.
-            data = node.data
-            if (text := data.lstrip(_HTML_WHITESPACE)) and text != data:
-                space = data[: len(data) - len(text)]
-                parent.appendChild(document.createTextNode(space))
-                data = text
-            parent.appendChild(document.createTextNode(data))
-        elif isinstance(node, turbohtml.Comment):
-            parent.appendChild(document.createComment(node.data))
-        elif isinstance(node, turbohtml.Doctype):
-            doctype = implementation.createDocumentType(
-                node.name, node.public_id, node.system_id
-            )
-            doctype.ownerDocument = document
-            document.appendChild(doctype)
-    return document
 
 
 def pisaParser(
@@ -1781,7 +1733,7 @@ def pisaParser(
     """
     if xhtml:
         log.warning("xhtml parameter will be removed on next release 0.2.8")
-    policy = current_policy()
+    policy: Final = current_policy()
     src = _limit_source(src, policy.max_document_bytes)
     if hasattr(src, "read"):
         src = src.read()
@@ -1793,7 +1745,7 @@ def pisaParser(
     except LookupError:
         # html5lib sniffed bytes when the caller supplied an unknown encoding label.
         tree = turbohtml.parse(src, allow_declarative_shadow_roots=False)
-    document = buildMiniDOM(tree)
+    document: Final = buildMiniDOM(tree)
     _check_depth(document, policy.max_depth)
 
     if xml_output:
@@ -1828,6 +1780,51 @@ def pisaParser(
     return context
 
 
+def buildMiniDOM(tree: turbohtml.Document) -> xml.dom.minidom.Document:
+    implementation: Final = xml.dom.minidom.getDOMImplementation()
+    document: Final = implementation.createDocument(None, None, None)
+    # Input nesting can exceed Python's recursion limit.
+    pending: Final[
+        list[tuple[turbohtml.Node, xml.dom.minidom.Document | xml.dom.minidom.Element]]
+    ] = [(child, document) for child in reversed(tree.children)]
+    while pending:
+        node, parent = pending.pop()
+        if isinstance(node, turbohtml.Element):
+            element = document.createElementNS(
+                _NAMESPACE_URIS[node.namespace], node.tag
+            )
+            # minidom cleans up by (namespace, local name); xml:lang must have its own key.
+            for name in node.attrs:
+                element.setAttributeNS(
+                    _ATTRIBUTE_NAMESPACE_URIS.get(name.partition(":")[0]),
+                    name,
+                    cast("str", node.attr(name)),
+                )
+            parent.appendChild(element)
+            pending.extend((child, element) for child in reversed(node.children))
+        elif isinstance(node, turbohtml.DocumentFragment):
+            pending.extend((child, parent) for child in reversed(node.children))
+        elif isinstance(node, turbohtml.Text):
+            parent = cast("xml.dom.minidom.Element", parent)
+            # Leading whitespace in the same fragment makes inline boxes overlap the following text.
+            data = node.data
+            if (text := data.lstrip(_HTML_WHITESPACE)) and text != data:
+                parent.appendChild(
+                    document.createTextNode(data[: len(data) - len(text)])
+                )
+                data = text
+            parent.appendChild(document.createTextNode(data))
+        elif isinstance(node, turbohtml.Comment):
+            parent.appendChild(document.createComment(node.data))
+        elif isinstance(node, turbohtml.Doctype):
+            doctype = implementation.createDocumentType(
+                node.name, node.public_id, node.system_id
+            )
+            doctype.ownerDocument = document
+            document.appendChild(doctype)
+    return document
+
+
 # Shortcuts
 
 HTML2PDF = pisaParser
@@ -1839,3 +1836,17 @@ def XHTML2PDF(*a, **kw):
 
 
 XML2PDF = XHTML2PDF
+
+
+__all__ = [
+    "HTML2PDF",
+    "XHTML2PDF",
+    "XML2PDF",
+    "AttrContainer",
+    "CSSCollect",
+    "buildMiniDOM",
+    "getCSSAttrCacheKey",
+    "pageBreakValue",
+    "pisaGetAttributes",
+    "pisaParser",
+]
