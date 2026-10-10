@@ -17,7 +17,6 @@ from collections import defaultdict
 from contextlib import contextmanager
 
 import reportlab.rl_config
-import turbohtml
 
 from xhtml2pdf import document as _document
 from xhtml2pdf import parser as _parser
@@ -57,8 +56,7 @@ def _timed(name, func):
 def phase_timers():
     """Install the phase timers for the duration of the block."""
     originals = [
-        (turbohtml, "parse", "parse"),
-        (_parser, "buildMiniDOM", "parse"),
+        (_parser, "parseHTML", "parse"),
         (pisaContext, "parseCSS", "parseCSS"),
         (_parser, "CSSCollect", "CSSCollect"),
         (_document, "pisaStory", "story"),

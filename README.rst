@@ -196,8 +196,8 @@ optional ones: pyHanko, for digital signatures, which is also the
 ``signing`` extra on its own. ``pip install xhtml2pdf`` leaves it out:
 asking for a signature then raises an ``ImportError`` that names the extra.
 
-HTML is parsed by turbohtml, a compiled dependency, so installation needs a
-compatible wheel or a C build toolchain.
+Python 3.10 parses HTML with html5lib; Python 3.11 and later use turbohtml,
+which needs a compatible wheel or a C build toolchain.
 
 ReportLab needs a rendering backend to turn vector graphics into bitmaps (for
 charts and SVG rasterised into the page). The supported one is `cairo
