@@ -1804,10 +1804,10 @@ def parseHTML(
     except LookupError:
         # html5lib sniffs bytes when the caller supplies an unknown encoding label.
         tree = turbohtml.parse(src, allow_declarative_shadow_roots=False)
-    return buildMiniDOM(tree)
+    return _build_minidom(tree)
 
 
-def buildMiniDOM(tree: turbohtml.Document) -> xml.dom.minidom.Document:
+def _build_minidom(tree: turbohtml.Document) -> xml.dom.minidom.Document:
     implementation: Final = xml.dom.minidom.getDOMImplementation()
     document: Final = implementation.createDocument(None, None, None)
     # Input nesting can exceed Python's recursion limit.
@@ -1871,7 +1871,6 @@ __all__ = [
     "XML2PDF",
     "AttrContainer",
     "CSSCollect",
-    "buildMiniDOM",
     "getCSSAttrCacheKey",
     "pageBreakValue",
     "parseHTML",
