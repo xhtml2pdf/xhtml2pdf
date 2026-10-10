@@ -58,11 +58,9 @@ Unreleased.
 
 **💪🏼 Improvements**
 
-* **turbohtml parses the HTML instead of html5lib.** html5lib has had no
-  release since 2020. turbohtml implements the same WHATWG parsing
-  algorithm, and xhtml2pdf copies its tree into the ``xml.dom.minidom``
-  document the renderer walked before, so the CSS and ``xml_output`` see
-  the same DOM. Parsing is 4 to 15 times faster.
+* Use turbohtml for HTML parsing and copy its tree into the ``xml.dom.minidom``
+  document required by the CSS and PDF renderer. Installation needs a compatible
+  turbohtml wheel or a C build toolchain.
 
 **🐛 Bug-Fixes**
 
@@ -72,8 +70,8 @@ Unreleased.
 * **Character references no longer split a run of text.** Each
   ``&#1575;`` became a text node of its own, so Arabic written with
   references showed isolated letter forms, and right-to-left text written
-  that way kept its source order. Such text now gets shaped and reordered
-  as one run, as in a browser.
+  that way kept its source order. The renderer now shapes and reorders
+  adjacent references as one run.
 * A ``str`` source with an ``encoding`` that cannot represent it, such as
   ``encoding="latin-1"`` for text with a bullet, raised
   ``UnicodeEncodeError``. xhtml2pdf now uses the text as it is.
