@@ -51,6 +51,37 @@ Versions >= 0.2
     --------------------------------------------
 
 
+0.2.24
+====================
+
+Unreleased.
+
+**💪🏼 Improvements**
+
+* Use turbohtml for HTML parsing on Python 3.11 and later, and copy its tree into
+  the ``xml.dom.minidom`` document required by the CSS and PDF renderer. Python 3.10
+  keeps html5lib. Installing turbohtml needs a compatible wheel or a C build
+  toolchain.
+
+**🐛 Bug-Fixes**
+
+* **Undeclared UTF-8 decodes as UTF-8.** Bytes with no ``encoding``
+  argument, byte order mark or ``<meta charset>`` fell back to
+  windows-1252, so "Wörld" came out as "WÃ¶rld".
+* **Character references no longer split a run of text.** Each
+  ``&#1575;`` became a text node of its own, so Arabic written with
+  references showed isolated letter forms, and right-to-left text written
+  that way kept its source order. The renderer now shapes and reorders
+  adjacent references as one run.
+* A ``str`` source with an ``encoding`` that cannot represent it, such as
+  ``encoding="latin-1"`` for text with a bullet, raised
+  ``UnicodeEncodeError``. xhtml2pdf now uses the text as it is.
+* ``xhtml=True`` raised ``AttributeError``: html5lib has no
+  ``XHTMLParser``. It still logs the deprecation warning, and parses the
+  source as HTML.
+* An element with both ``lang`` and ``xml:lang`` kept only one of them.
+
+
 0.2.23
 ====================
 

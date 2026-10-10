@@ -264,8 +264,16 @@ def execute():
             print("--------------------------------------------")
             print("OS:                %s" % sys.platform)
             print("Python:            %s" % sys.version)
-            print("html5lib:          ?")
             import reportlab
+
+            if sys.version_info >= (3, 11):
+                import turbohtml
+
+                print("turbohtml:         %s" % turbohtml.__version__)
+            else:
+                import html5lib
+
+                print("html5lib:          %s" % html5lib.__version__)
 
             print("Reportlab:         %s" % reportlab.Version)
             sys.exit(0)

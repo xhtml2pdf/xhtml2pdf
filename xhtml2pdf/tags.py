@@ -115,11 +115,7 @@ class pisaTag:
 
 
 class pisaTagBODY(pisaTag):
-    """
-    We can also assume that there is a BODY tag because html5lib
-    adds it for us. Here we take the base font size for later calculations
-    in the FONT tag.
-    """
+    """The parser inserts a body element; its font size anchors descendant FONT calculations."""
 
     def start(self, c: pisaContext) -> None:
         c.baseFontSize = c.frag.fontSize

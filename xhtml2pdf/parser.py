@@ -16,15 +16,19 @@ from __future__ import annotations
 import copy
 import logging
 import re
+import sys
 import xml.dom.minidom
-from typing import NamedTuple
+from typing import Final, NamedTuple, cast
 from xml.dom import Node
 
-import html5lib
-from html5lib import treebuilders
 from reportlab.lib.colors import Color
 from reportlab.platypus.doctemplate import FrameBreak, NextPageTemplate
 from reportlab.platypus.flowables import KeepInFrame, KeepTogether, PageBreak
+
+if sys.version_info >= (3, 11):
+    import turbohtml
+else:
+    import html5lib
 
 from xhtml2pdf.builders.block import BlockBoxData, block_box_style, declared_height
 from xhtml2pdf.builders.flex import (
@@ -56,7 +60,6 @@ from xhtml2pdf.default import (
     STRING,
     TAGS,
 )
-from xhtml2pdf.files import pisaTempFile
 from xhtml2pdf.properties import (
     FRAG_BLOCK_GROUPS,
     LOOP_GROUPS,
@@ -141,6 +144,7 @@ from xhtml2pdf.util import (
 )
 from xhtml2pdf.w3c import cssDOMElementInterface
 from xhtml2pdf.w3c.css import (
+    XHTML_NAMESPACE,
     CSSSelectorAttributeQualifier,
     CSSSelectorLogicalQualifier,
     CSSTerminalFunction,
@@ -1711,6 +1715,20 @@ def _check_depth(document, limit: int | None) -> None:
         )
 
 
+if sys.version_info >= (3, 11):
+    _NAMESPACE_URIS: Final = {
+        turbohtml.Namespace.HTML: XHTML_NAMESPACE,
+        turbohtml.Namespace.SVG: "http://www.w3.org/2000/svg",
+        turbohtml.Namespace.MATHML: "http://www.w3.org/1998/Math/MathML",
+    }
+_HTML_WHITESPACE: Final = " \t\n\f\r"
+_ATTRIBUTE_NAMESPACE_URIS: Final[dict[str, str]] = {
+    "xml": "http://www.w3.org/XML/1998/namespace",
+    "xmlns": "http://www.w3.org/2000/xmlns/",
+    "xlink": "http://www.w3.org/1999/xlink",
+}
+
+
 def pisaParser(
     src,
     context,
@@ -1727,40 +1745,11 @@ def pisaParser(
     """
     if xhtml:
         log.warning("xhtml parameter will be removed on next release 0.2.8")
-        # TODO: XHTMLParser doesn't seem to exist...
-        parser = html5lib.XHTMLParser(tree=treebuilders.getTreeBuilder("dom"))
-    else:
-        parser = html5lib.HTMLParser(tree=treebuilders.getTreeBuilder("dom"))
-    parser_kwargs = {}
-    policy = current_policy()
+    policy: Final = current_policy()
     src = _limit_source(src, policy.max_document_bytes)
-    if isinstance(src, str):
-        # Text has to become bytes for html5lib, and the encoding chosen here
-        # is the one it must decode with, so it is not a guess either way.
-        encoding = encoding or "utf-8"
-        src = src.encode(encoding)
-        src = pisaTempFile(src, capacity=context.capacity)
-    if encoding:
-        # An encoding the caller named is the answer, whatever the source was.
-        # Without this a bytes or file source fell through to html5lib's own
-        # sniffing, whose last resort is windows-1252, so UTF-8 bytes came out
-        # as mojibake -- a bullet as "\u00e2\u0080\u00a2". Sniffing is still what
-        # happens when the caller names nothing, which is how a document with
-        # its own <meta charset> keeps deciding for itself.
-        parser_kwargs["transport_encoding"] = encoding
-
-    # # Test for the restrictions of html5lib
-    # if encoding:
-    #     # Workaround for html5lib<0.11.1
-    #     if hasattr(inputstream, "isValidEncoding"):
-    #         if encoding.strip().lower() == "utf8":
-    #             encoding = "utf-8"
-    #         if not inputstream.isValidEncoding(encoding):
-    #             log.error("%r is not a valid encoding e.g. 'utf8' is not valid but 'utf-8' is!", encoding)
-    #     else:
-    #         if inputstream.codecName(encoding) is None:
-    #             log.error("%r is not a valid encoding", encoding)
-    document = parser.parse(src, **parser_kwargs)  # encoding=encoding)
+    if hasattr(src, "read"):
+        src = src.read()
+    document: Final = parseHTML(src, encoding)
     _check_depth(document, policy.max_depth)
 
     if xml_output:
@@ -1795,6 +1784,74 @@ def pisaParser(
     return context
 
 
+def parseHTML(
+    src: str | bytes, encoding: str | None = None
+) -> xml.dom.minidom.Document:
+    if sys.version_info < (3, 11):
+        return html5lib.HTMLParser(tree=html5lib.getTreeBuilder("dom")).parse(
+            src,
+            **(
+                {"transport_encoding": encoding}
+                if encoding and isinstance(src, bytes)
+                else {}
+            ),
+        )
+    # Keep template content reachable by the renderer, including shadow templates.
+    try:
+        tree = turbohtml.parse(
+            src, encoding=encoding, allow_declarative_shadow_roots=False
+        )
+    except LookupError:
+        # html5lib sniffs bytes when the caller supplies an unknown encoding label.
+        tree = turbohtml.parse(src, allow_declarative_shadow_roots=False)
+    return _build_minidom(tree)
+
+
+def _build_minidom(tree: turbohtml.Document) -> xml.dom.minidom.Document:
+    implementation: Final = xml.dom.minidom.getDOMImplementation()
+    document: Final = implementation.createDocument(None, None, None)
+    # Input nesting can exceed Python's recursion limit.
+    pending: Final[
+        list[tuple[turbohtml.Node, xml.dom.minidom.Document | xml.dom.minidom.Element]]
+    ] = [(child, document) for child in reversed(tree.children)]
+    while pending:
+        node, parent = pending.pop()
+        if isinstance(node, turbohtml.Element):
+            element = document.createElementNS(
+                _NAMESPACE_URIS[node.namespace], node.tag
+            )
+            # minidom cleans up by (namespace, local name); xml:lang must have its own key.
+            for name in node.attrs:
+                element.setAttributeNS(
+                    _ATTRIBUTE_NAMESPACE_URIS.get(name.partition(":")[0]),
+                    name,
+                    cast("str", node.attr(name)),
+                )
+            parent.appendChild(element)
+            pending.extend((child, element) for child in reversed(node.children))
+        elif isinstance(node, turbohtml.DocumentFragment):
+            pending.extend((child, parent) for child in reversed(node.children))
+        elif isinstance(node, turbohtml.Text):
+            parent = cast("xml.dom.minidom.Element", parent)
+            # Leading whitespace in the same fragment makes inline boxes overlap the following text.
+            data = node.data
+            if (text := data.lstrip(_HTML_WHITESPACE)) and text != data:
+                parent.appendChild(
+                    document.createTextNode(data[: len(data) - len(text)])
+                )
+                data = text
+            parent.appendChild(document.createTextNode(data))
+        elif isinstance(node, turbohtml.Comment):
+            parent.appendChild(document.createComment(node.data))
+        elif isinstance(node, turbohtml.Doctype):
+            doctype = implementation.createDocumentType(
+                node.name, node.public_id, node.system_id
+            )
+            doctype.ownerDocument = document
+            document.appendChild(doctype)
+    return document
+
+
 # Shortcuts
 
 HTML2PDF = pisaParser
@@ -1806,3 +1863,17 @@ def XHTML2PDF(*a, **kw):
 
 
 XML2PDF = XHTML2PDF
+
+
+__all__ = [
+    "HTML2PDF",
+    "XHTML2PDF",
+    "XML2PDF",
+    "AttrContainer",
+    "CSSCollect",
+    "getCSSAttrCacheKey",
+    "pageBreakValue",
+    "parseHTML",
+    "pisaGetAttributes",
+    "pisaParser",
+]
