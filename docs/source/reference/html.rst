@@ -247,10 +247,7 @@ differences:
 -  Within a container the text direction of the document decides where
    the row starts: a ``dir="rtl"`` document lays ``row`` out from the
    right. The direction is read from ``dir`` on ``<html>``, ``<body>``,
-   ``<div>`` or ``<p>``. Bear in mind that ``dir="rtl"`` reverses the
-   characters of a run rather than applying the Unicode bidirectional
-   algorithm, so Latin text in a right-to-left document comes out
-   backwards; ``<pdf:language name="arabic"/>`` reshapes properly.
+   ``<div>`` or ``<p>``.
 
 .. _inline-block:
 

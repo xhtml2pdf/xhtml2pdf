@@ -51,6 +51,30 @@ Versions >= 0.2
     --------------------------------------------
 
 
+Unreleased
+====================
+
+**🐛 Bug-Fixes**
+
+* Parentheses, brackets, ``«»`` and the other mirrored characters face the
+  right way in right-to-left text: ``(א)`` used to be drawn ``)א(``.
+  Bracket pairs now take the direction of what they enclose, as a browser
+  lays them out, and the invisible bidi controls (``U+2066``–``U+2069``,
+  ``U+202A``–``U+202E``, the marks ``U+200E``, ``U+200F``, ``U+061C``) are
+  no longer drawn as boxes.
+
+**🧹 Cleanup**
+
+* ``python-bidi`` is no longer a dependency. The Unicode Bidirectional
+  Algorithm is implemented in ``xhtml2pdf/bidi.py``, in pure Python on top
+  of ``unicodedata``, and passes the whole of the Unicode conformance
+  suites (``tools/bidi/conformance.py``). python-bidi has been a compiled
+  Rust extension since 0.5, which needed a wheel for every platform, and it
+  reordered without mirroring, which is the bug above.
+
+--------------------------------------------
+
+
 0.2.23
 ====================
 

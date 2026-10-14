@@ -137,7 +137,7 @@ notes = "Table borders, colspan, valign, cellspacing; <pdf:nextpage> and <pdf:ne
 [fixtures.arabic_font_rendering]
 compare = ["pages", "text"]
 notes = """<pdf:language name=\"arabic\"/> runs the text through arabic-reshaper \
-and python-bidi; a browser shapes and reorders Arabic natively, so dir=\"rtl\" is \
+and the bidirectional algorithm in xhtml2pdf/bidi.py; a browser shapes and reorders Arabic natively, so dir=\"rtl\" is \
 the equivalent. The two shaping implementations are not glyph-identical, so \
 SSIM is not compared. Naming a right-to-left language now turns the whole \
 document round rather than only reshaping its text, which is what moved the \
@@ -149,7 +149,10 @@ the first <td> of a row on the right -- but the two engines write the cells to \
 the page in different orders, and pypdf runs its own bidirectional pass over \
 what it extracts on top of that. Measured by turning the mirroring off alone: \
 text 0.89, document 0.97. The layout is closer to the browser than it was; the \
-extraction is a worse way of seeing that."""
+extraction is a worse way of seeing that. The document score then rose from \
+0.834 to 0.845 when python-bidi gave way to xhtml2pdf/bidi.py: "(NEW PAGE?) \
+AFTERDIV" now reads "AFTERDIV (?NEW PAGE)" with its parentheses facing the way \
+the browser draws them, where python-bidi left them back to front."""
 
 # ---------------------------------------------------------------------------
 # Targeted CSS fixtures.

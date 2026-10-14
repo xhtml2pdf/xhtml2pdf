@@ -22,7 +22,6 @@ from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple
 
 import arabic_reshaper
 import reportlab.pdfbase._cidfontdata
-from bidi import get_display
 from reportlab.lib.colors import Color, toColor
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.lib.units import cm, inch
@@ -31,6 +30,8 @@ from reportlab.pdfbase._glyphlist import _glyphname2unicode
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 from reportlab.pdfgen.canvas import FILL_EVEN_ODD
 from reportlab.rl_config import register_reset
+
+from xhtml2pdf.bidi import get_display
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

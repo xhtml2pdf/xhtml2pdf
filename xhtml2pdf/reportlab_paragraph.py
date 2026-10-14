@@ -12,7 +12,6 @@ from string import whitespace
 from typing import TYPE_CHECKING
 from urllib.parse import unquote
 
-from bidi import get_display
 from reportlab.graphics import renderPDF
 from reportlab.lib.abag import ABag
 from reportlab.lib.colors import Color
@@ -23,6 +22,7 @@ from reportlab.platypus.flowables import Flowable
 from reportlab.platypus.paraparser import ParaParser
 from reportlab.rl_settings import _FUZZ
 
+from xhtml2pdf.bidi import get_display
 from xhtml2pdf.util import (
     drawBoxBackground,
     drawBoxBorders,
