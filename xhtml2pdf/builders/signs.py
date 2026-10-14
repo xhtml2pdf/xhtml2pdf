@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 
 from asn1crypto import crl, ocsp, pem, x509
+from pyhanko.config.pkcs11 import TokenCriteria
 from pyhanko.pdf_utils.incremental_writer import IncrementalPdfFileWriter
 from pyhanko.sign import signers, timestamps
 from pyhanko.sign.fields import SigSeedSubFilter
@@ -76,13 +77,21 @@ class PDFSignature:
 
     @staticmethod
     def test_simple_signer(config):
+        """
+        A signer from a key and certificate file, with ``ca_chain`` added.
+
+        The chain goes in as ``other_certs``: get_chains has already read and
+        parsed it, and ``ca_chain_files`` wants paths to read, so passing it
+        there failed every signature that had a chain with "expected str,
+        bytes or os.PathLike object, not Certificate".
+        """
         passphrase = PDFSignature.get_passphrase(config)
         if "key" in config and "cert" in config and passphrase:
             chain = PDFSignature.get_chains(config, "ca_chain")
             return signers.SimpleSigner.load(
                 config["key"],
                 config["cert"],
-                ca_chain_files=chain,
+                other_certs=chain,
                 key_passphrase=passphrase,
             )
         return None
@@ -275,10 +284,16 @@ class PDFSignature:
 
         if user_pin is not None and lib_location is not None:
             if slot_no is not None or token_label is not None:
+                # pyHanko 0.37 removed open_pkcs11_session(token_label=...),
+                # deprecated since 0.14 in favour of token_criteria.
                 return open_pkcs11_session(
                     lib_location,
                     slot_no=slot_no,
-                    token_label=token_label,
+                    token_criteria=(
+                        TokenCriteria(label=token_label)
+                        if token_label is not None
+                        else None
+                    ),
                     user_pin=user_pin,
                 )
             return None

@@ -62,6 +62,20 @@ Unreleased
   lays them out, and the invisible bidi controls (``U+2066``–``U+2069``,
   ``U+202A``–``U+202E``, the marks ``U+200E``, ``U+200F``, ``U+061C``) are
   no longer drawn as boxes.
+* A ``simple`` signature with a ``ca_chain`` -- the first example in
+  :doc:`encryption_and_signatures` -- signs. The chain was read and parsed,
+  then handed to pyHanko as file names, and every such signature failed
+  with "expected str, bytes or os.PathLike object, not Certificate".
+* A ``pkcs11`` signature that names its token with ``token_label`` works
+  with pyHanko 0.37, which removed ``open_pkcs11_session(token_label=...)``;
+  the label now goes through ``token_criteria``.
+
+**⚠️ Deprecation**
+
+* pyHanko 0.37.0 and pyhanko-certvalidator 0.32.1 are the minimum versions;
+  the declared floor was pyHanko 0.12.1, which nothing tested. pyHanko 0.37
+  fetches revocation data and timestamps with ``aiohttp`` and no longer
+  installs ``requests``.
 
 **🧹 Cleanup**
 
