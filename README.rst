@@ -1,6 +1,9 @@
 XHTML2PDF
 =========
 
+**Write the document in HTML and CSS. Get a PDF.** Pure Python on top of
+ReportLab, with no browser to install or keep running.
+
 .. image:: https://img.shields.io/pypi/v/xhtml2pdf?label=PyPI&logo=PyPI&logoColor=white&color=blue
     :target: https://pypi.python.org/pypi/xhtml2pdf
     :alt: PyPI version
@@ -29,152 +32,237 @@ XHTML2PDF
    :target: http://xhtml2pdf.readthedocs.io/en/latest/?badge=latest
    :alt: Read the Docs
 
-|
+xhtml2pdf turns HTML5 and CSS into PDF on top of the ReportLab toolkit. Anyone
+who can build a web page can build an invoice, a report, a ticket or a book
+with it, from a Django or Flask template or from a plain string, and render
+it anywhere Python runs.
 
-Release Notes can be found here: `Release Notes <https://xhtml2pdf.readthedocs.io/en/latest/release-notes.html>`__
-As with all open-source software, its use in production depends on many factors, so be aware that you may find issues in some cases.
+Made with xhtml2pdf
+===================
 
-**Big thanks** to everyone who has worked on this project so far and to those who help maintain it.
+Every page below is an HTML document converted by xhtml2pdf, fonts, charts,
+barcodes and all.
 
-About
-=====
+.. |annual-report| image:: https://raw.githubusercontent.com/xhtml2pdf/xhtml2pdf/master/docs/source/_static/readme/annual-report.png
+   :width: 180px
+   :alt: An annual report with a cover photo, key figures and charts
 
-xhtml2pdf is a HTML to PDF converter using Python, the ReportLab Toolkit, html5lib and pypdf. It supports HTML5 and CSS 2.1 (and some of CSS 3). It is completely written in pure Python, so it is platform independent.
+.. |invoice| image:: https://raw.githubusercontent.com/xhtml2pdf/xhtml2pdf/master/docs/source/_static/readme/invoice.png
+   :width: 180px
+   :alt: An invoice with a long table of line items and totals
 
-The main benefit of this tool is that a user with web skills like HTML and CSS is able to generate PDF templates very quickly without learning new technologies.
+.. |book| image:: https://raw.githubusercontent.com/xhtml2pdf/xhtml2pdf/master/docs/source/_static/readme/book.png
+   :width: 180px
+   :alt: The cover of a novella, a full-page illustration with the title
 
-Please consider support this project using `Patreon <https://www.patreon.com/xhtml2pdf>`__ or Bitcoins: ``bc1qmr0skzwx5scyvh2ql28f7gfh6l65ua250qv227``
+.. |poster| image:: https://raw.githubusercontent.com/xhtml2pdf/xhtml2pdf/master/docs/source/_static/readme/poster.png
+   :width: 180px
+   :alt: A concert poster with a city skyline and a strip of dates
 
+.. |certificate| image:: https://raw.githubusercontent.com/xhtml2pdf/xhtml2pdf/master/docs/source/_static/readme/certificate.png
+   :width: 180px
+   :alt: A certificate of completion in landscape with a QR code
 
+.. |receipt-pos| image:: https://raw.githubusercontent.com/xhtml2pdf/xhtml2pdf/master/docs/source/_static/readme/receipt-pos.png
+   :width: 180px
+   :alt: A narrow point-of-sale receipt in a monospaced font
 
-Documentation
+.. |boarding-pass| image:: https://raw.githubusercontent.com/xhtml2pdf/xhtml2pdf/master/docs/source/_static/readme/boarding-pass.png
+   :width: 180px
+   :alt: An airline boarding pass with a barcode and a QR code
+
+.. |event-ticket| image:: https://raw.githubusercontent.com/xhtml2pdf/xhtml2pdf/master/docs/source/_static/readme/event-ticket.png
+   :width: 180px
+   :alt: A concert ticket with a stub and a barcode
+
++-----------------+-----------------+-----------------+-----------------+
+| |annual-report| | |invoice|       | |book|          | |poster|        |
++-----------------+-----------------+-----------------+-----------------+
+| |certificate|   | |receipt-pos|   | |boarding-pass| | |event-ticket|  |
++-----------------+-----------------+-----------------+-----------------+
+
+Quick start
+===========
+
+.. code:: bash
+
+    pip install xhtml2pdf
+
+.. code:: python
+
+    from xhtml2pdf import pisa
+
+    html = """
+    <style>
+      @page { size: a4; margin: 2cm;
+              @frame footer { -pdf-frame-content: footer; bottom: 1cm;
+                              margin-left: 2cm; margin-right: 2cm; height: 1cm } }
+      h1 { color: #204a87 }
+    </style>
+    <h1>Hello, PDF</h1>
+    <p>Written in HTML, laid out by CSS.</p>
+    <div id="footer">Page <pdf:pagenumber /> of <pdf:pagecount /></div>
+    """
+
+    with open("hello.pdf", "wb") as output:
+        result = pisa.CreatePDF(html, dest=output)
+    print("errors:", result.err)
+
+Or from the command line:
+
+.. code:: bash
+
+    xhtml2pdf report.html report.pdf
+
+What it can do
 ==============
 
-The documentation of xhtml2pdf is available at `Read the Docs <http://xhtml2pdf.readthedocs.io>`__.
+**Layout**
 
-And we could use your help improving it! A good place to start is ``doc/source/usage.rst``.
+* Flexbox (``display: flex``), including containers that break across
+  pages, and ``display: inline-block``.
+* ``position: relative``, ``absolute`` and ``fixed``, with ``z-index``.
+* Block boxes with padding, borders and backgrounds around everything they
+  hold, ``border-radius`` on blocks, tables, cells, images and inline
+  boxes, and dashed, dotted and double borders.
+* Tables with header rows repeated on every page, ``colspan`` and
+  ``rowspan``, auto margins and widths, and rows taller than a page cut
+  between pages.
+* Word breaking with ``overflow-wrap``, ``page-break-before``/``after``,
+  ``page-break-inside: avoid`` and keeping a heading with what follows.
 
+**CSS**
+
+* Selectors up to Level 4: ``:not()``, ``:is()``, ``:where()``, ``:has()``,
+  ``:nth-child()`` and attribute selectors.
+* Custom properties with ``var()``, ``em``/``rem``/percent units, and colours
+  with an alpha channel.
+* ``@font-face`` with TrueType and OpenType fonts, matched per character, so
+  a paragraph that mixes scripts finds a font for each of them.
+
+**Pages**
+
+* ``@page`` sizes and margins, named page templates and left/right pages,
+  background images, and frames for headers, footers and columns.
+* Page numbers and page counts, watermarks and backgrounds from an image or
+  another PDF.
+
+**Navigation**
+
+* Tables of contents with dot leaders, more than one per document,
+  clickable entries and a PDF outline (bookmarks).
+* Links to any element by ``id``, to other files and to the web.
+
+**International text**
+
+* Right-to-left documents in Arabic, Hebrew, Persian and Urdu, laid out with
+  a pure-Python implementation of the Unicode Bidirectional Algorithm that
+  passes the whole of the Unicode conformance suites.
+* Chinese, Japanese and Korean, Cyrillic and Greek, with the document's
+  language written to the PDF.
+
+**Graphics and PDF features**
+
+* SVG images, bar, line and pie charts, and barcodes and QR codes.
+* Fillable form fields, encryption with passwords and permissions, and
+  digital signatures (simple and PAdES) through pyHanko.
+
+**Safe by default**
+
+* A document cannot read local files outside its directory or reach
+  internal network addresses, and ``ResourceAccessPolicy.server()`` adds
+  limits on size, nesting and time for HTML from untrusted sources. See
+  `Security <https://xhtml2pdf.readthedocs.io/en/latest/security.html>`__.
+
+Documentation
+=============
+
+The documentation is on `Read the Docs <http://xhtml2pdf.readthedocs.io>`__,
+and what changed in each version is in the `Release Notes
+<https://xhtml2pdf.readthedocs.io/en/latest/release-notes.html>`__. Help
+improving it is welcome; a good place to start is
+``docs/source/quickstart.rst``.
 
 Installation
 ============
 
-This is a typical Python library and can be installed using pip::
+.. code:: bash
 
     pip install xhtml2pdf
 
+Python 3.10 and newer is tested and supported. Every mandatory requirement is
+listed in ``pyproject.toml`` and installed with xhtml2pdf.
 
-Requirements
-============
+ReportLab needs a rendering backend to turn vector graphics into bitmaps (for
+charts and SVG rasterised into the page). The supported one is `cairo
+<https://cairographics.org/>`__, installed system-wide, for example through
+the OS package manager, together with the ``pycairo`` extra:
 
-Only Python 3.10+ is tested and guaranteed to work.
-
-All mandatory requirements are listed in the ``pyproject.toml`` file and are installed automatically using the ``pip install xhtml2pdf`` method.
-
-As PDF library we depend on reportlab, which needs a rendering backend to generate bitmaps and vector graphic formats.
-For more information about this, have a look at the `reportlab docs <https://docs.reportlab.com/install/open_source_installation/>`__.
-
-The recommended choice is the `cairo graphics library <https://cairographics.org/>`__ which has to be installed system-wide e.g. via the OS package manager
-in combination with the ``PyCairo`` extra dependency:
+.. code:: bash
 
     pip install xhtml2pdf[pycairo]
 
-The ``renderpm`` extra is a deprecated alias for ``pycairo``. ReportLab 5 removed
-the C ``RenderPM`` backend, so ``pycairo`` is now the only backend.
-
-
-Alternatives
-============
-
-You can try `WeasyPrint <http://weasyprint.org>`__. The codebase is pretty, it has different features and it does a lot of what xhtml2pdf does.
-
-
-Call for testing
-================
-
-This project is heavily dependent on getting its test coverage up! Furthermore, parts of the codebase could do well with cleanups and refactoring.
-
-If you benefit from xhtml2pdf, perhaps look at the `test coverage <https://coveralls.io/github/xhtml2pdf/xhtml2pdf>`__ and identify parts that are yet untouched.
-
+The ``renderpm`` extra is a deprecated alias for ``pycairo``: ReportLab 5
+removed the C ``RenderPM`` backend. See the `ReportLab installation notes
+<https://docs.reportlab.com/install/open_source_installation/>`__.
 
 Development environment
 =======================
 
-#. If you don't have it, install ``pip``, the python package installer::
+``make devsetup`` creates ``.venv``, installs xhtml2pdf in editable mode with
+the ``test``, ``docs`` and ``release`` extras and installs the pre-commit
+hooks:
 
-    sudo easy_install pip
-
-   For more information about ``pip`` refer to http://www.pip-installer.org
-
-#. We will recommend using ``venv`` for development.
-
-#. ``make devsetup`` automates the steps below: it creates ``.venv``, installs
-   xhtml2pdf in editable mode with the ``test``, ``docs`` and ``release``
-   extras (the latter brings in ``build`` and ``twine``), and installs the
-   pre-commit hooks. Run it and skip to activating the environment::
+.. code:: bash
 
     make devsetup
     source .venv/bin/activate
 
-   Or do it by hand:
+Or by hand:
 
-#. Create a virtual environment for the project. This can be inside the project directory, but cannot be under version control::
+.. code:: bash
 
     python -m venv .venv
-
-#. Activate your virtual environment::
-
     source .venv/bin/activate
-
-   Later to deactivate it use::
-
-    deactivate
-
-#. The next step will be to install/upgrade dependencies from the ``pyproject.toml`` file::
-
     pip install -e .[test,docs,release]
-
-#. Run tests to check your configuration::
-
-    tox
-
-   You should have a log with the following success status::
-
-    congratulations :) (75.67 seconds)
-
-
-Python integration
-==================
-
-Some simple demos of how to integrate xhtml2pdf into a Python program may be found here: ``test/simple.py``
-
 
 Running tests
 =============
 
-Two different test suites are available to assert that xhtml2pdf works reliably:
-
-#. Unit tests. The unit testing framework is currently minimal, but is being
-   improved on a regular basis (contributions welcome). They should run in the
-   expected way for Python's unittest module, i.e.::
-
-        tox
-
-#. Functional tests. Thanks to mawe42's super cool work, a full functional
-   test suite is available at ``testrender/``.
-
-You can run them using make
-
 .. code:: bash
 
-        make test       # run tests
-        make test-ref   # generate reference data for testrender
-        make test-all   # Run all test using tox
+    make test               # unit tests
+    make test-ref           # reference renders for testrender
+    make test-render        # compare the renders against the reference
+    make test-browser       # compare against a headless browser's rendering
+    make test-all           # every supported Python and ReportLab, with tox
 
-Contact
-=======
+``testrender/`` renders a set of documents and compares the pages; the
+browser comparison scores xhtml2pdf against Chrome on the same markup, so a
+change that moves a layout away from a browser's shows up as a regression.
+``tools/perf`` measures time and memory.
 
-This project is community-led! Feel free to open up issues on GitHub about new ideas to improve xhtml2pdf.
+Contributing
+============
 
+This project is community-led. Ideas, bug reports with a small HTML that
+shows the problem, and pull requests are welcome on GitHub. If xhtml2pdf is
+useful to you, look at the `test coverage
+<https://coveralls.io/github/xhtml2pdf/xhtml2pdf>`__ for parts that are not
+yet tested.
+
+You can also support the project on `Patreon
+<https://www.patreon.com/xhtml2pdf>`__ or with Bitcoin:
+``bc1qmr0skzwx5scyvh2ql28f7gfh6l65ua250qv227``.
+
+**Big thanks** to everyone who has worked on this project so far and to those
+who help maintain it.
+
+Alternatives
+============
+
+`WeasyPrint <http://weasyprint.org>`__ covers much of the same ground with a
+different design and set of features.
 
 History
 =======
