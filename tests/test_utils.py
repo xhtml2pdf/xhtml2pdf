@@ -11,6 +11,7 @@ from xhtml2pdf.util import (
     DEFAULT_FONT_SIZE,
     copy_attrs,
     getBorderStyle,
+    getBorderTableLine,
     getBox,
     getColor,
     getCoords,
@@ -520,6 +521,22 @@ class GetBorderStyleTestCase(TestCase):
     def test_will_return_default_if_passed_value_is_non_case_sensitive_hidden(self):
         style = getBorderStyle("hidDen", default="defaultPassedArg")
         self.assertEqual(style, "defaultPassedArg")
+
+
+class GetBorderTableLineTestCase(TestCase):
+    """The cap a table border is stroked with: squared ends close up dashes."""
+
+    def test_a_dashed_or_dotted_border_has_butt_ends(self) -> None:
+        for style in ("dashed", "dotted"):
+            with self.subTest(style=style):
+                weight, cap, dashes, *_ = getBorderTableLine(style, 1.5)
+                self.assertEqual((1.5, "butt"), (weight, cap))
+                self.assertTrue(dashes)
+
+    def test_a_solid_or_double_border_is_squared_off(self) -> None:
+        for style in ("solid", "double", "groove"):
+            with self.subTest(style=style):
+                self.assertEqual("squared", getBorderTableLine(style, 3)[1])
 
 
 class CopyUtils(TestCase):

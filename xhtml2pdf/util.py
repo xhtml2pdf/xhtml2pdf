@@ -416,12 +416,18 @@ def getBorderTableLine(
     double the `count` parallel lines ReportLab can draw, narrowed to a third
     of the declared width and set two thirds apart so the three bands add up
     to the width that was asked for.
+
+    A solid line is squared off so that two edges meeting at a corner fill
+    it. A dashed one is not: a squared cap adds half the width at each end
+    of every dash, and the gaps of dashed and dotted are one width wide, so
+    they closed up and the border came out solid.
     """
     style = str(style).lower()
     if _is_double(style, width):
         band = width / 3.0
         return (band, "squared", None, None, 2, 2 * band)
-    return (width, "squared", getBorderDash(style, width), None, 1, 0)
+    dashes = getBorderDash(style, width)
+    return (width, "butt" if dashes else "squared", dashes, None, 1, 0)
 
 
 def drawBorderLine(

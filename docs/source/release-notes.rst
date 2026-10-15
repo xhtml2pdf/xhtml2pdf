@@ -75,6 +75,9 @@ Unreleased
   stopping the whole render with ``LayoutError: ... too large on page``.
   Content wider than the cell does not stop the cut either. A row crossed by
   a ``rowspan`` still fails as before.
+* Dashed and dotted borders on table cells are drawn dashed and dotted. The
+  squared line ends a table border is stroked with closed up every gap, so
+  they always came out as solid lines.
 
 **⚠️ Deprecation**
 
