@@ -528,7 +528,7 @@ class DocTemplateStateTest(TestCase):
 
 class TableStateTest(TestCase):
     """
-    ``PmlTable`` overrides three private methods of Table and reads its
+    ``PmlTable`` overrides four private methods of Table and reads its
     layout, and ``builders/flex.py`` reads a table's content to measure it.
     None of it has a public equivalent.
     """
@@ -603,7 +603,46 @@ class TableStateTest(TestCase):
         self.assertEqual(
             ["self", "V", "w", "s", "W", "H", "aH"], parameters(Table._listCellGeom)
         )
+        self.assertEqual(
+            ["self", "value", "style", "oldHeight", "newHeight", "width"],
+            parameters(Table._splitCell),
+        )
         self.assertTrue(all(isinstance(name, str) for name in _SPECIALROWS))
+
+    def test_a_row_can_be_cut_as_PmlTable_cuts_it(self) -> None:
+        """
+        A row too tall for any page is cut by PmlTable._splitInsideRow: it
+        turns splitInRow on for one split, finds the row as ReportLab does,
+        reads the spans and copies the cell styles; it asks the document's
+        frame for _atTop, and KeepInFrame for a height to shrink to.
+        """
+        from reportlab.platypus.flowables import KeepInFrame
+        from reportlab.platypus.frames import Frame
+        from reportlab.platypus.tables import Table
+
+        def parameters(method) -> list[str]:
+            return list(inspect.signature(method).parameters)
+
+        self.assertEqual(
+            ["self", "availHeight", "ignoreSpans"],
+            parameters(Table._getFirstPossibleSplitRowPosition),
+        )
+        # A part of a cut cell passes a huge height so as to shrink to width only.
+        self.assertIn(
+            "min(self.maxHeightoravailHeight,availHeight)",
+            inspect.getsource(KeepInFrame.wrap).replace(" ", ""),
+        )
+        self.assertIn("self.splitInRow", inspect.getsource(Table.split))
+        self.assertIn("self._splitCell(", inspect.getsource(Table._splitRows))
+        self.assertTrue(hasattr(Frame(0, 0, 10, 10), "_atTop"))
+
+        table = Table([["a", "b"], ["c", "d"]], style=[("SPAN", (0, 0), (1, 0))])
+        table.wrap(300, 300)
+        self.assertEqual((0, 0, 1, 0), table._spanRanges[0, 0])
+        self.assertIsNone(table._spanRanges[1, 0])
+        style = table._cellStyles[0][0]
+        self.assertIsNot(style, style.copy())
+        self.assertEqual(style.valign, style.copy().valign)
 
 
 class OtherPrivateStateTest(TestCase):

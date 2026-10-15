@@ -577,6 +577,14 @@
       "text": 1.0,
       "text_doc": 1.0
     },
+    "table-row-split": {
+      "pages": {
+        "xhtml2pdf": 3
+      },
+      "ssim": 0.713,
+      "text": 0.984,
+      "text_doc": 0.9888
+    },
     "table-shrink-auto-margins": {
       "pages": {
         "xhtml2pdf": 1

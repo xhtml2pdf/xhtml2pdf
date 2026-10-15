@@ -129,6 +129,29 @@ class RoundedTableDrawingTest(TestCase):
             (box,) = part._roundedBoxes.values()
             self.assertEqual(sides, box.sides)
 
+    def test_a_cell_cut_inside_its_row_is_open_at_the_cut(self) -> None:
+        lines = "<br/>".join(f"line {i}" for i in range(60))
+        table = _table(
+            "<table repeat='1'><tr><th>head</th><th>h</th></tr><tr>"
+            f"<td style='background-color: #eee; border-radius: 8pt'>{lines}</td>"
+            "<td style='background-color: #ddd; border-radius: 8pt'>short</td>"
+            "</tr></table>"
+        )
+        canvas = Canvas(BytesIO())
+        table.wrapOn(canvas, 400, 300)
+        table._postponed = 1
+        head, tail = table.splitOn(canvas, 400, 300)
+        for part, sides in (
+            (head, ("Left", "Right", "Top")),
+            (tail, ("Left", "Right", "Bottom")),
+        ):
+            part.wrapOn(canvas, 400, 800)
+            part.drawOn(canvas, 0, 0)
+            # The short cell is cut too: its box goes on, empty, below.
+            self.assertEqual(
+                [sides, sides], [box.sides for box in part._roundedBoxes.values()]
+            )
+
     def test_repeated_header_rows_make_one_box(self) -> None:
         rows = "".join(f"<tr><td>row {i}</td></tr>" for i in range(40))
         table = _table(

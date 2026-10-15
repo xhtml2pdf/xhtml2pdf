@@ -1037,6 +1037,174 @@ class TableHeightTestCase(TestCase):
         self.assertGreater(len(parts), 1)
 
 
+class RowCutAcrossPagesTestCase(TestCase):
+    """
+    A row too tall for a page under its repeated header is cut, its rest
+    going on under the header on the next page, as in a browser; it used to
+    stop the whole render with "too large on page". A row that fits a page
+    is still moved there whole.
+    """
+
+    #: A 200pt page with no margin, under a five-line header of 60pt: a body
+    #: row of more than eleven 12pt lines does not fit.
+    PAGE = (
+        "<style>@page { size: 200pt 200pt; margin: 0 }"
+        " body { font-size: 10pt; line-height: 12pt } td, th { padding: 0 }</style>"
+    )
+    HEADER = "<tr><th>a<br/>b<br/>c<br/>d<br/>e</th></tr>"
+
+    @staticmethod
+    def lines(count: int) -> list[str]:
+        return [f"line{i:03d}" for i in range(count)]
+
+    def html(self, cell: str, *, header: str = HEADER, repeat: int = 1) -> str:
+        return (
+            f"<html><head>{self.PAGE}</head><body>"
+            f'<table repeat="{repeat}">{header}<tr>{cell}</tr></table></body></html>'
+        )
+
+    def cell(self, count: int, attributes: str = "") -> str:
+        return f"<td{attributes}>{'<br/>'.join(self.lines(count))}</td>"
+
+    @staticmethod
+    def render(html: str) -> tuple[int, str]:
+        from io import BytesIO
+
+        from pypdf import PdfReader
+
+        from xhtml2pdf import pisa
+
+        output = BytesIO()
+        pisa.CreatePDF(html, dest=output, raise_exception=True)
+        reader = PdfReader(output)
+        return len(reader.pages), "".join(p.extract_text() for p in reader.pages)
+
+    def assertAllThere(self, words: list[str], text: str) -> None:
+        self.assertEqual([], [word for word in words if word not in text])
+
+    def test_the_rest_of_the_row_goes_on_under_the_header(self) -> None:
+        pages, text = self.render(self.html(self.cell(40)))
+
+        self.assertEqual(4, pages)
+        self.assertAllThere(self.lines(40), text)
+        self.assertEqual(4, text.count("e\n"), "the header on every page")
+
+    def test_every_part_fits_its_page(self) -> None:
+        parts = drawn_tables(self.html(self.cell(40)))
+
+        self.assertEqual([1, 2, 3, 4], [part.page for part in parts])
+        for part in parts:
+            self.assertLessEqual(sum(part.rows), 200)
+
+    def test_a_row_that_fits_under_the_header_is_not_cut(self) -> None:
+        self.assertEqual(1, len(drawn_tables(self.html(self.cell(8)))))
+
+    def test_a_row_that_fits_the_next_page_goes_there_whole(self) -> None:
+        filler = "<p>filler</p>" * 8
+        html = self.html(self.cell(8)).replace("<body>", f"<body>{filler}")
+        parts = drawn_tables(html)
+
+        self.assertEqual([2], [part.page for part in parts])
+
+    def test_without_a_header_a_tall_cell_is_still_shrunk(self) -> None:
+        """Unchanged: it fits the page once scaled down, so nothing fails."""
+        pages, _text = self.render(self.html(self.cell(40), header="", repeat=0))
+
+        self.assertEqual(1, pages)
+
+    def test_a_middle_aligned_cell_is_cut_from_its_top(self) -> None:
+        cell = self.cell(40, ' style="vertical-align: middle"')
+        pages, text = self.render(self.html(cell))
+
+        self.assertEqual(4, pages)
+        self.assertAllThere(self.lines(40), text)
+
+    def test_a_cell_spanning_columns_is_cut_at_its_full_width(self) -> None:
+        """ReportLab measures it as wide as its first column."""
+        header = "<tr><th>a<br/>b<br/>c<br/>d<br/>e</th><th>f</th></tr>"
+        words = [f"{word} wide-word-{i:03d}" for i, word in enumerate(self.lines(40))]
+        cell = f'<td colspan="2">{"<br/>".join(words)}</td>'
+        pages, text = self.render(self.html(cell, header=header))
+
+        self.assertEqual(4, pages)
+        self.assertAllThere([w.split()[1] for w in words], text)
+
+    def test_something_wider_than_the_cell_goes_on_too(self) -> None:
+        """Too wide or too tall, what the page has no room for is not lost."""
+        wide = {
+            "word": "Supercalifragilisticexpialidocious" * 3,
+            "image": '<img src="tests/samples/img/denker.png" width="300" height="40"/>',
+            "table": '<table style="width: 300pt"><tr><td>nested</td></tr></table>',
+        }
+        lines = self.lines(40)
+        for name, content in wide.items():
+            for at in (0, 15):
+                with self.subTest(name=name, at=at):
+                    cell = "<br/>".join([*lines[:at], content, *lines[at:]])
+                    pages, text = self.render(self.html(f"<td>{cell}</td>"))
+
+                    self.assertEqual(4, pages)
+                    self.assertAllThere(lines, text)
+
+    def test_the_other_cells_of_the_row_are_kept(self) -> None:
+        cells = f"<td>first</td>{self.cell(40)}<td>last</td>"
+        header = "<tr><th>a<br/>b<br/>c<br/>d<br/>e</th><th>f</th><th>g</th></tr>"
+        _pages, text = self.render(self.html(cells, header=header))
+
+        self.assertEqual(1, text.count("first"))
+        self.assertEqual(1, text.count("last"))
+
+    def test_a_row_a_rowspan_crosses_is_not_cut(self) -> None:
+        """ReportLab's cut gets a rowspan wrong; this one still fails."""
+        from reportlab.platypus.doctemplate import LayoutError
+
+        header = "<tr><th>a<br/>b<br/>c<br/>d<br/>e</th><th>f</th></tr>"
+        cells = f'<td rowspan="2">x</td>{self.cell(40)}</tr><tr><td>y</td>'
+        with self.assertRaises(LayoutError):
+            self.render(self.html(cells, header=header))
+
+    def test_a_cell_in_error_mode_still_fails(self) -> None:
+        from reportlab.platypus.doctemplate import LayoutError
+
+        cell = self.cell(40, ' style="-pdf-keep-in-frame-mode: error"')
+        with self.assertRaises(LayoutError):
+            self.render(self.html(cell))
+
+    def test_a_document_with_a_table_of_contents(self) -> None:
+        """Built twice: the cut must not change the table the second pass gets."""
+        html = self.html(self.cell(40)).replace(
+            "<body>", "<body><pdf:toc /><h1>Chapter</h1>"
+        )
+        _pages, text = self.render(html)
+
+        self.assertAllThere(self.lines(40), text)
+
+    def test_the_table_itself_is_not_changed_by_the_cut(self) -> None:
+        from io import BytesIO
+
+        from reportlab.pdfgen.canvas import Canvas
+
+        context = pisaStory(self.html(self.cell(40)))
+        table = next(f for f in context.story if isinstance(f, PmlTable))
+        canvas = Canvas(BytesIO())
+        table.wrapOn(canvas, 200, 200)
+        values, styles = table._cellvalues, table._cellStyles
+        valigns = [[s.valign for s in row] for row in styles]
+        self.assertEqual([], table.splitOn(canvas, 200, 200))
+
+        table._postponed = 1
+        head, tail = table.splitOn(canvas, 200, 200)
+
+        self.assertLessEqual(head.wrapOn(canvas, 200, 200)[1], 200)
+        self.assertEqual((0, 0), (head.splitInRow, tail.splitInRow))
+        self.assertEqual((False, True), (head._rowCutTop, head._rowCutBottom))
+        self.assertEqual((True, False), (tail._rowCutTop, tail._rowCutBottom))
+        self.assertIs(values, table._cellvalues)
+        self.assertIs(styles, table._cellStyles)
+        self.assertEqual(valigns, [[s.valign for s in row] for row in styles])
+        self.assertEqual(0, table.splitInRow)
+
+
 class CellHeightAttributeTestCase(TestCase):
     """
     <td height="..."> sets the row's height, as style="height: ..." does.

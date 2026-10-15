@@ -771,3 +771,9 @@ compare = ["pages", "text", "ssim"]
 notes = """Flex items sized with a percentage flex-basis inside a table cell: a \
 wrapped row of 30% items with padding, 40% items in a container with a height \
 and align-content, and a 20% basis next to an item that grows."""
+
+[fixtures.table-row-split]
+compare = ["pages", "text", "ssim"]
+notes = """A row taller than a page has under the repeated header: its cells \
+are cut where the page ends and go on under the header on the next one, as \
+in the browser. It used to stop the render with "too large on page"."""

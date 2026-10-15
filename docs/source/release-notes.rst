@@ -69,6 +69,12 @@ Unreleased
 * A ``pkcs11`` signature that names its token with ``token_label`` works
   with pyHanko 0.37, which removed ``open_pkcs11_session(token_label=...)``;
   the label now goes through ``token_criteria``.
+* A table row that fits no page -- such as a row with a long text in a
+  narrow column that would fit a page alone but not under the repeated
+  header -- is cut between pages and goes on under the header, instead of
+  stopping the whole render with ``LayoutError: ... too large on page``.
+  Content wider than the cell does not stop the cut either. A row crossed by
+  a ``rowspan`` still fails as before.
 
 **⚠️ Deprecation**
 

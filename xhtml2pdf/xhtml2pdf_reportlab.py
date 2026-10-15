@@ -1159,6 +1159,56 @@ class PmlKeepInFrame(KeepInFrame, PmlMaxHeightMixIn):
         return KeepInFrame.wrap(self, availWidth, availHeight)
 
 
+class _CellPart(PmlKeepInFrame):
+    """
+    One part of a cell whose row was cut between pages.
+
+    Shrunk to the cell's width when something in it is wider, so that it
+    stays inside the cell, but never to a height: what does not fit the
+    page goes on in the next part, in print of the same size.
+    """
+
+    def __init__(self, content) -> None:
+        super().__init__(maxWidth=0, maxHeight=0, mode="shrink", content=content)
+
+    def wrap(self, availWidth, availHeight):
+        return PmlKeepInFrame.wrap(self, availWidth, _UNBOUNDED)
+
+
+#: A height nothing is shrunk to, and that setMaxHeight does not record.
+_UNBOUNDED = 0xFFFFFFF
+
+
+def _cutContent(canv, content: list, width: float, height: float):
+    """
+    `content` as what fits `height` and the rest, cut by height alone.
+
+    ReportLab's _findSplit also stops at anything wider than `width`, and
+    with nothing before it gives up; here a long word or a wide image goes
+    where its height puts it, and the part holding it is shrunk to width.
+    """
+    used = 0.0
+    after = 0.0
+    for i, flowable in enumerate(content):
+        _w, h = flowable.wrapOn(canv, width, _UNBOUNDED)
+        before = max(flowable.getSpaceBefore() - after, 0) if i else 0
+        if used + before + h <= height:
+            after = flowable.getSpaceAfter()
+            used += before + h + after
+            continue
+        room = height - used - before
+        try:
+            parts = (
+                copy.deepcopy(flowable).splitOn(canv, width, room) if room > 0 else []
+            )
+        except Exception:  # some flowables cannot be copied
+            parts = []
+        if parts:
+            return content[:i] + parts[:1], parts[1:] + content[i + 1 :]
+        return content[:i], content[i:]
+    return content, []
+
+
 class RoundedTableBox:
     """
     A table or cell with a border-radius, as the argument of a BACKGROUND.
@@ -1175,8 +1225,8 @@ class RoundedTableBox:
 
     def __init__(self, style, kind: str) -> None:
         self.style = style
-        #: "table" or "td": a table's box is cut by a page break, a cell's
-        #: never is, since xhtml2pdf splits tables between rows.
+        #: "table" or "td": a table's box is cut by any page break, a cell's
+        #: only when its row is too tall for a page and is cut inside.
         self.kind = kind
 
     def __call__(self, table, canv, x0, y0, w, h) -> None:
@@ -1241,6 +1291,14 @@ class PmlTable(Table, PmlMaxHeightMixIn):
     #: bottom; the table's box has no edge and no rounded corners there.
     _cutTop = False
     _cutBottom = False
+    #: Whether the cut went through a row rather than between two: the
+    #: first body row of this fragment is the rest of one, or its last row
+    #: goes on in the next. A cell's box has no edge there.
+    _rowCutTop = False
+    _rowCutBottom = False
+    #: ReportLab's, swapped for the time of a cut inside a row.
+    _cellvalues: list[Any]
+    _cellStyles: list[Any]
     #: The table's own margin-left and margin-right. The table is laid out
     #: in what the frame has less these, and drawn that far in; a percentage
     #: width is of that narrower box, as in a browser.
@@ -1268,9 +1326,7 @@ class PmlTable(Table, PmlMaxHeightMixIn):
         """
         rows = self._cellvalues
         if self._cutTop:
-            repeat = self.repeatRows
-            skip = len(repeat) if isinstance(repeat, (list, tuple)) else repeat
-            rows = rows[skip or 0 :]
+            rows = rows[self._repeatCount() :]
         drawn: list[Flowable] = []
         for row in rows:
             for cell in row:
@@ -1294,12 +1350,123 @@ class PmlTable(Table, PmlMaxHeightMixIn):
                     return []
             self.minHeight = None
         parts = Table.split(self, availWidth - self._margins(), availHeight)
+        inRow = False
+        if not parts and self._mayCutInsideRow():
+            parts = self._splitInsideRow(availWidth - self._margins(), availHeight)
+            inRow = True
         for part in parts:
             part.marginLeft, part.marginRight = self.marginLeft, self.marginRight
+            part.splitInRow = 0
         if len(parts) == 2:
             parts[0]._cutTop, parts[0]._cutBottom = self._cutTop, True
             parts[1]._cutTop, parts[1]._cutBottom = True, self._cutBottom
+            parts[0]._rowCutTop, parts[0]._rowCutBottom = self._rowCutTop, inRow
+            parts[1]._rowCutTop = inRow
         return parts
+
+    def _repeatCount(self) -> int:
+        """How many header rows each fragment of the table repeats."""
+        repeat = self.repeatRows
+        return (len(repeat) if isinstance(repeat, (list, tuple)) else repeat) or 0
+
+    def _mayCutInsideRow(self) -> bool:
+        """
+        Whether a row too tall to go anywhere may be cut in two.
+
+        Only where the table fails today: it was already moved on once, or it
+        stands at the top of an empty frame and moving on would only leave
+        the frame empty. A row that fits the next frame still goes there
+        whole.
+        """
+        if getattr(self, "_postponed", False):
+            return True
+        doc = getattr(getattr(self, "canv", None), "_doctemplate", None)
+        return bool(getattr(getattr(doc, "frame", None), "_atTop", False))
+
+    def _splitInsideRow(self, availWidth, availHeight) -> list:
+        """
+        The table cut inside the first row that does not fit, or [] if not.
+
+        ReportLab can cut a row (splitInRow), but only a cell that is a list
+        of flowables, and every cell here is one PmlKeepInFrame; so for the
+        time of the split each cell is a list of one, which _splitCell
+        knows how to cut. A row that a rowspan crosses is not cut: ReportLab
+        gets that case wrong. Cells are cut top-aligned, as a browser does,
+        and nothing of the table itself is changed.
+        """
+        n = self._getFirstPossibleSplitRowPosition(availHeight, ignoreSpans=1)
+        if n >= self._nrows:
+            return []
+        values = [
+            [[v] if isinstance(v, Flowable) else v for v in row]
+            for row in self._cellvalues
+        ]
+        # A colspan's cell is as wide as its columns, not as its first.
+        widths: dict[int, float] = {}
+        for c in range(self._ncols):
+            span = getattr(self, "_spanRanges", {}).get((c, n), (c, n, c, n))
+            if span is not None:
+                widths[c] = sum(self._colWidths[span[0] : span[2] + 1])
+        for span in getattr(self, "_spanRanges", {}).values():
+            if span is not None and span[1] != span[3] and span[1] <= n <= span[3]:
+                return []
+        styles = [[s.copy() for s in row] for row in self._cellStyles]
+        for row in styles:
+            for style in row:
+                style.valign = "TOP"
+        saved = self._cellvalues, self._cellStyles
+        self._cellvalues, self._cellStyles = values, styles
+        self.splitInRow, self._splitRow = 1, (n, widths)
+        try:
+            parts = Table.split(self, availWidth, availHeight)
+        finally:
+            self._cellvalues, self._cellStyles = saved
+            self.splitInRow = 0
+            del self._splitRow
+        if len(parts) == 2:
+            # ReportLab gives the two halves of the row heights measured in
+            # the first column of a colspan; they are measured again, whole.
+            parts[0]._argH[-1] = None
+            parts[1]._argH[self._repeatCount()] = None
+        return parts
+
+    def _splitCell(self, value, style, oldHeight, newHeight, width):
+        if hasattr(self, "_splitRow"):
+            # Which column: ReportLab only says how wide the first one is.
+            # By identity, as measuring the row replaced the lists.
+            n, widths = self._splitRow
+            for c, cell in enumerate(self._cellvalues[n]):
+                if cell is value:
+                    width = widths.get(c, width)
+                    break
+        if (
+            isinstance(value, (list, tuple))
+            and len(value) == 1
+            and isinstance(value[0], PmlKeepInFrame)
+        ):
+            return self._splitKeepInFrame(value[0], style, newHeight, width)
+        return Table._splitCell(self, value, style, oldHeight, newHeight, width)
+
+    def _splitKeepInFrame(self, cell, style, newHeight, width):
+        """
+        `cell` in what fits `newHeight` of its row and the rest, or [].
+
+        ReportLab's own _splitCell measures in the column's width and the
+        row's height, paddings left in, so the top half it cuts can come out
+        taller than the room it was cut for once it is laid out in the cell.
+
+        The halves are _CellParts: the top one was cut to fit, and the rest,
+        shrunk to a height, would come out in smaller print than the top; at
+        its own height it is cut again on the next page if it has to be.
+        """
+        inner = width - style.leftPadding - style.rightPadding
+        room = newHeight - style.topPadding - style.bottomPadding
+        top, rest = _cutContent(getattr(self, "canv", None), cell._content, inner, room)
+        if not rest:
+            return (cell,), ()
+        if not top:
+            return []
+        return (_CellPart(top),), (_CellPart(rest),)
 
     def _placeRoundedBoxes(self) -> dict:
         """Each RoundedTableBox's rectangle in this table, by painter."""
@@ -1316,6 +1483,10 @@ class PmlTable(Table, PmlMaxHeightMixIn):
                 boxes[id(arg)].extend(*rect)
             else:
                 boxes[id(arg)] = _PlacedBox(arg, *rect)
+        # Where a row was cut inside: the top of the first body row, the
+        # bottom of the last.
+        rowCutTop = rp[self._repeatCount()] if self._rowCutTop else None
+        rowCutBottom = rp[nrows] if self._rowCutBottom else None
         for box in boxes.values():
             if box.painter.kind == "table":
                 box.sides = tuple(
@@ -1323,6 +1494,13 @@ class PmlTable(Table, PmlMaxHeightMixIn):
                     for side in box.sides
                     if not (side == "Top" and self._cutTop)
                     and not (side == "Bottom" and self._cutBottom)
+                )
+            else:
+                box.sides = tuple(
+                    side
+                    for side in box.sides
+                    if not (side == "Top" and box.top == rowCutTop)
+                    and not (side == "Bottom" and box.bottom == rowCutBottom)
                 )
             box.rounded = roundedBox(
                 box.painter.style, box.x, box.y, box.w, box.h, box.sides

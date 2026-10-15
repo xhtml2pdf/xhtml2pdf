@@ -1,0 +1,47 @@
+<!--
+  Browser equivalent of data/source/table-row-split.html
+
+  The same markup with _normalize.css linked ahead of the document's own
+  styles. The table keeps its borders separate, with no spacing, which is
+  what xhtml2pdf's cellspacing="0" lays out, and repeat="1" is the <thead>
+  the browser repeats on every page anyway.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>table-row-split</title>
+<style type="text/css">
+body { font-family: Helvetica; font-size: 10pt; line-height: 14pt; }
+table { width: 100%; border-collapse: separate; border-spacing: 0; }
+td, th { border: 1pt solid #555753; padding: 3pt 5pt; text-align: left; vertical-align: top; }
+th { background-color: #eeeeec; }
+td p { margin: 0 0 6pt 0; }
+.notes { width: 30%; }
+</style>
+</head>
+<body>
+<table cellspacing="0" repeat="1">
+<thead><tr><th>Item</th><th>Name</th><th class="notes">Notes</th><th>Code</th></tr></thead>
+<tr><td>1</td><td>A row taller than the page</td><td>
+<p>1. Orchard ledger river harbour lamp bridge clock harbour meadow harbour lamp baker baker lamp thyme lamp baker harbour bridge thyme harbour river harbour thyme harbour ledger lantern baker ledger bridge lantern ferry bridge meadow clock bridge lamp harbour meadow bench.</p>
+<p>2. Baker orchard chestnut chestnut clock lantern thyme ferry thyme lamp lantern bench orchard chestnut lantern lamp bridge baker ferry orchard ledger bench baker harbour lamp orchard orchard clock bench chestnut lamp lamp station bench lamp harbour lantern chestnut lantern river.</p>
+<p>3. Clock heron chestnut clock ferry bridge bench harbour meadow lantern ledger thyme river river bench lamp ferry chestnut river station ledger baker station baker clock river thyme ledger lamp ferry ledger thyme thyme heron bench ferry station lantern heron ledger.</p>
+<p>4. Baker clock orchard ledger harbour chestnut river river river river bridge bench river harbour meadow lamp meadow chestnut ferry bridge orchard harbour bridge heron ledger bridge clock heron lamp meadow river ledger station clock clock bench bridge bridge bench chestnut.</p>
+<p>5. Bench bench lantern lamp ledger bridge orchard station bench ferry heron meadow clock ledger heron lantern lamp station clock ferry clock thyme orchard thyme meadow thyme river thyme meadow bench clock heron heron station bench station meadow clock chestnut clock.</p>
+<p>6. Clock lamp thyme bridge thyme bench meadow orchard meadow bench heron bench clock lamp bridge river meadow bench ferry baker orchard lamp river chestnut river lamp ferry ferry ledger heron ledger chestnut ledger bench clock ledger ledger heron heron bridge.</p>
+<p>7. Ledger baker meadow meadow heron station meadow lantern thyme orchard station baker ledger harbour clock chestnut baker ledger ledger heron chestnut ferry heron ledger ferry ledger bench bridge harbour orchard bench bridge harbour thyme meadow station harbour bridge chestnut heron.</p>
+<p>8. Lamp chestnut orchard meadow station chestnut bench thyme station meadow chestnut ledger baker bridge river chestnut orchard lamp thyme baker lamp meadow lantern bridge ledger clock ledger station ledger chestnut thyme bridge river bench ferry thyme ferry baker river orchard.</p>
+<p>9. Baker meadow clock orchard lamp clock heron orchard chestnut chestnut heron river orchard lantern lamp bridge thyme bridge lamp station station harbour ferry station ledger baker station river ledger bench orchard lamp station harbour ferry baker lamp station heron lamp.</p>
+<p>10. Station lamp thyme lamp station bridge chestnut heron orchard baker station ledger harbour thyme bridge ferry station harbour ferry meadow lantern lantern meadow lantern chestnut ferry station clock heron station harbour heron heron meadow bench thyme chestnut bridge baker bench.</p>
+<p>11. River lantern meadow thyme orchard meadow ledger river clock harbour ledger heron lamp station baker ferry harbour lamp river lantern thyme lantern harbour chestnut ferry ferry station chestnut heron station clock orchard orchard thyme harbour lantern meadow clock ferry heron.</p>
+<p>12. Orchard river lamp bench station meadow thyme heron lamp station lamp ledger river harbour river heron lantern lantern thyme lamp ledger river orchard bench ledger lantern ledger harbour baker ledger heron thyme lamp heron harbour ledger clock bridge river chestnut.</p>
+<p>13. Harbour heron thyme bench station heron chestnut lamp lamp lamp bench station lamp station thyme meadow thyme chestnut bench river lamp bench lantern harbour meadow lamp ledger orchard station lantern ledger heron bench harbour bench station bridge meadow bench lantern.</p>
+<p>14. Lantern chestnut chestnut chestnut bridge meadow lantern lamp bench heron lantern chestnut lamp chestnut station river meadow meadow lamp lamp ledger station clock ledger station bridge clock thyme bench bench river heron ferry heron bench chestnut river lantern ledger baker.</p>
+</td><td>B-2</td></tr>
+<tr><td>2</td><td>The next row</td><td>lamp bridge</td><td>C-3</td></tr>
+</table>
+<p>After the table.</p>
+</body>
+</html>

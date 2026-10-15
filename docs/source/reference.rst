@@ -81,14 +81,23 @@ table mechanism of ReportLab.
 Long cells
 ----------
 
-``xhtml2pdf`` is not able to split table cells that are larger than the available
-space. To work around it you may define what should happen in this case.
-The ``-pdf-keep-in-frame-mode`` can be one of: "error", "overflow",
-"shrink", "truncate", where "shrink" is the default value.
+A table is split between pages at the boundary between two rows. What a cell does
+with content larger than its room is set by ``-pdf-keep-in-frame-mode``,
+one of: "error", "overflow", "shrink", "truncate", where "shrink" is the
+default value.
 
 ::
 
     table {    -pdf-keep-in-frame-mode: shrink;}
+
+A row that fits no page at all -- typically one that would fit by itself
+but not under the header that repeats above it -- is cut where the page
+ends, and its cells go on under the header on the next page, as in a
+browser. The cells of such a row are aligned to the top, and the parts of a
+cut cell keep the size of their text: something wider than the cell is
+shrunk to its width, and whatever does not fit the page goes on to the
+next one. A row that a ``rowspan`` crosses is not cut, and still stops the
+render with "too large on page".
 
 Cell widths
 -----------

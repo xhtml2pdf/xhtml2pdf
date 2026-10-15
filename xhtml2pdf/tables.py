@@ -609,7 +609,9 @@ class pisaTagTD(pisaTag):
         c.addPara()
         cell = c.story
 
-        # Keep in frame if needed since Reportlab does no split inside of cells
+        # Keep in frame: what a cell does with content taller or wider than
+        # it has room for. A row too tall for any page is cut instead, in
+        # PmlTable.split, and only there.
         if not c.frag.insideStaticFrame:
             # tdata.keepinframe["content"] = cell
             mode = getKeepInFrameMode(self.keep_in_frame_mode)
