@@ -1046,7 +1046,7 @@ def _visual_words(words, base_dir: str) -> list:
             visual.extend(right)
     flush()
     # Markers with no character after them, and the empty frags that carry a
-    # line's font or its line break, end the line as they did.
+    # line's font or its line break, end the line as in logical order.
     visual += markers(pending)
     visual += [w for w in words if not hasattr(w, "cbDefn") and not w.text]
     text_words = [w for w in visual if not hasattr(w, "cbDefn")]

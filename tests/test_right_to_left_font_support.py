@@ -468,11 +468,9 @@ class LineByLineBidiTests(TestCase):
     """
     A line is put in the order it is drawn in as a whole, once broken.
 
-    Each frag used to be reordered on its own before the lines were broken:
-    an entity or a <b> in the middle of a right-to-left sentence split it
-    into frags whose halves came out the wrong way round, and a paragraph of
-    several lines was reversed as if it were one, so that its first line
-    held its last words.
+    Not frag by frag: an entity or a <b> in the middle of a right-to-left
+    sentence splits it into frags that are still ordered as one. Not the
+    paragraph at once either: its first line holds its first words.
     """
 
     FONT = (

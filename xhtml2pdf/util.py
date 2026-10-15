@@ -416,9 +416,9 @@ def getBorderTableLine(
     to the width that was asked for.
 
     A solid line is squared off so that two edges meeting at a corner fill
-    it. A dashed one is not: a squared cap adds half the width at each end
-    of every dash, and the gaps of dashed and dotted are one width wide, so
-    they closed up and the border came out solid.
+    it. A dashed one has butt ends: a squared cap adds half the width at
+    each end of every dash, which would close the gaps of dashed and
+    dotted, one width wide.
     """
     style = str(style).lower()
     if _is_double(style, width):
@@ -2049,10 +2049,7 @@ def shape_frag_text(frag_text, font_name=None):
 
     Only reshaped, never reordered: the text stays in the order it was
     written, and each line is put in the order it is drawn in when it is
-    drawn (Paragraph.displayLines). Reordering a frag on its own put the
-    halves of a sentence split by an entity or a <b> the wrong way round,
-    and reordering before the lines were broken put a paragraph's last
-    words on its first line.
+    drawn (Paragraph.displayLines).
 
     Reshaping is skipped when the font cannot draw what it produces.
     arabic_reshaper writes Arabic Presentation Forms, and a font built for

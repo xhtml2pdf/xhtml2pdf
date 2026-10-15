@@ -1040,9 +1040,9 @@ class TableHeightTestCase(TestCase):
 class RowCutAcrossPagesTestCase(TestCase):
     """
     A row too tall for a page under its repeated header is cut, its rest
-    going on under the header on the next page, as in a browser; it used to
-    stop the whole render with "too large on page". A row that fits a page
-    is still moved there whole.
+    going on under the header on the next page, as in a browser, instead of
+    stopping the render with "too large on page". A row that fits a page is
+    moved there whole.
     """
 
     #: A 200pt page with no margin, under a five-line header of 60pt: a body
@@ -1107,7 +1107,7 @@ class RowCutAcrossPagesTestCase(TestCase):
         self.assertEqual([2], [part.page for part in parts])
 
     def test_without_a_header_a_tall_cell_is_still_shrunk(self) -> None:
-        """Unchanged: it fits the page once scaled down, so nothing fails."""
+        """It fits the page once scaled down, so it is not cut."""
         pages, _text = self.render(self.html(self.cell(40), header="", repeat=0))
 
         self.assertEqual(1, pages)

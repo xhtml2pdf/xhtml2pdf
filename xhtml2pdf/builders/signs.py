@@ -81,9 +81,7 @@ class PDFSignature:
         A signer from a key and certificate file, with ``ca_chain`` added.
 
         The chain goes in as ``other_certs``: get_chains has already read and
-        parsed it, and ``ca_chain_files`` wants paths to read, so passing it
-        there failed every signature that had a chain with "expected str,
-        bytes or os.PathLike object, not Certificate".
+        parsed it, and ``ca_chain_files`` takes paths to read.
         """
         passphrase = PDFSignature.get_passphrase(config)
         if "key" in config and "cert" in config and passphrase:

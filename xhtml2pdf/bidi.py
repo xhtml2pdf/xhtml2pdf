@@ -18,13 +18,6 @@ string in logical order -- the order it is typed and stored in -- and
 returns it in the order it is drawn in, with brackets and other mirrored
 characters swapped for their mirror images where they end up right to left.
 
-This replaces python-bidi. Since 0.5 that package wraps the Rust
-unicode-bidi crate, which reorders but never mirrors, so every parenthesis
-in a right-to-left paragraph came out facing the wrong way; and it passed
-the invisible isolate controls through to be drawn as boxes. The pure
-Python algorithm it still ships mirrors, but has no rule N0 and fails on
-isolates.
-
 Everything here follows the rule names of UAX #9, which is the
 documentation for why each step does what it does. Bidi classes come from
 unicodedata; the two properties it lacks, mirroring glyphs and paired

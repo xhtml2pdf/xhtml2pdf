@@ -139,9 +139,8 @@ class SigningTest(TestCase):
 
     def test_simple_engine_with_a_ca_chain(self) -> None:
         """
-        The first example in the docs. The chain used to be handed to
-        pyHanko as file names after it had already been parsed, and every
-        such signature failed with a TypeError.
+        The first example in the docs. The parsed chain goes to pyHanko as
+        certificates, not as the file names ca_chain_files expects.
         """
         signatures = self.sign(
             {
@@ -191,9 +190,9 @@ class PKCS11SessionTest(TestCase):
     """
     The session is opened by token label through token_criteria.
 
-    pyHanko 0.37 removed open_pkcs11_session(token_label=...), deprecated
-    since 0.14, and every PKCS#11 signature that named its token failed
-    with a TypeError. Checked against SoftHSM by hand; this pins the call.
+    open_pkcs11_session has no token_label argument since pyHanko 0.37.
+    There is no token here, so this pins the call; it has been checked
+    against SoftHSM.
     """
 
     CONFIG: ClassVar[dict] = {"lib_location": "/lib/p11.so", "user_pin": "1234"}

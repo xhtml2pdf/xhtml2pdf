@@ -222,10 +222,9 @@ class MultiBuildEditsTest(TestCase):
     """
     What multiBuild undoes between passes holds the flowables it names weakly.
 
-    Every flowable moved on to the next frame was noted with a strong
-    reference for the whole pass, and every part of a table that runs over a
-    page is moved on once, holding the rest of its table: a long table with
-    <pdf:pagecount> kept every part it had already drawn.
+    Every part of a table that runs over a page is moved on once and holds
+    the rest of its table; noted strongly for the whole pass, a long table
+    with <pdf:pagecount> would keep every part it has already drawn.
     """
 
     def test_a_postponed_flowable_is_noted_weakly(self) -> None:
@@ -285,7 +284,7 @@ class MultiBuildEditsTest(TestCase):
             result = pisa.pisaDocument(html, io.BytesIO())
 
         self.assertEqual(0, result.err)
-        # Without the weak notes, each of the ten or so pages kept its part.
+        # Strong notes would keep the part of each of the ten or so pages.
         self.assertLessEqual(alive[-1], 2)
 
     """

@@ -119,13 +119,11 @@ class PmlBaseDoc(BaseDocTemplate):
 
         Every flowable moved on to the next frame is noted here with
         (delattr, flowable, "_postponed"), and multiBuild keeps the notes for
-        the whole pass -- the last one never clears them. Each part of a
-        table that runs over a page is moved on once, and holds the rest of
-        its table, so a long table kept every part it had already drawn:
-        more than half of the memory of a long report. The part is noted by
-        a weak reference instead: a flowable of the story is still there to
-        be undone at the next pass, and a part that has been drawn and
-        dropped needs nothing undone.
+        the whole pass; the last one never clears them. Each part of a table
+        that runs over a page is moved on once and holds the rest of its
+        table, so a postponed flowable is noted by a weak reference: a
+        flowable of the story is still there to be undone at the next pass,
+        and a part that has been drawn and dropped needs nothing undone.
         """
         return self.__dict__.get("_weakMultiBuildEdits")
 
@@ -1414,9 +1412,9 @@ class PmlTable(Table, PmlMaxHeightMixIn):
         """
         Whether a row too tall to go anywhere may be cut in two.
 
-        Only where the table fails today: it was already moved on once, or it
-        stands at the top of an empty frame and moving on would only leave
-        the frame empty. A row that fits the next frame still goes there
+        Only where it could go nowhere else: the table was already moved on
+        once, or it stands at the top of an empty frame and moving on would
+        only leave the frame empty. A row that fits the next frame goes there
         whole.
         """
         if getattr(self, "_postponed", False):

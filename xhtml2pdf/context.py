@@ -1377,13 +1377,10 @@ class pisaContext:
                 frags = self.fragAnchor + self.fragList
 
                 self.dumpPara(frags, style)
-                # self.text is accumulated from fragments that have already
-                # been reshaped one by one, so reshaping it again here put the
-                # text through the whole of it twice -- which is what dropped a
-                # NUL into an Arabic paragraph that also declared dir="rtl".
-                # The direction is the paragraph's own, from its frag:
-                # self.dir is whatever was declared last, and a paragraph
-                # after a <p dir="rtl"> is not right-to-left for that.
+                # self.text is accumulated from frags that are already
+                # reshaped, so it is not reshaped again here. The direction is
+                # the paragraph's own, from its frag: self.dir is whatever was
+                # declared last, which may belong to an earlier paragraph.
                 para = PmlParagraph(
                     self.text,
                     style,

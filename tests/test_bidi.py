@@ -113,7 +113,7 @@ class GetDisplayTests(TestCase):
         self.assertEqual(get_display("", base_dir="R"), "")
 
     def test_brackets_are_mirrored_in_right_to_left_text(self) -> None:
-        # python-bidi 0.5+ reordered without mirroring: ")א(".
+        # Rule L4: at an odd level a bracket is drawn as its mirror image.
         self.assertEqual(get_display("(א)", base_dir="R"), "(א)")
         self.assertEqual(get_display("«שלום»", base_dir="R"), "«םולש»")
 
