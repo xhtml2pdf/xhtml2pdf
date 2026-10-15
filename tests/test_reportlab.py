@@ -218,7 +218,76 @@ class PmlBaseDocMultiBuildTest(TestCase):
         self.assertIn("footer 1 of 4", pages[0])
 
 
-class UnnamedMirroredPairTest(TestCase):
+class MultiBuildEditsTest(TestCase):
+    """
+    What multiBuild undoes between passes holds the flowables it names weakly.
+
+    Every flowable moved on to the next frame was noted with a strong
+    reference for the whole pass, and every part of a table that runs over a
+    page is moved on once, holding the rest of its table: a long table with
+    <pdf:pagecount> kept every part it had already drawn.
+    """
+
+    def test_a_postponed_flowable_is_noted_weakly(self) -> None:
+        import gc
+
+        from reportlab.platypus.flowables import Spacer
+
+        doc = xhtml2pdf_reportlab.PmlBaseDoc(io.BytesIO(), pagesize=A4)
+        edits: list = []
+        doc._multiBuildEdits = edits.append
+        kept, dropped = Spacer(1, 1), Spacer(1, 1)
+        kept._postponed = dropped._postponed = 1
+        doc._multiBuildEdits((delattr, kept, "_postponed"))
+        doc._multiBuildEdits((delattr, dropped, "_postponed"))
+        other = (setattr, kept, "keepWithNext", 0)
+        doc._multiBuildEdits(other)
+        del dropped
+        gc.collect()
+
+        self.assertIs(other, edits[2], "other edits are kept as they are")
+        for edit in edits:
+            edit[0](*edit[1:])
+        self.assertFalse(hasattr(kept, "_postponed"))
+        del doc._multiBuildEdits
+        self.assertIsNone(doc._multiBuildEdits)
+
+    def test_the_drawn_parts_of_a_long_table_are_let_go(self) -> None:
+        import gc
+        from unittest import mock
+
+        from reportlab.pdfgen.canvas import Canvas
+
+        rows = "".join(f"<tr><td>row {i}</td><td>x</td></tr>" for i in range(400))
+        html = (
+            "<html><head><style>@page { @frame footer { -pdf-frame-content: f;"
+            " bottom: 1cm; height: 1cm; left: 1cm; right: 1cm } }</style></head>"
+            f"<body><div id='f'>Page <pdf:pagenumber/> of <pdf:pagecount/></div>"
+            f"<table repeat='1'><tr><th>h</th><th>h</th></tr>{rows}</table>"
+            "</body></html>"
+        )
+        alive: list[int] = []
+        save = Canvas.save
+
+        def counting_save(canvas):
+            gc.collect()
+            alive.append(
+                sum(
+                    1
+                    for o in gc.get_objects()
+                    if isinstance(o, xhtml2pdf_reportlab.PmlTable)
+                    and (o._cutTop or o._cutBottom)
+                )
+            )
+            return save(canvas)
+
+        with mock.patch.object(Canvas, "save", counting_save):
+            result = pisa.pisaDocument(html, io.BytesIO())
+
+        self.assertEqual(0, result.err)
+        # Without the weak notes, each of the ten or so pages kept its part.
+        self.assertLessEqual(alive[-1], 2)
+
     """
     A stylesheet whose only page rules are @page :left and @page :right
     describes a mirrored document from its first page.

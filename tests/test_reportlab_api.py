@@ -473,6 +473,30 @@ class DocTemplateStateTest(TestCase):
     template or a cycle from outside the story.
     """
 
+    def test_multiBuild_notes_postponed_flowables_as_PmlBaseDoc_expects(self) -> None:
+        """
+        PmlBaseDoc._multiBuildEdits is a property that holds what multiBuild
+        sets: an append it calls with ``(delattr, f, "_postponed")``, runs as
+        ``e[0](*e[1:])`` between passes and deletes at the end.
+        """
+        from reportlab.platypus.doctemplate import BaseDocTemplate
+
+        def source(method) -> str:
+            return inspect.getsource(method).replace(" ", "")
+
+        self.assertIn(
+            "self._multiBuildEdits=mbe.append", source(BaseDocTemplate.multiBuild)
+        )
+        self.assertIn("e[0](*e[1:])", source(BaseDocTemplate.multiBuild))
+        self.assertIn("delself._multiBuildEdits", source(BaseDocTemplate.multiBuild))
+        self.assertIn(
+            "mbe((delattr,f,'_postponed'))", source(BaseDocTemplate.handle_flowable)
+        )
+        self.assertIn(
+            "getattr(self,'_multiBuildEdits',None)",
+            source(BaseDocTemplate.handle_flowable),
+        )
+
     def test_the_first_page_template_index_is_honoured(self) -> None:
         from reportlab.platypus.doctemplate import BaseDocTemplate
 

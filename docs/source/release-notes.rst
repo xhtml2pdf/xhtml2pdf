@@ -75,6 +75,11 @@ Unreleased
   stopping the whole render with ``LayoutError: ... too large on page``.
   Content wider than the cell does not stop the cut either. A row crossed by
   a ``rowspan`` still fails as before.
+* A long table in a document with ``<pdf:pagecount>`` or ``<pdf:toc>`` no
+  longer keeps every part of it already drawn until the end. Each part
+  that went on to the next page was remembered, with the rest of its
+  table, to be undone between passes; it is remembered weakly now. A
+  500-row report peaked at 58 MB instead of 166 MB, with the same PDF.
 * Right-to-left text is put in the order it is drawn one line at a time,
   after the lines are broken, instead of one fragment at a time before.
   A paragraph of several lines had its last words on its first line, and

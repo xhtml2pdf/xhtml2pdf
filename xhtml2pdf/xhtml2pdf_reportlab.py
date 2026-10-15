@@ -19,6 +19,7 @@ import contextlib
 import copy
 import logging
 import sys
+import weakref
 from hashlib import md5
 from html import escape as html_escape
 from io import BytesIO, StringIO
@@ -98,11 +99,51 @@ class PmlMaxHeightMixIn:
         return self.availHeightValue if hasattr(self, "availHeightValue") else 0
 
 
+def _undo_postponed(ref) -> None:
+    """Clear `_postponed` on the flowable `ref` names, if it is still there."""
+    flowable = ref()
+    if flowable is not None and hasattr(flowable, "_postponed"):
+        del flowable._postponed
+
+
 class PmlBaseDoc(BaseDocTemplate):
     """We use our own document template to get access to the canvas and set some information once."""
 
     # Stores a list of page templates, and the first page from which they're active.
     pisaTemplateList: list[tuple[int, PmlPageTemplate]]
+
+    @property
+    def _multiBuildEdits(self):
+        """
+        What multiBuild undoes between its passes, or None outside it.
+
+        Every flowable moved on to the next frame is noted here with
+        (delattr, flowable, "_postponed"), and multiBuild keeps the notes for
+        the whole pass -- the last one never clears them. Each part of a
+        table that runs over a page is moved on once, and holds the rest of
+        its table, so a long table kept every part it had already drawn:
+        more than half of the memory of a long report. The part is noted by
+        a weak reference instead: a flowable of the story is still there to
+        be undone at the next pass, and a part that has been drawn and
+        dropped needs nothing undone.
+        """
+        return self.__dict__.get("_weakMultiBuildEdits")
+
+    @_multiBuildEdits.setter
+    def _multiBuildEdits(self, append) -> None:
+        def add(edit, append=append) -> None:
+            if len(edit) == 3 and edit[0] is delattr and edit[2] == "_postponed":
+                # A flowable with __slots__ and no __weakref__ is kept as
+                # ReportLab keeps it.
+                with contextlib.suppress(TypeError):
+                    edit = (_undo_postponed, weakref.ref(edit[1]))
+            append(edit)
+
+        self.__dict__["_weakMultiBuildEdits"] = add
+
+    @_multiBuildEdits.deleter
+    def _multiBuildEdits(self) -> None:
+        self.__dict__.pop("_weakMultiBuildEdits", None)
 
     def beforeDocument(self) -> None:
         """
