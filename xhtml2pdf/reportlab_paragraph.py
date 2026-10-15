@@ -22,7 +22,13 @@ from reportlab.platypus.flowables import Flowable
 from reportlab.platypus.paraparser import ParaParser
 from reportlab.rl_settings import _FUZZ
 
-from xhtml2pdf.bidi import get_display
+from xhtml2pdf.bidi import (
+    CONTROL_CHARS,
+    display_order,
+    get_display,
+    mirrored,
+    needs_bidi,
+)
 from xhtml2pdf.util import (
     drawBoxBackground,
     drawBoxBorders,
@@ -381,7 +387,11 @@ def _putFragLine(cur_x, tx, line):
                 elif xs.inlineBoxes:
                     box = xs.inlineBoxes.pop()
                     x2 = cur_x_s + cbDefn.advance - cbDefn.inset
-                    xs.inlineBoxSpans.append((box.x, x2, box.style, box.first, True))
+                    # A close edge that only ends the box on this line, as a
+                    # right-to-left line ends a box it carries on to the
+                    # next one, draws no edge.
+                    last = not getattr(cbDefn, "continued", False)
+                    xs.inlineBoxSpans.append((box.x, x2, box.style, box.first, last))
                 cur_x += cbDefn.advance
                 cur_x_s += cbDefn.advance
                 setXPos(tx, cur_x_s - tx._x0)
@@ -866,6 +876,225 @@ def _reopen_inline_boxes(lines) -> list:
         )
         reopened.append(carrier)
     return reopened
+
+
+# Bidirectional text, line by line.
+#
+# The frags of a paragraph hold their text in logical order, the order it is
+# typed in, and lines are broken in that order. Only a line about to be drawn
+# is put in visual order, the whole line at once: a paragraph cannot be, as
+# its first line is the start of its text whichever way it runs, and a frag
+# cannot be on its own, as an entity or a <b> in the middle of a sentence
+# splits the sentence into frags that must still be ordered as one.
+
+#: What an image, a barcode or an inline-block counts as among the characters
+#: of its line: one object replacement character, a neutral, as a browser
+#: treats an atomic inline.
+_OBJECT = "￼"
+
+
+def _inline_box_edge(word, edge: str, *, continued: bool):
+    """A copy of the inline-box marker `word` for `edge`, of zero advance."""
+    carrier = word.clone()
+    carrier.text = ""
+    carrier.cbDefn = ABag(
+        kind="inlineBox",
+        edge=edge,
+        style=word.cbDefn.style,
+        advance=0.0,
+        inset=0.0,
+        continued=continued,
+    )
+    return carrier
+
+
+def _with_edge(word, edge: str):
+    """`word`, an inline-box marker, acting as the other edge of its box."""
+    cbDefn = word.cbDefn
+    flipped = word.clone()
+    flipped.cbDefn = ABag(
+        kind="inlineBox",
+        edge=edge,
+        style=cbDefn.style,
+        advance=cbDefn.advance,
+        inset=cbDefn.inset,
+        continued=getattr(cbDefn, "continued", False),
+    )
+    return flipped
+
+
+def _is_box_edge(word, edge: str) -> bool:
+    cbDefn = getattr(word, "cbDefn", None)
+    return (
+        cbDefn is not None
+        and getattr(cbDefn, "kind", None) == "inlineBox"
+        and cbDefn.edge == edge
+    )
+
+
+def _self_contained(lines) -> list[list]:
+    """
+    The words of each line, every inline box opened and closed in it.
+
+    A box left open at the end of a line is drawn on into the next from its
+    left margin; once a line is reversed, its left margin is where the line
+    ends. So each line closes what it leaves open and opens what it found
+    open, with markers of no advance that draw no edge (continued), and the
+    box is finished on each line by itself.
+    """
+    result = []
+    open_boxes: list = []
+    for line in lines:
+        words = [_inline_box_edge(box, "open", continued=True) for box in open_boxes]
+        for word in line.words:
+            if _is_box_edge(word, "open"):
+                open_boxes.append(word)
+            elif _is_box_edge(word, "close") and open_boxes:
+                open_boxes.pop()
+            words.append(word)
+        words.extend(
+            _inline_box_edge(box, "close", continued=True)
+            for box in reversed(open_boxes)
+        )
+        result.append(words)
+    return result
+
+
+def _visual_words(words, base_dir: str) -> list:
+    """
+    The frags of one line in the order they are drawn, left to right.
+
+    The line's text is reordered as one string (UAX #9, rules L1 to L4), and
+    each run of characters that comes from one frag and stays together
+    becomes a copy of that frag. An image, a barcode or an inline-block is
+    one character. A marker of no width -- an anchor, a callback, the edge
+    of an inline box -- has no character: it goes next to the character it
+    is attached to, the next one for what opens and the previous one for
+    what closes, on the side that comes first in that character's
+    direction. An inline box whose close edge then lies left of its open
+    edge, as in a right-to-left run, has its two edges exchanged.
+    """
+    chars: list[str] = []
+    owner: list[int] = []
+    before: dict[int, list[int]] = {}
+    after: dict[int, list[int]] = {}
+    pending: list[int] = []
+    last = -1
+    for index, word in enumerate(words):
+        cbDefn = getattr(word, "cbDefn", None)
+        if cbDefn is not None and getattr(cbDefn, "width", None):
+            chars.append(_OBJECT)
+            owner.append(index)
+        elif cbDefn is not None:
+            if (cbDefn.kind == "inlineBox" and cbDefn.edge == "close") or (
+                cbDefn.kind not in {"inlineBox", "anchor"}
+            ):
+                (after.setdefault(last, []) if last >= 0 else pending).append(index)
+            else:
+                pending.append(index)
+            continue
+        else:
+            text = word.text
+            if isinstance(text, bytes):
+                text = text.decode("utf8")
+            for char in text:
+                chars.append(char)
+                owner.append(index)
+        if len(chars) - 1 > last:
+            if pending:
+                before.setdefault(last + 1, []).extend(pending)
+                pending = []
+            last = len(chars) - 1
+    text = "".join(chars)
+    order, levels = display_order(text, base_dir)
+
+    def markers(indices: list[int]) -> list:
+        return [words[i] for i in indices]
+
+    visual: list = []
+    run_owner = -1
+    run_chars: list[str] = []
+
+    def flush() -> None:
+        nonlocal run_owner, run_chars
+        if run_chars:
+            visual.append(words[run_owner].clone(text="".join(run_chars)))
+        run_owner, run_chars = -1, []
+
+    for position in order:
+        rtl = levels[position] & 1
+        # Markers attached to this character: what opens goes on its
+        # starting side, what closes on its ending one.
+        lead = markers(before.get(position, []))
+        trail = markers(after.get(position, []))
+        left, right = (trail[::-1], lead[::-1]) if rtl else (lead, trail)
+        if left:
+            flush()
+            visual.extend(left)
+        char = text[position]
+        word = words[owner[position]]
+        if char == _OBJECT and getattr(getattr(word, "cbDefn", None), "width", None):
+            flush()
+            visual.append(word)
+        elif char not in CONTROL_CHARS:
+            if owner[position] != run_owner:
+                flush()
+                run_owner = owner[position]
+            run_chars.append(mirrored(char, levels[position]))
+        if right:
+            flush()
+            visual.extend(right)
+    flush()
+    # Markers with no character after them, and the empty frags that carry a
+    # line's font or its line break, end the line as they did.
+    visual += markers(pending)
+    visual += [w for w in words if not hasattr(w, "cbDefn") and not w.text]
+    text_words = [w for w in visual if not hasattr(w, "cbDefn")]
+    if text_words and visual[-1] is not text_words[-1]:
+        # The last word of a line is what moves the text on to the next one,
+        # and only a word of text does.
+        visual.append(text_words[-1].clone(text=""))
+    return _paired_edges(visual)
+
+
+def _visual_text_words(words, base_dir: str) -> list:
+    """The words of a line of one style, in the order they are drawn."""
+    as_bytes = bool(words) and isinstance(words[0], bytes)
+    line = " ".join(w.decode("utf8") if as_bytes else w for w in words)
+    visual = get_display(line, base_dir).split(" ")
+    return [w.encode("utf8") for w in visual] if as_bytes else visual
+
+
+def _paired_edges(visual: list) -> list:
+    """`visual` with each inline box opened on its left and closed on its right."""
+    stack: list[int] = []
+    pairs: list[tuple[int, int]] = []
+    for index, word in enumerate(visual):
+        if _is_box_edge(word, "open"):
+            stack.append(index)
+        elif _is_box_edge(word, "close") and stack:
+            pairs.append((stack.pop(), index))
+    # A close met before its open: the opens that were never closed, and the
+    # closes that found nothing to close, are the edges of reversed boxes.
+    opens = sorted(stack)
+    closes = []
+    depth = 0
+    for index, word in enumerate(visual):
+        if _is_box_edge(word, "open"):
+            depth += 1
+        elif _is_box_edge(word, "close"):
+            if depth:
+                depth -= 1
+            else:
+                closes.append(index)
+    if not opens and not closes:
+        return visual
+    result = list(visual)
+    for index in closes:
+        result[index] = _with_edge(visual[index], "open")
+    for index in opens:
+        result[index] = _with_edge(visual[index], "close")
+    return result
 
 
 def _bulletWidth(bulletText, style) -> float:
@@ -1667,7 +1896,11 @@ class Paragraph(Flowable):
         func = self._get_split_blParaFunc()
 
         P1 = type(self)(
-            None, style, bulletText=self.bulletText, frags=func(blPara, 0, s)
+            None,
+            style,
+            bulletText=self.bulletText,
+            frags=func(blPara, 0, s),
+            dir=self.dir,
         )
         # this is a major hack
         P1.blPara = ParaLines(
@@ -1684,7 +1917,7 @@ class Paragraph(Flowable):
         if blPara.kind == 1:
             # XXX Modified for XHTML2PDF: inline boxes open at the cut
             frags = _reopen_inline_boxes(blPara.lines[:s]) + frags
-        P2 = type(self)(None, style, bulletText=None, frags=frags)
+        P2 = type(self)(None, style, bulletText=None, frags=frags, dir=self.dir)
         for a in (
             "autoLeading",  # possible attributes that might be directly on self.
         ):
@@ -2058,6 +2291,46 @@ class Paragraph(Flowable):
     def beginText(self, x, y):
         return self.canv.beginText(x, y)
 
+    def displayLines(self) -> list:
+        """
+        The lines of this paragraph in the order they are drawn in.
+
+        blPara keeps its lines in logical order, the order the text is
+        stored in: a paragraph split between pages is made again from them,
+        and must not be reversed twice. Each line is put in visual order on
+        its own, the whole line at once, with the paragraph's direction as
+        its base (UAX #9, rules L1 to L4). A paragraph with nothing to
+        reorder gets its own lines back.
+
+        Levels are resolved line by line rather than over the paragraph, so a
+        neutral or a bracket pair on either side of a line break does not
+        see the other side. That differs from UAX #9 only there.
+        """
+        blPara = self.blPara
+        base_dir = "R" if self.dir == "rtl" else "L"
+        cached = getattr(self, "_displayCache", None)
+        if cached is not None and cached[0] is blPara and cached[1] == base_dir:
+            return cached[2]
+        lines = blPara.lines
+        texts = (
+            frag.text
+            for frag in self.frags
+            if isinstance(getattr(frag, "text", None), str)
+        )
+        if any(needs_bidi(text, base_dir) for text in texts):
+            if blPara.kind == 0:
+                lines = [
+                    (extraspace, _visual_text_words(words, base_dir))
+                    for extraspace, words in lines
+                ]
+            else:
+                lines = [
+                    line.clone(words=_visual_words(words, base_dir))
+                    for line, words in zip(lines, _self_contained(lines), strict=True)
+                ]
+        self._displayCache = (blPara, base_dir, lines)
+        return lines
+
     def drawPara(self, debug=0):
         """
         Draws a paragraph according to the given style.
@@ -2072,7 +2345,7 @@ class Paragraph(Flowable):
         canvas = self.canv
         style = self.style
         blPara = self.blPara
-        lines = blPara.lines
+        lines = self.displayLines()
         leading = style.leading
         autoLeading = getattr(self, "autoLeading", getattr(style, "autoLeading", ""))
 

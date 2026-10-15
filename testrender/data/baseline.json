@@ -510,6 +510,14 @@
         "xhtml2pdf": 4
       }
     },
+    "rtl-bidi-lines": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.8492,
+      "text": 0.6621,
+      "text_doc": 0.6621
+    },
     "rtl-list-markers": {
       "pages": {
         "xhtml2pdf": 1

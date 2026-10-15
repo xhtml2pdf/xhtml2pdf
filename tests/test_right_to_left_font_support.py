@@ -2,12 +2,30 @@ import io
 import logging
 import os
 from pathlib import Path
+from typing import ClassVar
 from unittest import TestCase
 
 import html5lib
 from pypdf import PdfReader
 
+from xhtml2pdf.bidi import get_display
 from xhtml2pdf.document import pisaDocument, pisaStory
+from xhtml2pdf.xhtml2pdf_reportlab import PmlParagraph
+
+
+def drawn_lines(paragraph, width: float = 400) -> list[str]:
+    """The text of each line of `paragraph` in the order it is drawn."""
+    paragraph.wrap(width, 100000)
+    lines = []
+    for line in paragraph.displayLines():
+        words = getattr(line, "words", None)
+        if words is None:
+            lines.append(" ".join(line[1]))
+        else:
+            lines.append(
+                "".join(w.text for w in words if not hasattr(w, "cbDefn") and w.text)
+            )
+    return lines
 
 
 class RightToLeftFontSupportTests(TestCase):
@@ -305,11 +323,10 @@ class RightToLeftLayoutTests(TestCase):
 
     def story_text(self, body: str, *, rtl: str = "") -> str:
         """
-        The text of every fragment, as the paragraph will draw it.
+        The text of every fragment, in logical order: the order it was written.
 
-        Not PdfReader.extract_text: pypdf runs its own bidirectional pass
-        over what it finds, so it hands back something in logical order that
-        says nothing about what was drawn. The fragments are what was drawn.
+        The fragments keep it that way; a line is put in the order it is
+        drawn only when it is drawn -- see drawn_lines.
         """
         context = pisaStory(self.document(body, rtl=rtl).encode())
         return " ".join(
@@ -422,12 +439,167 @@ class RightToLeftLayoutTests(TestCase):
         self.assertLess(text.index("One"), text.index("Three"), text)
         self.assertIn("after.", text)
 
-    def test_the_arabic_is_put_in_visual_order(self) -> None:
-        # get_display returns the order the characters are drawn in, so the
-        # Arabic ends up after the Latin on the line -- which is where a
-        # right-to-left line puts what was written first.
+    def drawn_lines(self, body: str, *, rtl: str = "", width: float = 400) -> list:
+        """
+        The lines of the first paragraph, as the text of each is drawn.
+
+        Not PdfReader.extract_text: pypdf runs its own bidirectional pass
+        over what it finds, so it hands back something in logical order that
+        says nothing about what was drawn.
+        """
+        context = pisaStory(self.document(body, rtl=rtl).encode())
+        paragraph = next(f for f in context.story if isinstance(f, PmlParagraph))
+        return drawn_lines(paragraph, width)
+
+    def test_the_text_keeps_the_order_it_was_written_in(self) -> None:
         text = self.story_text(f"<p>{self.ARABIC} and Latin</p>", rtl="tag")
 
+        self.assertTrue(text.strip().endswith("and Latin"), repr(text))
+
+    def test_the_arabic_is_drawn_after_the_latin(self) -> None:
         # The Arabic was written first, so on a right-to-left line it is
         # drawn last -- the Latin comes out at the start of the run.
-        self.assertTrue(text.strip().startswith("and Latin"), repr(text))
+        (line,) = self.drawn_lines(f"<p>{self.ARABIC} and Latin</p>", rtl="tag")
+
+        self.assertTrue(line.startswith("and Latin"), repr(line))
+
+
+class LineByLineBidiTests(TestCase):
+    """
+    A line is put in the order it is drawn in as a whole, once broken.
+
+    Each frag used to be reordered on its own before the lines were broken:
+    an entity or a <b> in the middle of a right-to-left sentence split it
+    into frags whose halves came out the wrong way round, and a paragraph of
+    several lines was reversed as if it were one, so that its first line
+    held its last words.
+    """
+
+    FONT = (
+        Path(__file__).parent.parent
+        / "manual_test"
+        / "font"
+        / "dejavu"
+        / "DejaVuSans.ttf"
+    )
+    WORDS: ClassVar[list[str]] = [c * 3 for c in "אבגדהוזחטיכלמנסעפצקרשת"]
+
+    def paragraphs(self, body: str, *, direction: str = "rtl") -> list:
+        css = f"@font-face {{ font-family: D; src: url('{self.FONT}'); }}"
+        html = (
+            f'<html dir="{direction}"><head><meta charset="utf-8"><style>{css}'
+            f"body {{ font-family: D; font-size: 20pt }}</style></head>"
+            f"<body>{body}</body></html>"
+        )
+        context = pisaStory(html.encode())
+        return [f for f in context.story if isinstance(f, PmlParagraph)]
+
+    def lines(self, body: str, *, direction: str = "rtl", width: float = 400) -> list:
+        return drawn_lines(self.paragraphs(body, direction=direction)[0], width)
+
+    def test_an_entity_does_not_split_the_sentence(self) -> None:
+        for dash in ("&mdash;", "<b>—</b>", "—"):
+            with self.subTest(dash=dash):
+                (line,) = self.lines(f"<p>אאא בבב {dash} גגג דדד</p>")
+                self.assertEqual(get_display("אאא בבב — גגג דדד", "R"), line)
+
+    def test_the_first_line_holds_the_first_words(self) -> None:
+        lines = self.lines(f"<p>{' '.join(self.WORDS)}</p>", width=230)
+
+        self.assertGreater(len(lines), 2)
+        # Drawn right to left: the first word ends the first line.
+        self.assertTrue(lines[0].endswith(self.WORDS[0]), lines)
+        self.assertTrue(lines[-1].startswith(self.WORDS[-1]), lines)
+        drawn = [w for line in lines for w in reversed(line.split())]
+        self.assertEqual(self.WORDS, drawn)
+
+    def test_a_bracket_is_mirrored_across_frags(self) -> None:
+        (line,) = self.lines("<p>אאא (<b>בבב</b>) גגג</p>")
+
+        self.assertEqual(get_display("אאא (בבב) גגג", "R"), line)
+
+    def test_latin_in_a_right_to_left_line_reads_left_to_right(self) -> None:
+        (line,) = self.lines("<p>אאא and Latin בבב</p>")
+
+        self.assertEqual("בבב and Latin אאא", line)
+
+    def test_a_hebrew_word_in_a_left_to_right_paragraph(self) -> None:
+        (line,) = self.lines("<p>Latin עברית text</p>", direction="ltr")
+
+        self.assertEqual("Latin תירבע text", line)
+
+    def test_a_left_to_right_paragraph_keeps_its_own_lines(self) -> None:
+        (paragraph,) = self.paragraphs("<p>Only Latin text.</p>", direction="ltr")
+        paragraph.wrap(400, 1000)
+
+        self.assertIs(paragraph.blPara.lines, paragraph.displayLines())
+
+    def test_a_paragraph_after_a_right_to_left_one_is_left_to_right(self) -> None:
+        first, after = self.paragraphs(
+            '<p dir="rtl">אאא</p><p>after.</p>', direction="ltr"
+        )
+
+        self.assertEqual(("rtl", "ltr"), (first.dir, after.dir))
+        self.assertEqual(["after."], drawn_lines(after))
+
+    def test_justified_lines_keep_their_spaces(self) -> None:
+        (paragraph,) = self.paragraphs(
+            f'<p style="text-align: justify">{" ".join(self.WORDS)}</p>'
+        )
+        paragraph.wrap(230, 1000)
+        for logical, visual in zip(
+            paragraph.blPara.lines, paragraph.displayLines(), strict=True
+        ):
+            count = lambda line: sum(  # noqa: E731
+                w.text.count(" ") for w in getattr(line, "words", ()) if w.text
+            )
+            self.assertEqual(count(logical), count(visual))
+            self.assertEqual(logical.extraSpace, visual.extraSpace)
+
+    def test_a_paragraph_split_between_pages_stays_right_to_left(self) -> None:
+        (paragraph,) = self.paragraphs(f"<p>{' '.join(self.WORDS)}</p>")
+        paragraph.wrap(230, 1000)
+        head, tail = paragraph.split(230, 60)
+
+        self.assertEqual(("rtl", "rtl"), (head.dir, tail.dir))
+        drawn = [
+            w
+            for part in (head, tail)
+            for line in drawn_lines(part, 230)
+            for w in reversed(line.split())
+        ]
+        self.assertEqual(self.WORDS, drawn)
+
+    def test_an_inline_box_in_a_right_to_left_line(self) -> None:
+        from unittest import mock
+
+        from reportlab.pdfgen.canvas import Canvas
+
+        from xhtml2pdf import reportlab_paragraph
+
+        def spans(width: float) -> list:
+            (paragraph,) = self.paragraphs(
+                "<p>אאא <span style='background-color: #ff0000; padding: 0 4pt'>"
+                f"{' '.join(self.WORDS[1:8])}</span> תתת</p>"
+            )
+            found = []
+            original = reportlab_paragraph._do_post_text
+
+            def spy(tx):
+                found.extend(tx.XtraState.inlineBoxSpans)
+                original(tx)
+
+            with mock.patch.object(reportlab_paragraph, "_do_post_text", spy):
+                paragraph.wrapOn(Canvas(io.BytesIO()), width, 1000)
+                paragraph.drawOn(Canvas(io.BytesIO()), 0, 0)
+            return found
+
+        (one,) = spans(1000)
+        x1, x2, _style, first, last = one
+        self.assertLess(x1, x2)
+        self.assertEqual((True, True), (first, last))
+
+        # Over two lines the box starts on the right of the first and ends
+        # on the left of the second: each line has one edge.
+        edges = [(first, last) for _x1, _x2, _s, first, last in spans(250)]
+        self.assertEqual([(False, True), (True, False)], edges)

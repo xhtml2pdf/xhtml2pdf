@@ -12,9 +12,13 @@ from __future__ import annotations
 from unittest import TestCase
 
 from xhtml2pdf.bidi import (
+    CONTROL_CHARS,
     _paragraph_level,
     bidi_class,
+    display_order,
     get_display,
+    mirrored,
+    needs_bidi,
     reorder,
     resolve_levels,
 )
@@ -146,3 +150,38 @@ class GetDisplayTests(TestCase):
     def test_automatic_direction(self) -> None:
         self.assertEqual(get_display("אב c", base_dir=None), "c בא")
         self.assertEqual(get_display("c אב", base_dir=None), "c בא")
+
+
+class LineApiTests(TestCase):
+    """What Paragraph.displayLines builds a line's order from."""
+
+    def test_needs_bidi_finds_every_character_that_reorders(self) -> None:
+        import sys
+
+        reordering = {"R", "AL", "AN", "RLE", "RLO", "RLI", "FSI", "LRE", "LRO"}
+        reordering |= {"LRI", "PDF", "PDI"}
+        missed = [
+            hex(code)
+            for code in range(sys.maxunicode + 1)
+            if not 0xD800 <= code <= 0xDFFF
+            and bidi_class(chr(code)) in reordering
+            and not needs_bidi(chr(code))
+        ]
+        self.assertEqual([], missed)
+
+    def test_needs_bidi_leaves_latin_alone(self) -> None:
+        self.assertFalse(needs_bidi("Plain text, 123 (and brackets)."))
+        self.assertTrue(needs_bidi("Plain text", base_dir="R"))
+
+    def test_display_order_is_what_get_display_draws(self) -> None:
+        text = "אב (cd) 12 \u2067גד\u2069"
+        order, levels = display_order(text, "R")
+        drawn = "".join(
+            mirrored(text[i], levels[i]) for i in order if text[i] not in CONTROL_CHARS
+        )
+        self.assertEqual(get_display(text, "R"), drawn)
+
+    def test_mirrored_only_at_an_odd_level(self) -> None:
+        self.assertEqual(")", mirrored("(", 1))
+        self.assertEqual("(", mirrored("(", 2))
+        self.assertEqual("a", mirrored("a", 1))

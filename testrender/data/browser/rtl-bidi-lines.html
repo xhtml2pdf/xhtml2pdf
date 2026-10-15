@@ -1,0 +1,32 @@
+<!--
+  Browser equivalent of data/source/rtl-bidi-lines.html
+
+  The same markup with _normalize.css linked ahead of the document's own
+  styles.
+-->
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>rtl-bidi-lines</title>
+<style type="text/css">
+@font-face { font-family: Dejavu; src: url('../../../manual_test/font/dejavu/DejaVuSans.ttf'); }
+body { font-family: Dejavu; font-size: 14pt; line-height: 21pt; }
+p { margin: 0 0 8pt 0; }
+h2 { font-size: 11pt; line-height: 16pt; margin: 8pt 0 4pt 0; }
+</style>
+</head>
+<body>
+<h2>פסקה של כמה שורות</h2>
+<p>זוהי פסקה ארוכה בעברית שנועדה לבדוק את סדר השורות. המילים הראשונות של הפסקה צריכות להופיע בשורה העליונה, והמילים האחרונות בשורה התחתונה, כמו בכל דפדפן. כאן מופיעה גם מילה באנגלית, Latin text, באמצע המשפט, ומספר כמו 2024 שנשאר משמאל לימין.</p>
+<h2>ישות באמצע משפט</h2>
+<p>המשפט הזה נחתך באמצע &mdash; והחצי השני צריך להישאר אחרי המקף ולא לפניו.</p>
+<p>גם תגית <b>מודגשת</b> באמצע המשפט לא אמורה לשנות את סדר המילים בשורה.</p>
+<p>סוגריים (<i>עם הטיה בפנים</i>) צריכים להיות הפוכים כמו במראה.</p>
+<h2>תיבה בתוך שורה</h2>
+<p>לפני התיבה <span style="background-color: #fce94f; padding: 0 3pt">ברקע צהוב יש כאן כמה מילים שעוברות לשורה הבאה כדי לבדוק את שני הקצוות של התיבה</span> ואחרי התיבה.</p>
+<h2 dir="ltr">A left-to-right paragraph</h2>
+<p dir="ltr">This English paragraph quotes a Hebrew sentence, שלום לכולם וברוכים הבאים לבדיקה הזאת של שורות ארוכות, and then goes on in English until the line breaks once more.</p>
+</body>
+</html>

@@ -777,3 +777,12 @@ compare = ["pages", "text", "ssim"]
 notes = """A row taller than a page has under the repeated header: its cells \
 are cut where the page ends and go on under the header on the next one, as \
 in the browser. It used to stop the render with "too large on page"."""
+
+[fixtures.rtl-bidi-lines]
+compare = ["pages", "text", "ssim"]
+notes = """Right-to-left paragraphs of several lines, an entity, a <b> and an <i> \
+in brackets in the middle of a sentence, a background span over a line \
+break, and a Hebrew sentence that wraps inside a left-to-right paragraph. \
+Each frag used to be reordered on its own before the lines were broken: \
+the halves of a sentence came out swapped and a paragraph's first line \
+held its last words."""

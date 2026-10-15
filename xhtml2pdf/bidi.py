@@ -43,7 +43,14 @@ from xhtml2pdf._bidi_data import CLOSING_BRACKETS, MIRRORS, OPENING_BRACKETS
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-__all__ = ["get_display", "resolve_levels"]
+__all__ = [
+    "CONTROL_CHARS",
+    "display_order",
+    "get_display",
+    "mirrored",
+    "needs_bidi",
+    "resolve_levels",
+]
 
 MAX_DEPTH = 125
 _BRACKET_STACK_SIZE = 63
@@ -64,7 +71,7 @@ _REORDERING = frozenset(
 #: Characters that only steer the algorithm. They are invisible, and a font
 #: rarely has a glyph for them, so they are left out of what is drawn. The
 #: other format characters (zero-width joiners, soft hyphens) stay.
-_CONTROL_CHARS = frozenset(
+CONTROL_CHARS = frozenset(
     "\u202a\u202b\u202c\u202d\u202e\u2066\u2067\u2068\u2069\u200e\u200f\u061c"
 )
 #: Types that rule L1 resets when they trail a line or a separator.
@@ -136,6 +143,65 @@ def _unassigned_class(char: str) -> str:
     return "L"
 
 
+#: Text that can come out in another order than it is stored in: the blocks
+#: of the right-to-left scripts (which hold every R, AL and AN character)
+#: and the controls that open a right-to-left or isolated run.
+#: tests/test_bidi.py checks it against every code point.
+_NEEDS_BIDI = re.compile(
+    "["
+    + "".join(
+        f"{re.escape(chr(start))}-{re.escape(chr(end))}"
+        for start, end, default in _UNASSIGNED_DEFAULTS
+        if default in {"R", "AL"}
+    )
+    + "\u200f\u202a-\u202e\u2066-\u2069]"
+)
+
+
+def needs_bidi(text: str, base_dir: str | None = "L") -> bool:
+    """Whether `text` in a paragraph of `base_dir` is drawn in another order."""
+    return base_dir != "L" or _NEEDS_BIDI.search(text) is not None
+
+
+def display_order(text: str, base_dir: str | None = "L") -> tuple[list[int], list[int]]:
+    """
+    The indices of `text` in the order they are drawn, and each one's level.
+
+    The order is the visual one, left to right, with the whole of `text` as
+    one line (rule L2). A character at an odd level is drawn as its mirror
+    image (L4), and the bidi controls not at all; both are left to the
+    caller, who may be laying out more than characters.
+    """
+    types = _bidi_classes(text)
+    if base_dir == "L" and _REORDERING.isdisjoint(types):
+        return list(range(len(text))), [0] * len(text)
+    order: list[int] = []
+    levels: list[int] = []
+    for start, end in _paragraphs(types):
+        para_types = types[start:end]
+        resolved = resolve_levels(
+            para_types, _paragraph_level(para_types, base_dir), text[start:end]
+        )
+        if None in resolved:
+            # A character removed by X9 is drawn where it stands, at the level
+            # of the one before it (UAX #9, 5.2).
+            previous = resolved[0] if resolved[0] is not None else 0
+            for index, level in enumerate(resolved):
+                if level is None:
+                    resolved[index] = previous
+                else:
+                    previous = level
+        filled: list[int] = resolved  # type: ignore[assignment]
+        order.extend(start + i for i in reorder(filled))
+        levels.extend(filled)
+    return order, levels
+
+
+def mirrored(char: str, level: int) -> str:
+    """`char` as drawn at `level`: its mirror image at an odd one (L4)."""
+    return MIRRORS.get(char, char) if level & 1 else char
+
+
 def get_display(text: str, base_dir: str | None = "L") -> str:
     """
     `text` in visual order: the order its characters are drawn in, left to
@@ -149,37 +215,19 @@ def get_display(text: str, base_dir: str | None = "L") -> str:
     """
     if not text:
         return text
-    types = _bidi_classes(text)
-    if base_dir == "L" and _REORDERING.isdisjoint(types):
+    if base_dir == "L" and _REORDERING.isdisjoint(_bidi_classes(text)):
         return text
-    out: list[str] = []
-    for start, end in _paragraphs(types):
-        para_types = types[start:end]
-        para_text = text[start:end]
-        levels = resolve_levels(
-            para_types, _paragraph_level(para_types, base_dir), para_text
-        )
-        if None in levels:
-            # A character removed by X9 is drawn where it stands, at the level
-            # of the one before it (UAX #9, 5.2).
-            previous = levels[0] if levels[0] is not None else 0
-            for index, level in enumerate(levels):
-                if level is None:
-                    levels[index] = previous
-                else:
-                    previous = level
-        filled: list[int] = levels  # type: ignore[assignment]
-        # Rule L4: what sits at an odd level is drawn as its mirror image.
-        source = list(para_text)
-        for match in _MIRRORED.finditer(para_text):
-            index = match.start()
-            if filled[index] & 1:
-                source[index] = MIRRORS[source[index]]
-        chars = [source[i] for i in reorder(filled)]
-        if not _CONTROL_CHARS.isdisjoint(para_text):
-            chars = [c for c in chars if c not in _CONTROL_CHARS]
-        out.extend(chars)
-    return "".join(out)
+    order, levels = display_order(text, base_dir)
+    source = list(text)
+    # Rule L4: what sits at an odd level is drawn as its mirror image.
+    for match in _MIRRORED.finditer(text):
+        index = match.start()
+        if levels[index] & 1:
+            source[index] = MIRRORS[source[index]]
+    chars = [source[i] for i in order]
+    if not CONTROL_CHARS.isdisjoint(text):
+        chars = [c for c in chars if c not in CONTROL_CHARS]
+    return "".join(chars)
 
 
 def _paragraphs(types: Sequence[str]) -> list[tuple[int, int]]:

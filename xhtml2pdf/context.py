@@ -47,7 +47,6 @@ from xhtml2pdf.util import (
     apply_text_transform,
     copy_attrs,
     font_has_glyph,
-    frag_text_language_check,
     get_default_asian_font,
     getColor,
     getCoords,
@@ -60,6 +59,7 @@ from xhtml2pdf.util import (
     getTocNameClass,
     set_asian_fonts,
     set_value,
+    shape_frag_text,
     split_by_coverage,
 )
 from xhtml2pdf.w3c import css
@@ -808,12 +808,6 @@ class PageCountText:
         self.flowable = flowable
 
 
-def reverse_sentence(sentence: str) -> str:
-    words = sentence.split(" ")
-    reverse_sentence = " ".join(reversed(words))
-    return reverse_sentence[::-1]
-
-
 class pisaContext:
     """
     Helper class for creation of reportlab story and container for
@@ -1011,10 +1005,10 @@ class pisaContext:
         element declared it last and never put back, so a single
         `<p dir="rtl">` left every table after it with its columns reversed.
 
-        A right-to-left line is laid out by aligning it to the right, not by
-        turning its words around: the bidirectional algorithm has already put
-        the characters in the order they are drawn in. An explicit text-align
-        on the same element still wins.
+        A right-to-left line is aligned to the right, and put in the order it
+        is drawn in only when it is drawn, line by line (Paragraph.displayLines):
+        the text itself stays in the order it was written. An explicit
+        text-align on the same element still wins.
         """
         self.dir = direction
         self._applyDir(self.frag, direction)
@@ -1384,13 +1378,18 @@ class pisaContext:
 
                 self.dumpPara(frags, style)
                 # self.text is accumulated from fragments that have already
-                # been reshaped and reordered one by one, so reshaping it
-                # again here put the text through the whole of it twice --
-                # which is what dropped a NUL into an Arabic paragraph that
-                # also declared dir="rtl".
-
+                # been reshaped one by one, so reshaping it again here put the
+                # text through the whole of it twice -- which is what dropped a
+                # NUL into an Arabic paragraph that also declared dir="rtl".
+                # The direction is the paragraph's own, from its frag:
+                # self.dir is whatever was declared last, and a paragraph
+                # after a <p dir="rtl"> is not right-to-left for that.
                 para = PmlParagraph(
-                    self.text, style, frags=frags, bulletText=bulletText, dir=self.dir
+                    self.text,
+                    style,
+                    frags=frags,
+                    bulletText=bulletText,
+                    dir="rtl" if getattr(first, "rtl", False) else "ltr",
                 )
 
                 para.outline = first.outline
@@ -1604,11 +1603,9 @@ class pisaContext:
                     self._appendFrag(frag)
                 else:
                     frag.text = " ".join(("x" + text + "x").split())[1:-1]
-                    language_check = frag_text_language_check(
-                        self, frag.text, frag.fontName
-                    )
-                    if language_check:
-                        frag.text = language_check
+                    shaped = shape_frag_text(frag.text, frag.fontName)
+                    if shaped:
+                        frag.text = shaped
                     if self.fragStrip:
                         frag.text = frag.text.lstrip()
                         if frag.text:

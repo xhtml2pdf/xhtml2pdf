@@ -31,8 +31,6 @@ from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 from reportlab.pdfgen.canvas import FILL_EVEN_ODD
 from reportlab.rl_config import register_reset
 
-from xhtml2pdf.bidi import get_display
-
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
@@ -2034,38 +2032,6 @@ def detect_language(name):
     return None
 
 
-def arabic_format(text, language):
-    """
-    `text` shaped and reordered for a right-to-left document, or None.
-
-    Two steps that are often confused. Reshaping picks the contextual form
-    of each Arabic letter, which a font needs because ReportLab does no
-    shaping of its own. get_display then runs the Unicode bidirectional
-    algorithm, which puts the characters in the order they are drawn in --
-    so what comes back is visual order, laid out left to right like any
-    other string, and nothing downstream should reverse it again.
-
-    The base direction is forced to right-to-left rather than taken from
-    the first strong character: in a right-to-left document a paragraph
-    that happens to open with a Latin word is still a right-to-left
-    paragraph, and letting the first word decide would lay it out the wrong
-    way round.
-    """
-    # Note: right now all of the languages are treated the same way.
-    # But maybe in the future we have to for example implement something
-    # for "hebrew" that isn't used in "arabic"
-    if detect_language(language) in {
-        "arabic",
-        "hebrew",
-        "persian",
-        "urdu",
-        "pashto",
-        "sindhi",
-    }:
-        return get_display(arabic_reshaper.reshape(text), base_dir="R")
-    return None
-
-
 #: The blocks whose characters are written right to left: Hebrew, Arabic,
 #: Syriac, Thaana, NKo, and the presentation forms of the first two. A run of
 #: these inside a left-to-right paragraph is still laid out right to left,
@@ -2077,16 +2043,16 @@ _RTL_CHARS = re.compile(
 )
 
 
-def frag_text_language_check(context, frag_text, font_name=None):
+def shape_frag_text(frag_text, font_name=None):
     """
-    `frag_text` shaped and reordered for this document, or None.
+    `frag_text` with its Arabic letters joined, or None if it has none.
 
-    Driven by the text and the document's direction rather than by
-    <pdf:language> alone. A document that only says dir="rtl" is right-to-left
-    too and used to get no reordering at all; and a Hebrew or Arabic word
-    inside an otherwise left-to-right paragraph is still written right to
-    left, which is what the base direction is for -- it says which way the
-    paragraph runs, not which characters get reordered.
+    Only reshaped, never reordered: the text stays in the order it was
+    written, and each line is put in the order it is drawn in when it is
+    drawn (Paragraph.displayLines). Reordering a frag on its own put the
+    halves of a sentence split by an entity or a <b> the wrong way round,
+    and reordering before the lines were broken put a paragraph's last
+    words on its first line.
 
     Reshaping is skipped when the font cannot draw what it produces.
     arabic_reshaper writes Arabic Presentation Forms, and a font built for
@@ -2095,11 +2061,9 @@ def frag_text_language_check(context, frag_text, font_name=None):
     letters into empty boxes. Unjoined letters are a poor second best; a row
     of boxes is not a best at all.
     """
-    rtl_document = bool(getattr(context, "is_rtl", False))
-    if not rtl_document and not _RTL_CHARS.search(frag_text):
+    if not _RTL_CHARS.search(frag_text):
         return None
-    shaped = _reshape_for(frag_text, font_name)
-    return get_display(shaped, base_dir="R" if rtl_document else "L")
+    return _reshape_for(frag_text, font_name)
 
 
 #: A reshaper that joins letters but writes no ligatures. Ligatures are where

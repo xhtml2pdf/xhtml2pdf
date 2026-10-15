@@ -1932,7 +1932,13 @@ class PmlTableOfContents(TableOfContents):
             # The marker sticks to the title's last word, so the room it
             # reserves goes with that word to the next line when the line is
             # full.
-            entry = Paragraph(text.rstrip() + marker, style)
+            # The title is in the order it was written; the entry's lines are
+            # put in the order they are drawn in its own direction.
+            entry = Paragraph(
+                text.rstrip() + marker,
+                style,
+                dir="rtl" if getattr(style, "tocRTL", False) else "ltr",
+            )
             reserveForPageNumber(entry, style, str(pageNum), self.leaderFor(style))
             tableData.append([entry])
 

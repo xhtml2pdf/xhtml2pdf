@@ -75,6 +75,13 @@ Unreleased
   stopping the whole render with ``LayoutError: ... too large on page``.
   Content wider than the cell does not stop the cut either. A row crossed by
   a ``rowspan`` still fails as before.
+* Right-to-left text is put in the order it is drawn one line at a time,
+  after the lines are broken, instead of one fragment at a time before.
+  A paragraph of several lines had its last words on its first line, and
+  an entity (``&mdash;``, ``&laquo;``) or an inline tag such as ``<b>`` in
+  the middle of a sentence split it into halves that came out the wrong way
+  round. The text itself now keeps the order it was written in, so the PDF
+  outline and the document title are no longer stored reversed.
 * Dashed and dotted borders on table cells are drawn dashed and dotted. The
   squared line ends a table border is stroked with closed up every gap, so
   they always came out as solid lines.
