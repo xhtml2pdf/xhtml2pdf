@@ -796,11 +796,22 @@ class PageNumberText:
         # if it were empty and everything around it moves once the number
         # arrives. It comes from the example attribute of <pdf:pagenumber>.
         self.data: str = placeholder
+        #: Whether the paragraph holding it set the number as it was laid out.
+        self._resolved = False
+
+    def resolve(self, doc) -> None:
+        """Take the number of the page `doc` is laying out."""
+        pageLabel = getattr(doc, "pageLabel", None)
+        page = getattr(doc, "page", None)
+        if page is not None:
+            self.data = str(pageLabel(page) if pageLabel else page)
+            self._resolved = True
 
     def _refresh(self) -> str:
         # Read on every use: each layout pass draws the flowable again, and
-        # a later pass knows more (the page count, a renumbering).
-        if self.flowable.page is not None:
+        # a later pass knows more (the page count, a renumbering). Only for
+        # a paragraph laid out where no document says which page it is on.
+        if not self._resolved and self.flowable.page is not None:
             self.data = str(self.flowable.page)
         return self.data
 
@@ -825,9 +836,17 @@ class PageNumberText:
 class PageCountText:
     def __init__(self, *args, **kwargs) -> None:
         self.data: str = ""
+        self._resolved = False
+
+    def resolve(self, doc) -> None:
+        """Take the page count `doc` has: the whole document's, from a second pass."""
+        count = getattr(doc, "_page_count", None)
+        if count:
+            self.data = str(count)
+            self._resolved = True
 
     def _refresh(self) -> str:
-        if self.flowable.pagecount is not None:
+        if not self._resolved and self.flowable.pagecount is not None:
             self.data = str(self.flowable.pagecount)
         return self.data
 

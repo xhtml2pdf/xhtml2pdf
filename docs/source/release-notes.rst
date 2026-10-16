@@ -112,6 +112,10 @@ Released: 2026-10-16
   the number of pages of the document. On the pages laid out before the
   last one it showed how many pages there were so far: ``Page 1 of 1`` on
   the first page of two.
+* ``<pdf:pagenumber>`` and ``<pdf:pagecount>`` inside a block with a
+  border, a padding, a background or a width, a table cell or a flex item
+  show their number. They came out blank, leaving the space: ``This file
+  has  pages.``
 * ``padding`` on ``<body>`` or ``<html>`` is room around the page content,
   given once: the sides indent every block and the tables in the flow, the
   top is room above the first block. Every paragraph used to draw it again,

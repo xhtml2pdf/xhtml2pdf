@@ -60,6 +60,7 @@ from xhtml2pdf.xhtml2pdf_reportlab import (
     PmlKeepInFrame,
     PmlMaxHeightMixIn,
     PmlParagraph,
+    layout_moment,
 )
 
 if TYPE_CHECKING:
@@ -680,7 +681,7 @@ class FlexContainer(Flowable, PmlMaxHeightMixIn):
         self.layout = FlexLayout()
         #: Per item, the stacked content at the width it was last measured.
         self._stacks: dict[int, tuple[float, list[StackEntry], float]] = {}
-        self._cache_key: tuple[float, float] | None = None
+        self._cache_key: tuple[float, float, int, int] | None = None
         self._box: ABag | None = None
 
     # ~ Platypus protocol ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -851,7 +852,11 @@ class FlexContainer(Flowable, PmlMaxHeightMixIn):
 
     def wrap(self, availWidth: float, availHeight: float) -> tuple[float, float]:
         availHeight = self.setMaxHeight(availHeight)
-        key = (round(availWidth, 2), round(availHeight, 2))
+        key = (
+            round(availWidth, 2),
+            round(availHeight, 2),
+            *layout_moment(getattr(self, "canv", None)),
+        )
         if self._cache_key == key and self._box is not None:
             return self.width, self.height
         canv = getattr(self, "canv", None)
@@ -1539,13 +1544,13 @@ class InlineBox(Flowable):
         self._box_width = 0.0
         self._box_height = 0.0
         self.last_baseline: float | None = None
-        self._cache_key: float | None = None
+        self._cache_key: tuple[float, int, int] | None = None
 
     def identity(self, maxLen=None) -> str:
         return f"<InlineBox with {len(self.content)} flowables>"
 
     def wrap(self, availWidth: float, availHeight: float) -> tuple[float, float]:
-        key = round(availWidth, 2)
+        key = (round(availWidth, 2), *layout_moment(getattr(self, "canv", None)))
         if self._cache_key == key:
             return self.width, self.height
         canv = getattr(self, "canv", None)

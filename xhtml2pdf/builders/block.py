@@ -35,7 +35,12 @@ from xhtml2pdf.builders.flex import (
 )
 from xhtml2pdf.builders.position import PositionAnchor
 from xhtml2pdf.util import drawBoxBackground, drawBoxBorders, getSize, toList
-from xhtml2pdf.xhtml2pdf_reportlab import PmlKeepInFrame, PmlMaxHeightMixIn, opened_up
+from xhtml2pdf.xhtml2pdf_reportlab import (
+    PmlKeepInFrame,
+    PmlMaxHeightMixIn,
+    layout_moment,
+    opened_up,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -162,7 +167,7 @@ class BlockBox(Flowable, PmlMaxHeightMixIn):
         #: next page whole when it does not fit, if a page can hold it.
         self.keep_together = keep_together
         self.keepWithNext = False
-        self._key: float | None = None
+        self._key: tuple[float, int, int] | None = None
         self._entries: list[StackEntry] = []
         self._inner = 0.0
         self._stacked = 0.0
@@ -196,7 +201,7 @@ class BlockBox(Flowable, PmlMaxHeightMixIn):
     def wrap(self, availWidth: float, availHeight: float) -> tuple[float, float]:
         availHeight = self.setMaxHeight(availHeight)
         style = self.style
-        key = round(availWidth, 2)
+        key = (round(availWidth, 2), *layout_moment(getattr(self, "canv", None)))
         if self._key != key:
             # Laid out once per width and never at a trial one: a table
             # turns its percentage columns into points as it is wrapped.

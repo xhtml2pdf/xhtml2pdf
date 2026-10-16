@@ -8,6 +8,7 @@ number of pages in the document.
 """
 
 from io import BytesIO
+from typing import ClassVar
 from unittest import TestCase
 
 from pypdf import PdfReader
@@ -78,3 +79,35 @@ class PageCountInTheFlowTest(TestCase):
         texts = page_texts("<p>count <pdf:pagecount/></p>" + FILLER)
         self.assertGreater(len(texts), 1)
         self.assertIn(f"count {len(texts)}", texts[0])
+
+
+class PageFieldsInsideABoxTest(TestCase):
+    """A box or a cell lays its lines out before it draws what is in it."""
+
+    CONTAINERS: ClassVar[dict[str, str]] = {
+        "a bordered block": (
+            "<div style='border: 1pt solid red; padding: 4pt'><p>{}</p></div>"
+        ),
+        "a block with a width": "<div style='width: 50%'>{}</div>",
+        "a table cell": "<table><tr><td>{}</td></tr></table>",
+        "a flex item": "<div style='display: flex'><div>{}</div></div>",
+    }
+
+    def test_the_number_and_the_count_are_there(self) -> None:
+        for name, container in self.CONTAINERS.items():
+            with self.subTest(name):
+                texts = page_texts(
+                    container.format("page <pdf:pagenumber/> of <pdf:pagecount/>")
+                    + "<pdf:nextpage/>"
+                    + container.format("then <pdf:pagenumber/> of <pdf:pagecount/>")
+                )
+                self.assertIn("page 1 of 2", texts[0])
+                self.assertIn("then 2 of 2", texts[1])
+
+    def test_a_renumbered_page_in_a_box(self) -> None:
+        box = self.CONTAINERS["a bordered block"]
+        texts = page_texts(
+            "<p>cover</p><pdf:nextpage/><pdf:resetpagenumber value='1'/>"
+            + box.format("numbered <pdf:pagenumber/>")
+        )
+        self.assertIn("numbered 1", texts[1])

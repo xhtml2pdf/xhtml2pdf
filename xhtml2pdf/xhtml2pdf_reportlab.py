@@ -129,6 +129,17 @@ class PageNumberReset(Flowable):
             doc.pageNumberResets.append((doc.page, self.value))
 
 
+def layout_moment(canv) -> tuple[int, int]:
+    """
+    The layout pass and the page a flowable is being laid out for.
+
+    Part of the key a container keeps its layout under: what it holds may
+    show the page number or the page count, which change with either.
+    """
+    doc = getattr(canv, "_doctemplate", None)
+    return getattr(doc, "layoutPass", 0), getattr(doc, "page", 0)
+
+
 class PmlBaseDoc(BaseDocTemplate):
     """We use our own document template to get access to the canvas and set some information once."""
 
@@ -190,6 +201,8 @@ class PmlBaseDoc(BaseDocTemplate):
         # in a multiBuild rendering.
         self.pisaTemplateList = []
         self._knownResets = sorted(getattr(self, "pageNumberResets", []))
+        #: Counts the layout passes, for the containers' layout caches.
+        self.layoutPass = getattr(self, "layoutPass", 0) + 1
         self.pageNumberResets = []
 
         # The anchors of the positioned boxes fall where this pass puts them.
@@ -1133,6 +1146,16 @@ class PmlParagraph(DeepCopiedDirectly, Paragraph, PmlMaxHeightMixIn):
 
         # Modify maximum image sizes
         self._calcImageMaxSizes(availWidth, availHeight)
+
+        # A page number or count takes its value as the line is laid out: in
+        # a box or a table cell the lines are broken before anything in it
+        # is drawn.
+        doc = getattr(getattr(self, "canv", None), "_doctemplate", None)
+        if doc is not None:
+            for frag in self.frags:
+                resolve = getattr(getattr(frag, "text", None), "resolve", None)
+                if resolve is not None:
+                    resolve(doc)
 
         # call the base class to do wrapping and calculate the size
         Paragraph.wrap(self, availWidth, availHeight)
