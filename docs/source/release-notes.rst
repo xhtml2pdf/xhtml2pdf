@@ -76,6 +76,11 @@ Unreleased
   inside such a block no longer repeats the block's margins above and below
   every paragraph of it, and a block's vertical margins are no longer
   inherited by the blocks inside it. Fixes :issue:`310`.
+* ``padding`` on ``<body>`` or ``<html>`` is room around the page content,
+  given once: the sides indent every block and the tables in the flow, the
+  top is room above the first block. Every paragraph used to draw it again,
+  so a body with ``padding: 20px`` spread its lines down the page. Fixes
+  :issue:`728`.
 
 --------------------------------------------
 

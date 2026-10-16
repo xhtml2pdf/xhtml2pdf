@@ -855,6 +855,9 @@ class pisaContext:
         self.node: Element | None = None
         self.template = None
         self.tableData: TableData = TableData()
+        #: The side padding of <html> and <body>: what indents the page's
+        #: content, tables included (see parser._take_page_padding).
+        self.pageInset: tuple[float, float] = (0.0, 0.0)
         #: The flex container being collected, if the walk is inside one.
         self.flexData: FlexData = FlexData()
         self.err: int = 0

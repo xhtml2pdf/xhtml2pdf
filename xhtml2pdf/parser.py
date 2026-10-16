@@ -24,7 +24,7 @@ import html5lib
 from html5lib import treebuilders
 from reportlab.lib.colors import Color
 from reportlab.platypus.doctemplate import FrameBreak, NextPageTemplate
-from reportlab.platypus.flowables import KeepInFrame, KeepTogether, PageBreak
+from reportlab.platypus.flowables import KeepInFrame, KeepTogether, PageBreak, Spacer
 
 from xhtml2pdf.builders.block import (
     BlockBoxData,
@@ -1265,6 +1265,31 @@ def _keeps_with_next(flowable) -> bool:
     return bool(get() if get is not None else getattr(flowable, "keepWithNext", 0))
 
 
+def _take_page_padding(context, kw: dict) -> None:
+    """
+    Turn the padding of <html> or <body> into room around the page content.
+
+    The side padding indents everything inside and the top padding is room
+    above the first block. Nothing follows the last block, so the bottom
+    padding has nothing to keep away; a page of its own for it would be
+    empty. The padding is taken off the frag, so nothing inside draws it.
+    """
+    frag = context.frag
+    left = getattr(frag, "paddingLeft", 0) or 0
+    right = getattr(frag, "paddingRight", 0) or 0
+    kw["margin-left"] += left
+    kw["margin-right"] += right
+    inset_left, inset_right = context.pageInset
+    context.pageInset = (inset_left + left, inset_right + right)
+    frag.paddingLeft = frag.paddingRight = 0
+    frag.leftIndent = kw["margin-left"]
+    frag.rightIndent = kw["margin-right"]
+    top = getattr(frag, "paddingTop", 0) or 0
+    frag.paddingTop = frag.paddingBottom = 0
+    if top:
+        context.addStory(Spacer(0, top))
+
+
 def pisaLoop(node, context, **kw):
     # Once per element: a render's time limit is checked as it goes.
     check_deadline()
@@ -1383,6 +1408,8 @@ def pisaLoop(node, context, **kw):
         CSS2Frag(context, kw, isBlock=isBlock or isInlineBlock or outOfFlow)
         if node.tagName == "html":
             context.rootFontSize = context.frag.fontSize
+        if isBlock and node.tagName in {"html", "body"}:
+            _take_page_padding(context, kw)
 
         offsets = (
             read_offsets(context.cssAttr, context.frag.fontSize)

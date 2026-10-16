@@ -792,3 +792,9 @@ compare = ["pages", "text", "ssim"]
 notes = """The vertical margins of blocks without a box: a block's margin goes \
 above its first child and below its last, nested margins collapse to the \
 largest, and the text of a block takes its margins once, not per paragraph."""
+
+[fixtures.page-padding]
+compare = ["pages", "text", "ssim"]
+notes = """The padding of <body> is room around the page content once: it indents every \
+block and a table in the flow, a nested table not again, and paragraphs \
+inside stay one line apart."""

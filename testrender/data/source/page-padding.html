@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>page-padding</title>
+<style type="text/css">
+body { font-size: 11pt; line-height: 15pt; padding: 10pt 40pt 20pt 30pt; }
+p { margin: 0 0 6pt 0; }
+.box { border: 1pt solid #3465a4; padding: 5pt; background-color: #dbe5f1; }
+</style>
+</head>
+<body>
+<p>The body has a padding of 10pt at the top, 40pt on the right and 30pt on the left.</p>
+<p>Each paragraph is one line and a 6pt margin below the one before, not the padding again.</p>
+<div class="box"><p>A boxed block inside the padded body.</p><p>Its second paragraph.</p></div>
+<table border="1" style="width: 100%"><tr><td>A table in the flow</td><td>is indented by the padding<table border="1"><tr><td>and a nested one is not again</td></tr></table></td></tr></table>
+<table border="1" style="width: 200pt; margin: 6pt auto"><tr><td>A centred table</td></tr></table>
+<p style="text-align: right">Right-aligned text stops 40pt before the right margin.</p>
+</body>
+</html>

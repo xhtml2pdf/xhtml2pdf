@@ -93,6 +93,8 @@ class TableData:
         self.data: list = []
         self.mode: str = ""
         self.padding: int = 0
+        #: 1 for a table in the page's flow, 2 for one in its cells, and so on.
+        self.depth: int = 0
         #: How many rows from the top repeat on every page.
         self.repeat: int = 0
         self.row: int = 0
@@ -256,6 +258,7 @@ class pisaTagTABLE(pisaTag):
 
         c.tableData, self.tableData = TableData(), c.tableData
         tdata = c.tableData
+        tdata.depth = self.tableData.depth + 1
 
         if attrs.border and attrs.bordercolor:
             self.set_borders(c.frag, attrs)
@@ -309,6 +312,9 @@ class pisaTagTABLE(pisaTag):
             tdata.align = "RIGHT"
         elif auto == [False, True]:
             tdata.align = "LEFT"
+        if tdata.depth == 1:
+            # The padding of <html> and <body> is the edge of the content.
+            margins = [m + inset for m, inset in zip(margins, c.pageInset, strict=True)]
         return margins[0], margins[1]
 
     def end(self, c):
