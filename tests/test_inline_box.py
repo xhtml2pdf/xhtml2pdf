@@ -428,14 +428,22 @@ class InlineBoxRenderTest(TestCase):
         self.assertIn("only", page.extract_text())
 
     def test_a_box_after_a_line_break_starting_with_whitespace_renders(self) -> None:
-        # The line break strips the leading whitespace of what follows it,
-        # which empties the box's first text fragment while its opening
-        # marker is already in the pending word (#849).
+        # The box's opening marker is in the pending word when the text
+        # after the line break starts (#849).
         page = self._render(
             "<p>first<br/><span style='padding: 1px'>&#xa0;second</span></p>"
         )
         text = page.extract_text()
         self.assertLess(text.index("first"), text.index("second"))
+
+    def test_non_breaking_spaces_after_a_line_break_are_kept(self) -> None:
+        para = _paragraph("<p>first<br/>&#xa0;&#xa0;indented</p>")
+        kept = b"".join(
+            text.encode() if isinstance(text, str) else text
+            for word in _getFragWords(para.frags)
+            for _f, text in word[1:]
+        )
+        self.assertEqual(2, kept.decode().count("\xa0"))
 
 
 class EmbeddedFontTest(TestCase):

@@ -739,7 +739,9 @@ def _getFragWords(frags):
         if text:
             if hangingStrip:
                 hangingStrip = False
-                text = text.lstrip()
+                # Collapsible white space only: a non-breaking space at the
+                # start of a line stays, as in a browser.
+                text = text.lstrip(whitespace)
             S = split(text)
             if S == []:
                 S = [""]

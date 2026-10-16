@@ -64,6 +64,9 @@ Unreleased
   longer fails the render with ``IndexError: string index out of range``
   when its text starts with whitespace, such as ``&#xa0;``. Fixes
   :issue:`849`.
+* A non-breaking space at the start of a line after a ``<br/>`` is kept,
+  as a browser keeps it: ``<br/>&#xa0;&#xa0;text`` is indented by two
+  spaces, not one.
 
 --------------------------------------------
 
