@@ -19,7 +19,7 @@ import ntpath
 import re
 import urllib.parse as urlparse
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from reportlab.lib.enums import TA_LEFT, TA_RIGHT
 from reportlab.lib.fonts import addMapping
@@ -61,6 +61,7 @@ from xhtml2pdf.util import (
     set_value,
     shape_frag_text,
     split_by_coverage,
+    toList,
 )
 from xhtml2pdf.w3c import css
 from xhtml2pdf.xhtml2pdf_reportlab import (
@@ -402,6 +403,31 @@ class pisaCSSBuilder(css.CSSBuilder):
             data,
         )
 
+    #: The values of -pdf-frame-pages: which pages a static frame is on.
+    FRAME_PAGES: ClassVar[frozenset[str]] = frozenset({"all", "last", "not-last"})
+
+    def _framePages(self, data: dict) -> str:
+        """
+        Which pages a static frame is painted on, from -pdf-frame-pages.
+
+        Knowing the last page takes a second pass over the document, which
+        asking for it turns on, as <pdf:pagecount> does.
+        """
+        value = "".join(str(part) for part in toList(data.get("-pdf-frame-pages", "")))
+        value = value.strip().lower() or "all"
+        if value not in self.FRAME_PAGES:
+            log.warning(
+                self.c.warning(
+                    "Ignoring -pdf-frame-pages: %s; use one of %s",
+                    value,
+                    ", ".join(sorted(self.FRAME_PAGES)),
+                )
+            )
+            return "all"
+        if value != "all":
+            self.c.addPageCount()
+        return value
+
     @staticmethod
     def _getFromData(data, attr, default=None, func: Callable | None = None):
         if not func:
@@ -629,6 +655,7 @@ class pisaCSSBuilder(css.CSSBuilder):
                 frame.pisaStaticOverflowMode = getKeepInFrameMode(
                     fdata.get("-pdf-keep-in-frame-mode", "shrink")
                 )
+                frame.pisaPages = self._framePages(fdata)
                 c.frameStatic[static] = [frame, *c.frameStatic.get(static, [])]
                 staticList.append(frame)
             else:

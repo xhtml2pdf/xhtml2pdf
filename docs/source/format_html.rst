@@ -209,6 +209,39 @@ following PDF Document:
     # To avoid a problem where duplicate numbers are printed,
     # make sure that these tags are immediately followed by a newline.
 
+A Static Frame on the last page only
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``-pdf-frame-pages`` on a Static Frame says which pages it is painted on:
+``all`` (the default), ``last`` for the last page only, or ``not-last`` for
+every page but the last. A signature block or a closing footer goes on the
+last page whatever the length of the content, and a "continued on the next
+page" note on the others:
+
+.. code:: html
+
+    <style>
+        @page {
+            margin: 2cm 2cm 4cm 2cm;
+            @frame signature_frame {
+                -pdf-frame-content: signature;
+                -pdf-frame-pages: last;
+                left: 2cm; width: 10cm; bottom: 1cm; height: 2.5cm;
+            }
+            @frame continued_frame {
+                -pdf-frame-content: continued;
+                -pdf-frame-pages: not-last;
+                left: 2cm; width: 10cm; bottom: 1cm; height: 1cm;
+            }
+        }
+    </style>
+    <div id="signature">Signed: ______________________</div>
+    <div id="continued">Continued on the next page.</div>
+
+Which page is the last is only known once the document has been laid out,
+so a frame with ``last`` or ``not-last`` makes xhtml2pdf lay it out twice,
+as ``<pdf:pagecount>`` does.
+
 
 Flowing HTML content through Content Frames
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -54,6 +54,13 @@ Versions >= 0.2
 Unreleased
 ====================
 
+**🎉 New**
+
+* ``-pdf-frame-pages: last`` paints a Static Frame on the last page only,
+  and ``not-last`` on every page but the last: a signature block or a
+  closing footer at the end of a document of any length. See
+  :doc:`format_html`. Fixes :issue:`105`.
+
 **🐛 Bug-Fixes**
 
 * Every image is drawn with its own pixels again. Since 0.2.23 a document

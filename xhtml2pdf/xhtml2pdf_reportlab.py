@@ -410,7 +410,11 @@ class PmlPageTemplate(PageTemplate):
                 self._page_count = pagenumber
                 canvas._doctemplate._page_count = pagenumber
 
+            last = pagenumber == canvas._doctemplate._page_count
             for frame in self.pisaStaticList:
+                pages = getattr(frame, "pisaPages", "all")
+                if (pages == "last" and not last) or (pages == "not-last" and last):
+                    continue
                 self._paintStaticFrame(frame, canvas, pageNumbering)
         finally:
             canvas.restoreState()
