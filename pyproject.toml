@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 
@@ -15,9 +15,9 @@ maintainers = [
 description = "PDF generator using HTML and CSS"
 keywords = ["PDF", "HTML", "HTML", "XML", "CSS"]
 readme = "README.rst"
-license = {file = "LICENSE.txt"}
+license = "Apache-2.0"
+license-files = ["LICENSE.txt"]
 classifiers = [
-    "License :: OSI Approved :: Apache Software License",
     "Development Status :: 4 - Beta",
     "Environment :: Console",
     "Environment :: Other Environment",

@@ -70,6 +70,12 @@ Unreleased
   does: the colour of the axis and the angle and colour of its labels were
   ignored.
 
+**🧹 Cleanup**
+
+* The licence is declared as the SPDX expression ``Apache-2.0``, which
+  setuptools 77 and later ask for; building the package no longer warns
+  about the licence table and classifier.
+
 --------------------------------------------
 
 
