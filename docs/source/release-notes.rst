@@ -118,6 +118,12 @@ Unreleased
   ``margin-left: auto`` puts it on the right. A block always took the whole
   width of the frame. Fixes :issue:`545`.
 
+| Thanks to the following people on GitHub for contributing to this release:
+| *cristianchiriac*, who fixed the ``IndexError`` after a ``<br/>``
+  (:pr:`850`), *rondanen*, whose report of the repeated PNG found its
+  cause, and *wyhsu1128*, who narrowed the ``<br/>`` crash down to a few
+  lines of HTML.
+
 --------------------------------------------
 
 
