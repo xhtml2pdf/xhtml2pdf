@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Callable
 from contextvars import ContextVar
 
@@ -8,6 +9,8 @@ from reportlab.graphics.charts.piecharts import LegendedPie, Pie
 from reportlab.graphics.widgets.markers import makeMarker
 
 from xhtml2pdf.util import getColor
+
+log = logging.getLogger(__name__)
 
 #: Turns the fontName a chart's JSON gives into a face ReportLab registered.
 #: A font-family as the stylesheet names it -- "Noto Sans" -- is registered as
@@ -26,8 +29,89 @@ def set_properties(obj, data, prop_map):
 
                 if value is not None:
                     setattr(obj, key, value)
-            except Exception:
-                continue
+            except Exception as e:
+                log.warning(
+                    "Ignoring %r in the JSON of a <canvas type=graph>: %r is not"
+                    " a value it takes (%s)",
+                    key,
+                    data[key],
+                    e,
+                )
+
+
+class ReadKeys(dict):
+    """
+    A chart's JSON, keeping track of the keys anything reads.
+
+    What no part of the chart reads -- a misspelt key, a property this chart
+    type does not have -- does nothing; unread() names it.
+    """
+
+    def __init__(self, data: dict, path: str = "") -> None:
+        super().__init__(
+            {key: _read_keys(value, f"{path}{key}.") for key, value in data.items()}
+        )
+        self._path = path
+        self._read: set = set()
+
+    def __getitem__(self, key):
+        self._read.add(key)
+        return super().__getitem__(key)
+
+    def get(self, key, default=None):
+        self._read.add(key)
+        return super().get(key, default)
+
+    def __contains__(self, key) -> bool:
+        found = super().__contains__(key)
+        if found:
+            self._read.add(key)
+        return found
+
+    def _read_all(self) -> None:
+        self._read.update(super().keys())
+
+    def __iter__(self):
+        self._read_all()
+        return super().__iter__()
+
+    def keys(self):
+        self._read_all()
+        return super().keys()
+
+    def items(self):
+        self._read_all()
+        return super().items()
+
+    def values(self):
+        self._read_all()
+        return super().values()
+
+    def unread(self) -> list[str]:
+        """The keys nothing read, as dotted paths, here and in what was read."""
+        found = []
+        for key, value in dict.items(self):
+            if key not in self._read:
+                found.append(f"{self._path}{key}")
+            else:
+                found.extend(_unread_in(value))
+        return found
+
+
+def _read_keys(value, path: str):
+    if isinstance(value, dict):
+        return ReadKeys(value, path)
+    if isinstance(value, list):
+        return [_read_keys(item, path) for item in value]
+    return value
+
+
+def _unread_in(value) -> list[str]:
+    if isinstance(value, ReadKeys):
+        return value.unread()
+    if isinstance(value, list):
+        return [path for item in value for path in _unread_in(item)]
+    return []
 
 
 def _color_name_pairs(pairs) -> list:
@@ -253,7 +337,34 @@ class BaseChart:
         return []
 
 
-class BaseBarChart(BaseChart):
+class CategoryChart(BaseChart):
+    """A chart with a category axis: bars and lines."""
+
+    def set_category_axis(self, data, props) -> None:
+        if "categoryAxis" in data:
+            self.set_categoryAxis(data["categoryAxis"], props=props)
+
+            if "labels" in data["categoryAxis"]:
+                self.set_categoryAxis_labels(
+                    data["categoryAxis"]["labels"], props=props
+                )
+
+    def set_categoryAxis(self, data, props=None):
+        if props is None:
+            props = Props(self)
+        props.add_prop(props.prop_map_categoryAxis, [("strokeColor", getColor)])
+        set_properties(self.categoryAxis, data, props.prop_map_categoryAxis)
+
+    def set_categoryAxis_labels(self, data, props=None):
+        if props is None:
+            props = Props(self)
+        props.add_prop(props.prop_map_categoryAxis_labels, [("fillColor", getColor)])
+        set_properties(
+            self.categoryAxis.labels, data, props.prop_map_categoryAxis_labels
+        )
+
+
+class BaseBarChart(CategoryChart):
     def __init__(self) -> None:
         super().__init__()
 
@@ -279,13 +390,7 @@ class BaseBarChart(BaseChart):
         if isinstance(data.get("valueAxis"), dict):
             self.set_valueAxis(data["valueAxis"], props=props)
 
-        if "categoryAxis" in data:
-            self.set_categoryAxis(data["categoryAxis"], props=props)
-
-            if "labels" in data["categoryAxis"]:
-                self.set_categoryAxis_labels(
-                    data["categoryAxis"]["labels"], props=props
-                )
+        self.set_category_axis(data, props)
 
     def assign_labels(self, labels):
         self.categoryAxis.categoryNames = labels
@@ -303,20 +408,6 @@ class BaseBarChart(BaseChart):
             props = Props(self)
         set_properties(self.barLabels, data, props.prop_map_barLabels)
 
-    def set_categoryAxis(self, data, props=None):
-        if props is None:
-            props = Props(self)
-        props.add_prop(props.prop_map_categoryAxis, [("strokeColor", getColor)])
-        set_properties(self.categoryAxis, data, props.prop_map_categoryAxis)
-
-    def set_categoryAxis_labels(self, data, props=None):
-        if props is None:
-            props = Props(self)
-        props.add_prop(props.prop_map_categoryAxis_labels, [("fillColor", getColor)])
-        set_properties(
-            self.categoryAxis.labels, data, props.prop_map_categoryAxis_labels
-        )
-
 
 class HorizontalBar(HorizontalBarChart, BaseBarChart):
     pass
@@ -326,7 +417,7 @@ class VerticalBar(VerticalBarChart, BaseBarChart):
     pass
 
 
-class HorizontalLine(HorizontalLineChart, BaseChart):
+class HorizontalLine(HorizontalLineChart, CategoryChart):
     def __init__(self) -> None:
         super().__init__()
 
@@ -345,6 +436,8 @@ class HorizontalLine(HorizontalLineChart, BaseChart):
 
         if isinstance(data.get("valueAxis"), dict):
             self.set_valueAxis(data["valueAxis"], props=props)
+
+        self.set_category_axis(data, props)
 
     SERIES_STYLES = "lines"
     SERIES_COLOR = "strokeColor"

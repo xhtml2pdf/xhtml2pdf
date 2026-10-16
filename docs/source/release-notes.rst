@@ -129,6 +129,12 @@ Released: 2026-10-16
 * A ``<canvas type="graph">`` written amid the text of its block is drawn,
   with the text before and after it. The text before it was read as part
   of the chart's JSON, so the chart was dropped and its JSON printed.
+* A chart property that does nothing says so: a key no part of the chart
+  reads, such as a misspelt one, and a value the property does not take
+  each log a warning naming them. Both were dropped without a word.
+* A ``horizontalline`` chart takes its ``categoryAxis``, the way a bar chart
+  does: the colour of the axis and the angle and colour of its labels were
+  ignored.
 * ``width`` on a ``<div>``, a ``<p>`` or any other block is applied: a
   length, or a percentage of the block that contains it, as the width of
   its content box. ``margin: 0 auto`` centres the block and

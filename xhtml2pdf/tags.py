@@ -41,6 +41,7 @@ from xhtml2pdf.charts import (
     HorizontalLine,
     LegendedPieChart,
     PieChart,
+    ReadKeys,
     VerticalBar,
     font_resolver,
 )
@@ -1196,6 +1197,8 @@ class pisaTagCANVAS(pisaTag):
             data = json.loads(c.text)
         except json.JSONDecodeError as exc:
             log.warning("Cannot read the JSON of a <canvas type=graph>: %s", exc)
+        if isinstance(data, dict):
+            data = ReadKeys(data)
 
         if data and c.node:
             nodetype = dict(c.node.attributes).get("type")
@@ -1232,7 +1235,7 @@ class pisaTagCANVAS(pisaTag):
             # but only when the JSON places nothing itself: a chart with its
             # own coordinates is laid out around them, and resizing it under
             # the author would move everything else out of place.
-            if not self.GEOMETRY & set(data):
+            if not any(key in data for key in self.GEOMETRY):
                 self.chart.x = self.chart.y = self.CHART_INSET
                 self.chart.width = max(width - 2 * self.CHART_INSET, 1)
                 self.chart.height = max(height - 2 * self.CHART_INSET, 1)
@@ -1267,6 +1270,14 @@ class pisaTagCANVAS(pisaTag):
             # ADD CHART TO DRAW OBJECT
             draw.add(self.chart)
             draw.fit_contents("<canvas type=graph>")
+            unread = data.unread() if isinstance(data, ReadKeys) else []
+            if unread:
+                log.warning(
+                    "Ignoring %s in the JSON of a <canvas type=graph>: no %s chart"
+                    " reads them",
+                    ", ".join(repr(path) for path in unread),
+                    charttype,
+                )
             # Placed like an image in its line: the text-align of the block
             # around it lines it up.
             draw.hAlign = {TA_CENTER: "CENTER", TA_RIGHT: "RIGHT"}.get(

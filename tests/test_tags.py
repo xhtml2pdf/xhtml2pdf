@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import io
+import logging
 import re
 from pathlib import Path
 from typing import NamedTuple
@@ -13,6 +14,7 @@ from pypdf.generic import ArrayObject
 from reportlab.pdfbase.pdfmetrics import stringWidth
 
 from xhtml2pdf import pisa, tags
+from xhtml2pdf.charts import HorizontalLine
 from xhtml2pdf.context import pisaContext
 from xhtml2pdf.document import pisaStory
 from xhtml2pdf.parser import AttrContainer, pisaGetAttributes
@@ -144,7 +146,7 @@ class BadInputKeepsTheDocumentTestCase(TestCase):
         with self.assertNoLogs("xhtml2pdf", level="WARNING"):
             result = self.convert(
                 '<canvas type="graph" width="200" height="100">'
-                '{"type": "pie", "data": [[1, 2]], "labels": ["a", "b"]}</canvas>'
+                '{"type": "pie", "data": [1, 2], "labels": ["a", "b"]}</canvas>'
             )
         self.assertEqual(0, result.err)
 
@@ -384,6 +386,91 @@ class ChartParametersTestCase(TestCase):
             f" {self.LEGEND}}}"
         )
         self.assertEqual(["a", "1", "b", "2", "c", "3"], labels[:6])
+
+
+class ChartWarningsTestCase(TestCase):
+    """A chart property that does nothing says so."""
+
+    @staticmethod
+    def render(chart: str) -> None:
+        pisa.pisaDocument(
+            io.StringIO(
+                f'<html><body><canvas type="graph" width="300" height="150">{chart}'
+                "</canvas></body></html>"
+            ),
+            io.BytesIO(),
+        )
+
+    def json_warnings(self, chart: str) -> list[str]:
+        """What is said about the chart's JSON, and only that."""
+        found: list[str] = []
+        handler = logging.Handler(logging.WARNING)
+        handler.emit = lambda record: found.append(record.getMessage())
+        logger = logging.getLogger("xhtml2pdf")
+        level = logger.level
+        logger.addHandler(handler)
+        logger.setLevel(logging.WARNING)
+        try:
+            self.render(chart)
+        finally:
+            logger.removeHandler(handler)
+            logger.setLevel(level)
+        return [line for line in found if "in the JSON of" in line]
+
+    def warnings(self, chart: str) -> list[str]:
+        found = self.json_warnings(chart)
+        self.assertTrue(found)
+        return found
+
+    def test_a_key_the_chart_does_not_read(self) -> None:
+        (line,) = self.warnings(
+            '{"type": "verticalbar", "data": [[1, 2]], "labels": ["a", "b"],'
+            ' "barThickness": 5, "legend": {"x": 1, "colour": "red"}}'
+        )
+        self.assertIn("'barThickness'", line)
+        self.assertIn("'legend.colour'", line)
+
+    def test_a_value_the_property_does_not_take(self) -> None:
+        (line,) = self.warnings(
+            '{"type": "verticalbar", "data": [[1, 2]], "labels": ["a", "b"],'
+            ' "barWidth": "wide"}'
+        )
+        self.assertIn("'barWidth'", line)
+        self.assertIn("'wide'", line)
+
+    def test_a_line_chart_takes_its_category_axis(self) -> None:
+        chart = HorizontalLine()
+        chart.set_properties(
+            {
+                "data": [[1, 2, 3]],
+                "labels": ["a", "b", "c"],
+                "categoryAxis": {"strokeColor": "red", "labels": {"angle": 30}},
+            }
+        )
+        self.assertEqual(30, chart.categoryAxis.labels.angle)
+        self.assertEqual(
+            [],
+            self.json_warnings(
+                '{"type": "horizontalline", "data": [[1, 2, 3]],'
+                ' "labels": ["a", "b", "c"], "categoryAxis": {"labels": {"angle": 30}}}'
+            ),
+        )
+
+    def test_a_chart_that_uses_every_key_says_nothing(self) -> None:
+        for chart in (
+            (
+                '{"type": "verticalbar", "data": [[1, 2]], "labels": ["a", "b"],'
+                ' "barWidth": 5, "valueAxis": {"valueMin": 0},'
+                ' "categoryAxis": {"labels": {"angle": 30}}}'
+            ),
+            (
+                '{"type": "pie", "data": [3, 1], "labels": ["x", "y"],'
+                ' "title": {"_text": "T", "x": 10, "y": 10},'
+                ' "legend": {"x": 10, "y": 10}, "slices": {"strokeColor": "white"}}'
+            ),
+        ):
+            with self.subTest(chart):
+                self.assertEqual([], self.json_warnings(chart))
 
 
 class SelfClosingTocTestCase(TestCase):
