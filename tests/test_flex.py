@@ -13,6 +13,7 @@ from unittest import TestCase
 from pypdf import PdfReader
 
 from xhtml2pdf import pisa
+from xhtml2pdf.builders.block import BlockBox
 from xhtml2pdf.builders.flex import FlexContainer
 from xhtml2pdf.document import pisaStory
 from xhtml2pdf.xhtml2pdf_reportlab import PmlParagraph, PmlTable
@@ -155,10 +156,13 @@ class FlexPropertiesTest(TestCase):
         self.assertEqual(("length", 12.0), second.height)
 
     def test_a_block_does_not_hand_its_width_to_what_is_inside_it(self) -> None:
-        container = _container(
+        # The block's width makes it a box, with the container inside.
+        context = pisaStory(
             "<div style='width: 300pt'><div style='display:flex'>"
             "<div>a</div></div></div>"
         )
+        (box,) = [f for f in context.story if isinstance(f, BlockBox)]
+        (container,) = [f for f in box.content if isinstance(f, FlexContainer)]
         self.assertEqual("auto", container.css_width.kind)
         self.assertEqual("auto", container.items[0].width.kind)
 

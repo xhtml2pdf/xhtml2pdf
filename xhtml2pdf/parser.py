@@ -31,6 +31,7 @@ from xhtml2pdf.builders.block import (
     block_box_style,
     collapse_margins,
     declared_height,
+    declared_width,
 )
 from xhtml2pdf.builders.flex import (
     BoxStyle,
@@ -1533,11 +1534,15 @@ def pisaLoop(node, context, **kw):
             boxStyle = block_box_style(context, kw)
             # A block of text alone is one paragraph, which draws its own
             # box -- unless the block is empty, when there is no paragraph
-            # to draw it, or declares a height, which a paragraph ignores.
+            # to draw it, or declares a height or a width, which a paragraph
+            # ignores.
             # Not a flex item: the container sizes and draws its items.
+            sized = bool(declared_height(context)) or (
+                declared_width(context) is not None
+            )
             if boxStyle is not None and (
                 hasBlockContent(node, context)
-                or (not isFlexItem and (isEmptyBlock(node) or declared_height(context)))
+                or (not isFlexItem and (isEmptyBlock(node) or sized))
             ):
                 blockBox = BlockBoxData(context, kw, boxStyle)
 

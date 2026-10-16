@@ -86,6 +86,11 @@ Unreleased
   the ``text-align`` of its block: ``text-align: center`` centres it. It was
   always put at the left edge, flush against what came before and after.
   Fixes :issue:`693`.
+* ``width`` on a ``<div>``, a ``<p>`` or any other block is applied: a
+  length, or a percentage of the block that contains it, as the width of
+  its content box. ``margin: 0 auto`` centres the block and
+  ``margin-left: auto`` puts it on the right. A block always took the whole
+  width of the frame. Fixes :issue:`545`.
 
 --------------------------------------------
 

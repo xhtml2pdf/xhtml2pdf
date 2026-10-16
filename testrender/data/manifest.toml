@@ -798,3 +798,9 @@ compare = ["pages", "text", "ssim"]
 notes = """The padding of <body> is room around the page content once: it indents every \
 block and a table in the flow, a nested table not again, and paragraphs \
 inside stay one line apart."""
+
+[fixtures.block-width]
+compare = ["pages", "text", "ssim"]
+notes = """The CSS width of a block: a percentage of the containing block, a length in \
+cm or pt, the content box inside padding and a border, margin: 0 auto \
+centring it, and a block of blocks laid out at its width."""

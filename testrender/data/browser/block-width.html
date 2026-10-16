@@ -1,0 +1,26 @@
+<!--
+  Browser equivalent of data/source/block-width.html
+
+  Plain HTML/CSS on both sides, so the equivalent is the same markup with
+  _normalize.css linked ahead of the document's own styles.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_normalize.css">
+<title>block-width</title>
+<style type="text/css">
+body { font-size: 11pt; line-height: 15pt; }
+p { margin: 0 0 8pt 0; }
+</style>
+</head>
+<body>
+<div style="width: 50%">A block half as wide as the page's content: lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua ut enim ad minim veniam quis nostrud exercitation ullamco laboris.</div>
+<p style="width: 8cm">A paragraph eight centimetres wide: lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+<div style="width: 200pt; border: 1pt solid #3465a4; padding: 4pt">A bordered block whose content is 200pt wide: lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor.</div>
+<div style="width: 300pt; margin: 8pt auto; background-color: #dbe5f1">A block 300pt wide, centred by its auto margins: lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt.</div>
+<div style="width: 60%; background-color: #e2f0d9"><p>A block of paragraphs at 60%: its first paragraph wraps at the block's width, lorem ipsum dolor sit amet.</p><p>And so does its second one.</p></div>
+<div style="width: 250pt; margin-left: auto; border: 1pt solid #cc0000; padding: 4pt">A block pushed to the right by an auto left margin: lorem ipsum dolor sit amet consectetur.</div>
+</body>
+</html>
