@@ -81,6 +81,11 @@ Unreleased
   top is room above the first block. Every paragraph used to draw it again,
   so a body with ``padding: 20px`` spread its lines down the page. Fixes
   :issue:`728`.
+* A ``<canvas type="graph">`` chart takes the margins and the padding of
+  the block around it, its own margins when it is ``display: block``, and
+  the ``text-align`` of its block: ``text-align: center`` centres it. It was
+  always put at the left edge, flush against what came before and after.
+  Fixes :issue:`693`.
 
 --------------------------------------------
 

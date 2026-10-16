@@ -1039,7 +1039,7 @@ _NO_BLOCK_BOX_TAGS = frozenset(
 )
 
 #: Tags that put something other than text into a block's story, whatever
-#: their display: a table, a rule, a break, a spacer, an index.
+#: their display: a table, a rule, a break, a spacer, an index, a chart.
 _BLOCK_CONTENT_TAGS = frozenset(
     {
         "table",
@@ -1049,6 +1049,7 @@ _BLOCK_CONTENT_TAGS = frozenset(
         "pdfnexttemplate",
         "pdfspacer",
         "pdftoc",
+        "canvas",
     }
 )
 

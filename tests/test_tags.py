@@ -533,6 +533,58 @@ class CanvasGraphTestCase(TestCase):
         self.assertIn("n 0 0 200 100 re", stream)
 
 
+class CanvasPlacementTestCase(TestCase):
+    """A chart takes the margins, padding and text-align of the block it is in."""
+
+    CHART = (
+        '<canvas type="graph" width="300" height="120">'
+        '{"type": "verticalbar", "data": [[1, 2, 3]], "labels": ["a", "b", "c"]}'
+        "</canvas>"
+    )
+
+    def runs(self, body: str) -> dict[str, tuple[float, float]]:
+        """The (x, y) of each run of text, y up from the bottom of the page."""
+        dest = io.BytesIO()
+        result = pisa.pisaDocument(
+            io.StringIO(
+                "<html><head><style>p { margin: 0 }</style></head>"
+                f"<body><p>before</p>{body}<p>after</p></body></html>"
+            ),
+            dest,
+        )
+        self.assertEqual(0, result.err)
+        found: dict[str, tuple[float, float]] = {}
+
+        def visit(text, cm, tm, _font, _size) -> None:
+            if text.strip() and text.strip() not in found:
+                found[text.strip()] = (
+                    tm[4] * cm[0] + tm[5] * cm[2] + cm[4],
+                    tm[4] * cm[1] + tm[5] * cm[3] + cm[5],
+                )
+
+        PdfReader(io.BytesIO(dest.getvalue())).pages[0].extract_text(visitor_text=visit)
+        return found
+
+    def test_the_margins_of_the_block_around_it(self) -> None:
+        plain = self.runs(self.CHART)
+        spaced = self.runs(f"<div style='margin: 40pt 0'>{self.CHART}</div>")
+        self.assertAlmostEqual(plain["a"][1] - 40, spaced["a"][1], places=1)
+        self.assertAlmostEqual(plain["after"][1] - 80, spaced["after"][1], places=1)
+
+    def test_the_padding_of_the_block_around_it(self) -> None:
+        plain = self.runs(self.CHART)
+        padded = self.runs(
+            f"<div style='padding: 30pt; border: 1pt solid red'>{self.CHART}</div>"
+        )
+        self.assertAlmostEqual(plain["a"][0] + 31, padded["a"][0], places=1)
+        self.assertAlmostEqual(plain["a"][1] - 31, padded["a"][1], places=1)
+
+    def test_text_align_center_centres_it(self) -> None:
+        plain = self.runs(self.CHART)
+        centred = self.runs(f"<div style='text-align: center'>{self.CHART}</div>")
+        self.assertGreater(centred["a"][0] - plain["a"][0], 100)
+
+
 class FormFieldTestCase(TestCase):
     """
     A form describes fields; what is written inside the controls is not page

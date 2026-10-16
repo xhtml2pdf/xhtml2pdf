@@ -26,6 +26,7 @@ from reportlab.graphics.barcode import createBarcodeDrawing
 from reportlab.graphics.charts.legends import Legend
 from reportlab.graphics.charts.textlabels import Label
 from reportlab.graphics.shapes import Rect
+from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import inch, mm
 from reportlab.pdfbase import pdfmetrics
@@ -1254,4 +1255,9 @@ class pisaTagCANVAS(pisaTag):
             # ADD CHART TO DRAW OBJECT
             draw.add(self.chart)
             draw.fit_contents("<canvas type=graph>")
+            # Placed like an image in its line: the text-align of the block
+            # around it lines it up.
+            draw.hAlign = {TA_CENTER: "CENTER", TA_RIGHT: "RIGHT"}.get(
+                c.frag.alignment, "LEFT"
+            )
             c.addStory(draw)
