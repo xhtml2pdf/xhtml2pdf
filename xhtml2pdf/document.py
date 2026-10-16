@@ -15,6 +15,7 @@
 import io
 import logging
 import reprlib
+import threading
 import warnings
 from html import escape as html_escape
 
@@ -62,6 +63,10 @@ def pisaErrorDocument(dest, c):
     return pisaDocument(out.getvalue(), dest, raise_exception=False)
 
 
+#: Held for the whole of a conversion; see pisaDocument.
+_RENDER_LOCK = threading.RLock()
+
+
 def pisaStory(
     src,
     path="",
@@ -94,7 +99,11 @@ def pisaStory(
     # Parse and fill the story. Everything the markup asks the renderer to
     # fetch happens inside this block, including the paths that do not go
     # through link_callback.
-    with use_policy(context.resource_policy), render_budget(context.resource_policy):
+    with (
+        _RENDER_LOCK,
+        use_policy(context.resource_policy),
+        render_budget(context.resource_policy),
+    ):
         pisaParser(src, context, default_css, xhtml, encoding, xml_output)
 
     # Avoid empty documents
@@ -286,65 +295,74 @@ def pisaDocument(
         context_meta,
     )
 
-    # Prepare simple context
-    context = pisaContext(path, capacity=capacity)
+    # One conversion at a time in a process. ReportLab keeps its fonts, the
+    # family + bold + italic map that picks a face and its caches in module
+    # globals, which a document fills in as it parses and reads back as it
+    # is drawn, and reset_caches() empties them when it is done: two at once
+    # draw with each other's fonts. The render is pure Python, so threads
+    # gain next to nothing from running two side by side. Taken outside the
+    # render budget, so that waiting for it does not count against the time
+    # a document may take.
+    with _RENDER_LOCK:
+        # Prepare simple context
+        context = pisaContext(path, capacity=capacity)
 
-    if context_meta is not None:
-        context.meta.update(context_meta)
+        if context_meta is not None:
+            context.meta.update(context_meta)
 
-    context.pathCallback = link_callback
-    # Chosen here rather than in pisaStory so that the ReportLab build phase --
-    # where images are actually read -- runs under the same policy as the parse.
-    # pathDirectory, not path: `path` names the document, and its directory is
-    # what relative resources resolve against. A policy a caller put in force
-    # around the call is honoured before falling back to that default --
-    # otherwise `with use_policy(...)` around a build would do nothing.
-    context.resource_policy = (
-        resource_policy or active_policy() or default_policy(context.pathDirectory)
-    )
+        context.pathCallback = link_callback
+        # Chosen here rather than in pisaStory so that the ReportLab build phase --
+        # where images are actually read -- runs under the same policy as the parse.
+        # pathDirectory, not path: `path` names the document, and its directory is
+        # what relative resources resolve against. A policy a caller put in force
+        # around the call is honoured before falling back to that default --
+        # otherwise `with use_policy(...)` around a build would do nothing.
+        context.resource_policy = (
+            resource_policy or active_policy() or default_policy(context.pathDirectory)
+        )
 
-    try:
-        with (
-            use_policy(context.resource_policy),
-            render_budget(context.resource_policy),
-        ):
-            return _build(
-                src,
-                context,
-                dest=dest,
-                dest_bytes=dest_bytes,
-                path=path,
-                link_callback=link_callback,
-                default_css=default_css,
-                xhtml=xhtml,
-                encoding=encoding,
-                xml_output=xml_output,
-                encrypt=encrypt,
-                signature=signature,
-            )
-    except Exception:
-        # raise_exception=False has always been the documented way to ask for
-        # a status object rather than an exception, and it was never read:
-        # the argument was marked unused and every failure propagated.
-        if raise_exception and not show_error_as_pdf:
-            raise
-        log.exception("Error while converting the document")
-        context.err += 1
-        if show_error_as_pdf:
-            # What pisaErrorDocument was written for. Nothing called it.
-            return pisaErrorDocument(
-                dest if dest is not None else io.BytesIO(), context
-            )
-        return context
-    finally:
-        # Every resource read during the build registers a NamedTemporaryFile
-        # in a per-thread list, and a build which raised has registered as
-        # many as one which finished. In a finally for that reason: a render
-        # that skips these leaves a file descriptor and a deleted-but-open
-        # inode behind for the life of the thread, so documents that fail to
-        # convert walk a long-running server towards EMFILE.
-        cleanFiles()
-        reset_caches()
+        try:
+            with (
+                use_policy(context.resource_policy),
+                render_budget(context.resource_policy),
+            ):
+                return _build(
+                    src,
+                    context,
+                    dest=dest,
+                    dest_bytes=dest_bytes,
+                    path=path,
+                    link_callback=link_callback,
+                    default_css=default_css,
+                    xhtml=xhtml,
+                    encoding=encoding,
+                    xml_output=xml_output,
+                    encrypt=encrypt,
+                    signature=signature,
+                )
+        except Exception:
+            # raise_exception=False has always been the documented way to ask for
+            # a status object rather than an exception, and it was never read:
+            # the argument was marked unused and every failure propagated.
+            if raise_exception and not show_error_as_pdf:
+                raise
+            log.exception("Error while converting the document")
+            context.err += 1
+            if show_error_as_pdf:
+                # What pisaErrorDocument was written for. Nothing called it.
+                return pisaErrorDocument(
+                    dest if dest is not None else io.BytesIO(), context
+                )
+            return context
+        finally:
+            # Every resource read during the build registers a NamedTemporaryFile
+            # in a per-thread list, and a build which raised has registered as
+            # many as one which finished. In a finally for that reason: a render
+            # that skips these leaves a file descriptor and a deleted-but-open
+            # inode behind for the life of the thread, so documents that fail to
+            # convert walk a long-running server towards EMFILE.
+            cleanFiles()
+            reset_caches()
 
 
 def _build(

@@ -80,6 +80,14 @@ Released: 2026-10-16
 
 **🐛 Bug-Fixes**
 
+* Conversions in different threads of a process no longer swap fonts. Two
+  documents converted at once could come out with the bold or italic of a
+  family missing, or drawn with another document's file, with no error.
+  A process now converts one document at a time; see the Python API
+  reference for converting in parallel with processes.
+* Two documents that name a ``font-family`` the same and embed different
+  files each draw with their own, also one after the other. The second used
+  to be drawn with the first one's file, with a warning.
 * Every image is drawn with its own pixels again. Since 0.2.23 a document
   with several PNGs (or GIFs, or any image other than a JPEG) drew each of
   them as the first one: a logo and two charts came out as three logos.

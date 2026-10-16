@@ -100,6 +100,20 @@ The main function of xhtml2pdf is :py:func:`CreatePDF`.
    :return:
    :rtype: xhtml2pdf.document.pisaStory|bytes
 
+Threads and processes
+^^^^^^^^^^^^^^^^^^^^^
+
+:py:func:`CreatePDF` can be called from several threads, but a process
+converts one document at a time: a call made while another conversion is
+running waits for it to finish. ReportLab keeps its fonts and their bold
+and italic variants in module globals, which two conversions at once would
+share. A conversion is Python code that keeps the processor busy, so
+threads gained little from running side by side anyway; to convert
+documents in parallel, use processes, for example a
+:py:class:`concurrent.futures.ProcessPoolExecutor` or several workers of a
+web server. The time a call waits does not count against the time limit of
+its :doc:`resource policy </security>`.
+
 Link callback
 ^^^^^^^^^^^^^
 

@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import logging
 import ntpath
 import re
@@ -122,47 +123,48 @@ class PmlParaFrag(DeepCopiedDirectly, ParaFrag):
         return n
 
 
-#: The file each embedded face was built from, by its ReportLab name. Process
-#: wide, like reportlab's font registry, so that the two can be compared at all.
+#: The md5 of the file each embedded face was built from, by its ReportLab
+#: name. Process wide, like ReportLab's font registry, which it describes.
 _embedded_font_source: dict[str, str] = {}
 
 
-def registerTTFont(fullFontName: str, file) -> None:
+def _file_digest(name: str | None) -> str | None:
+    if name is None:
+        return None
+    try:
+        with open(name, "rb") as handle:
+            return hashlib.md5(handle.read()).hexdigest()
+    except OSError:
+        return None
+
+
+def registerTTFont(fullFontName: str, file) -> str:
     """
-    Make an embedded TrueType font available to ReportLab under fullFontName.
+    Make an embedded TrueType font available to ReportLab; return its name.
 
-    Not a cache: registerFont keeps whichever object is already registered
-    under a dynamic font's name, so from the second document
-    of a process onwards the TTFont built here was discarded on arrival. This
-    builds the object that gets used and skips the ones that never did --
-    which matters because building one reads and parses the whole font file,
-    7 ms for a Latin face and 70 ms for a CJK one, per weight.
-
-    The name is all that is consulted, so a second document declaring the same
-    font-family from a different file keeps the face the first one embedded.
-    That predates this; what is new is that it says so.
+    The name is fullFontName unless that name already holds another file in
+    this process -- two documents declaring the same font-family from
+    different files -- when the file's digest is added to it, so that each
+    document draws with the file it named. A file registered once is not
+    built again: building one reads and parses the whole font file, 7 ms for
+    a Latin face and 70 ms for a CJK one, per weight.
     """
     name = file.getNamedFile()
-    if fullFontName in pdfmetrics.getRegisteredFontNames():
-        # Same name, different file: the document is going to be drawn with
-        # the other one's glyphs, and until now nothing said a word. Whether
-        # the file is the same cannot be asked of a TTFont, which does not
-        # keep its source, so the filename this render resolved is recorded
-        # alongside and compared.
+    digest = _file_digest(name)
+    registered = pdfmetrics.getRegisteredFontNames()
+    if fullFontName in registered:
         previous = _embedded_font_source.get(fullFontName)
-        if previous is not None and name is not None and previous != name:
-            log.warning(
-                "Font %r is already embedded in this process from %r, so %r is "
-                "ignored and the text is drawn with the first one. Give the two "
-                "families different names.",
-                fullFontName,
-                previous,
-                name,
-            )
-        return
-    if name is not None:
-        _embedded_font_source[fullFontName] = name
+        if previous is None or digest is None or previous == digest:
+            # The same file, or a font registered outside xhtml2pdf, which
+            # keeps its name.
+            return fullFontName
+        fullFontName = f"{fullFontName}_{digest[:8]}"
+        if fullFontName in registered:
+            return fullFontName
+    if digest is not None:
+        _embedded_font_source[fullFontName] = digest
     pdfmetrics.registerFont(TTFont(fullFontName, name))
+    return fullFontName
 
 
 def getParaFrag(style) -> ParaFrag:
@@ -1839,7 +1841,7 @@ class pisaContext:
                     )
                 else:
                     # Register TTF font and special name
-                    registerTTFont(fullFontName, file)
+                    psName = registerTTFont(fullFontName, file)
 
                     # Add or replace missing styles
                     for is_bold in (0, 1):
@@ -1847,10 +1849,10 @@ class pisaContext:
                             if (
                                 "%s_%d%d" % (fontName, is_bold, is_italic)
                             ) not in self.fontList:
-                                addMapping(fontName, is_bold, is_italic, fullFontName)
+                                addMapping(fontName, is_bold, is_italic, psName)
 
                     # Register "normal" name and the place holder for style
-                    self.registerFont(fontName, [*fontAlias, fullFontName])
+                    self.registerFont(fontName, [*fontAlias, fullFontName, psName])
 
             elif font_type in {"afm", ""}:
                 if font_type == "afm":
