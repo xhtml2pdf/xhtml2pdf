@@ -86,7 +86,7 @@ Quick start
 
 .. code:: bash
 
-    pip install xhtml2pdf
+    pip install xhtml2pdf[all]
 
 .. code:: python
 
@@ -188,10 +188,13 @@ Installation
 
 .. code:: bash
 
-    pip install xhtml2pdf
+    pip install xhtml2pdf[all]
 
 Python 3.10 and newer is tested and supported. Every mandatory requirement is
-listed in ``pyproject.toml`` and installed with xhtml2pdf.
+listed in ``pyproject.toml`` and installed with xhtml2pdf; ``all`` adds the
+optional ones: pyHanko, for digital signatures, which is also the
+``signing`` extra on its own. ``pip install xhtml2pdf`` leaves it out:
+asking for a signature then raises an ``ImportError`` that names the extra.
 
 ReportLab needs a rendering backend to turn vector graphics into bitmaps (for
 charts and SVG rasterised into the page). The supported one is `cairo

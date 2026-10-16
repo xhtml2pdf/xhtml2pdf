@@ -23,7 +23,6 @@ from reportlab.platypus.doctemplate import NextPageTemplate
 from reportlab.platypus.flowables import Spacer
 
 from xhtml2pdf.builders.position import PositionAnchor
-from xhtml2pdf.builders.signs import PDFSignature
 from xhtml2pdf.builders.watermarks import WaterMarks
 from xhtml2pdf.config.resources import (
     active_policy,
@@ -449,6 +448,14 @@ def _build(
     if not has_bg:
         output = out
     if signature:
+        try:
+            from xhtml2pdf.builders.signs import PDFSignature
+        except ImportError as e:
+            msg = (
+                "Signing a PDF needs pyHanko, which is not installed:"
+                " pip install 'xhtml2pdf[signing]'"
+            )
+            raise ImportError(msg) from e
         signoutput = io.BytesIO()
         do_ok = PDFSignature.sign(output, signoutput, signature)
         if do_ok:

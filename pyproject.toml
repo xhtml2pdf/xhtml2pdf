@@ -50,11 +50,9 @@ dependencies = [
     "arabic-reshaper>=3.0.0",
     "html5lib>=1.1",
     "Pillow>=8.1.1",
-    "pyHanko>=0.37.0",
-    "pyhanko-certvalidator>=0.32.1",
     "pypdf>=3.1.0",
     "reportlab>=4.4.9,<6",
-    "svglib>=1.2.1"
+    "svglib>=1.2.1",
 ]
 dynamic = ["version"]
 
@@ -65,6 +63,15 @@ Documentation = "https://xhtml2pdf.readthedocs.io/"
 Changelog = "https://xhtml2pdf.readthedocs.io/en/latest/release-notes.html"
 
 [project.optional-dependencies]
+# Digital signatures (the `signature` argument and the CLI's signing options).
+signing = [
+    "pyHanko>=0.37.0",
+    "pyhanko-certvalidator>=0.32.1",
+]
+# Every optional feature that needs nothing outside Python.
+all = [
+    "xhtml2pdf[signing]",
+]
 pycairo = [
     "reportlab[pycairo]>=4.4.9,<6",
 ]
@@ -76,6 +83,7 @@ renderpm = [
     "xhtml2pdf[pycairo]",
 ]
 test = [
+    "xhtml2pdf[signing]",
     "tomli>=2.0.1; python_version<'3.11'",
     "tox",
     "coverage>=5.3"
@@ -115,6 +123,7 @@ legacy_tox_ini = """
     envlist = py{3.10,3.11,3.12,3.13,3.14}-rl{4,5}, py3.10-rlmin
 
     [testenv]
+    extras = signing
     deps =
         coverage[toml]
         rl4: reportlab>=4.4.9,<5

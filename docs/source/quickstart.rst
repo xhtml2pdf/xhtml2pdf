@@ -11,7 +11,10 @@ This is a typical Python library and is installed using pip
 
 .. code:: shell
 
-    pip install xhtml2pdf
+    pip install xhtml2pdf[all]
+
+``all`` includes pyHanko, for digital signatures. ``pip install xhtml2pdf``
+leaves it out; it is also the ``signing`` extra on its own.
 
 
 Use

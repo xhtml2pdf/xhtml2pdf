@@ -54,6 +54,14 @@ Versions >= 0.2
 Unreleased
 ====================
 
+**⚠️ Important notes**
+
+* pyHanko is no longer installed with xhtml2pdf. Signing a PDF needs the
+  ``signing`` extra, which ``all`` includes: ``pip install xhtml2pdf[all]``
+  installs what a plain install did before. Without it, asking
+  for a signature raises an ``ImportError`` that names the extra, rather
+  than writing an unsigned PDF. Fixes :issue:`809` and :issue:`755`.
+
 **🎉 New**
 
 * ``-pdf-frame-pages: last`` paints a Static Frame on the last page only,

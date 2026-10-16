@@ -62,7 +62,12 @@ Simple Signing
 --------------
 
 Signature use `Pyhanko <https://pyhanko.readthedocs.io/en/latest/>`__ internally, so `signature` parameter
-allow many of the available configurations on that documentation.
+allow many of the available configurations on that documentation. pyHanko
+comes with the ``signing`` extra:
+
+.. code:: shell
+
+    pip install xhtml2pdf[signing]
 
 The control parameters are required:
 

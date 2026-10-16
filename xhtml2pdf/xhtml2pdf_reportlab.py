@@ -17,6 +17,7 @@ from __future__ import annotations
 import codecs
 import contextlib
 import copy
+import functools
 import logging
 import sys
 import weakref
@@ -75,10 +76,12 @@ if TYPE_CHECKING:
 
 try:
     from reportlab.graphics import renderPM
+except ImportError:
+    renderPM = None
+try:
     from svglib.svglib import svg2rlg
 except ImportError:
     svg2rlg = None
-    renderPM = None
 
 log = logging.getLogger(__name__)
 
@@ -854,6 +857,15 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
         return str(self.fileName or id(self))
 
 
+@functools.cache
+def _warn_without_svglib() -> None:
+    """Say, once, why an SVG image is left out."""
+    log.warning(
+        "An SVG image is left out: drawing SVG needs svglib, which cannot be"
+        " imported: pip install svglib"
+    )
+
+
 _BOMS: tuple[bytes, ...] = (codecs.BOM_UTF8, codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE)
 
 
@@ -943,7 +955,11 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         self, width: float | None = None, height: float | None = None
     ) -> Drawing | None:
         """If this image is a vector image and the library is available, returns a ReportLab Drawing."""
-        if svg2rlg and looks_like_svg(self._imgdata, self.mimetype):
+        if svg2rlg is None:
+            if looks_like_svg(self._imgdata, self.mimetype):
+                _warn_without_svglib()
+            return None
+        if looks_like_svg(self._imgdata, self.mimetype):
             try:
                 # From a buffer, not a path, so svglib has no directory to
                 # resolve an <image href> against and follows none; entities
