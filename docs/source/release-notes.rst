@@ -51,6 +51,28 @@ Versions >= 0.2
     --------------------------------------------
 
 
+Unreleased
+====================
+
+**🐛 Bug-Fixes**
+
+* ``<pdf:pagenumber>`` and ``<pdf:pagecount>`` inside a block with a
+  border, a padding, a background or a width, a table cell or a flex item
+  show their number. They came out blank, leaving the space: ``This file
+  has  pages.``
+* A ``<canvas type="graph">`` written amid the text of its block is drawn,
+  with the text before and after it. The text before it was read as part
+  of the chart's JSON, so the chart was dropped and its JSON printed.
+* A chart property that does nothing says so: a key no part of the chart
+  reads, such as a misspelt one, and a value the property does not take
+  each log a warning naming them. Both were dropped without a word.
+* A ``horizontalline`` chart takes its ``categoryAxis``, the way a bar chart
+  does: the colour of the axis and the angle and colour of its labels were
+  ignored.
+
+--------------------------------------------
+
+
 0.2.25
 ====================
 
@@ -112,10 +134,6 @@ Released: 2026-10-16
   the number of pages of the document. On the pages laid out before the
   last one it showed how many pages there were so far: ``Page 1 of 1`` on
   the first page of two.
-* ``<pdf:pagenumber>`` and ``<pdf:pagecount>`` inside a block with a
-  border, a padding, a background or a width, a table cell or a flex item
-  show their number. They came out blank, leaving the space: ``This file
-  has  pages.``
 * ``padding`` on ``<body>`` or ``<html>`` is room around the page content,
   given once: the sides indent every block and the tables in the flow, the
   top is room above the first block. Every paragraph used to draw it again,
@@ -126,15 +144,6 @@ Released: 2026-10-16
   the ``text-align`` of its block: ``text-align: center`` centres it. It was
   always put at the left edge, flush against what came before and after.
   Fixes :issue:`693`.
-* A ``<canvas type="graph">`` written amid the text of its block is drawn,
-  with the text before and after it. The text before it was read as part
-  of the chart's JSON, so the chart was dropped and its JSON printed.
-* A chart property that does nothing says so: a key no part of the chart
-  reads, such as a misspelt one, and a value the property does not take
-  each log a warning naming them. Both were dropped without a word.
-* A ``horizontalline`` chart takes its ``categoryAxis``, the way a bar chart
-  does: the colour of the axis and the angle and colour of its labels were
-  ignored.
 * ``width`` on a ``<div>``, a ``<p>`` or any other block is applied: a
   length, or a percentage of the block that contains it, as the width of
   its content box. ``margin: 0 auto`` centres the block and
