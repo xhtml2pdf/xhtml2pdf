@@ -61,6 +61,7 @@ from xhtml2pdf.util import (
     getSize,
 )
 from xhtml2pdf.xhtml2pdf_reportlab import (
+    PageNumberReset,
     PmlDrawing,
     PmlFrame,
     PmlImage,
@@ -835,6 +836,15 @@ class pisaTagPDFPAGENUMBER(pisaTag):
         c.frag.pageNumber = True
         c.addFrag(pageNumber)
         c.frag.pageNumber = False
+
+
+class pisaTagPDFRESETPAGENUMBER(pisaTag):
+    """<pdf:resetpagenumber value="1" />."""
+
+    def start(self, c: pisaContext) -> None:
+        c.addPara()
+        c.addStory(PageNumberReset(int(self.attr.value)))
+        c.addPageCount()
 
 
 class pisaTagPDFPAGECOUNT(pisaTag):

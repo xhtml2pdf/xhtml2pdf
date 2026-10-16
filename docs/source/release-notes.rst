@@ -64,6 +64,9 @@ Unreleased
   lands on, and moves it whole to the bottom of the next page when it does
   not fit: a signature at the foot of the last page. See
   :doc:`format_html`. Fixes :issue:`429`.
+* ``<pdf:resetpagenumber value="1"/>`` starts the page numbering again on
+  the page it falls on, for the headers and footers, ``<pdf:pagenumber>``
+  in the flow and the table of contents. Fixes :issue:`461`.
 
 **🐛 Bug-Fixes**
 

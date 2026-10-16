@@ -108,11 +108,43 @@ def _undo_postponed(ref) -> None:
         del flowable._postponed
 
 
+class PageNumberReset(Flowable):
+    """
+    Where <pdf:resetpagenumber> was written: the page it is drawn on is
+    numbered `value`, and the pages after it on from there.
+    """
+
+    _ZEROSIZE = 1
+
+    def __init__(self, value: int) -> None:
+        super().__init__()
+        self.value = value
+
+    def draw(self) -> None:
+        doc = self.canv._doctemplate
+        if isinstance(doc, PmlBaseDoc):
+            doc.pageNumberResets.append((doc.page, self.value))
+
+
 class PmlBaseDoc(BaseDocTemplate):
     """We use our own document template to get access to the canvas and set some information once."""
 
     # Stores a list of page templates, and the first page from which they're active.
     pisaTemplateList: list[tuple[int, PmlPageTemplate]]
+    #: (page, number) for each <pdf:resetpagenumber> this pass has drawn.
+    pageNumberResets: list[tuple[int, int]]
+    #: The same, from the pass before. A page's header is painted before
+    #: its content, so it can only be numbered from what an earlier pass
+    #: found; the tag asks for a second pass.
+    _knownResets: list[tuple[int, int]]
+
+    def pageLabel(self, page: int) -> int:
+        """The number page `page` shows, after the resets before it."""
+        label = page
+        for start, value in getattr(self, "_knownResets", ()):
+            if start <= page:
+                label = value + page - start
+        return label
 
     @property
     def _multiBuildEdits(self):
@@ -154,6 +186,8 @@ class PmlBaseDoc(BaseDocTemplate):
         # Clear the list of templates, to ensure the list refers to the *final* rendering, also
         # in a multiBuild rendering.
         self.pisaTemplateList = []
+        self._knownResets = sorted(getattr(self, "pageNumberResets", []))
+        self.pageNumberResets = []
 
         # The anchors of the positioned boxes fall where this pass puts them.
         from xhtml2pdf.builders.position import reset_positioned
@@ -217,7 +251,7 @@ class PmlBaseDoc(BaseDocTemplate):
                 (
                     flowable.outlineLevel,
                     html_escape(copy.deepcopy(flowable.text), quote=True),
-                    self.page,
+                    self.pageLabel(self.page),
                     # The fourth element ReportLab documents: the destination
                     # the entry links to. PmlParagraph.draw has bookmarked it
                     # by now, this being called after the flowable is drawn.
@@ -393,7 +427,7 @@ class PmlPageTemplate(PageTemplate):
                     if isinstance(obj, PmlParagraph):
                         for frag in obj.frags:
                             if frag.pageNumber:
-                                frag.text = str(pagenumber)
+                                frag.text = str(label)
                             elif frag.pageCount:
                                 frag.text = str(canvas._doctemplate._page_count)
 
@@ -406,6 +440,8 @@ class PmlPageTemplate(PageTemplate):
 
             # Paint static frames
             pagenumber = canvas.getPageNumber()
+            pageLabel = getattr(doc, "pageLabel", None)
+            label = pageLabel(pagenumber) if pageLabel else pagenumber
             if pagenumber > self._page_count:
                 self._page_count = pagenumber
                 canvas._doctemplate._page_count = pagenumber

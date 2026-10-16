@@ -494,6 +494,27 @@ pdf:pagecount
 
 Prints total page count.
 
+pdf:resetpagenumber
+~~~~~~~~~~~~~~~~~~~
+
+Numbers the page it falls on ``value`` (1 when left out) and the pages
+after it on from there, to start the numbering again after a cover or the
+front matter:
+
+::
+
+    <h1>Cover</h1>
+    <pdf:toc/>
+    <pdf:nextpage/>
+    <pdf:resetpagenumber value="1"/>
+    <h1>Chapter one</h1>
+
+The new numbers are what ``<pdf:pagenumber>`` shows, in a static frame and
+in the flow, and what the table of contents lists. ``<pdf:pagecount>`` is
+still the number of pages in the document. A header is painted before the
+content of its page, so the numbering is worked out in a first pass over the
+document and applied in a second one, as for ``<pdf:pagecount>``.
+
 pdf:nexttemplate
 ~~~~~~~~~~~~~~~~
 

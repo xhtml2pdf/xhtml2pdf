@@ -119,6 +119,7 @@ from xhtml2pdf.tags import (  # noqa: F401
     pisaTagPDFNEXTTEMPLATE,
     pisaTagPDFPAGECOUNT,
     pisaTagPDFPAGENUMBER,
+    pisaTagPDFRESETPAGENUMBER,
     pisaTagPDFSPACER,
     pisaTagPDFTEMPLATE,
     pisaTagPDFTOC,

@@ -598,5 +598,7 @@ class PageNumberFlowable(Flowable):
         self.pagecount: str | None = None
 
     def draw(self) -> None:
-        self.page = str(self.canv._doctemplate.page)
+        doc = self.canv._doctemplate
+        pageLabel = getattr(doc, "pageLabel", None)
+        self.page = str(pageLabel(doc.page) if pageLabel else doc.page)
         self.pagecount = str(self.canv._doctemplate._page_count)

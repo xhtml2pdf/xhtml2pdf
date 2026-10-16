@@ -177,6 +177,7 @@ TAGS = {
     "pdflanguage": (0, {"name": (STRING, "")}),
     "pdfspacer": (0, {"height": (SIZE, MUST)}),
     "pdfpagenumber": (0, {"example": (STRING, "0")}),
+    "pdfresetpagenumber": (0, {"value": (INT, "1")}),
     "pdfpagecount": (0, {}),
     "pdftoc": (0, {"leader": (STRING, ""), "name": (STRING, "")}),
     "pdfbarcode": (
