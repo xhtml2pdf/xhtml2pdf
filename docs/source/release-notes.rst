@@ -51,6 +51,19 @@ Versions >= 0.2
     --------------------------------------------
 
 
+Unreleased
+====================
+
+**🐛 Bug-Fixes**
+
+* Every image is drawn with its own pixels again. Since 0.2.23 a document
+  with several PNGs (or GIFs, or any image other than a JPEG) drew each of
+  them as the first one: a logo and two charts came out as three logos.
+  Fixes :issue:`848`.
+
+--------------------------------------------
+
+
 0.2.24
 ====================
 

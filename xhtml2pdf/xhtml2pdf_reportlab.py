@@ -800,9 +800,15 @@ class PmlImageReader:  # TODO We need a factory here, returning either a class f
             return None
 
     def __str__(self) -> str:
-        if isinstance(self.fileName, PmlImage | Image | BytesIO):
-            fn = self.fileName.read() or id(self)
-            return f"PmlImageObject_{hash(fn)}"
+        # ReportLab caches one XObject per name, so the name is the content:
+        # two different images must not share it, the same image may.
+        if isinstance(self.fileName, BytesIO):
+            data = self.fileName.getvalue()
+            if data:
+                return f"PmlImageObject_{md5(data).hexdigest()}"
+            return f"PmlImageObject_{id(self)}"
+        if isinstance(self.fileName, PmlImage | Image):
+            return f"PmlImageObject_{id(self)}"
         return str(self.fileName or id(self))
 
 

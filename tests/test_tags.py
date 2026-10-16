@@ -1,4 +1,5 @@
 import base64
+import hashlib
 import io
 import re
 from pathlib import Path
@@ -6,6 +7,7 @@ from typing import NamedTuple
 from unittest import TestCase
 from xml.dom import minidom
 
+from PIL import Image
 from pypdf import PdfReader
 from pypdf.generic import ArrayObject
 from reportlab.pdfbase.pdfmetrics import stringWidth
@@ -199,6 +201,40 @@ class CorruptImageTestCase(TestCase):
         self.assert_left_out(
             "<style>@page {{ background-image: url('{uri}') }}</style><p>after</p>"
         )
+
+
+class DistinctImagesTestCase(TestCase):
+    """Every image is drawn with its own pixels; a repeated one is embedded once."""
+
+    @staticmethod
+    def png_uri(color: tuple[int, int, int, int]) -> str:
+        buf = io.BytesIO()
+        Image.new("RGBA", (64, 48), color).save(buf, format="PNG")
+        return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
+
+    def image_digests(self, uris: list[str]) -> list[str]:
+        imgs = "".join(f'<img src="{uri}" width="64" height="48"/> ' for uri in uris)
+        dest = io.BytesIO()
+        result = pisa.pisaDocument(
+            io.StringIO(f"<html><body><p>{imgs}</p></body></html>"), dest
+        )
+        self.assertEqual(0, result.err)
+        xobjects = PdfReader(io.BytesIO(dest.getvalue())).pages[0]["/Resources"][
+            "/XObject"
+        ]
+        return [
+            hashlib.md5(x.get_object().get_data()).hexdigest()
+            for x in xobjects.values()
+        ]
+
+    def test_different_pngs_stay_different(self) -> None:
+        colors = [(255, 0, 0, 255), (0, 160, 0, 255), (0, 0, 255, 255)]
+        digests = self.image_digests([self.png_uri(c) for c in colors])
+        self.assertEqual(3, len(set(digests)))
+
+    def test_the_same_png_twice_is_embedded_once(self) -> None:
+        uri = self.png_uri((255, 0, 0, 255))
+        self.assertEqual(1, len(self.image_digests([uri, uri])))
 
 
 class ChartParametersTestCase(TestCase):
