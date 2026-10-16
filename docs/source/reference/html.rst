@@ -413,6 +413,7 @@ xhtml2pdf adds the following vendor-specific properties:
 
 ::
 
+     -pdf-frame-align
      -pdf-frame-break
      -pdf-keep-in-frame-max-height
      -pdf-keep-in-frame-max-width
@@ -427,6 +428,9 @@ xhtml2pdf adds the following vendor-specific properties:
      -pdf-toc-leader
      -pdf-toc-name
      -pdf-word-wrap
+
+``-pdf-frame-align: bottom`` puts a block at the bottom of the page it lands
+on, a signature at the foot of the last page; see :doc:`../format_html`.
 
 ``-pdf-word-wrap: CJK`` lays the paragraph out the way Chinese, Japanese and
 Korean text is: a line may break between any two characters, not only at a

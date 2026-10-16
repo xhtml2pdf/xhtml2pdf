@@ -29,6 +29,7 @@ from reportlab.platypus.flowables import KeepInFrame, KeepTogether, PageBreak, S
 from xhtml2pdf.builders.block import (
     BlockBoxData,
     block_box_style,
+    bottom_aligned,
     collapse_margins,
     declared_height,
     declared_width,
@@ -1331,6 +1332,7 @@ def pisaLoop(node, context, **kw):
 
         pageBreakAfter = False
         breakInsideAvoid = False
+        frameAlignBottom = False
         blockStoryStart = 0
         frameBreakAfter = False
         display = getDisplay(context.cssAttr.get("display", "inline"))
@@ -1386,6 +1388,10 @@ def pisaLoop(node, context, **kw):
             if breakAfter == "avoid":
                 pageBreakAfter = PAGE_BREAK_AVOID
             breakInsideAvoid = pageBreakValue(context.cssAttr, "inside") == "avoid"
+            frameAlignBottom = (
+                str(context.cssAttr.get("-pdf-frame-align", "")).strip().lower()
+                == "bottom"
+            )
             blockStoryStart = len(context.story)
 
         if display == Display.NONE:
@@ -1653,6 +1659,10 @@ def pisaLoop(node, context, **kw):
             if position == "relative":
                 # Drawn where top/left say, laid out and paginated where it is.
                 shift_story(context.story, blockStoryStart, offsets)
+            if frameAlignBottom and not staticFrame:
+                context.story[blockStoryStart:] = bottom_aligned(
+                    context.story[blockStoryStart:]
+                )
             if breakInsideAvoid and len(context.story) > blockStoryStart:
                 # Even round a single flowable: a lone paragraph is split
                 # line by line otherwise. And with the blocks before it that

@@ -371,6 +371,60 @@ class BlockBox(Flowable, PmlMaxHeightMixIn):
         return opened_up(entry.flowable for entry in self._entries)
 
 
+class BottomAligned(Flowable):
+    """
+    A block drawn at the bottom of the frame it lands in, which takes the
+    room above it as well: what follows starts in the next frame
+    (-pdf-frame-align: bottom).
+
+    Where it does not fit it goes on to the next frame, and only a frame it
+    has to itself splits it. Laid out anywhere but in a frame -- in a box,
+    in a table cell -- it is just the block.
+    """
+
+    #: Room left below the block. A frame takes a flowable of no height --
+    #: an anchor, the page count's marker -- only while it has room left at
+    #: all, and one that comes after the block belongs on its page.
+    LEFT_OVER = 0.01
+
+    def __init__(self, content: Flowable) -> None:
+        super().__init__()
+        self.content = content
+
+    def identity(self, maxLen=None) -> str:
+        return f"<BottomAligned at {id(self):#x} of {self.content.identity(maxLen)}>"
+
+    def _in_frame(self, availHeight: float) -> bool:
+        return getattr(self, "_frame", None) is not None and availHeight < LARGE
+
+    def wrap(self, availWidth: float, availHeight: float) -> tuple[float, float]:
+        width, height = self.content.wrapOn(self.canv, availWidth, availHeight)
+        self.width = width
+        if self._in_frame(availHeight):
+            height = max(height, availHeight - self.LEFT_OVER)
+        self.height = height
+        return self.width, self.height
+
+    def split(self, availWidth: float, availHeight: float) -> list:
+        if getattr(getattr(self, "_frame", None), "_atTop", False):
+            return self.content.split(availWidth, availHeight)
+        return []
+
+    def drawOn(self, canvas, x: float, y: float, _sW: float = 0) -> None:
+        # y is the bottom of the room taken, at the bottom of the frame.
+        self.content.drawOn(canvas, x, y, _sW)
+
+
+def bottom_aligned(story: list[Flowable]) -> list[Flowable]:
+    """What a block put into the flow, as one block at the bottom of a frame."""
+    flowables = [f for f in story if not _breaks_the_flow(f)]
+    if not flowables:
+        return story
+    breaks = [f for f in story if _breaks_the_flow(f)]
+    box = BlockBox(flowables, BoxStyle(), keep_together=True)
+    return [*breaks, BottomAligned(box)]
+
+
 class _UnsplittableBlockBox(BlockBox):
     """Inside the shrink fallback: whatever the room, it is one piece."""
 

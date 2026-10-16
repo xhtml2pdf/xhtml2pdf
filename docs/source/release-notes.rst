@@ -60,6 +60,10 @@ Unreleased
   and ``not-last`` on every page but the last: a signature block or a
   closing footer at the end of a document of any length. See
   :doc:`format_html`. Fixes :issue:`105`.
+* ``-pdf-frame-align: bottom`` puts a block at the bottom of the page it
+  lands on, and moves it whole to the bottom of the next page when it does
+  not fit: a signature at the foot of the last page. See
+  :doc:`format_html`. Fixes :issue:`429`.
 
 **🐛 Bug-Fixes**
 

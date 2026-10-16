@@ -242,6 +242,27 @@ Which page is the last is only known once the document has been laid out,
 so a frame with ``last`` or ``not-last`` makes xhtml2pdf lay it out twice,
 as ``<pdf:pagecount>`` does.
 
+A block at the bottom of the page
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``-pdf-frame-align: bottom`` on a block puts it at the foot of the frame it
+lands in, after the content before it. It is the other way to end a
+document with a signature: written last, the block sits at the bottom of the
+last page, and when it does not fit below the content it moves to the
+bottom of the next page, whole. The block takes the room above it too, so
+whatever follows it starts on the next page.
+
+.. code:: html
+
+    <style>
+        .signature { -pdf-frame-align: bottom; border-top: 1px solid black; }
+    </style>
+    <p>... the contract ...</p>
+    <div class="signature">
+        <p>Signed: ______________________</p>
+        <p>Date: ______________________</p>
+    </div>
+
 
 Flowing HTML content through Content Frames
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
