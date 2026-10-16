@@ -87,6 +87,10 @@ Unreleased
   inside such a block no longer repeats the block's margins above and below
   every paragraph of it, and a block's vertical margins are no longer
   inherited by the blocks inside it. Fixes :issue:`310`.
+* ``<pdf:pagecount>`` written in the flow, outside a static frame, shows
+  the number of pages of the document. On the pages laid out before the
+  last one it showed how many pages there were so far: ``Page 1 of 1`` on
+  the first page of two.
 * ``padding`` on ``<body>`` or ``<html>`` is room around the page content,
   given once: the sides indent every block and the tables in the flow, the
   top is room above the first block. Every paragraph used to draw it again,

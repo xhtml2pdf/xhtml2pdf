@@ -62,6 +62,18 @@ def split(text, delim=None):
     return [uword.encode("utf8") for uword in text.split(delim)]
 
 
+def _text_key(text):
+    """
+    A fragment's text as the line cache compares it.
+
+    A page number or count is an object whose value each layout pass sets
+    anew; its string is what the lines were broken with.
+    """
+    if text is None or isinstance(text, str | bytes):
+        return text
+    return str(text)
+
+
 def strip(text):
     if isinstance(text, bytes):
         text = text.decode("utf8")
@@ -1790,7 +1802,7 @@ class Paragraph(Flowable):
             tuple(
                 (
                     id(f),
-                    getattr(f, "text", None),
+                    _text_key(getattr(f, "text", None)),
                     getattr(getattr(f, "cbDefn", None), "width", None),
                     getattr(getattr(f, "cbDefn", None), "height", None),
                 )

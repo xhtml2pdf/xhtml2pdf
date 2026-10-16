@@ -795,41 +795,53 @@ class PageNumberText:
         # arrives. It comes from the example attribute of <pdf:pagenumber>.
         self.data: str = placeholder
 
-    def __contains__(self, key) -> bool:
+    def _refresh(self) -> str:
+        # Read on every use: each layout pass draws the flowable again, and
+        # a later pass knows more (the page count, a renumbering).
         if self.flowable.page is not None:
             self.data = str(self.flowable.page)
+        return self.data
+
+    def __contains__(self, key) -> bool:
+        self._refresh()
         return False
 
     def split(self, text: str) -> list[str]:
-        return [self.data]
+        return [self._refresh()]
 
     def __getitem__(self, index: int) -> str:
-        return self.data[index] if self.data else self.data
+        data = self._refresh()
+        return data[index] if data else data
 
     def setFlowable(self, flowable: Flowable) -> None:
         self.flowable = flowable
 
     def __str__(self) -> str:
-        return self.data
+        return self._refresh()
 
 
 class PageCountText:
     def __init__(self, *args, **kwargs) -> None:
         self.data: str = ""
 
-    def __str__(self) -> str:
-        return self.data
-
-    def __contains__(self, key) -> bool:
+    def _refresh(self) -> str:
         if self.flowable.pagecount is not None:
             self.data = str(self.flowable.pagecount)
+        return self.data
+
+    def __str__(self) -> str:
+        return self._refresh()
+
+    def __contains__(self, key) -> bool:
+        self._refresh()
         return False
 
     def split(self, text: str) -> list[str]:
-        return [self.data]
+        return [self._refresh()]
 
     def __getitem__(self, index: int) -> str:
-        return self.data if not self.data else self.data[index]
+        data = self._refresh()
+        return data if not data else data[index]
 
     def setFlowable(self, flowable: Flowable) -> None:
         self.flowable = flowable
