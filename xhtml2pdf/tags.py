@@ -1150,8 +1150,10 @@ class pisaTagCANVAS(pisaTag):
             "legendedPie": LegendedPieChart,
         }
 
-    def start(self, c: pisaContext) -> None:
-        pass
+    def start(self, c: pisaContext) -> None:  # noqa: PLR6301
+        # The text before the chart is a paragraph of its own: what the
+        # element holds is read as its JSON, and only that.
+        c.addPara()
 
     @staticmethod
     def _length(value, default: float) -> float | None:

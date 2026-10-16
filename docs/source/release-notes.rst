@@ -126,6 +126,9 @@ Released: 2026-10-16
   the ``text-align`` of its block: ``text-align: center`` centres it. It was
   always put at the left edge, flush against what came before and after.
   Fixes :issue:`693`.
+* A ``<canvas type="graph">`` written amid the text of its block is drawn,
+  with the text before and after it. The text before it was read as part
+  of the chart's JSON, so the chart was dropped and its JSON printed.
 * ``width`` on a ``<div>``, a ``<p>`` or any other block is applied: a
   length, or a percentage of the block that contains it, as the width of
   its content box. ``margin: 0 auto`` centres the block and

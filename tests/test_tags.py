@@ -579,6 +579,13 @@ class CanvasPlacementTestCase(TestCase):
         self.assertAlmostEqual(plain["a"][0] + 31, padded["a"][0], places=1)
         self.assertAlmostEqual(plain["a"][1] - 31, padded["a"][1], places=1)
 
+    def test_the_text_around_it_in_its_block_is_kept(self) -> None:
+        with self.assertNoLogs("xhtml2pdf", level="WARNING"):
+            found = self.runs(f"<div>lead {self.CHART} tail</div>")
+        # y grows up the page: the lead above the chart, the tail below it.
+        self.assertGreater(found["lead"][1], found["a"][1])
+        self.assertGreater(found["a"][1], found["tail"][1])
+
     def test_text_align_center_centres_it(self) -> None:
         plain = self.runs(self.CHART)
         centred = self.runs(f"<div style='text-align: center'>{self.CHART}</div>")
