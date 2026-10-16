@@ -786,3 +786,9 @@ break, and a Hebrew sentence that wraps inside a left-to-right paragraph. \
 Each frag used to be reordered on its own before the lines were broken: \
 the halves of a sentence came out swapped and a paragraph's first line \
 held its last words."""
+
+[fixtures.block-margins]
+compare = ["pages", "text", "ssim"]
+notes = """The vertical margins of blocks without a box: a block's margin goes \
+above its first child and below its last, nested margins collapse to the \
+largest, and the text of a block takes its margins once, not per paragraph."""

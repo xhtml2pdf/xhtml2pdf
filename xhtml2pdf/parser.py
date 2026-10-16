@@ -26,7 +26,12 @@ from reportlab.lib.colors import Color
 from reportlab.platypus.doctemplate import FrameBreak, NextPageTemplate
 from reportlab.platypus.flowables import KeepInFrame, KeepTogether, PageBreak
 
-from xhtml2pdf.builders.block import BlockBoxData, block_box_style, declared_height
+from xhtml2pdf.builders.block import (
+    BlockBoxData,
+    block_box_style,
+    collapse_margins,
+    declared_height,
+)
 from xhtml2pdf.builders.flex import (
     BoxStyle,
     FlexData,
@@ -1549,6 +1554,19 @@ def pisaLoop(node, context, **kw):
         # changed: every clone of it below copies what it holds.
         compact_frag(context.frag)
         context.fragBlock = fragBlock = copy.copy(context.frag)
+        # A block without a box of its own: its vertical margins go on the
+        # first and last thing it puts into the flow when it closes, not on
+        # every paragraph of its own text.
+        blockMargins = None
+        placedElsewhere = isFlex or isFlexItem or outOfFlow or bool(staticFrame)
+        if (
+            isBlock
+            and blockBox is None
+            and not placedElsewhere
+            and node.tagName not in _NO_BLOCK_BOX_TAGS
+        ):
+            blockMargins = (fragBlock.spaceBefore or 0, fragBlock.spaceAfter or 0)
+            fragBlock.spaceBefore = fragBlock.spaceAfter = 0
         if isBlock:
             # A block's background belongs to its box, which fragBlock (or the
             # block box) paints. Inherited by the words inside, it was painted
@@ -1590,6 +1608,8 @@ def pisaLoop(node, context, **kw):
         # Block?
         if isBlock:
             context.addPara()
+            if blockMargins is not None:
+                collapse_margins(context.story[blockStoryStart:], *blockMargins)
 
             # XXX Buggy!
 

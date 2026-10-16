@@ -333,6 +333,61 @@ def _breaks_the_flow(flowable: Flowable) -> bool:
     return getattr(flowable, "locChanger", False) or hasattr(flowable, "frameAction")
 
 
+def _in_flow(flowables) -> list[Flowable]:
+    """The flowables that take room in the flow, skipping markers and breaks."""
+    return [
+        f
+        for f in flowables
+        if not getattr(f, "_ZEROSIZE", False) and not _breaks_the_flow(f)
+    ]
+
+
+def _raise_space(flowable: Flowable, side: str, value: float) -> None:
+    """Make `flowable`'s spaceBefore or spaceAfter at least `value`."""
+    content = getattr(flowable, "_content", None)
+    if isinstance(content, list):
+        # A container (KeepTogether and the like) asks its content.
+        inner = _in_flow(content)
+        if inner:
+            _raise_space(inner[0] if side == "spaceBefore" else inner[-1], side, value)
+        return
+    paragraph = getattr(flowable, "P", None)
+    if isinstance(paragraph, Flowable):
+        # A paragraph with a floated image asks the paragraph.
+        _raise_space(paragraph, side, value)
+        return
+    current = (
+        flowable.getSpaceBefore() if side == "spaceBefore" else flowable.getSpaceAfter()
+    )
+    if (current or 0.0) >= value:
+        return
+    style = getattr(flowable, "style", None)
+    if not hasattr(flowable, side) and style is not None and hasattr(style, side):
+        # A paragraph's style can be shared with another paragraph.
+        flowable.style = style = copy.copy(style)
+        setattr(style, side, value)
+    else:
+        setattr(flowable, side, value)
+
+
+def collapse_margins(story: list[Flowable], top: float, bottom: float) -> None:
+    """
+    Give a block without a box its vertical margins.
+
+    With no padding or border to keep them apart, the block's top margin and
+    its first child's are one, the larger of the two, and so are the bottom
+    margins of the block and its last child (CSS 2.1, 8.3.1). `story` is
+    what the block put into the flow.
+    """
+    flowables = _in_flow(story)
+    if not flowables:
+        return
+    if top > 0:
+        _raise_space(flowables[0], "spaceBefore", top)
+    if bottom > 0:
+        _raise_space(flowables[-1], "spaceAfter", bottom)
+
+
 def block_box_style(c, kw: dict) -> BoxStyle | None:
     """
     The box an element declares for itself, or None when it declares none

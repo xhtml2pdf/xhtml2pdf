@@ -43,6 +43,8 @@ REQUIRED_SYMBOLS: dict[str, tuple[str, ...]] = {
     "reportlab.rl_settings": ("_FUZZ",),
     "reportlab.rl_config": ("register_reset",),
     "reportlab.lib.abag": ("ABag",),
+    "reportlab.lib.attrmap": ("AttrMap", "AttrMapValue"),
+    "reportlab.lib.validators": ("isNumber",),
     "reportlab.lib.utils": (
         "ImageReader",
         "LazyImageReader",

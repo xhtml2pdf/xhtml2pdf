@@ -30,8 +30,10 @@ from PIL import Image as PILImage
 from PIL import UnidentifiedImageError
 from PIL.Image import Image
 from reportlab.graphics.shapes import Drawing
+from reportlab.lib.attrmap import AttrMap, AttrMapValue
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.utils import LazyImageReader, flatten, haveImages, open_for_read
+from reportlab.lib.validators import isNumber
 from reportlab.pdfbase import pdfform
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.platypus.doctemplate import (
@@ -2058,6 +2060,14 @@ class PmlDrawing(Drawing):
     width: float
     height: float
     renderScale: float
+
+    # A Drawing refuses attributes its map does not name; these are the
+    # vertical margins Platypus asks a flowable for.
+    _attrMap = AttrMap(
+        BASE=Drawing,
+        spaceBefore=AttrMapValue(isNumber, desc="Space above, as a flowable"),
+        spaceAfter=AttrMapValue(isNumber, desc="Space below, as a flowable"),
+    )
 
     def wrap(self, availWidth: float, availHeight: float):
         if availWidth > 0 and self.width > availWidth:

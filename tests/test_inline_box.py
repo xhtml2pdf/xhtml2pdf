@@ -103,8 +103,8 @@ class InlineBoxParsingTest(TestCase):
         self.assertEqual(2, len(_markers(para)))
         outer = next(f for f in para.frags if f.text == "a ")
         inner = next(f for f in para.frags if f.text == "b")
-        for name in ("firstLineIndent", "spaceBefore"):
-            self.assertEqual(getattr(outer, name, 0), getattr(inner, name, 0), name)
+        self.assertEqual(outer.firstLineIndent, inner.firstLineIndent)
+        self.assertEqual(0, inner.spaceBefore)
 
     def test_the_markers_carry_the_box_and_the_text_does_not(self) -> None:
         para = _paragraph(f"<p>a <span style='{BOX}'>b</span> c</p>")

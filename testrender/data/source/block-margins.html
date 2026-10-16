@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>block-margins</title>
+<style type="text/css">
+body { font-size: 11pt; line-height: 15pt; }
+p { margin: 0; }
+</style>
+</head>
+<body>
+<div style="margin-bottom: 1in"><p>A block with a bottom margin of an inch around a paragraph without margins.</p></div>
+<p>An inch below the block above, and an inch above the block below.</p>
+<div style="margin-top: 1in"><p>A block with a top margin of an inch around a paragraph without margins.</p></div>
+<div style="margin: 20pt 0 30pt 0"><div style="margin-top: 10pt"><p style="margin-top: 5pt">Three top margins in one another collapse to the largest, 20pt.</p></div><p style="margin-bottom: 40pt">The last child's bottom margin of 40pt wins over its block's 30pt.</p></div>
+<p>After the nested blocks.</p>
+<div style="margin: 30pt 0 40pt 0">Text of a block with margins
+<p style="margin: 5pt 0">A paragraph between the text of its block.</p>
+More text of the same block, 40pt above what follows.</div>
+<p>After the block of mixed content.</p>
+<div style="margin-top: 25pt"><ul style="margin: 0"><li>A list in a block with a top margin.</li></ul></div>
+<div style="margin-top: 25pt"><h3 style="margin: 0">A heading in a block with a top margin</h3></div>
+<p>The end.</p>
+</body>
+</html>

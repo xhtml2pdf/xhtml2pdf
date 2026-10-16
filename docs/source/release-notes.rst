@@ -67,6 +67,15 @@ Unreleased
 * A non-breaking space at the start of a line after a ``<br/>`` is kept,
   as a browser keeps it: ``<br/>&#xa0;&#xa0;text`` is indented by two
   spaces, not one.
+* The top and bottom margins of a ``<div>`` (or any block without padding,
+  a border or a background) are kept when what it holds are paragraphs or
+  other blocks with margins of their own. The block's margin goes above its
+  first child and below its last, collapsing with theirs to the larger one
+  as in a browser; a ``<div style="margin-bottom: 1in">`` around a
+  ``<p style="margin: 0">`` used to leave no room at all. Text directly
+  inside such a block no longer repeats the block's margins above and below
+  every paragraph of it, and a block's vertical margins are no longer
+  inherited by the blocks inside it. Fixes :issue:`310`.
 
 --------------------------------------------
 
