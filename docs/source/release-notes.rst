@@ -51,6 +51,19 @@ Versions >= 0.2
     --------------------------------------------
 
 
+Unreleased
+====================
+
+**🐛 Bug-Fixes**
+
+* An inline element with padding or a border right after a ``<br/>`` no
+  longer fails the render with ``IndexError: string index out of range``
+  when its text starts with whitespace, such as ``&#xa0;``. Fixes
+  :issue:`849`.
+
+--------------------------------------------
+
+
 0.2.24
 ====================
 
