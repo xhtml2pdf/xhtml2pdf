@@ -427,6 +427,16 @@ class InlineBoxRenderTest(TestCase):
         page = self._render(f"<p><span style='{BOX}'>only</span></p>")
         self.assertIn("only", page.extract_text())
 
+    def test_a_box_after_a_line_break_starting_with_whitespace_renders(self) -> None:
+        # The line break strips the leading whitespace of what follows it,
+        # which empties the box's first text fragment while its opening
+        # marker is already in the pending word (#849).
+        page = self._render(
+            "<p>first<br/><span style='padding: 1px'>&#xa0;second</span></p>"
+        )
+        text = page.extract_text()
+        self.assertLess(text.index("first"), text.index("second"))
+
 
 class EmbeddedFontTest(TestCase):
     """

@@ -60,6 +60,10 @@ Unreleased
   with several PNGs (or GIFs, or any image other than a JPEG) drew each of
   them as the first one: a logo and two charts came out as three logos.
   Fixes :issue:`848`.
+* An inline element with padding or a border right after a ``<br/>`` no
+  longer fails the render with ``IndexError: string index out of range``
+  when its text starts with whitespace, such as ``&#xa0;``. Fixes
+  :issue:`849`.
 
 --------------------------------------------
 

@@ -743,7 +743,10 @@ def _getFragWords(frags):
             S = split(text)
             if S == []:
                 S = [""]
-            if W != [] and text[0] in whitespace:
+            # The strip above can leave nothing: a fragment of only
+            # whitespace after a <br/>, with an inline box's marker already
+            # in W.
+            if W != [] and text and text[0] in whitespace:
                 W.insert(0, n)
                 R.append(W)
                 W = []
