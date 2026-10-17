@@ -175,9 +175,14 @@ Known limitations of the properties above:
 -  ``word-break``: ``break-all`` breaks the paragraph between any two
    characters, as ``-pdf-word-wrap: CJK`` does; ``break-word`` is
    ``overflow-wrap: anywhere``. ``keep-all`` is ignored.
--  ``width`` and ``height`` apply to images, table cells and barcodes
-   only, not to blocks. ``width`` applies to a ``<table>`` too, and wins
-   over its ``width`` attribute. ``height`` on a ``<table>`` is the least
+-  ``width`` and ``height`` apply to images, table cells, barcodes and
+   blocks. On a ``<div>``, a ``<p>`` or any other block, ``width`` is the
+   width of its content box, a length or a percentage of the block that
+   contains it; ``margin: 0 auto`` centres the block and
+   ``margin-left: auto`` puts it on the right. A block's ``height`` is the
+   least its content area takes: taller content makes it taller.
+   ``width`` applies to a ``<table>`` too, and wins over its ``width``
+   attribute. ``height`` on a ``<table>`` is the least
    it is high: shorter rows share the difference, taller content makes the
    table taller. A percentage ``height`` on it is ignored.
 -  ``margin-left`` and ``margin-right`` on a ``<table>`` narrow it from that
