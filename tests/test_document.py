@@ -468,6 +468,39 @@ class EncryptAndSignTest(TestCase):
 
         self.assertIn("cannot be merged", str(raised.exception))
 
+    def test_a_background_drops_an_owner_password_and_says_so(self) -> None:
+        """
+        With an owner password only the document can be read back, and the
+        background is merged in; but it is written again unencrypted.
+        """
+        from reportlab.lib.pdfencrypt import StandardEncryption
+
+        html = (
+            "<html><head><style>@page { background-image:"
+            ' url("tests/samples/img/tree.jpg"); }</style></head>'
+            "<body><p>x</p></body></html>"
+        )
+        dest = io.BytesIO()
+        encrypt = StandardEncryption("", ownerPassword="owner", canPrint=0)
+
+        with self.assertLogs("xhtml2pdf", level="WARNING") as logs:
+            pisaDocument(io.StringIO(html), dest, encrypt=encrypt, path=".")
+
+        self.assertFalse(PdfReader(io.BytesIO(dest.getvalue())).is_encrypted)
+        self.assertTrue(
+            any("WITHOUT encryption" in line for line in logs.output), logs.output
+        )
+
+    def test_no_warning_without_a_background(self) -> None:
+        from reportlab.lib.pdfencrypt import StandardEncryption
+
+        dest = io.BytesIO()
+        encrypt = StandardEncryption("", ownerPassword="owner")
+        with self.assertNoLogs("xhtml2pdf", level="WARNING"):
+            pisaDocument(io.StringIO(self.HTML), dest, encrypt=encrypt)
+
+        self.assertTrue(PdfReader(io.BytesIO(dest.getvalue())).is_encrypted)
+
 
 class ArgumentsThatDoSomethingTest(TestCase):
     """

@@ -56,6 +56,16 @@ flags
     reason: the inserted pages are put in place after the build. Asking for
     both raises ``ValueError``.
 
+.. warning::
+    A page background (``@page { background-image: ... }``, an image or a
+    PDF) is merged into the document after it is built: the document is
+    read back and written again, and that second write cannot reapply the
+    encryption. With a user password the document cannot be read back at
+    all, and the call raises ``ValueError``. With an owner password only it
+    can, and the result is written **without encryption**; a warning in the
+    log says so. To have both, render without ``encrypt`` and encrypt the
+    result afterwards, with pypdf for instance.
+
 Signing pdf
 ===========
 

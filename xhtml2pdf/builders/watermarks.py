@@ -227,6 +227,15 @@ class WaterMarks:
                     page.merge_page(pagebg, over=False)
                 has_bg = True
         if has_bg:
+            if getattr(doc, "encrypt", None) is not None:
+                log.warning(
+                    "The document is written WITHOUT encryption: its page"
+                    " background is merged in after the document is built, by"
+                    " reading it back and writing it again, and that second"
+                    " write cannot reapply the encryption ReportLab gave it."
+                    " Drop the background or the encryption, or encrypt the"
+                    " result afterwards (with pypdf, for instance)."
+                )
             pdfoutput.write(output)
 
         return output, has_bg

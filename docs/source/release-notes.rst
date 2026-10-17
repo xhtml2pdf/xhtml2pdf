@@ -69,6 +69,11 @@ Unreleased
 
 **🐛 Bug-Fixes**
 
+* A document with a page background and ``encrypt`` with an owner password
+  only comes out unencrypted, as it always has: the background is merged in
+  by writing the document again, which cannot reapply the encryption. That
+  now logs a warning saying so, instead of happening silently.
+
 * A table inside a table cell goes on from page to page, starting where
   its row starts and in print of its own size, as in a browser. It was
   moved whole to the next page and shrunk to fit it, down to unreadable
