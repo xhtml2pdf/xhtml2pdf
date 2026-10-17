@@ -1305,6 +1305,16 @@ class _CellPart(PmlKeepInFrame):
 _UNBOUNDED = 0xFFFFFFF
 
 
+class PmlFlowingCell(_CellPart):
+    """
+    A cell holding a table of its own, at its natural height.
+
+    A nested table taller than the page goes on from page to page in print
+    of its own size: the row holding it is cut wherever the page ends
+    (PmlTable.split), rather than the cell being shrunk to fit one page.
+    """
+
+
 def _cutContent(canv, content: list, width: float, height: float):
     """
     `content` as what fits `height` and the rest, cut by height alone.
@@ -1475,8 +1485,13 @@ class PmlTable(Table, PmlMaxHeightMixIn):
                 if natural <= availHeight:
                     return []
             self.minHeight = None
-        parts = Table.split(self, availWidth - self._margins(), availHeight)
+        parts = []
         inRow = False
+        if self._flowsAt(availHeight):
+            parts = self._splitInsideRow(availWidth - self._margins(), availHeight)
+            inRow = bool(parts)
+        if not parts:
+            parts = Table.split(self, availWidth - self._margins(), availHeight)
         if not parts and self._mayCutInsideRow():
             parts = self._splitInsideRow(availWidth - self._margins(), availHeight)
             inRow = True
@@ -1494,6 +1509,20 @@ class PmlTable(Table, PmlMaxHeightMixIn):
         """How many header rows each fragment of the table repeats."""
         repeat = self.repeatRows
         return (len(repeat) if isinstance(repeat, (list, tuple)) else repeat) or 0
+
+    def _flowsAt(self, availHeight) -> bool:
+        """
+        Whether the first row that does not fit `availHeight` holds a
+        PmlFlowingCell, which is cut there rather than moved on whole.
+        """
+        n = self._getFirstPossibleSplitRowPosition(availHeight, ignoreSpans=1)
+        if n >= self._nrows or n < self._repeatCount():
+            return False
+        return any(
+            isinstance(flowable, PmlFlowingCell)
+            for cell in self._cellvalues[n]
+            for flowable in (cell if isinstance(cell, (list, tuple)) else [cell])
+        )
 
     def _mayCutInsideRow(self) -> bool:
         """
@@ -1592,7 +1621,8 @@ class PmlTable(Table, PmlMaxHeightMixIn):
             return (cell,), ()
         if not top:
             return []
-        return (_CellPart(top),), (_CellPart(rest),)
+        part = PmlFlowingCell if isinstance(cell, PmlFlowingCell) else _CellPart
+        return (part(top),), (part(rest),)
 
     def _placeRoundedBoxes(self) -> dict:
         """Each RoundedTableBox's rectangle in this table, by painter."""

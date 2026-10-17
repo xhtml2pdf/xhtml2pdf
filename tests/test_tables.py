@@ -1205,6 +1205,78 @@ class RowCutAcrossPagesTestCase(TestCase):
         self.assertEqual(0, table.splitInRow)
 
 
+class NestedTableAcrossPagesTestCase(TestCase):
+    """
+    A table in a cell goes on from page to page in print of its own size,
+    starting where the row holding it starts, as in a browser (#402). It
+    used to be moved to a page of its own and shrunk to fit it.
+    """
+
+    PAGE = RowCutAcrossPagesTestCase.PAGE
+
+    @staticmethod
+    def rows(count: int) -> str:
+        return "".join(f"<tr><td>row{i:03d}</td></tr>" for i in range(count))
+
+    def html(self, count: int, cell_style: str = "") -> str:
+        return (
+            f"<html><head>{self.PAGE}</head><body><table>"
+            "<tr><td>outer</td></tr>"
+            f'<tr><td style="{cell_style}"><table>{self.rows(count)}</table></td></tr>'
+            "</table></body></html>"
+        )
+
+    @staticmethod
+    def pages(html: str) -> list[str]:
+        from io import BytesIO
+
+        from pypdf import PdfReader
+
+        from xhtml2pdf import pisa
+
+        output = BytesIO()
+        pisa.CreatePDF(html, dest=output, raise_exception=True)
+        return [page.extract_text() for page in PdfReader(output).pages]
+
+    def test_the_nested_table_starts_under_the_row_before_it(self) -> None:
+        pages = self.pages(self.html(40))
+
+        self.assertIn("outer", pages[0])
+        self.assertIn("row000", pages[0])
+
+    def test_every_row_is_there_in_order(self) -> None:
+        text = "".join(self.pages(self.html(40)))
+        found = [text.index(f"row{i:03d}") for i in range(40)]
+
+        self.assertEqual(sorted(found), found)
+
+    @staticmethod
+    def row_heights(html: str) -> set[float]:
+        """The row heights of the nested table's parts, the outer one left out."""
+        return {
+            round(height, 2)
+            for part in drawn_tables(html)
+            if len(part.rows) > 2
+            for height in part.rows
+        }
+
+    def test_its_rows_keep_their_height(self) -> None:
+        unshrunk = self.row_heights(self.html(5))
+
+        self.assertEqual(1, len(unshrunk))
+        self.assertEqual(unshrunk, self.row_heights(self.html(40)))
+        self.assertEqual(3, len(self.pages(self.html(40))))
+
+    def test_a_short_nested_table_is_not_cut(self) -> None:
+        self.assertEqual(1, len(self.pages(self.html(5))))
+
+    def test_an_explicit_shrink_still_shrinks_it_onto_one_page(self) -> None:
+        pages = self.pages(self.html(40, "-pdf-keep-in-frame-mode: shrink"))
+
+        self.assertEqual(2, len(pages))
+        self.assertNotIn("row000", pages[0])
+
+
 class CellHeightAttributeTestCase(TestCase):
     """
     <td height="..."> sets the row's height, as style="height: ..." does.

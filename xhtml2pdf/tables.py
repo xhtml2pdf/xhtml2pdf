@@ -31,7 +31,12 @@ from xhtml2pdf.util import (
     roundedBox,
     set_value,
 )
-from xhtml2pdf.xhtml2pdf_reportlab import PmlKeepInFrame, PmlTable, RoundedTableBox
+from xhtml2pdf.xhtml2pdf_reportlab import (
+    PmlFlowingCell,
+    PmlKeepInFrame,
+    PmlTable,
+    RoundedTableBox,
+)
 
 log = logging.getLogger(__name__)
 
@@ -494,7 +499,7 @@ class pisaTagTD(pisaTag):
         self.story = c.swapStory()
         # Read now: by end() c.cssAttr is that of the cell's last child, and
         # a cell holding a <p> took that paragraph's mode, "shrink".
-        self.keep_in_frame_mode = c.cssAttr.get("-pdf-keep-in-frame-mode", "shrink")
+        self.keep_in_frame_mode = c.cssAttr.get("-pdf-keep-in-frame-mode")
 
         attrs = self.attr
 
@@ -618,10 +623,15 @@ class pisaTagTD(pisaTag):
         # Keep in frame: what a cell does with content taller or wider than
         # it has room for. A row too tall for any page is cut instead, in
         # PmlTable.split, and only there.
-        if not c.frag.insideStaticFrame:
-            # tdata.keepinframe["content"] = cell
-            mode = getKeepInFrameMode(self.keep_in_frame_mode)
-            # keepInFrame mode is passed to Platypus for rendering
+        if c.frag.insideStaticFrame:
+            pass
+        elif self.keep_in_frame_mode is None and any(
+            isinstance(flowable, PmlTable) for flowable in cell
+        ):
+            # A nested table goes on across pages, as in a browser (#402).
+            cell = PmlFlowingCell(cell)
+        else:
+            mode = getKeepInFrameMode(self.keep_in_frame_mode or "shrink")
             cell = PmlKeepInFrame(maxWidth=0, maxHeight=0, mode=mode, content=cell)
 
         c.swapStory(self.story)

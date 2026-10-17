@@ -51,6 +51,20 @@ Versions >= 0.2
     --------------------------------------------
 
 
+Unreleased
+====================
+
+**🐛 Bug-Fixes**
+
+* A table inside a table cell goes on from page to page, starting where
+  its row starts and in print of its own size, as in a browser. It was
+  moved whole to the next page and shrunk to fit it, down to unreadable
+  text for a long one. ``-pdf-keep-in-frame-mode`` on the cell still asks
+  for the old behaviour. Fixes :issue:`402`.
+
+--------------------------------------------
+
+
 0.2.26
 ====================
 
