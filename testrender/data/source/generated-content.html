@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>generated-content</title>
+<style type="text/css">
+body { font-size: 11pt; line-height: 15pt; counter-reset: h2; }
+p { margin: 0 0 8pt 0; }
+h2 { font-size: 15pt; line-height: 20pt; margin: 10pt 0 6pt 0; counter-increment: h2; counter-reset: h3; }
+h3 { font-size: 12pt; line-height: 16pt; margin: 8pt 0 4pt 0; counter-increment: h3; }
+h2::before { content: counter(h2) ". "; }
+h3::before { content: counter(h2) "." counter(h3) " "; color: #3465a4; }
+ol.roman { list-style: none; counter-reset: item; }
+ol.roman li { counter-increment: item; }
+ol.roman li::before { content: counter(item, upper-roman) ") "; font-weight: bold; }
+p.ref::after { content: " [" attr(data-ref) "]"; color: #cc0000; }
+</style>
+</head>
+<body>
+<h2>Introduction</h2>
+<p>The headings of this page are numbered by CSS counters, in the order the browser walks the document.</p>
+<h3>Scope</h3>
+<p class="ref" data-ref="RFC 2119">Each paragraph with a reference shows it after its text.</p>
+<h3>Terms</h3>
+<ol class="roman"><li>First item counted in capital roman numerals.</li><li>Second item, with its marker in bold.</li><li>Third item closes the list.</li></ol>
+<h2>Design</h2>
+<p>A new chapter starts the sub-section counter again from one.</p>
+<h3>Parts</h3>
+<p class="ref" data-ref="ISO 32000">Another reference, drawn after its paragraph in red.</p>
+</body>
+</html>

@@ -804,3 +804,9 @@ compare = ["pages", "text", "ssim"]
 notes = """The CSS width of a block: a percentage of the containing block, a length in \
 cm or pt, the content box inside padding and a border, margin: 0 auto \
 centring it, and a block of blocks laid out at its width."""
+
+[fixtures.generated-content]
+compare = ["pages", "text", "ssim"]
+notes = """CSS counters and ::before / ::after content: h2 and h3 numbered 1., 1.1, \
+1.2, 2., 2.1 (the h3 number in its own colour), a list numbered in bold \
+upper-roman by counter(item, upper-roman), and attr() in an ::after."""

@@ -85,6 +85,7 @@ xhtml2pdf supports the following standard CSS properties
     break-after, break-before, break-inside
     color
     column-gap, row-gap
+    content, counter-increment, counter-reset
     display
     flex-basis, flex-direction, flex-grow, flex-shrink, flex-wrap
     font-family, font-size, font-style, font-weight
@@ -320,6 +321,48 @@ Differences from a browser:
    and below.
 -  ``margin-top`` and ``margin-bottom`` do nothing on an inline element,
    as in a browser.
+
+.. _generated-content:
+
+Generated content and counters
+------------------------------
+
+``::before`` and ``::after`` (or ``:before`` and ``:after``, as CSS 2 wrote
+them) add text at the start and the end of an element, and CSS counters
+number things. Numbered headings, which also come out numbered in
+``<pdf:toc>`` and in the PDF's outline:
+
+.. code-block:: css
+
+    body { counter-reset: h2 }
+    h2 { counter-increment: h2; counter-reset: h3 }
+    h3 { counter-increment: h3 }
+    h2::before { content: counter(h2) ". " }
+    h3::before { content: counter(h2) "." counter(h3) " "; color: #888 }
+
+``content`` takes strings, ``counter(name)``, ``counter(name, style)``,
+``counters(name, ", ")``, ``counters(name, ".", style)`` and ``attr(name)``,
+in any order. The styles are those of ``list-style-type``: ``decimal``,
+``decimal-leading-zero``, ``lower-roman``, ``upper-roman``,
+``lower-alpha``, ``upper-alpha``, ``lower-greek``, ``disc``, ``circle``,
+``square`` and ``none``. ``counter-reset`` and ``counter-increment`` take
+names, each with an optional number, and their scope is the one CSS 2.1
+gives them: a reset on an element counts for it, its following siblings
+and everything inside them.
+
+The pseudo-element takes its own text properties -- ``color``,
+``font-weight``, ``font-size`` and the like -- and inherits the rest from
+its element. Known limitations:
+
+-  It is always inline: ``display``, margins, padding and borders on it are
+   ignored.
+-  ``open-quote``, ``close-quote`` and images in ``content`` are left out
+   with a warning; ``content`` on an element itself, rather than on its
+   pseudo-element, does nothing, and so does ``::marker``.
+-  A counter in a header or footer frame is worked out once, where the
+   frame's content is written, not again on every page; for page numbers
+   use ``<pdf:pagenumber>``.
+-  A flex container has no ``::before`` or ``::after``.
 
 .. _border-radius:
 

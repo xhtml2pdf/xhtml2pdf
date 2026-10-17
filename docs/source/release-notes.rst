@@ -56,6 +56,11 @@ Unreleased
 
 **🎉 New**
 
+* CSS counters and generated content: ``::before`` and ``::after`` with
+  ``content`` (strings, ``counter()``, ``counters()``, ``attr()``), and
+  ``counter-reset`` and ``counter-increment``. Headings can be numbered from
+  the stylesheet, ``1.``, ``1.1``, ``1.2``, and the numbers appear in the
+  table of contents and the PDF outline as well. Fixes :issue:`112`.
 * ``overflow`` and ``text-overflow``: a line wider than a block whose
   ``overflow`` is not ``visible`` is cut at the block's edge, and
   ``text-overflow: ellipsis`` ends it with "…". With ``white-space: nowrap``

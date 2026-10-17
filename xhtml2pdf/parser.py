@@ -155,6 +155,7 @@ from xhtml2pdf.w3c.css import (
     CSSTerminalFunction,
 )
 from xhtml2pdf.w3c.css_variables import CSSPendingValue, InvalidVarError, substituteFrom
+from xhtml2pdf.w3c.generated_content import parse_content
 from xhtml2pdf.xhtml2pdf_reportlab import PmlLeftPageBreak, PmlRightPageBreak
 
 log = logging.getLogger(__name__)
@@ -296,16 +297,25 @@ def warnUnsupportedProperties(declaredBySource: dict[str, set[str]]) -> None:
 #: object. Everything else is a value nothing downstream can evaluate.
 READABLE_CSS_FUNCTIONS: frozenset[str] = frozenset({"rgb", "rgba"})
 
+#: The functions ``content`` reads besides those (w3c/generated_content.py).
+CONTENT_FUNCTIONS: frozenset[str] = frozenset({"counter", "counters", "attr"})
 
-def firstUnreadableFunction(value) -> CSSTerminalFunction | None:
-    """Return the first CSS function in `value` this library cannot evaluate."""
+
+def firstUnreadableFunction(value, name: str = "") -> CSSTerminalFunction | None:
+    """
+    Return the first CSS function in `value` this library cannot evaluate as
+    the value of the property `name`.
+    """
+    readable = READABLE_CSS_FUNCTIONS
+    if name == "content":
+        readable |= CONTENT_FUNCTIONS
     parts = value if isinstance(value, list | tuple) else (value,)
     return next(
         (
             part
             for part in parts
             if isinstance(part, CSSTerminalFunction)
-            and part.name.lower() not in READABLE_CSS_FUNCTIONS
+            and part.name.lower() not in readable
         ),
         None,
     )
@@ -331,7 +341,7 @@ def dropUnreadableFunctions(
     unreadable = [
         (name, function)
         for name, value in cssAttrs.items()
-        if (function := firstUnreadableFunction(value)) is not None
+        if (function := firstUnreadableFunction(value, name)) is not None
     ]
     for name, function in unreadable:
         del cssAttrs[name]
@@ -809,6 +819,69 @@ def CSSCollect(node, c):
         c.cssAttrCache[key] = node.cssAttrs
         node.cssAttrs = resolveRootEm(node.cssAttrs, c)
     return node.cssAttrs
+
+
+def CSSCollectPseudo(node, c, pseudo: str) -> CSSAttrs | None:
+    """
+    The CSS properties of the ::before or ::after of `node`, or None when it
+    has none: no rule is for it, or none gives it a ``content``.
+
+    Resolved through the same cascade as the element, with the element's
+    own style="" left out -- an inline style cannot name a pseudo-element.
+    Inherited properties come from the element's frag, which the
+    pseudo-element's is cloned from, so "inherit" needs nothing here.
+    """
+    if not c.css or not c.cssCascade.hasPseudoRules(pseudo):
+        return None
+    key = (getCSSAttrCacheKey(node, c.cssPositionalTags, c.cssAttributeNames), pseudo)
+    if key not in c.cssPseudoCache:
+        element = cssDOMElementInterface.CSSDOMElementInterface(node)
+        element.pseudoElement = pseudo
+        resolved = c.cssCascade.findStylesForElement(element, PROPERTY_NAMES)
+        attrs = CSSAttrs(
+            (name, resolved[name])
+            for name in PROPERTY_NAMES
+            if name in resolved and resolved[name] != "inherit"
+        )
+        resolvePendingValues(node, attrs, c)
+        dropUnreadableFunctions(
+            attrs, c.cssDroppedFunctions, c.cssDroppedFunctionSources
+        )
+        c.cssPseudoCache[key] = attrs if "content" in attrs else None
+    attrs = c.cssPseudoCache[key]
+    return None if attrs is None else resolveRootEm(attrs, c)
+
+
+def emitPseudo(node, context, pseudo: str, kw) -> None:
+    """
+    Add the text of the ::before or ::after of `node` where the walk is.
+
+    It goes through addFrag like the element's own text, in a frag of its
+    own styled by the pseudo-element's declarations: so it is part of the
+    paragraph's text, and a numbered heading's number reaches its table of
+    contents entry and its outline title. The pseudo-element is always
+    inline.
+    """
+    attrs = CSSCollectPseudo(node, context, pseudo)
+    if attrs is None:
+        return
+    items = parse_content(attrs["content"])
+    if items is None:
+        return
+    context.counters.apply(node, attrs)
+    text = context.counters.text(items, node)
+    if not text:
+        return
+    saved = context.cssAttr
+    context.pushFrag()
+    reset_non_inherited(context.frag)
+    context.cssAttr = attrs
+    try:
+        CSS2Frag(context, dict(kw), isBlock=False)
+    finally:
+        context.cssAttr = saved
+    context.addFrag(text)
+    context.pullFrag()
 
 
 #: 1rem inside the root element itself: the initial font size, `medium`.
@@ -1451,6 +1524,7 @@ def pisaLoop(node, context, **kw):
         # directly for the .pdftoclevelN styles, and a table of contents
         # should not pick up an outline flag from them.
         apply_uniform_groups(context.frag, context.cssAttr, LOOP_GROUPS)
+        context.counters.apply(node.parentNode, context.cssAttr)
 
         isFlexItem = context.flexData.collecting_item
         if isFlexItem:
@@ -1614,6 +1688,8 @@ def pisaLoop(node, context, **kw):
             # a second time behind every line: invisible while opaque, twice
             # as dark with an alpha.
             context.frag.backColor = None
+        if not isFlex:
+            emitPseudo(node, context, "before", kw)
         for nnode in node.childNodes:
             if isFlex:
                 context.flexData.begin_item(context)
@@ -1621,6 +1697,9 @@ def pisaLoop(node, context, **kw):
             if isFlex:
                 context.flexData.end_item(context)
         context.fragBlock = fragBlock
+        if not isFlex:
+            emitPseudo(node, context, "after", kw)
+        context.counters.leave(node)
 
         # END tag
         if obj:
@@ -1856,6 +1935,7 @@ def pisaParser(
     # cyclic collector next runs. It was parsed above; nothing else has it.
     context.node = None
     context.cssAttrCache.clear()
+    context.cssPseudoCache.clear()
     document.unlink()
     return context
 

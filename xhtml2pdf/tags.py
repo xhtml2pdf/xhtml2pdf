@@ -68,6 +68,7 @@ from xhtml2pdf.util import (
     getKeepInFrameMode,
     getSize,
 )
+from xhtml2pdf.w3c.generated_content import greek_alphabet, int_to_roman
 from xhtml2pdf.xhtml2pdf_reportlab import (
     PageNumberReset,
     PdfInsertPage,
@@ -264,32 +265,6 @@ def listDecimalLeadingZero(c: pisaContext) -> str:
     return f"{c.listCounter:02d}."
 
 
-roman_numeral_map: tuple[tuple[int, str], ...] = (
-    (1000, "M"),
-    (900, "CM"),
-    (500, "D"),
-    (400, "CD"),
-    (100, "C"),
-    (90, "XC"),
-    (50, "L"),
-    (40, "XL"),
-    (10, "X"),
-    (9, "IX"),
-    (5, "V"),
-    (4, "IV"),
-    (1, "I"),
-)
-
-
-def int_to_roman(i: int) -> str:
-    result: list[str] = []
-    for integer, numeral in roman_numeral_map:
-        count: int = int(i / integer)
-        result.append(numeral * count)
-        i -= integer * count
-    return "".join(result)
-
-
 def listUpperRoman(c: pisaContext) -> str:
     c.listCounter += 1
     roman: str = int_to_roman(c.listCounter)
@@ -317,16 +292,10 @@ def listLowerAlpha(c: pisaContext) -> str:
     return listUpperAlpha(c).lower()
 
 
-#: CSS 2.1 lower-greek: the 24 letters of the alphabet, with no final sigma.
-_greek_alphabet: str = "\u03b1\u03b2\u03b3\u03b4\u03b5\u03b6\u03b7\u03b8"
-_greek_alphabet += "\u03b9\u03ba\u03bb\u03bc\u03bd\u03be\u03bf\u03c0"
-_greek_alphabet += "\u03c1\u03c3\u03c4\u03c5\u03c6\u03c7\u03c8\u03c9"
-
-
 def listLowerGreek(c: pisaContext) -> str:
     c.listCounter += 1
-    index: int = (c.listCounter - 1) % len(_greek_alphabet)
-    return f"{_greek_alphabet[index]}."
+    index: int = (c.listCounter - 1) % len(greek_alphabet)
+    return f"{greek_alphabet[index]}."
 
 
 _bullet: str = "\u2022"

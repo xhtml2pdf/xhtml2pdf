@@ -420,6 +420,14 @@
       "text": 0.9586,
       "text_doc": 0.9586
     },
+    "generated-content": {
+      "pages": {
+        "xhtml2pdf": 1
+      },
+      "ssim": 0.9269,
+      "text": 1.0,
+      "text_doc": 1.0
+    },
     "image-grayscale-alpha": {
       "pages": {
         "xhtml2pdf": 1

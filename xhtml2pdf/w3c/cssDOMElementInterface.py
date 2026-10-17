@@ -146,6 +146,10 @@ class CSSDOMElementInterface(css.CSSElementInterfaceAbstract):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     style = None
+    #: The generated pseudo-element ("before", "after") whose style is being
+    #: asked for, or None for the element itself. Set on one instance only:
+    #: the parent and siblings it hands out are the elements themselves.
+    pseudoElement: str | None = None
     #: The node this wraps. Assigned in __init__, declared here so the
     #: pseudo-class handlers below can be read on their own.
     domElement: Any

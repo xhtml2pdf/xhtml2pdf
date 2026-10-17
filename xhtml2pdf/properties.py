@@ -361,6 +361,15 @@ CSS_PROPERTIES += (
     CSSProperty("-pdf-keep-in-frame-max-width", "pdf", consumer=LOOP),
     CSSProperty("-pdf-keep-in-frame-max-height", "pdf", consumer=LOOP),
     CSSProperty("-pdf-word-wrap", "pdf", consumer=LOOP, note="CJK"),
+    # ~ generated content ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    CSSProperty(
+        "content",
+        "generated",
+        consumer=LOOP,
+        note="read off ::before and ::after only; see w3c/generated_content.py",
+    ),
+    CSSProperty("counter-reset", "generated", consumer=LOOP),
+    CSSProperty("counter-increment", "generated", consumer=LOOP),
 )
 
 #: Flexbox, CSS Flexible Box Layout Module Level 1. All LOOP: the container

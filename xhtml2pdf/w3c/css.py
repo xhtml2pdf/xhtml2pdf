@@ -137,6 +137,24 @@ class CSSCascadeStrategy:
                     names.update(declarations)
         return frozenset(names)
 
+    def hasPseudoRules(self, pseudo: str) -> bool:
+        """
+        Whether any rule of the cascade is for that pseudo-element.
+
+        Asked twice for every element, and the rulesets are complete by the
+        time a cascade is built (see _collectPropertyNames), so the answer
+        is kept.
+        """
+        known = self.__dict__.setdefault("_pseudoRules", {})
+        if pseudo not in known:
+            known[pseudo] = any(
+                ruleset.hasPseudoRules(pseudo)
+                for level in (self.userAgenr, self.user, self.author)
+                if level is not None
+                for ruleset in level
+            )
+        return known[pseudo]
+
     def copyWithUpdate(self, author=None, user=None, userAgent=None):
         if author is None:
             author = self.author
@@ -363,9 +381,9 @@ def _matches_nth(index: int, a: int, b: int) -> bool:
 #: are read against (cssParser.HAS_ANCHOR) matches. Unset, it matches nothing.
 _scope: contextvars.ContextVar = contextvars.ContextVar("css_scope", default=None)
 
-#: Pseudo-elements. A selector that names one never matches here -- nothing
-#: generates ::before or lays out ::first-line -- but it counts as an element
-#: in specificity, where a pseudo-class counts as a class.
+#: Pseudo-elements. They count as an element in specificity, where a
+#: pseudo-class counts as a class. Only those in GENERATED_PSEUDO_ELEMENTS
+#: ever match; nothing lays out ::first-line or ::first-letter.
 PSEUDO_ELEMENTS = frozenset(
     {
         "before",
@@ -377,6 +395,23 @@ PSEUDO_ELEMENTS = frozenset(
         "selection",
     }
 )
+
+
+#: The pseudo-elements whose content is generated: a selector naming one
+#: matches only when the style of that pseudo-element is asked for, written
+#: with one colon (CSS 2) or two.
+GENERATED_PSEUDO_ELEMENTS = frozenset({"before", "after"})
+
+
+def _pseudoElementOf(qualifiers) -> str | None:
+    """The generated pseudo-element these qualifiers of a subject name, if any."""
+    for qualifier in qualifiers:
+        if (
+            isinstance(qualifier, CSSSelectorPseudoQualifier)
+            and qualifier.name in GENERATED_PSEUDO_ELEMENTS
+        ):
+            return qualifier.name
+    return None
 
 
 #: Hands out a source-order number to each selector as it is built. Parsing
@@ -832,6 +867,8 @@ class CSSSelectorPseudoQualifier(CSSSelectorQualifierBase):
         return f":{self.name}({_flatten_params(self.params)})"
 
     def matches(self, element):
+        if self.name in GENERATED_PSEUDO_ELEMENTS:
+            return getattr(element, "pseudoElement", None) == self.name
         return element.inPseudoState(self.name, self.params)
 
 
@@ -992,6 +1029,15 @@ class CSSSelectorCombinationQualifier(CSSSelectorQualifierBase):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
+class CSSString(str):
+    """
+    A quoted string, which CSS tells apart from a keyword: in ``content``,
+    "none" is four letters to draw and none is nothing at all.
+    """
+
+    __slots__ = ()
+
+
 class CSSTerminalFunction:
     #: The source it was written in (see CSSParser.sourceName), for the
     #: warning that drops a function nothing can evaluate.
@@ -1080,6 +1126,10 @@ class _RulesetIndex(NamedTuple):
     byTag: dict[str, list]
     universal: list
     attrNames: frozenset[str]
+    #: The rules for a generated pseudo-element, by its name. Kept out of
+    #: the buckets above: an element never matches them, and the few there
+    #: are need no narrowing when its ::before is asked for.
+    pseudo: dict[str, list]
 
 
 class CSSRuleset(dict):
@@ -1095,10 +1145,14 @@ class CSSRuleset(dict):
         twice keeps the source order of the first. Reading the mapping back
         inherits that; watching insertions would not.
         """
-        index = _RulesetIndex({}, {}, {}, [], frozenset())
+        index = _RulesetIndex({}, {}, {}, [], frozenset(), {})
         attrNames: set[str] = set()
         for selector, declarations in self.items():
             attrNames.update(declarations)
+            pseudo = _pseudoElementOf(getattr(selector, "qualifiers", ()))
+            if pseudo is not None:
+                index.pseudo.setdefault(pseudo, []).append((selector, declarations))
+                continue
             kind, key = _bucketFor(selector)
             if kind is None:
                 index.universal.append((selector, declarations))
@@ -1115,6 +1169,13 @@ class CSSRuleset(dict):
         index = self._index
         if index is None:
             index = self._buildIndex()
+
+        # A rule for h2::before styles that and never the h2 itself, and a
+        # rule for h2 never its ::before: each is only ever a candidate for
+        # its own kind of element.
+        pseudo = getattr(element, "pseudoElement", None)
+        if pseudo is not None:
+            return index.pseudo.get(pseudo, _NO_RULES)
 
         # Gathered as buckets and flattened at the end. Appending to
         # `candidates` instead would append to whichever bucket it started out
@@ -1171,6 +1232,13 @@ class CSSRuleset(dict):
             for nodeFilter, declarations in self._candidatesFor(element)
             if nodeFilter.matches(element)
         ]
+
+    def hasPseudoRules(self, pseudo: str) -> bool:
+        """Whether any rule of this ruleset is for that pseudo-element."""
+        index = self._index
+        if index is None:
+            index = self._buildIndex()
+        return pseudo in index.pseudo
 
     def findCSSRuleFor(self, element, attrName):
         # rule is packed in a list to differentiate from "no rule" vs "rule
@@ -1481,7 +1549,7 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
 
     @staticmethod
     def termString(value):
-        return value
+        return CSSString(value)
 
     @staticmethod
     def termUnicodeRange(value):
