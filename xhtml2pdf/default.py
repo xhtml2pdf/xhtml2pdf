@@ -165,6 +165,7 @@ TAGS = {
         },
     ),
     "pdfnextframe": (0, {}),
+    "pdfinsertpdf": (0, {"src": (FILE, MUST), "pages": (STRING, "")}),
     "pdffont": (
         0,
         {

@@ -113,6 +113,7 @@ from xhtml2pdf.tags import (  # noqa: F401
     pisaTagPDFBARCODE,
     pisaTagPDFFONT,
     pisaTagPDFFRAME,
+    pisaTagPDFINSERTPDF,
     pisaTagPDFLANGUAGE,
     pisaTagPDFNEXTFRAME,
     pisaTagPDFNEXTPAGE,

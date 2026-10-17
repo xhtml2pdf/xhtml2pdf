@@ -62,8 +62,8 @@ every limit below on at once:
 ``max_depth``              200 levels of nesting
 =========================  ==================================
 
-It also refuses a PDF page background that was fetched or written inline
-(``allow_remote_pdf_backgrounds=False``).
+It also refuses a PDF page background, or a PDF to insert, that was fetched
+or written inline (``allow_remote_pdf_backgrounds=False``).
 
 Without ``base_dir`` local reads are denied outright, rather than confined to
 the working directory, which on a server holds its source and its settings.
@@ -175,8 +175,8 @@ what it actually allows:
     than a precise stop.
 
 ``allow_remote_pdf_backgrounds`` (default ``True``)
-    Whether ``@page { background-image }`` may name a PDF fetched over the
-    network or written as a ``data:`` URI. A PDF is parsed by pypdf, and one
+    Whether ``@page { background-image }`` and ``<pdf:insertpdf>`` may name
+    a PDF fetched over the network or written as a ``data:`` URI. A PDF is parsed by pypdf, and one
     from anywhere but a file beside the document is the document author's
     input. A local PDF is still used. Whatever its source, a PDF that cannot
     be read is logged and left out rather than aborting the render.

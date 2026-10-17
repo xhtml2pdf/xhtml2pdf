@@ -62,6 +62,10 @@ Unreleased
   this gives a one-line cell or block that ends in an ellipsis. The line
   used to run on past the block, over whatever came next. Fixes
   :issue:`698`.
+* ``<pdf:insertpdf src="annex.pdf" pages="1-3"/>`` inserts the pages of an
+  existing PDF where it is written, each in its own size. They are numbered
+  and counted with the rest of the document, so ``<pdf:pagecount>`` and the
+  table of contents include them. Fixes :issue:`551`.
 
 **🐛 Bug-Fixes**
 

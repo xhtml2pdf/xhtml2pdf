@@ -31,9 +31,16 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import inch, mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.platypus.doctemplate import FrameBreak, NextPageTemplate
-from reportlab.platypus.flowables import Flowable, HRFlowable, PageBreak, Spacer
+from reportlab.platypus.flowables import (
+    Flowable,
+    HRFlowable,
+    PageBreak,
+    PageBreakIfNotEmpty,
+    Spacer,
+)
 from reportlab.platypus.paraparser import ABag, tt2ps
 
+from xhtml2pdf.builders.inserts import parse_pages, read_source
 from xhtml2pdf.charts import (
     BaseChart,
     DoughnutChart,
@@ -63,6 +70,7 @@ from xhtml2pdf.util import (
 )
 from xhtml2pdf.xhtml2pdf_reportlab import (
     PageNumberReset,
+    PdfInsertPage,
     PmlDrawing,
     PmlFrame,
     PmlImage,
@@ -787,6 +795,23 @@ class pisaTagPDFNEXTPAGE(pisaTag):
         if self.attr.name:
             c.addStory(NextPageTemplate(self.attr.name))
         c.addStory(PageBreak())
+
+
+class pisaTagPDFINSERTPDF(pisaTag):
+    """<pdf:insertpdf src="" pages="" />."""
+
+    def start(self, c: pisaContext) -> None:
+        source = read_source(self.attr.src)
+        if source is None:
+            return
+        data, count = source
+        indexes = parse_pages(self.attr.pages, count)
+        if not indexes:
+            return
+        c.addPara()
+        c.addStory(PageBreakIfNotEmpty())
+        for index in indexes:
+            c.addStory(PdfInsertPage(data, index))
 
 
 class pisaTagPDFNEXTTEMPLATE(pisaTag):

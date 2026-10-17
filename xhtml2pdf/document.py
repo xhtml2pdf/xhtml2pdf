@@ -23,6 +23,7 @@ from reportlab.lib import pdfencrypt
 from reportlab.platypus.doctemplate import NextPageTemplate
 from reportlab.platypus.flowables import Spacer
 
+from xhtml2pdf.builders.inserts import insert_pages
 from xhtml2pdf.builders.position import PositionAnchor
 from xhtml2pdf.builders.watermarks import WaterMarks
 from xhtml2pdf.config.resources import (
@@ -458,6 +459,10 @@ def _build(
         doc.multiBuild(context.story)
     else:
         doc.build(context.story)
+
+    inserted = insert_pages(doc, out)
+    if inserted is not None:
+        out = inserted
 
     # Add watermarks
     output = io.BytesIO()

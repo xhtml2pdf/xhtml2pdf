@@ -544,6 +544,34 @@ pdf:nextpage
 
 Create a new page after this position.
 
+pdf:insertpdf
+~~~~~~~~~~~~~
+
+Insert the pages of an existing PDF here, each on a page of its own, in
+the size and orientation it has in that PDF. The document goes on, on a
+new page, after the last of them.
+
+.. code-block:: html
+
+    <pdf:insertpdf src="annex.pdf" pages="1-3, 5"/>
+
+``src`` names the PDF the way ``<img src>`` names an image. ``pages`` lists
+the pages to insert, from 1, in the order to insert them: single pages and
+ranges, separated by commas, with either end of a range left open (``4-``
+is from page 4 to the last). Without it every page is inserted.
+
+The inserted pages count like any other: page numbers, ``<pdf:pagecount>``
+and the table of contents take them into account. Nothing of the document
+is drawn on them -- no header or footer frame, no page background -- so a
+page number in a footer skips them. A source PDF that cannot be read, is
+encrypted, or is not allowed by the resource policy (see
+``allow_remote_pdf_backgrounds`` in :doc:`/security`) is left out with a
+warning.
+
+The pages are put in place once the document is built, so the tag cannot
+be used together with ``encrypt`` (see :doc:`/encryption_and_signatures`):
+asking for both raises ``ValueError``.
+
 pdf:nextframe
 ~~~~~~~~~~~~~
 

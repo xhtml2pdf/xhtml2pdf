@@ -38,6 +38,7 @@ from reportlab.lib.validators import isNumber
 from reportlab.pdfbase import pdfform
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.platypus.doctemplate import (
+    ActionFlowable,
     BaseDocTemplate,
     IndexingFlowable,
     PageTemplate,
@@ -47,6 +48,7 @@ from reportlab.platypus.flowables import (
     CondPageBreak,
     Flowable,
     KeepInFrame,
+    PageBreak,
     ParagraphAndImage,
 )
 from reportlab.platypus.frames import Frame
@@ -129,6 +131,30 @@ class PageNumberReset(Flowable):
             doc.pageNumberResets.append((doc.page, self.value))
 
 
+class PdfInsertPage(Flowable):
+    """
+    A page that <pdf:insertpdf> fills with page `index` of `source`.
+
+    The page is laid out like any other, so it counts for the page numbers,
+    the page count and the table of contents; what is drawn on it is
+    replaced by the source page once the document is built
+    (xhtml2pdf.builders.inserts).
+    """
+
+    _ZEROSIZE = 1
+
+    def __init__(self, source: bytes, index: int) -> None:
+        super().__init__()
+        self.source = source
+        self.index = index
+
+    def draw(self) -> None:
+        doc = self.canv._doctemplate
+        if isinstance(doc, PmlBaseDoc):
+            doc.pdfInserts.append((doc.page, self.source, self.index))
+            doc.pageTaken = True
+
+
 def layout_moment(canv) -> tuple[int, int]:
     """
     The layout pass and the page a flowable is being laid out for.
@@ -151,6 +177,12 @@ class PmlBaseDoc(BaseDocTemplate):
     #: its content, so it can only be numbered from what an earlier pass
     #: found; the tag asks for a second pass.
     _knownResets: list[tuple[int, int]]
+    #: (page, source PDF, page index in it) for each page <pdf:insertpdf>
+    #: reserved in this pass.
+    pdfInserts: list[tuple[int, bytes, int]]
+    #: Whether the current page is an inserted one, which nothing else is
+    #: laid out on: what comes next starts a new page.
+    pageTaken = False
 
     def pageLabel(self, page: int) -> int:
         """The number page `page` shows, after the resets before it."""
@@ -204,6 +236,8 @@ class PmlBaseDoc(BaseDocTemplate):
         #: Counts the layout passes, for the containers' layout caches.
         self.layoutPass = getattr(self, "layoutPass", 0) + 1
         self.pageNumberResets = []
+        self.pdfInserts = []
+        self.pageTaken = False
 
         # The anchors of the positioned boxes fall where this pass puts them.
         from xhtml2pdf.builders.position import reset_positioned
@@ -274,6 +308,24 @@ class PmlBaseDoc(BaseDocTemplate):
                     getattr(flowable, "tocKey", None),
                 ),
             )
+
+    def handle_flowable(self, flowables) -> None:
+        """
+        Start a new page before what follows an inserted page.
+
+        Only before something laid out: a page template chosen after the
+        tag applies to that new page, and a page break of its own takes the
+        place of this one. Nothing is added when nothing follows, so the
+        document does not end on an empty page.
+        """
+        if self.pageTaken and flowables:
+            first = flowables[0]
+            if isinstance(first, PageBreak):
+                self.pageTaken = False
+            elif not isinstance(first, ActionFlowable | PmlPageCount):
+                self.pageTaken = False
+                flowables.insert(0, PageBreak())
+        super().handle_flowable(flowables)
 
     def handle_nextPageTemplate(self, pt: str | int | list | tuple) -> None:
         """If pt has also templates for even and odd page convert it to list."""

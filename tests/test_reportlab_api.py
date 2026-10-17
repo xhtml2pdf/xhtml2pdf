@@ -74,6 +74,7 @@ REQUIRED_SYMBOLS: dict[str, tuple[str, ...]] = {
     "reportlab.pdfbase": ("pdfform", "pdfmetrics"),
     "reportlab.pdfgen.canvas": ("Canvas", "FILL_EVEN_ODD"),
     "reportlab.platypus.doctemplate": (
+        "ActionFlowable",
         "BaseDocTemplate",
         "FrameBreak",
         "IndexingFlowable",
@@ -88,6 +89,7 @@ REQUIRED_SYMBOLS: dict[str, tuple[str, ...]] = {
         "KeepInFrame",
         "KeepTogether",
         "PageBreak",
+        "PageBreakIfNotEmpty",
         "ParagraphAndImage",
         "Spacer",
     ),
@@ -527,6 +529,15 @@ class DocTemplateStateTest(TestCase):
         _build([Switch(), PageBreak(), _Probe.make(record)])
 
         self.assertEqual("B", record[0]["template"])
+
+    def test_a_page_break_if_not_empty_on_a_fresh_page_is_dropped(self) -> None:
+        """<pdf:insertpdf> starts with one; at the top of a page it does nothing."""
+        from reportlab.platypus.flowables import PageBreakIfNotEmpty
+
+        record: list[dict] = []
+        doc = _build([PageBreakIfNotEmpty(), _Probe.make(record)])
+
+        self.assertEqual(1, doc.page)
 
     def test_PmlBaseDoc_cycles_left_and_right_templates(self) -> None:
         """

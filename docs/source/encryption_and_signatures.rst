@@ -52,6 +52,10 @@ flags
     built and signed afterwards, so the signer would be handed a PDF it has no
     password for.
 
+    ``encrypt`` cannot be used with ``<pdf:insertpdf>`` either, for the same
+    reason: the inserted pages are put in place after the build. Asking for
+    both raises ``ValueError``.
+
 Signing pdf
 ===========
 
