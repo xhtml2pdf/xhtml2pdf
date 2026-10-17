@@ -54,6 +54,15 @@ Versions >= 0.2
 Unreleased
 ====================
 
+**🎉 New**
+
+* ``overflow`` and ``text-overflow``: a line wider than a block whose
+  ``overflow`` is not ``visible`` is cut at the block's edge, and
+  ``text-overflow: ellipsis`` ends it with "…". With ``white-space: nowrap``
+  this gives a one-line cell or block that ends in an ellipsis. The line
+  used to run on past the block, over whatever came next. Fixes
+  :issue:`698`.
+
 **🐛 Bug-Fixes**
 
 * A table inside a table cell goes on from page to page, starting where

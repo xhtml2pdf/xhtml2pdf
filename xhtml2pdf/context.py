@@ -1232,6 +1232,10 @@ class pisaContext:
             ),
         )
 
+        # How a line wider than the paragraph ends: cut ("clip"), cut with a
+        # mark ("ellipsis"), or left to stick out (None).
+        style.textOverflow = None if first.overflow == "visible" else first.textOverflow
+
         style.leading = max(first.leading + first.leadingSpace, first.fontSize * 1.25)
         style.bulletFontName = first.bulletFontName or first.fontName
         style.bulletFontSize = first.fontSize

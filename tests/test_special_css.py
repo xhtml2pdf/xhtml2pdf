@@ -705,6 +705,73 @@ class WhiteSpaceTest(TestCase):
         self.assertEqual("two spaces and a newline", self._text("nowrap").strip())
 
 
+class TextOverflowTest(TestCase):
+    """
+    A line wider than a block whose overflow is not visible is cut at the
+    block's edge, and text-overflow: ellipsis ends it with one (#698). The
+    line used to run on past the block and over what was next to it.
+    """
+
+    LONG = "The quick brown fox jumps over the lazy dog and keeps on running"
+    WIDTH = 113.39  # 4cm in points
+
+    @classmethod
+    def _lines(cls, style: str, tag: str = "div", content: str = LONG) -> list[str]:
+        font = "font-family: Helvetica; font-size: 10pt"
+        block = f'<{tag} style="width: 4cm; {font}; {style}">{content}</{tag}>'
+        if tag == "td":
+            block = f'<table style="width: 12cm"><tr>{block}<td>next</td></tr></table>'
+        out = io.BytesIO()
+        pisa.pisaDocument(io.StringIO(f"<html><body>{block}</body></html>"), out)
+        text = PdfReader(out).pages[0].extract_text()
+        return [line for line in text.replace("\xa0", " ").split("\n") if line]
+
+    def assertFits(self, line: str) -> None:
+        from reportlab.pdfbase.pdfmetrics import stringWidth
+
+        self.assertLessEqual(stringWidth(line, "Helvetica", 10), self.WIDTH)
+
+    def test_ellipsis_ends_the_cut_line_with_one(self) -> None:
+        nowrap = "white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
+        [line] = self._lines(nowrap)
+
+        self.assertTrue(line.endswith("\u2026"), line)
+        self.assertTrue(self.LONG.startswith(line[:-1]), line)
+        self.assertFits(line)
+
+    def test_clip_cuts_it_without_a_mark(self) -> None:
+        [line] = self._lines("white-space: nowrap; overflow: hidden")
+
+        self.assertTrue(self.LONG.startswith(line), line)
+        self.assertLess(len(line), len(self.LONG))
+        self.assertFits(line)
+
+    def test_a_table_cell_is_cut_at_its_width(self) -> None:
+        nowrap = "white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
+        line, after = self._lines(nowrap, tag="td")
+
+        self.assertTrue(line.endswith("\u2026"), line)
+        self.assertFits(line)
+        self.assertEqual("next", after)
+
+    def test_the_mark_comes_where_the_line_is_cut_across_elements(self) -> None:
+        nowrap = "white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
+        [line] = self._lines(nowrap, content=f"<b>{self.LONG}</b> and more")
+
+        self.assertTrue(line.endswith("\u2026"), line)
+        self.assertNotIn("more", line)
+
+    def test_visible_overflow_leaves_the_line_whole(self) -> None:
+        [line] = self._lines("white-space: nowrap; text-overflow: ellipsis")
+
+        self.assertEqual(self.LONG, line)
+
+    def test_lines_that_fit_are_left_alone(self) -> None:
+        lines = self._lines("overflow: hidden; text-overflow: ellipsis")
+
+        self.assertEqual(self.LONG, " ".join(lines))
+
+
 class BackgroundShorthandTest(TestCase):
     """
     Every part of the shorthand but one used to be thrown away: the first was

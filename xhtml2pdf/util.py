@@ -1693,6 +1693,22 @@ getFlexDirection = _keyword_converter(
     "row",
 )
 
+getOverflow = _keyword_converter(
+    "overflow",
+    {
+        "visible": "visible",
+        "hidden": "hidden",
+        "clip": "hidden",
+        "scroll": "hidden",
+        "auto": "hidden",
+    },
+    "visible",
+)
+
+getTextOverflow = _keyword_converter(
+    "text-overflow", {"clip": "clip", "ellipsis": "ellipsis"}, "clip"
+)
+
 getFlexWrap = _keyword_converter(
     "flex-wrap", {k: k for k in ("nowrap", "wrap", "wrap-reverse")}, "nowrap"
 )

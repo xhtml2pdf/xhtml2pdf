@@ -32,6 +32,7 @@ from xhtml2pdf.bidi import (
 from xhtml2pdf.util import (
     drawBoxBackground,
     drawBoxBorders,
+    font_has_glyph,
     getSize,
     roundedClip,
     stringWidth,
@@ -729,6 +730,106 @@ def _reserved(words) -> float:
     would put the room on the wrong side of a line set flush right.
     """
     return sum(getattr(getattr(w, "cbDefn", None), "reserve", 0) for w in words)
+
+
+#: What text-overflow: ellipsis ends a cut line with, and what it falls back
+#: on in a face without that glyph.
+ELLIPSIS = "\u2026"
+
+
+def _overflowMark(mode: str, fontName: str) -> str:
+    """The text `mode` puts where it cuts a line, in `fontName`."""
+    if mode != "ellipsis":
+        return ""
+    return ELLIPSIS if font_has_glyph(fontName, ELLIPSIS) else "..."
+
+
+def _fitText(text: str, fontName: str, fontSize: float, room: float) -> str:
+    """The longest start of `text` no wider than `room`."""
+    low, high = 0, len(text)
+    while low < high:
+        middle = (low + high + 1) // 2
+        if stringWidth(text[:middle], fontName, fontSize) <= room:
+            low = middle
+        else:
+            high = middle - 1
+    return text[:low]
+
+
+def _cutText(text: str, fontName: str, fontSize: float, room: float, mode: str):
+    """`text` cut to `room`, mark included, and its width; ("", 0) if no room."""
+    mark = _overflowMark(mode, fontName)
+    markWidth = stringWidth(mark, fontName, fontSize)
+    if markWidth > room:
+        return "", 0.0
+    kept = _fitText(text, fontName, fontSize, room - markWidth).rstrip()
+    text = kept + mark
+    return text, stringWidth(text, fontName, fontSize)
+
+
+def _pieceWidth(frag) -> float:
+    """How wide one fragment of a broken line is."""
+    cbDefn = getattr(frag, "cbDefn", None)
+    if cbDefn is not None:
+        return getattr(cbDefn, "width", 0) or getattr(cbDefn, "advance", 0)
+    return stringWidth(frag.text, frag.fontName, frag.fontSize)
+
+
+def _cutLines(blPara, maxWidths, mode: str) -> bool:
+    """
+    Cut each line of `blPara` wider than its width, as text-overflow does.
+
+    `mode` is "clip", which drops what does not fit, or "ellipsis", which
+    also ends the line with one. The cut falls between two characters: no
+    glyph is drawn in part. Returns whether any line was cut.
+    """
+    cut = False
+    for lineno, line in enumerate(blPara.lines):
+        maxWidth = maxWidths[min(lineno, len(maxWidths) - 1)]
+        if blPara.kind == 0:
+            extraSpace, words = line
+            if extraSpace >= -_FUZZ:
+                continue
+            text, width = _cutText(
+                " ".join(words), blPara.fontName, blPara.fontSize, maxWidth, mode
+            )
+            blPara.lines[lineno] = (maxWidth - width, text.split(" "))
+            cut = True
+            continue
+        pieces = line.words
+        widths = [_pieceWidth(g) for g in pieces]
+        if sum(widths) <= maxWidth + _FUZZ:
+            continue
+        kept: list = []
+        used = 0.0
+        for g, width in zip(pieces, widths, strict=True):
+            if hasattr(g, "lineBreak"):
+                continue
+            if hasattr(g, "cbDefn"):
+                if used + width > maxWidth:
+                    break
+                kept.append(g)
+                used += width
+                continue
+            room = maxWidth - used
+            mark = _overflowMark(mode, g.fontName)
+            if width + stringWidth(mark, g.fontName, g.fontSize) <= room:
+                kept.append(g)
+                used += width
+                continue
+            text = g.text.decode("utf8") if isinstance(g.text, bytes) else g.text
+            text, width = _cutText(text, g.fontName, g.fontSize, room, mode)
+            if text:
+                g = g.clone()
+                g.text = text
+                kept.append(g)
+                used += width
+            break
+        kept.extend(g for g in pieces if hasattr(g, "lineBreak"))
+        line.words = kept
+        line.extraSpace = maxWidth - used + _reserved(kept)
+        cut = True
+    return cut
 
 
 def _getFragWords(frags):
@@ -1797,6 +1898,7 @@ class Paragraph(Flowable):
             first_line_width,
             later_widths,
             style.wordWrap,
+            getattr(style, "textOverflow", None),
             getattr(self, "autoLeading", getattr(style, "autoLeading", "")),
             self.dir,
             tuple(
@@ -1818,11 +1920,17 @@ class Paragraph(Flowable):
             self.width = cached[2]
             self.height = 0
             return cached[1]
+        width = self.width
         if style.wordWrap == "CJK":
             # use Asian text wrap algorithm to break characters
             blPara = self.breakLinesCJK([first_line_width, later_widths])
         else:
             blPara = self.breakLines([first_line_width, later_widths])
+        textOverflow = getattr(style, "textOverflow", None)
+        if textOverflow and _cutLines(
+            blPara, [first_line_width, later_widths], textOverflow
+        ):
+            self.width = width
         self._brokenLinesCache = (key, blPara, self.width)
         return blPara
 

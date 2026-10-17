@@ -47,7 +47,9 @@ from xhtml2pdf.util import (
     getInt,
     getLengthOrAuto,
     getNumber,
+    getOverflow,
     getSize,
+    getTextOverflow,
     getTocLeader,
     getTocName,
     transform_attrs,
@@ -125,6 +127,15 @@ CSS_PROPERTIES: tuple[CSSProperty, ...] = (
     CSSProperty("vertical-align", "text", note="table cells and inline images"),
     CSSProperty("white-space", "text", note="pre, pre-wrap, pre-line, nowrap"),
     CSSProperty(
+        "text-overflow",
+        "text",
+        frag="textOverflow",
+        convert=getTextOverflow,
+        block_only=True,
+        initial="clip",
+        note="how a line wider than its block ends, with overflow not visible",
+    ),
+    CSSProperty(
         "overflow-wrap",
         "text",
         consumer=LOOP,
@@ -194,6 +205,15 @@ CSS_PROPERTIES: tuple[CSSProperty, ...] = (
         " blocks, where it is the least the content takes",
     ),
     CSSProperty("zoom", "box", note="not CSS; scales images"),
+    CSSProperty(
+        "overflow",
+        "box",
+        frag="overflow",
+        convert=getOverflow,
+        block_only=True,
+        initial="visible",
+        note="hidden, clip, scroll and auto cut the lines wider than the block",
+    ),
 )
 
 #: padding-* and the twelve border-* properties, which differ only by side.

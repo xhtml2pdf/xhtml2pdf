@@ -96,6 +96,7 @@ xhtml2pdf supports the following standard CSS properties
     margin-bottom, margin-left, margin-right, margin-top
     max-height, max-width, min-height, min-width
     order
+    overflow, text-overflow
     overflow-wrap, word-break, word-wrap
     padding-bottom, padding-left, padding-right, padding-top
     page-break-after, page-break-before, page-break-inside
@@ -157,6 +158,13 @@ Known limitations of the properties above:
    ``avoid-page`` for ``avoid``.
 -  ``white-space``: ``pre-wrap`` keeps its spaces unbreakable, so a line
    will not wrap inside a run of them.
+-  ``overflow``: ``hidden``, ``clip``, ``scroll`` and ``auto`` all cut a
+   line that is wider than its block at the block's edge, and
+   ``text-overflow: ellipsis`` ends the cut line with "…" (with "..." in a
+   font that has no such glyph). With ``white-space: nowrap`` the block is
+   one line cut to its width, as in a browser. The cut falls between two
+   characters rather than through one, and content taller than the block
+   is not hidden: only the width of a line is.
 -  ``overflow-wrap`` (and ``word-wrap``, its old name): ``break-word`` and
    ``anywhere`` split a word that is wider than its line -- a long URL, a
    hash -- into pieces that fit, and leave every other word whole. Without
