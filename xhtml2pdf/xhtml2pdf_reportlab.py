@@ -1247,22 +1247,23 @@ class PmlParagraph(DeepCopiedDirectly, Paragraph, PmlMaxHeightMixIn):
             if not getattr(self, "tocKey", None):
                 self.tocKey = uuid4().hex
 
-            # Check level and add all levels
-            last = getattr(self.canv, "outlineLast", -1) + 1
-            while last < self.outlineLevel:
-                # Filler entries for levels the document skipped. Nothing links
-                # to these, so their keys need not be stable.
-                key = uuid4().hex
-                self.canv.bookmarkPage(key)
-                self.canv.addOutlineEntry(self.text, key, last, not self.outlineOpen)
-                last += 1
-            self.canv.outlineLast = self.outlineLevel
+            # The entry goes under the nearest entry before it with a lower
+            # level, or at the top with none, as a browser nests a document's
+            # headings: an h3 straight after an h1 is the h1's child, and a
+            # document that starts at h2 has its h2s at the top. The stack
+            # holds the levels of the entries still open, so the depth is
+            # never more than one below the entry before, which is all
+            # ReportLab accepts.
+            levels = self.canv.__dict__.setdefault("outlineLevels", [])
+            while levels and levels[-1] >= self.outlineLevel:
+                levels.pop()
+            depth = len(levels)
+            levels.append(self.outlineLevel)
 
             self.canv.bookmarkPage(self.tocKey)
             self.canv.addOutlineEntry(
-                self.text, self.tocKey, self.outlineLevel, not self.outlineOpen
+                self.text, self.tocKey, depth, not self.outlineOpen
             )
-            last += 1
 
         # Draw the background and borders here before passing control on to
         # ReportLab. This is because ReportLab can't handle the individual

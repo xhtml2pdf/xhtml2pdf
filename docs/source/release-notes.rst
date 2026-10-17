@@ -74,6 +74,11 @@ Unreleased
 
 **🐛 Bug-Fixes**
 
+* A document that skips heading levels -- one that starts at ``<h2>``, or
+  goes from ``<h1>`` to ``<h3>`` -- no longer repeats a heading in the PDF's
+  outline for every level it skipped. Each entry goes under the nearest
+  heading before it with a lower level, or at the top with none, as in a
+  browser's document outline.
 * A document with a page background and ``encrypt`` with an owner password
   only comes out unencrypted, as it always has: the background is merged in
   by writing the document again, which cannot reapply the encryption. That

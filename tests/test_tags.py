@@ -1304,6 +1304,57 @@ class TocLevelStylesTestCase(TestCase):
         self.assertEqual(plain["Body text"], leaked["Body text"])
 
 
+class OutlineNestingTestCase(TestCase):
+    """
+    A heading's outline entry goes under the nearest entry before it with a
+    lower level, or at the top with none -- what Chrome's document outline
+    does. Each level a document skipped used to get a copy of the heading:
+    a document of h2s showed every first one twice, its child under itself.
+    """
+
+    @staticmethod
+    def outline(body: str) -> list[tuple[int, str]]:
+        output = io.BytesIO()
+        pisa.CreatePDF(f"<html><body>{body}</body></html>", dest=output)
+
+        def flat(items, depth=0):
+            for item in items:
+                if isinstance(item, list):
+                    yield from flat(item, depth + 1)
+                else:
+                    yield depth, item["/Title"]
+
+        return list(flat(PdfReader(output).outline))
+
+    def test_a_document_that_starts_at_h2(self) -> None:
+        self.assertEqual(
+            [(0, "A"), (1, "A1"), (0, "B")],
+            self.outline("<h2>A</h2><h3>A1</h3><h2>B</h2>"),
+        )
+
+    def test_a_skipped_level_in_the_middle(self) -> None:
+        self.assertEqual(
+            [(0, "T"), (1, "Skip"), (1, "B")],
+            self.outline("<h1>T</h1><h3>Skip</h3><h2>B</h2>"),
+        )
+
+    def test_a_deep_heading_before_a_top_one(self) -> None:
+        self.assertEqual(
+            [(0, "Deep"), (0, "Top")], self.outline("<h3>Deep</h3><h1>Top</h1>")
+        )
+
+    def test_headings_in_order_are_nested_as_before(self) -> None:
+        self.assertEqual(
+            [(0, "T"), (1, "S"), (2, "SS"), (1, "S2"), (0, "T2")],
+            self.outline("<h1>T</h1><h2>S</h2><h3>SS</h3><h2>S2</h2><h1>T2</h1>"),
+        )
+
+    def test_a_table_of_contents_still_links_to_them(self) -> None:
+        body = "<pdf:toc/><h2>A</h2><h4>Deep</h4><h2>B</h2>"
+
+        self.assertEqual([(0, "A"), (1, "Deep"), (0, "B")], self.outline(body))
+
+
 class ImageBorderRadiusTestCase(TestCase):
     """border-radius clips an image; with none it is drawn as before."""
 
