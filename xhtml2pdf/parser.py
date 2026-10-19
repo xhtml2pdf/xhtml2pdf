@@ -234,7 +234,11 @@ def pisaGetAttributes(c, tag, attributes):
                     nv = getPos(nv, c.pageSize)
 
                 elif v == INT:
-                    nv = int(nv)
+                    try:
+                        nv = int(nv)
+                    except ValueError:
+                        log.warning(c.warning("Attribute '%s' expects an integer", k))
+                        nv = None if dfl is None else int(dfl)
 
                 elif v == COLOR:
                     nv = getColor(nv)

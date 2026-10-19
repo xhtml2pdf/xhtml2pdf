@@ -43,6 +43,14 @@ class PisaTagOLTestCase(TestCase):
         self.assertEqual(instance.node, element)
         self.assertEqual(context.listCounter, 9)
 
+    def test_a_start_that_is_not_a_number_counts_from_one(self) -> None:
+        dom = minidom.parseString('<ol start="abc"><li>item</li></ol>')
+        element = dom.getElementsByTagName("ol")[0]
+        context = pisaContext()
+        attrs = pisaGetAttributes(context, element.tagName.lower(), element.attributes)
+        tags.pisaTagOL(element, attrs).start(context)
+        self.assertEqual(context.listCounter, 0)
+
 
 class ListMarkerFaceTestCase(TestCase):
     """
@@ -85,7 +93,8 @@ class BadInputKeepsTheDocumentTestCase(TestCase):
     A mistyped barcode, a chart whose JSON names no type and a <pdf:spacer/>
     without a height are all author mistakes worth a warning, not worth the
     document. Everything else in a stylesheet or in the markup degrades; these
-    three did not.
+    three did not. Nor did an integer attribute, <ol start> or <td colspan>,
+    whose value was not a number.
     """
 
     @staticmethod
@@ -154,6 +163,24 @@ class BadInputKeepsTheDocumentTestCase(TestCase):
         """Spacer(1, None) raised TypeError on None + int."""
         self.assert_warns_and_converts(
             "<p>a</p><pdf:spacer/><p>b</p>", "Ignoring <pdf:spacer> with no height"
+        )
+
+    def test_a_list_start_that_is_not_a_number(self) -> None:
+        """int("abc") raised ValueError while reading the attributes."""
+        self.assert_warns_and_converts(
+            '<ol start="abc"><li>a</li></ol>', "Attribute 'start' expects an integer"
+        )
+
+    def test_a_colspan_that_is_not_a_number(self) -> None:
+        self.assert_warns_and_converts(
+            '<table><tr><td colspan="x">a</td><td>b</td></tr></table>',
+            "Attribute 'colspan' expects an integer",
+        )
+
+    def test_a_rowspan_that_is_not_a_number(self) -> None:
+        self.assert_warns_and_converts(
+            '<table><tr><td rowspan="x">a</td></tr><tr><td>b</td></tr></table>',
+            "Attribute 'rowspan' expects an integer",
         )
 
 
