@@ -1334,9 +1334,7 @@ class TocLevelStylesTestCase(TestCase):
 class OutlineNestingTestCase(TestCase):
     """
     A heading's outline entry goes under the nearest entry before it with a
-    lower level, or at the top with none -- what Chrome's document outline
-    does. Each level a document skipped used to get a copy of the heading:
-    a document of h2s showed every first one twice, its child under itself.
+    lower level, or at the top with none -- as Chrome's document outline does.
     """
 
     @staticmethod

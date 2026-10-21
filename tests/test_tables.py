@@ -1208,8 +1208,7 @@ class RowCutAcrossPagesTestCase(TestCase):
 class NestedTableAcrossPagesTestCase(TestCase):
     """
     A table in a cell goes on from page to page in print of its own size,
-    starting where the row holding it starts, as in a browser (#402). It
-    used to be moved to a page of its own and shrunk to fit it.
+    starting where the row holding it starts, as in a browser (#402).
     """
 
     PAGE = RowCutAcrossPagesTestCase.PAGE

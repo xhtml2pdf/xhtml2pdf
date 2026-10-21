@@ -628,7 +628,7 @@ class pisaTagTD(pisaTag):
         elif self.keep_in_frame_mode is None and any(
             isinstance(flowable, PmlTable) for flowable in cell
         ):
-            # A nested table goes on across pages, as in a browser (#402).
+            # A nested table goes on across pages, as in a browser.
             cell = PmlFlowingCell(cell)
         else:
             mode = getKeepInFrameMode(self.keep_in_frame_mode or "shrink")

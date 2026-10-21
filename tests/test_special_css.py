@@ -708,8 +708,7 @@ class WhiteSpaceTest(TestCase):
 class TextOverflowTest(TestCase):
     """
     A line wider than a block whose overflow is not visible is cut at the
-    block's edge, and text-overflow: ellipsis ends it with one (#698). The
-    line used to run on past the block and over what was next to it.
+    block's edge, and text-overflow: ellipsis ends it with one (#698).
     """
 
     LONG = "The quick brown fox jumps over the lazy dog and keeps on running"
