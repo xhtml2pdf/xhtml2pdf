@@ -83,12 +83,19 @@ Unreleased
   only comes out unencrypted, as it always has: the background is merged in
   by writing the document again, which cannot reapply the encryption. That
   now logs a warning saying so, instead of happening silently.
-
 * A table inside a table cell goes on from page to page, starting where
   its row starts and in print of its own size, as in a browser. It was
   moved whole to the next page and shrunk to fit it, down to unreadable
   text for a long one. ``-pdf-keep-in-frame-mode`` on the cell still asks
   for the old behaviour. Fixes :issue:`402`.
+* An integer attribute whose value is not a number, such as
+  ``<ol start="abc">`` or ``<td colspan="x">``, logs a warning and is
+  ignored, as a browser does. It raised ``ValueError`` and the whole
+  conversion failed. (:pr:`851`)
+
+| Thanks to the following people on GitHub for contributing to this release:
+| *RavSinghChandan*, who made a bad integer attribute a warning instead of
+  a failed document (:pr:`851`).
 
 --------------------------------------------
 
