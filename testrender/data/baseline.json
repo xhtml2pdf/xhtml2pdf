@@ -1,5 +1,5 @@
 {
-  "browser": "chrome 152.0.7977.82",
+  "browser": "chrome 155.0.8059.79",
   "fixtures": {
     "adobe_asian_lenguage_pack": {
       "pages": {
@@ -742,7 +742,7 @@
       },
       "ssim": 0.5744,
       "text": 0.1365,
-      "text_doc": 0.9689
+      "text_doc": 0.9688
     },
     "test-page-left-right": {
       "pages": {
