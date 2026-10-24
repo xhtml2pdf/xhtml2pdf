@@ -128,6 +128,25 @@ document you name is your own. See :doc:`/security`.
 
    Fetch anything, as versions before 0.2.19 did.
 
+Print
+"""""
+
+Output for a print shop. See :doc:`/guide/printing`.
+
+.. option:: --pdfx-profile <file>
+
+   Write PDF/X-4, with this CMYK ICC profile of the press as the output
+   intent. Every font that draws text must be embedded with ``@font-face``.
+
+.. option:: --pdfx-condition <name>
+
+   The identifier of the printing condition, as registered at the ICC
+   (``FOGRA39``, ``CGATS TR 006``). Defaults to the profile's description.
+
+.. option:: --pdfx-info <text>
+
+   A description of the printing condition for a person.
+
 Styling
 ^^^^^^^
 

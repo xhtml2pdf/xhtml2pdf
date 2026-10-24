@@ -12,6 +12,12 @@ Valid @page properties:
     background-image
     size
     margin, margin-bottom, margin-left, margin-right, margin-top
+    bleed
+    marks
+
+``bleed: <length> | auto`` grows the page around its trim size, and
+``marks: none | crop | cross`` adds crop marks and registration targets
+outside the bleed. See :doc:`/guide/printing`.
 
 Valid size syntax and values:
 

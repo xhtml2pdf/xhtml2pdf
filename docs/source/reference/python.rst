@@ -6,7 +6,7 @@ Python API
 
 The main function of xhtml2pdf is :py:func:`CreatePDF`.
 
-.. py:function:: CreatePDF(src, dest=None, dest_bytes=False, path="", link_callback=None, debug=0, default_css=None, xhtml=False, encoding=None, xml_output=None, raise_exception=True, capacity=100 * 1024, context_meta=None, encrypt=None, signature=None, show_error_as_pdf=False, resource_policy=None)
+.. py:function:: CreatePDF(src, dest=None, dest_bytes=False, path="", link_callback=None, debug=0, default_css=None, xhtml=False, encoding=None, xml_output=None, raise_exception=True, capacity=100 * 1024, context_meta=None, encrypt=None, signature=None, show_error_as_pdf=False, resource_policy=None, pdfx=None)
 
    Create PDF.
 
@@ -96,6 +96,13 @@ The main function of xhtml2pdf is :py:func:`CreatePDF`.
        call with ``use_policy``, then to a default that refuses internal
        network addresses and confines local reads to the document's own
        directory. See :doc:`/security`.
+
+   :param dict[str, typing.Any] pdfx:
+       Write PDF/X-4 for a print shop. Takes ``profile``, the CMYK ICC
+       profile of the printing condition as a path or bytes, and
+       ``condition``, its identifier (``"FOGRA39"``); optionally ``info`` and
+       ``registry``. Text must be set in embedded fonts. Cannot be combined
+       with ``encrypt``. See :doc:`/guide/printing`.
 
    :return:
    :rtype: xhtml2pdf.document.pisaStory|bytes

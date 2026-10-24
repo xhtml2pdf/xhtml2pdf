@@ -31,6 +31,7 @@ Contents
    watermarks
    examples
    Fonts <guide/fonts>
+   Printing <guide/printing>
 
 .. toctree::
    :caption: Reference

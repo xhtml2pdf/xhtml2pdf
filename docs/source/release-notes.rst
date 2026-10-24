@@ -51,6 +51,30 @@ Versions >= 0.2
     --------------------------------------------
 
 
+Unreleased
+====================
+
+**🎉 New**
+
+* Output for print shops: ``@page { bleed: 3mm; marks: crop cross }`` grows
+  the page around its trim size, with a ``TrimBox`` and a ``BleedBox``,
+  backgrounds that reach into the bleed and crop and registration marks
+  outside it.
+* ``device-cmyk()`` and ``cmyk()`` colours in CSS, written to the PDF in
+  DeviceCMYK.
+* PDF/X-4: ``pdfx={"profile": ..., "condition": ...}``, or
+  ``--pdfx-profile`` on the command line, adds the output intent, XMP
+  metadata and page boxes PDF/X asks for, tags RGB as sRGB and draws neutral
+  greys on the black plate.
+* A document with bleed, marks or PDF/X logs the images drawn under 300 ppi
+  and the text set in fonts that are not embedded.
+
+**📘 Documentation**
+
+* A guide to printing: :doc:`guide/printing`.
+
+
+
 0.2.27
 ====================
 
