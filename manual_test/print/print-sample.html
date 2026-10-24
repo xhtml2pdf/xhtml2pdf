@@ -1,0 +1,38 @@
+<html>
+<head>
+<meta charset="utf-8">
+<title>Print sample</title>
+<style>
+@font-face { font-family: DejaVu; src: url(../font/dejavu/DejaVuSans.ttf); }
+@page {
+    size: a5;
+    margin: 15mm;
+    bleed: 3mm;
+    marks: crop cross;
+}
+body { font-family: DejaVu; font-size: 10pt; background-color: #f4e9d8; }
+h1 { color: #c0392b; }
+.cmyk { color: device-cmyk(0 1 1 0); }
+.cmyk-commas { background-color: cmyk(1, 0, 0, 0); color: white; }
+.helvetica { font-family: Helvetica; }
+.translucent { background-color: rgba(0, 0, 255, 0.3); }
+img { width: 60mm; }
+</style>
+</head>
+<body>
+<h1>Print sample</h1>
+<p>Body text in an embedded TrueType font, on a background propagated from
+body to the page canvas, which should reach into the bleed.</p>
+<p class="cmyk">This paragraph asks for <code>device-cmyk(0 1 1 0)</code>.</p>
+<p class="cmyk-commas">This one has a <code>cmyk(1, 0, 0, 0)</code> background.</p>
+<p><font color="cmyk(0,0,1,0)">An HTML colour attribute in cmyk().</font></p>
+<p class="helvetica">This line is set in Helvetica, a base-14 font that is not embedded.</p>
+<p class="translucent">A translucent background (rgba).</p>
+<p>A 540x360 RGB JPEG drawn 60 mm wide:</p>
+<img src="../img/beach.jpg">
+<p>A palette PNG with transparency:</p>
+<img src="../img/denker.png" style="width: 20mm">
+<p>An SVG:</p>
+<img src="sample.svg" style="width: 40mm">
+</body>
+</html>
