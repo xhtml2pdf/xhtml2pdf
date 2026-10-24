@@ -107,7 +107,7 @@ REQUIRED_SYMBOLS: dict[str, tuple[str, ...]] = {
     "reportlab.pdfbase.ttfonts": ("TTFont",),
     "reportlab.lib.fonts": ("addMapping", "tt2ps"),
     "reportlab.lib.styles": ("ParagraphStyle", "getSampleStyleSheet"),
-    "reportlab.lib.colors": ("Color", "toColor"),
+    "reportlab.lib.colors": ("CMYKColor", "Color", "toColor"),
     "reportlab.lib.units": ("cm", "inch", "mm"),
     "reportlab.lib.enums": ("TA_CENTER", "TA_JUSTIFY", "TA_LEFT", "TA_RIGHT"),
     "reportlab.lib.pdfencrypt": ("StandardEncryption",),
@@ -717,6 +717,39 @@ class OtherPrivateStateTest(TestCase):
 
         self.assertEqual(ord("A"), _glyphname2unicode["A"])
         self.assertIsInstance(cidfontdata.defaultUnicodeEncodings, dict)
+
+    def test_crop_marks_move_the_page_and_write_its_boxes(self) -> None:
+        """
+        ``builders.printmarks`` drives the crop-mark state of the canvas.
+
+        It sets ``_cropMarks``, ``_trimBox`` and ``_bleedBox`` before each
+        page, relies on ``borderWidth`` moving the content and growing the
+        MediaBox without scaling, on ``_getCmShift`` for link destinations,
+        and on ``BaseDocTemplate._makeCanvas`` to choose the canvas class.
+        """
+        import io
+
+        import pypdf
+        from reportlab.pdfgen.canvas import Canvas
+        from reportlab.platypus.doctemplate import BaseDocTemplate
+
+        from xhtml2pdf.builders.printmarks import PageMarks
+
+        self.assertTrue(callable(BaseDocTemplate._makeCanvas))
+        out = io.BytesIO()
+        canvas = Canvas(out, pagesize=(100, 200))
+        canvas._cropMarks = PageMarks(10)
+        canvas._trimBox = (10, 10, 110, 210)
+        canvas._bleedBox = (7, 7, 113, 213)
+        self.assertEqual(10, canvas._getCmShift())
+        canvas.rect(0, 0, 5, 5)
+        canvas.showPage()
+        canvas.save()
+        page = pypdf.PdfReader(io.BytesIO(out.getvalue())).pages[0]
+        self.assertEqual([0, 0, 120, 220], [float(v) for v in page.mediabox])
+        self.assertEqual([10, 10, 110, 210], [float(v) for v in page.trimbox])
+        self.assertEqual([7, 7, 113, 213], [float(v) for v in page.bleedbox])
+        self.assertIn(b"1 0 0 1 10 10 cm", page.get_contents().get_data())
 
     def test_the_canvas_keeps_its_code(self) -> None:
         """The paragraph fork appends to ``canvas._code`` directly."""

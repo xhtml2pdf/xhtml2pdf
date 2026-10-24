@@ -56,6 +56,7 @@ from reportlab.platypus.tableofcontents import TableOfContents, drawPageNumbers
 from reportlab.platypus.tables import _SPECIALROWS, Table, TableStyle
 from reportlab.rl_config import register_reset
 
+from xhtml2pdf.builders.printmarks import MarkedCanvas, begin_page, draw_marks
 from xhtml2pdf.config.resources import (
     ResourceAccessError,
     check_deadline,
@@ -183,6 +184,12 @@ class PmlBaseDoc(BaseDocTemplate):
     #: Whether the current page is an inserted one, which nothing else is
     #: laid out on: what comes next starts a new page.
     pageTaken = False
+
+    def _makeCanvas(self, filename=None, canvasmaker=None):
+        # build() passes reportlab's plain Canvas when it is given none.
+        if canvasmaker is None or issubclass(MarkedCanvas, canvasmaker):
+            canvasmaker = MarkedCanvas
+        return super()._makeCanvas(filename=filename, canvasmaker=canvasmaker)
 
     def pageLabel(self, page: int) -> int:
         """The number page `page` shows, after the resets before it."""
@@ -433,6 +440,10 @@ class PmlPageTemplate(PageTemplate):
     #: the two measurements are the same number said in different words.
     STATIC_OVERFLOW_FUZZ: float = 0.1
 
+    #: `@page { bleed; marks }`; see xhtml2pdf.builders.printmarks.
+    bleed: float = 0.0
+    marks: frozenset[str] = frozenset()
+
     def __init__(self, **kw) -> None:
         self.pisaStaticList: list = []
         self.pisaBackground: Any = None
@@ -472,16 +483,27 @@ class PmlPageTemplate(PageTemplate):
         from xhtml2pdf.builders.position import paint_positioned
 
         paint_positioned(canvas, doc, self)
+        draw_marks(canvas, self.pagesize, self.bleed, self.marks)
 
     def beforeDrawPage(self, canvas: Canvas, doc):
+        begin_page(canvas, self.pagesize, self.bleed, self.marks)
         canvas.saveState()
         try:
             # CSS 2.1 14.2: a background propagated from body paints the whole
-            # canvas, underneath everything else including the @page background.
+            # canvas, underneath everything else including the @page background,
+            # and reaches into the bleed.
             if self.canvasBackground is not None:
+                bleed = self.bleed
                 canvas.saveState()
                 canvas.setFillColor(self.canvasBackground)
-                canvas.rect(0, 0, self.pagesize[0], self.pagesize[1], stroke=0, fill=1)
+                canvas.rect(
+                    -bleed,
+                    -bleed,
+                    self.pagesize[0] + 2 * bleed,
+                    self.pagesize[1] + 2 * bleed,
+                    stroke=0,
+                    fill=1,
+                )
                 canvas.restoreState()
             if (
                 # No template was set yet, or the previous template differs from the last

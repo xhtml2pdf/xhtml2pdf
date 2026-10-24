@@ -41,6 +41,7 @@ from reportlab.platypus.paraparser import ABag, ParaFrag, ps2tt, tt2ps
 
 from xhtml2pdf import default, parser
 from xhtml2pdf.builders.flex import FlexData
+from xhtml2pdf.builders.printmarks import parse_bleed, parse_marks
 from xhtml2pdf.files import B64InlineURI, getFile, pisaFileObject
 from xhtml2pdf.properties import CSSAttrs, reset_non_inherited
 from xhtml2pdf.tables import TableData
@@ -717,6 +718,8 @@ class pisaCSSBuilder(css.CSSBuilder):
 
         pt = PmlPageTemplate(id=name, frames=frameList, pagesize=c.pageSize)
         pt.pisaStaticList = staticList
+        pt.marks = parse_marks(data.get("marks", "none"))
+        pt.bleed = parse_bleed(data.get("bleed"), pt.marks)
         pt.pisaBackground = background
         pt.backgroundContext = background_context
 
