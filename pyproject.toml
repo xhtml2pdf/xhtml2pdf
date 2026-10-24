@@ -325,6 +325,8 @@ Hink = "Hink"
 myu20 = "myu20"
 opf = "opf"
 PNGs = "PNGs"
+# pypdf's StreamObject.flate_encode, named after the Flate filter.
+flate_encode = "flate_encode"
 
 [tool.typos.default.extend-words]
 splitted = "splitted"

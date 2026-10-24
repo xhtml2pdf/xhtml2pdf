@@ -184,3 +184,145 @@ class BleedAndMarksTestCase(TestCase):
 
         left, top = destination(plain)
         self.assertEqual([left + 10, top + 10], destination(marked))
+
+
+FONT = Path(__file__).parent / "samples" / "font" / "Noto_Sans" / "NotoSans-Regular.ttf"
+
+
+def fake_profile(space: bytes = b"CMYK", device_class: bytes = b"prtr") -> bytes:
+    """An ICC header with an empty tag table: enough for the output intent."""
+    header = bytearray(132)
+    header[0:4] = (132).to_bytes(4, "big")
+    header[12:16] = device_class
+    header[16:20] = space
+    header[20:24] = b"Lab "
+    header[36:40] = b"acsp"
+    return bytes(header)
+
+
+PDFX = {"profile": fake_profile(), "condition": "FOGRA39", "info": "Coated FOGRA39"}
+
+
+def embedded(body: str, css: str = "") -> str:
+    """A document whose text is all set in an embedded TrueType face."""
+    return (
+        f"<style>@font-face {{ font-family: Noto; src: url({FONT.as_posix()}) }}"
+        f" body {{ font-family: Noto }} {css}</style>{body}"
+    )
+
+
+class PDFXTestCase(TestCase):
+    @staticmethod
+    def render_pdfx(html: str) -> tuple[bytes, pypdf.PdfReader]:
+        out = io.BytesIO()
+        pisaDocument(html, dest=out, pdfx=PDFX)
+        data = out.getvalue()
+        return data, pypdf.PdfReader(io.BytesIO(data))
+
+    def test_output_intent_metadata_and_version(self) -> None:
+        data, reader = self.render_pdfx(
+            embedded("<title>Brochure</title><p>text</p>", "@page { size: a6 }")
+        )
+        self.assertTrue(data.startswith(b"%PDF-1.6"))
+        root = reader.trailer["/Root"]
+        (intent,) = root["/OutputIntents"]
+        intent = intent.get_object()
+        self.assertEqual("/GTS_PDFX", intent["/S"])
+        self.assertEqual("FOGRA39", intent["/OutputConditionIdentifier"])
+        self.assertEqual("Coated FOGRA39", intent["/Info"])
+        profile = intent["/DestOutputProfile"].get_object()
+        self.assertEqual(4, profile["/N"])
+        self.assertEqual(fake_profile(), profile.get_data())
+
+        self.assertEqual("PDF/X-4", reader.metadata["/GTS_PDFXVersion"])
+        xmp = root["/Metadata"].get_object().get_data().decode("utf-8")
+        self.assertIn("<pdfxid:GTS_PDFXVersion>PDF/X-4</pdfxid:GTS_PDFXVersion>", xmp)
+        self.assertIn(">Brochure</rdf:li>", xmp)
+        self.assertEqual("Brochure", reader.xmp_metadata.dc_title["x-default"])
+        self.assertIn("<xmpMM:RenditionClass>default</xmpMM:RenditionClass>", xmp)
+
+    def test_xmp_dates_repeat_the_info_dates(self) -> None:
+        _, reader = self.render_pdfx(embedded("<p>text</p>"))
+        created = reader.metadata["/CreationDate"]  # D:YYYYMMDDHHmmSS+hh'mm'
+        xmp = reader.trailer["/Root"]["/Metadata"].get_object().get_data().decode()
+        iso = (
+            f"{created[2:6]}-{created[6:8]}-{created[8:10]}"
+            f"T{created[10:12]}:{created[12:14]}:{created[14:16]}"
+        )
+        self.assertIn(f"<xmp:CreateDate>{iso}", xmp)
+
+    def test_every_page_has_a_trim_box_and_managed_rgb(self) -> None:
+        _, reader = self.render_pdfx(
+            embedded("<p style='color: #c00'>red</p><pdf:nextpage/><p>two</p>")
+        )
+        for page in reader.pages:
+            self.assertIn("/TrimBox", page)
+            spaces = page["/Resources"]["/ColorSpace"]
+            space, profile = spaces["/DefaultRGB"]
+            self.assertEqual("/ICCBased", space)
+            self.assertEqual(3, profile.get_object()["/N"])
+
+    def test_neutral_rgb_is_drawn_in_gray(self) -> None:
+        _, reader = self.render_pdfx(embedded("<p style='color: #000'>black</p>"))
+        stream = content(reader)
+        self.assertNotIn("0 0 0 rg", stream)
+        self.assertRegex(stream, r"\b0(?:\.0)? g\b")
+
+    def test_fonts_that_draw_nothing_are_taken_out(self) -> None:
+        """Reportlab selects Helvetica at the top of every page."""
+        _, reader = self.render_pdfx(embedded("<p>text</p>"))
+        fonts = reader.pages[0]["/Resources"]["/Font"]
+        names = {str(font.get_object()["/BaseFont"]) for font in fonts.values()}
+        self.assertFalse({name for name in names if "Helvetica" in name})
+        self.assertTrue(any("NotoSans" in name for name in names))
+
+    def test_text_in_a_font_that_is_not_embedded_is_an_error(self) -> None:
+        with self.assertRaisesRegex(ValueError, "Helvetica"):
+            pisaDocument("<p>plain</p>", dest=io.BytesIO(), pdfx=PDFX)
+
+    def test_links_are_left_out(self) -> None:
+        _, reader = self.render_pdfx(embedded("<a href='https://example.com'>site</a>"))
+        self.assertNotIn("/Annots", reader.pages[0])
+
+    def test_bleed_and_marks_are_kept(self) -> None:
+        _, reader = self.render_pdfx(
+            embedded("<p>text</p>", "@page { size: a6; marks: crop }")
+        )
+        self.assertIn("/BleedBox", reader.pages[0])
+        self.assertAlmostEqual(6 + SLUG, float(reader.pages[0].trimbox[0]), delta=0.01)
+
+    def test_unusable_arguments(self) -> None:
+        cases = [
+            ({"condition": "FOGRA39"}, "profile"),
+            ({"profile": fake_profile(space=b"RGB ")}, "CMYK"),
+            ({"profile": fake_profile(device_class=b"mntr")}, "output"),
+            ({"profile": b"not a profile"}, "not an ICC profile"),
+            ({"profile": fake_profile()}, "condition"),
+        ]
+        for pdfx, message in cases:
+            with (
+                self.subTest(message=message),
+                self.assertRaisesRegex(ValueError, message),
+            ):
+                pisaDocument("<p>x</p>", dest=io.BytesIO(), pdfx=pdfx)
+
+    def test_pdfx_and_encryption_cannot_be_combined(self) -> None:
+        with self.assertRaisesRegex(ValueError, "encrypt"):
+            pisaDocument("<p>x</p>", dest=io.BytesIO(), pdfx=PDFX, encrypt="secret")
+
+
+class PrintWarningTestCase(TestCase):
+    def test_a_coarse_image_on_a_page_with_bleed_is_reported(self) -> None:
+        html = f"<style>@page {{ bleed: 3mm }}</style><img src='{IMAGE}' width='200'>"
+        with self.assertLogs("xhtml2pdf.builders.preflight", level="WARNING") as logs:
+            render(html)
+        self.assertTrue(any("ppi" in line for line in logs.output))
+
+    def test_text_in_base_fonts_on_a_page_with_bleed_is_reported(self) -> None:
+        with self.assertLogs("xhtml2pdf.builders.preflight", level="WARNING") as logs:
+            render("<style>@page { bleed: 3mm }</style><p>text</p>")
+        self.assertTrue(any("Helvetica" in line for line in logs.output))
+
+    def test_nothing_is_reported_without_bleed_or_marks(self) -> None:
+        with self.assertNoLogs("xhtml2pdf.builders.preflight", level="WARNING"):
+            render(f"<p>text</p><img src='{IMAGE}' width='200'>")

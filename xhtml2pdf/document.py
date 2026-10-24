@@ -19,12 +19,15 @@ import threading
 import warnings
 from html import escape as html_escape
 
+import pypdf
 from reportlab.lib import pdfencrypt
 from reportlab.platypus.doctemplate import NextPageTemplate
 from reportlab.platypus.flowables import Spacer
 
 from xhtml2pdf.builders.inserts import insert_pages
+from xhtml2pdf.builders.pdfx import PDFXOptions, make_pdfx
 from xhtml2pdf.builders.position import PositionAnchor
+from xhtml2pdf.builders.preflight import scan, warn
 from xhtml2pdf.builders.watermarks import WaterMarks
 from xhtml2pdf.config.resources import (
     active_policy,
@@ -255,6 +258,7 @@ def pisaDocument(
     signature=None,
     show_error_as_pdf=False,  # noqa: FBT002
     resource_policy=None,
+    pdfx=None,
     **kwargs,
 ):
     if kwargs:
@@ -282,6 +286,14 @@ def pisaDocument(
             " encrypted before it is signed, and the signer cannot open it"
         )
         raise ValueError(msg)
+
+    if pdfx is not None:
+        if encrypt:
+            msg = "pdfx and encrypt cannot be combined: PDF/X forbids encryption"
+            raise ValueError(msg)
+        # Read and checked before the document is converted, so that a profile
+        # that cannot be used is said before the work rather than after it.
+        pdfx = PDFXOptions.from_argument(pdfx)
 
     log.debug(
         "pisaDocument options:\n  src = %r\n  dest = %r\n  path = %r\n  link_callback ="
@@ -340,6 +352,7 @@ def pisaDocument(
                     xml_output=xml_output,
                     encrypt=encrypt,
                     signature=signature,
+                    pdfx=pdfx,
                 )
         except Exception:
             # raise_exception=False has always been the documented way to ask for
@@ -380,6 +393,7 @@ def _build(
     xml_output,
     encrypt,
     signature,
+    pdfx=None,
 ):
     """Convert the document; the caller decides what a failure means."""
     # Build story
@@ -470,6 +484,11 @@ def _build(
 
     if not has_bg:
         output = out
+    if pdfx is not None:
+        output = io.BytesIO(make_pdfx(output.getvalue(), pdfx))
+    elif any(template.bleed or template.marks for template in templates):
+        # A document with bleed or marks is going to a print shop.
+        warn(scan(pypdf.PdfReader(io.BytesIO(output.getvalue()))))
     if signature:
         try:
             from xhtml2pdf.builders.signs import PDFSignature

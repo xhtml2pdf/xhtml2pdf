@@ -104,6 +104,18 @@ DEST
     Turn all of the above off and fetch anything, as versions before 0.2.19
     did.
 
+[Print options]
+
+  --pdfx-profile:
+    Write PDF/X-4 for a print shop, with this CMYK ICC profile of the press
+    (FOGRA39, GRACoL, SWOP...) as the output intent. Every font that draws
+    text must be embedded with @font-face.
+  --pdfx-condition:
+    The identifier of the printing condition, as registered at the ICC
+    (FOGRA39, CGATS TR 006...). Defaults to the profile's description.
+  --pdfx-info:
+    A description of the printing condition for a person.
+
 [HTTP Connection options]
 
   --http_nosslcheck:
@@ -214,6 +226,9 @@ def execute():
                 "allow-private-networks",
                 "no-remote",
                 "unsafe-resources",
+                "pdfx-profile=",
+                "pdfx-condition=",
+                "pdfx-info=",
                 "http_nosslcheck",
                 "http_key_file",
                 "http_cert_file",
@@ -239,6 +254,7 @@ def execute():
     allow_remote = True
     allow_private_networks = False
     unsafe_resources = False
+    pdfx: dict[str, str] = {}
 
     log_level = logging.ERROR
     log_format = LOG_FORMAT
@@ -335,6 +351,9 @@ def execute():
         elif o == "--unsafe-resources":
             unsafe_resources = True
 
+        elif o in {"--pdfx-profile", "--pdfx-condition", "--pdfx-info"}:
+            pdfx[o.removeprefix("--pdfx-")] = a
+
         elif httpConfig.is_http_config(o, a):
             continue
 
@@ -343,6 +362,10 @@ def execute():
 
     if len(args) not in {1, 2}:
         usage()
+        sys.exit(2)
+
+    if pdfx and "profile" not in pdfx:
+        print("--pdfx-condition and --pdfx-info need --pdfx-profile", file=sys.stderr)
         sys.exit(2)
 
     if unsafe_resources:
@@ -455,6 +478,7 @@ def execute():
             encoding=encoding,
             xml_output=xml_output,
             resource_policy=resource_policy,
+            pdfx=pdfx or None,
         )
 
         if xml_output:

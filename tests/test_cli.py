@@ -13,7 +13,7 @@ import os
 import subprocess
 import sys
 import tempfile
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest import TestCase, mock
 
@@ -79,6 +79,34 @@ class CommandTest(TestCase):
         self.assertEqual(0, code)
         self.assertTrue(dest.is_file())
         self.assertEqual("cli\nhello", PdfReader(dest).pages[0].extract_text().strip())
+
+    def test_pdfx_options_write_pdf_x(self) -> None:
+        from tests.test_print import embedded, fake_profile
+
+        self.src.write_text(embedded("<p>print</p>"), encoding="utf-8")
+        profile = Path(self.tmp.name) / "press.icc"
+        profile.write_bytes(fake_profile())
+        dest = Path(self.tmp.name) / "out.pdf"
+        code, _ = run_cli(
+            "-q",
+            "--pdfx-profile",
+            str(profile),
+            "--pdfx-condition",
+            "FOGRA39",
+            str(self.src),
+            str(dest),
+        )
+        self.assertEqual(0, code)
+        reader = PdfReader(dest)
+        self.assertEqual("PDF/X-4", reader.metadata["/GTS_PDFXVersion"])
+        intent = reader.trailer["/Root"]["/OutputIntents"][0].get_object()
+        self.assertEqual("FOGRA39", intent["/OutputConditionIdentifier"])
+
+    def test_pdfx_condition_without_a_profile_is_a_usage_error(self) -> None:
+        dest = Path(self.tmp.name) / "out.pdf"
+        with redirect_stderr(io.StringIO()):
+            code, _ = run_cli("--pdfx-condition", "FOGRA39", str(self.src), str(dest))
+        self.assertEqual(2, code)
 
     def test_destination_defaults_to_the_source_name(self) -> None:
         cwd = os.getcwd()
