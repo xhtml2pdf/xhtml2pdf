@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple
 
 import arabic_reshaper
 import reportlab.pdfbase._cidfontdata
-from reportlab.lib.colors import Color, toColor
+from reportlab.lib.colors import CMYKColor, Color, toColor
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.lib.units import cm, inch
 from reportlab.pdfbase import pdfmetrics
@@ -61,6 +61,15 @@ rgb_re = re.compile(
 #: that class turns any argument which is not already a str into one, so the
 #: number is found rather than parsed off a known shape.
 color_arg_re = re.compile(r"-?\d*\.?\d+")
+
+#: The tokens of the arguments of cmyk()/device-cmyk(): numbers, the percent
+#: sign that follows one, and the slash before the alpha. They are read off
+#: the text of the arguments, which for `device-cmyk(0 1 1 0 / 0.5)` holds
+#: the last one as the stringified operator "op('0', '/', '0.5')".
+cmyk_token_re = re.compile(r"-?\d*\.?\d+(?:e-?\d+)?|%|/")
+
+#: The CSS functions that name a colour in DeviceCMYK.
+CMYK_FUNCTIONS: frozenset[str] = frozenset({"cmyk", "device-cmyk"})
 
 # =========================================================================
 # Memoize decorator
@@ -255,6 +264,32 @@ def _rgbFunctionColor(function, default):
     return Color(_clamp01(red), _clamp01(green), _clamp01(blue), alpha=_clamp01(alpha))
 
 
+def _cmykColor(arguments: str, original, default):
+    """
+    Read the arguments of `device-cmyk()` or `cmyk()` into a CMYKColor.
+
+    Each of the four inks is a number from 0 to 1 or a percentage, separated
+    by spaces or commas; an alpha may follow a slash (CSS Color 5) or come as
+    a fifth argument.
+    """
+    values: list[float] = []
+    alpha_at = None
+    for token in cmyk_token_re.findall(arguments):
+        if token == "%":
+            if values:
+                values[-1] /= 100.0
+        elif token == "/":
+            alpha_at = len(values)
+        else:
+            values.append(float(token))
+    if alpha_at not in {None, 4} or len(values) not in {4, 5}:
+        log.warning("Cannot read the colour %r, using %r", original, default)
+        return default
+    cyan, magenta, yellow, black = (_clamp01(v) for v in values[:4])
+    alpha = _clamp01(values[4]) if len(values) == 5 else 1.0
+    return CMYKColor(cyan, magenta, yellow, black, alpha=alpha)
+
+
 def _hexAlphaColor(value, original, default):
     """
     Read `#rgba` or `#rrggbbaa`, the hex forms with an alpha channel.
@@ -295,6 +330,8 @@ def getColor(value, default=None):
 
     if isinstance(value, CSSTerminalFunction) and value.name.lower() in {"rgb", "rgba"}:
         return _rgbFunctionColor(value, default)
+    if isinstance(value, CSSTerminalFunction) and value.name.lower() in CMYK_FUNCTIONS:
+        return _cmykColor(" ".join(value.params), value, default)
 
     value = str(value).strip().lower()
 
@@ -304,6 +341,9 @@ def getColor(value, default=None):
 
     if value in {"transparent", "none"}:
         return default
+    name, _, arguments = value.partition("(")
+    if name.strip() in CMYK_FUNCTIONS and arguments.endswith(")"):
+        return _cmykColor(arguments[:-1], original, default)
     if value in COLOR_BY_NAME:
         return COLOR_BY_NAME[value]
     if value.startswith("#") and len(value) in {5, 9}:

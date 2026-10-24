@@ -297,9 +297,12 @@ def warnUnsupportedProperties(declaredBySource: dict[str, set[str]]) -> None:
 
 #: The CSS functions the rest of the library can actually read. `url()` never
 #: reaches here as a function -- the parser hands it over as a plain string --
-#: and getColor reads the arguments of rgb() and rgba() off the function
-#: object. Everything else is a value nothing downstream can evaluate.
-READABLE_CSS_FUNCTIONS: frozenset[str] = frozenset({"rgb", "rgba"})
+#: and getColor reads the arguments of rgb(), rgba(), cmyk() and device-cmyk()
+#: off the function object. Everything else is a value nothing downstream can
+#: evaluate.
+READABLE_CSS_FUNCTIONS: frozenset[str] = frozenset(
+    {"rgb", "rgba", "cmyk", "device-cmyk"}
+)
 
 #: The functions ``content`` reads besides those (w3c/generated_content.py).
 CONTENT_FUNCTIONS: frozenset[str] = frozenset({"counter", "counters", "attr"})
