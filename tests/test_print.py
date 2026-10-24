@@ -203,6 +203,24 @@ def fake_profile(space: bytes = b"CMYK", device_class: bytes = b"prtr") -> bytes
 PDFX = {"profile": fake_profile(), "condition": "FOGRA39", "info": "Coated FOGRA39"}
 
 
+def undefined_fonts(stream, resources, reader: pypdf.PdfReader) -> list[str]:
+    """The fonts a content stream, or a form it draws, selects without having."""
+    resources = resources.get_object()
+    fonts = resources.get("/Font")
+    known = set(fonts.get_object()) if fonts is not None else set()
+    missing = [
+        str(operands[0])
+        for operands, operator in pypdf.generic.ContentStream(stream, reader).operations
+        if operator == b"Tf" and str(operands[0]) not in known
+    ]
+    xobjects = resources.get("/XObject")
+    for xobj in xobjects.get_object().values() if xobjects is not None else []:
+        xobj = xobj.get_object()
+        if xobj.get("/Subtype") == "/Form":
+            missing += undefined_fonts(xobj, xobj.get("/Resources", resources), reader)
+    return missing
+
+
 def embedded(body: str, css: str = "") -> str:
     """A document whose text is all set in an embedded TrueType face."""
     return (
@@ -275,6 +293,36 @@ class PDFXTestCase(TestCase):
         names = {str(font.get_object()["/BaseFont"]) for font in fonts.values()}
         self.assertFalse({name for name in names if "Helvetica" in name})
         self.assertTrue(any("NotoSans" in name for name in names))
+
+    def assert_fonts_defined(self, reader: pypdf.PdfReader) -> None:
+        self.assertGreater(len(reader.pages), 1)
+        for number, page in enumerate(reader.pages, 1):
+            self.assertEqual(
+                [],
+                undefined_fonts(page.get_contents(), page["/Resources"], reader),
+                f"page {number}",
+            )
+
+    def test_every_page_keeps_the_fonts_it_selects(self) -> None:
+        """Every Tf on every page names a font of the /Font dictionary they share."""
+        _, reader = self.render_pdfx(
+            embedded("<p>one</p><pdf:nextpage/><p>two</p><pdf:nextpage/><p>3</p>")
+        )
+        self.assert_fonts_defined(reader)
+
+    def test_every_page_keeps_the_fonts_it_selects_under_a_background(self) -> None:
+        """
+        A merged page background, which brings a renamed Helvetica of its own,
+        leaves every Tf naming a font of the page.
+        """
+        with self.assertLogs("xhtml2pdf.builders.preflight", level="WARNING"):
+            _, reader = self.render_pdfx(
+                embedded(
+                    "<p>one</p><pdf:nextpage/><p>two</p>",
+                    f"@page {{ size: a6; background-image: url({IMAGE}) }}",
+                )
+            )
+        self.assert_fonts_defined(reader)
 
     def test_text_in_a_font_that_is_not_embedded_is_an_error(self) -> None:
         with self.assertRaisesRegex(ValueError, "Helvetica"):

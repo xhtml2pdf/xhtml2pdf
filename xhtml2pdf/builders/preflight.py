@@ -263,13 +263,15 @@ def warn(reports: list[PageReport], min_ppi: float = PRINT_PPI) -> None:
         )
 
 
-def _drop_tf(content, resources, idle: set, pdf, depth: int = 0):
+def _drop_tf(content, resources, idle: set, pdf, forms: list, depth: int = 0):
     """
     Remove the Tf operators of `content` that select an idle font.
 
     No glyph is drawn while an idle font is current, so dropping the operator
     that makes it current leaves every glyph drawn with the font it had.
-    Returns the rewritten stream, or None when nothing changed.
+    The resources of the forms it draws are added to `forms`, for their fonts
+    to be taken out once every stream is rewritten. Returns the rewritten
+    stream, or None when nothing changed.
     """
     resources = resolve(resources) or {}
     fonts = resolve(resources.get("/Font")) or {}
@@ -278,11 +280,11 @@ def _drop_tf(content, resources, idle: set, pdf, depth: int = 0):
         xobj = resolve(xobj)
         if xobj.get("/Subtype") == "/Form" and depth < MAX_FORM_DEPTH:
             rewritten = _drop_tf(
-                xobj, xobj.get("/Resources", resources), idle, pdf, depth + 1
+                xobj, xobj.get("/Resources", resources), idle, pdf, forms, depth + 1
             )
             if rewritten is not None:
                 xobj.set_data(rewritten.get_data())
-            _drop_font_resources(xobj.get("/Resources"), idle)
+            forms.append(xobj.get("/Resources"))
     if not idle_names:
         return None
     stream = ContentStream(content, pdf)
@@ -325,11 +327,18 @@ def drop_idle_fonts(writer) -> list[str]:
     idle = {key for key, font in fonts.items() if not font.embedded and not font.drawn}
     if not idle:
         return []
+    # Pages share reportlab's /Font dictionary, so fonts leave the resources
+    # only after every content stream has been rewritten.
+    resources: list = []
     for page in writer.pages:
         contents = page.get_contents()
         if contents is not None:
-            rewritten = _drop_tf(contents, page.get("/Resources"), idle, writer)
+            rewritten = _drop_tf(
+                contents, page.get("/Resources"), idle, writer, resources
+            )
             if rewritten is not None:
                 page.replace_contents(rewritten)
-        _drop_font_resources(page.get("/Resources"), idle)
+        resources.append(page.get("/Resources"))
+    for found in resources:
+        _drop_font_resources(found, idle)
     return sorted({fonts[key].name for key in idle})
