@@ -161,6 +161,31 @@ first has to end with ``.ttf`` the latter with one of ``.pfb`` or
 ``<name>``\ ``.afm`` or ``<name>``\ ``.pfb``, the missing one will be
 calculated automatically.
 
+OpenType fonts (``.otf``), including those with PostScript (CFF) outlines,
+and web fonts (``.woff``, ``.woff2``) work as well, from a file or a
+``data:`` URI (``font/otf``, ``font/woff``, ``font/woff2``). ReportLab
+embeds TrueType outlines only, so these are converted with fontTools,
+which is the ``fonts`` extra:
+
+.. code:: shell
+
+    pip install 'xhtml2pdf[fonts]'
+
+The converted curves stay within a thousandth of the em of the original,
+which no print shows. A TrueType font in an ``.otf`` file needs no
+conversion and no extra. Without fontTools, a font that needs it is
+skipped with a warning naming the extra.
+
+``src`` may list several sources; the first one that loads is used, and the
+others are fallbacks:
+
+::
+
+    @font-face {
+      font-family: Brand;
+      src: url('brand.woff2') format('woff2'), url('brand.ttf');
+    }
+
 To define other shapes you can do the following:
 
 ::

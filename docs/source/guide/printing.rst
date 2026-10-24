@@ -78,7 +78,7 @@ Fonts
 A print file must embed its fonts. The built-in Helvetica, Times and
 Courier, and every family name that falls back to them, are **never
 embedded**: give the text a face of its own with ``@font-face`` and a
-TrueType file. See :doc:`fonts`. A document with bleed or marks logs text set
+TrueType, OpenType or WOFF file. See :doc:`fonts`. A document with bleed or marks logs text set
 in a font that is not embedded; in PDF/X mode it is an error.
 
 PDF/X-4
@@ -136,4 +136,3 @@ What is not covered
 - Spot colours (Pantone and other named inks), overprint and trapping.
 - PDF/X-1a and PDF/X-3, which forbid transparency: transparency is kept
   as it is drawn.
-- OpenType (CFF) and WOFF fonts: ``@font-face`` takes TrueType files.

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import io
 import logging
 import ntpath
 import re
@@ -43,6 +44,7 @@ from xhtml2pdf import default, parser
 from xhtml2pdf.builders.flex import FlexData
 from xhtml2pdf.builders.printmarks import parse_bleed, parse_marks
 from xhtml2pdf.files import B64InlineURI, getFile, pisaFileObject
+from xhtml2pdf.opentype import FontConversionError, needs_conversion, to_truetype
 from xhtml2pdf.properties import CSSAttrs, reset_non_inherited
 from xhtml2pdf.tables import TableData
 from xhtml2pdf.util import (
@@ -129,6 +131,21 @@ class PmlParaFrag(DeepCopiedDirectly, ParaFrag):
 #: name. Process wide, like ReportLab's font registry, which it describes.
 _embedded_font_source: dict[str, str] = {}
 
+#: The MIME types of a data: URI that may hold an OpenType, WOFF or WOFF2 font.
+SFNT_MIMETYPES: frozenset[str] = frozenset(
+    {
+        "font/otf",
+        "font/sfnt",
+        "font/woff",
+        "font/woff2",
+        "application/font-sfnt",
+        "application/font-woff",
+        "application/vnd.ms-opentype",
+        "application/x-font-otf",
+        "application/x-font-opentype",
+    }
+)
+
 
 def _file_digest(name: str | None) -> str | None:
     if name is None:
@@ -140,9 +157,12 @@ def _file_digest(name: str | None) -> str | None:
         return None
 
 
-def registerTTFont(fullFontName: str, file) -> str:
+def registerTTFont(fullFontName: str, file, data: bytes | None = None) -> str:
     """
     Make an embedded TrueType font available to ReportLab; return its name.
+
+    The font is read from `file`, or from `data` when given: the TrueType
+    font an OpenType or WOFF file was converted to.
 
     The name is fullFontName unless that name already holds another file in
     this process -- two documents declaring the same font-family from
@@ -151,8 +171,11 @@ def registerTTFont(fullFontName: str, file) -> str:
     built again: building one reads and parses the whole font file, 7 ms for
     a Latin face and 70 ms for a CJK one, per weight.
     """
-    name = file.getNamedFile()
-    digest = _file_digest(name)
+    if data is None:
+        name = file.getNamedFile()
+        digest = _file_digest(name)
+    else:
+        digest = hashlib.md5(data).hexdigest()
     registered = pdfmetrics.getRegisteredFontNames()
     if fullFontName in registered:
         previous = _embedded_font_source.get(fullFontName)
@@ -165,7 +188,8 @@ def registerTTFont(fullFontName: str, file) -> str:
             return fullFontName
     if digest is not None:
         _embedded_font_source[fullFontName] = digest
-    pdfmetrics.registerFont(TTFont(fullFontName, name))
+    source = name if data is None else io.BytesIO(data)
+    pdfmetrics.registerFont(TTFont(fullFontName, source))
     return fullFontName
 
 
@@ -359,7 +383,10 @@ class pisaCSSBuilder(css.CSSBuilder):
         for font in fonts:
             src = self.c.getFile(font, relative=self.c.cssParser.rootPath)
             if src and not src.notFound():
-                self.c.loadFont(names, src, bold=bold, italic=italic)
+                # The first source that loads is the font (CSS Fonts 3,
+                # 4.3); the rest are fallbacks for a reader that cannot.
+                if self.c.loadFont(names, src, bold=bold, italic=italic):
+                    break
             else:
                 # Dropped without a word until now. The document then drew
                 # with whatever the family name happened to mean -- a base-14
@@ -1830,7 +1857,10 @@ class pisaContext:
             self.fontList[str(a)] = str(fontname)
 
     # TODO: convert to getFile to support remotes fonts
-    def loadFont(self, names, src, encoding="WinAnsiEncoding", bold=0, italic=0):
+    def loadFont(
+        self, names, src, encoding="WinAnsiEncoding", bold=0, italic=0
+    ) -> bool:
+        """Embed the font in `src` under `names`; return whether it is usable."""
         # XXX Just works for local filenames!
         if names and src:
             file = src
@@ -1842,24 +1872,42 @@ class pisaContext:
             if isinstance(names, list):
                 fontAlias = names
             else:
-                fontAlias = (x.lower().strip() for x in names.split(",") if x)
+                fontAlias = [x.lower().strip() for x in names.split(",") if x]
 
             # XXX Problems with unicode here
             fontAlias = [str(x) for x in fontAlias]
             fontName = fontAlias[0]
 
             font_type = None
+            truetype = None
             if isinstance(file.instance, B64InlineURI):
-                if file.getMimeType() == "font/ttf":
+                mimetype = file.getMimeType()
+                if mimetype == "font/ttf":
                     font_type = "ttf"
+                elif mimetype in SFNT_MIMETYPES:
+                    font_type = "sfnt"
             else:
                 parts = src.split(".")
                 baseName, suffix = ".".join(parts[:-1]), parts[-1]
                 suffix = suffix.lower()
                 if suffix in {"ttf", "ttc"}:
                     font_type = "ttf"
+                elif suffix in {"otf", "woff", "woff2"}:
+                    font_type = "sfnt"
                 elif suffix in {"afm", "pfb"}:
                     font_type = suffix
+
+            if font_type == "sfnt":
+                data = file.getData()
+                if data and needs_conversion(data):
+                    try:
+                        truetype = to_truetype(data)
+                    except (ImportError, FontConversionError) as e:
+                        log.warning(
+                            self.warning("Cannot embed the font %r: %s", src[:120], e)
+                        )
+                        return False
+                font_type = "ttf"
 
             if font_type == "ttf":
                 # determine full font name according to weight and style
@@ -1874,7 +1922,7 @@ class pisaContext:
                     )
                 else:
                     # Register TTF font and special name
-                    psName = registerTTFont(fullFontName, file)
+                    psName = registerTTFont(fullFontName, file, truetype)
 
                     # Add or replace missing styles
                     for is_bold in (0, 1):
@@ -1932,3 +1980,6 @@ class pisaContext:
                     )
             else:
                 log.warning(self.warning("wrong attributes for <pdf:font>"))
+                return False
+            return True
+        return False

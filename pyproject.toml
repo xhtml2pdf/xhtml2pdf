@@ -68,9 +68,15 @@ signing = [
     "pyHanko>=0.37.0",
     "pyhanko-certvalidator>=0.32.1",
 ]
+# OpenType (CFF), WOFF and WOFF2 fonts in @font-face; brotli reads WOFF2.
+fonts = [
+    "fonttools>=4.40",
+    "brotli>=1.0.9",
+]
 # Every optional feature that needs nothing outside Python.
 all = [
     "xhtml2pdf[signing]",
+    "xhtml2pdf[fonts]",
 ]
 pycairo = [
     "reportlab[pycairo]>=4.4.9,<6",
@@ -84,6 +90,7 @@ renderpm = [
 ]
 test = [
     "xhtml2pdf[signing]",
+    "xhtml2pdf[fonts]",
     "tomli>=2.0.1; python_version<'3.11'",
     "tox",
     "coverage>=5.3"
@@ -327,6 +334,8 @@ opf = "opf"
 PNGs = "PNGs"
 # pypdf's StreamObject.flate_encode, named after the Flate filter.
 flate_encode = "flate_encode"
+# The TrueType glyph location table.
+loca = "loca"
 
 [tool.typos.default.extend-words]
 splitted = "splitted"

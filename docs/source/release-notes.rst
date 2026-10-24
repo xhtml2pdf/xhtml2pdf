@@ -68,6 +68,10 @@ Unreleased
   greys on the black plate.
 * A document with bleed, marks or PDF/X logs the images drawn under 300 ppi
   and the text set in fonts that are not embedded.
+* ``@font-face`` takes OpenType fonts with PostScript (CFF) outlines, and
+  WOFF and WOFF2 web fonts, converted to TrueType with fontTools: the new
+  ``fonts`` extra, ``pip install 'xhtml2pdf[fonts]'``. The first source of
+  a ``src`` list that loads is used; the rest are fallbacks.
 
 **📘 Documentation**
 
