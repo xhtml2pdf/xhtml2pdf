@@ -130,7 +130,7 @@ legacy_tox_ini = """
     envlist = py{3.10,3.11,3.12,3.13,3.14}-rl{4,5}, py3.10-rlmin
 
     [testenv]
-    extras = signing
+    extras = signing, fonts
     deps =
         coverage[toml]
         rl4: reportlab>=4.4.9,<5
