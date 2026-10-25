@@ -135,7 +135,7 @@ def _cff_to_glyf(font, outlines: str) -> None:
     ):
         setattr(maxp, attribute, 0)
 
-    # TrueType keeps glyph names in post format 2; CFF kept them itself.
+    # TrueType keeps glyph names in post format 2; CFF holds them itself.
     post = font["post"]
     post.formatType = 2.0
     post.extraNames = []
