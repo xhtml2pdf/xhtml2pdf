@@ -12,6 +12,8 @@ announced.
 from __future__ import annotations
 
 import logging
+import shutil
+import tempfile
 from io import BytesIO
 from pathlib import Path
 from unittest import TestCase
@@ -255,3 +257,27 @@ class HashPrefixedFamilyTest(TestCase):
         fonts = base_fonts(render(html))
 
         self.assertTrue(any("NotoSans" in name for name in fonts), sorted(fonts))
+
+
+class Type1FontTest(TestCase):
+    """A Type 1 face is its .pfb outlines and its .afm metrics, side by side."""
+
+    def setUp(self) -> None:
+        import reportlab
+
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.directory = Path(directory.name)
+        fonts = Path(reportlab.__file__).parent / "fonts"
+        for suffix in ("afm", "pfb"):
+            shutil.copy(fonts / f"DarkGardenMK.{suffix}", self.directory)
+
+    def test_either_file_of_the_pair_embeds_the_face(self) -> None:
+        for suffix in ("afm", "pfb"):
+            with self.subTest(suffix):
+                html = document("Garden", src=f"DarkGardenMK.{suffix}", text="abc")
+                output = BytesIO()
+                pisa.CreatePDF(
+                    html, dest=output, path=str(self.directory / "document.html")
+                )
+                self.assertIn("/DarkGardenMK", base_fonts(output.getvalue()))

@@ -1935,7 +1935,7 @@ class pisaContext:
                     # Register "normal" name and the place holder for style
                     self.registerFont(fontName, [*fontAlias, fullFontName, psName])
 
-            elif font_type in {"afm", ""}:
+            elif font_type in {"afm", "pfb"}:
                 if font_type == "afm":
                     afm = file.getNamedFile()
                     tfile = pisaFileObject(baseName + ".pfb", basepath=file.basepath)
