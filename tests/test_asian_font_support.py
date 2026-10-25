@@ -126,6 +126,45 @@ class AsianFontSupportTests(TestCase):
             "Not all asian fonts detected in the PDF file!",
         )
 
+    def test_asian_font_cmap_matches_its_collection(self):
+        """
+        Every CJK face is written with a CMap of its own character collection.
+
+        ReportLab pairs MSung-Light (Adobe-CNS1) with UniGB-UCS2-H, which maps
+        to Adobe-GB1; Poppler drops a font with that pair and shows no text.
+        """
+        orderings = {
+            "UniGB": "GB1",
+            "UniCNS": "CNS1",
+            "UniJIS": "Japan1",
+            "UniKS": "Korea1",
+        }
+        with io.BytesIO() as pdf_file:
+            pisaDocument(src=self.HTML_CONTENT, dest=pdf_file)
+            pdf_file.seek(0)
+            reader = PdfReader(pdf_file)
+            found = {}
+            for page in reader.pages:
+                for ref in page["/Resources"]["/Font"].values():
+                    font = ref.get_object()
+                    if font.get("/Subtype") != "/Type0":
+                        continue
+                    descendant = font["/DescendantFonts"][0].get_object()
+                    info = descendant["/CIDSystemInfo"].get_object()
+                    found[str(font["/BaseFont"])[1:]] = (
+                        str(font["/Encoding"])[1:],
+                        str(info["/Ordering"]),
+                    )
+
+        self.assertIn("MSung-Light", found)
+        self.assertEqual(("UniCNS-UCS2-H", "CNS1"), found["MSung-Light"])
+        mismatched = {
+            name: pair
+            for name, pair in found.items()
+            if orderings.get(pair[0].split("-")[0]) != pair[1]
+        }
+        self.assertEqual({}, mismatched)
+
     def test_get_default_asian_font(self):
         """Tests if we can successfully extract the default asian fonts"""
         DEFAULT_ASIAN_FONT = get_default_asian_font()
@@ -151,6 +190,7 @@ class AsianFontSupportTests(TestCase):
             "HeiseiMin-W3": ("jpn", "UniJIS-UCS2-H"),
             "HeiseiKakuGo-W5": ("jpn", "UniJIS-UCS2-H"),
             "STSong-Light": ("chs", "UniGB-UCS2-H"),
+            # The wrong CMap for this face; set_asian_fonts writes UniCNS.
             "MSung-Light": ("cht", "UniGB-UCS2-H"),
             "HYSMyeongJo-Medium": ("kor", "UniKS-UCS2-H"),
             "HYGothic-Medium": ("kor", "UniKS-UCS2-H"),

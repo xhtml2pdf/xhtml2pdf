@@ -73,6 +73,12 @@ Unreleased
   ``fonts`` extra, ``pip install 'xhtml2pdf[fonts]'``. The first source of
   a ``src`` list that loads is used; the rest are fallbacks.
 
+**🐛 Bug-Fixes**
+
+* Text in the MSung-Light face (traditional Chinese) is written with the
+  CMap of its own character collection, ``UniCNS-UCS2-H``. Viewers that
+  check the pair, such as Poppler, showed none of it.
+
 **📘 Documentation**
 
 * A guide to printing: :doc:`guide/printing`.

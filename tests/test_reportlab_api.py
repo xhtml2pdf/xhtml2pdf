@@ -103,7 +103,7 @@ REQUIRED_SYMBOLS: dict[str, tuple[str, ...]] = {
         "selectFieldRelative",
         "textFieldRelative",
     ),
-    "reportlab.pdfbase.cidfonts": ("UnicodeCIDFont",),
+    "reportlab.pdfbase.cidfonts": ("CIDEncoding", "UnicodeCIDFont"),
     "reportlab.pdfbase.ttfonts": ("TTFont",),
     "reportlab.lib.fonts": ("addMapping", "tt2ps"),
     "reportlab.lib.styles": ("ParagraphStyle", "getSampleStyleSheet"),
