@@ -9,7 +9,7 @@ import sys
 import tempfile
 import textwrap
 from pathlib import Path
-from unittest import TestCase, skipUnless
+from unittest import TestCase, mock, skipUnless
 
 import pypdf
 
@@ -167,6 +167,33 @@ class OpenTypeFontTestCase(TestCase):
             reader = render(src)
         self.assertTrue(any("Cannot embed the font" in line for line in logs.output))
         self.assertEmbedded(reader, "NotoSans")
+
+    def test_a_damaged_cff_table_falls_back_to_the_next_source(self) -> None:
+        """The CFF table is read only once a glyph is drawn from it."""
+        data = bytearray(cff_font("Damaged"))
+        table = TTFont(io.BytesIO(bytes(data))).reader.tables["CFF "]
+        data[table.offset + 4 : table.offset + table.length] = b"\xff" * (
+            table.length - 4
+        )
+        src = f"url({data_uri(bytes(data), 'font/otf')}), url({TTF.as_posix()})"
+        with self.assertLogs("xhtml2pdf.context", level="WARNING") as logs:
+            reader = render(src)
+        self.assertTrue(any("Cannot embed the font" in line for line in logs.output))
+        self.assertEmbedded(reader, "NotoSans")
+
+    def test_a_font_converts_to_the_same_bytes_every_time(self) -> None:
+        """The same source font is registered once, under one digest."""
+        from xhtml2pdf import opentype
+
+        data = cff_font("Stable")
+        converted = []
+        for now in (3_000_000_000, 3_000_000_001):
+            opentype._cache.clear()
+            with mock.patch(
+                "fontTools.ttLib.tables._h_e_a_d.timestampNow", return_value=now
+            ):
+                converted.append(opentype.to_truetype(data))
+        self.assertEqual(converted[0], converted[1])
 
 
 class WithoutFontToolsTest(TestCase):

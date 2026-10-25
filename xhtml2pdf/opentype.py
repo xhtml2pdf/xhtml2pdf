@@ -19,7 +19,7 @@ import hashlib
 import io
 from collections import OrderedDict
 
-from xhtml2pdf.config.resources import check_deadline
+from xhtml2pdf.config.resources import RenderLimitError, check_deadline
 
 #: The sfnt versions ReportLab reads as they are.
 TRUETYPE_SIGNATURES: frozenset[bytes] = frozenset({b"\x00\x01\x00\x00", b"true"})
@@ -67,7 +67,7 @@ def to_truetype(data: bytes) -> bytes:
 
 def _convert(data: bytes) -> bytes:
     try:
-        from fontTools.ttLib import TTFont, TTLibError
+        from fontTools.ttLib import TTFont
     except ImportError as e:
         msg = (
             "OpenType (CFF), WOFF and WOFF2 fonts need fontTools, which is not"
@@ -75,27 +75,35 @@ def _convert(data: bytes) -> bytes:
         )
         raise ImportError(msg) from e
 
+    # fontTools reads a table when it is first used, so a damaged font can
+    # fail anywhere from here to save(). The modification time is kept, so
+    # the same font always converts to the same bytes.
     try:
-        font = TTFont(io.BytesIO(data))
+        font = TTFont(io.BytesIO(data), recalcTimestamp=False)
+        font.flavor = None
+        _truetype_outlines(font)
+        out = io.BytesIO()
+        font.save(out)
     except ImportError as e:
         # fontTools imports brotli only when it meets a WOFF2 file.
         msg = f"WOFF2 fonts need brotli, which is not installed: {EXTRA_HINT}"
         raise ImportError(msg) from e
-    except (TTLibError, OSError, ValueError, AssertionError) as e:
-        msg = f"not a font fontTools can read: {e}"
+    except (FontConversionError, RenderLimitError):
+        raise
+    except Exception as e:
+        msg = f"not a font fontTools can read: {e!r}"
         raise FontConversionError(msg) from e
+    return out.getvalue()
 
-    font.flavor = None
+
+def _truetype_outlines(font) -> None:
+    """Give `font` TrueType outlines, converting its CFF ones if it has them."""
     outlines = next((tag for tag in ("CFF ", "CFF2") if tag in font), None)
     if outlines is not None:
         _cff_to_glyf(font, outlines)
     elif "glyf" not in font:
         msg = "the font has no outlines (neither glyf nor CFF)"
         raise FontConversionError(msg)
-
-    out = io.BytesIO()
-    font.save(out)
-    return out.getvalue()
 
 
 def _cff_to_glyf(font, outlines: str) -> None:
