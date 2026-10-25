@@ -45,7 +45,7 @@ class BackgroundOpacityTestCase(TestCase):
 
     @staticmethod
     def alphas(image: Image.Image) -> set[int]:
-        return {pixel[3] for pixel in image.getdata()}
+        return set(image.getchannel("A").tobytes())
 
     def test_a_cut_out_pixel_stays_cut_out(self) -> None:
         self.assertIn(0, self.alphas(self.faded(0.5)))
