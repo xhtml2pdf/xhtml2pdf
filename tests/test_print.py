@@ -181,6 +181,19 @@ class BleedAndMarksTestCase(TestCase):
         # edge of the bleed, which is the slug from the corner of the page.
         self.assertBox([SLUG, SLUG], numbers(TRANSLATION, content(reader)))
 
+    def test_a_positioned_page_background_is_placed_from_the_trim(self) -> None:
+        html = (
+            "<style>@page {{ size: a6; {} background-image: url({});"
+            " background-object-position: 20pt 30pt; background-width: 50pt;"
+            " background-height: 40pt }}</style><p>x</p>"
+        )
+        image = re.compile(r"50 0 0 40 (-?[\d.]+) (-?[\d.]+) cm")
+        plain = numbers(image, content(render(html.format("", IMAGE))))
+        bled = numbers(image, content(render(html.format("bleed: 10pt;", IMAGE))))
+        self.assertEqual([20, 30], plain)
+        # The backdrop it is drawn on starts at the edge of the bleed.
+        self.assertEqual([30, 40], bled)
+
     def test_link_destinations_move_with_the_content(self) -> None:
         html = (
             "<style>@page {{ size: a6; margin: 0; {} }}</style>"

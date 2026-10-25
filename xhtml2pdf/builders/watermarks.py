@@ -133,12 +133,22 @@ class WaterMarks:
                         # image.
                         width, height = pagetemplate.pagesize
                         bleed = pagetemplate.bleed
+                        context = pgcontext
+                        position = (pgcontext or {}).get("object_position")
+                        if bleed and position:
+                            # The backdrop starts at the edge of the bleed; a
+                            # position is measured from the trim.
+                            x, y = position
+                            context = {
+                                **pgcontext,
+                                "object_position": (x + bleed, y + bleed),
+                            }
                         try:
                             bgfile = WaterMarks.generate_pdf_background(
                                 bgfile,
                                 (width + 2 * bleed, height + 2 * bleed),
                                 is_portrait=pagetemplate.isPortrait(),
-                                context=pagetemplate.backgroundContext,
+                                context=context,
                             )
                         except ResourceAccessError as e:
                             log.warning("Blocked by the resource policy: %s", e)

@@ -28,7 +28,8 @@ Bleed and crop marks
 area the layout fills. ``bleed`` (CSS Paged Media) grows the PDF page around
 it. The page background, the background propagated from ``<body>`` and an
 ``@page`` ``background-image`` all reach into the bleed, so a slightly-off
-cut leaves no white edge. ``marks`` adds a 12 mm margin outside the bleed,
+cut leaves no white edge. A ``background-object-position`` is still measured from
+the corner of the trim. ``marks`` adds a 12 mm margin outside the bleed,
 the slug, with:
 
 - ``crop``: crop marks at the corners of the trim;
