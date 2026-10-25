@@ -291,6 +291,12 @@ def pisaDocument(
         if encrypt:
             msg = "pdfx and encrypt cannot be combined: PDF/X forbids encryption"
             raise ValueError(msg)
+        if signature:
+            msg = (
+                "pdfx and signature cannot be combined: signing adds a form"
+                " field and an annotation, which a PDF/X file leaves out"
+            )
+            raise ValueError(msg)
         # Read and checked before the document is converted, so that a profile
         # that cannot be used is said before the work rather than after it.
         pdfx = PDFXOptions.from_argument(pdfx)

@@ -102,7 +102,7 @@ The main function of xhtml2pdf is :py:func:`CreatePDF`.
        profile of the printing condition as a path or bytes, and
        ``condition``, its identifier (``"FOGRA39"``); optionally ``info`` and
        ``registry``. Text must be set in embedded fonts. Cannot be combined
-       with ``encrypt``. See :doc:`/guide/printing`.
+       with ``encrypt`` or ``signature``. See :doc:`/guide/printing`.
 
    :return:
    :rtype: xhtml2pdf.document.pisaStory|bytes

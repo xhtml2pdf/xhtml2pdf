@@ -364,6 +364,11 @@ def make_pdfx(data: bytes, options: PDFXOptions) -> bytes:
     # XMP below repeats.
     writer.add_metadata({"/GTS_PDFXVersion": PDFX_VERSION})
     info = dict(writer.metadata or {})
+    if not str(info.get("/Title") or "").strip():
+        log.warning(
+            "The PDF/X document has no title, which a preflight reports. Give"
+            " it one with <title>."
+        )
     document_id = uuid.UUID(
         bytes=hashlib.md5(data, usedforsecurity=False).digest(), version=4
     )

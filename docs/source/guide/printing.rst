@@ -123,7 +123,10 @@ The document is then:
   black plate alone instead of as a four-ink mix;
 - stripped of links and form fields, which a print file has no use for.
 
-It cannot be combined with ``encrypt``: PDF/X forbids encryption.
+It cannot be combined with ``encrypt``, as PDF/X forbids encryption, nor
+with ``signature``, which adds the form field and annotation a PDF/X file
+leaves out. Give the document a ``<title>``: a preflight reports a PDF/X
+file without one, and xhtml2pdf logs a warning.
 
 The file is built to the standard, not validated against it. Check it with
 a preflight (Acrobat Pro, callas pdfToolbox) or ask the print shop to.

@@ -393,6 +393,19 @@ class PDFXTestCase(TestCase):
         with self.assertRaisesRegex(ValueError, "encrypt"):
             pisaDocument("<p>x</p>", dest=io.BytesIO(), pdfx=PDFX, encrypt="secret")
 
+    def test_pdfx_and_signature_cannot_be_combined(self) -> None:
+        with self.assertRaisesRegex(ValueError, "signature"):
+            pisaDocument(
+                "<p>x</p>", dest=io.BytesIO(), pdfx=PDFX, signature={"cert": "x"}
+            )
+
+    def test_a_document_without_a_title_is_reported(self) -> None:
+        with self.assertLogs("xhtml2pdf.builders.pdfx", level="WARNING") as logs:
+            self.render_pdfx(embedded("<p>text</p>"))
+        self.assertTrue(any("<title>" in line for line in logs.output))
+        with self.assertNoLogs("xhtml2pdf.builders.pdfx", level="WARNING"):
+            self.render_pdfx(embedded("<title>Brochure</title><p>text</p>"))
+
 
 class PrintWarningTestCase(TestCase):
     def test_a_coarse_image_on_a_page_with_bleed_is_reported(self) -> None:
