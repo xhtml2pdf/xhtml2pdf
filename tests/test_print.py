@@ -72,6 +72,16 @@ class CMYKColorTestCase(TestCase):
         self.assertIn("1 0 0 0 k", stream)
         self.assertIn("0 0 1 0 k", stream)
 
+    def test_cmyk_in_the_background_shorthand(self) -> None:
+        reader = render(
+            "<div style='background: cmyk(1 0 0 0)'>div</div>"
+            "<table><tr><td style='background: device-cmyk(0 .5 0 0)'>td</td>"
+            "</tr></table>"
+        )
+        stream = content(reader)
+        self.assertIn("1 0 0 0 k", stream)
+        self.assertIn("0 .5 0 0 k", stream)
+
 
 def boxes(page: pypdf.PageObject) -> dict[str, list[float]]:
     found = {}

@@ -169,6 +169,11 @@ def splitBorder(parts):
     return (width, style, color)
 
 
+#: The CSS functions that are a colour (CSSTerminalFunction names; getColor
+#: reads them).
+_COLOR_FUNCTIONS = frozenset({"rgb", "rgba", "cmyk", "device-cmyk"})
+
+
 def expandBackground(parts, last):
     """
     Expand the background shorthand.
@@ -176,19 +181,22 @@ def expandBackground(parts, last):
     [<'background-color'> || <'background-image'> || <'background-repeat'> ||
      <'background-attachment'> || <'background-position'>] | inherit
 
-    Every part used to be thrown away but one: the first was read as an image
-    if it contained a dot and as a colour otherwise, so
-    `background: #fcaf3e url(x.png) no-repeat` set the colour and lost both
-    the image and the repeat.
+    Each part goes to the longhand it belongs to, so
+    `background: #fcaf3e url(x.png) no-repeat` sets the colour, the image and
+    the repeat. A colour function is kept whole for getColor to read.
 
     The parser has already unwrapped url(), so an image is a bare string by
     the time it arrives and cannot be told from a colour name by syntax alone;
-    the dot-or-data: guess is still how they are separated, only now it is the
-    last resort rather than the first test.
+    as a last resort, a part with a dot or a data: URI is the image.
     """
     expanded = []
     position = []
     for part in parts:
+        if getattr(part, "params", None) is not None and (
+            str(part.name).lower() in _COLOR_FUNCTIONS
+        ):
+            expanded.append(("background-color", part, last))
+            continue
         text = _joinPart(part)
         lowered = text.lower()
         if lowered in _backgroundRepeatTable:

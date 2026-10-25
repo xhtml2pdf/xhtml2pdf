@@ -78,6 +78,9 @@ Unreleased
 * Text in the MSung-Light face (traditional Chinese) is written with the
   CMap of its own character collection, ``UniCNS-UCS2-H``. Viewers that
   check the pair, such as Poppler, showed none of it.
+* A colour function in the ``background`` shorthand is read as the
+  background colour, also when an argument has a decimal point:
+  ``background: rgb(10.5, 0, 0)`` was taken for an image.
 
 **📘 Documentation**
 
