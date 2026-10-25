@@ -339,3 +339,6 @@ loca = "loca"
 
 [tool.typos.default.extend-words]
 splitted = "splitted"
+# The PDF Flate filter (FlateDecode) and the stream key /DecodeParms.
+Flate = "Flate"
+Parms = "Parms"

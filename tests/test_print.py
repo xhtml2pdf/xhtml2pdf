@@ -6,6 +6,7 @@ import io
 import re
 from pathlib import Path
 from unittest import TestCase
+from xml.dom import minidom
 
 import pypdf
 from reportlab.lib.colors import CMYKColor
@@ -333,6 +334,30 @@ class PDFXTestCase(TestCase):
                 )
             )
         self.assert_fonts_defined(reader)
+
+    def test_a_form_written_through_ascii85_is_rewritten(self) -> None:
+        """A box under the flow is a form; reportlab encodes it ASCII85 + Flate."""
+        _, reader = self.render_pdfx(
+            embedded(
+                "<p>flowing</p><div style='position: absolute; top: 0;"
+                " z-index: -1; color: #000'>under</div>"
+            )
+        )
+        page = reader.pages[0]
+        self.assertEqual(
+            [], undefined_fonts(page.get_contents(), page["/Resources"], reader)
+        )
+        (form,) = page["/Resources"]["/XObject"].values()
+        stream = form.get_object().get_data().decode("latin-1")
+        self.assertNotIn("0 0 0 rg", stream)
+
+    def test_control_characters_in_the_title_leave_the_xmp_well_formed(self) -> None:
+        _, reader = self.render_pdfx(
+            embedded("<title>A &amp; B &lt;c&gt; \x01\x07é</title><p>text</p>")
+        )
+        xmp = reader.trailer["/Root"]["/Metadata"].get_object().get_data()
+        minidom.parseString(xmp)
+        self.assertEqual("A & B <c> é", reader.xmp_metadata.dc_title["x-default"])
 
     def test_text_in_a_font_that_is_not_embedded_is_an_error(self) -> None:
         with self.assertRaisesRegex(ValueError, "Helvetica"):

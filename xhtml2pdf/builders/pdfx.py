@@ -54,6 +54,7 @@ from pypdf.generic import (
 from xhtml2pdf.builders.preflight import (
     MAX_FORM_DEPTH,
     drop_idle_fonts,
+    replace_stream_data,
     resolve,
     scan,
     unembedded_text_fonts,
@@ -170,9 +171,13 @@ def _pdf_date_to_xmp(value: str | None) -> str:
     return f"{year}-{month}-{day}T{hour}:{minute}:{second}{zone}"
 
 
+#: The characters XML 1.0 does not allow, even escaped.
+XML_FORBIDDEN = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\ufffe\uffff]")
+
+
 def _xmp(info: dict, document_id: str) -> bytes:
     def text(key: str) -> str:
-        return escape(str(info.get(key, "") or ""))
+        return escape(XML_FORBIDDEN.sub("", str(info.get(key, "") or "")))
 
     created = _pdf_date_to_xmp(info.get("/CreationDate"))
     modified = _pdf_date_to_xmp(info.get("/ModDate") or info.get("/CreationDate"))
@@ -224,9 +229,12 @@ def _set_default_rgb(resources, srgb, depth: int = 0) -> None:
     spaces[NameObject("/DefaultRGB")] = ArrayObject([NameObject("/ICCBased"), srgb])
     for xobj in (resolve(resources.get("/XObject")) or {}).values():
         xobj = resolve(xobj)
-        if xobj.get("/Subtype") == "/Form" and depth < MAX_FORM_DEPTH:
-            if "/Resources" not in xobj:
-                xobj[NameObject("/Resources")] = DictionaryObject()
+        # A form without resources of its own uses the page's.
+        if (
+            xobj.get("/Subtype") == "/Form"
+            and "/Resources" in xobj
+            and depth < MAX_FORM_DEPTH
+        ):
             _set_default_rgb(xobj["/Resources"], srgb, depth + 1)
 
 
@@ -275,7 +283,7 @@ def _gray_neutrals(writer: pypdf.PdfWriter) -> None:
             done.add(id(form))
             rewritten = _neutral_to_gray(form, writer)
             if rewritten is not None:
-                form.set_data(rewritten.get_data())
+                replace_stream_data(form, rewritten.get_data())
 
 
 def _drop_annotations(writer: pypdf.PdfWriter) -> int:

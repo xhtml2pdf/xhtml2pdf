@@ -16,7 +16,7 @@ import math
 from collections import Counter
 from dataclasses import dataclass, field
 
-from pypdf.generic import ContentStream, IndirectObject, NameObject
+from pypdf.generic import ContentStream, EncodedStreamObject, IndirectObject, NameObject
 
 log = logging.getLogger(__name__)
 
@@ -84,6 +84,20 @@ class PageReport:
 
 def resolve(obj):
     return obj.get_object() if isinstance(obj, IndirectObject) else obj
+
+
+def replace_stream_data(stream, data: bytes) -> None:
+    """
+    Give a stream object new data, Flate-encoded whatever its filters were.
+
+    pypdf rewrites only a stream whose sole filter is FlateDecode, and
+    reportlab writes its forms through ASCII85Decode as well.
+    """
+    if isinstance(stream, EncodedStreamObject):
+        stream.get_data()
+        stream[NameObject("/Filter")] = NameObject("/FlateDecode")
+        stream.pop("/DecodeParms", None)
+    stream.set_data(data)
 
 
 def font_key(ref) -> object:
@@ -283,7 +297,7 @@ def _drop_tf(content, resources, idle: set, pdf, forms: list, depth: int = 0):
                 xobj, xobj.get("/Resources", resources), idle, pdf, forms, depth + 1
             )
             if rewritten is not None:
-                xobj.set_data(rewritten.get_data())
+                replace_stream_data(xobj, rewritten.get_data())
             forms.append(xobj.get("/Resources"))
     if not idle_names:
         return None
