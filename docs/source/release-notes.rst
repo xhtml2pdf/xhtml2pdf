@@ -83,6 +83,8 @@ Unreleased
   ``background: rgb(10.5, 0, 0)`` was taken for an image.
 * A Type 1 face named in ``@font-face`` by its ``.pfb`` file is embedded,
   with the ``.afm`` beside it, as one named by its ``.afm`` already was.
+* An SVG ``list-style-image`` is drawn as vectors. It was rasterised with
+  renderPM, and failed the document when its backend was not installed.
 
 **📘 Documentation**
 

@@ -1292,15 +1292,14 @@ def _drawBullet(canvas, offset, cur_y, bulletText, style):
                 width = image.drawWidth
                 height = image.drawHeight
                 gap = style.bulletFontSize * 0.25
-                img = image.getImage()
-                # print style.bulletIndent, offset, width
-                canvas.drawImage(
-                    img,
-                    style.leftIndent - width - gap,
-                    cur_y + getattr(style, "bulletOffsetY", 0),
-                    width,
-                    height,
-                )
+                x = style.leftIndent - width - gap
+                y = cur_y + getattr(style, "bulletOffsetY", 0)
+                # An SVG marker is drawn as vectors, like an inline SVG image.
+                drawing = image.getDrawing(width, height)
+                if drawing:
+                    renderPDF.draw(drawing, canvas, x, y)
+                else:
+                    canvas.drawImage(image.getImage(), x, y, width, height)
             else:
                 tx2.setFont(f.fontName, f.fontSize)
                 tx2.setFillColor(f.textColor)

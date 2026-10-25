@@ -85,6 +85,25 @@ class ListMarkerFaceTestCase(TestCase):
         self.assertTrue(any("'1' (U+0031)" in line for line in logged.output))
 
 
+class ListImageMarkerTestCase(TestCase):
+    def test_an_svg_marker_is_drawn_as_vectors(self) -> None:
+        """No raster backend is needed: the marker is a path, not an image."""
+        svg = (
+            '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">'
+            '<rect width="10" height="10" fill="#00f"/></svg>'
+        )
+        uri = "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
+        dest = io.BytesIO()
+        result = pisa.CreatePDF(
+            f"<ul style=\"list-style-image: url('{uri}')\"><li>uno</li></ul>", dest=dest
+        )
+        self.assertFalse(result.err)
+        page = PdfReader(io.BytesIO(dest.getvalue())).pages[0]
+        self.assertNotIn("/XObject", page["/Resources"])
+        stream = page.get_contents().get_data().decode("latin-1")
+        self.assertRegex(stream, r"\b0 0 1 rg\b")
+
+
 class BadInputKeepsTheDocumentTestCase(TestCase):
     """
     Three tags used to let an exception from the value they were given escape
