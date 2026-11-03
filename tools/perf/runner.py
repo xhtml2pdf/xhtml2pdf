@@ -37,7 +37,7 @@ timings: dict[str, float] = defaultdict(float)
 #: What `total` is made of. `reportlab` is derived rather than measured: the
 #: build step reaches into reportlab through so many entry points that timing
 #: it directly would mean instrumenting reportlab itself.
-PHASES = ("html5lib", "parseCSS", "CSSCollect", "story", "reportlab")
+PHASES = ("parse", "parseCSS", "CSSCollect", "story", "reportlab")
 
 
 def _timed(name, func):
@@ -55,10 +55,8 @@ def _timed(name, func):
 @contextmanager
 def phase_timers():
     """Install the phase timers for the duration of the block."""
-    import html5lib
-
     originals = [
-        (html5lib.HTMLParser, "parse", "html5lib"),
+        (_parser, "parseHTML", "parse"),
         (pisaContext, "parseCSS", "parseCSS"),
         (_parser, "CSSCollect", "CSSCollect"),
         (_document, "pisaStory", "story"),
