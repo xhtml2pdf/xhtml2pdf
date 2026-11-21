@@ -115,7 +115,9 @@ def create_diff_image(srcfile1, srcfile2, output_dir, options):
         # `compare` exits 1 when the images differ; that is a result, not a crash
         allowed_returncodes=(0, 1),
     )
-    diff_value = int(float(result.strip()))
+    # ImageMagick 6 prints the pixel count alone; 7 follows it with the
+    # normalized value in parentheses, as in "0 (0)"
+    diff_value = int(float(result.split()[0]))
     if diff_value > 0:
         pprint("Image %s differs from reference, value is %i" % (srcfile1, diff_value))
     return outfile, diff_value
