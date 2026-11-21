@@ -39,7 +39,7 @@ jobs:
       - if: contains(fromJSON('["3.13", "3.14"]'), matrix.python-version)
         run: |
           sudo apt-get update
-          sudo apt-get install --yes libxml2 libxslt-dev
+          sudo apt-get install --yes libxml2-dev libxslt-dev
       - name: Install dependencies
         run: |
           sudo apt-get update
