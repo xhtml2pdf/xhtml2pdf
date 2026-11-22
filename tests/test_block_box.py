@@ -269,6 +269,32 @@ class PageTestCase(TestCase):
         reader = PdfReader(io.BytesIO(pdf))
         self.assertIn("Chapter", reader.pages[0].extract_text())
 
+    def test_a_long_table_in_a_box_runs_on_across_pages(self) -> None:
+        """A box's background or padding does not shrink the table to a page."""
+        rows = "".join(
+            f"<tr><td>row {i}</td><td>value {i}</td></tr>" for i in range(200)
+        )
+        content = f"<p>Intro.</p><table>{rows}</table>"
+
+        def pages(html: str) -> list[str]:
+            dest = io.BytesIO()
+            pisa.CreatePDF(f"<html><body>{html}</body></html>", dest=dest)
+            return [
+                p.extract_text() for p in PdfReader(io.BytesIO(dest.getvalue())).pages
+            ]
+
+        plain = pages(f"<div>{content}</div>")
+        self.assertEqual(3, len(plain))
+        for style in ("background: #ffffff", "padding: 0 20px"):
+            with self.subTest(style=style):
+                self.assertEqual(plain, pages(f'<div style="{style}">{content}</div>'))
+        nested = pages(
+            '<div style="padding: 0 20px">'
+            f'<div style="border: 1px solid black">{content}</div></div>'
+        )
+        self.assertEqual(3, len(nested))
+        self.assertIn("row 199", nested[-1])
+
     def assertInside(self, box: Box, table: Drawn) -> None:
         self.assertEqual(box.page, table.page)
         self.assertGreaterEqual(table.x, box.x)

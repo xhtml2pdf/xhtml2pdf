@@ -58,6 +58,9 @@ Unreleased.
 
 **🐛 Bug-Fixes**
 
+* A long table inside a block with a background, padding or border runs on
+  across pages again, rather than being shrunk to one page or raising
+  ``LayoutError: Splitting error`` (:issue:`854`).
 * ``HttpConfig(timeout=30)`` keeps the timeout it is given; the default of
   5 seconds only fills in a missing one.
 

@@ -253,11 +253,14 @@ class BlockBox(Flowable, PmlMaxHeightMixIn):
         # next wrap lays the content out afresh.
         self._key = None
 
-        # Only a first flowable that no page can hold is shrunk to fit:
-        # anything else waits for the next frame, where it gets a whole one.
+        # Only a first flowable that no page can hold is shrunk to fit, and
+        # only once the box has a whole frame to itself: with less, it waits
+        # for the next frame, where that flowable may split after all.
         first = next((e for e in self._entries if e.height > _FUZZ), None)
         needed = (first.height if first is not None else 0.0) + style.vertical
-        if needed > room + _FUZZ:
+        at_top = getattr(getattr(self, "_frame", None), "_atTop", False)
+        whole_frame = at_top or availHeight + _FUZZ >= room
+        if whole_frame and needed > room + _FUZZ:
             return [
                 PmlKeepInFrame(
                     maxWidth=availWidth,
