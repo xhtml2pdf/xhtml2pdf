@@ -322,6 +322,20 @@ class FlexRenderTest(TestCase):
         self.assertIn("SIDE", text)
         self.assertIn("CELL", text)
 
+    def test_a_long_table_item_keeps_its_rows_on_one_line(self) -> None:
+        """Its columns follow their content, so no cell wraps on later pages."""
+        rows = "".join(
+            f"<tr><td>row {i}</td><td>value {i}</td></tr>" for i in range(200)
+        )
+        table = f"<table>{rows}</table>"
+        plain = [p.extract_text() for p in self._render(f"<div>{table}</div>").pages]
+        for direction in ("row", "column"):
+            with self.subTest(direction=direction):
+                reader = self._render(
+                    f"<div style='display:flex; flex-direction:{direction}'>{table}</div>"
+                )
+                self.assertEqual(plain, [p.extract_text() for p in reader.pages])
+
 
 class FlexWrapTest(TestCase):
     def test_wrap_makes_lines(self) -> None:

@@ -60,6 +60,7 @@ from xhtml2pdf.xhtml2pdf_reportlab import (
     PmlKeepInFrame,
     PmlMaxHeightMixIn,
     PmlParagraph,
+    PmlTable,
     layout_moment,
 )
 
@@ -578,6 +579,13 @@ class FlexItem:
     #: The main size the item had before a page cut, in points; the
     #: continuation keeps it so the line it is in keeps its geometry.
     pinned_main: float | None = None
+
+    def __post_init__(self) -> None:
+        # The item is as wide as its content, so a table in it lays its
+        # columns out by their content rather than in equal shares.
+        for flowable in self.content:
+            if isinstance(flowable, PmlTable):
+                flowable.fitContent = True
 
     @classmethod
     def from_frag(

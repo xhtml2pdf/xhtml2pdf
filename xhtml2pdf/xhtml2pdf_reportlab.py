@@ -1518,6 +1518,9 @@ class PmlTable(Table, PmlMaxHeightMixIn):
     #: Whether the table is as wide as its content rather than the frame:
     #: what an auto margin asks of a table with no width of its own (#562).
     shrinkToFit = False
+    #: Whether a flex item holds the table: its automatic columns follow
+    #: their content and share what room is left in proportion.
+    fitContent = False
     #: A CSS height, in points: the least the table is high. Rows shorter
     #: than that share the difference, as in a browser; content taller than
     #: that makes the table taller.
@@ -1841,6 +1844,22 @@ class PmlTable(Table, PmlMaxHeightMixIn):
                 result[i] = lows[i]
         return result
 
+    def _fillWidth(self, widths: list[float], availWidth: float) -> list[float]:
+        """
+        ``widths`` with the room they leave shared among the automatic
+        columns in proportion to their widths, so that the table fills
+        ``availWidth``; columns with a width of their own keep it.
+        """
+        auto = [i for i, w in enumerate(self._colWidths) if w is None]
+        grown = sum(widths[i] for i in auto)
+        room = availWidth - sum(widths)
+        if room <= 0 or grown <= 0:
+            return widths
+        result = list(widths)
+        for i in auto:
+            result[i] += room * widths[i] / grown
+        return result
+
     def _wrapInside(self, availWidth, availHeight):
         self.setMaxHeight(availHeight)
 
@@ -1849,9 +1868,11 @@ class PmlTable(Table, PmlMaxHeightMixIn):
             self.totalWidth = availWidth
 
         newColWidths = self._colWidths
-        if self.shrinkToFit and self.totalWidth is None:
+        if (self.shrinkToFit or self.fitContent) and self.totalWidth is None:
             content = self._contentColumnWidths(availWidth)
             if content is not None:
+                if self.fitContent:
+                    content = self._fillWidth(content, availWidth)
                 newColWidths[:] = content
                 self.totalWidth = min(sum(content), availWidth)
 

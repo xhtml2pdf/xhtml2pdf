@@ -61,6 +61,10 @@ Unreleased.
 * A long table inside a block with a background, padding or border runs on
   across pages again, rather than being shrunk to one page or raising
   ``LayoutError: Splitting error`` (:issue:`854`).
+* A table in a flex item lays its columns out by their content, as a
+  browser does, instead of in equal shares of the item. The equal shares
+  were narrower than a column's content, so a long table's cells wrapped
+  once its numbers grew, and each page held fewer rows than the last.
 * An ``lta`` signature without ``validation_context.trust_roots`` is
   refused with a ``ValueError``, where pyHanko quietly fell back to the
   operating system's trust list, which it deprecates. ``extra_trust_roots``
