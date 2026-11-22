@@ -13,23 +13,29 @@ import io
 import tempfile
 from pathlib import Path
 from typing import ClassVar
-from unittest import TestCase, mock
+from unittest import SkipTest, TestCase, mock
 
 from asn1crypto import keys as asn1_keys
 from asn1crypto import x509 as asn1_x509
-from cryptography import x509
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives.serialization import pkcs12
-from cryptography.x509.oid import ExtendedKeyUsageOID, NameOID
-from pyhanko.pdf_utils.reader import PdfFileReader
-from pyhanko.sign import timestamps
-from pyhanko.sign.validation import validate_pdf_signature
-from pyhanko_certvalidator import ValidationContext
 
-from xhtml2pdf.builders import signs
-from xhtml2pdf.builders.signs import PDFSignature
 from xhtml2pdf.document import pisaDocument
+
+try:
+    from cryptography import x509
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric import rsa
+    from cryptography.hazmat.primitives.serialization import pkcs12
+    from cryptography.x509.oid import ExtendedKeyUsageOID, NameOID
+    from pyhanko.pdf_utils.reader import PdfFileReader
+    from pyhanko.sign import timestamps
+    from pyhanko.sign.validation import validate_pdf_signature
+    from pyhanko_certvalidator import ValidationContext
+
+    from xhtml2pdf.builders import signs
+    from xhtml2pdf.builders.signs import PDFSignature
+except ImportError as missing:  # pragma: no cover
+    msg = f"signing needs the pyhanko extra ({missing.name} is not installed)"
+    raise SkipTest(msg) from missing
 
 PASSPHRASE = "secret"
 

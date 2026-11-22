@@ -20,7 +20,7 @@ import time
 import zlib
 from pathlib import Path
 from typing import Any
-from unittest import TestCase, mock
+from unittest import TestCase, mock, skipUnless
 
 from asn1crypto import pem
 from pypdf import PdfReader
@@ -28,7 +28,6 @@ from reportlab.platypus import Spacer
 from svglib.svglib import svg2rlg
 
 from xhtml2pdf import pisa
-from xhtml2pdf.builders.signs import PDFSignature
 from xhtml2pdf.config.resources import (
     RenderLimitError,
     ResourceAccessError,
@@ -40,6 +39,11 @@ from xhtml2pdf.files import cleanFiles, getFile, pisaTempFile
 from xhtml2pdf.xhtml2pdf_reportlab import PmlBaseDoc, PmlImage, looks_like_svg
 
 from .httpserver import LocalServerMixin, sample_server
+
+try:
+    from xhtml2pdf.builders.signs import PDFSignature
+except ImportError:  # pragma: no cover
+    PDFSignature = None  # type: ignore[assignment,misc]
 
 
 class LocalSizeLimitTest(TestCase):
@@ -619,6 +623,7 @@ def self_signed_pem() -> bytes:
     return cert.public_bytes(serialization.Encoding.PEM)
 
 
+@skipUnless(PDFSignature is not None, "signing needs the pyhanko extra")
 class SigningInputTest(TestCase):
     """Signing inputs are the caller's, read under the caller's policy."""
 
