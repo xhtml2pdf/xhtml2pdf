@@ -188,35 +188,31 @@ class PDFSignature:
 
     @staticmethod
     def get_validation_context(config):
+        """
+        The pyHanko ValidationContext an ``lta`` signature is validated with.
+
+        ``validation_context.trust_roots`` is required: pyHanko's fallback to
+        the operating system's trust list is deprecated. ``extra_trust_roots``
+        is added to ``trust_roots`` rather than passed on.
+        """
+        settings = config.get("validation_context") or {}
+        if not settings.get("trust_roots") and not settings.get("extra_trust_roots"):
+            msg = (
+                "An lta signature needs validation_context.trust_roots: the"
+                " certificates its chain is validated against"
+            )
+            raise ValueError(msg)
         context = {"allow_fetching": True}
-        if "validation_context" in config:
-            if "crls" in config["validation_context"]:
-                config["validation_context"]["crls"] = PDFSignature.parse_crls(
-                    config["validation_context"]["crls"], config
-                )
-            if "ocsps" in config["validation_context"]:
-                config["validation_context"]["ocsps"] = PDFSignature.parse_oscp(
-                    config["validation_context"]["ocsps"], config
-                )
-
-            if "trust_roots" in config["validation_context"]:
-                config["validation_context"]["trust_roots"] = PDFSignature.get_chains(
-                    config, "trust_roots", config["validation_context"]
-                )
-
-            if "extra_trust_roots" in config["validation_context"]:
-                config["validation_context"]["extra_trust_roots"] = (
-                    PDFSignature.get_chains(
-                        config, "extra_trust_roots", config["validation_context"]
-                    )
-                )
-
-            if "other_certs" in config["validation_context"]:
-                config["validation_context"]["other_certs"] = PDFSignature.get_chains(
-                    config, "other_certs", config["validation_context"]
-                )
-
-            context.update(config["validation_context"])
+        if "crls" in settings:
+            settings["crls"] = PDFSignature.parse_crls(settings["crls"], config)
+        if "ocsps" in settings:
+            settings["ocsps"] = PDFSignature.parse_oscp(settings["ocsps"], config)
+        for key in ("trust_roots", "extra_trust_roots", "other_certs"):
+            if key in settings:
+                settings[key] = PDFSignature.get_chains(config, key, settings)
+        context.update(settings)
+        extra = context.pop("extra_trust_roots", None) or []
+        context["trust_roots"] = [*(context.get("trust_roots") or []), *extra]
         return ValidationContext(**context)
 
     @staticmethod

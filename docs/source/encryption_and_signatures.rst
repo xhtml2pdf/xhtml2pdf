@@ -168,6 +168,12 @@ from `ca_chain` when build pdf signature.
                                'crls': ['http://your.crl', '/path/to/file.crl']}
     }
 
+An ``lta`` signature needs ``validation_context.trust_roots``: the
+certificates the signer's chain is validated against. Without it the
+signature is refused with a ``ValueError``, because pyHanko's fallback to
+the operating system's trust list is deprecated. ``extra_trust_roots`` is
+still read, and its certificates are added to ``trust_roots``.
+
 Signing inputs and the network
 ------------------------------
 

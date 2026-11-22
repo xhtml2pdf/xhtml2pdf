@@ -61,6 +61,11 @@ Unreleased.
 * A long table inside a block with a background, padding or border runs on
   across pages again, rather than being shrunk to one page or raising
   ``LayoutError: Splitting error`` (:issue:`854`).
+* An ``lta`` signature without ``validation_context.trust_roots`` is
+  refused with a ``ValueError``, where pyHanko quietly fell back to the
+  operating system's trust list, which it deprecates. ``extra_trust_roots``
+  is added to ``trust_roots`` instead of being passed on as the deprecated
+  key.
 * ``HttpConfig(timeout=30)`` keeps the timeout it is given; the default of
   5 seconds only fills in a missing one.
 
