@@ -32,7 +32,7 @@ class HttpConfig(dict):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self["timeout"] = 5
+        self.setdefault("timeout", 5)
 
     def save_keys(self, name, value):
         if name == "nosslcheck":

@@ -51,6 +51,32 @@ Versions >= 0.2
     --------------------------------------------
 
 
+0.2.29
+====================
+
+Unreleased.
+
+**🐛 Bug-Fixes**
+
+* ``HttpConfig(timeout=30)`` keeps the timeout it is given; the default of
+  5 seconds only fills in a missing one.
+
+**🧹 Cleanup**
+
+* The signing tests are skipped when pyHanko is not installed, so a plain
+  ``pytest`` run, as Debian's autopkgtest does, no longer stops at
+  collection.
+* The test workflow runs on Ubuntu 26.04: ``testrender`` reads ImageMagick
+  7's ``compare`` output, and the 3.13 and 3.14 jobs install ``libxml2-dev``
+  (:pr:`856`).
+* Tests for ``HttpConfig`` (:pr:`855`).
+
+| Thanks to the following people on GitHub for contributing to this release:
+| *gaborbernat* and *arifahmedozturk*
+
+--------------------------------------------
+
+
 0.2.28
 ====================
 

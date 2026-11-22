@@ -14,13 +14,9 @@ class HttpConfigTest(TestCase):
         config = HttpConfig(source_address=("127.0.0.1", 0))
         self.assertEqual(("127.0.0.1", 0), config["source_address"])
 
-    def test_constructor_cannot_override_default_timeout(self) -> None:
-        """
-        __init__ sets the default timeout after dict.__init__, so a timeout
-        passed to the constructor is overwritten. Options set later, as the
-        CLI does through is_http_config, are kept.
-        """
-        self.assertEqual(5, HttpConfig(timeout=30)["timeout"])
+    def test_a_timeout_given_to_the_constructor_is_kept(self) -> None:
+        self.assertEqual(30, HttpConfig(timeout=30)["timeout"])
+        self.assertEqual(30, HttpConfig({"timeout": 30})["timeout"])
 
     def test_http_options_are_stored_without_prefix(self) -> None:
         for option in ("--http_timeout", "-http_timeout", "http_timeout"):
