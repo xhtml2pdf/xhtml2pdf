@@ -104,6 +104,37 @@ class ListImageMarkerTestCase(TestCase):
         self.assertRegex(stream, r"\b0 0 1 rg\b")
 
 
+class HollowMarkerTestCase(TestCase):
+    """circle is the disc bullet drawn in outline, in the item's colour."""
+
+    @staticmethod
+    def stream(html: str) -> str:
+        dest = io.BytesIO()
+        pisa.CreatePDF(html, dest=dest)
+        page = PdfReader(io.BytesIO(dest.getvalue())).pages[0]
+        return page.get_contents().get_data().decode("latin-1")
+
+    def test_circle_strokes_the_bullet(self) -> None:
+        stream = self.stream(
+            '<ul style="list-style-type: circle; color: #ff0000"><li>uno</li></ul>'
+        )
+        bullet = re.search(r"1 Tr\s*(.*?)\s*0 Tr", stream, re.DOTALL)
+        self.assertIsNotNone(bullet)
+        self.assertRegex(stream, r"\b1 0 0 RG\b")
+        self.assertRegex(stream, r"\b[\d.]+ w\b")
+
+    def test_disc_and_nested_lists_fill_or_stroke_as_they_say(self) -> None:
+        self.assertNotIn(" Tr", self.stream("<ul><li>uno</li></ul>"))
+        # A list inside a list is circle by default.
+        self.assertIn("1 Tr", self.stream("<ul><li>uno<ul><li>dos</li></ul></li></ul>"))
+
+    def test_rtl_circle_strokes_too(self) -> None:
+        stream = self.stream(
+            '<ul dir="rtl" style="list-style-type: circle"><li>uno</li></ul>'
+        )
+        self.assertIn("1 Tr", stream)
+
+
 class BadInputKeepsTheDocumentTestCase(TestCase):
     """
     Three tags used to let an exception from the value they were given escape

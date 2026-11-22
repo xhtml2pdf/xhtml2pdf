@@ -32,6 +32,8 @@ Versions >= 0.2
 * ``border-style: groove``, ``ridge``, ``inset`` and ``outset`` are drawn in
   two shades of the border colour, as Chrome draws them, on blocks,
   paragraphs, tables and table cells. They used to come out solid.
+* ``list-style-type: circle`` draws a hollow ring, the default of a list
+  inside a list. It used to draw the same filled bullet as ``disc``.
 
 **🐛 Bug-Fixes**
 

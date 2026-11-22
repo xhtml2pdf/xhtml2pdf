@@ -129,8 +129,8 @@ Known limitations of the properties above:
    ``ridge``, ``inset`` and ``outset`` use two shades of the border colour,
    a third darker and a third lighter, as Chrome does; ``groove`` and
    ``ridge`` split the width into an outer and an inner half.
--  ``list-style-type``: ``circle`` draws a filled bullet, because no font
-   in the base-14 set has a hollow circle.
+-  ``list-style-type``: ``circle`` is the ``disc`` bullet drawn in
+   outline, so it needs no font beyond the base-14 set.
 -  ``text-decoration``: ``underline``, ``line-through`` and ``overline``,
    in any combination, in the colour and size of the text they are on;
    ``none`` takes off what an ancestor set. ``text-decoration-color``,

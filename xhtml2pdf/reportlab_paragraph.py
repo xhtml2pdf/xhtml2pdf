@@ -1244,6 +1244,37 @@ def _paired_edges(visual: list) -> list:
     return result
 
 
+#: Line width of a hollow marker's outline, as a fraction of its font size:
+#: a 1px ring at 16px, as Chrome draws a circle marker.
+HOLLOW_MARKER_STROKE = 1 / 16
+
+
+def _markerTextOut(tx2, f) -> None:
+    """Write one text fragment of a marker, in outline when it is hollow."""
+    tx2.setFont(f.fontName, f.fontSize)
+    tx2.setFillColor(f.textColor)
+    if getattr(f, "hollow", False):
+        tx2.setStrokeColor(f.textColor)
+        tx2._code.append(f"{f.fontSize * HOLLOW_MARKER_STROKE:.4g} w")
+        tx2.setTextRenderMode(1)
+        tx2.textOut(f.text)
+        tx2.setTextRenderMode(0)
+    else:
+        tx2.textOut(f.text)
+
+
+def _drawMarkerText(canvas, tx2, bulletText) -> None:
+    """Draw a marker's text object; a hollow one keeps its stroke to itself."""
+    hollow = not isinstance(bulletText, str) and any(
+        getattr(f, "hollow", False) for f in bulletText
+    )
+    if hollow:
+        canvas.saveState()
+    canvas.drawText(tx2)
+    if hollow:
+        canvas.restoreState()
+
+
 def _bulletWidth(bulletText, style) -> float:
     if isinstance(bulletText, str):
         return stringWidth(bulletText, style.bulletFontName, style.bulletFontSize)
@@ -1296,10 +1327,8 @@ def _drawBulletRTL(canvas, offset, cur_y, bulletText, style, width):
                 )
                 tx2.moveCursor(image.drawWidth, 0)
             else:
-                tx2.setFont(f.fontName, f.fontSize)
-                tx2.setFillColor(f.textColor)
-                tx2.textOut(f.text)
-    canvas.drawText(tx2)
+                _markerTextOut(tx2, f)
+    _drawMarkerText(canvas, tx2, bulletText)
     return offset
 
 
@@ -1330,10 +1359,8 @@ def _drawBullet(canvas, offset, cur_y, bulletText, style):
                 else:
                     canvas.drawImage(image.getImage(), x, y, width, height)
             else:
-                tx2.setFont(f.fontName, f.fontSize)
-                tx2.setFillColor(f.textColor)
-                tx2.textOut(f.text)
-    canvas.drawText(tx2)
+                _markerTextOut(tx2, f)
+    _drawMarkerText(canvas, tx2, bulletText)
     # AR making definition lists a bit less ugly
     # bulletEnd = tx2.getX()
     bulletEnd = tx2.getX() + style.bulletFontSize * 0.6

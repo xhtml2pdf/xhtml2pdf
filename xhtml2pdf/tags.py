@@ -306,8 +306,8 @@ _black_square: str = "\u25a0"
 _list_style_type: dict[str, str | Callable] = {
     "none": "",
     "disc": _bullet,
-    # No base-14 font has a hollow circle, so circle still borrows the disc
-    # bullet. Everything else here now draws what it says.
+    # No base-14 font has a hollow circle: circle is the disc bullet drawn in
+    # outline (see _HOLLOW_MARKERS).
     "circle": _bullet,
     "square": _black_square,
     "decimal": listDecimal,
@@ -342,6 +342,9 @@ _list_style_type: dict[str, str | Callable] = {
 #: The factor is a fraction of the text size. ZapfDingbats' black square fills
 #: its em, while the marker CSS asks for is a small square: measured against
 #: Chromium it comes out 5px where the unscaled glyph is 11px.
+#: Markers drawn as the outline of their glyph rather than filled.
+_HOLLOW_MARKERS = frozenset({"circle"})
+
 _list_style_font: dict[str, tuple[str, float]] = {
     "disc": ("Symbol", 1.0),
     "circle": ("Symbol", 1.0),
@@ -450,6 +453,7 @@ class pisaTagLI(pisaTag):
             frag.fontSize *= size_factor
         elif frag.listStyleImage is None:
             frag.fontName = frag.bulletFontName = _marker_face(c, frag)
+        frag.hollow = style_type in _HOLLOW_MARKERS and frag.listStyleImage is None
 
         # Left pending on the context rather than set on the frag: the frag is
         # cloned for every child of the <li> and clone drops bulletText, so a

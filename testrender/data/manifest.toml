@@ -172,10 +172,11 @@ ridge."""
 
 [fixtures.css-list-style]
 compare = ["pages", "text", "ssim"]
-notes = """list-style-type beyond disc. Two divergences are left and both are \
-recorded in testrender's KNOWN DIFFERENCES: circle draws a filled bullet, \
-since no base-14 font has a hollow circle, and list-style-position is not \
-implemented so every marker sits outside the box. Text is compared as well as \
+notes = """list-style-type beyond disc. circle is the disc bullet of Symbol \
+drawn in outline, the same size as Chrome's ring with a slightly thinner \
+stroke. One divergence is left, recorded in testrender's KNOWN \
+DIFFERENCES: list-style-position is not implemented so every marker sits \
+outside the box. Text is compared as well as \
 SSIM because a marker is content: it is how upper-latin numbering by letter \
 rather than by number can be seen at all. Chromium puts no unordered marker in \
 its text stream, so browsercompare.py drops those from both sides; ordered \
