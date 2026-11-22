@@ -125,9 +125,10 @@ level, so a rule that does nothing says so rather than looking broken.
 
 Known limitations of the properties above:
 
--  ``border-style``: ``groove``, ``ridge``, ``inset`` and ``outset`` are
-   drawn as a solid line. ``dashed``, ``dotted`` and ``double`` are drawn
-   as themselves.
+-  ``border-style``: every style is drawn as itself. ``groove``,
+   ``ridge``, ``inset`` and ``outset`` use two shades of the border colour,
+   a third darker and a third lighter, as Chrome does; ``groove`` and
+   ``ridge`` split the width into an outer and an inner half.
 -  ``list-style-type``: ``circle`` draws a filled bullet, because no font
    in the base-14 set has a hollow circle.
 -  ``text-decoration``: ``underline``, ``line-through`` and ``overline``,

@@ -114,12 +114,12 @@ class Box(dict):
             canvas.rect(x, y, w, h, fill=1, stroke=0)
 
         # Borders
-        def _drawBorderLine(bstyle, width, color, x1, y1, x2, y2):
+        def _drawBorderLine(bstyle, width, color, x1, y1, x2, y2, side):
             # If no color for border is given, the text color is used (like
             # defined by W3C)
             if color is None:
                 color = self.get("textColor", Color(0, 0, 0))
-            drawBorderLine(canvas, bstyle, width, color, x1, y1, x2, y2)
+            drawBorderLine(canvas, bstyle, width, color, x1, y1, x2, y2, side)
 
         _drawBorderLine(
             self.get("borderLeftStyle", None),
@@ -129,6 +129,7 @@ class Box(dict):
             y,
             x,
             y + h,
+            "Left",
         )
         _drawBorderLine(
             self.get("borderRightStyle", None),
@@ -138,6 +139,7 @@ class Box(dict):
             y,
             x + w,
             y + h,
+            "Right",
         )
         _drawBorderLine(
             self.get("borderTopStyle", None),
@@ -147,6 +149,7 @@ class Box(dict):
             y + h,
             x + w,
             y + h,
+            "Top",
         )
         _drawBorderLine(
             self.get("borderBottomStyle", None),
@@ -156,6 +159,7 @@ class Box(dict):
             y,
             x + w,
             y,
+            "Bottom",
         )
 
         canvas.restoreState()

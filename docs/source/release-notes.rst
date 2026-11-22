@@ -29,6 +29,9 @@ Versions >= 0.2
 
 * ``text-decoration: overline``, alone or with ``underline`` and
   ``line-through``.
+* ``border-style: groove``, ``ridge``, ``inset`` and ``outset`` are drawn in
+  two shades of the border colour, as Chrome draws them, on blocks,
+  paragraphs, tables and table cells. They used to come out solid.
 
 **🐛 Bug-Fixes**
 

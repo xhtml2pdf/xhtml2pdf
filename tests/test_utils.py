@@ -1156,3 +1156,75 @@ class RoundedPaintingTest(TestCase):
             sides=("Left", "Right", "Top"),
         )
         self.assertEqual(3, len(canvas.named("drawPath")))
+
+
+def _styled(style: str, width: float, color) -> dict:
+    return _solid(width, color, **{f"border{s}Style": style for s in utils._BOX_SIDES})
+
+
+class TwoToneBorderTest(TestCase):
+    """groove, ridge, inset and outset, in the shades Chrome draws them."""
+
+    BLUE = Color(0x20 / 255, 0x4A / 255, 0x87 / 255)
+
+    def assertRGB(self, expected: tuple[int, int, int], color) -> None:
+        got = tuple(round(c * 255) for c in color.rgb())
+        for e, g in zip(expected, got, strict=True):
+            self.assertLessEqual(abs(e - g), 1, (expected, got))
+
+    def test_inset_is_dark_above_and_light_below(self) -> None:
+        # Sampled off Chrome 156 for border: 6px inset #204a87.
+        (top,) = utils.borderTones("inset", "Top", self.BLUE)
+        (bottom,) = utils.borderTones("inset", "Bottom", self.BLUE)
+        self.assertRGB((12, 27, 51), top)
+        self.assertRGB((52, 120, 220), bottom)
+        self.assertEqual((bottom,), utils.borderTones("outset", "Top", self.BLUE))
+
+    def test_groove_and_ridge_are_two_halves(self) -> None:
+        (dark,) = utils.borderTones("inset", "Left", self.BLUE)
+        (light,) = utils.borderTones("outset", "Left", self.BLUE)
+        self.assertEqual((dark, light), utils.borderTones("groove", "Left", self.BLUE))
+        self.assertEqual((light, dark), utils.borderTones("ridge", "Left", self.BLUE))
+        self.assertEqual((light, dark), utils.borderTones("groove", "Right", self.BLUE))
+
+    def test_black_is_lightened_but_not_darkened(self) -> None:
+        black = Color(0, 0, 0)
+        (top,) = utils.borderTones("inset", "Top", black)
+        (bottom,) = utils.borderTones("inset", "Bottom", black)
+        self.assertEqual(black, top)
+        self.assertRGB((0x54, 0x54, 0x54), bottom)
+
+    def test_a_cmyk_colour_stays_cmyk(self) -> None:
+        from reportlab.lib.colors import CMYKColor
+
+        cyan = CMYKColor(1, 0, 0, 0.2)
+        for tone in utils.borderTones("groove", "Top", cyan):
+            self.assertIsInstance(tone, CMYKColor)
+            self.assertEqual((1, 0, 0), (tone.cyan, tone.magenta, tone.yellow))
+        dark, light = utils.borderTones("groove", "Top", cyan)
+        self.assertGreater(dark.black, cyan.black)
+        self.assertLess(light.black, cyan.black)
+
+    def test_a_square_box_is_painted_side_by_side(self) -> None:
+        for style, bands in (("inset", 1), ("outset", 1), ("groove", 2), ("ridge", 2)):
+            with self.subTest(style=style):
+                canvas = _PathCanvas()
+                utils.drawBoxBorders(
+                    canvas, 0, 0, 100, 50, _BoxStyle(**_styled(style, 6, self.BLUE))
+                )
+                # Each side in its own wedge, which splits the corners on the
+                # diagonal, and one filled band per shade.
+                self.assertEqual(4, len(canvas.named("clipPath")))
+                self.assertEqual(4 * bands, len(canvas.named("drawPath")))
+
+    def test_without_its_side_a_line_is_solid(self) -> None:
+        canvas = _RecordingCanvas()
+        utils.drawBorderLine(canvas, "groove", 6, self.BLUE, 0, 0, 100, 0)
+        self.assertEqual(1, len(canvas.named("line")))
+
+    def test_a_straight_groove_is_two_half_lines(self) -> None:
+        canvas = _RecordingCanvas()
+        utils.drawBorderLine(canvas, "groove", 6, self.BLUE, 0, 0, 100, 0, "Bottom")
+        lines = [args for _name, args, _kw in canvas.named("line")]
+        # The outer half below the edge, the inner half above it.
+        self.assertEqual([(0, -1.5, 100, -1.5), (0, 1.5, 100, 1.5)], lines)

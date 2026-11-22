@@ -442,6 +442,65 @@ def getBorderDash(style, width: float) -> list[float] | None:
     return [max(part * width, 0.1) for part in pattern]
 
 
+#: The border styles drawn in two shades of their colour.
+TWO_TONE_STYLES = frozenset({"groove", "ridge", "inset", "outset"})
+
+#: What Blink turns black into when it lightens it, having no hue to scale.
+_SHADED_BLACK = 0x54 / 255.0
+#: Blink leaves a colour this close to black undarkened, and one this close
+#: to white unlightened, as their squared distance in 0..255 RGB.
+_NEAR_BLACK = 3 * 0x20**2
+_NEAR_WHITE = 3 * (0xFF - 0xEB) ** 2
+
+
+def _shade(color, step: float):
+    """
+    `color` with its brightest channel moved by `step` (-1/3 or +1/3), the
+    others keeping their proportion to it, as Blink's Color::Dark and
+    Color::Light work. A CMYK colour stays CMYK: scaling the RGB channels
+    together is changing the black.
+    """
+    r, g, b = color.rgb()
+    rgb = (r * 255, g * 255, b * 255)
+    if step < 0 and sum(c * c for c in rgb) <= _NEAR_BLACK:
+        return color
+    if step > 0 and sum((255 - c) ** 2 for c in rgb) <= _NEAR_WHITE:
+        return color
+    value = max(r, g, b)
+    if isinstance(color, CMYKColor):
+        c, m, y = color.cyan, color.magenta, color.yellow
+        if value <= 0:
+            return CMYKColor(0, 0, 0, 1 - _SHADED_BLACK, alpha=color.alpha)
+        target = min(max(value + step, 0.0), 1.0)
+        reach = max(1 - c, 1 - m, 1 - y)
+        return CMYKColor(c, m, y, max(0.0, 1 - target / reach), alpha=color.alpha)
+    if value <= 0:
+        return Color(*(_SHADED_BLACK,) * 3, alpha=color.alpha)
+    factor = min(max(value + step, 0.0), 1.0) / value
+    return Color(r * factor, g * factor, b * factor, alpha=color.alpha)
+
+
+def borderTones(style: str, side: str, color) -> tuple:
+    """
+    The colours of a two-tone border side, outer band first.
+
+    inset is dark at the top and left and light at the bottom and right, as
+    if the box were pressed in, and outset the reverse; groove is an inset
+    outer half on an outset inner half, and ridge the reverse. One colour
+    for inset and outset, two halves for groove and ridge. The shades are
+    Chrome's: a third darker and a third lighter than the declared colour.
+    """
+    dark, light = _shade(color, -1 / 3), _shade(color, 1 / 3)
+    upper = side in {"Top", "Left"}
+    inset_tone, outset_tone = (dark, light) if upper else (light, dark)
+    return {
+        "inset": (inset_tone,),
+        "outset": (outset_tone,),
+        "groove": (inset_tone, outset_tone),
+        "ridge": (outset_tone, inset_tone),
+    }[style]
+
+
 def getBorderTableLine(
     style, width: float
 ) -> tuple[float, str, list[float] | None, None, int, float]:
@@ -469,21 +528,43 @@ def getBorderTableLine(
 
 
 def drawBorderLine(
-    canvas, bstyle, width: float, color, x1: float, y1: float, x2: float, y2: float
+    canvas,
+    bstyle,
+    width: float,
+    color,
+    x1: float,
+    y1: float,
+    x2: float,
+    y2: float,
+    side: str | None = None,
 ) -> None:
     """
     Draw one edge of a box, honouring its border-style.
 
-    Every caller used to stroke a plain line whatever the style said, so
-    dashed, dotted and double all came out solid. The style is still only
-    consulted for the shape of the line: groove, ridge, inset and outset need
-    two shades of the declared colour and are drawn solid for now.
+    The line is centred on the edge. `side` says which edge it is, which a
+    two-tone style needs to pick its shades and to know which half of the
+    width is outside; without it groove, ridge, inset and outset are solid.
     """
     if not width or not getBorderStyle(bstyle) or color is None:
         return
 
     style = str(bstyle).lower()
     canvas.saveState()
+    if style in TWO_TONE_STYLES and side is not None:
+        tones = borderTones(style, side, color)
+        band = width / len(tones)
+        out = {"Left": (-1, 0), "Right": (1, 0), "Top": (0, 1), "Bottom": (0, -1)}
+        dx, dy = out[side]
+        canvas.setLineWidth(band)
+        for index, tone in enumerate(tones):
+            # Centre of this band, measured outward from the edge.
+            shift = width / 2 - band * (index + 0.5)
+            canvas.setStrokeColor(tone)
+            canvas.line(
+                x1 + dx * shift, y1 + dy * shift, x2 + dx * shift, y2 + dy * shift
+            )
+        canvas.restoreState()
+        return
     canvas.setStrokeColor(color)
 
     # CSS 2.1 8.5.3: double is two solid lines with a gap, and the three
@@ -600,7 +681,10 @@ def roundedBox(
 
     None is what every box without a radius gets, and the painters keep
     their plain rectangles for it, so a document that declares none draws
-    exactly what it drew before.
+    exactly what it drew before. A box with a groove, ridge, inset or outset
+    border gets one even with square corners: those are painted side by side
+    in the wedges this geometry gives, which split each corner on the
+    diagonal.
 
     A corner next to a side in no `sides` -- the edge of a box cut by a line
     or page break -- is square, as box-decoration-break: slice has it. It is
@@ -612,9 +696,12 @@ def roundedBox(
     declared = [
         getattr(style, f"border{corner}Radius", None) for corner in RADIUS_CORNERS
     ]
-    if w <= 0 or h <= 0 or all(d is None or d is NO_RADIUS for d in declared):
+    if w <= 0 or h <= 0:
         return None
     borders = _drawnBorders(style, sides)
+    two_tone = any(spec[0] in TWO_TONE_STYLES for spec in borders.values())
+    if not two_tone and all(d is None or d is NO_RADIUS for d in declared):
+        return None
     widths = {side: borders[side][1] if side in borders else 0.0 for side in _BOX_SIDES}
     x -= widths["Left"] / 2.0
     y -= widths["Bottom"] / 2.0
@@ -628,7 +715,7 @@ def roundedBox(
         )
         for d, (a, b) in zip(declared, _CORNER_SIDES, strict=True)
     ]
-    if not any(rx for rx, _ in radii):
+    if not two_tone and not any(rx for rx, _ in radii):
         return None
     tl, tr, br, bl = radii
     factor = min(
@@ -896,9 +983,26 @@ def _drawRoundedSide(canvas, box: RoundedBox, spec, side: str | None) -> None:
     A solid or double border is filled as the band between two edges of the
     box -- the whole ring, or the part in the side's wedge -- so its corner
     grows and thins the way CSS draws it. Dashes need a stroke, so dashed
-    and dotted are stroked along the middle of the band.
+    and dotted are stroked along the middle of the band. A two-tone style
+    is filled side by side, each in its own wedge and shades.
     """
     bstyle, width, color = spec
+    if bstyle in TWO_TONE_STYLES:
+        for one in box.borders if side is None else (side,):
+            canvas.saveState()
+            canvas.clipPath(_sideWedge(canvas, box, one), stroke=0, fill=0)
+            tones = borderTones(bstyle, one, color)
+            step = 1.0 / len(tones)
+            for index, tone in enumerate(tones):
+                canvas.setFillColor(tone)
+                canvas.drawPath(
+                    _ringPath(canvas, box, index * step, (index + 1) * step),
+                    fill=1,
+                    stroke=0,
+                    fillMode=FILL_EVEN_ODD,
+                )
+            canvas.restoreState()
+        return
     canvas.saveState()
     dash = getBorderDash(bstyle, width)
     if dash:
@@ -971,6 +1075,7 @@ def drawBoxBorders(
             y1,
             x2,
             y2,
+            side,
         )
     canvas.restoreState()
 

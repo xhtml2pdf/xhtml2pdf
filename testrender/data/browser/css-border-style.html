@@ -26,6 +26,8 @@ p {
 .double { border-style: double; border-width: 6px; }
 .groove { border-style: groove; border-width: 6px; }
 .ridge  { border-style: ridge;  border-width: 6px; }
+.inset  { border-style: inset;  border-width: 6px; }
+.outset { border-style: outset; border-width: 6px; }
 .hidden { border-style: none; }
 .mixed {
     border-top-style: dotted;
@@ -42,6 +44,7 @@ td {
     padding: 0.3em;
     border: 2px dashed #a40000;
 }
+td.ridge { border: 6px ridge #4e9a06; }
 </style>
 </head>
 <body>
@@ -51,12 +54,18 @@ td {
 <p class="double">border-style: double</p>
 <p class="groove">border-style: groove</p>
 <p class="ridge">border-style: ridge</p>
+<p class="inset">border-style: inset</p>
+<p class="outset">border-style: outset</p>
 <p class="hidden">border-style: none, nothing drawn</p>
 <p class="mixed">dotted red above, dashed green below, no sides</p>
 <table cellspacing="0" cellpadding="0" width="100%">
 <tr>
 <td width="50%">dashed cell</td>
 <td width="50%">dashed cell</td>
+</tr>
+<tr>
+<td class="ridge">ridge cell</td>
+<td>dashed cell</td>
 </tr>
 </table>
 </body>

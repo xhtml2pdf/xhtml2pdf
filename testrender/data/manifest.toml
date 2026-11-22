@@ -164,11 +164,11 @@ the browser draws them, where python-bidi left them back to front."""
 
 [fixtures.css-border-style]
 compare = ["pages", "text", "ssim"]
-notes = """border-style beyond solid. getBorderStyle (xhtml2pdf/util.py) only \
-tells none/hidden apart from everything else, and _drawBorderLine \
-(xhtml2pdf/xhtml2pdf_reportlab.py) strokes an undashed line, so dashed, \
-dotted, double, groove and ridge all come out solid. Covers block borders, \
-per-side styles and a table cell."""
+notes = """border-style beyond solid: dashed, dotted, double, and groove, \
+ridge, inset and outset in Chrome's two shades (a third darker and a third \
+lighter), each side in its own wedge so the corners split on the diagonal. \
+Covers block borders, per-side styles and two table cells, one of them \
+ridge."""
 
 [fixtures.css-list-style]
 compare = ["pages", "text", "ssim"]
