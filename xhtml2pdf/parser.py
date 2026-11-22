@@ -985,9 +985,12 @@ def CSS2Frag(c, kw, isBlock):
             c.frag.underline = 1
         if "line-through" in value:
             c.frag.strike = 1
+        if "overline" in value:
+            c.frag.overline = 1
         if "none" in value:
             c.frag.underline = 0
             c.frag.strike = 0
+            c.frag.overline = 0
     if "font-style" in c.cssAttr:
         value = lower(c.cssAttr["font-style"])
         if value in {"italic", "oblique"}:

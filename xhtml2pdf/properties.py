@@ -118,7 +118,9 @@ CSS_PROPERTIES: tuple[CSSProperty, ...] = (
     ),
     CSSProperty("font-weight", "text", note="binary: bold from bold/bolder/500-900"),
     CSSProperty("font-style", "text", note="binary: italic from italic/oblique"),
-    CSSProperty("text-decoration", "text", note="lights underline and strike"),
+    CSSProperty(
+        "text-decoration", "text", note="lights underline, strike and overline"
+    ),
     CSSProperty("line-height", "text", note="also recomputed when absent"),
     CSSProperty("letter-spacing", "text", note="kept raw, resolved at draw time"),
     CSSProperty("word-spacing", "text", note="kept raw, resolved at draw time"),

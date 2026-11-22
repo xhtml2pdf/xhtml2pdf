@@ -518,6 +518,29 @@ def _putFragLine(cur_x, tx, line):
                     xs.strikeColor = xs.textColor
                     xs.strikeFontSize = f.fontSize
                     xs.strike_x = cur_x_s
+            # Overline
+            overline = getattr(f, "overline", 0)
+            if not getattr(xs, "overline", 0) and overline:
+                xs.overline = 1
+                xs.overline_x = cur_x_s
+                xs.overlineColor = f.textColor
+                xs.overlineFontSize = f.fontSize
+            elif getattr(xs, "overline", 0):
+                if not overline:
+                    xs.overline = 0
+                    xs.overlines.append(
+                        (xs.overline_x, cur_x_s, xs.overlineColor, xs.overlineFontSize)
+                    )
+                elif (
+                    xs.textColor != xs.overlineColor
+                    or f.fontSize != xs.overlineFontSize
+                ):
+                    xs.overlines.append(
+                        (xs.overline_x, cur_x_s, xs.overlineColor, xs.overlineFontSize)
+                    )
+                    xs.overlineColor = xs.textColor
+                    xs.overlineFontSize = f.fontSize
+                    xs.overline_x = cur_x_s
             if f.link and not xs.link:
                 if not xs.link:
                     xs.link = f.link
@@ -557,6 +580,11 @@ def _putFragLine(cur_x, tx, line):
     # Strike
     if xs.strike:
         xs.strikes.append((xs.strike_x, cur_x_s, xs.strikeColor, xs.strikeFontSize))
+
+    if getattr(xs, "overline", 0):
+        xs.overlines.append(
+            (xs.overline_x, cur_x_s, xs.overlineColor, xs.overlineFontSize)
+        )
 
     if xs.link:
         xs.links.append((xs.link_x, cur_x_s, xs.link, xs.linkColor))
@@ -634,6 +662,7 @@ _SAME_FRAG_ATTRIBUTES = (
     "rise",
     "underline",
     "strike",
+    "overline",
     "link",
 )
 
@@ -1404,6 +1433,13 @@ def splitLines0(frags, widths):
                 i += 1
 
 
+#: Height of an overline above the baseline, in ems. A browser draws it at
+#: the font's ascent, about 0.9 em in common Latin fonts; the ascent ReportLab
+#: reports is closer to the cap height, which would put the line on the
+#: capitals.
+OVERLINE_RISE = 0.9
+
+
 def _do_under_line(i, t_off, ws, tx, lm=-0.125):
     y = (
         tx.XtraState.cur_y
@@ -1562,6 +1598,18 @@ def _do_post_text(tx):
     xs.strikes = []
     xs.strike = 0
     xs.strikeColor = None
+
+    # Overline, at the top of each span's font
+    for x1, x2, c, fs in getattr(xs, "overlines", ()):
+        yo = y0 + OVERLINE_RISE * fs
+        if c != csc:
+            tx._canvas.setStrokeColor(c)
+            csc = c
+        tx._canvas.setLineWidth(fs * 0.125 * 0.75)
+        tx._canvas.line(x1, yo, x2, yo)
+    xs.overlines = []
+    xs.overline = 0
+    xs.overlineColor = None
 
     yl = y + leading
     for x1, x2, link, _c in xs.links:
@@ -2557,10 +2605,8 @@ class Paragraph(Flowable):
                 tx.setFont(f.fontName, f.fontSize, leading)
                 ws = getattr(tx, "_wordSpace", 0)
                 t_off = dpl(tx, offset, ws, lines[0][1], noJustifyLast and nLines == 1)
-                if (
-                    (hasattr(f, "underline") and f.underline)
-                    or f.link
-                    or (hasattr(f, "strike") and f.strike)
+                if f.link or any(
+                    getattr(f, name, 0) for name in ("underline", "strike", "overline")
                 ):
                     xs = tx.XtraState = ABag()
                     xs.cur_y = cur_y
@@ -2586,11 +2632,14 @@ class Paragraph(Flowable):
                     # XXX Never underline!
                     underline = f.underline
                     strike = f.strike
+                    overline = getattr(f, "overline", 0)
                     link = f.link
                     if underline:
                         _do_under_line(0, dx, ws, tx)
                     if strike:
                         _do_under_line(0, dx, ws, tx, lm=0.125)
+                    if overline:
+                        _do_under_line(0, dx, ws, tx, lm=OVERLINE_RISE)
                     if link:
                         _do_link_line(0, dx, ws, tx)
 
@@ -2606,6 +2655,10 @@ class Paragraph(Flowable):
                             _do_under_line(i, t_off + leftIndent, ws, tx)
                         if strike:
                             _do_under_line(i, t_off + leftIndent, ws, tx, lm=0.125)
+                        if overline:
+                            _do_under_line(
+                                i, t_off + leftIndent, ws, tx, lm=OVERLINE_RISE
+                            )
                         if link:
                             _do_link_line(i, t_off + leftIndent, ws, tx)
                 else:
@@ -2662,6 +2715,9 @@ class Paragraph(Flowable):
                 xs.strikeColor = None
                 # XXX Modified for XHTML2PDF
                 xs.strikeFontSize = None
+                xs.overline = 0
+                xs.overlines = []
+                xs.overlineColor = None
                 xs.links = []
                 xs.link = None
                 # XXX Modified for XHTML2PDF: inline boxes, open across lines

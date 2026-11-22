@@ -81,11 +81,6 @@ Divergences the comparison has surfaced that are not yet resolved. Each is
 recorded in data/manifest.toml against the fixture that shows it, so the score
 is explained rather than mysterious.
 
-  * text-decoration: overline is not drawn. Underline and strike each carry
-    their own accumulator and drawing pass through
-    xhtml2pdf/reportlab_paragraph.py, and overline needs a third. Shown by
-    css-text.
-
   * list-style-type: circle draws a filled bullet. No font in the base-14 set
     has a hollow circle, and a list marker must not depend on an embedded font
     being present. Shown by css-list-style.

@@ -204,6 +204,7 @@ def getParaFrag(style) -> ParaFrag:
             "rise",
             "underline",
             "strike",
+            "overline",
             "greek",
             "leading",
             "leadingSpace",

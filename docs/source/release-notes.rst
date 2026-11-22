@@ -25,7 +25,12 @@ Versions >= 0.2
     * Note: for smaller improvements
     *
 
-    **🐛 Bug-Fixes**
+    **🎉 New**
+
+* ``text-decoration: overline``, alone or with ``underline`` and
+  ``line-through``.
+
+**🐛 Bug-Fixes**
 
     * Note: Please reference GitHub issues with :issue:`999` and pull requests with :pr:`999`
     *

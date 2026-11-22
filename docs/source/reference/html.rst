@@ -130,7 +130,10 @@ Known limitations of the properties above:
    as themselves.
 -  ``list-style-type``: ``circle`` draws a filled bullet, because no font
    in the base-14 set has a hollow circle.
--  ``text-decoration``: ``overline`` is not drawn.
+-  ``text-decoration``: ``underline``, ``line-through`` and ``overline``,
+   in any combination, in the colour and size of the text they are on;
+   ``none`` takes off what an ancestor set. ``text-decoration-color``,
+   ``-style`` and ``-thickness`` are not read.
 -  ``position``: ``relative`` moves a block where ``top``/``left`` (or
    ``bottom``/``right``) say without moving anything around it; the block
    is laid out and paginated where it was. It applies to blocks only: an

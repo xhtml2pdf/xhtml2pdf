@@ -184,11 +184,10 @@ markers it does emit, and those are compared."""
 [fixtures.css-text]
 compare = ["pages", "text", "ssim"]
 notes = """text-transform, word-spacing, text-decoration: overline and the \
-wrapping white-space values. None are implemented: the first three are absent \
-from the attrNames whitelist (xhtml2pdf/parser.py), so they are parsed and \
-cascaded and then never read, and only `pre` has an effect on white-space \
-(xhtml2pdf/context.py). Text similarity is compared as well as SSIM because \
-text-transform changes the extracted characters, not just their pixels."""
+wrapping white-space values. The overline is drawn 0.9 em above the baseline, \
+where Chrome draws it at the font's ascent. Text similarity is compared as \
+well as SSIM because text-transform changes the extracted characters, not just \
+their pixels."""
 
 [fixtures.css-selectors]
 compare = ["pages", "text", "ssim"]
