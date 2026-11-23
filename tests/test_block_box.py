@@ -326,6 +326,20 @@ class PageTestCase(TestCase):
             pages('<div style="height: 740pt"></div>' + note.format(lines)),
         )
 
+    def test_a_declared_height_that_does_not_fit_keeps_the_box(self) -> None:
+        """
+        Content and padding fit, only the rest of a declared height does not:
+        the box stays on its page, as a full-page cover's band does.
+        """
+        spacer = '<div style="height: 700pt"></div>'
+        band = (
+            '<div style="padding: 7pt; height: 90pt; background: #eee">'
+            "<p style='margin: 0'>band</p></div>"
+        )
+        boxes, _, pdf = render(spacer + band)
+        self.assertEqual([1], sorted({b.page for b in boxes if b.style.backColor}))
+        self.assertEqual(1, len(PdfReader(io.BytesIO(pdf)).pages))
+
     def assertInside(self, box: Box, table: Drawn) -> None:
         self.assertEqual(box.page, table.page)
         self.assertGreaterEqual(table.x, box.x)

@@ -245,13 +245,17 @@ class BlockBox(Flowable, PmlMaxHeightMixIn):
         if at > _FUZZ:
             canv = getattr(self, "canv", None)
             head, tail = split_stack(self._entries, at, self._inner, canv)
-            if not _has_content(tail):
+            bottom = style.paddingBottom + style.border("Bottom")
+            if (
+                not _has_content(tail)
+                and self._stacked + style.vertical > availHeight + _FUZZ
+            ):
                 # All the content fits, but not the bottom padding and border
                 # after it: the box would go on with nothing in it. The last
                 # part of a box carries its bottom, so the cut is made where
                 # that fits too, and with nothing above it the box moves on
-                # whole, as a browser does.
-                bottom = style.paddingBottom + style.border("Bottom")
+                # whole, as a browser does. When it is only a declared height
+                # that does not fit, the bottom still does, here.
                 head, tail = (
                     split_stack(self._entries, at - bottom, self._inner, canv)
                     if at - bottom > _FUZZ
