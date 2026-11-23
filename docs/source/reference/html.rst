@@ -102,6 +102,7 @@ xhtml2pdf supports the following standard CSS properties
     list-style-image, list-style-type
     margin-bottom, margin-left, margin-right, margin-top
     max-height, max-width, min-height, min-width
+    opacity
     order
     overflow, text-overflow
     overflow-wrap, word-break, word-wrap
@@ -140,6 +141,13 @@ Known limitations of the properties above:
    in any combination, in the colour and size of the text they are on;
    ``none`` takes off what an ancestor set. ``text-decoration-color``,
    ``-style`` and ``-thickness`` are not read.
+-  ``opacity``: a block, a table, a flex container or item, an
+   inline-block, a positioned box and an image are each painted with
+   everything in them as one translucent group, as in a browser: where
+   their parts overlap they do not show through each other, and links
+   inside still work. An inline element such as a ``<span>`` has no box to
+   make a group of: its text, background and images are faded each, so
+   where they overlap they show through.
 -  ``position``: ``relative`` moves a block where ``top``/``left`` (or
    ``bottom``/``right``) say without moving anything around it; the block
    is laid out and paginated where it was. It applies to blocks only: an

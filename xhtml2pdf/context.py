@@ -282,6 +282,8 @@ def getParaFrag(style) -> ParaFrag:
     frag.backgroundRepeat = "repeat"
     frag.backgroundPosition = "0% 0%"
     frag.leadingSource = "1.5"
+    #: The opacity of the inline elements an element is inside, multiplied.
+    frag.inlineAlpha = 1.0
     frag.alignment = TA_LEFT
     frag.borderWidth = 1
     reset_non_inherited(frag)

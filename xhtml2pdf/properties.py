@@ -47,6 +47,7 @@ from xhtml2pdf.util import (
     getInt,
     getLengthOrAuto,
     getNumber,
+    getOpacity,
     getOverflow,
     getSize,
     getTextOverflow,
@@ -215,6 +216,15 @@ CSS_PROPERTIES: tuple[CSSProperty, ...] = (
         block_only=True,
         initial="visible",
         note="hidden, clip, scroll and auto cut the lines wider than the block",
+    ),
+    CSSProperty(
+        "opacity",
+        "box",
+        consumer=LOOP,
+        frag="opacity",
+        convert=getOpacity,
+        initial=1.0,
+        note="a box and its content painted as one translucent group",
     ),
 )
 

@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field, replace
+from functools import partial
 from itertools import pairwise
 from operator import itemgetter
 from typing import TYPE_CHECKING, Any
@@ -43,6 +44,7 @@ from xhtml2pdf.builders.flex_layout import (
     PlacedItem,
     resolve_flex_layout,
 )
+from xhtml2pdf.builders.opacity import paint_with_opacity
 from xhtml2pdf.reportlab_paragraph import (
     Paragraph,
     _getFragWords,
@@ -131,6 +133,8 @@ class BoxStyle:
         self.backgroundPosition = "0% 0%"
         self.textColor = None
         self.fontSize = 10.0
+        #: CSS opacity: the box and what is in it, as one translucent group.
+        self.opacity = 1.0
         #: margin-top / margin-bottom, as Platypus asks for them.
         self.spaceBefore = 0.0
         self.spaceAfter = 0.0
@@ -1292,6 +1296,9 @@ class FlexContainer(Flowable, PmlMaxHeightMixIn):
     # ~ Drawing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def draw(self) -> None:
+        paint_with_opacity(self.canv, self.style.opacity, self._draw)
+
+    def _draw(self) -> None:
         if self._box is None:
             self.wrap(self.width, LARGE)
         layout, box = self.layout, self._box
@@ -1317,17 +1324,27 @@ class FlexContainer(Flowable, PmlMaxHeightMixIn):
                 top = content_top - placed.main_pos
                 w, h = placed.cross_size, placed.main_size
             y = top - h
-            drawBoxBackground(canv, x, y, w, h, item.style)
-            draw_stack(
+            paint_with_opacity(
                 canv,
-                self._stacks[placed.index][1],
-                x + item.style.content_left,
-                top - item.style.content_top,
-                w - item.style.horizontal,
+                item.style.opacity,
+                partial(self._draw_item, item, placed.index, (x, y, w, h)),
             )
-            drawBoxBorders(canv, x, y, w, h, item.style)
 
         drawBoxBorders(canv, outer_x, 0, box.outer_width, outer_h, style)
+
+    def _draw_item(self, item: FlexItem, index: int, rect) -> None:
+        """One item's box and content, at `rect` (x, y, w, h)."""
+        x, y, w, h = rect
+        canv = self.canv
+        drawBoxBackground(canv, x, y, w, h, item.style)
+        draw_stack(
+            canv,
+            self._stacks[index][1],
+            x + item.style.content_left,
+            y + h - item.style.content_top,
+            w - item.style.horizontal,
+        )
+        drawBoxBorders(canv, x, y, w, h, item.style)
 
 
 class _UnsplittableFlexContainer(FlexContainer):
@@ -1625,6 +1642,9 @@ class InlineBox(Flowable):
         return self.width, self.height
 
     def draw(self) -> None:
+        paint_with_opacity(self.canv, self.style.opacity, self._draw)
+
+    def _draw(self) -> None:
         if self._cache_key is None:
             self.wrap(LARGE, LARGE)
         canv = self.canv

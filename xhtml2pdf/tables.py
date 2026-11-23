@@ -284,6 +284,7 @@ class pisaTagTABLE(pisaTag):
         tdata.width = _width(c.frag.width or attrs.width)
         tdata.margins = self._horizontal_margins(c, tdata)
         tdata.height = _height(c.frag.height)
+        tdata.opacity = getattr(c.frag, "opacity", 1.0)
 
     @staticmethod
     def _horizontal_margins(c, tdata) -> tuple[float, float]:
@@ -386,6 +387,7 @@ class pisaTagTABLE(pisaTag):
 
             # XXX Maybe we need to copy some more properties?
             t.keepWithNext = c.frag.keepWithNext
+            t.opacity = getattr(tdata, "opacity", 1.0)
             # t.hAlign = tdata.align
             c.addStory(t)
         else:

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>css-opacity</title>
+<style type="text/css">
+p { margin: 0 0 6pt 0; }
+.box { padding: 6pt; margin-bottom: 10pt; background-color: #cc0000; }
+.inner { background-color: #3465a4; color: #ffffff; padding: 4pt; }
+.half { opacity: 0.5; }
+.quarter { opacity: 0.25; }
+table { width: 60%; }
+td { background-color: #73d216; padding: 4pt; }
+</style>
+</head>
+<body>
+<p>An opaque box, for reference:</p>
+<div class="box"><div class="inner">blue box inside red</div></div>
+
+<p>The same box at opacity 0.5: the blue does not show the red through it.</p>
+<div class="box half"><div class="inner">blue box inside red</div></div>
+
+<p>Opacity inside opacity, 0.5 of 0.5:</p>
+<div class="box half"><div class="inner half">nested</div></div>
+
+<p class="quarter">A paragraph of text alone, at 0.25.</p>
+
+<p>Text with <span class="half" style="color: #cc0000">a faded span</span> in it.</p>
+
+<table class="half"><tr><td>a table at 0.5</td><td>second cell</td></tr></table>
+
+<p><img src="img/denker.png" width="80" class="half"> an image at 0.5</p>
+</body>
+</html>

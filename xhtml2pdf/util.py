@@ -1842,6 +1842,24 @@ def getNumber(value, default: float = 0.0) -> float:
         return default
 
 
+def getOpacity(value) -> float:
+    """A CSS <alpha-value>: a number or a percentage, clamped to 0..1."""
+    text = "".join(str(part) for part in toList(value)).strip()
+    try:
+        alpha = float(text[:-1]) / 100 if text.endswith("%") else float(text)
+    except ValueError:
+        _warn_value("opacity", text, "is not a number; using its initial value")
+        return 1.0
+    return min(max(alpha, 0.0), 1.0)
+
+
+def withAlpha(color, factor: float):
+    """`color` with its alpha multiplied by `factor`; None stays None."""
+    if color is None or factor >= 1.0:
+        return color
+    return color.clone(alpha=getattr(color, "alpha", 1.0) * factor)
+
+
 def getInt(value, default: int = 0) -> int:
     """A bare CSS <integer>; order."""
     text = "".join(str(part) for part in toList(value)).strip()

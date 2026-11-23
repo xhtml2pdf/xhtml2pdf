@@ -33,6 +33,7 @@ from xhtml2pdf.builders.flex import (
     draw_stack,
     split_stack,
 )
+from xhtml2pdf.builders.opacity import paint_with_opacity
 from xhtml2pdf.builders.position import PositionAnchor
 from xhtml2pdf.util import drawBoxBackground, drawBoxBorders, getSize, toList
 from xhtml2pdf.xhtml2pdf_reportlab import (
@@ -281,6 +282,9 @@ class BlockBox(Flowable, PmlMaxHeightMixIn):
         return part
 
     def draw(self) -> None:
+        paint_with_opacity(self.canv, self.style.opacity, self._draw)
+
+    def _draw(self) -> None:
         if self._key is None:
             self.wrap(self.width, LARGE)
         canv = self.canv
@@ -538,6 +542,7 @@ def block_box_style(c, kw: dict) -> BoxStyle | None:
         or style.backgroundImage
         or declared_height(c)
         or declared_width(c)
+        or style.opacity < 1.0
     ):
         return None
     return style

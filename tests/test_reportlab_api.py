@@ -103,6 +103,13 @@ REQUIRED_SYMBOLS: dict[str, tuple[str, ...]] = {
         "selectFieldRelative",
         "textFieldRelative",
     ),
+    # A form's stream is given a transparency group (builders/opacity.py).
+    "reportlab.pdfbase.pdfdoc": (
+        "PDFDictionary",
+        "PDFName",
+        "PDFStream",
+        "xObjectName",
+    ),
     "reportlab.pdfbase.cidfonts": ("CIDEncoding", "UnicodeCIDFont"),
     "reportlab.pdfbase.ttfonts": ("TTFont",),
     "reportlab.lib.fonts": ("addMapping", "tt2ps"),
@@ -759,6 +766,38 @@ class OtherPrivateStateTest(TestCase):
 
         canvas = Canvas(io.BytesIO())
         self.assertIsInstance(canvas._code, list)
+
+    def test_a_form_can_be_made_a_translucent_group(self) -> None:
+        """
+        What paint_with_opacity reads and writes around beginForm/endForm:
+        the matrix links are measured with, the annotation list, and the
+        form's stream and Contents in the document.
+        """
+        import io
+
+        from pypdf import PdfReader
+        from reportlab.pdfgen.canvas import Canvas
+
+        from xhtml2pdf.builders.opacity import paint_with_opacity
+
+        out = io.BytesIO()
+        canvas = Canvas(out)
+        canvas.translate(100, 200)
+        self.assertEqual((1, 0, 0, 1, 100, 200), canvas._currentMatrix)
+        self.assertIsInstance(canvas._annotationrefs, list)
+
+        def draw() -> None:
+            canvas.rect(0, 0, 10, 10, fill=1)
+            canvas.linkURL("https://example.com", (0, 0, 10, 10), relative=1)
+
+        paint_with_opacity(canvas, 0.5, draw)
+        canvas.showPage()
+        canvas.save()
+        page = PdfReader(io.BytesIO(out.getvalue())).pages[0]
+        (form,) = page["/Resources"]["/XObject"].values()
+        self.assertEqual("/Transparency", form.get_object()["/Group"]["/S"])
+        (link,) = page["/Annots"]
+        self.assertEqual([100, 200, 110, 210], list(link.get_object()["/Rect"]))
 
 
 @skipUnless(tomllib is not None, "needs tomllib (py>=3.11) or the tomli extra")

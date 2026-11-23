@@ -537,7 +537,7 @@ class SourceTest(ParserTestCase):
     def test_unimplemented_properties_are_named_by_source(self) -> None:
         output, _ = self._render(
             '<style>p { box-shadow: 1px 1px red }</style><link rel="stylesheet"'
-            ' href="ext.css"><p style="opacity: 0.5; width: min(1pt, 2pt)">y</p>',
+            ' href="ext.css"><p style="cursor: help; width: min(1pt, 2pt)">y</p>',
             {"ext.css": "p { float: left }"},
         )
         unimplemented = [
@@ -554,7 +554,7 @@ class SourceTest(ParserTestCase):
         self.assertTrue(ext.endswith(": float"), ext)
         # A style attribute used to be read without a word about it.
         self.assertTrue(attribute.startswith("the style attribute of <p>: "))
-        self.assertTrue(attribute.endswith(": opacity"), attribute)
+        self.assertTrue(attribute.endswith(": cursor"), attribute)
         self.assertIn(
             "the style attribute of <p>: Ignoring CSS declarations whose value"
             " xhtml2pdf cannot evaluate: width: min()",

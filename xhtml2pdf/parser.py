@@ -149,6 +149,7 @@ from xhtml2pdf.util import (
     lineHeight,
     roundedBox,
     toList,
+    withAlpha,
 )
 from xhtml2pdf.w3c import cssDOMElementInterface
 from xhtml2pdf.w3c.css import (
@@ -1536,6 +1537,14 @@ def pisaLoop(node, context, **kw):
         # directly for the .pdftoclevelN styles, and a table of contents
         # should not pick up an outline flag from them.
         apply_uniform_groups(context.frag, context.cssAttr, LOOP_GROUPS)
+        if context.frag.opacity < 1.0 and not (isBlock or isInlineBlock or outOfFlow):
+            # An inline element has no box to paint as a group: its text and
+            # background are faded instead, and what is inside it inherits
+            # the faded colours and the factor, for its images.
+            alpha = context.frag.opacity
+            context.frag.inlineAlpha *= alpha
+            context.frag.textColor = withAlpha(context.frag.textColor, alpha)
+            context.frag.backColor = withAlpha(context.frag.backColor, alpha)
         context.counters.apply(node.parentNode, context.cssAttr)
 
         isFlexItem = context.flexData.collecting_item
@@ -1634,9 +1643,12 @@ def pisaLoop(node, context, **kw):
             sized = bool(declared_height(context)) or (
                 declared_width(context) is not None
             )
+            # A translucent block is one group, text alone or not.
+            own_box = boxStyle is not None and (
+                isEmptyBlock(node) or sized or boxStyle.opacity < 1.0
+            )
             if boxStyle is not None and (
-                hasBlockContent(node, context)
-                or (not isFlexItem and (isEmptyBlock(node) or sized))
+                hasBlockContent(node, context) or (not isFlexItem and own_box)
             ):
                 blockBox = BlockBoxData(context, kw, boxStyle)
 

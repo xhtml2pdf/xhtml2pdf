@@ -182,6 +182,12 @@ rather than by number can be seen at all. Chromium puts no unordered marker in \
 its text stream, so browsercompare.py drops those from both sides; ordered \
 markers it does emit, and those are compared."""
 
+[fixtures.css-opacity]
+compare = ["pages", "text", "ssim"]
+notes = """opacity on a block with an overlapping child (one group, so the \
+child does not show its parent through it), nested, on a paragraph of text \
+alone, on an inline span (its colours faded), on a table and on an image."""
+
 [fixtures.css-text]
 compare = ["pages", "text", "ssim"]
 notes = """text-transform, word-spacing, text-decoration: overline and the \

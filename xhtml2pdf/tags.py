@@ -494,6 +494,8 @@ class pisaTagIMG(pisaTag):
                     img = PmlImage(filedata, src=attr.src.uri, width=None, height=None)
 
                     img.pisaZoom = c.frag.zoom
+                    # Its own opacity and that of the inline elements around it.
+                    img.opacity = c.frag.inlineAlpha
 
                     img.drawHeight *= DPI96
                     img.drawWidth *= DPI96

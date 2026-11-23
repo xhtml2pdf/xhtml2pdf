@@ -56,6 +56,7 @@ from reportlab.platypus.tableofcontents import TableOfContents, drawPageNumbers
 from reportlab.platypus.tables import _SPECIALROWS, Table, TableStyle
 from reportlab.rl_config import register_reset
 
+from xhtml2pdf.builders.opacity import paint_with_opacity
 from xhtml2pdf.builders.printmarks import MarkedCanvas, begin_page, draw_marks
 from xhtml2pdf.config.resources import (
     ResourceAccessError,
@@ -1108,8 +1109,14 @@ class PmlImage(Flowable, PmlMaxHeightMixIn):
         #     renderPDF.draw(drawing, self.canv, 0, 0)
         # else:
         img = self.getImage()
-        with roundedClip(self.canv, self, 0, 0, self.dWidth, self.dHeight):
-            self.canv.drawImage(img, 0, 0, self.dWidth, self.dHeight, mask=self._mask)
+
+        def paint() -> None:
+            with roundedClip(self.canv, self, 0, 0, self.dWidth, self.dHeight):
+                self.canv.drawImage(
+                    img, 0, 0, self.dWidth, self.dHeight, mask=self._mask
+                )
+
+        paint_with_opacity(self.canv, getattr(self, "opacity", 1.0), paint)
 
     def identity(self, maxLen=None):
         return Flowable.identity(self, maxLen)
@@ -1808,7 +1815,11 @@ class PmlTable(Table, PmlMaxHeightMixIn):
         return width + self._margins(), height
 
     def drawOn(self, canvas, x, y, _sW=0):
-        Table.drawOn(self, canvas, x + self.marginLeft, y, _sW)
+        paint_with_opacity(
+            canvas,
+            getattr(self, "opacity", 1.0),
+            lambda: Table.drawOn(self, canvas, x + self.marginLeft, y, _sW),
+        )
 
     def _contentColumnWidths(self, availWidth: float) -> list[float] | None:
         """

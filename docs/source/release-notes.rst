@@ -63,6 +63,11 @@ Unreleased.
 * ``border-style: groove``, ``ridge``, ``inset`` and ``outset`` are drawn in
   two shades of the border colour, as Chrome draws them, on blocks,
   paragraphs, tables and table cells. They used to come out solid.
+* ``opacity``. A block, a table, a flex container or item, an
+  inline-block, a positioned box or an image is painted with what is in it
+  as one PDF transparency group, so overlapping parts do not show through
+  each other, and links inside keep working. An inline element fades its
+  text, background and images.
 * ``list-style-type: circle`` draws a hollow ring, the default of a list
   inside a list. It used to draw the same filled bullet as ``disc``.
 

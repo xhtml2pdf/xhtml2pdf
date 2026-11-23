@@ -7,6 +7,7 @@ from __future__ import annotations
 import re
 import sys
 from copy import deepcopy
+from functools import partial
 from operator import truth
 from string import whitespace
 from typing import TYPE_CHECKING
@@ -29,6 +30,7 @@ from xhtml2pdf.bidi import (
     mirrored,
     needs_bidi,
 )
+from xhtml2pdf.builders.opacity import paint_with_opacity
 from xhtml2pdf.util import (
     drawBoxBackground,
     drawBoxBorders,
@@ -252,6 +254,16 @@ def _flush_text_object(tx, x0, cur_y):
     tx.XtraState.textColor = None
 
 
+def _paintInlineImage(canvas, image, drawing, box) -> None:
+    """Draw an inline image in `box` (x, y, w, h): its vectors, or its bitmap."""
+    x, y, w, h = box
+    with roundedClip(canvas, image, x, y, w, h):
+        if drawing:
+            renderPDF.draw(drawing, canvas, x, y)
+        else:
+            canvas.drawImage(image.getImage(), x, y, w, h, mask="auto")
+
+
 def _putFragLine(cur_x, tx, line):
     xs = tx.XtraState
     cur_y = xs.cur_y
@@ -328,18 +340,19 @@ def _putFragLine(cur_x, tx, line):
                 )
                 cur_x_s = cur_x + nSpaces * ws
                 drawing = cbDefn.image.getDrawing(w, h)
-                with roundedClip(tx._canvas, cbDefn.image, cur_x_s, cur_y + iy0, w, h):
-                    if drawing:
-                        renderPDF.draw(drawing, tx._canvas, cur_x_s, cur_y + iy0)
-                    else:
-                        tx._canvas.drawImage(
-                            cbDefn.image.getImage(),
-                            cur_x_s,
-                            cur_y + iy0,
-                            w,
-                            h,
-                            mask="auto",
-                        )
+
+                image = cbDefn.image
+                paint_with_opacity(
+                    tx._canvas,
+                    getattr(image, "opacity", 1.0),
+                    partial(
+                        _paintInlineImage,
+                        tx._canvas,
+                        image,
+                        drawing,
+                        (cur_x_s, cur_y + iy0, w, h),
+                    ),
+                )
                 # An image inside <a href>. The links of a line are gathered
                 # from its text, and an image has none, so a linked image
                 # made no link at all; its own rectangle is the link.
