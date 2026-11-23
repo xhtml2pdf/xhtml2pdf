@@ -1,0 +1,38 @@
+<!--
+  Browser equivalent of data/source/page-margin-boxes.html
+
+  Chrome prints page-margin boxes itself, so the equivalent is the same
+  markup with _normalize.css linked ahead of the document's own styles.
+  string-set is not in it: Chrome does not implement named strings.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>page-margin-boxes</title>
+<link rel="stylesheet" href="_normalize.css">
+<style type="text/css">
+@page {
+    size: a5;
+    margin: 2cm 1.5cm;
+    @top-left { content: "Annual report"; font-weight: bold }
+    @top-center { content: "Chapter one" }
+    @top-right { content: "2026"; color: #555555 }
+    @bottom-center { content: "Page " counter(page) " of " counter(pages); color: #cc0000 }
+    @bottom-right { content: counter(page, lower-roman) }
+}
+@page :first {
+    @top-left { content: none }
+    @top-center { content: "Cover" }
+    @top-right { content: none }
+}
+p { margin: 0 0 6pt 0; }
+.page { page-break-after: always; }
+</style>
+</head>
+<body>
+<div class="page"><p>The cover: no running header, a centred title in its place.</p></div>
+<div class="page"><p>The second page: the whole header, and the page number in two styles.</p></div>
+<div><p>The last page.</p></div>
+</body>
+</html>

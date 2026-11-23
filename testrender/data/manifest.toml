@@ -182,6 +182,14 @@ rather than by number can be seen at all. Chromium puts no unordered marker in \
 its text stream, so browsercompare.py drops those from both sides; ordered \
 markers it does emit, and those are compared."""
 
+[fixtures.page-margin-boxes]
+compare = ["pages", "text", "ssim"]
+notes = """@page margin boxes with strings, counter(page) in two styles and \
+counter(pages), and @page :first replacing the header on the cover. A box \
+across the top or the bottom is as wide as its content, as Chrome draws it; \
+a box with a background is narrower than Chrome's, which shares out the \
+room its neighbours leave."""
+
 [fixtures.css-opacity]
 compare = ["pages", "text", "ssim"]
 notes = """opacity on a block with an overlapping child (one group, so the \
