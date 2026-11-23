@@ -54,7 +54,7 @@ Versions >= 0.2
 0.2.29
 ====================
 
-Unreleased.
+Released: 2026-11-22
 
 **🎉 New**
 
