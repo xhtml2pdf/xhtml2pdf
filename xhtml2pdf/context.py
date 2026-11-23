@@ -749,6 +749,14 @@ class pisaCSSBuilder(css.CSSBuilder):
 
         pt = PmlPageTemplate(id=name, frames=frameList, pagesize=c.pageSize)
         pt.pisaStaticList = staticList
+        pt.pisaMarginBoxes = c.marginBoxes
+        left, top, width, height = getFrameDimensions(data, *c.pageSize)
+        pt.pisaPageMargins = (
+            top,
+            c.pageSize[0] - left - width,
+            c.pageSize[1] - top - height,
+            left,
+        )
         pt.marks = parse_marks(data.get("marks", "none"))
         pt.bleed = parse_bleed(data.get("bleed"), pt.marks)
         pt.pisaBackground = background
@@ -761,6 +769,7 @@ class pisaCSSBuilder(css.CSSBuilder):
         c.template = None
         c.frameList = []
         c.frameStaticList = []
+        c.marginBoxes = {}
 
         return {}, {}
 
@@ -780,6 +789,16 @@ class pisaCSSBuilder(css.CSSBuilder):
                 )
 
         return {}, {}  # TODO: It always returns empty dicts?
+
+    def atMarginBox(self, name: str, declarations) -> tuple[dict, dict]:
+        """Keep a page-margin box's declarations for the @page around it."""
+        data: dict = {}
+        if declarations:
+            result = self.ruleset([self.selector("*")], declarations)[0]
+            if result:
+                data = dict(next(iter(result.values())))
+        self.c.marginBoxes.setdefault(name, {}).update(data)
+        return {}, {}
 
 
 class pisaCSSParser(css.CSSParser):
@@ -940,6 +959,8 @@ class pisaContext:
         self.fragStack: list = []
         self.frameList: list = []
         self.frameStaticList: list = []
+        #: The page-margin boxes of the @page being read: name -> declarations.
+        self.marginBoxes: dict[str, dict] = {}
         self.frameStatioundList: list = []
         self.log: list = []
         self.path: list = []

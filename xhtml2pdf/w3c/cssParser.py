@@ -60,6 +60,39 @@ def isAtRuleIdent(src, ident):
     return re.match(r"^@" + ident + r"\s*", src)
 
 
+#: The sixteen page-margin boxes of CSS Paged Media 3, section 4.2.
+MARGIN_BOXES: frozenset[str] = frozenset(
+    {
+        "top-left-corner",
+        "top-left",
+        "top-center",
+        "top-right",
+        "top-right-corner",
+        "right-top",
+        "right-middle",
+        "right-bottom",
+        "bottom-right-corner",
+        "bottom-right",
+        "bottom-center",
+        "bottom-left",
+        "bottom-left-corner",
+        "left-bottom",
+        "left-middle",
+        "left-top",
+    }
+)
+
+_AT_IDENT = re.compile(r"^@([a-z-]+)", re.IGNORECASE)
+
+
+def _marginBoxName(src: str) -> str | None:
+    """The margin box an at-rule at the start of `src` names, or None."""
+    match = _AT_IDENT.match(src)
+    if match and match.group(1).lower() in MARGIN_BOXES:
+        return match.group(1).lower()
+    return None
+
+
 def stripAtRuleIdent(src):
     return re.sub(r"^@[a-z\-]+\s*", "", src)
 
@@ -882,6 +915,8 @@ class CSSParser:
             src, result = self._skipAtRule(src), None
         elif isAtRuleIdent(src, "frame"):
             src, result = self._parseAtFrame(src)
+        elif _marginBoxName(src) is not None:
+            src, result = self._parseAtMarginBox(src)
         elif src.startswith("@"):
             src, result = self._parseAtIdent(src)
         else:
@@ -1098,6 +1133,15 @@ class CSSParser:
         src, properties = self._parseDeclarationGroup(src.lstrip())
         properties = self._resolveRootVars(properties)
         result = [self.cssBuilder.atFrame(box, properties)]
+        return src.lstrip(), result
+
+    def _parseAtMarginBox(self, src):
+        """A page-margin box of CSS Paged Media: @top-center { ... }."""
+        name = _marginBoxName(src)
+        src = src[1 + len(name) :].lstrip()
+        src, properties = self._parseDeclarationGroup(src)
+        properties = self._resolveRootVars(properties)
+        result = [self.cssBuilder.atMarginBox(name, properties)]
         return src.lstrip(), result
 
     def _parseAtFontFace(self, src):

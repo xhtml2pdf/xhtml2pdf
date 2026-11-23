@@ -1495,6 +1495,10 @@ class CSSBuilder(cssParser.CSSBuilderAbstract):
         """This is overridden by xhtml2pdf.context.pisaCSSBuilder."""
         return self.ruleset([self.selector("*")], declarations)
 
+    def atMarginBox(self, _name, _declarations):  # noqa: PLR6301
+        """This is overridden by xhtml2pdf.context.pisaCSSBuilder."""
+        return {}, {}
+
     @staticmethod
     def atIdent(_atIdent, _cssParser, src):
         return src, NotImplemented

@@ -481,9 +481,11 @@ class PmlPageTemplate(PageTemplate):
     def afterDrawPage(self, canvas: Canvas, doc):
         # After the page's flow, before showPage: the absolute and fixed
         # boxes paint over everything in the flow, in z-index order.
+        from xhtml2pdf.builders.margin_boxes import paint_margin_boxes
         from xhtml2pdf.builders.position import paint_positioned
 
         paint_positioned(canvas, doc, self)
+        paint_margin_boxes(canvas, doc, self)
         draw_marks(canvas, self.pagesize, self.bleed, self.marks)
 
     def beforeDrawPage(self, canvas: Canvas, doc):

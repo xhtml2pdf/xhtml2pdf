@@ -25,6 +25,7 @@ from reportlab.platypus.doctemplate import NextPageTemplate
 from reportlab.platypus.flowables import Spacer
 
 from xhtml2pdf.builders.inserts import insert_pages
+from xhtml2pdf.builders.margin_boxes import prepare_margin_boxes
 from xhtml2pdf.builders.pdfx import PDFXOptions, make_pdfx
 from xhtml2pdf.builders.position import PositionAnchor
 from xhtml2pdf.builders.preflight import scan, warn
@@ -109,6 +110,7 @@ def pisaStory(
         render_budget(context.resource_policy),
     ):
         pisaParser(src, context, default_css, xhtml, encoding, xml_output)
+        prepare_margin_boxes(context)
 
     # Avoid empty documents
     if not context.story:
