@@ -295,6 +295,37 @@ class PageTestCase(TestCase):
         self.assertEqual(3, len(nested))
         self.assertIn("row 199", nested[-1])
 
+    def test_the_bottom_padding_does_not_go_on_alone(self) -> None:
+        """
+        Content that fits at the foot, with no room for the padding under it,
+        does not leave a slice of empty box on the next page.
+        """
+
+        def pages(html: str) -> list[list[str]]:
+            dest = io.BytesIO()
+            pisa.CreatePDF(html, dest=dest)
+            return [
+                p.extract_text().split()
+                for p in PdfReader(io.BytesIO(dest.getvalue())).pages
+            ]
+
+        note = '<div style="padding: 7pt 9pt; background: #eee">{}</div><p>after</p>'
+        # The frame of an A4 page is 785.2pt; the note's text ends 18.25pt in.
+        spacer = '<div style="height: 764pt"></div>'
+        boxes, _, _ = render(spacer + note.format("<p style='margin: 0'>note</p>"))
+        # One box, on page two, whole: a browser moves it too.
+        self.assertEqual([2], [b.page for b in boxes if b.style.backColor])
+        self.assertEqual(
+            [[], ["note", "after"]],
+            pages(spacer + note.format("<p style='margin: 0'>note</p>")),
+        )
+        # With lines to spare, the last goes on with the padding.
+        lines = "<p style='margin: 0'>one<br/>two<br/>three</p>"
+        self.assertEqual(
+            [["one", "two"], ["three", "after"]],
+            pages('<div style="height: 740pt"></div>' + note.format(lines)),
+        )
+
     def assertInside(self, box: Box, table: Drawn) -> None:
         self.assertEqual(box.page, table.page)
         self.assertGreaterEqual(table.x, box.x)

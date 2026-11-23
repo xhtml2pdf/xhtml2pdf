@@ -134,6 +134,11 @@ def _stack(
     return entries, height
 
 
+def _has_content(flowables) -> bool:
+    """Whether any of `flowables` draws something: not only zero-size markers."""
+    return any(not getattr(f, "_ZEROSIZE", False) for f in flowables)
+
+
 class BlockBox(Flowable, PmlMaxHeightMixIn):
     """
     A block's box: background, padding and borders around a column of
@@ -238,10 +243,23 @@ class BlockBox(Flowable, PmlMaxHeightMixIn):
 
         at = availHeight - style.content_top
         if at > _FUZZ:
-            head, tail = split_stack(
-                self._entries, at, self._inner, getattr(self, "canv", None)
-            )
-            if any(not getattr(f, "_ZEROSIZE", False) for f in head):
+            canv = getattr(self, "canv", None)
+            head, tail = split_stack(self._entries, at, self._inner, canv)
+            if not _has_content(tail):
+                # All the content fits, but not the bottom padding and border
+                # after it: the box would go on with nothing in it. The last
+                # part of a box carries its bottom, so the cut is made where
+                # that fits too, and with nothing above it the box moves on
+                # whole, as a browser does.
+                bottom = style.paddingBottom + style.border("Bottom")
+                head, tail = (
+                    split_stack(self._entries, at - bottom, self._inner, canv)
+                    if at - bottom > _FUZZ
+                    else ([], self._entries)
+                )
+                if not _has_content(tail):
+                    head = []
+            if _has_content(head):
                 # Nothing of the box's bottom is drawn at the cut, and
                 # nothing of its top where it goes on.
                 return [

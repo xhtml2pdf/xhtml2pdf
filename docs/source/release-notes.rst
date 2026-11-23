@@ -105,6 +105,11 @@ Unreleased.
 
 **🐛 Bug-Fixes**
 
+* A box whose content fits at the foot of a page, with no room for the
+  bottom padding under it, no longer leaves a slice of empty box -- its
+  padding, background and border -- at the top of the next page. The cut is
+  made where the bottom fits too, so the last line goes on with it, or the
+  box goes on whole, as in a browser.
 * A forced page break no longer leaves an empty page:
   ``page-break-before: always`` on the first element used to make page one
   blank, and ``page-break-after`` on one block with ``page-break-before`` on
