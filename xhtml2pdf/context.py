@@ -1014,6 +1014,8 @@ class pisaContext:
         self.pageRules: dict[str, tuple] = {}
         #: An @page :first read before the @page it belongs to, kept for it.
         self.pendingFirstPages: dict[str, tuple] = {}
+        #: (name, text) of string-set, waiting for the next paragraph.
+        self.pendingStringSets: list[tuple[str, str]] = []
         self.frameStatioundList: list = []
         self.log: list = []
         self.path: list = []
@@ -1582,6 +1584,9 @@ class pisaContext:
                     self.tocNamesUsed.add(para.tocName)
                 para.keepWithNext = first.keepWithNext
                 para.autoLeading = "max"
+                if self.pendingStringSets:
+                    para.stringSets = self.pendingStringSets
+                    self.pendingStringSets = []
 
                 if self.image:
                     para = PmlParagraphAndImage(

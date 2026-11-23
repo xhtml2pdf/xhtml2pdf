@@ -20,7 +20,7 @@ down the left and the right it fills its share.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
@@ -28,9 +28,11 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 from reportlab.lib.styles import ParagraphStyle
 
 from xhtml2pdf.builders.opacity import paint_with_opacity
+from xhtml2pdf.builders.strings import string_on_page
 from xhtml2pdf.w3c.generated_content import (
     AttrItem,
     CounterItem,
+    StringItem,
     format_counter,
     parse_content,
 )
@@ -81,8 +83,6 @@ class MarginBox:
     box: BoxStyle
     valign: str
     opacity: float = 1.0
-    #: string-set names this box reads, for string(); see the D3 step.
-    strings: list[str] = field(default_factory=list)
 
     def text(self, doc) -> str:
         """The box's content on the page `doc` is drawing."""
@@ -95,6 +95,8 @@ class MarginBox:
             elif isinstance(item, CounterItem) and item.name == "pages":
                 count = getattr(doc, "_page_count", 0) or doc.page
                 parts.append(format_counter(count, item.style))
+            elif isinstance(item, StringItem):
+                parts.append(string_on_page(doc, item.name, item.policy))
             elif isinstance(item, AttrItem | CounterItem):
                 # A margin box has no element for attr() and no counters
                 # but the page's.

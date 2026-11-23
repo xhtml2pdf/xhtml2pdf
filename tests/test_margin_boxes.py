@@ -219,3 +219,50 @@ class FirstPageTest(TestCase):
         )
         found = words(out.getvalue())
         self.assertGreater(found["one"][1], 6 * cm - 1)
+
+
+class StringSetTest(TestCase):
+    CSS = (
+        "@page { size: a6; margin: 1.5cm 1cm;"
+        " @top-left { content: string(chapter) }"
+        " @top-right { content: 'last:' string(chapter, last) }"
+        " @bottom-left { content: 'start:' string(chapter, start) }"
+        " @bottom-right { content: 'except:' string(chapter, first-except) } }"
+        " h1 { string-set: chapter 'Ch. ' counter(c) ' ' content();"
+        " counter-increment: c }"
+    )
+
+    def margins(self, body: str) -> list[list[str]]:
+        return [
+            [line for line in lines if ":" in line or line.startswith("Ch.")]
+            for lines in page_lines(render(self.CSS, body))
+        ]
+
+    def test_a_running_header_follows_the_headings(self) -> None:
+        body = (
+            "<h1>One</h1><p>a</p><pdf:nextpage/><p>still one</p><pdf:nextpage/>"
+            "<h1>Two</h1><p>b</p><h1>Three</h1><p>c</p>"
+        )
+        self.assertEqual(
+            [
+                ["Ch. 1 One", "last:Ch. 1 One", "start:Ch. 1 One", "except:"],
+                ["Ch. 1 One", "last:Ch. 1 One", "start:Ch. 1 One", "except:Ch. 1 One"],
+                ["Ch. 2 Two", "last:Ch. 3 Three", "start:Ch. 1 One", "except:"],
+            ],
+            self.margins(body),
+        )
+
+    def test_attr_and_a_part_of_the_content(self) -> None:
+        reader = render(
+            "@page { margin: 2cm; @top-center { content: string(t) '|' string(f) } }"
+            " h1 { string-set: t attr(title), f content(first-letter) }",
+            '<h1 title="Tooltip">Heading</h1>',
+        )
+        self.assertIn("Tooltip|H", page_lines(reader)[0])
+
+    def test_before_any_assignment_the_string_is_empty(self) -> None:
+        reader = render(
+            "@page { margin: 2cm; @top-center { content: '[' string(x) ']' } }",
+            "<p>no headings</p>",
+        )
+        self.assertIn("[]", page_lines(reader)[0])

@@ -49,6 +49,7 @@ from xhtml2pdf.builders.position import (
     read_position,
     shift_story,
 )
+from xhtml2pdf.builders.strings import string_set_values
 from xhtml2pdf.config.resources import RenderLimitError, check_deadline, current_policy
 from xhtml2pdf.default import (
     BOOL,
@@ -310,6 +311,9 @@ READABLE_CSS_FUNCTIONS: frozenset[str] = frozenset(
 #: The functions ``content`` reads besides those (w3c/generated_content.py).
 CONTENT_FUNCTIONS: frozenset[str] = frozenset({"counter", "counters", "attr"})
 
+#: The functions ``string-set`` reads (builders/strings.py).
+STRING_SET_FUNCTIONS: frozenset[str] = CONTENT_FUNCTIONS | {"content"}
+
 
 def firstUnreadableFunction(value, name: str = "") -> CSSTerminalFunction | None:
     """
@@ -319,6 +323,8 @@ def firstUnreadableFunction(value, name: str = "") -> CSSTerminalFunction | None
     readable = READABLE_CSS_FUNCTIONS
     if name == "content":
         readable |= CONTENT_FUNCTIONS
+    elif name == "string-set":
+        readable |= STRING_SET_FUNCTIONS
     parts = value if isinstance(value, list | tuple) else (value,)
     return next(
         (
@@ -1546,6 +1552,12 @@ def pisaLoop(node, context, **kw):
             context.frag.textColor = withAlpha(context.frag.textColor, alpha)
             context.frag.backColor = withAlpha(context.frag.backColor, alpha)
         context.counters.apply(node.parentNode, context.cssAttr)
+        if "string-set" in context.cssAttr:
+            # Handed to the next paragraph made, which records them with the
+            # page it lands on.
+            context.pendingStringSets += string_set_values(
+                context.cssAttr["string-set"], node, context.counters
+            )
 
         isFlexItem = context.flexData.collecting_item
         if isFlexItem:

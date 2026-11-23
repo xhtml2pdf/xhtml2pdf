@@ -58,6 +58,17 @@ Unreleased.
 
 **🎉 New**
 
+* Page-margin boxes: ``@page { @top-center { content: ... } }`` and the
+  other fifteen boxes of CSS Paged Media write headers and footers in the
+  page's margin, with ``counter(page)``, ``counter(pages)`` in any counter
+  style, and their own font, colour, alignment, background, border, padding
+  and opacity -- no static ``@frame`` or ``<pdf:pagenumber>`` needed.
+* ``@page :first`` builds on its ``@page`` and is used for the first page,
+  so ``@page :first { @top-center { content: none } }`` leaves the cover
+  without a header.
+* ``string-set`` and ``string()``: ``h1 { string-set: chapter content() }``
+  with ``@top-left { content: string(chapter) }`` is a running header, with
+  the ``first``, ``start``, ``last`` and ``first-except`` choices.
 * ``text-decoration: overline``, alone or with ``underline`` and
   ``line-through``.
 * ``border-style: groove``, ``ridge``, ``inset`` and ``outset`` are drawn in

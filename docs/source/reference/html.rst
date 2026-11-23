@@ -39,6 +39,61 @@ Valid size syntax and values:
     Defaults to:
     size: a4 portrait;
 
+Page-margin boxes
+~~~~~~~~~~~~~~~~~
+
+An ``@page`` rule may hold the sixteen margin boxes of CSS Paged Media --
+``@top-left-corner``, ``@top-left``, ``@top-center``, ``@top-right``,
+``@top-right-corner``, ``@right-top``, ``@right-middle``,
+``@right-bottom``, their ``bottom-`` and ``left-`` counterparts and the
+other three corners -- to write in the page's margin on every page:
+
+.. code:: css
+
+    @page {
+        size: a4;
+        margin: 2.5cm 2cm;
+        @top-left { content: string(chapter); font-size: 8pt }
+        @top-right { content: "Annual report"; color: #555 }
+        @bottom-center { content: "Page " counter(page) " of " counter(pages) }
+    }
+    @page :first {
+        @top-left { content: none }
+        @top-right { content: none }
+    }
+    h1 { string-set: chapter content() }
+
+``content`` takes strings, ``counter(page)`` and ``counter(pages)`` -- in
+any counter style, ``counter(page, lower-roman)`` -- and ``string(name)``.
+The page number follows ``<pdf:resetpagenumber>``; ``counter(pages)`` makes
+the document be laid out twice, as ``<pdf:pagecount>`` does. A box takes
+the text properties, ``background-color``, ``border``, ``padding``,
+``text-align``, ``vertical-align`` (``top``, ``middle`` or ``bottom``) and
+``opacity``; ``content: none`` leaves it out.
+
+The corners are the squares the margins meet in. The boxes of a side share
+it by which of them have content: a centre box with neighbours may take the
+middle third, and they what is left either side. Across the top and the
+bottom a box is as wide as its content, against its end of the side or
+centred, as Chrome draws them; down the left and right a box fills its
+share. ``width`` and ``height`` on a box are not read.
+
+``@page :first`` is the first page. It builds on the ``@page`` it is a page
+of: what it does not declare -- size, margins, frames, margin boxes -- it
+takes from there, so a cover without the running header is the one line
+above. ``@page :left`` and ``@page :right`` take that ``@page``'s margin
+boxes as well.
+
+``string-set: name value`` on an element sets a named string for
+``string(name)`` -- its value strings, ``content()`` (the element's text;
+``content(first-letter)`` its first letter), ``attr()`` and ``counter()``,
+several names separated by commas. ``string(name)`` shows the first value
+set on the page, or the one the page began with; ``string(name, last)`` the
+last on the page; ``string(name, start)`` the one the page began with;
+``string(name, first-except)`` nothing on a page that sets it. The string
+belongs to the next paragraph after the element begins, and to the page
+that paragraph is drawn on.
+
 Supported @frame properties:
 ----------------------------
 
@@ -91,7 +146,7 @@ xhtml2pdf supports the following standard CSS properties
     break-after, break-before, break-inside
     color
     column-gap, row-gap
-    content, counter-increment, counter-reset
+    content, counter-increment, counter-reset, string-set
     display
     flex-basis, flex-direction, flex-grow, flex-shrink, flex-wrap
     font-family, font-size, font-style, font-weight

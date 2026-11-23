@@ -382,6 +382,12 @@ CSS_PROPERTIES += (
     ),
     CSSProperty("counter-reset", "generated", consumer=LOOP),
     CSSProperty("counter-increment", "generated", consumer=LOOP),
+    CSSProperty(
+        "string-set",
+        "generated",
+        consumer=LOOP,
+        note="named strings for string() in a page-margin box",
+    ),
 )
 
 #: Flexbox, CSS Flexible Box Layout Module Level 1. All LOOP: the container

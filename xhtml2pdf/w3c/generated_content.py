@@ -117,7 +117,15 @@ class AttrItem:
     name: str
 
 
-ContentItem = str | CounterItem | AttrItem
+@dataclass(frozen=True)
+class StringItem:
+    """string(name, policy): a named string, in a page-margin box."""
+
+    name: str
+    policy: str = "first"
+
+
+ContentItem = str | CounterItem | AttrItem | StringItem
 
 #: A CSS escape in a string: a backslash and up to six hex digits, with the
 #: one white space that may end them, or a backslash and any other character.
@@ -149,6 +157,8 @@ def _function_item(function: CSSTerminalFunction) -> ContentItem | None:
         )
     if name == "attr" and len(params) == 1:
         return AttrItem(params[0])
+    if name == "string" and 1 <= len(params) <= 2:
+        return StringItem(params[0], *(p.lower() for p in params[1:]))
     return None
 
 
@@ -266,7 +276,7 @@ class Counters:
             elif isinstance(item, AttrItem):
                 if element.hasAttribute(item.name):
                     out.append(element.getAttribute(item.name))
-            else:
+            elif isinstance(item, CounterItem):
                 values = self.values(item.name)
                 if not values:
                     # A counter used where none is in scope is created there

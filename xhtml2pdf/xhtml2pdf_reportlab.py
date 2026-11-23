@@ -244,6 +244,8 @@ class PmlBaseDoc(BaseDocTemplate):
         #: Counts the layout passes, for the containers' layout caches.
         self.layoutPass = getattr(self, "layoutPass", 0) + 1
         self.pageNumberResets = []
+        #: (page, name, value) for each string-set, as the pages are drawn.
+        self.stringSets: list[tuple[int, str, str]] = []
         self.pdfInserts = []
         self.pageTaken = False
 
@@ -299,6 +301,9 @@ class PmlBaseDoc(BaseDocTemplate):
             for drawn in inner:
                 self.afterFlowable(drawn)
             return
+        # The named strings it sets, with the page it is on, for string().
+        for name, value in getattr(flowable, "stringSets", ()):
+            self.stringSets.append((self.page, name, value))
         # Does the flowable contain fragments?
         if getattr(flowable, "outline", False):
             self.notify(
