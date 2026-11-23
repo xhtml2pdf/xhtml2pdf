@@ -651,6 +651,10 @@ class TableStateTest(TestCase):
             ["self", "value", "style", "oldHeight", "newHeight", "width"],
             parameters(Table._splitCell),
         )
+        self.assertEqual(
+            ["self", "availHeight", "ignoreSpans"],
+            parameters(Table._getFirstPossibleSplitRowPosition),
+        )
         self.assertTrue(all(isinstance(name, str) for name in _SPECIALROWS))
 
     def test_a_row_can_be_cut_as_PmlTable_cuts_it(self) -> None:

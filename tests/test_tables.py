@@ -1154,14 +1154,16 @@ class RowCutAcrossPagesTestCase(TestCase):
         self.assertEqual(1, text.count("first"))
         self.assertEqual(1, text.count("last"))
 
-    def test_a_row_a_rowspan_crosses_is_not_cut(self) -> None:
-        """ReportLab's cut gets a rowspan wrong; this one still fails."""
-        from reportlab.platypus.doctemplate import LayoutError
-
+    def test_a_row_a_rowspan_crosses_is_shrunk_not_cut(self) -> None:
+        """ReportLab's cut gets a rowspan wrong: the rows are shrunk instead."""
         header = "<tr><th>a<br/>b<br/>c<br/>d<br/>e</th><th>f</th></tr>"
         cells = f'<td rowspan="2">x</td>{self.cell(40)}</tr><tr><td>y</td>'
-        with self.assertRaises(LayoutError):
-            self.render(self.html(cells, header=header))
+        with self.assertLogs("xhtml2pdf", level="WARNING") as logged:
+            _pages, text = self.render(self.html(cells, header=header))
+
+        self.assertTrue(any("shrunk to fit" in line for line in logged.output))
+        for line in self.lines(40):
+            self.assertIn(line, text)
 
     def test_a_cell_in_error_mode_still_fails(self) -> None:
         from reportlab.platypus.doctemplate import LayoutError
@@ -1313,3 +1315,39 @@ class CellHeightAttributeTestCase(TestCase):
             '<table><tr><td height="90" style="height: 20pt">a</td></tr></table>'
         )
         self.assertAlmostEqual(20, height)
+
+
+class SpannedTallRowTestCase(TestCase):
+    """
+    A row too tall for any page that a rowspan crosses cannot be cut, nor can
+    the table between the rows the span joins: those rows are shrunk to fit,
+    with a warning, where the render used to stop with a LayoutError.
+    """
+
+    def test_the_rows_of_the_span_are_shrunk_rather_than_fail(self) -> None:
+        from io import BytesIO
+
+        from pypdf import PdfReader
+
+        from xhtml2pdf import pisa
+
+        long = "word " * 1500
+        html = (
+            '<table repeat="1"><tr><th>H1</th><th>H2</th></tr>'
+            '<tr><td rowspan="3">span</td><td>x</td></tr>'
+            f"<tr><td>{long}</td></tr><tr><td>y</td></tr></table><p>after</p>"
+        )
+        dest = BytesIO()
+        with self.assertLogs("xhtml2pdf", level="WARNING") as logged:
+            result = pisa.CreatePDF(html, dest=dest)
+
+        self.assertFalse(result.err)
+        self.assertTrue(
+            any("rows 2 to 4 are shrunk to fit" in line for line in logged.output),
+            logged.output,
+        )
+        text = " ".join(
+            page.extract_text() for page in PdfReader(BytesIO(dest.getvalue())).pages
+        )
+        for word in ("span", "x", "y", "after"):
+            self.assertIn(word, text.split())

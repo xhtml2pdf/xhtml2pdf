@@ -105,6 +105,11 @@ Unreleased.
 
 **🐛 Bug-Fixes**
 
+* A table row too tall for any page that a ``rowspan`` crosses no longer
+  stops the conversion with ``LayoutError: ... too large on page``. Such a
+  row cannot be cut, nor can the table between the rows the span joins, so
+  those rows are shrunk to fit the page, with a warning naming them; the
+  rest of the table goes on as before.
 * A box whose content fits at the foot of a page, with no room for the
   bottom padding under it, no longer leaves a slice of empty box -- its
   padding, background and border -- at the top of the next page. The cut is

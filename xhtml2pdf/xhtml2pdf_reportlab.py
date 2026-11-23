@@ -1587,6 +1587,10 @@ class PmlTable(Table, PmlMaxHeightMixIn):
         if not parts and self._mayCutInsideRow():
             parts = self._splitInsideRow(availWidth - self._margins(), availHeight)
             inRow = True
+            if not parts:
+                shrunk = self._shrinkSpannedRows(availWidth, availHeight)
+                if shrunk:
+                    return shrunk
         for part in parts:
             part.marginLeft, part.marginRight = self.marginLeft, self.marginRight
             part.splitInRow = 0
@@ -1676,6 +1680,67 @@ class PmlTable(Table, PmlMaxHeightMixIn):
             parts[0]._argH[-1] = None
             parts[1]._argH[self._repeatCount()] = None
         return parts
+
+    def _getFirstPossibleSplitRowPosition(self, availHeight, ignoreSpans=0):
+        """ReportLab's split row, unless _shrinkSpannedRows has chosen one."""
+        forced = getattr(self, "_forcedSplitRow", None)
+        if forced is not None:
+            return forced
+        return Table._getFirstPossibleSplitRowPosition(
+            self, availHeight, ignoreSpans=ignoreSpans
+        )
+
+    def _shrinkSpannedRows(self, availWidth, availHeight) -> list:
+        """
+        The rows a rowspan holds together, shrunk to fit, and the rest; or [].
+
+        For a row too tall for any page that a rowspan crosses: it cannot be
+        cut inside (see _splitInsideRow), nor can the table between the rows
+        the span joins, so the conversion used to stop with a LayoutError.
+        The table is cut after the last row of the span instead, and that
+        first part is shrunk to the room there is, with a warning.
+        """
+        n = self._getFirstPossibleSplitRowPosition(availHeight, ignoreSpans=1)
+        spans = [
+            span
+            for span in getattr(self, "_spanRanges", {}).values()
+            if span is not None and span[1] != span[3] and span[1] <= n <= span[3]
+        ]
+        if n >= self._nrows or not spans:
+            return []
+        end = max(span[3] for span in spans) + 1
+        log.warning(
+            "A table row too tall for a page is held to its neighbours by a"
+            " rowspan, so it cannot be cut: rows %d to %d are shrunk to fit",
+            min(span[1] for span in spans) + 1,
+            end,
+        )
+        self._forcedSplitRow = end
+        try:
+            parts = (
+                [self]
+                if end >= self._nrows
+                else Table.split(self, availWidth - self._margins(), 1e9)
+            )
+        finally:
+            del self._forcedSplitRow
+        if not parts:
+            return []
+        for part in parts:
+            part.marginLeft, part.marginRight = self.marginLeft, self.marginRight
+        head = parts[0]
+        if head is self:
+            head = copy.copy(self)
+            head.split = lambda *_args, **_kw: []
+        return [
+            PmlKeepInFrame(
+                maxWidth=availWidth,
+                maxHeight=availHeight,
+                content=[head],
+                mode="shrink",
+            ),
+            *parts[1:],
+        ]
 
     def _splitCell(self, value, style, oldHeight, newHeight, width):
         if hasattr(self, "_splitRow"):
