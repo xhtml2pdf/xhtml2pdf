@@ -131,6 +131,11 @@ Known limitations of the properties above:
    ``ridge`` split the width into an outer and an inner half.
 -  ``list-style-type``: ``circle`` is the ``disc`` bullet drawn in
    outline, so it needs no font beyond the base-14 set.
+-  ``line-height``: a number (``1.5``, ``2``) multiplies the font size of
+   every element it reaches, each its own; a percentage or a length in
+   ``em``, ``ex`` or ``rem`` is worked out where it is declared, against
+   that element's font size, and the elements inside take the length it
+   comes to, as in a browser. The default is ``1.5``.
 -  ``text-decoration``: ``underline``, ``line-through`` and ``overline``,
    in any combination, in the colour and size of the text they are on;
    ``none`` takes off what an ancestor set. ``text-decoration-color``,

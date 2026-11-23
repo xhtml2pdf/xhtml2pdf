@@ -145,6 +145,8 @@ from xhtml2pdf.util import (
     getLengthOrAuto,
     getPos,
     getSize,
+    leadingFrom,
+    lineHeight,
     roundedBox,
     toList,
 )
@@ -960,11 +962,11 @@ def CSS2Frag(c, kw, isBlock):
             1.0,
         )
     if "line-height" in c.cssAttr:
-        leading = "".join(c.cssAttr["line-height"])
-        c.frag.leading = getSize(leading, c.frag.fontSize)
-        c.frag.leadingSource = leading
+        c.frag.leading, c.frag.leadingSource = lineHeight(
+            c.cssAttr["line-height"], c.frag.fontSize, c.frag.leadingSource
+        )
     else:
-        c.frag.leading = getSize(c.frag.leadingSource, c.frag.fontSize)
+        c.frag.leading = leadingFrom(c.frag.leadingSource, c.frag.fontSize)
     if "letter-spacing" in c.cssAttr:
         c.frag.letterSpacing = c.cssAttr["letter-spacing"]
     if "word-spacing" in c.cssAttr:

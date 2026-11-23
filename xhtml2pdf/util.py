@@ -1214,6 +1214,48 @@ def getSize(
         return default
 
 
+_NUMBER = re.compile(r"^[+]?(\d+(\.\d*)?|\.\d+)$")
+#: Units CSS resolves against the element's own font size.
+_FONT_RELATIVE = ("%", "rem", "em", "ex")
+
+
+def lineHeight(value, fontSize: float, inherited: str) -> tuple[float, str]:
+    """
+    (leading, source) for a declared line-height, as CSS 2.1 10.8 computes it.
+
+    The source is what the element's children inherit. A number is inherited
+    as the number and multiplies each child's own font size; a percentage or
+    a length in em, ex or rem is resolved here, against this element's font
+    size, and the children inherit the length it comes to. ``inherit`` takes
+    `inherited`, the parent's source.
+    """
+    if isinstance(value, list | tuple):
+        value = "".join(str(part) for part in value)
+    text = str(value).strip().lower()
+    if text == "inherit":
+        return leadingFrom(inherited, fontSize), inherited
+    if text.endswith(_FONT_RELATIVE) and not _NUMBER.match(text):
+        leading = getSize(text, fontSize)
+        return leading, f"{leading!r}pt"
+    return leadingFrom(text, fontSize), text
+
+
+def leadingFrom(source: str, fontSize: float) -> float:
+    """
+    The leading an inherited line-height `source` gives at `fontSize`: a
+    number times the size, ``normal`` the size itself, a length as it is.
+
+    A bare number never goes through getSize, which reads 1 to 7 as the
+    sizes of HTML's <font size>.
+    """
+    text = str(source).strip().lower()
+    if text == "normal":
+        return fontSize
+    if _NUMBER.match(text):
+        return fontSize * float(text)
+    return getSize(text, fontSize)
+
+
 @Memoized
 def getCoords(x, y, w, h, pagesize):
     """

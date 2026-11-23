@@ -61,6 +61,7 @@ from xhtml2pdf.util import (
     getTocLeader,
     getTocName,
     getTocNameClass,
+    leadingFrom,
     set_asian_fonts,
     set_value,
     shape_frag_text,
@@ -280,7 +281,7 @@ def getParaFrag(style) -> ParaFrag:
     frag.textTransform = "none"
     frag.backgroundRepeat = "repeat"
     frag.backgroundPosition = "0% 0%"
-    frag.leadingSource = "150%"
+    frag.leadingSource = "1.5"
     frag.alignment = TA_LEFT
     frag.borderWidth = 1
     reset_non_inherited(frag)
@@ -1417,7 +1418,7 @@ class pisaContext:
         maxLeading: int = 0
         # fontSize = 0
         for frag in self.fragList:
-            leading = getSize(frag.leadingSource, frag.fontSize) + frag.leadingSpace
+            leading = leadingFrom(frag.leadingSource, frag.fontSize) + frag.leadingSpace
             maxLeading = max(leading, frag.fontSize + frag.leadingSpace, maxLeading)
             frag.leading = leading
 
@@ -1454,7 +1455,8 @@ class pisaContext:
                 style.leading = maxLeading
             else:
                 style.leading = (
-                    getSize(first.leadingSource, first.fontSize) + first.leadingSpace
+                    leadingFrom(first.leadingSource, first.fontSize)
+                    + first.leadingSpace
                 )
 
             bulletText = copy.copy(first.bulletText)

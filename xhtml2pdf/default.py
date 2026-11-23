@@ -423,7 +423,7 @@ html {
     color: #000000;
     margin: 0;
     padding: 0;
-    line-height: 150%;
+    line-height: 1.5;
     border: 1px none;
     display: inline;
     width: auto;

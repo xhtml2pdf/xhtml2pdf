@@ -75,6 +75,13 @@ Unreleased.
   Compared with Chrome on the 105 fixtures of ``make test-browser``, 66 come
   closer and the average SSIM goes from 0.900 to 0.907. A document laid out
   to the point over a background or a form should be checked.
+* ``line-height`` is inherited as CSS says. A percentage or an ``em``
+  length is worked out on the element that declares it and its descendants
+  take that length, so ``body { line-height: 150% }`` gives a heading the
+  body's leading, as a browser does, rather than 150% of the heading's own
+  size; a number such as ``1.5`` still follows each element's size. The
+  default is now the number ``1.5``, which lays out exactly as the
+  ``150%`` it replaces did.
 
 **🐛 Bug-Fixes**
 
@@ -90,6 +97,9 @@ Unreleased.
   operating system's trust list, which it deprecates. ``extra_trust_roots``
   is added to ``trust_roots`` instead of being passed on as the deprecated
   key.
+* ``line-height: 2`` and the other whole numbers from 1 to 7 multiply the
+  font size; they were read as the sizes of HTML's ``<font size>``, so
+  ``line-height: 2`` gave 0.75em.
 * ``HttpConfig(timeout=30)`` keeps the timeout it is given; the default of
   5 seconds only fills in a missing one.
 
