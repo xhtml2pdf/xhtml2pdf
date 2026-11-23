@@ -66,6 +66,16 @@ Unreleased.
 * ``list-style-type: circle`` draws a hollow ring, the default of a list
   inside a list. It used to draw the same filled bullet as ``disc``.
 
+**💪🏼 Improvements**
+
+* Text sits in its line as a browser puts it: the leading is shared above
+  and below the text, as CSS does, rather than left below it. A paragraph
+  takes the same height as before, and its text is drawn lower inside it,
+  by about 0.29 em at the default ``line-height: 150%`` -- 2.2 pt at 7.5 pt.
+  Compared with Chrome on the 105 fixtures of ``make test-browser``, 66 come
+  closer and the average SSIM goes from 0.900 to 0.907. A document laid out
+  to the point over a background or a form should be checked.
+
 **🐛 Bug-Fixes**
 
 * A long table inside a block with a background, padding or border runs on

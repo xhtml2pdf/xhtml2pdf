@@ -43,7 +43,12 @@ from xhtml2pdf.builders.flex_layout import (
     PlacedItem,
     resolve_flex_layout,
 )
-from xhtml2pdf.reportlab_paragraph import Paragraph, _getFragWords
+from xhtml2pdf.reportlab_paragraph import (
+    Paragraph,
+    _getFragWords,
+    _maxLeadingExtent,
+    _strut,
+)
 from xhtml2pdf.util import (
     AUTO,
     NO_RADIUS,
@@ -303,20 +308,22 @@ def flowable_baseline(flowable) -> float | None:
     """
     Distance from the top of a wrapped flowable to its first baseline.
 
-    A paragraph's is the ascent of its first line, which is where drawPara
-    puts the pen; a flex container lends its first item's. Anything else --
-    a table, an image, a keep-in-frame -- has none, and answers None.
+    A paragraph's is where drawPara puts the pen for its first line; a flex
+    container lends its first item's. Anything else -- a table, an image, a
+    keep-in-frame -- has none, and answers None.
     """
     if isinstance(flowable, FlexContainer):
         return flowable.first_baseline()
     blPara = _paragraph_lines(flowable)
     if blPara is None:
         return None
-    if blPara.kind == 1:
-        ascent = blPara.lines[0].ascent
+    if isinstance(flowable, Paragraph):
+        first = flowable._firstBaseline()
+    elif blPara.kind == 1:
+        first = blPara.lines[0].ascent
     else:
-        ascent = getattr(blPara, "ascent", blPara.fontSize)
-    return _paragraph_top(flowable) + ascent
+        first = getattr(blPara, "ascent", blPara.fontSize)
+    return _paragraph_top(flowable) + first
 
 
 def flowable_last_baseline(flowable) -> float | None:
@@ -335,12 +342,22 @@ def flowable_last_baseline(flowable) -> float | None:
     leading = style.leading
     auto_leading = getattr(flowable, "autoLeading", getattr(style, "autoLeading", ""))
     lines = blPara.lines
+    first = (
+        flowable._firstBaseline()
+        if isinstance(flowable, Paragraph)
+        else (
+            lines[0].ascent
+            if blPara.kind == 1
+            else getattr(blPara, "ascent", blPara.fontSize)
+        )
+    )
     if blPara.kind == 1:
-        from_top = lines[0].ascent
+        from_top = first
+        strut = _strut(style, leading)
         for previous, line in pairwise(lines):
             if auto_leading == "max":
-                from_top += max(leading / 6.0, -previous.descent)
-                from_top += max(leading * 5.0 / 6.0, line.ascent)
+                from_top += _maxLeadingExtent(previous, strut)[1]
+                from_top += _maxLeadingExtent(line, strut)[0]
             elif auto_leading == "min":
                 from_top += -previous.descent + line.ascent
             else:
@@ -351,7 +368,7 @@ def flowable_last_baseline(flowable) -> float | None:
             step = max(leading, blPara.fontSize)
         elif auto_leading == "min":
             step = blPara.fontSize
-        from_top = getattr(blPara, "ascent", blPara.fontSize) + step * (len(lines) - 1)
+        from_top = first + step * (len(lines) - 1)
     inner_height = flowable.height - getattr(flowable, "deltaHeight", 0.0)
     bottom = 0.0
     if isinstance(flowable, PmlParagraph):

@@ -206,24 +206,26 @@ def imgVRange(h, va, fontSize, line_ascent=None, line_descent=None):
     return iyo, iyo + h
 
 
-_56 = 5.0 / 6
-_16 = 1.0 / 6
-
-
-def _maxLeadingExtent(line, leading):
+def _strut(style, leading) -> tuple[float, float]:
     """
-    The ascent and descent a line is given with autoLeading "max": the
-    leading split 5/6 above the baseline and 1/6 below, each part widened to
-    the font's own where that is taller.
-
-    One function for drawing (_putFragLine) and for measuring (wrap, split).
-    They used to measure max(ascent - descent, leading) instead, which is
-    less whenever the font's ascent wins above and its descent below -- a
-    TTF taller than 1.2em with a line-height over 1.2 -- so a paragraph was
-    drawn taller than it said it was, and the next block ran over its last
-    lines, by about a point per line.
+    The paragraph font's ascent and descent with the leading shared out as
+    CSS does: half of what the leading has beyond the font above, half below.
     """
-    return max(_56 * leading, line.ascent), max(_16 * leading, -line.descent)
+    ascent, descent = getAscentDescent(style.fontName, style.fontSize)
+    half = (leading - (ascent - descent)) / 2
+    return ascent + half, -descent + half
+
+
+def _maxLeadingExtent(line, strut):
+    """
+    The ascent and descent a line is given with autoLeading "max": those of
+    the paragraph's strut, each widened to the line's own where that is
+    taller, so a bigger font in the line makes it taller.
+
+    One function for drawing (_putFragLine) and for measuring (wrap, split),
+    so a paragraph is drawn exactly as tall as it says it is.
+    """
+    return max(strut[0], line.ascent), max(strut[1], -line.descent)
 
 
 def _flush_text_object(tx, x0, cur_y):
@@ -261,7 +263,7 @@ def _putFragLine(cur_x, tx, line):
     dal = autoLeading in {"min", "max"}
     if dal:
         if autoLeading == "max":
-            ascent, descent = _maxLeadingExtent(line, leading)
+            ascent, descent = _maxLeadingExtent(line, _strut(xs.style, leading))
         else:
             ascent = line.ascent
             descent = -line.descent
@@ -1937,8 +1939,9 @@ class Paragraph(Flowable):
         if blPara.kind == 1 and autoLeading not in {"", "off"}:
             height = 0
             if autoLeading == "max":
+                strut = _strut(style, leading)
                 for line in blPara.lines:
-                    height += sum(_maxLeadingExtent(line, leading))
+                    height += sum(_maxLeadingExtent(line, strut))
             elif autoLeading == "min":
                 for line in blPara.lines:
                     height += line.ascent - line.descent
@@ -2053,8 +2056,9 @@ class Paragraph(Flowable):
         if blPara.kind == 1 and autoLeading not in {"", "off"}:
             s = height = 0
             if autoLeading == "max":
+                strut = _strut(style, leading)
                 for i, line in enumerate(blPara.lines):
-                    h = sum(_maxLeadingExtent(line, leading))
+                    h = sum(_maxLeadingExtent(line, strut))
                     n = height + h
                     if n > availHeight + 1e-8:
                         break
@@ -2530,6 +2534,32 @@ class Paragraph(Flowable):
         self._displayCache = (blPara, base_dir, lines)
         return lines
 
+    def _firstBaseline(self) -> float:
+        """
+        Distance from the top of the wrapped paragraph to its first baseline.
+
+        The leading is shared above and below the text as CSS does, so a
+        line's text sits in the middle of its line box rather than at the
+        top of it. With autoLeading "min" a line is only as tall as its
+        font, and the text starts at the top.
+        """
+        blPara = self.blPara
+        style = self.style
+        leading = style.leading
+        autoLeading = getattr(self, "autoLeading", getattr(style, "autoLeading", ""))
+        if blPara.kind == 1:
+            line = blPara.lines[0]
+            if autoLeading == "min":
+                return line.ascent
+            return _maxLeadingExtent(line, _strut(style, leading))[0]
+        ascent = getattr(blPara, "ascent", blPara.fontSize)
+        if autoLeading == "min":
+            return ascent
+        if autoLeading == "max":
+            leading = max(leading, LEADING_FACTOR * style.fontSize)
+        descent = getattr(blPara, "descent", -0.2 * blPara.fontSize)
+        return ascent + (leading - (ascent - descent)) / 2
+
     def drawPara(self, debug=0):
         """
         Draws a paragraph according to the given style.
@@ -2608,9 +2638,7 @@ class Paragraph(Flowable):
                 elif self.style.alignment == TA_JUSTIFY:
                     dpl = _justifyDrawParaLine
                 f = blPara
-                cur_y = self.height - getattr(
-                    f, "ascent", f.fontSize
-                )  # TODO fix XPreformatted to remove this hack
+                cur_y = self.height - self._firstBaseline()
                 if bulletText:
                     if self.dir == "rtl":
                         offset = _drawBulletRTL(
@@ -2699,9 +2727,7 @@ class Paragraph(Flowable):
                         )
             else:
                 f = lines[0]
-                cur_y = self.height - getattr(
-                    f, "ascent", f.fontSize
-                )  # TODO fix XPreformatted to remove this hack
+                cur_y = self.height - self._firstBaseline()
                 # default?
                 dpl = _leftDrawParaLineX
                 if bulletText:
