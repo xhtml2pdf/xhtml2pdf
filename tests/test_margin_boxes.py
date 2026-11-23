@@ -173,3 +173,49 @@ class DrawTest(TestCase):
         # In the top margin, centred in it.
         top, bottom = found["Middle"][1], found["Middle"][3]
         self.assertAlmostEqual(cm, (top + bottom) / 2, delta=2)
+
+
+class FirstPageTest(TestCase):
+    BASE = (
+        "@page { size: a5; margin: 2cm; @top-center { content: 'Header' }"
+        " @bottom-center { content: counter(page) } }"
+    )
+    BODY = "<p>one</p><pdf:nextpage/><p>two</p><pdf:nextpage/><p>three</p>"
+
+    def heads(self, css: str) -> list[list[str]]:
+        return [
+            [line for line in lines if line not in {"one", "two", "three"}]
+            for lines in page_lines(render(css, self.BODY))
+        ]
+
+    def test_first_blanks_a_box_on_page_one_only(self) -> None:
+        first = "@page :first { @top-center { content: none } }"
+        expected = [["1"], ["Header", "2"], ["Header", "3"]]
+        self.assertEqual(expected, self.heads(self.BASE + first))
+        # Written before the @page it belongs to, it waits for it.
+        self.assertEqual(expected, self.heads(first + self.BASE))
+
+    def test_first_keeps_the_pages_other_declarations(self) -> None:
+        reader = render(
+            self.BASE + "@page :first { @top-center { content: 'Cover' } }", self.BODY
+        )
+        self.assertEqual(3, len(reader.pages))
+        self.assertEqual(
+            {(420, 595)},
+            {
+                (round(float(p.mediabox.width)), round(float(p.mediabox.height)))
+                for p in reader.pages
+            },
+        )
+        self.assertIn("Cover", page_lines(reader)[0])
+
+    @skipUnless(which("pdftotext"), "needs pdftotext")
+    def test_first_may_have_margins_of_its_own(self) -> None:
+        out = io.BytesIO()
+        pisa.CreatePDF(
+            f"<style>{self.BASE} @page :first {{ margin-top: 6cm }}</style>"
+            + self.BODY,
+            dest=out,
+        )
+        found = words(out.getvalue())
+        self.assertGreater(found["one"][1], 6 * cm - 1)

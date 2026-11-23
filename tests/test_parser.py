@@ -618,13 +618,13 @@ class PseudoPageTest(TestCase):
         self.assertIn("b_right", context.templateList)
 
     def test_an_unsupported_pseudo_says_so(self) -> None:
-        """:first has no equivalent here, and used to crash rather than say it."""
+        """:blank has no equivalent here, and says so rather than crash."""
         with self.assertLogs("xhtml2pdf", level="WARNING") as logged:
-            context = self.story("@page :first { size: a5; }")
+            context = self.story("@page :blank { size: a5; }")
 
         self.assertEqual(0, context.err)
         self.assertTrue(
-            any("Unsupported pseudo page :first" in line for line in logged.output),
+            any("Unsupported pseudo page :blank" in line for line in logged.output),
             logged.output,
         )
 

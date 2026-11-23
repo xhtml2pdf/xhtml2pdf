@@ -384,7 +384,9 @@ class CSSParser:
     #: The pseudo pages that mean something here. A ``name_left`` /
     #: ``name_right`` pair is what ``handle_nextPageTemplate`` cycles between;
     #: :first and :blank have no equivalent in this model.
-    PAGE_PSEUDO_CLASSES: ClassVar[frozenset[str]] = frozenset({"left", "right"})
+    PAGE_PSEUDO_CLASSES: ClassVar[frozenset[str]] = frozenset(
+        {"left", "right", "first"}
+    )
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # ~ Regular expressions
@@ -1001,7 +1003,7 @@ class CSSParser:
                 # nothing will ever select it.
                 self._warn(
                     "Unsupported pseudo page :%s, the rules in it will not be"
-                    " used. Only :left and :right are honoured.",
+                    " used. Only :first, :left and :right are honoured.",
                     pseudopage,
                 )
         else:

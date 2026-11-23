@@ -242,6 +242,28 @@ def start_on_leading_template(
     del story[:leading]
 
 
+def start_on_first_page(doc, templates, story) -> None:
+    """
+    Begin the document on its ``@page :first`` template, if it has one.
+
+    The first page takes ``<name>_first`` for the template it would begin on,
+    and a NextPageTemplate put ahead of the story sends the pages after it
+    back to that template -- or to the :left/:right cycle.
+    """
+    ids = [template.id for template in templates]
+    start = doc._firstPageTemplateIndex
+    if isinstance(start, list):
+        following: str | list[str] = start
+        base = DEFAULT_PAGE_NAME
+    else:
+        following = base = ids[start]
+    first = f"{base}_first"
+    if first not in ids:
+        return
+    doc._firstPageTemplateIndex = ids.index(first)
+    story.insert(0, NextPageTemplate(following))
+
+
 def pisaDocument(
     src,
     dest=None,
@@ -475,6 +497,7 @@ def _build(
         declared_body=declared_body,
         body_named=context.bodyPageNamed,
     )
+    start_on_first_page(doc, templates, context.story)
 
     # Use multibuild e.g. if a TOC has to be created
     if context.multiBuild:

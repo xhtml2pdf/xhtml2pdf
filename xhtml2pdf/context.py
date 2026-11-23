@@ -546,6 +546,31 @@ class pisaCSSBuilder(css.CSSBuilder):
         if name == "body" and pseudopage is None:
             c.bodyPageNamed = True
         name = name or "body"
+        base = name[: -len(pseudopage) - 1] if pseudopage else name
+        if pseudopage == "first":
+            rule = c.pageRules.get(base)
+            if rule is None:
+                # Kept for the @page it belongs to, which may come later.
+                c.pendingFirstPages[base] = (
+                    data,
+                    c.marginBoxes,
+                    c.frameList,
+                    isLandscape,
+                    pageBorder,
+                )
+                c.marginBoxes, c.frameList, c.frameStaticList = {}, [], []
+                return {}, {}
+            # CSS Paged Media: what :first does not say, the @page it is a
+            # page of does.
+            base_data, base_boxes, base_frames, base_landscape = rule
+            data = {**base_data, **data}
+            # The base's @frames, not the frame its margins made: :first may
+            # have margins of its own, and they make its frame.
+            c.frameList = c.frameList or [f for f in base_frames if f[0] != base]
+            c.marginBoxes = _merge_boxes(base_boxes, c.marginBoxes)
+            isLandscape = isLandscape or base_landscape
+        elif pseudopage in {"left", "right"} and base in c.pageRules:
+            c.marginBoxes = _merge_boxes(c.pageRules[base][1], c.marginBoxes)
 
         if name in c.templateList:
             log.warning(self.c.warning("template '%s' has already been defined", name))
@@ -767,9 +792,27 @@ class pisaCSSBuilder(css.CSSBuilder):
 
         c.templateList[name] = pt
         c.template = None
+        if pseudopage is None:
+            c.pageRules[name] = (
+                dict(data),
+                c.marginBoxes,
+                list(c.frameList),
+                isLandscape,
+            )
         c.frameList = []
         c.frameStaticList = []
         c.marginBoxes = {}
+
+        pending = c.pendingFirstPages.pop(name, None) if pseudopage is None else None
+        if pending is not None:
+            first_data, c.marginBoxes, c.frameList, landscape, border = pending
+            self.atPage(
+                f"{name}_first",
+                "first",
+                first_data,
+                isLandscape=landscape,
+                pageBorder=border,
+            )
 
         return {}, {}
 
@@ -799,6 +842,11 @@ class pisaCSSBuilder(css.CSSBuilder):
                 data = dict(next(iter(result.values())))
         self.c.marginBoxes.setdefault(name, {}).update(data)
         return {}, {}
+
+
+def _merge_boxes(base: dict[str, dict], own: dict[str, dict]) -> dict[str, dict]:
+    """Margin boxes of a page rule over those of the @page it builds on."""
+    return {name: {**base.get(name, {}), **own.get(name, {})} for name in {*base, *own}}
 
 
 class pisaCSSParser(css.CSSParser):
@@ -961,6 +1009,11 @@ class pisaContext:
         self.frameStaticList: list = []
         #: The page-margin boxes of the @page being read: name -> declarations.
         self.marginBoxes: dict[str, dict] = {}
+        #: What each plain @page declared, for its :first and :left/:right to
+        #: build on: name -> (declarations, margin boxes, frames, landscape).
+        self.pageRules: dict[str, tuple] = {}
+        #: An @page :first read before the @page it belongs to, kept for it.
+        self.pendingFirstPages: dict[str, tuple] = {}
         self.frameStatioundList: list = []
         self.log: list = []
         self.path: list = []
