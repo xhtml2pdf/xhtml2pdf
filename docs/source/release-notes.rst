@@ -82,6 +82,10 @@ Unreleased.
   size; a number such as ``1.5`` still follows each element's size. The
   default is now the number ``1.5``, which lays out exactly as the
   ``150%`` it replaces did.
+* A list (``ul``, ``ol``, ``dl``) has an em of space above and below it, as
+  in a browser, and a list inside a list has none; the last item's bottom
+  margin collapses into the list's. Lists used to have no vertical margin.
+  ``ul, ol, dl { margin-top: 0; margin-bottom: 0 }`` keeps the old spacing.
 
 **🐛 Bug-Fixes**
 

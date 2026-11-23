@@ -392,8 +392,6 @@ class pisaTagUL(pisaTagP):
         # item's own closing addPara -- clearing it there would strip the
         # marker from every ordinary item.
         c.pendingBullet = None
-        # XXX Simulate margin for the moment
-        c.addStory(Spacer(width=1, height=c.fragBlock.spaceAfter))
         c.listCounter = self.counter
 
 

@@ -124,7 +124,9 @@ small {
     font-size: 75%;
 }
 
-/* DEFAULT_CSS indents lists with margin-left; browsers use padding-left: 40px */
+/* DEFAULT_CSS indents lists with margin-left; browsers use padding-left: 40px.
+   The 1em above and below a list, and none for a list in a list, are the
+   browser's own and DEFAULT_CSS gives the same. */
 ul,
 ol {
     margin-left: 1.5em;

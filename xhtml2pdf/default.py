@@ -613,6 +613,28 @@ small {
 }
 
 
+/* A list has an em above and below it, as in a browser; a list inside a
+   list has none. */
+ul,
+ol,
+dl {
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+ul ul,
+ul ol,
+ul dl,
+ol ul,
+ol ol,
+ol dl,
+dl ul,
+dl ol,
+dl dl {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
 ul {
     margin-left: 1.5em;
     list-style-type: disc;
