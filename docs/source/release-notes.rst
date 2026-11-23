@@ -105,6 +105,10 @@ Unreleased.
 
 **🐛 Bug-Fixes**
 
+* An ``@page`` ``bleed`` that is not a length, such as ``bleed: wide``, is
+  reported once as the page's bleed, where ``getSize`` used to report "Not a
+  float" in its own words and the bleed's warning only came for a negative
+  value.
 * A table row too tall for any page that a ``rowspan`` crosses no longer
   stops the conversion with ``LayoutError: ... too large on page``. Such a
   row cannot be cut, nor can the table between the rows the span joins, so

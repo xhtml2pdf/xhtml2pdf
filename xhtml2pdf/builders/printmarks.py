@@ -17,6 +17,7 @@ cover the bleed, which a print shop does not want, so it stays at zero.
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import dataclass
 
 from reportlab.lib.colors import CMYKColor
@@ -95,16 +96,24 @@ def parse_marks(value) -> frozenset[str]:
     return frozenset(marks & MARK_NAMES)
 
 
+#: A length getSize reads without a font size to resolve it against.
+_LENGTH = re.compile(r"[+-]?(\d+(\.\d*)?|\.\d+)(px|pt|cm|mm|in|pc)?")
+
+
 def parse_bleed(value, marks: frozenset[str]) -> float:
     """The `bleed` of an @page, in points; `auto` is 6pt with marks, else 0."""
     if value is None or str(value).strip().lower() == "auto":
         return AUTO_BLEED if marks else 0.0
-    try:
-        bleed = getSize(value)
-    except Exception:
-        bleed = None
+    text = (
+        "".join(str(part) for part in value)
+        if isinstance(value, list | tuple)
+        else str(value)
+    )
+    # Read here rather than left to getSize, which would warn about "a
+    # float" in words of its own and give 0 without saying which property.
+    bleed = getSize(text) if _LENGTH.fullmatch(text.strip().lower()) else None
     if bleed is None or bleed < 0:
-        log.warning("Cannot read the @page bleed %r, using none", value)
+        log.warning("Cannot read the @page bleed %r, using none", text)
         return 0.0
     return bleed
 

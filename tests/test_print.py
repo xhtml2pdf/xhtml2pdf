@@ -104,6 +104,18 @@ class BleedAndMarksTestCase(TestCase):
         reader = render("<style>@page { size: a6 }</style><p>x</p>")
         self.assertEqual({"MediaBox": [0, 0, *A6]}, boxes(reader.pages[0]))
 
+    def test_an_unreadable_bleed_says_so_once(self) -> None:
+        from xhtml2pdf.builders.printmarks import parse_bleed
+
+        for value in ("wide", "-2mm"):
+            with (
+                self.subTest(value=value),
+                self.assertLogs("xhtml2pdf", level="WARNING") as logged,
+            ):
+                self.assertEqual(0.0, parse_bleed(value, frozenset()))
+            (line,) = logged.output
+            self.assertIn("@page bleed", line)
+
     def test_bleed_grows_the_page_around_the_trim(self) -> None:
         reader = render("<style>@page { size: a6; bleed: 10pt }</style><p>x</p>")
         width, height = A6
