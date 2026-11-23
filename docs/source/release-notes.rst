@@ -25,17 +25,7 @@ Versions >= 0.2
     * Note: for smaller improvements
     *
 
-    **🎉 New**
-
-* ``text-decoration: overline``, alone or with ``underline`` and
-  ``line-through``.
-* ``border-style: groove``, ``ridge``, ``inset`` and ``outset`` are drawn in
-  two shades of the border colour, as Chrome draws them, on blocks,
-  paragraphs, tables and table cells. They used to come out solid.
-* ``list-style-type: circle`` draws a hollow ring, the default of a list
-  inside a list. It used to draw the same filled bullet as ``disc``.
-
-**🐛 Bug-Fixes**
+    **🐛 Bug-Fixes**
 
     * Note: Please reference GitHub issues with :issue:`999` and pull requests with :pr:`999`
     *
@@ -65,6 +55,16 @@ Versions >= 0.2
 ====================
 
 Unreleased.
+
+**🎉 New**
+
+* ``text-decoration: overline``, alone or with ``underline`` and
+  ``line-through``.
+* ``border-style: groove``, ``ridge``, ``inset`` and ``outset`` are drawn in
+  two shades of the border colour, as Chrome draws them, on blocks,
+  paragraphs, tables and table cells. They used to come out solid.
+* ``list-style-type: circle`` draws a hollow ring, the default of a list
+  inside a list. It used to draw the same filled bullet as ``disc``.
 
 **🐛 Bug-Fixes**
 
