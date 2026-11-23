@@ -105,6 +105,13 @@ Unreleased.
 
 **🐛 Bug-Fixes**
 
+* A forced page break no longer leaves an empty page:
+  ``page-break-before: always`` on the first element used to make page one
+  blank, and ``page-break-after`` on one block with ``page-break-before`` on
+  the next made an empty page between them. A break where nothing is on the
+  page yet does nothing, as in a browser; ``<pdf:nextpage/>`` still always
+  starts a page, and ``left``/``right`` still add the page their parity
+  needs.
 * A long table inside a block with a background, padding or border runs on
   across pages again, rather than being shrunk to one page or raising
   ``LayoutError: Splitting error`` (:issue:`854`).

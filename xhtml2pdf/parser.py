@@ -24,7 +24,13 @@ import html5lib
 from html5lib import treebuilders
 from reportlab.lib.colors import Color
 from reportlab.platypus.doctemplate import FrameBreak, NextPageTemplate
-from reportlab.platypus.flowables import KeepInFrame, KeepTogether, PageBreak, Spacer
+from reportlab.platypus.flowables import (
+    KeepInFrame,
+    KeepTogether,
+    PageBreak,
+    PageBreakIfNotEmpty,
+    Spacer,
+)
 
 from xhtml2pdf.builders.block import (
     BlockBoxData,
@@ -1460,14 +1466,17 @@ def pisaLoop(node, context, **kw):
                     context.addStory(FrameBreak())
                 if str(context.cssAttr["-pdf-frame-break"]).lower() == "after":
                     frameBreakAfter = True
+            # A forced break never leaves an empty page: on a page nothing
+            # has been drawn on yet -- the first one, or the one a break just
+            # began -- it does nothing (CSS Fragmentation 3, 4.1).
             breakBefore = pageBreakValue(context.cssAttr, "before")
             if breakBefore == "always":
-                context.addStory(PageBreak())
+                context.addStory(PageBreakIfNotEmpty())
             if breakBefore == "right":
-                context.addStory(PageBreak())
+                context.addStory(PageBreakIfNotEmpty())
                 context.addStory(PmlRightPageBreak())
             if breakBefore == "left":
-                context.addStory(PageBreak())
+                context.addStory(PageBreakIfNotEmpty())
                 context.addStory(PmlLeftPageBreak())
             if breakBefore == "avoid" and context.story:
                 # Whatever came before stays on the page this block starts on.
@@ -1797,7 +1806,7 @@ def pisaLoop(node, context, **kw):
                     context.story[-1].keepWithNext = True
             # Page break by CSS
             elif pageBreakAfter:
-                context.addStory(PageBreak())
+                context.addStory(PageBreakIfNotEmpty())
                 if pageBreakAfter == PAGE_BREAK_RIGHT:
                     context.addStory(PmlRightPageBreak())
                 if pageBreakAfter == PAGE_BREAK_LEFT:

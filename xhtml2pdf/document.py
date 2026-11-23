@@ -22,7 +22,7 @@ from html import escape as html_escape
 import pypdf
 from reportlab.lib import pdfencrypt
 from reportlab.platypus.doctemplate import NextPageTemplate
-from reportlab.platypus.flowables import Spacer
+from reportlab.platypus.flowables import PageBreakIfNotEmpty, Spacer
 
 from xhtml2pdf.builders.inserts import insert_pages
 from xhtml2pdf.builders.margin_boxes import prepare_margin_boxes
@@ -261,7 +261,12 @@ def start_on_first_page(doc, templates, story) -> None:
     if first not in ids:
         return
     doc._firstPageTemplateIndex = ids.index(first)
-    story.insert(0, NextPageTemplate(following))
+    # After a leading forced break, which reportlab drops only when it is
+    # the first thing on the page.
+    index = 0
+    while index < len(story) and isinstance(story[index], PageBreakIfNotEmpty):
+        index += 1
+    story.insert(index, NextPageTemplate(following))
 
 
 def pisaDocument(
