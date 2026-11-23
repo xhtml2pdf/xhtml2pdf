@@ -84,17 +84,16 @@ is explained rather than mysterious.
   * list-style-position is not implemented; every marker is drawn outside the
     box. Shown by css-list-style.
 
-  * The first line of a block sits a little higher than a browser puts it.
-    CSS centres the font's content area inside the line box, so half of the
-    leading falls above the first line; ReportLab starts the ascent at the top
-    of the box instead. Worth about 4pt at a 10px font with 150% line height,
-    the same on every block, so it does not accumulate.
+  * Text sits a little higher in its line than a browser puts it. The
+    leading is shared above and below the text as CSS does, but the base-14
+    fonts' ascent is ReportLab's AFM figure (0.718em for Helvetica) where a
+    browser uses the real font's (about 0.905em), so the baseline is about
+    0.19em higher: 0.86pt at 7.5pt, the same on every line.
 
   * A table with no column widths gets equal columns, where a browser sizes
     each column to its content, so the table comes out wider. As a block it
     also takes the whole frame width rather than shrink-wrapping. Shown by
-    test-tables, and inherited by flex-item-content, whose flex item is only
-    as wide as the table it holds.
+    test-tables. In a flex item the columns do follow their content.
 
   * Arabic letters are joined by substituting presentation forms, because
     ReportLab does no shaping of its own. A font built for OpenType shaping
